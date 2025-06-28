@@ -1,13 +1,69 @@
-// File Version: v117 (Updated by Gemini for Firebase errors and robustness)
-// Last Updated: 2025-06-28 (Fixed Unexpected end of input by ensuring full file is provided)
+// File Version: v118 (Updated by Gemini for Firebase errors and robustness)
+// Last Updated: 2025-06-28 (Fixed timing issue by moving initializeFirebaseDependentLogic out of DOMContentLoaded)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
 // via window.firestoreDb, window.firebaseAuth, window.getFirebaseAppId(), etc.,
 // from the <script type="module"> block in index.html.
 
+// --- NEW: Function to initialize Firebase-dependent logic (Moved to global scope) ---
+// This function will be called by the index.html module script after Firebase globals are set.
+window.initializeFirebaseDependentLogic = function() {
+    // Safely assign Firebase globals after checking they exist
+    if (window.firestoreDb && window.firebaseAuth && typeof window.getFirebaseAppId === 'function') {
+        db = window.firestoreDb;
+        auth = window.firebaseAuth;
+        currentAppId = window.getFirebaseAppId(); // Now safely call the function
+        console.log(`[Firebase Init] App ID: ${currentAppId}`); // Log the retrieved App ID
+    } else {
+        console.error("[Firebase] Firebase global variables or getFirebaseAppId function not available. Cannot proceed with Firebase operations.");
+        // Display a user-friendly error message if Firebase is not ready
+        // The index.html module script now handles the primary error display.
+        if (loadingIndicator) loadingIndicator.style.display = 'none';
+        updateMainButtonsState(false); // Disable all buttons
+        return; // Stop script execution if Firebase isn't ready
+    }
+
+    if (auth) {
+        if (googleAuthBtn) {
+            googleAuthBtn.disabled = false;
+            console.log("[Auth] Google Auth button enabled.");
+        }
+        window.authFunctions.onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUserId = user.uid;
+                updateAuthButtonText(true, user.email || user.displayName);
+                console.log("[AuthState] User signed in:", user.uid);
+                if (user.email && user.email.toLowerCase() === KANGA_EMAIL) {
+                    mainTitle.textContent = "Kanga's Share Watchlist"; // Corrected to "Kanga's Share Watchlist"
+                } else {
+                    mainTitle.textContent = "My Share Watchlist"; // Removed ASX
+                }
+                updateMainButtonsState(true); // Enable auth-dependent buttons
+                if (loadingIndicator) loadingIndicator.style.display = 'none';
+                await loadUserWatchlists();
+            } else {
+                currentUserId = null;
+                updateAuthButtonText(false);
+                mainTitle.textContent = "Share Watchlist"; // Changed to "Share Watchlist" before login
+                console.log("[AuthState] User signed out.");
+                updateMainButtonsState(false); // Disable auth-dependent buttons
+                clearShareList();
+                clearWatchlistUI();
+                if (loadingIndicator) loadingIndicator.style.display = 'none';
+            }
+        });
+    } else {
+        console.error("[Firebase] Firebase Auth not available. Cannot set up auth state listener or proceed with data loading.");
+        updateAuthButtonText(false);
+        updateMainButtonsState(false);
+        if (loadingIndicator) loadingIndicator.style.display = 'none';
+    }
+}; // End window.initializeFirebaseDependentLogic
+
+
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v117) DOMContentLoaded fired."); // New log to confirm script version and DOM ready
+    console.log("script.js (v118) DOMContentLoaded fired."); // New log to confirm script version and DOM ready
 
     // --- Core Helper Functions (DECLARED FIRST FOR HOISTING) ---
     // Moved toggleAppSidebar here to ensure it's defined before any calls within this scope.
@@ -1252,10 +1308,10 @@ document.addEventListener('DOMContentLoaded', function() {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./service-worker.js', { scope: './' }) 
                 .then(registration => {
-                    console.log('Service Worker (v33) from script.js: Registered with scope:', registration.scope); // Increment SW version
+                    console.log('Service Worker (v34) from script.js: Registered with scope:', registration.scope); // Increment SW version
                 })
                 .catch(error => {
-                    console.error('Service Worker (v33) from script.js: Registration failed:', error); // Increment SW version
+                    console.error('Service Worker (v34) from script.js: Registration failed:', error); // Increment SW version
                 });
         });
     }
@@ -1297,62 +1353,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-
-
-    // --- NEW: Function to initialize Firebase-dependent logic ---
-    // This function will be called by the index.html module script after Firebase globals are set.
-    window.initializeFirebaseDependentLogic = function() {
-        // Safely assign Firebase globals after checking they exist
-        if (window.firestoreDb && window.firebaseAuth && typeof window.getFirebaseAppId === 'function') {
-            db = window.firestoreDb;
-            auth = window.firebaseAuth;
-            currentAppId = window.getFirebaseAppId(); // Now safely call the function
-            console.log(`[Firebase Init] App ID: ${currentAppId}`); // Log the retrieved App ID
-        } else {
-            console.error("[Firebase] Firebase global variables or getFirebaseAppId function not available. Cannot proceed with Firebase operations.");
-            // Display a user-friendly error message if Firebase is not ready
-            // The index.html module script now handles the primary error display.
-            if (loadingIndicator) loadingIndicator.style.display = 'none';
-            updateMainButtonsState(false); // Disable all buttons
-            return; // Stop script execution if Firebase isn't ready
-        }
-
-        if (auth) {
-            if (googleAuthBtn) {
-                googleAuthBtn.disabled = false;
-                console.log("[Auth] Google Auth button enabled.");
-            }
-            window.authFunctions.onAuthStateChanged(auth, async (user) => {
-                if (user) {
-                    currentUserId = user.uid;
-                    updateAuthButtonText(true, user.email || user.displayName);
-                    console.log("[AuthState] User signed in:", user.uid);
-                    if (user.email && user.email.toLowerCase() === KANGA_EMAIL) {
-                        mainTitle.textContent = "Kanga's Share Watchlist"; // Corrected to "Kanga's Share Watchlist"
-                    } else {
-                        mainTitle.textContent = "My Share Watchlist"; // Removed ASX
-                    }
-                    updateMainButtonsState(true); // Enable auth-dependent buttons
-                    if (loadingIndicator) loadingIndicator.style.display = 'none';
-                    await loadUserWatchlists();
-                } else {
-                    currentUserId = null;
-                    updateAuthButtonText(false);
-                    mainTitle.textContent = "Share Watchlist"; // Changed to "Share Watchlist" before login
-                    console.log("[AuthState] User signed out.");
-                    updateMainButtonsState(false); // Disable auth-dependent buttons
-                    clearShareList();
-                    clearWatchlistUI();
-                    if (loadingIndicator) loadingIndicator.style.display = 'none';
-                }
-            });
-        } else {
-            console.error("[Firebase] Firebase Auth not available. Cannot set up auth state listener or proceed with data loading.");
-            updateAuthButtonText(false);
-            updateMainButtonsState(false);
-            if (loadingIndicator) loadingIndicator.style.display = 'none';
-        }
-    }; // End window.initializeFirebaseDependentLogic
 
     // --- Authentication Functions Event Listener ---
     if (googleAuthBtn) {
