@@ -1,5 +1,5 @@
-// File Version: v109 (Updated by Gemini for toggleAppSidebar ReferenceError, theme cycling, and modal display)
-// Last Updated: 2025-06-28 (Moved toggleAppSidebar for better hoisting, integrated all requested features)
+// File Version: v110 (Updated by Gemini for Firebase errors and robustness)
+// Last Updated: 2025-06-28 (Improved Firebase initialization checks, fixed window.getFirebaseAppId access)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -7,7 +7,7 @@
 // from the <script type="module"> block in index.html.
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v109) DOMContentLoaded fired."); // New log to confirm script version and DOM ready
+    console.log("script.js (v110) DOMContentLoaded fired."); // New log to confirm script version and DOM ready
 
     // --- Core Helper Functions (DECLARED FIRST FOR HOISTING) ---
     // Moved toggleAppSidebar here to ensure it's defined before any calls within this scope.
@@ -890,8 +890,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Save the last selected watchlist ID to user's profile
     async function saveLastSelectedWatchlistId(watchlistId) {
-        if (!db || !currentUserId || !window.firestore) {
-            console.warn("[Watchlist] Cannot save last selected watchlist: DB, User ID, or Firestore functions not available.");
+        // Ensure window.firestore and db are available before proceeding
+        if (!window.firestore || !db || !currentUserId) {
+            console.warn("[Watchlist] Cannot save last selected watchlist: Firestore functions, DB, or User ID not available.");
             return;
         }
         const userProfileDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/profile/settings`);
@@ -905,20 +906,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Load watchlists from Firestore and set the current one
     async function loadUserWatchlists() {
-        if (!db || !currentUserId) {
-            console.warn("[Watchlist] Firestore DB or User ID not available for loading watchlists.");
+        // Ensure db and currentUserId are available before proceeding
+        if (!db || !currentUserId || !window.firestore) {
+            console.warn("[Watchlist] Firestore DB, User ID, or Firestore functions not available for loading watchlists.");
+            // If Firebase is not ready, hide loading and disable buttons
+            if (loadingIndicator) loadingIndicator.style.display = 'none';
+            updateMainButtonsState(false);
             return;
         }
+
         userWatchlists = [];
-        const watchlistsColRef = window.firestore ? window.firestore.collection(db, `artifacts/${currentAppId}/users/${currentUserId}/watchlists`) : null;
-        const userProfileDocRef = window.firestore ? window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/profile/settings`) : null;
+        const watchlistsColRef = window.firestore.collection(db, `artifacts/${currentAppId}/users/${currentUserId}/watchlists`);
+        const userProfileDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/profile/settings`);
 
-        if (!watchlistsColRef || !userProfileDocRef) {
-            console.error("[Watchlist] Firestore collection or doc reference is null. Cannot load watchlists.");
-            showCustomAlert("Firestore services not fully initialized. Cannot load watchlists.");
-            return;
-        }
-
+        if (loadingIndicator) loadingIndicator.style.display = 'block';
         try {
             console.log("[Watchlist] Fetching user watchlists...");
             const querySnapshot = await window.firestore.getDocs(watchlistsColRef);
@@ -968,6 +969,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (error) {
             console.error("[Watchlist] Error loading user watchlists:", error);
             showCustomAlert("Error loading watchlists: " + error.message);
+            updateMainButtonsState(false); // Disable buttons on error
         } finally {
             if (loadingIndicator) loadingIndicator.style.display = 'none';
         }
@@ -975,6 +977,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Load shares from Firestore
     async function loadShares() {
+        // Ensure db, currentUserId, currentWatchlistId, and window.firestore are available
         if (!db || !currentUserId || !currentWatchlistId || !window.firestore) {
             console.warn("[Shares] Firestore DB, User ID, Watchlist ID, or Firestore functions not available for loading shares. Clearing list.");
             clearShareList();
@@ -1005,6 +1008,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // One-time migration function for old shares
     async function migrateOldSharesToWatchlist() {
+        // Ensure db, currentUserId, and window.firestore are available
         if (!db || !currentUserId || !window.firestore) {
             console.warn("[Migration] Firestore DB, User ID, or Firestore functions not available for migration.");
             return false;
@@ -1215,7 +1219,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let db;
     let auth = null;
     let currentUserId = null;
-    let currentAppId;
+    let currentAppId; // This will be set from window.getFirebaseAppId()
     let selectedShareDocId = null;
     let allSharesData = [];
     let currentDialogCallback = null;
@@ -1266,10 +1270,10 @@ document.addEventListener('DOMContentLoaded', function() {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./service-worker.js', { scope: './' }) 
                 .then(registration => {
-                    console.log('Service Worker (v24) from script.js: Registered with scope:', registration.scope); // Increment SW version
+                    console.log('Service Worker (v25) from script.js: Registered with scope:', registration.scope); // Increment SW version
                 })
                 .catch(error => {
-                    console.error('Service Worker (v24) from script.js: Registration failed:', error); // Increment SW version
+                    console.error('Service Worker (v25) from script.js: Registration failed:', error); // Increment SW version
                 });
         });
     }
@@ -1314,9 +1318,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
     // --- Firebase Initialization and Authentication State Listener ---
-    db = window.firestoreDb;
-    auth = window.firebaseAuth;
-    currentAppId = window.getFirebaseAppId();
+    // Safely assign Firebase globals after checking they exist
+    if (window.firestoreDb && window.firebaseAuth && typeof window.getFirebaseAppId === 'function') {
+        db = window.firestoreDb;
+        auth = window.firebaseAuth;
+        currentAppId = window.getFirebaseAppId(); // Now safely call the function
+        console.log(`[Firebase Init] App ID: ${currentAppId}`); // Log the retrieved App ID
+    } else {
+        console.error("[Firebase] Firebase global variables or getFirebaseAppId function not available. Cannot proceed with Firebase operations.");
+        document.body.innerHTML = '<div class="error-message"><p>Application failed to initialize Firebase.</p><p>Please ensure your environment provides Firebase configuration and try again.</p></div>';
+        if (loadingIndicator) loadingIndicator.style.display = 'none';
+        updateMainButtonsState(false); // Disable all buttons
+        return; // Stop script execution if Firebase isn't ready
+    }
 
     if (auth) {
         if (googleAuthBtn) {

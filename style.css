@@ -1,5 +1,5 @@
-/* File Version: v48 (Updated by Gemini for sidebar pointer-events fix) */
-/* Last Updated: 2025-06-28 (Sidebar pointer-events, CommSec message, Theme prep) */
+/* File Version: v49 (Updated by Gemini for watchlist/sort layout fixes) */
+/* Last Updated: 2025-06-28 (Sidebar pointer-events, CommSec message, Theme prep, Watchlist/Sort Layout) */
 
 :root {
     /* Light Theme (Default) - Adjusted for more vibrancy */
@@ -330,7 +330,7 @@ h1#mainTitle {
 .watchlist-controls-row {
     display: flex;
     flex-wrap: wrap; /* Allow wrapping on smaller screens */
-    justify-content: center; /* CENTERED ON MOBILE & DESKTOP */
+    justify-content: center; /* CENTRALIZED ON MOBILE & DESKTOP */
     align-items: center;
     gap: 15px 25px; /* Vertical and horizontal gap */
     padding: 10px 0;
@@ -346,8 +346,11 @@ h1#mainTitle {
 .watchlist-group,
 .sort-group {
     display: flex;
-    align-items: center;
-    gap: 8px;
+    align-items: center; /* Vertically align items in the middle */
+    gap: 8px; /* Space between label, dropdown, and buttons */
+    /* Ensure these groups don't take up more space than needed */
+    flex-shrink: 0; 
+    flex-grow: 0;
 }
 
 .dropdown-large {
@@ -820,7 +823,7 @@ table tbody tr:not(.selected):hover {
 
 .form-action-buttons #cancelFormBtn:hover,
 .form-action-buttons #cancelAddWatchlistBtn:hover, /* Added cancelAddWatchlistBtn */
-.form-action-buttons #cancelManageWatchlistBtn:hover, /* Added cancelManageWatchlistBtn */
+.form-action-buttons #cancelManageWatchlistBtn:hover, /* Added cancelAddWatchlistBtn */
 .custom-dialog-buttons #customDialogCancelBtn:hover { /* Added customDialogCancelBtn */
     background-color: var(--secondary-button-hover-bg);
     transform: translateY(-1px);
