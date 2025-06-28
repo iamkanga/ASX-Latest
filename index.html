@@ -3,229 +3,298 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Share Tracker</title> <!-- Removed ASX from title -->
-    <!-- Favicon: Eggplant emoji -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍆</text></svg>">
-
-    <!-- Linking to your separate style.css file -->
-    <link rel="stylesheet" href="style.css?v=48"> <!-- Updated CSS version for new styles -->
+    <title>ASX Watchlist App</title>
+    <!-- Tailwind CSS CDN - Loaded first for base utility classes -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Custom CSS for specific styling and overrides - Loaded after Tailwind -->
+    <link rel="stylesheet" href="style.css?v=48"> <!-- IMPORTANT: Ensure this version matches your style.css file -->
+    <!-- Google Fonts for 'Inter' -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <!-- Font Awesome for icons -->
+    <!-- Font Awesome for icons - Used throughout the app for buttons and indicators -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* This inline style block is for critical initial hiding to prevent "flash of unstyled content" (FOUC)
+           before the main script loads and applies classes for transitions.
+           Most styling and transitions are handled in style.css. */
+        body {
+            font-family: 'Inter', sans-serif; /* Ensures Inter font is applied early */
+        }
+        /* All modals are initially hidden to prevent them from appearing on page load */
+        .modal {
+            display: none; /* Hidden by default, JavaScript will add 'open' class for visibility and transitions */
+        }
+        /* The .modal-overlay, .modal-content, and .app-sidebar transitions
+           are primarily handled by style.css using the 'open' class. */
+    </style>
 </head>
-<body>
-    <header>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+    <!-- Firebase SDKs - These MUST be loaded before your main script.js
+         They provide the global 'window.firestoreDb', 'window.firebaseAuth', etc. -->
+    <script type="module">
+        // Import necessary Firebase modules from CDN
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import {
+            getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged,
+            signInAnonymously, signInWithCustomToken // signInWithCustomToken is used by the Canvas environment
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import {
+            getFirestore, collection, doc, getDoc, getDocs, addDoc, setDoc, updateDoc,
+            deleteDoc, query, where, writeBatch, FieldValue, // FieldValue is needed for deleteField
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // IMPORTANT: These variables (__app_id, __firebase_config, __initial_auth_token)
+        // are automatically provided by the Canvas environment at runtime.
+        // DO NOT hardcode your Firebase API keys or project IDs here.
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Initialize Firebase app and services
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        // Make Firebase instances and core functions globally accessible to script.js
+        // This is a common pattern for integrating Firebase with vanilla JS in this environment.
+        window.firestoreDb = db;
+        window.firebaseAuth = auth;
+        window.getFirebaseAppId = () => appId;
+        window.firestore = {
+            collection, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc,
+            query, where, writeBatch, FieldValue: FieldValue // Expose FieldValue for operations like deleteField
+        };
+        window.authFunctions = {
+            signInWithPopup, GoogleAuthProviderInstance: new GoogleAuthProvider(), signOut, onAuthStateChanged,
+            signInAnonymously, // Expose signInAnonymously for unauthenticated access
+        };
+
+        // Attempt authentication using the provided custom token or anonymously
+        // This ensures the app can interact with Firestore immediately upon loading.
+        if (initialAuthToken) {
+            signInWithCustomToken(auth, initialAuthToken)
+                .then(() => console.log("Firebase: Signed in with custom token."))
+                .catch(error => console.error("Firebase: Custom token sign-in failed:", error));
+        } else {
+            signInAnonymously(auth)
+                .then(() => console.log("Firebase: Signed in anonymously."))
+                .catch(error => console.error("Firebase: Anonymous sign-in failed:", error));
+        }
+
+        console.log("Firebase: Initialized successfully with config.");
+        console.log("index.html (v46) script module loaded and DOMContentLoaded fired."); // Updated HTML version log
+    </script>
+
+    <!-- Main Header Section -->
+    <header class="header">
         <div class="header-top-row">
-            <!-- New "Add Share" button on the main screen -->
-            <button id="addShareHeaderBtn" class="header-action-btn">
-                <i class="fas fa-plus"></i>
+            <!-- Hamburger Menu Button - Visible on all screen sizes -->
+            <button id="hamburgerBtn" class="hamburger-btn" aria-label="Open menu">
+                <i class="fas fa-bars"></i> <!-- Font Awesome hamburger icon -->
             </button>
-            <h1 id="mainTitle">Share Watchlist</h1> <!-- Default text before login -->
-            <!-- Hamburger/Sidebar Toggle Button -->
-            <button id="hamburgerBtn" class="hamburger-btn">
-                <i class="fas fa-bars"></i>
+            <!-- Main Title - Dynamically updated by script.js based on auth state -->
+            <h1 id="mainTitle">Share Watchlist</h1>
+            <!-- Add New Share Button in Header - Visible on all screen sizes -->
+            <button id="addShareHeaderBtn" class="header-action-btn" aria-label="Add new share">
+                <i class="fas fa-plus"></i> <!-- Font Awesome plus icon -->
             </button>
         </div>
-
-        <!-- Mobile Menu / Desktop Sidebar Content -->
-        <nav id="appSidebar" class="app-sidebar">
-            <button id="closeMenuBtn" class="close-menu-btn">X</button> <!-- Changed to simple X -->
-            
-            <div class="menu-section">
-                <h3>Share Actions</h3>
-                <div class="menu-buttons-group">
-                    <!-- Consolidated Share Action Buttons -->
-                    <button id="newShareBtn" class="menu-button-item" data-action-closes-menu="true"><i class="fas fa-plus-circle"></i> Add New Share</button>
-                </div>
-            </div>
-
-            <div class="menu-section">
-                <h3>Watchlists</h3>
-                <div class="menu-buttons-group">
-                    <button id="addWatchlistBtn" class="menu-button-item" data-action-closes-menu="true"><i class="fas fa-list-ul"></i> Add Watchlist</button>
-                    <!-- Changed delete button to edit button -->
-                    <button id="editWatchlistBtn" class="menu-button-item" data-action-closes-menu="true"><i class="fas fa-edit"></i> Edit Current Watchlist</button>
-                </div>
-            </div>
-
-            <div class="menu-section">
-                <h3>Calculators</h3>
-                <div class="menu-buttons-group">
-                    <!-- Consolidated Calculator Buttons -->
-                    <button id="standardCalcBtn" class="menu-button-item" data-action-closes-menu="true"><i class="fas fa-calculator"></i> Standard</button>
-                    <button id="dividendCalcBtn" class="menu-button-item" data-action-closes-menu="true"><i class="fas fa-money-bill-wave"></i> Dividend</button>
-                </div>
-            </div>
-
-            <div class="menu-section">
-                <h3>Theme</h3>
-                <div class="menu-buttons-group">
-                    <!-- Consolidated Theme Toggle Button -->
-                    <button id="themeToggleBtn" class="menu-button-item" data-action-closes-menu="false"><i class="fas fa-moon"></i> Toggle Theme</button>
-                </div>
-            </div>
-        </nav>
-
-        <!-- Watchlist and Sort controls -->
+        <!-- Watchlist and Sort Controls Row - Contains dropdowns and watchlist management buttons -->
         <div class="watchlist-controls-row">
             <div class="watchlist-group">
+                <label for="watchlistSelect" class="text-gray-700 font-medium">Watchlist:</label>
                 <select id="watchlistSelect" class="dropdown-large">
-                    <!-- Options populated by JS, including 'Watchlist' placeholder -->
+                    <option value="" disabled selected>Loading Watchlists...</option>
                 </select>
+                <!-- Add Watchlist Button -->
+                <button id="addWatchlistBtn" class="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 transition-colors duration-200 text-sm" title="Add New Watchlist">
+                    <i class="fas fa-plus"></i>
+                </button>
+                <!-- Manage Watchlist Button (Edit/Delete) -->
+                <button id="editWatchlistBtn" class="bg-gray-300 text-gray-800 p-2 rounded-md hover:bg-gray-400 transition-colors duration-200 text-sm" title="Manage Current Watchlist">
+                    <i class="fas fa-cog"></i> <!-- Cog icon for settings/manage -->
+                </button>
             </div>
-
             <div class="sort-group">
+                <label for="sortSelect" class="text-gray-700 font-medium">Sort by:</label>
                 <select id="sortSelect" class="dropdown-large">
-                    <option value="" disabled selected>Sort</option> <!-- Explicit "Sort" placeholder -->
-                    <option value="entryDate-desc">Date Added (Newest)</option>
-                    <option value="entryDate-asc">Date Added (Oldest)</option>
-                    <option value="shareName-asc">Code (A-Z)</option> <!-- Removed ASX -->
-                    <option value="shareName-desc">Code (Z-A)</option> <!-- Removed ASX -->
-                    <!-- Removed Current Price sorting options as per new display -->
-                    <option value="dividendAmount-desc">Dividend (High-Low)</option>
+                    <option value="" disabled selected>Sort</option>
+                    <option value="shareName-asc">Code (A-Z)</option>
+                    <option value="shareName-desc">Code (Z-A)</option>
+                    <option value="currentPrice-asc">Entered Price (Low-High)</option>
+                    <option value="currentPrice-desc">Entered Price (High-Low)</option>
+                    <option value="targetPrice-asc">Target Price (Low-High)</option>
+                    <option value="targetPrice-desc">Target Price (High-Low)</option>
                     <option value="dividendAmount-asc">Dividend (Low-High)</option>
+                    <option value="dividendAmount-desc">Dividend (High-Low)</option>
+                    <option value="frankingCredits-asc">Franking (Low-High)</option>
+                    <option value="frankingCredits-desc">Franking (High-Low)</option>
+                    <option value="entryDate-asc">Entry Date (Oldest-Newest)</option>
+                    <option value="entryDate-desc">Entry Date (Newest-Oldest)</option>
                 </select>
             </div>
         </div>
-        
-        <!-- ASX Code buttons container -->
+        <!-- ASX Code Buttons Container - Dynamically populated by script.js -->
         <div id="asxCodeButtonsContainer" class="asx-code-buttons-container">
-            <!-- ASX code buttons will be dynamically added here -->
+            <!-- ASX code buttons will be dynamically loaded here by script.js -->
         </div>
     </header>
 
-    <main class="container">
-        <!-- Message for Firebase initialization errors -->
-        <div id="firebaseInitError" class="error-message" style="display: none;">
-            <p><strong>Error:</strong> Firebase failed to initialize.</p>
-            <p>This is usually due to missing or incorrect Firebase configuration. Please ensure your <code>firebaseConfig</code> in <code>index.html</code> is correctly set up from your Firebase project settings.</p>
-            <p>Core application features will not work without a valid Firebase connection.</p>
+    <!-- App Sidebar - This slides in from the left on desktop and covers part of the screen on mobile -->
+    <nav id="appSidebar" class="app-sidebar">
+        <!-- Close button for the sidebar -->
+        <button id="closeMenuBtn" class="close-menu-btn" aria-label="Close menu">&times;</button>
+        <h3 class="text-lg font-semibold mb-3">Tools</h3>
+        <div class="menu-buttons-group">
+            <!-- Buttons for adding shares and calculators -->
+            <button id="newShareBtn" class="menu-button-item" data-action-closes-menu="true">
+                <i class="fas fa-plus-circle"></i> Add New Share
+            </button>
+            <button id="dividendCalcBtn" class="menu-button-item" data-action-closes-menu="true">
+                <i class="fas fa-calculator"></i> Dividend Calculator
+            </button>
+            <button id="standardCalcBtn" class="menu-button-item" data-action-closes-menu="true">
+                <i class="fas fa-calculator"></i> Standard Calculator
+            </button>
         </div>
 
-        <div id="loadingIndicator" class="loading" style="display: none;">Loading shares...</div>
-        <div class="share-list-section">
+        <h3 class="text-lg font-semibold mb-3">Settings</h3>
+        <div class="menu-buttons-group">
+            <!-- Theme Toggle Button - Cycles through themes -->
+            <button id="themeToggleBtn" class="menu-button-item" data-action-closes-menu="false">
+                <i class="fas fa-palette"></i> Toggle Theme
+            </button>
+            <!-- Other settings can go here as needed -->
+        </div>
+
+        <h3 class="text-lg font-semibold mb-3">Account</h3>
+        <div class="menu-buttons-group">
+            <!-- Google Authentication Button - Text changes based on login status -->
+            <button id="googleAuthBtn" class="menu-button-item" data-action-closes-menu="false">
+                <i class="fab fa-google"></i> Sign In
+            </button>
+        </div>
+    </nav>
+    <!-- Sidebar Overlay - Dims the background when sidebar is open and allows closing on click outside -->
+    <div class="sidebar-overlay"></div>
+
+    <!-- Main Content Area - Contains the share list and mobile cards -->
+    <main class="container flex-grow">
+        <!-- Loading Indicator - Shown while data is being fetched from Firebase -->
+        <div id="loadingIndicator" class="loading" style="display: none;">
+            <i class="fas fa-spinner fa-spin mr-2"></i> Loading shares...
+        </div>
+
+        <!-- Share List Section (Table for Desktop) - Dynamically populated by script.js -->
+        <section class="share-list-section">
             <div class="table-container">
                 <table id="shareTable">
                     <thead>
                         <tr>
-                            <th>Code</th> <!-- Removed ASX -->
-                            <th>Entered Price</th> <!-- Renamed from Current Price -->
+                            <th>Code</th>
+                            <th>Entered Price</th>
                             <th>Target Price</th>
-                            <th>Dividends</th>
+                            <th>Dividend & Yields</th>
                             <th>Comments</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- Share rows will be dynamically added here -->
+                        <!-- Share data rows will be dynamically loaded here by script.js -->
                     </tbody>
                 </table>
             </div>
-            <div id="mobileShareCards" class="mobile-share-cards">
-                <!-- Mobile share cards will be dynamically added here -->
-            </div>
-        </div>
+        </section>
+
+        <!-- Mobile Share Cards (for Mobile) - Dynamically populated by script.js -->
+        <section id="mobileShareCards" class="mobile-share-cards">
+            <!-- Mobile share cards will be dynamically loaded here by script.js -->
+        </section>
+
+        <!-- Scroll to Top Button (Mobile Only) -->
+        <button id="scrollToTopBtn" class="hidden">
+            <i class="fas fa-arrow-up"></i>
+        </button>
     </main>
 
+    <!-- Fixed Footer - Contains the Google Auth button for quick access -->
     <footer class="fixed-footer">
-        <button id="googleAuthBtn" class="google-auth-btn">Sign In</button>
+        <!-- This is a duplicate of the Google Auth button in the sidebar, for mobile accessibility -->
+        <button id="googleAuthBtn" class="google-auth-btn">
+            <i class="fab fa-google"></i> Sign In
+        </button>
     </footer>
 
-    <!-- Scroll-to-Top Button -->
-    <button id="scrollToTopBtn" title="Go to top"><i class="fas fa-arrow-up"></i></button>
+    <!-- MODALS SECTION - All modals are initially hidden and controlled by script.js -->
 
-    <!-- Modals -->
-    <!-- Share Form Modal -->
+    <!-- Share Form Modal (Add/Edit Share) -->
     <div id="shareFormSection" class="modal">
         <div class="modal-content add-share-modal-content">
-            <span class="close-button form-close-button">&times;</span>
+            <button class="close-button form-close-button">&times;</button>
             <h2 id="formTitle">Add New Share</h2>
-            <label for="shareName">Code:</label> <!-- Removed ASX -->
-            <input type="text" id="shareName" placeholder="e.g., BHP" required>
+            <label for="shareName">ASX Code:</label>
+            <input type="text" id="shareName" placeholder="e.g., CBA" maxlength="10">
 
-            <label for="currentPrice">Entered Price ($):</label> <!-- Changed label to Entered Price -->
-            <input type="number" id="currentPrice" step="0.01" placeholder="e.g., 25.50">
+            <label for="currentPrice">Entered Price ($):</label>
+            <input type="number" id="currentPrice" placeholder="e.g., 105.20" step="0.01">
 
             <label for="targetPrice">Target Price ($):</label>
-            <input type="number" id="targetPrice" step="0.01" placeholder="e.g., 30.00">
+            <input type="number" id="targetPrice" placeholder="e.g., 110.00" step="0.01">
 
-            <label for="dividendAmount">Dividend Amount (per share, annual $):</label>
-            <input type="number" id="dividendAmount" step="0.001" placeholder="e.g., 1.250">
+            <label for="dividendAmount">Dividend Amount ($ per share):</label>
+            <input type="number" id="dividendAmount" placeholder="e.g., 2.50" step="0.001">
 
             <label for="frankingCredits">Franking Credits (%):</label>
-            <input type="number" id="frankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 70 for 70%">
+            <input type="number" id="frankingCredits" placeholder="e.g., 100" step="0.1" min="0" max="100">
 
             <div id="commentsFormContainer" class="comments-form-container">
                 <h3>Comments <button type="button" id="addCommentSectionBtn" class="add-section-btn">+</button></h3>
-                <!-- Comment sections will be dynamically added here by JS -->
+                <!-- Dynamic comment sections will be added here by script.js -->
             </div>
 
-            <!-- Buttons for Add/Edit Share Modal - will be styled to be on one line -->
-            <div class="form-action-buttons modal-form-buttons">
-                <button type="button" id="deleteShareFromFormBtn" class="danger-button"><i class="fas fa-trash-alt"></i> Delete Share</button>
-                <button type="button" id="cancelFormBtn" class="secondary-buttons"><i class="fas fa-times-circle"></i> Cancel</button>
-                <button type="submit" id="saveShareBtn"><i class="fas fa-save"></i> Save Share</button>
+            <div class="form-action-buttons">
+                <button type="button" id="cancelFormBtn" class="secondary-button">Cancel</button>
+                <button type="button" id="deleteShareFromFormBtn" class="danger-button" style="display: none;">Delete</button>
+                <button type="submit" id="saveShareBtn" class="primary-button">Save Share</button>
             </div>
         </div>
     </div>
 
-    <!-- Share Details Modal (Still needed for double-click on table/card) -->
+    <!-- Share Detail Modal - Displays detailed information about a selected share -->
     <div id="shareDetailModal" class="modal">
         <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2 id="modalShareName">Share Details</h2>
+            <button class="close-button">&times;</button>
+            <h2 id="modalShareName" class="text-center">Share Name</h2>
             <p><strong>Entry Date:</strong> <span id="modalEntryDate"></span></p>
-            <p><strong>Entered Price:</strong> <span id="modalEnteredPrice"></span> <span id="modalEnteredPriceDateTime" class="ghosted-text"></span></p> <!-- Date/Time moved here -->
-            <!-- <p><strong>Current Price:</strong> <span id="modalCurrentPriceDetailed"></span></p> Removed Current Price -->
+            <!-- Entered Price - Date/Time is cleared by script.js -->
+            <p><strong>Entered Price:</strong> <span id="modalEnteredPrice"></span><span id="modalEnteredPriceDateTime" class="ghosted-text ml-2"></span></p>
             <p><strong>Target Price:</strong> <span id="modalTargetPrice"></span></p>
             <p><strong>Dividend Amount:</strong> <span id="modalDividendAmount"></span></p>
             <p><strong>Franking Credits:</strong> <span id="modalFrankingCredits"></span></p>
             <p><strong>Unfranked Yield:</strong> <span id="modalUnfrankedYield"></span></p>
             <p><strong>Franked Yield:</strong> <span id="modalFrankedYield"></span></p>
 
-            <div id="modalCommentsContainer" class="modal-comments-sections">
+            <div id="modalCommentsContainer">
                 <h3>Comments</h3>
-                <!-- Comments will be displayed here -->
+                <!-- Comments will be dynamically loaded here by script.js -->
             </div>
 
             <div class="external-links-section">
                 <h3>External Links</h3>
-                <p><a id="modalMarketIndexLink" href="#" target="_blank" class="external-link"><i class="fas fa-external-link-alt"></i> View on MarketIndex.com.au</a></p>
-                <p><a id="modalFoolLink" href="#" target="_blank" class="external-link"><i class="fas fa-external-link-alt"></i> View on Fool.com.au</a></p>
-                <p><a id="modalCommSecLink" href="#" target="_blank" class="external-link"><i class="fas fa-external-link-alt"></i> View on CommSec.com.au</a></p>
-                <p id="commSecLoginMessage" class="ghosted-text">Requires single CommSec login per session</p> <!-- NEW COMMSEC LOGIN MESSAGE -->
+                <!-- External links to financial sites -->
+                <a id="modalMarketIndexLink" href="#" target="_blank" rel="noopener noreferrer" class="external-link">
+                    <i class="fas fa-external-link-alt"></i> MarketIndex.com.au
+                </a>
+                <a id="modalFoolLink" href="#" target="_blank" rel="noopener noreferrer" class="external-link">
+                    <i class="fas fa-external-link-alt"></i> Fool.com.au
+                </a>
+                <a id="modalCommSecLink" href="#" target="_blank" rel="noopener noreferrer" class="external-link">
+                    <i class="fas fa-external-link-alt"></i> CommSec.com.au
+                </a>
+                <!-- Ghosted text for CommSec login reminder -->
+                <span id="commSecLoginMessage" class="ghosted-text block">Requires single CommSec login per session.</span>
             </div>
 
             <div class="modal-action-buttons">
-                <button type="button" id="editShareFromDetailBtn"><i class="fas fa-edit"></i> Edit Share</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Add Watchlist Modal -->
-    <div id="addWatchlistModal" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2>Add New Watchlist</h2>
-            <label for="newWatchlistName">Watchlist Name:</label>
-            <input type="text" id="newWatchlistName" placeholder="e.g., Tech Stocks" required>
-            <div class="form-action-buttons">
-                <button type="button" id="cancelAddWatchlistBtn" class="secondary-buttons"><i class="fas fa-times-circle"></i> Cancel</button>
-                <button type="button" id="saveWatchlistBtn"><i class="fas fa-save"></i> Save Watchlist</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Manage Watchlist Modal (New) -->
-    <div id="manageWatchlistModal" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2>Manage Watchlist</h2>
-            <label for="editWatchlistName">Watchlist Name:</label>
-            <input type="text" id="editWatchlistName" required>
-            <div class="form-action-buttons">
-                <button type="button" id="deleteWatchlistInModalBtn" class="danger-button"><i class="fas fa-trash-alt"></i> Delete Watchlist</button>
-                <button type="button" id="cancelManageWatchlistBtn" class="secondary-buttons"><i class="fas fa-times-circle"></i> Cancel</button>
-                <button type="button" id="saveWatchlistNameBtn"><i class="fas fa-save"></i> Save Name</button>
+                <button id="editShareFromDetailBtn" class="primary-button">Edit Share</button>
             </div>
         </div>
     </div>
@@ -233,43 +302,51 @@
     <!-- Dividend Calculator Modal -->
     <div id="dividendCalculatorModal" class="modal">
         <div class="modal-content calculator-modal-content">
-            <span class="close-button calc-close-button">&times;</span>
-            <h2>Dividend Calculator</h2>
+            <button class="close-button calc-close-button">&times;</button>
+            <h2 class="text-center">Dividend Calculator</h2>
+
             <div class="calc-input-group">
-                <label for="calcCurrentPrice">Share Price ($):</label> <!-- Reordered and renamed -->
-                <input type="number" id="calcCurrentPrice" step="0.01" placeholder="e.g., 25.50">
+                <label for="calcCurrentPrice">Share Price ($):</label>
+                <input type="number" id="calcCurrentPrice" placeholder="e.g., 100.00" step="0.01">
             </div>
+
             <div class="calc-input-group">
-                <label for="calcDividendAmount">Dividend Amount (per share, annual $):</label> <!-- Reordered -->
-                <input type="number" id="calcDividendAmount" step="0.001" placeholder="e.g., 1.250">
+                <label for="calcDividendAmount">Dividend Amount ($ per share):</label>
+                <input type="number" id="calcDividendAmount" placeholder="e.g., 2.50" step="0.001">
             </div>
+
             <div class="calc-input-group">
-                <label for="calcFrankingCredits">Franking Credits (%):</label> <!-- Reordered -->
-                <input type="number" id="calcFrankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 70 for 70%">
+                <label for="calcFrankingCredits">Franking Credits (%):</label>
+                <input type="number" id="calcFrankingCredits" placeholder="e.g., 100" step="0.1" min="0" max="100">
             </div>
+
+            <hr>
+
             <p><strong>Unfranked Yield:</strong> <span id="calcUnfrankedYield">-</span></p>
             <p><strong>Franked Yield:</strong> <span id="calcFrankedYield">-</span></p>
+
             <hr>
+
             <div class="calc-input-group">
-                <label for="investmentValueSelect">Investment Value:</label>
+                <label for="investmentValueSelect">Investment Value ($):</label>
                 <select id="investmentValueSelect">
-                    <option value="1000">$1,000</option>
-                    <option value="5000">$5,000</option>
-                    <option value="10000" selected>$10,000</option>
-                    <option value="25000">$25,000</option>
-                    <option value="50000">$50,000</option>
-                    <option value="100000">$100,000</option>
+                    <option value="1000">1,000</option>
+                    <option value="5000">5,000</option>
+                    <option value="10000" selected>10,000</option>
+                    <option value="25000">25,000</option>
+                    <option value="50000">50,000</option>
+                    <option value="100000">100,000</option>
                 </select>
             </div>
-            <p><strong>Estimated Annual Dividend:</strong> <span id="calcEstimatedDividend">-</span></p>
+            <p><strong>Estimated Annual Dividend Income:</strong> <span id="calcEstimatedDividend">-</span></p>
         </div>
     </div>
 
     <!-- Standard Calculator Modal -->
     <div id="calculatorModal" class="modal">
         <div class="modal-content calculator-modal-content">
-            <span class="close-button">&times;</span>
-            <h2>Standard Calculator</h2>
+            <button class="close-button">&times;</button>
+            <h2 class="text-center">Standard Calculator</h2>
             <div class="calculator-display">
                 <div id="calculatorInput" class="calculator-input"></div>
                 <div id="calculatorResult" class="calculator-result">0</div>
@@ -297,95 +374,62 @@
         </div>
     </div>
 
-    <!-- Custom Dialog Modal for Alerts/Confirms -->
-    <div id="customDialogModal" class="modal">
+    <!-- Add Watchlist Modal -->
+    <div id="addWatchlistModal" class="modal">
         <div class="modal-content">
-            <p id="customDialogMessage"></p>
-            <div class="custom-dialog-buttons">
-                <button id="customDialogConfirmBtn" class="secondary-buttons">OK</button>
-                <button id="customDialogCancelBtn" class="danger-button">Cancel</button>
+            <button class="close-button">&times;</button>
+            <h2 class="text-center">Add New Watchlist</h2>
+            <label for="newWatchlistName">Watchlist Name:</label>
+            <input type="text" id="newWatchlistName" placeholder="e.g., Tech Stocks" maxlength="50">
+            <div class="form-action-buttons">
+                <button type="button" id="cancelAddWatchlistBtn" class="secondary-button">Cancel</button>
+                <button type="submit" id="saveWatchlistBtn" class="primary-button">Add Watchlist</button>
             </div>
         </div>
     </div>
 
-    <!-- Firebase and main script loading -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, FieldValue, deleteField, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; // Added writeBatch
+    <!-- Manage Watchlist Modal (Edit/Delete) -->
+    <div id="manageWatchlistModal" class="modal">
+        <div class="modal-content">
+            <button class="close-button">&times;</button>
+            <h2 class="text-center">Manage Watchlist</h2>
+            <label for="editWatchlistName">Watchlist Name:</label>
+            <input type="text" id="editWatchlistName" placeholder="e.g., My Watchlist" maxlength="50">
+            <div class="form-action-buttons">
+                <button type="button" id="cancelManageWatchlistBtn" class="secondary-button">Cancel</button>
+                <button type="button" id="deleteWatchlistInModalBtn" class="danger-button">Delete Watchlist</button>
+                <button type="submit" id="saveWatchlistNameBtn" class="primary-button">Save Name</button>
+            </div>
+        </div>
+    </div>
 
-const firebaseConfig = {
-    apiKey: "AIzaSyAyIWoTYlzTkaSZ9x-ySiHtzATBM9XFrYw",
-    authDomain: "asx-watchlist-app.firebaseapp.com",
-    projectId: "asx-watchlist-app",
-    storageBucket: "asx-watchlist-app.firebasestorage.app",
-    messagingSenderId: "671024168765",
-    appId: "1:671024168765:web:f2b62cd0e77a126c0ecf54",
-    measurementId: "G-J24BTJ34D2"
-};
+    <!-- Custom Dialog Modal (for custom alerts/confirms) -->
+    <div id="customDialogModal" class="modal">
+        <div class="modal-content">
+            <h3 id="customDialogMessage" class="text-lg font-medium text-center mb-4"></h3>
+            <div class="custom-dialog-buttons">
+                <button id="customDialogCancelBtn" class="secondary-button">Cancel</button>
+                <button id="customDialogConfirmBtn" class="primary-button">OK</button>
+            </div>
+        </div>
+    </div>
 
-        // END OF FIREBASE CONFIGURATION
-
-        const currentAppId = firebaseConfig.projectId || 'default-app-id';
-
-        let firebaseApp;
-        let auth;
-        let db;
-        let firebaseInitialized = false;
-
-        if (firebaseConfig && firebaseConfig.apiKey && firebaseConfig.projectId) {
-            try {
-                firebaseApp = initializeApp(firebaseConfig);
-                auth = getAuth(firebaseApp);
-                db = getFirestore(firebaseApp);
-                firebaseInitialized = true;
-                console.log("Firebase: Initialized successfully with config.");
-            } catch (error) {
-                console.error("Firebase: Failed to initialize app with provided config:", error);
-                firebaseInitialized = false;
-            }
-        } else {
-            console.error("Firebase: Configuration is missing or invalid (apiKey or projectId). Firebase will not initialize.");
-            const errorDiv = document.getElementById('firebaseInitError');
-            if (errorDiv) {
-                errorDiv.style.display = 'block';
-            }
-            firebaseInitialized = false;
+    <!-- Your main script.js - Loaded last to ensure all HTML elements are available -->
+    <script src="script.js?v=109"></script> <!-- IMPORTANT: Ensure this version matches your script.js file -->
+    <script>
+        // Register service worker - This block is typically placed at the end of the body
+        // to ensure the page content loads first.
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js', { scope: './' })
+                    .then(registration => {
+                        console.log('Service Worker registered with scope:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.error('Service Worker registration failed:', error);
+                    });
+            });
         }
-
-        window.firestoreDb = firebaseInitialized ? db : null;
-        window.firebaseAuth = firebaseInitialized ? auth : null;
-        window.getFirebaseAppId = () => currentAppId;
-        window.firestore = firebaseInitialized ? {
-            collection: collection,
-            doc: doc,
-            getDoc: getDoc,
-            addDoc: addDoc,
-            setDoc: setDoc,
-            updateDoc: updateDoc,
-            deleteDoc: deleteDoc,
-            onSnapshot: onSnapshot,
-            query: query,
-            where: where,
-            getDocs: getDocs,
-            deleteField: FieldValue.delete,
-            writeBatch: writeBatch // Exposed writeBatch
-        } : null;
-        
-        window.authFunctions = firebaseInitialized ? {
-            GoogleAuthProviderInstance: new GoogleAuthProvider(),
-            signInAnonymously: signInAnonymously,
-            signInWithCustomToken: signInWithCustomToken,
-            signInWithPopup: signInWithPopup,
-            signOut: signOut,
-            onAuthStateChanged: onAuthStateChanged
-        } : null;
-
-        document.addEventListener('DOMContentLoaded', async function() {
-            console.log("index.html (v45) script module loaded and DOMContentLoaded fired."); // Updated version number
-        }); 
     </script>
-    <!-- Linking to your separate script.js file -->
-    <script src="script.js?v=109"></script>
 </body>
 </html>
