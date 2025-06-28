@@ -826,27 +826,23 @@ body.sidebar-active {
     background-color: var(--input-bg);
     border: 1px solid var(--input-border);
     border-radius: 8px;
-    padding: 15px;
     margin-bottom: 20px;
+    padding: 15px;
     text-align: right;
-    min-height: 80px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    overflow: hidden;
+    overflow: hidden; /* Hide overflow for long numbers */
 }
 
 .calculator-input {
     font-size: 1.2rem;
     color: var(--label-color);
-    min-height: 25px;
+    min-height: 1.2em;
 }
 
 .calculator-result {
     font-size: 2.5rem;
     font-weight: 700;
     color: var(--text-color);
-    min-height: 40px;
+    min-height: 1.5em;
 }
 
 .calculator-buttons {
@@ -856,52 +852,106 @@ body.sidebar-active {
 }
 
 .calc-btn {
-    background-color: var(--button-bg);
-    color: var(--button-text);
+    background-color: var(--asx-button-bg);
+    color: var(--asx-button-text);
     padding: 15px;
     border-radius: 8px;
     border: none;
     font-size: 1.5rem;
-    font-weight: 600;
     cursor: pointer;
     transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
 .calc-btn:hover {
-    background-color: var(--button-hover-bg);
+    background-color: var(--asx-button-hover-bg);
     transform: translateY(-1px);
+}
+
+.calc-btn.operator {
+    background-color: var(--button-bg);
+    color: var(--button-text);
+}
+
+.calc-btn.operator:hover {
+    background-color: var(--button-hover-bg);
 }
 
 .calc-btn.clear {
     background-color: var(--danger-button-bg);
+    color: #ffffff;
 }
+
 .calc-btn.clear:hover {
     background-color: var(--danger-button-hover-bg);
 }
 
-.calc-btn.operator {
-    background-color: var(--secondary-button-bg);
-}
-.calc-btn.operator:hover {
-    background-color: var(--secondary-button-hover-bg);
+.calc-btn.equals {
+    background-color: var(--button-bg);
+    color: var(--button-text);
+    grid-column: span 2; /* Make equals button span two columns */
 }
 
-.calc-btn.equals {
-    background-color: #28a745; /* Green */
-    grid-column: span 2;
-}
 .calc-btn.equals:hover {
-    background-color: #218838; /* Darker Green */
+    background-color: var(--button-hover-bg);
 }
 
 .calc-btn.zero {
-    grid-column: span 2;
+    grid-column: span 2; /* Make zero button span two columns */
+}
+
+/* Manage Watchlists Modal */
+.tab-buttons {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.tab-button {
+    background: none;
+    border: none;
+    padding: 10px 15px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--label-color);
+    border-bottom: 3px solid transparent;
+    transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.tab-button.active {
+    color: var(--button-bg);
+    border-color: var(--button-bg);
+}
+
+.tab-button:hover:not(.active) {
+    color: var(--text-color);
+}
+
+.tab-content {
+    display: none;
+    padding-top: 15px;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Custom Dialog Modal */
+.custom-dialog-buttons {
+    display: flex;
+    justify-content: space-around;
+    gap: 15px;
+}
+
+.custom-dialog-buttons button {
+    min-width: 100px;
 }
 
 /* Fixed Footer */
 .fixed-footer {
     background-color: var(--header-bg);
-    padding: 10px 20px;
+    padding: 10px 15px;
     border-top: 1px solid var(--border-color);
     box-shadow: 0 -2px 4px var(--shadow-color);
     position: sticky;
@@ -909,7 +959,7 @@ body.sidebar-active {
     width: 100%;
     z-index: 999; /* Below modals, above content */
     display: flex;
-    justify-content: center;
+    justify-content: center; /* Center the button */
     align-items: center;
     transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
@@ -920,9 +970,9 @@ body.sidebar-active {
     padding: 10px 20px;
     border-radius: 8px;
     border: none;
-    cursor: pointer;
     font-size: 1rem;
     font-weight: 600;
+    cursor: pointer;
     display: flex;
     align-items: center;
     gap: 10px;
@@ -939,77 +989,36 @@ body.sidebar-active {
     cursor: not-allowed;
 }
 
-/* Scroll to Top Button (Mobile only) */
+/* Scroll to Top Button */
 #scrollToTopBtn {
     position: fixed;
-    bottom: 80px; /* Above the fixed footer */
+    bottom: 80px; /* Above the footer */
     right: 20px;
     background-color: var(--button-bg);
-    color: var(--button-text);
+    color: #ffffff;
     border: none;
     border-radius: 50%;
     width: 50px;
     height: 50px;
     font-size: 1.5rem;
     display: flex;
-    align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 8px var(--shadow-color);
+    align-items: center;
     cursor: pointer;
-    transition: opacity 0.3s ease, transform 0.2s ease;
-    z-index: 998; /* Below modals, above content */
-    opacity: 0;
-    pointer-events: none; /* Disable clicks when hidden */
-}
-
-#scrollToTopBtn.visible {
-    opacity: 1;
-    pointer-events: auto;
+    box-shadow: 0 4px 8px var(--shadow-color);
+    z-index: 990; /* Below footer, above content */
+    opacity: 0; /* Hidden by default */
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease, background-color 0.2s ease;
 }
 
 #scrollToTopBtn:hover {
-    transform: translateY(-3px);
+    background-color: var(--button-hover-bg);
 }
 
-/* --- New Combined Manage Watchlists Modal Styles --- */
-.tab-buttons {
-    display: flex;
-    margin-bottom: 20px;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.tab-button {
-    flex-grow: 1;
-    padding: 12px 15px;
-    background-color: var(--table-header-bg); /* Lighter background for inactive tab */
-    color: var(--text-color);
-    border: none;
-    border-bottom: 2px solid transparent; /* Highlight for active tab */
-    cursor: pointer;
-    font-size: 1rem;
-    font-weight: 600;
-    transition: background-color 0.2s ease, border-color 0.2s ease;
-    text-align: center;
-    border-radius: 8px 8px 0 0; /* Rounded top corners */
-}
-
-.tab-button:hover {
-    background-color: var(--table-row-hover-bg); /* Subtle hover */
-}
-
-.tab-button.active {
-    background-color: var(--modal-content-bg); /* Match modal content background for active tab */
-    border-bottom-color: var(--button-bg); /* Active color */
-    color: var(--button-bg); /* Active text color */
-}
-
-.tab-content {
-    display: none; /* Hidden by default */
-    padding-top: 10px; /* Space below tabs */
-}
-
-.tab-content.active {
-    display: block; /* Show active tab content */
+#scrollToTopBtn.show {
+    opacity: 1;
+    visibility: visible;
 }
 
 
@@ -1019,198 +1028,126 @@ body.sidebar-active {
         font-size: 1.5rem;
     }
 
+    .hamburger-btn, .header-action-btn {
+        font-size: 1.3rem;
+        padding: 5px 8px;
+    }
+
     .watchlist-controls-row {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 10px; /* Keep gap for vertical stacking */
-    }
-
-    .watchlist-group, .sort-group {
-        width: 100%;
-        flex-direction: row; /* Keep dropdown and its potential label on one line */
-        justify-content: center; /* Center the dropdown itself */
-        gap: 0; /* Remove gap between label and dropdown if labels were present */
-    }
-    .dropdown-large {
-        width: 100%; /* Full width on mobile */
-        min-width: unset;
-    }
-
-    .share-list-section {
-        display: none; /* Hide table on mobile */
-    }
-
-    .mobile-share-cards {
-        display: grid; /* Show cards on mobile */
-    }
-
-    .modal-content {
-        width: 95%;
-        margin: 20px auto; /* Adjust margin for mobile */
-        padding: 20px; /* Adjust padding for mobile */
-    }
-
-    .form-action-buttons, .modal-action-buttons, .custom-dialog-buttons {
-        flex-direction: row; /* Keep buttons in a row */
-        flex-wrap: nowrap; /* Prevent wrapping */
-        justify-content: space-between; /* Distribute space evenly */
-        gap: 5px; /* Reduce gap to fit more buttons */
-    }
-
-    .form-action-buttons button, .modal-action-buttons button, .custom-dialog-buttons button {
-        flex-grow: 1; /* Allow buttons to grow */
-        max-width: unset; /* Remove max-width on mobile */
-        padding: 10px 8px; /* Adjust padding for smaller buttons */
-        font-size: 0.9rem; /* Slightly smaller font for tighter fit */
-    }
-
-    /* Specific adjustment for 3-button layouts on mobile */
-    .form-action-buttons.three-buttons button {
-        max-width: unset; /* Let flex-grow handle sizing */
-    }
-    
-    .comments-form-container .add-section-btn {
-        width: 35px;
-        height: 35px;
-        font-size: 1.8rem;
-    }
-
-    /* Ensure scroll-to-top button is shown on mobile when scrolled (JS will manage visibility based on scroll) */
-    #scrollToTopBtn {
-        right: 10px;
-        bottom: 10px;
-        display: flex; /* Always display initially, JS controls opacity/final display */
-    }
-
-    /* Mobile Sign-In Button Centering */
-    .google-auth-btn {
-        width: 100%; /* Make footer button full width */
-        justify-content: center;
-    }
-
-    /* Combined Watchlist Modal Tabs on Mobile */
-    .tab-buttons {
-        flex-direction: row; /* Keep tabs in a row */
-        flex-wrap: nowrap;
-    }
-    .tab-button {
-        padding: 10px;
-        font-size: 0.9rem;
-    }
-}
-
-/* Desktop (min-width: 769px) */
-@media (min-width: 769px) {
-    header {
-        flex-direction: column;
-        justify-content: flex-start;
-        align-items: center;
-        flex-wrap: nowrap;
-        padding-bottom: 0;
-        gap: 10px;
-        height: auto;
-    }
-
-    .header-top-row {
-        width: 100%;
-        margin-bottom: 0;
-        justify-content: center;
-        flex-grow: 0;
-        height: auto;
-        position: relative;
-    }
-
-    h1#mainTitle {
-        font-size: 2.2rem;
-        text-align: center;
-        order: 1;
-        margin-left: 0;
-        flex-grow: 1;
-        padding-left: 0;
-        padding-right: 0;
-        line-height: 1;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    /* Hamburger button on desktop - always visible, but only for toggling */
-    .hamburger-btn {
-        position: absolute;
-        left: 0; /* Moved to left */
-        top: 50%;
-        transform: translateY(-50%);
-        font-size: 2rem;
-        padding: 5px 10px;
-        height: auto;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        order: 0;
-    }
-
-    /* New: Header "Add Share" Button on desktop - position left */
-    #addShareHeaderBtn {
-        display: block;
-        position: absolute;
-        right: 0; /* Moved to right */
-        top: 50%;
-        transform: translateY(-50%);
-        padding: 5px 10px;
-    }
-
-    /* App Sidebar specific for desktop - initially hidden, slides in/out */
-    .app-sidebar {
-        left: -280px; /* Start hidden on desktop too */
-        width: 260px; /* Fixed width */
-        box-shadow: 2px 0 5px var(--shadow-color);
-        border-right: 1px solid var(--sidebar-border);
-        position: fixed;
-        top: 0;
-        height: 100%;
-        padding-top: calc(70px + 20px); /* Space for fixed header (70px) + padding */
-        z-index: 998; /* Lower z-index than modals, but above main content */
-        transition: left 0.3s ease-in-out; 
-    }
-    /* Show close button on desktop sidebar */
-    .app-sidebar .close-menu-btn {
-        display: block;
-        top: 15px; /* Adjusted top for consistency */
-        left: 15px; /* Moved to left */
-        font-size: 1.5rem; /* Reduced size for desktop */
-    }
-    /* Overlay for desktop when sidebar is open */
-    .sidebar-overlay.open {
-        display: block;
-        background-color: rgba(0, 0, 0, 0.1); /* More ghosted for desktop */
-        pointer-events: none; /* Allow clicks to pass through to main content */
-    }
-
-    /* Shift main content & footer to the right when sidebar is open on desktop */
-    body.sidebar-active main.container {
-        margin-left: 260px; /* Match sidebar width */
-        width: calc(100% - 260px);
-    }
-    body.sidebar-active footer.fixed-footer {
-        margin-left: 260px; /* Match sidebar width */
-        width: calc(100% - 260px);
-    }
-
-    /* Watchlist and Sort controls on Desktop: Ensure they are on the same line and centralized */
-    .watchlist-controls-row {
-        width: 100%;
-        justify-content: center;
-        flex-direction: row;
-        flex-wrap: nowrap;
-        gap: 20px; /* Adjusted gap for desktop */
+        flex-direction: column; /* Stack dropdowns vertically */
+        align-items: stretch; /* Stretch to fill width */
+        gap: 15px; /* More space between stacked items */
         padding: 15px 0;
-        border-top: 1px solid var(--border-color);
+        border-top: 1px solid var(--border-color); /* Ensure borders are here */
         border-bottom: 1px solid var(--border-color);
     }
     .watchlist-group,
     .sort-group {
-        width: auto;
-        justify-content: flex-start;
+        width: 100%; /* Full width for mobile */
+        justify-content: center; /* Center content within group */
+        padding: 0 15px; /* Add horizontal padding for dropdowns */
+    }
+    .dropdown-large {
+        width: 100%; /* Full width for dropdowns */
+        min-width: unset; /* Remove min-width constraint */
+    }
+
+    .asx-code-buttons-container {
+        padding: 15px;
+    }
+
+    /* Hide table on mobile, show cards */
+    table {
+        display: none;
+    }
+
+    .mobile-share-cards {
+        display: grid; /* Ensure cards are displayed */
+        padding: 0 15px 20px;
+    }
+
+    .form-action-buttons, .modal-action-buttons, .custom-dialog-buttons {
+        flex-direction: column; /* Stack buttons vertically */
+        gap: 10px;
+    }
+
+    .form-action-buttons button, .modal-action-buttons button, .custom-dialog-buttons button {
+        width: 100%; /* Full width for stacked buttons */
+        max-width: unset; /* Remove max-width constraint */
+    }
+
+    /* Specific adjustment for 3 buttons in manage watchlist modal */
+    .form-action-buttons.three-buttons {
+        flex-direction: column; /* Ensure stacking */
+    }
+    .form-action-buttons.three-buttons button {
+        max-width: unset; /* Override any specific max-width for mobile */
+    }
+
+    .fixed-footer {
+        padding: 10px 15px;
+    }
+
+    #scrollToTopBtn {
+        display: flex; /* Show on mobile */
+    }
+}
+
+/* Desktop adjustments */
+@media (min-width: 769px) {
+    .hamburger-btn {
+        display: none; /* Hide hamburger on desktop */
+    }
+
+    .app-sidebar {
+        left: 0; /* Always visible on desktop */
+        position: sticky; /* Keeps it in flow on desktop */
+        top: 0;
+        height: 100vh; /* Full viewport height */
+        width: 260px; /* Fixed width */
+        padding-top: 80px; /* Adjust for header height */
+        z-index: 900; /* Ensure it's below header sticky */
+    }
+
+    .app-sidebar.open {
+        left: 0; /* Ensure it stays open */
+    }
+
+    .sidebar-overlay {
+        display: none; /* Hide overlay on desktop */
+    }
+
+    .close-menu-btn {
+        display: none; /* Hide close button on desktop */
+    }
+
+    /* Adjust main content to flow next to sidebar */
+    body {
+        flex-direction: row; /* Arrange header, sidebar, main in a row */
+    }
+
+    header {
+        width: 100%; /* Header spans full width */
+    }
+
+    main {
+        margin-left: 260px; /* Push main content right by sidebar width */
+        flex-grow: 1; /* Allow main content to take remaining space */
+        padding-top: 20px; /* Add top padding for content below header */
+    }
+
+    .watchlist-controls-row {
+        flex-direction: row; /* Ensure they are in a row */
+        flex-wrap: nowrap; /* Prevent wrapping on desktop */
+        gap: 20px 40px; /* Adjust gap for desktop */
+        padding: 15px 0;
+        border-top: 1px solid var(--border-color); /* Ensure borders are here */
+        border-bottom: 1px solid var(--border-color);
+    }
+    .watchlist-group,
+    .sort-group {
+        width: auto; /* Let content determine width */
+        justify-content: flex-start; /* Align content within group to start */
         padding: 0;
     }
     .dropdown-large {
@@ -1235,25 +1172,17 @@ body.sidebar-active {
     #scrollToTopBtn {
         display: none; /* Always hidden on desktop */
     }
-
-    /* Modal buttons on desktop */
-    .form-action-buttons button, .modal-action-buttons button, .custom-dialog-buttons button {
-        max-width: 180px; /* Keep max-width for desktop */
-    }
-    .form-action-buttons.three-buttons button {
-        max-width: 150px; /* Adjust max-width for 3 buttons to fit better */
-    }
 }
 
 /* Specific adjustments for very large screens (optional) */
 @media (min-width: 1024px) {
     header {
-        padding: 20px 30px;
-    }
-    h1#mainTitle {
-        font-size: 2.5rem;
+        padding: 20px 40px;
     }
     .container {
-        padding: 0 20px;
+        padding: 0 40px;
+    }
+    .fixed-footer {
+        padding: 20px 40px;
     }
 }

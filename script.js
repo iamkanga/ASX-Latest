@@ -1,5 +1,5 @@
-// File Version: v131 (Updated by Gemini for Firebase Variable Initialization Fix)
-// Last Updated: 2025-06-28 (Ensured Firebase variables are initialized before use)
+// File Version: v132 (Updated by Gemini for Watchlist Placeholder Fix)
+// Last Updated: 2025-06-28 (Fixed watchlist dropdown placeholder selection logic)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -502,10 +502,14 @@ function renderWatchlistSelect() {
     watchlistSelect.innerHTML = '';
     const placeholderOption = document.createElement('option');
     placeholderOption.value = '';
-    // Updated placeholder text for watchlist dropdown
     placeholderOption.textContent = currentUserId ? 'Select Watchlist' : 'No Watchlist Selected';
     placeholderOption.disabled = true;
-    placeholderOption.selected = true; 
+    
+    // Only set placeholder as selected if no current watchlist is defined
+    if (!currentWatchlistId) {
+        placeholderOption.selected = true; 
+    }
+    
     watchlistSelect.appendChild(placeholderOption);
 
     if (userWatchlists.length === 0) {
@@ -522,12 +526,13 @@ function renderWatchlistSelect() {
         watchlistSelect.value = currentWatchlistId;
         console.log(`[UI Update] Watchlist dropdown set to: ${currentWatchlistName} (ID: ${currentWatchlistId})`);
     } else if (userWatchlists.length > 0) {
+        // Fallback to first watchlist if currentWatchlistId is invalid or not found
         watchlistSelect.value = userWatchlists[0].id;
         currentWatchlistId = userWatchlists[0].id;
         currentWatchlistName = userWatchlists[0].name;
         console.warn(`[UI Update] currentWatchlistId was null/invalid, fallback to first watchlist: ${currentWatchlistName} (ID: ${currentWatchlistId})`);
     } else {
-         watchlistSelect.value = '';
+         watchlistSelect.value = ''; // Ensure no option is selected if no watchlists
     }
     watchlistSelect.disabled = false;
     console.log("[UI Update] Watchlist select rendered.");
@@ -535,21 +540,19 @@ function renderWatchlistSelect() {
 
 function renderSortSelect() {
     if (!sortSelect) { console.error("[renderSortSelect] sortSelect element not found."); return; }
-    const firstOption = sortSelect.options[0];
-    if (firstOption && firstOption.value === '') {
-        firstOption.textContent = 'Sort'; // Placeholder text for sort dropdown
-        firstOption.disabled = true;
-        firstOption.selected = true;
-    } else {
-        const placeholderOption = document.createElement('option');
+    // Ensure the placeholder option is always the first one and correctly styled
+    let placeholderOption = sortSelect.querySelector('option[value=""][disabled]');
+    if (!placeholderOption) {
+        placeholderOption = document.createElement('option');
         placeholderOption.value = '';
-        placeholderOption.textContent = 'Sort'; // Placeholder text for sort dropdown
         placeholderOption.disabled = true;
-        placeholderOption.selected = true;
         sortSelect.insertBefore(placeholderOption, sortSelect.firstChild);
     }
+    placeholderOption.textContent = 'Sort'; // Placeholder text for sort dropdown
+    
+    // Ensure the placeholder is selected if no other value is set or if the current value is the placeholder
     if (!sortSelect.value || sortSelect.value === '') {
-        sortSelect.value = '';
+        placeholderOption.selected = true;
     }
     console.log("[UI Update] Sort select rendered.");
 }
@@ -1172,7 +1175,7 @@ async function migrateOldSharesToWatchlist() {
 
 // --- DOMContentLoaded Listener for UI Element References and Event Listeners ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v131) DOMContentLoaded fired.");
+    console.log("script.js (v132) DOMContentLoaded fired.");
 
     // --- Initialize Firebase variables from window globals ---
     // These must be assigned before any Firebase operations.
