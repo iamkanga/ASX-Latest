@@ -1,5 +1,5 @@
-/* File Version: v61 */
-/* Last Updated: 2025-06-28 (Incremented version to force update and clear cache) */
+/* File Version: v62 */
+/* Last Updated: 2025-06-28 (Fixed header/hamburger border, sidebar overlay behavior) */
 
 /* Base styles for the entire application */
 body {
@@ -130,6 +130,9 @@ body.dark-theme {
     padding: 5px 10px;
     border-radius: 8px;
     transition: background-color 0.2s ease, color 0.2s ease;
+    /* Ensure hamburger button is positioned correctly and doesn't get cut off */
+    position: relative; /* Needed for z-index to work against header-top-row */
+    z-index: 1; /* Ensure it's above other elements in the row if needed */
 }
 
 .hamburger-btn:hover, .header-action-btn:hover {
