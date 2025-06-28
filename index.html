@@ -25,6 +25,32 @@
         }
         /* The .modal-overlay, .modal-content, and .app-sidebar transitions
            are primarily handled by style.css using the 'open' class. */
+
+        /* Error message styling */
+        .firebase-error-display {
+            background-color: #fee2e2; /* Red-100 */
+            color: #ef4444; /* Red-500 */
+            border: 1px solid #ef4444;
+            padding: 20px;
+            margin: 40px auto;
+            border-radius: 8px;
+            max-width: 600px;
+            text-align: center;
+            font-family: 'Inter', sans-serif;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .firebase-error-display h2 {
+            font-size: 1.5em;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        .firebase-error-display p {
+            margin-bottom: 5px;
+            line-height: 1.5;
+        }
+        .firebase-error-display p:last-child {
+            margin-bottom: 0;
+        }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
@@ -49,27 +75,37 @@
         let firebaseConfig = {};
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
-        // Safely parse __firebase_config. If it's missing or invalid, use a fallback.
-        if (typeof __app_id !== 'undefined') {
+        let firebaseInitError = null; // Flag to track Firebase initialization status
+
+        // Safely get and parse __app_id
+        if (typeof __app_id !== 'undefined' && __app_id !== null && __app_id.trim() !== '') {
             appId = __app_id;
+            console.log(`Firebase Init: __app_id detected: '${appId}'`);
         } else {
-            console.warn("Firebase Init: __app_id is not defined. Using default 'default-app-id'.");
+            console.warn("Firebase Init: __app_id is not defined or is empty. Using default 'default-app-id'.");
+            firebaseInitError = "App ID not provided by environment.";
         }
 
-        if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+        // Safely get and parse __firebase_config
+        if (typeof __firebase_config !== 'undefined' && __firebase_config !== null && __firebase_config.trim() !== '') {
             try {
                 firebaseConfig = JSON.parse(__firebase_config);
+                // Ensure projectId is present, as it's required by Firebase SDK
                 if (!firebaseConfig.projectId) {
                     console.error("Firebase Init: Parsed firebaseConfig is missing 'projectId'. Using a placeholder.");
                     firebaseConfig.projectId = "placeholder-project-id"; // Provide a fallback
+                    firebaseInitError = "Firebase config missing 'projectId'.";
                 }
+                console.log("Firebase Init: __firebase_config successfully parsed.");
             } catch (e) {
                 console.error("Firebase Init: Error parsing __firebase_config. Using a minimal fallback.", e);
                 firebaseConfig = { projectId: "parse-error-fallback", apiKey: "parse-error-fallback" };
+                firebaseInitError = "Firebase config could not be parsed.";
             }
         } else {
-            console.warn("Firebase Init: __firebase_config is not defined or is empty. Using a minimal fallback config.");
+            console.error("Firebase Init: __firebase_config is not defined or is empty. Firebase will not initialize correctly.");
             firebaseConfig = { projectId: "no-config-provided", apiKey: "no-config-provided" };
+            firebaseInitError = "Firebase configuration not provided by environment.";
         }
 
         console.log("Firebase Init: Attempting to initialize with config:", firebaseConfig);
@@ -78,6 +114,27 @@
         let db;
         let auth;
 
+        if (firebaseInitError) {
+            // If there's an issue with config, don't even try to initialize Firebase SDK
+            console.error(`Firebase: Skipping initialization due to configuration error: ${firebaseInitError}`);
+            document.body.innerHTML = `
+                <div class="firebase-error-display">
+                    <h2>Application Initialization Error</h2>
+                    <p>Failed to load essential application components.</p>
+                    <p>Reason: <strong>Firebase Configuration Missing or Invalid.</strong></p>
+                    <p>Please ensure the environment variables are correctly set up.</p>
+                    <p>Error Detail: ${firebaseInitError}</p>
+                </div>
+            `;
+            // Set globals to null or undefined to signal script.js that Firebase is not ready
+            window.firestoreDb = undefined;
+            window.firebaseAuth = undefined;
+            window.getFirebaseAppId = () => 'error-app-id';
+            window.firestore = undefined;
+            window.authFunctions = undefined;
+            return; // Stop module script execution
+        }
+
         try {
             app = initializeApp(firebaseConfig);
             db = getFirestore(app);
@@ -85,12 +142,26 @@
             console.log("Firebase: Initialized successfully.");
         } catch (error) {
             console.error("Firebase: Initialization failed in index.html module script:", error);
-            // FIX: Removed the 'return;' statement here to avoid "Illegal return statement" error.
-            // script.js will now handle the UI disablement if Firebase globals are not set.
+            firebaseInitError = `Firebase SDK Init Failed: ${error.message}`;
+            document.body.innerHTML = `
+                <div class="firebase-error-display">
+                    <h2>Application Initialization Error</h2>
+                    <p>Failed to load essential application components.</p>
+                    <p>Reason: <strong>Firebase SDK Initialization Failed.</strong></p>
+                    <p>Please ensure the Firebase configuration is valid and network is available.</p>
+                    <p>Error Detail: ${firebaseInitError}</p>
+                </div>
+            `;
+            // Set globals to null or undefined to signal script.js that Firebase is not ready
+            window.firestoreDb = undefined;
+            window.firebaseAuth = undefined;
+            window.getFirebaseAppId = () => 'error-app-id';
+            window.firestore = undefined;
+            window.authFunctions = undefined;
+            return; // Stop module script execution
         }
 
         // Make Firebase instances and core functions globally accessible to script.js
-        // These will be undefined if initialization failed, and script.js will handle that.
         window.firestoreDb = db;
         window.firebaseAuth = auth;
         window.getFirebaseAppId = () => appId; // Function to return the appId
@@ -119,7 +190,7 @@
             console.warn("Firebase: Auth object is null, skipping authentication attempt in module script.");
         }
 
-        console.log("index.html (v49) script module loaded."); // Updated HTML version log
+        console.log("index.html (v50) script module loaded."); // Updated HTML version log
     </script>
 
     <!-- Main Header Section -->
@@ -453,7 +524,7 @@
     </div>
 
     <!-- Your main script.js - Loaded last to ensure all HTML elements are available -->
-    <script src="script.js?v=112"></script> <!-- IMPORTANT: This version should match your script.js file -->
+    <script src="script.js?v=113"></script> <!-- IMPORTANT: This version should match your script.js file -->
     <script>
         // Register service worker - This block is typically placed at the end of the body
         // to ensure the page content loads first.
