@@ -1,4 +1,4 @@
-<!-- Version v64 - **CRITICAL UPDATE: PLEASE REPLACE YOUR ENTIRE index.html WITH THIS CONTENT** - 2025-06-28 16:35 -->
+<!-- Version v65 - **CRITICAL UPDATE: PLEASE REPLACE YOUR ENTIRE index.html WITH THIS CONTENT** - 2025-06-28 16:40 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,7 +8,7 @@
     <!-- Tailwind CSS CDN - Loaded first for base utility classes -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Custom CSS for specific styling and overrides - Loaded after Tailwind -->
-    <link rel="stylesheet" href="style.css?v=52"> <!-- IMPORTANT: This version should match your style.css file -->
+    <link rel="stylesheet" href="style.css?v=53"> <!-- IMPORTANT: This version should match your style.css file -->
     <!-- Google Fonts for 'Inter' -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome for icons - Used throughout the app for buttons and indicators -->
@@ -168,7 +168,8 @@
         // Make Firebase instances and core functions globally accessible to script.js
         window.firestoreDb = db;
         window.firebaseAuth = auth;
-        window.getFirebaseAppId = () => appId; // Function to return the appId
+        // IMPORTANT: Pass the actual appId from the Firebase config, not a default.
+        window.getFirebaseAppId = () => firebaseConfig.appId || appId; 
         window.firestore = {
             collection, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc,
             query, where, writeBatch, FieldValue: FieldValue // Expose FieldValue for operations like deleteField
@@ -194,7 +195,7 @@
             console.warn("Firebase: Auth object is null, skipping authentication attempt in module script.");
         }
 
-        console.log("index.html (v64) script module loaded."); // Updated HTML version log
+        console.log("index.html (v65) script module loaded."); // Updated HTML version log
     </script>
 
     <!-- Main Header Section -->
@@ -528,7 +529,7 @@
     </div>
 
     <!-- Your main script.js - Loaded last to ensure all HTML elements are available -->
-    <script src="script.js?v=123"></script> <!-- IMPORTANT: This version should match your script.js file -->
+    <script src="script.js?v=124"></script> <!-- IMPORTANT: This version should match your script.js file -->
     <script>
         // Register service worker - This block is typically placed at the end of the body
         // to ensure the page content loads first.
