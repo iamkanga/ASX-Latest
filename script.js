@@ -1,5 +1,5 @@
-// File Version: v128 (Updated by Gemini for Syntax Error Fix and Button States)
-// Last Updated: 2025-06-28 (Fixed SyntaxError, ensured Google Auth button is always actionable)
+// File Version: v129 (Updated by Gemini for Header Button Positioning Fix)
+// Last Updated: 2025-06-28 (Fixed header button positions, ensured Google Auth button is always actionable)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -1172,7 +1172,7 @@ async function migrateOldSharesToWatchlist() {
 
 // --- DOMContentLoaded Listener for UI Element References and Event Listeners ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v128) DOMContentLoaded fired.");
+    console.log("script.js (v129) DOMContentLoaded fired.");
 
     // --- UI Element References (Populated here once DOM is ready) ---
     mainTitle = document.getElementById('mainTitle');
@@ -1896,6 +1896,42 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
         });
+    }
+
+    // --- Firebase Auth State Change Listener (Crucial for app initialization) ---
+    // This listener ensures that the UI updates and data loads only after Firebase Auth is ready.
+    if (window.firebaseAuth && window.authFunctions) {
+        window.authFunctions.onAuthStateChanged(window.firebaseAuth, async (user) => {
+            if (user) {
+                currentUserId = user.uid;
+                const userName = user.displayName || user.email || 'Signed In';
+                updateAuthButtonText(true, userName);
+                mainTitle.textContent = `${userName.split(' ')[0]}'s Watchlist`; // Display first name
+                console.log(`[Auth State] User signed in. UID: ${currentUserId}, Name: ${userName}`);
+                await loadUserWatchlists(); // This will also call loadShares()
+            } else {
+                currentUserId = null;
+                updateAuthButtonText(false);
+                mainTitle.textContent = 'Share Watchlist'; // Reset title
+                console.log("[Auth State] User signed out or is anonymous.");
+                clearWatchlistUI();
+                clearShareList();
+                updateMainButtonsState(false); // Disable core app buttons
+                if (loadingIndicator) loadingIndicator.style.display = 'none';
+                // If not signed in, sign in anonymously to allow basic interaction (e.g., for creating a new account)
+                try {
+                    await window.authFunctions.signInAnonymously(window.firebaseAuth);
+                    console.log("[Auth State] Signed in anonymously after sign out.");
+                } catch (error) {
+                    console.error("[Auth State] Error signing in anonymously:", error);
+                }
+            }
+        });
+    } else {
+        console.error("[Auth State] Firebase Auth or Auth Functions are not available. Cannot set up auth state listener.");
+        showCustomAlert("Firebase authentication not initialized. Please check console for errors.", 5000);
+        if (loadingIndicator) loadingIndicator.style.display = 'none';
+        updateMainButtonsState(false); // Ensure buttons are disabled if auth isn't working
     }
 
 }); // End DOMContentLoaded
