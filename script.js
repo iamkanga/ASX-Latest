@@ -1,5 +1,5 @@
-// File Version: v130 (Updated by Gemini for Header Button Positioning Fix)
-// Last Updated: 2025-06-28 (Fixed header button positions, ensured Google Auth button is always actionable)
+// File Version: v131 (Updated by Gemini for Firebase Variable Initialization Fix)
+// Last Updated: 2025-06-28 (Ensured Firebase variables are initialized before use)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -814,7 +814,7 @@ const themes = [
     { name: "Warm Beige", bg: "#fbf8ed", text: "#6b462f", header: "#e8dcd2", card: "#ffffff", border: "#d4c0b0", button: "#dd6b20", hover: "#c05621", sidebar: "#e8d9c2", asx_active_text: "#fff" },
     { name: "Cool Grey", bg: "#eef2f5", text: "#4c5563", header: "#d4dae0", card: "#f7f9fb", border: "#c0c7cf", button: "#63b3ed", hover: "#4299e1", sidebar: "#d4dae0", asx_active_text: "#fff" },
     { name: "Dusty Rose", bg: "#fcf0f2", text: "#713f48", header: "#ebd2d5", card: "#ffffff", border: "#d9b3b8", button: "#e53e3e", hover: "#c53030", sidebar: "#ebd2d2", asx_active_text: "#fff" },
-    { name: "Lavender Mist", bg: "#f5f3fa", text: "#5c4f70", header: "#dcd7e3", card: "#ffffff", border: "#c4b8d0", button: "#805ad5", hover: "#6b46c1", sidebar: "#dcd7e3", asx_active_text: "#fff" },
+    { name: "Lavender Mist", bg: "#f5f3fa", text: "#5c4f70", header: "#dcd7e3", card: "#ffffff", border: "#c4b8d0", button: "#805ad5", hover: "#6b1fa8", sidebar: "#dcd7e3", asx_active_text: "#fff" },
     { name: "Ocean Breeze", bg: "#e6f7f7", text: "#31708f", header: "#b3e0e0", card: "#ffffff", border: "#80caca", button: "#2b6cb0", hover: "#2c5282", sidebar: "#b3e0e0", asx_active_text: "#fff" },
     { name: "Sandstone", bg: "#fdf8ed", text: "#7b341f", header: "#e8d9c2", card: "#ffffff", border: "#d4b89b", button: "#a05a2c", hover: "#8a4b2b", sidebar: "#e8d9c2", asx_active_text: "#fff" },
     { name: "Forest Night", bg: "#2a363b", text: "#e0e0e0", header: "#3b4a50", card: "#3f5259", border: "#5a6a70", button: "#4a7dff", hover: "#3a6cd9", sidebar: "#3b4a50", asx_active_text: "#fff" }
@@ -1172,7 +1172,22 @@ async function migrateOldSharesToWatchlist() {
 
 // --- DOMContentLoaded Listener for UI Element References and Event Listeners ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v130) DOMContentLoaded fired.");
+    console.log("script.js (v131) DOMContentLoaded fired.");
+
+    // --- Initialize Firebase variables from window globals ---
+    // These must be assigned before any Firebase operations.
+    if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
+        db = window.firestoreDb;
+        auth = window.firebaseAuth;
+        currentAppId = window.getFirebaseAppId();
+        console.log("[Firebase Init] Local Firebase variables assigned from window globals.");
+    } else {
+        console.error("[Firebase Init] Essential Firebase window globals are missing. App will not function correctly.");
+        showCustomAlert("Application startup failed: Firebase not fully initialized. Please check console for errors.", 5000);
+        if (loadingIndicator) loadingIndicator.style.display = 'none';
+        updateMainButtonsState(false); // Ensure buttons are disabled if Firebase isn't ready
+        return; // Stop further execution if Firebase isn't ready
+    }
 
     // --- UI Element References (Populated here once DOM is ready) ---
     mainTitle = document.getElementById('mainTitle');
@@ -1338,16 +1353,16 @@ document.addEventListener('DOMContentLoaded', function() {
         if (button) {
             button.addEventListener('click', async () => {
                 console.log(`[Auth] Google Auth Button Clicked. (Source: ${button.id === 'googleAuthBtn' ? 'Sidebar/Footer' : 'Unknown'})`);
-                const currentAuth = window.firebaseAuth;
-                if (!currentAuth || !window.authFunctions) {
+                // Use the locally assigned 'auth' variable
+                if (!auth || !window.authFunctions) {
                     console.warn("[Auth] Auth service not ready or functions not loaded. Cannot process click.");
                     showCustomAlert("Authentication service not ready. Please try again in a moment.");
                     return;
                 }
-                if (currentAuth.currentUser && currentAuth.currentUser.isAnonymous === false) { // Check if explicitly signed in
+                if (auth.currentUser && auth.currentUser.isAnonymous === false) { // Check if explicitly signed in
                     console.log("[Auth] Explicit user exists, attempting sign out.");
                     try {
-                        await window.authFunctions.signOut(currentAuth);
+                        await window.authFunctions.signOut(auth);
                         console.log("[Auth] User signed out successfully.");
                     } catch (error) {
                         console.error("[Auth] Sign-Out failed:", error);
@@ -1363,7 +1378,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             return;
                         }
                         // Attempt sign-in with popup
-                        await window.authFunctions.signInWithPopup(currentAuth, provider);
+                        await window.authFunctions.signInWithPopup(auth, provider);
                         console.log("[Auth] Google Sign-In successful.");
                     }
                     catch (error) {
@@ -1900,8 +1915,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- Firebase Auth State Change Listener (Crucial for app initialization) ---
     // This listener ensures that the UI updates and data loads only after Firebase Auth is ready.
-    if (window.firebaseAuth && window.authFunctions) {
-        window.authFunctions.onAuthStateChanged(window.firebaseAuth, async (user) => {
+    if (auth && window.authFunctions) { // Use the locally assigned 'auth' variable
+        window.authFunctions.onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUserId = user.uid;
                 const userName = user.displayName || user.email || 'Signed In';
@@ -1920,7 +1935,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (loadingIndicator) loadingIndicator.style.display = 'none';
                 // If not signed in, sign in anonymously to allow basic interaction (e.g., for creating a new account)
                 try {
-                    await window.authFunctions.signInAnonymously(window.firebaseAuth);
+                    await window.authFunctions.signInAnonymously(auth); // Use the locally assigned 'auth' variable
                     console.log("[Auth State] Signed in anonymously after sign out.");
                 } catch (error) {
                     console.error("[Auth State] Error signing in anonymously:", error);
