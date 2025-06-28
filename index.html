@@ -126,42 +126,44 @@
                     <p>Error Detail: ${firebaseInitError}</p>
                 </div>
             `;
-            // Set globals to null or undefined to signal script.js that Firebase is not ready
+            // Set globals to undefined to signal script.js that Firebase is not ready
             window.firestoreDb = undefined;
             window.firebaseAuth = undefined;
             window.getFirebaseAppId = () => 'error-app-id';
             window.firestore = undefined;
             window.authFunctions = undefined;
-            return; // Stop module script execution
-        }
-
-        try {
-            app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            auth = getAuth(app);
-            console.log("Firebase: Initialized successfully.");
-        } catch (error) {
-            console.error("Firebase: Initialization failed in index.html module script:", error);
-            firebaseInitError = `Firebase SDK Init Failed: ${error.message}`;
-            document.body.innerHTML = `
-                <div class="firebase-error-display">
-                    <h2>Application Initialization Error</h2>
-                    <p>Failed to load essential application components.</p>
-                    <p>Reason: <strong>Firebase SDK Initialization Failed.</strong></p>
-                    <p>Please ensure the Firebase configuration is valid and network is available.</p>
-                    <p>Error Detail: ${firebaseInitError}</p>
-                </div>
-            `;
-            // Set globals to null or undefined to signal script.js that Firebase is not ready
-            window.firestoreDb = undefined;
-            window.firebaseAuth = undefined;
-            window.getFirebaseAppId = () => 'error-app-id';
-            window.firestore = undefined;
-            window.authFunctions = undefined;
-            return; // Stop module script execution
+            // Removed the `return;` here, as it was causing the "Illegal return statement" error in some environments.
+            // The `document.body.innerHTML` replacement effectively stops further rendering anyway.
+        } else {
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                console.log("Firebase: Initialized successfully.");
+            } catch (error) {
+                console.error("Firebase: Initialization failed in index.html module script:", error);
+                firebaseInitError = `Firebase SDK Init Failed: ${error.message}`;
+                document.body.innerHTML = `
+                    <div class="firebase-error-display">
+                        <h2>Application Initialization Error</h2>
+                        <p>Failed to load essential application components.</p>
+                        <p>Reason: <strong>Firebase SDK Initialization Failed.</strong></p>
+                        <p>Please ensure the Firebase configuration is valid and network is available.</p>
+                        <p>Error Detail: ${firebaseInitError}</p>
+                    </div>
+                `;
+                // Set globals to undefined to signal script.js that Firebase is not ready
+                window.firestoreDb = undefined;
+                window.firebaseAuth = undefined;
+                window.getFirebaseAppId = () => 'error-app-id';
+                window.firestore = undefined;
+                window.authFunctions = undefined;
+                // Removed the `return;` here as well.
+            }
         }
 
         // Make Firebase instances and core functions globally accessible to script.js
+        // These will be undefined if initialization failed, and script.js will handle that.
         window.firestoreDb = db;
         window.firebaseAuth = auth;
         window.getFirebaseAppId = () => appId; // Function to return the appId
@@ -190,7 +192,7 @@
             console.warn("Firebase: Auth object is null, skipping authentication attempt in module script.");
         }
 
-        console.log("index.html (v50) script module loaded."); // Updated HTML version log
+        console.log("index.html (v49) script module loaded."); // Updated HTML version log
     </script>
 
     <!-- Main Header Section -->
