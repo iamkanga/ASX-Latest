@@ -1,8 +1,8 @@
-// File Version: v23
-// Last Updated: 2025-06-27 (New version to attempt to fix SyntaxError)
+// File Version: v27
+// Last Updated: 2025-06-28 (Incremented version to force update and clear cache)
 
 // Increment the cache name to force the browser to re-install this new service worker.
-const CACHE_NAME = 'asx-tracker-v23'; 
+const CACHE_NAME = 'asx-tracker-v27'; 
 
 // Only precache external CDN assets.
 // Local files (index.html, script.js, style.css) will be handled by the 'network-first' fetch strategy,
@@ -16,65 +16,56 @@ const CACHED_ASSETS = [
 ];
 
 self.addEventListener('install', (event) => {
-    console.log('Service Worker v23: Installing...'); // Updated log for version
+    console.log('Service Worker v27: Installing...'); // Updated log for version
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then((cache) => {
-                console.log('Service Worker v23: Cache opened'); // Updated log for version
-                // Add all assets to the cache during install
+                console.log('Service Worker v27: Cache opened'); // Updated log
                 return cache.addAll(CACHED_ASSETS);
             })
             .then(() => {
-                // Force the new service worker to activate immediately.
-                // This will replace the old one without requiring a page refresh.
-                self.skipWaiting();
-                console.log('Service Worker v23: Installation complete and skipWaiting called.'); // Updated log
+                console.log('Service Worker v27: All assets added to cache. Calling skipWaiting.'); // Updated log
+                return self.skipWaiting(); // Force the new service worker to activate immediately
             })
-            .catch((error) => {
-                console.error('Service Worker v23: Cache addAll failed during install:', error); // Updated log
+            .catch(error => {
+                console.error('Service Worker v27: Installation failed:', error); // Updated log
             })
     );
 });
 
 self.addEventListener('activate', (event) => {
-    console.log('Service Worker v23: Activating...'); // Updated log for version
+    console.log('Service Worker v27: Activating...'); // Updated log
     event.waitUntil(
         caches.keys().then((cacheNames) => {
             return Promise.all(
                 cacheNames.map((cacheName) => {
                     if (cacheName !== CACHE_NAME) {
-                        console.log(`Service Worker v23: Deleting old cache: ${cacheName}`); // Updated log
+                        console.log(`Service Worker v27: Deleting old cache: ${cacheName}`); // Updated log
                         return caches.delete(cacheName);
                     }
+                    return null;
                 })
-            );
-        }).then(() => {
-            // Clients.claim() allows the service worker to take control of existing clients
-            // (e.g., the current page) immediately upon activation.
-            console.log('Service Worker v23: Old caches cleared, claiming clients.'); // Updated log
-            return self.clients.claim();
+            ).then(() => self.clients.claim()); // Take control of clients immediately
         })
     );
 });
 
 self.addEventListener('fetch', (event) => {
-    // Only cache GET requests. POST requests (like Firebase auth) should not be cached.
+    // Only handle GET requests, ignore others (like POST, PUT, DELETE)
     if (event.request.method === 'GET') {
-        // Network First, then Cache strategy for ALL requests
         event.respondWith(
             caches.match(event.request).then((cachedResponse) => {
-                // If a cached response is found, fetch from network in background to update cache
-                const fetchPromise = fetch(event.request).then(response => {
-                    // Check if response is valid before caching (e.g., status 200)
-                    if (response && response.status === 200) {
-                        const responseToCache = response.clone();
-                        caches.open(CACHE_NAME).then(cache => {
+                const fetchPromise = fetch(event.request).then((networkResponse) => {
+                    // Cache successful responses for future use
+                    if (networkResponse.ok) {
+                        const responseToCache = networkResponse.clone();
+                        caches.open(CACHE_NAME).then((cache) => {
                             cache.put(event.request, responseToCache);
                         });
                     }
-                    return response;
+                    return networkResponse;
                 }).catch(error => {
-                    console.error(`Service Worker v23: Network fetch failed for ${event.request.url}.`, error); // Updated log
+                    console.error(`Service Worker v27: Network fetch failed for ${event.request.url}.`, error); // Updated log
                     // If network fails and there's no cache, or if you want to provide a specific fallback
                     // return caches.match('/offline.html'); // Example fallback
                 });
@@ -83,7 +74,7 @@ self.addEventListener('fetch', (event) => {
                 return cachedResponse || fetchPromise;
 
             }).catch(error => {
-                console.error(`Service Worker v23: Cache match failed for ${event.request.url}.`, error); // Updated log
+                console.error(`Service Worker v27: Cache match failed for ${event.request.url}.`, error); // Updated log
                 // Fallback in case both cache and network fail (unlikely given fetchPromise)
                 return fetch(event.request); // Try network one more time if cache fails
             })
@@ -98,6 +89,6 @@ self.addEventListener('fetch', (event) => {
 self.addEventListener('message', (event) => {
     if (event.data && event.data.type === 'SKIP_WAITING') {
         self.skipWaiting();
-        console.log('Service Worker v23: Skip waiting message received, new SW activated.'); // Updated log
+        console.log('Service Worker v27: Skip waiting message received, new SW activated.'); // Updated log
     }
 });
