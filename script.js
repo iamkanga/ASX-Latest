@@ -1,4 +1,4 @@
-// File Version: v129 (Updated by Gemini for Header Button Positioning Fix)
+// File Version: v130 (Updated by Gemini for Header Button Positioning Fix)
 // Last Updated: 2025-06-28 (Fixed header button positions, ensured Google Auth button is always actionable)
 
 // This script interacts with Firebase Firestore for data storage.
@@ -1172,7 +1172,7 @@ async function migrateOldSharesToWatchlist() {
 
 // --- DOMContentLoaded Listener for UI Element References and Event Listeners ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v129) DOMContentLoaded fired.");
+    console.log("script.js (v130) DOMContentLoaded fired.");
 
     // --- UI Element References (Populated here once DOM is ready) ---
     mainTitle = document.getElementById('mainTitle');
