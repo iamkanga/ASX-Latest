@@ -1,4 +1,4 @@
-/* File Version: v46 (Updated by Gemini for modal/sidebar transitions and button styling) */
+/* File Version: v47 (Updated by Gemini for modal/sidebar transitions, button styling, and CommSec message) */
 /* Last Updated: 2025-06-28 (Button layout, Hamburger X size, Sign-in button centering, ghosted text, Price display restructure) */
 
 :root {
@@ -651,15 +651,14 @@ table tbody tr:not(.selected):hover {
     cursor: pointer;
 }
 
-/* Ghosted text for messages */
+/* Ghosted text for messages - MODIFIED FOR COMMSEC MESSAGE */
 .ghosted-text {
     color: var(--ghosted-text-color);
-    font-size: 0.85em;
+    font-size: 0.85em; /* Slightly smaller */
     opacity: 0.8;
-    /* Adjusted for CommSec message */
-    margin-top: 2px; /* Reduced margin */
-    margin-bottom: 2px; /* Reduced margin */
-    display: block; /* Ensure it takes its own line */
+    margin-top: 5px; /* Reduced margin to be closer to link */
+    margin-bottom: 2px;
+    display: block;
 }
 
 
@@ -1333,7 +1332,7 @@ table tbody tr:not(.selected):hover {
     }
     /* Overlay for desktop when sidebar is open */
     .sidebar-overlay.open {
-        display: block; /* Ensure overlay is visible on desktop */
+        display: block;
     }
 
     /* Shift main content & footer to the right when sidebar is open on desktop */

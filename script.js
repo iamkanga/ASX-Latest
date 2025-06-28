@@ -1,4 +1,4 @@
-// File Version: v107 (Updated by Gemini for hamburger/modal fixes)
+// File Version: v108 (Updated by Gemini for hamburger/modal fixes, theme cycling, and modal display)
 // Last Updated: 2025-06-28 (Integrated all requested fixes and features)
 
 // This script interacts with Firebase Firestore for data storage.
@@ -7,7 +7,7 @@
 // from the <script type="module"> block in index.html.
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v107) DOMContentLoaded fired."); // New log to confirm script version and DOM ready
+    console.log("script.js (v108) DOMContentLoaded fired."); // New log to confirm script version and DOM ready
 
     // --- Core Helper Functions (DECLARED FIRST FOR HOISTING) ---
 
@@ -84,6 +84,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // FIX: Refined updateMainButtonsState logic for hamburger menu buttons
     function updateMainButtonsState(enable) {
         // These buttons are now primarily controlled by the unified sidebar.
         // Their disabled state should still reflect auth status.
@@ -97,6 +98,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (editWatchlistBtn) editWatchlistBtn.disabled = !enable || userWatchlists.length <= 1; 
         if (deleteWatchlistInModalBtn) deleteWatchlistInModalBtn.disabled = !enable || userWatchlists.length <= 1;
         if (addShareHeaderBtn) addShareHeaderBtn.disabled = !enable; // New: Disable addShareHeaderBtn
+
+        // Ensure theme toggle button is always enabled, regardless of auth state
+        if (themeToggleBtn) {
+            themeToggleBtn.disabled = false;
+        }
     }
 
     // MODAL OPEN/CLOSE FUNCTIONS - UPDATED TO USE 'open' CLASS FOR CSS TRANSITIONS
@@ -230,10 +236,10 @@ document.addEventListener('DOMContentLoaded', function() {
         modalShareName.textContent = share.shareName || 'N/A';
         modalEntryDate.textContent = formatDate(share.entryDate) || 'N/A';
         
-        // Display Entered Price and its date/time
+        // Display Entered Price - REMOVED DATE/TIME
         const enteredPriceNum = Number(share.currentPrice); // This is the user-entered price
         modalEnteredPrice.textContent = (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? `$${enteredPriceNum.toFixed(2)}` : 'N/A';
-        modalEnteredPriceDateTime.textContent = `(${formatDateTime(share.lastPriceUpdateTime) || 'N/A'})`; // Moved date/time here
+        modalEnteredPriceDateTime.textContent = ''; // Clear date/time
 
         const targetPriceNum = Number(share.targetPrice);
         modalTargetPrice.textContent = (!isNaN(targetPriceNum) && targetPriceNum !== null) ? `$${targetPriceNum.toFixed(2)}` : 'N/A';
@@ -248,7 +254,7 @@ document.addEventListener('DOMContentLoaded', function() {
         modalUnfrankedYieldSpan.textContent = unfrankedYield !== null ? `${unfrankedYield.toFixed(2)}%` : 'N/A';
         
         const frankedYield = calculateFrankedYield(dividendAmountNum, enteredPriceNum, frankingCreditsNum); // Use enteredPriceNum for yield calculations in modal
-        modalFrankedYieldSpan.textContent = frankedYield !== null ? `${frankingYield.toFixed(2)}%` : 'N/A';
+        modalFrankedYieldSpan.textContent = frankedYield !== null ? `${frankedYield.toFixed(2)}%` : 'N/A';
         
         modalCommentsContainer.innerHTML = '';
         if (share.comments && Array.isArray(share.comments) && share.comments.length > 0) {
@@ -497,7 +503,7 @@ document.addEventListener('DOMContentLoaded', function() {
         card.innerHTML = `
             <h3>${displayShareName}</h3>
             <p><strong>Entry Date:</strong> ${formatDate(share.entryDate) || '-'}</p>
-            <p><strong>Entered Price:</strong> $${displayEnteredPrice} <span class="ghosted-text">(${formatDateTime(share.lastPriceUpdateTime) || '-'})</span></p> <!-- Date/Time moved here -->
+            <p><strong>Entered Price:</strong> $${displayEnteredPrice}</p> <!-- REMOVED DATE/TIME -->
             <p><strong>Target:</strong> $${displayTargetPrice}</p>
             <p><strong>Dividend:</strong> $${displayDividendAmount}</p>
             <p><strong>Franking:</strong> ${displayFrankingCredits}</p>
@@ -694,75 +700,157 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log("[Calculator] Calculator state reset.");
     }
 
-    // Theme Toggling Logic
+    // Theme Toggling Logic - MODIFIED FOR 20 THEMES + SYSTEM DEFAULT
+    const themes = [
+        // 10 Bright Themes
+        { name: "Bright Blue", bg: "#e0f2f7", text: "#003366", header: "#a7d9ed", card: "#ffffff", border: "#87c9e0", button: "#007bff", hover: "#0056b3", sidebar: "#a7d9ed" },
+        { name: "Sunny Yellow", bg: "#fffbe6", text: "#664d00", header: "#ffe066", card: "#ffffff", border: "#ffcc00", button: "#e6a700", hover: "#b38000", sidebar: "#ffe066" },
+        { name: "Vibrant Green", bg: "#e6ffe6", text: "#006600", header: "#a7ed87", card: "#ffffff", border: "#87e087", button: "#28a745", hover: "#218838", sidebar: "#a7ed87" },
+        { name: "Energetic Orange", bg: "#fff0e6", text: "#804000", header: "#ffb380", card: "#ffffff", border: "#ff9933", button: "#ff8c00", hover: "#cc7000", sidebar: "#ffb380" },
+        { name: "Deep Purple", bg: "#f0e6ff", text: "#4d0066", header: "#cc99ff", card: "#ffffff", border: "#b366ff", button: "#8a2be2", hover: "#6b1fa8", sidebar: "#cc99ff" },
+        { name: "Aqua Teal", bg: "#e6fafa", text: "#004d4d", header: "#80e6e6", card: "#ffffff", border: "#4ddede", button: "#008080", hover: "#006666", sidebar: "#80e6e6" },
+        { name: "Crimson Red", bg: "#ffe6e6", text: "#660000", header: "#ff8080", card: "#ffffff", border: "#ff3333", button: "#cc0000", hover: "#990000", sidebar: "#ff8080" },
+        { name: "Lime Green", bg: "#f0ffe6", text: "#334d00", header: "#ccee99", card: "#ffffff", border: "#aacc66", button: "#66cc00", hover: "#52a300", sidebar: "#ccee99" },
+        { name: "Hot Pink", bg: "#ffe6f0", text: "#66004d", header: "#ff99cc", card: "#ffffff", border: "#ff66b3", button: "#ff0080", hover: "#cc0066", sidebar: "#ff99cc" },
+        { name: "Gold Rush", bg: "#fffaf0", text: "#664000", header: "#ffdf80", card: "#ffffff", border: "#ffbf00", button: "#d4af37", hover: "#a88a2c", sidebar: "#ffdf80" },
+        // 10 Subtle Themes
+        { name: "Soft Grey", bg: "#f4f7f6", text: "#333", header: "#e6e9eb", card: "#ffffff", border: "#c9d2d4", button: "#6c757d", hover: "#545b62", sidebar: "#e6e9eb" },
+        { name: "Muted Blue", bg: "#e9eff2", text: "#4a5568", header: "#c9d5db", card: "#f0f4f7", border: "#aebbc2", button: "#4299e1", hover: "#3182ce", sidebar: "#c9d5db" },
+        { name: "Earthy Green", bg: "#f0f5ee", text: "#4a574a", header: "#d1d9cf", card: "#f8fbf7", border: "#b8c2b8", button: "#48bb78", hover: "#38a169", sidebar: "#d1d9cf" },
+        { name: "Warm Beige", bg: "#fbf8f3", text: "#6b462f", header: "#e8dcd2", card: "#ffffff", border: "#d4c0b0", button: "#dd6b20", hover: "#c05621", sidebar: "#e8dcd2" },
+        { name: "Cool Grey", bg: "#eef2f5", text: "#4c5563", header: "#d4dae0", card: "#f7f9fb", border: "#c0c7cf", button: "#63b3ed", hover: "#4299e1", sidebar: "#d4dae0" },
+        { name: "Dusty Rose", bg: "#fcf0f2", text: "#713f48", header: "#ebd2d5", card: "#ffffff", border: "#d9b3b8", button: "#e53e3e", hover: "#c53030", sidebar: "#ebd2d5" },
+        { name: "Lavender Mist", bg: "#f5f3fa", text: "#5c4f70", header: "#dcd7e3", card: "#ffffff", border: "#c4b8d0", button: "#805ad5", hover: "#6b46c1", sidebar: "#dcd7e3" },
+        { name: "Ocean Breeze", bg: "#e6f7f7", text: "#31708f", header: "#b3e0e0", card: "#ffffff", border: "#80caca", button: "#2b6cb0", hover: "#2c5282", sidebar: "#b3e0e0" },
+        { name: "Sandstone", bg: "#fdf8ed", text: "#7b341f", header: "#e8d9c2", card: "#ffffff", border: "#d4b89b", button: "#a05a2c", hover: "#8a4b2b", sidebar: "#e8d9c2" },
+        { name: "Forest Night", bg: "#2a363b", text: "#e0e0e0", header: "#3b4a50", card: "#3f5259", border: "#5a6a70", button: "#4a7dff", hover: "#3a6cd9", sidebar: "#3b4a50" } // Darker subtle theme
+    ];
+
+    let currentThemeIndex = -1; // -1 for system default, 0 to 19 for custom themes
+
+    function applyTheme(theme) {
+        const root = document.documentElement;
+        root.style.setProperty('--background-color', theme.bg);
+        root.style.setProperty('--text-color', theme.text);
+        root.style.setProperty('--header-bg', theme.header);
+        root.style.setProperty('--card-bg', theme.card);
+        root.style.setProperty('--border-color', theme.border);
+        root.style.setProperty('--button-bg', theme.button);
+        root.style.setProperty('--button-text', theme.text); // Use text color for button text
+        root.style.setProperty('--button-hover-bg', theme.hover);
+        root.style.setProperty('--input-bg', theme.card); // Use card background for input
+        root.style.setProperty('--input-border', theme.border);
+        root.style.setProperty('--modal-bg', 'rgba(0, 0, 0, 0.6)'); // Keep consistent modal overlay
+        root.style.setProperty('--modal-content-bg', theme.card);
+        root.style.setProperty('--table-header-bg', theme.header);
+        root.style.setProperty('--table-row-hover-bg', theme.bg); // Use background for row hover
+        root.style.setProperty('--asx-button-bg', theme.header); // Use header for asx buttons
+        root.style.setProperty('--asx-button-hover-bg', theme.hover);
+        root.style.setProperty('--asx-button-text', theme.text);
+        root.style.setProperty('--asx-button-active-bg', theme.button);
+        root.style.setProperty('--asx-button-active-text', theme.button);
+        root.style.setProperty('--danger-button-bg', '#dc3545'); // Keep consistent danger
+        root.style.setProperty('--danger-button-hover-bg', '#c82333');
+        root.style.setProperty('--secondary-button-bg', '#6c757d'); // Keep consistent secondary
+        root.style.setProperty('--secondary-button-hover-bg', '#545b62');
+        root.style.setProperty('--google-auth-btn-bg', '#dd4b39'); // Keep consistent Google
+        root.style.setProperty('--google-auth-btn-hover-bg', '#c23321');
+        root.style.setProperty('--label-color', theme.text); // Use text color for labels
+        root.style.setProperty('--shadow-color', 'rgba(0, 0, 0, 0.15)'); // Keep consistent shadow
+        root.style.setProperty('--sidebar-bg', theme.header);
+        root.style.setProperty('--sidebar-border', theme.border);
+        root.style.setProperty('--sidebar-text', theme.text);
+        root.style.setProperty('--close-sidebar-btn-color', theme.text);
+        root.style.setProperty('--ghosted-text-color', theme.text); // Use text color for ghosted text
+
+        // Remove dark-theme class if a custom theme is applied
+        document.body.classList.remove('dark-theme');
+        console.log(`[Theme] Applied custom theme: ${theme.name}`);
+    }
+
+    function applySystemDefaultTheme() {
+        const root = document.documentElement;
+        // Reset all custom properties by removing them
+        root.style.removeProperty('--background-color');
+        root.style.removeProperty('--text-color');
+        root.style.removeProperty('--header-bg');
+        root.style.removeProperty('--card-bg');
+        root.style.removeProperty('--border-color');
+        root.style.removeProperty('--button-bg');
+        root.style.removeProperty('--button-text');
+        root.style.removeProperty('--button-hover-bg');
+        root.style.removeProperty('--input-bg');
+        root.style.removeProperty('--input-border');
+        root.style.removeProperty('--modal-bg');
+        root.style.removeProperty('--modal-content-bg');
+        root.style.removeProperty('--table-header-bg');
+        root.style.removeProperty('--table-row-hover-bg');
+        root.style.removeProperty('--asx-button-bg');
+        root.style.removeProperty('--asx-button-hover-bg');
+        root.style.removeProperty('--asx-button-text');
+        root.style.removeProperty('--asx-button-active-bg');
+        root.style.removeProperty('--asx-button-active-text');
+        root.style.removeProperty('--danger-button-bg');
+        root.style.removeProperty('--danger-button-hover-bg');
+        root.style.removeProperty('--secondary-button-bg');
+        root.style.removeProperty('--secondary-button-hover-bg');
+        root.style.removeProperty('--google-auth-btn-bg');
+        root.style.removeProperty('--google-auth-btn-hover-bg');
+        root.style.removeProperty('--label-color');
+        root.style.removeProperty('--shadow-color');
+        root.style.removeProperty('--sidebar-bg');
+        root.style.removeProperty('--sidebar-border');
+        root.style.removeProperty('--sidebar-text');
+        root.style.removeProperty('--close-sidebar-btn-color');
+        root.style.removeProperty('--ghosted-text-color');
+
+        // Re-apply dark-theme class based on system preference
+        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.body.classList.add('dark-theme');
+        } else {
+            document.body.classList.remove('dark-theme');
+        }
+        console.log("[Theme] Applied system default theme.");
+    }
+
     function toggleTheme() {
-        const body = document.body;
-        if (body.classList.contains('dark-theme')) {
-            body.classList.remove('dark-theme');
-            localStorage.setItem('theme', 'light');
-            if (themeToggleBtn) themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i> Toggle Theme';
-        } else {
-            body.classList.add('dark-theme');
-            localStorage.setItem('theme', 'dark');
-            if (themeToggleBtn) themeToggleBtn.innerHTML = '<i class="fas fa-sun"></i> Toggle Theme';
+        currentThemeIndex++;
+        if (currentThemeIndex >= themes.length) {
+            currentThemeIndex = -1; // Cycle back to system default
         }
-        console.log(`[Theme] Theme toggled to: ${localStorage.getItem('theme')}`);
-    }
 
-    function applySavedTheme() {
-        const savedTheme = localStorage.getItem('theme');
-        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const body = document.body;
-        if (savedTheme) {
-            if (savedTheme === 'dark') {
-                body.classList.add('dark-theme');
-                if (themeToggleBtn) themeToggleBtn.innerHTML = '<i class="fas fa-sun"></i> Toggle Theme';
-            } else {
-                body.classList.remove('dark-theme');
-                if (themeToggleBtn) themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i> Toggle Theme';
-            }
-            console.log(`[Theme] Applied saved theme: ${savedTheme}`);
+        if (currentThemeIndex === -1) {
+            applySystemDefaultTheme();
+            localStorage.removeItem('themeIndex'); // Remove stored index for system default
+            if (themeToggleBtn) themeToggleBtn.innerHTML = '<i class="fas fa-desktop"></i> System Default';
         } else {
-            if (systemPrefersDark) {
-                body.classList.add('dark-theme');
-                if (themeToggleBtn) themeToggleBtn.innerHTML = '<i class="fas fa-sun"></i> Toggle Theme';
-            } else {
-                document.body.classList.remove('dark-theme');
-                if (themeToggleBtn) themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i> Toggle Theme';
-            }
-            localStorage.setItem('theme', systemPrefersDark ? 'dark' : 'light');
-            console.log(`[Theme] Applied system default theme: ${systemPrefersDark ? 'dark' : 'light'}`);
+            const selectedTheme = themes[currentThemeIndex];
+            applyTheme(selectedTheme);
+            localStorage.setItem('themeIndex', currentThemeIndex.toString());
+            if (themeToggleBtn) themeToggleBtn.innerHTML = `<i class="fas fa-palette"></i> ${selectedTheme.name}`;
         }
     }
 
-    // Hamburger/Sidebar Menu Logic (Unified for Mobile & Desktop)
-    function toggleAppSidebar(force) {
-        const isSidebarOpen = appSidebar.classList.contains('open');
-        const isForcedOpen = (typeof force === 'boolean' && force === true);
-        const isForcedClosed = (typeof force === 'boolean' && force === false);
-
-        // Determine the target state based on 'force' or current state
-        let targetState;
-        if (isForcedOpen) { targetState = true; }
-        else if (isForcedClosed) { targetState = false; }
-        else { targetState = !isSidebarOpen; } // Toggle if no force specified
-
-        if (targetState) {
-            appSidebar.classList.add('open');
-            sidebarOverlay.classList.add('open'); // Show overlay
-            document.body.classList.add('sidebar-active'); // Shift content
-            document.documentElement.style.overflowX = 'hidden'; // Prevent horizontal scroll on html
-            document.body.style.overflowX = 'hidden'; // Prevent horizontal scroll on body
-            document.body.style.overflowY = 'hidden'; // Prevent vertical scroll on body when sidebar is open
+    function loadAndApplySavedTheme() {
+        const savedThemeIndex = localStorage.getItem('themeIndex');
+        if (savedThemeIndex !== null) {
+            currentThemeIndex = parseInt(savedThemeIndex, 10);
+            if (currentThemeIndex >= 0 && currentThemeIndex < themes.length) {
+                const selectedTheme = themes[currentThemeIndex];
+                applyTheme(selectedTheme);
+                if (themeToggleBtn) themeToggleBtn.innerHTML = `<i class="fas fa-palette"></i> ${selectedTheme.name}`;
+            } else {
+                // Fallback if saved index is out of bounds
+                currentThemeIndex = -1;
+                applySystemDefaultTheme();
+                if (themeToggleBtn) themeToggleBtn.innerHTML = '<i class="fas fa-desktop"></i> System Default';
+            }
         } else {
-            appSidebar.classList.remove('open');
-            sidebarOverlay.classList.remove('open'); // Hide overlay
-            document.body.classList.remove('sidebar-active'); // Revert content shift
-            document.documentElement.style.overflowX = ''; // Allow horizontal scroll if needed
-            document.body.style.overflowX = ''; // Allow horizontal scroll if needed
-            document.body.style.overflowY = ''; // Allow vertical scroll on body
+            // No saved theme, apply system default initially
+            currentThemeIndex = -1;
+            applySystemDefaultTheme();
+            if (themeToggleBtn) themeToggleBtn.innerHTML = '<i class="fas fa-desktop"></i> System Default';
         }
-        console.log(`[Menu] App sidebar toggled. Open: ${appSidebar.classList.contains('open')}`);
     }
 
 
@@ -1135,13 +1223,13 @@ document.addEventListener('DOMContentLoaded', function() {
     if (manageWatchlistModal) manageWatchlistModal.classList.remove('open'); // Hide new manage watchlist modal
     if (customDialogModal) customDialogModal.classList.remove('open');
     if (calculatorModal) calculatorModal.classList.remove('open');
-    updateMainButtonsState(false);
+    updateMainButtonsState(false); // Initially disable all auth-dependent buttons
     if (loadingIndicator) loadingIndicator.style.display = 'block';
     // WatchlistSelect should always be rendered with placeholder, then enabled if logged in
     renderWatchlistSelect(); // Call this immediately to show the placeholder
     if (googleAuthBtn) googleAuthBtn.disabled = true;
     if (addShareHeaderBtn) addShareHeaderBtn.disabled = true; // Disable new add share button initially
-    applySavedTheme(); // Applies theme and updates themeToggleBtn text
+    loadAndApplySavedTheme(); // Applies theme and updates themeToggleBtn text
 
 
     // --- PWA Service Worker Registration ---
@@ -1216,7 +1304,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     mainTitle.textContent = "My Share Watchlist"; // Removed ASX
                 }
-                updateMainButtonsState(true);
+                updateMainButtonsState(true); // Enable auth-dependent buttons
                 if (loadingIndicator) loadingIndicator.style.display = 'none';
                 await loadUserWatchlists();
             } else {
@@ -1224,7 +1312,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 updateAuthButtonText(false);
                 mainTitle.textContent = "Share Watchlist"; // Changed to "Share Watchlist" before login
                 console.log("[AuthState] User signed out.");
-                updateMainButtonsState(false);
+                updateMainButtonsState(false); // Disable auth-dependent buttons
                 clearShareList();
                 clearWatchlistUI();
                 if (loadingIndicator) loadingIndicator.style.display = 'none';
@@ -1672,15 +1760,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Listen for system theme changes (if no explicit saved theme is set)
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
         // Only react to system changes if no explicit theme is saved by the user
-        if (!localStorage.getItem('theme')) {
+        if (localStorage.getItem('themeIndex') === null) { // Check for null, not 'light' or 'dark'
             if (event.matches) {
                 document.body.classList.add('dark-theme');
-                if (themeToggleBtn) themeToggleBtn.innerHTML = '<i class="fas fa-sun"></i> Toggle Theme';
-                localStorage.setItem('theme', 'dark'); // Save system preference
+                if (themeToggleBtn) themeToggleBtn.innerHTML = '<i class="fas fa-desktop"></i> System Default'; // Keep icon consistent
             } else {
                 document.body.classList.remove('dark-theme');
-                if (themeToggleBtn) themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i> Toggle Theme';
-                localStorage.setItem('theme', 'light'); // Save system preference
+                if (themeToggleBtn) themeToggleBtn.innerHTML = '<i class="fas fa-desktop"></i> System Default'; // Keep icon consistent
             }
             console.log("[Theme] System theme preference changed and applied.");
         }
