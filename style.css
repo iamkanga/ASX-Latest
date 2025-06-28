@@ -1,5 +1,5 @@
-/* File Version: v50 */
-/* Last Updated: 2025-06-28 (Added modal z-index and centering) */
+/* File Version: v52 */
+/* Last Updated: 2025-06-28 (Moved modal CSS from index.html, strengthened rules) */
 
 /* Base styles for the entire application */
 body {
@@ -473,7 +473,27 @@ body.sidebar-active {
     display: block; /* Override flex for comments */
 }
 
-/* Modals (General Styling) */
+/* Modals (General Styling) - Moved from index.html inline style */
+.modal {
+    position: fixed; /* Ensures it's relative to the viewport */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--modal-bg); /* Dark overlay from theme variables */
+    display: flex; /* Use flexbox for centering */
+    justify-content: center; /* Center horizontally */
+    align-items: center; /* Center vertically */
+    z-index: 9999; /* Ensure it's on top of everything */
+    opacity: 0; /* Start invisible for transition */
+    visibility: hidden; /* Hidden for accessibility and clicks */
+    transition: opacity 0.3s ease, visibility 0.3s ease; /* Smooth transition */
+}
+.modal.open {
+    opacity: 1;
+    visibility: visible;
+}
+
 .modal-content {
     background-color: var(--modal-content-bg);
     padding: 30px;

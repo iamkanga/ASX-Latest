@@ -1,5 +1,5 @@
-// File Version: v122 (Updated by Gemini for Firebase errors and robustness)
-// Last Updated: 2025-06-28 (Added detailed logging for button clicks and Firebase auth)
+// File Version: v123 (Updated by Gemini for Firebase errors and robustness)
+// Last Updated: 2025-06-28 (No functional changes, version bump for fresh load)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -1158,7 +1158,7 @@ async function migrateOldSharesToWatchlist() {
 
 // --- DOMContentLoaded Listener for UI Element References and Event Listeners ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v122) DOMContentLoaded fired.");
+    console.log("script.js (v123) DOMContentLoaded fired.");
 
     // --- UI Element References (Populated here once DOM is ready) ---
     mainTitle = document.getElementById('mainTitle');
