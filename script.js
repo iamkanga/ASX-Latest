@@ -1,4 +1,4 @@
-// File Version: v121 (Updated by Gemini for Firebase errors and robustness)
+// File Version: v122 (Updated by Gemini for Firebase errors and robustness)
 // Last Updated: 2025-06-28 (Added detailed logging for button clicks and Firebase auth)
 
 // This script interacts with Firebase Firestore for data storage.
@@ -49,7 +49,8 @@ let addCommentSectionBtn;
 let shareTableBody;
 let mobileShareCardsContainer;
 let loadingIndicator;
-let googleAuthBtn;
+let googleAuthBtnSidebar; // Specific reference for sidebar button
+let googleAuthBtnFooter; // Specific reference for footer button
 let shareDetailModal;
 let modalShareName;
 let modalEntryDate;
@@ -202,11 +203,18 @@ function formatDateTime(dateString) {
 }
 
 function updateAuthButtonText(isSignedIn, userName = 'Sign In') {
-    if (googleAuthBtn) {
-        googleAuthBtn.textContent = isSignedIn ? (userName || 'Signed In') : 'Sign In';
-        console.log(`[Auth UI] Google Auth button text updated to: ${googleAuthBtn.textContent}`);
+    const buttonText = isSignedIn ? (userName || 'Signed In') : 'Sign In';
+    if (googleAuthBtnSidebar) {
+        googleAuthBtnSidebar.textContent = buttonText;
+        console.log(`[Auth UI] Sidebar Google Auth button text updated to: ${buttonText}`);
     } else {
-        console.warn("[Auth UI] googleAuthBtn element not found when trying to update text.");
+        console.warn("[Auth UI] googleAuthBtnSidebar element not found when trying to update text.");
+    }
+    if (googleAuthBtnFooter) {
+        googleAuthBtnFooter.textContent = buttonText;
+        console.log(`[Auth UI] Footer Google Auth button text updated to: ${buttonText}`);
+    } else {
+        console.warn("[Auth UI] googleAuthBtnFooter element not found when trying to update text.");
     }
 }
 
@@ -216,14 +224,16 @@ function updateMainButtonsState(enable) {
     if (dividendCalcBtn) dividendCalcBtn.disabled = !enable;
     if (watchlistSelect) watchlistSelect.disabled = !enable;
     if (addWatchlistBtn) addWatchlistBtn.disabled = !enable;
-    if (editWatchlistBtn) editWatchlistBtn.disabled = !enable || userWatchlists.length <= 1;
-    if (deleteWatchlistInModalBtn) deleteWatchlistInModalBtn.disabled = !enable || userWatchlists.length <= 1;
+    // Disable edit/delete watchlist if there's only one watchlist, regardless of auth state
+    const disableEditDeleteWatchlist = !enable || userWatchlists.length <= 1;
+    if (editWatchlistBtn) editWatchlistBtn.disabled = disableEditDeleteWatchlist;
+    if (deleteWatchlistInModalBtn) deleteWatchlistInModalBtn.disabled = disableEditDeleteWatchlist;
     if (addShareHeaderBtn) addShareHeaderBtn.disabled = !enable;
 
     if (themeToggleBtn) {
         themeToggleBtn.disabled = false; // Theme toggle is always enabled
     }
-    console.log(`[UI State] Main buttons enabled: ${enable}. Watchlist edit/delete disabled if only one watchlist: ${userWatchlists.length <= 1}`);
+    console.log(`[UI State] Main buttons enabled: ${enable}. Watchlist edit/delete disabled if only one watchlist: ${disableEditDeleteWatchlist}`);
 }
 
 function showModal(modalElement) {
@@ -1148,7 +1158,7 @@ async function migrateOldSharesToWatchlist() {
 
 // --- DOMContentLoaded Listener for UI Element References and Event Listeners ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v121) DOMContentLoaded fired.");
+    console.log("script.js (v122) DOMContentLoaded fired.");
 
     // --- UI Element References (Populated here once DOM is ready) ---
     mainTitle = document.getElementById('mainTitle');
@@ -1173,7 +1183,8 @@ document.addEventListener('DOMContentLoaded', function() {
     shareTableBody = document.querySelector('#shareTable tbody');
     mobileShareCardsContainer = document.getElementById('mobileShareCards');
     loadingIndicator = document.getElementById('loadingIndicator');
-    googleAuthBtn = document.getElementById('googleAuthBtn');
+    googleAuthBtnSidebar = document.querySelector('#appSidebar #googleAuthBtn'); // Specific selector
+    googleAuthBtnFooter = document.querySelector('footer #googleAuthBtn'); // Specific selector
     shareDetailModal = document.getElementById('shareDetailModal');
     modalShareName = document.getElementById('modalShareName');
     modalEntryDate = document.getElementById('modalEntryDate');
@@ -1249,7 +1260,9 @@ document.addEventListener('DOMContentLoaded', function() {
     updateMainButtonsState(false); // Initially disable all auth-dependent buttons
     if (loadingIndicator) loadingIndicator.style.display = 'block';
     renderWatchlistSelect(); // Call this immediately to show the placeholder
-    if (googleAuthBtn) googleAuthBtn.disabled = true; // Keep disabled until Firebase auth is ready
+    // Ensure both Google Auth buttons are initially disabled until Firebase auth is ready
+    if (googleAuthBtnSidebar) googleAuthBtnSidebar.disabled = true;
+    if (googleAuthBtnFooter) googleAuthBtnFooter.disabled = true;
     if (addShareHeaderBtn) addShareHeaderBtn.disabled = true;
     loadAndApplySavedTheme(); // Applies theme and updates themeToggleBtn text
 
@@ -1274,10 +1287,10 @@ document.addEventListener('DOMContentLoaded', function() {
         currentAppId = window.getFirebaseAppId(); // Assign global appId from window
         console.log(`[Firebase Init] App ID: ${currentAppId}`);
 
-        if (googleAuthBtn) {
-            googleAuthBtn.disabled = false;
-            console.log("[Auth] Google Auth button enabled.");
-        }
+        // Enable Google Auth buttons once Firebase Auth is available
+        if (googleAuthBtnSidebar) googleAuthBtnSidebar.disabled = false;
+        if (googleAuthBtnFooter) googleAuthBtnFooter.disabled = false;
+        console.log("[Auth] Google Auth buttons enabled.");
 
         window.authFunctions.onAuthStateChanged(auth, async (user) => {
             console.log("[AuthState] onAuthStateChanged fired. User:", user ? user.uid : "null");
@@ -1348,53 +1361,60 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // --- Authentication Functions Event Listener ---
-    if (googleAuthBtn) {
-        googleAuthBtn.addEventListener('click', async () => {
-            console.log("[Auth] Google Auth Button Clicked.");
-            const currentAuth = window.firebaseAuth;
-            if (!currentAuth || !window.authFunctions) {
-                console.warn("[Auth] Auth service not ready or functions not loaded. Cannot process click.");
-                showCustomAlert("Authentication service not ready. Please try again in a moment.");
-                return;
-            }
-            if (currentAuth.currentUser) {
-                console.log("[Auth] Current user exists, attempting sign out.");
-                try {
-                    await window.authFunctions.signOut(currentAuth);
-                    console.log("[Auth] User signed out successfully.");
-                } catch (error) {
-                    console.error("[Auth] Sign-Out failed:", error);
-                    showCustomAlert("Sign-Out failed: " + error.message);
+    // Attach event listeners to both Google Auth buttons
+    const attachGoogleAuthListener = (button) => {
+        if (button) {
+            button.addEventListener('click', async () => {
+                console.log(`[Auth] Google Auth Button Clicked. (Source: ${button.id === 'googleAuthBtn' ? 'Sidebar/Footer' : 'Unknown'})`);
+                const currentAuth = window.firebaseAuth;
+                if (!currentAuth || !window.authFunctions) {
+                    console.warn("[Auth] Auth service not ready or functions not loaded. Cannot process click.");
+                    showCustomAlert("Authentication service not ready. Please try again in a moment.");
+                    return;
                 }
-            } else {
-                console.log("[Auth] No current user, attempting Google sign in with popup.");
-                try {
-                    const provider = window.authFunctions.GoogleAuthProviderInstance;
-                    if (!provider) {
-                        console.error("[Auth] GoogleAuthProvider instance not found. Is Firebase module script loaded?");
-                        showCustomAlert("Authentication service not ready. Please ensure Firebase module script is loaded.");
-                        return;
+                if (currentAuth.currentUser && currentAuth.currentUser.isAnonymous === false) { // Check if explicitly signed in
+                    console.log("[Auth] Explicit user exists, attempting sign out.");
+                    try {
+                        await window.authFunctions.signOut(currentAuth);
+                        console.log("[Auth] User signed out successfully.");
+                    } catch (error) {
+                        console.error("[Auth] Sign-Out failed:", error);
+                        showCustomAlert("Sign-Out failed: " + error.message);
                     }
-                    // Attempt sign-in with popup
-                    await window.authFunctions.signInWithPopup(currentAuth, provider);
-                    console.log("[Auth] Google Sign-In successful.");
-                }
-                catch (error) {
-                    console.error("[Auth] Google Sign-In failed:", error.message);
-                    // Check for common errors like popup closed by user or popup blocked
-                    if (error.code === 'auth/popup-closed-by-user') {
-                        showCustomAlert("Sign-in cancelled. Popup closed by user.", 2000);
-                    } else if (error.code === 'auth/cancelled-popup-request') {
-                        showCustomAlert("Sign-in cancelled. Another popup request was already in progress.", 2000);
-                    } else if (error.code === 'auth/popup-blocked') {
-                        showCustomAlert("Sign-in failed: Popup blocked. Please allow popups for this site.", 3000);
-                    } else {
-                        showCustomAlert("Google Sign-In failed: " + error.message, 3000);
+                } else {
+                    console.log("[Auth] No explicit user, attempting Google sign in with popup.");
+                    try {
+                        const provider = window.authFunctions.GoogleAuthProviderInstance;
+                        if (!provider) {
+                            console.error("[Auth] GoogleAuthProvider instance not found. Is Firebase module script loaded?");
+                            showCustomAlert("Authentication service not ready. Please ensure Firebase module script is loaded.");
+                            return;
+                        }
+                        // Attempt sign-in with popup
+                        await window.authFunctions.signInWithPopup(currentAuth, provider);
+                        console.log("[Auth] Google Sign-In successful.");
+                    }
+                    catch (error) {
+                        console.error("[Auth] Google Sign-In failed:", error.message);
+                        // Check for common errors like popup closed by user or popup blocked
+                        if (error.code === 'auth/popup-closed-by-user') {
+                            showCustomAlert("Sign-in cancelled. Popup closed by user.", 2000);
+                        } else if (error.code === 'auth/cancelled-popup-request') {
+                            showCustomAlert("Sign-in cancelled. Another popup request was already in progress.", 2000);
+                        } else if (error.code === 'auth/popup-blocked') {
+                            showCustomAlert("Sign-in failed: Popup blocked. Please allow popups for this site.", 3000);
+                        } else {
+                            showCustomAlert("Google Sign-In failed: " + error.message, 3000);
+                        }
                     }
                 }
-            }
-        });
-    }
+            });
+        }
+    };
+
+    attachGoogleAuthListener(googleAuthBtnSidebar);
+    attachGoogleAuthListener(googleAuthBtnFooter);
+
 
     // --- Event Listener for Watchlist Dropdown ---
     if (watchlistSelect) {
@@ -1623,7 +1643,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             editWatchlistNameInput.value = currentWatchlistName;
-            deleteWatchlistInModalBtn.disabled = userWatchlists.length <= 1;
+            // Disable delete if it's the last watchlist
+            if (deleteWatchlistInModalBtn) {
+                deleteWatchlistInModalBtn.disabled = userWatchlists.length <= 1;
+            }
             showModal(manageWatchlistModal);
             editWatchlistNameInput.focus();
             toggleAppSidebar(false);

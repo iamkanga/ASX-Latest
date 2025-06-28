@@ -1,4 +1,4 @@
-<!-- Version v61 - **CRITICAL UPDATE: PLEASE REPLACE YOUR ENTIRE index.html WITH THIS CONTENT** - 2025-06-28 16:20 -->
+<!-- Version v62 - **CRITICAL UPDATE: PLEASE REPLACE YOUR ENTIRE index.html WITH THIS CONTENT** - 2025-06-28 16:25 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,7 +8,7 @@
     <!-- Tailwind CSS CDN - Loaded first for base utility classes -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Custom CSS for specific styling and overrides - Loaded after Tailwind -->
-    <link rel="stylesheet" href="style.css?v=49"> <!-- IMPORTANT: This version should match your style.css file -->
+    <link rel="stylesheet" href="style.css?v=50"> <!-- IMPORTANT: This version should match your style.css file -->
     <!-- Google Fonts for 'Inter' -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome for icons - Used throughout the app for buttons and indicators -->
@@ -23,9 +23,24 @@
         /* All modals are initially hidden to prevent them from appearing on page load */
         .modal {
             display: none; /* Hidden by default, JavaScript will add 'open' class for visibility and transitions */
+            position: fixed; /* Ensures it's relative to the viewport */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6); /* Dark overlay */
+            display: flex; /* Use flexbox for centering */
+            justify-content: center; /* Center horizontally */
+            align-items: center; /* Center vertically */
+            z-index: 9999; /* Ensure it's on top of everything */
+            opacity: 0; /* Start invisible for transition */
+            visibility: hidden; /* Hidden for accessibility and clicks */
+            transition: opacity 0.3s ease, visibility 0.3s ease; /* Smooth transition */
         }
-        /* The .modal-overlay, .modal-content, and .app-sidebar transitions
-           are primarily handled by style.css using the 'open' class. */
+        .modal.open {
+            opacity: 1;
+            visibility: visible;
+        }
 
         /* Error message styling */
         .firebase-error-display {
@@ -39,6 +54,8 @@
             text-align: center;
             font-family: 'Inter', sans-serif;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 10000; /* Even higher z-index for error messages */
+            position: relative; /* Ensure z-index applies */
         }
         .firebase-error-display h2 {
             font-size: 1.5em;
@@ -199,7 +216,7 @@
             console.warn("Firebase: Auth object is null, skipping authentication attempt in module script.");
         }
 
-        console.log("index.html (v61) script module loaded."); // Updated HTML version log
+        console.log("index.html (v62) script module loaded."); // Updated HTML version log
     </script>
 
     <!-- Main Header Section -->
@@ -533,7 +550,7 @@
     </div>
 
     <!-- Your main script.js - Loaded last to ensure all HTML elements are available -->
-    <script src="script.js?v=121"></script> <!-- IMPORTANT: This version should match your script.js file -->
+    <script src="script.js?v=122"></script> <!-- IMPORTANT: This version should match your script.js file -->
     <script>
         // Register service worker - This block is typically placed at the end of the body
         // to ensure the page content loads first.
