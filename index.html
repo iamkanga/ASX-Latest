@@ -1,3 +1,4 @@
+<!-- Version v52 - Unique identifier to force browser cache refresh - 2025-06-28 15:30 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -142,34 +143,33 @@
             window.getFirebaseAppId = () => 'error-app-id';
             window.firestore = undefined;
             window.authFunctions = undefined;
-            return; // Stop module script execution
-        }
-
-
-        try {
-            app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            auth = getAuth(app);
-            console.log("Firebase: Initialized successfully.");
-        } catch (error) {
-            console.error("Firebase: Initialization failed in index.html module script:", error);
-            firebaseInitError = `Firebase SDK Init Failed: ${error.message}`;
-            document.body.innerHTML = `
-                <div class="firebase-error-display">
-                    <h2>Application Initialization Error</h2>
-                    <p>Failed to load essential application components.</p>
-                    <p>Reason: <strong>Firebase SDK Initialization Failed.</strong></p>
-                    <p>Please ensure the Firebase configuration is valid and network is available.</p>
-                    <p>Error Detail: ${firebaseInitError}</p>
-                </div>
-            `;
-            // Set globals to undefined to signal script.js that Firebase is not ready
-            window.firestoreDb = undefined;
-            window.firebaseAuth = undefined;
-            window.getFirebaseAppId = () => 'error-app-id';
-            window.firestore = undefined;
-            window.authFunctions = undefined;
-            return; // Stop module script execution
+            // Removed the `return;` here.
+        } else {
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                console.log("Firebase: Initialized successfully.");
+            } catch (error) {
+                console.error("Firebase: Initialization failed in index.html module script:", error);
+                firebaseInitError = `Firebase SDK Init Failed: ${error.message}`;
+                document.body.innerHTML = `
+                    <div class="firebase-error-display">
+                        <h2>Application Initialization Error</h2>
+                        <p>Failed to load essential application components.</p>
+                        <p>Reason: <strong>Firebase SDK Initialization Failed.</strong></p>
+                        <p>Please ensure the Firebase configuration is valid and network is available.</p>
+                        <p>Error Detail: ${firebaseInitError}</p>
+                    </div>
+                `;
+                // Set globals to undefined to signal script.js that Firebase is not ready
+                window.firestoreDb = undefined;
+                window.firebaseAuth = undefined;
+                window.getFirebaseAppId = () => 'error-app-id';
+                window.firestore = undefined;
+                window.authFunctions = undefined;
+                // Removed the `return;` here.
+            }
         }
 
         // Make Firebase instances and core functions globally accessible to script.js
@@ -201,7 +201,7 @@
             console.warn("Firebase: Auth object is null, skipping authentication attempt in module script.");
         }
 
-        console.log("index.html (v51) script module loaded."); // Updated HTML version log
+        console.log("index.html (v52) script module loaded."); // Updated HTML version log
     </script>
 
     <!-- Main Header Section -->
