@@ -1,5 +1,5 @@
-/* File Version: v57 */
-/* Last Updated: 2025-06-28 (UI Refinements: consolidated watchlist, spacing, modal aesthetics) */
+/* File Version: v58 */
+/* Last Updated: 2025-06-28 (Fixed header button positions, sidebar close button position) */
 
 /* Base styles for the entire application */
 body {
@@ -280,8 +280,8 @@ body.sidebar-active {
     font-size: 2rem;
     color: var(--close-sidebar-btn-color);
     position: absolute;
-    top: 10px;
-    right: 10px;
+    top: 15px; /* Adjusted top for better vertical alignment */
+    left: 15px; /* Moved to left */
     cursor: pointer;
     padding: 5px;
     border-radius: 50%;
@@ -1137,7 +1137,7 @@ body.sidebar-active {
     /* Hamburger button on desktop - always visible, but only for toggling */
     .hamburger-btn {
         position: absolute;
-        right: 0;
+        left: 0; /* Moved to left */
         top: 50%;
         transform: translateY(-50%);
         font-size: 2rem;
@@ -1153,7 +1153,7 @@ body.sidebar-active {
     #addShareHeaderBtn {
         display: block;
         position: absolute;
-        left: 0;
+        right: 0; /* Moved to right */
         top: 50%;
         transform: translateY(-50%);
         padding: 5px 10px;
@@ -1175,8 +1175,8 @@ body.sidebar-active {
     /* Show close button on desktop sidebar */
     .app-sidebar .close-menu-btn {
         display: block;
-        top: 10px;
-        right: 15px;
+        top: 15px; /* Adjusted top for consistency */
+        left: 15px; /* Moved to left */
         font-size: 1.5rem; /* Reduced size for desktop */
     }
     /* Overlay for desktop when sidebar is open */

@@ -1,5 +1,5 @@
-// File Version: v126 (Updated by Gemini for UI Refinements and Watchlist Consolidation)
-// Last Updated: 2025-06-28 (Implemented consolidated watchlist management, spacing, modal aesthetics)
+// File Version: v127 (Updated by Gemini for Header & Sidebar Button Fixes)
+// Last Updated: 2025-06-28 (Fixed header button positions, sidebar close button position, Google Auth button state)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -224,21 +224,27 @@ function updateAuthButtonText(isSignedIn, userName = 'Sign In') {
 }
 
 function updateMainButtonsState(enable) {
+    // These buttons control core app functionality and should be disabled if not signed in
     if (newShareBtn) newShareBtn.disabled = !enable;
     if (standardCalcBtn) standardCalcBtn.disabled = !enable;
     if (dividendCalcBtn) dividendCalcBtn.disabled = !enable;
     if (watchlistSelect) watchlistSelect.disabled = !enable;
-    if (manageWatchlistsSidebarBtn) manageWatchlistsSidebarBtn.disabled = !enable; // New: Manage Watchlists button
-    
-    // Disable delete if there's only one watchlist, regardless of auth state
+    if (manageWatchlistsSidebarBtn) manageWatchlistsSidebarBtn.disabled = !enable;
+    if (addShareHeaderBtn) addShareHeaderBtn.disabled = !enable;
+
+    // Delete watchlist button state depends on number of watchlists
     const disableDeleteWatchlist = !enable || userWatchlists.length <= 1;
     if (deleteWatchlistInModalBtn) deleteWatchlistInModalBtn.disabled = disableDeleteWatchlist;
     
-    if (addShareHeaderBtn) addShareHeaderBtn.disabled = !enable;
-
+    // Theme toggle is always enabled regardless of auth state
     if (themeToggleBtn) {
-        themeToggleBtn.disabled = false; // Theme toggle is always enabled
+        themeToggleBtn.disabled = false; 
     }
+    
+    // Google Auth buttons should always be clickable to allow sign-in/sign-out
+    if (googleAuthBtnSidebar) googleAuthBtnSidebar.disabled = false;
+    if (googleAuthBtnFooter) googleAuthBtnFooter.disabled = false;
+
     console.log(`[UI State] Main buttons enabled: ${enable}. Watchlist edit/delete disabled if only one watchlist: ${disableDeleteWatchlist}`);
 }
 
@@ -1166,7 +1172,7 @@ async function migrateOldSharesToWatchlist() {
 
 // --- DOMContentLoaded Listener for UI Element References and Event Listeners ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v126) DOMContentLoaded fired.");
+    console.log("script.js (v127) DOMContentLoaded fired.");
 
     // --- UI Element References (Populated here once DOM is ready) ---
     mainTitle = document.getElementById('mainTitle');
@@ -1269,13 +1275,12 @@ document.addEventListener('DOMContentLoaded', function() {
     if (manageWatchlistsCombinedModal) manageWatchlistsCombinedModal.classList.remove('open'); // New combined modal
     if (customDialogModal) customDialogModal.classList.remove('open');
     if (calculatorModal) calculatorModal.classList.remove('open');
-    updateMainButtonsState(false); // Initially disable all auth-dependent buttons
+    updateMainButtonsState(false); // Initially disable core app functionality buttons
     if (loadingIndicator) loadingIndicator.style.display = 'block';
     renderWatchlistSelect(); // Call this immediately to show the placeholder
-    // Ensure both Google Auth buttons are initially disabled until Firebase auth is ready
-    if (googleAuthBtnSidebar) googleAuthBtnSidebar.disabled = true;
-    if (googleAuthBtnFooter) googleAuthBtnFooter.disabled = true;
-    if (addShareHeaderBtn) addShareHeaderBtn.disabled = true;
+    // Google Auth buttons should be enabled here, regardless of initial auth state
+    if (googleAuthBtnSidebar) googleAuthBtnSidebar.disabled = false;
+    if (googleAuthBtnFooter) googleAuthBtnFooter.disabled = false;
     loadAndApplySavedTheme(); // Applies theme and updates themeToggleBtn text
 
     // --- PWA Service Worker Registration ---
@@ -1832,64 +1837,4 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     scrollToTopBtn.style.opacity = '0';
                     setTimeout(() => {
-                        scrollToTopBtn.style.display = 'none';
-                    }, 300);
-                }
-            } else {
-                scrollToTopBtn.style.display = 'none';
-            }
-        });
-        if (window.innerWidth > 768) {
-            scrollToTopBtn.style.display = 'none';
-        }
-        scrollToTopBtn.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); console.log("[UI] Scrolled to top."); });
-    }
-
-    // --- Hamburger/Sidebar Menu Logic Event Listeners ---
-    if (hamburgerBtn && appSidebar && closeMenuBtn && sidebarOverlay) {
-        hamburgerBtn.addEventListener('click', () => {
-            console.log("[Button] Hamburger button clicked.");
-            toggleAppSidebar();
-        });
-        closeMenuBtn.addEventListener('click', () => {
-            console.log("[Button] Close Menu button clicked.");
-            toggleAppSidebar(false);
-        });
-        
-        sidebarOverlay.addEventListener('click', (event) => {
-            console.log("[Sidebar Overlay] Clicked overlay. Attempting to close sidebar.");
-            if (appSidebar.classList.contains('open')) {
-                toggleAppSidebar(false);
-            }
-        });
-
-        window.addEventListener('resize', () => {
-            const isDesktop = window.innerWidth > 768;
-            if (appSidebar.classList.contains('open')) {
-                toggleAppSidebar(false);
-            }
-            if (scrollToTopBtn) {
-                if (window.innerWidth > 768) {
-                    scrollToTopBtn.style.display = 'none';
-                } else {
-                    window.dispatchEvent(new Event('scroll'));
-                }
-            }
-        });
-
-        const menuButtons = appSidebar.querySelectorAll('.menu-button-item');
-        menuButtons.forEach(button => {
-            if (button.dataset.actionClosesMenu === 'true') { 
-                button.addEventListener('click', () => {
-                    console.log(`[Button] Sidebar menu item clicked (closes menu): ${button.textContent.trim()}`);
-                    toggleAppSidebar(false);
-                });
-            } else {
-                button.addEventListener('click', () => {
-                    console.log(`[Button] Sidebar menu item clicked (does not close menu): ${button.textContent.trim()}`);
-                });
-            }
-        });
-    }
-
-}); // End DOMContentLoaded
+                        scrollToTo
