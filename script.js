@@ -1,5 +1,5 @@
-// File Version: v116 (Updated by Gemini for Firebase errors and robustness)
-// Last Updated: 2025-06-28 (Improved Firebase initialization checks, fixed window.getFirebaseAppId access, Service Worker v26)
+// File Version: v117 (Updated by Gemini for Firebase errors and robustness)
+// Last Updated: 2025-06-28 (Fixed Unexpected end of input by ensuring full file is provided)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -7,7 +7,7 @@
 // from the <script type="module"> block in index.html.
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v116) DOMContentLoaded fired."); // New log to confirm script version and DOM ready
+    console.log("script.js (v117) DOMContentLoaded fired."); // New log to confirm script version and DOM ready
 
     // --- Core Helper Functions (DECLARED FIRST FOR HOISTING) ---
     // Moved toggleAppSidebar here to ensure it's defined before any calls within this scope.
@@ -1252,10 +1252,10 @@ document.addEventListener('DOMContentLoaded', function() {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./service-worker.js', { scope: './' }) 
                 .then(registration => {
-                    console.log('Service Worker (v32) from script.js: Registered with scope:', registration.scope); // Increment SW version
+                    console.log('Service Worker (v33) from script.js: Registered with scope:', registration.scope); // Increment SW version
                 })
                 .catch(error => {
-                    console.error('Service Worker (v32) from script.js: Registration failed:', error); // Increment SW version
+                    console.error('Service Worker (v33) from script.js: Registration failed:', error); // Increment SW version
                 });
         });
     }
@@ -1811,4 +1811,65 @@ document.addEventListener('DOMContentLoaded', function() {
                     scrollToTopBtn.style.display = 'flex'; // Use flex to center arrow
                     scrollToTopBtn.style.opacity = '1';
                 } else {
-                    scrollToTo
+                    scrollToTopBtn.style.opacity = '0';
+                    setTimeout(() => { // Hide completely after fade out
+                        scrollToTopBtn.style.display = 'none';
+                    }, 300); // Match CSS transition duration
+                }
+            } else {
+                // Ensure it's hidden on desktop
+                scrollToTopBtn.style.display = 'none';
+            }
+        });
+        // Initial check for desktop to hide it immediately if window is resized or loaded on desktop
+        if (window.innerWidth > 768) {
+            scrollToTopBtn.style.display = 'none';
+        }
+        scrollToTopBtn.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); console.log("[UI] Scrolled to top."); });
+    }
+
+    // --- Hamburger/Sidebar Menu Logic Event Listeners ---
+    if (hamburgerBtn && appSidebar && closeMenuBtn && sidebarOverlay) {
+        hamburgerBtn.addEventListener('click', () => toggleAppSidebar()); // No force, just toggle
+        closeMenuBtn.addEventListener('click', () => toggleAppSidebar(false)); // Force close
+        
+        // Event listener for clicking outside the sidebar (on the overlay)
+        sidebarOverlay.addEventListener('click', (event) => {
+            console.log("[Sidebar Overlay] Clicked overlay. Attempting to close sidebar.");
+            // Check if the sidebar is actually open before attempting to close via overlay
+            if (appSidebar.classList.contains('open')) {
+                toggleAppSidebar(false); // Force close
+            }
+        });
+
+        // Handle resize event to adapt sidebar behavior
+        window.addEventListener('resize', () => {
+            const isDesktop = window.innerWidth > 768;
+            // If sidebar is open, close it on resize to prevent layout issues
+            if (appSidebar.classList.contains('open')) {
+                toggleAppSidebar(false); // Force close
+            }
+            // Re-evaluate scroll-to-top button visibility on resize
+            if (scrollToTopBtn) {
+                if (window.innerWidth > 768) {
+                    scrollToTopBtn.style.display = 'none';
+                } else {
+                    // Re-trigger scroll event to evaluate visibility based on scroll position
+                    window.dispatchEvent(new Event('scroll'));
+                }
+            }
+        });
+
+        // Add event listeners to close menu when certain menu buttons are clicked
+        const menuButtons = appSidebar.querySelectorAll('.menu-button-item');
+        menuButtons.forEach(button => {
+            // Corrected: Use camelCase for dataset property access
+            if (button.dataset.actionClosesMenu === 'true') { 
+                button.addEventListener('click', () => {
+                    toggleAppSidebar(false); // Explicitly close the sidebar after these actions
+                });
+            }
+        });
+    }
+
+}); // End DOMContentLoaded
