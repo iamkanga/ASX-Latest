@@ -1,5 +1,5 @@
-/* File Version: v47 (Updated by Gemini for modal/sidebar transitions, button styling, and CommSec message) */
-/* Last Updated: 2025-06-28 (Button layout, Hamburger X size, Sign-in button centering, ghosted text, Price display restructure) */
+/* File Version: v48 (Updated by Gemini for sidebar pointer-events fix) */
+/* Last Updated: 2025-06-28 (Sidebar pointer-events, CommSec message, Theme prep) */
 
 :root {
     /* Light Theme (Default) - Adjusted for more vibrancy */
@@ -198,6 +198,7 @@ h1#mainTitle {
     flex-direction: column;
     overflow-y: auto; /* Enable scrolling if content is long */
     border-right: 1px solid var(--sidebar-border);
+    pointer-events: auto; /* Ensure elements inside are clickable */
 }
 
 .app-sidebar.open {
@@ -314,14 +315,14 @@ h1#mainTitle {
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
     z-index: 999; /* Below the sidebar, above content */
-    display: none; /* Hidden by default, shown by JS */
     opacity: 0; /* Start hidden for transition */
     transition: opacity 0.3s ease-in-out; /* Smooth fade in/out */
+    pointer-events: none; /* Initially, overlay does not capture clicks */
 }
 
 .sidebar-overlay.open {
-    display: block; /* Show when sidebar is open */
     opacity: 1; /* Fade in */
+    pointer-events: auto; /* When open, overlay captures clicks to close sidebar */
 }
 
 
