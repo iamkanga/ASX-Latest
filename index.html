@@ -1,4 +1,4 @@
-<!-- Version v65 - **CRITICAL UPDATE: PLEASE REPLACE YOUR ENTIRE index.html WITH THIS CONTENT** - 2025-06-28 16:40 -->
+<!-- Version v66 - **CRITICAL UPDATE: PLEASE REPLACE YOUR ENTIRE index.html WITH THIS CONTENT** - 2025-06-28 16:45 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,7 +8,7 @@
     <!-- Tailwind CSS CDN - Loaded first for base utility classes -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Custom CSS for specific styling and overrides - Loaded after Tailwind -->
-    <link rel="stylesheet" href="style.css?v=53"> <!-- IMPORTANT: This version should match your style.css file -->
+    <link rel="stylesheet" href="style.css?v=54"> <!-- IMPORTANT: This version should match your style.css file -->
     <!-- Google Fonts for 'Inter' -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome for icons - Used throughout the app for buttons and indicators -->
@@ -105,10 +105,9 @@
             firebaseConfig = {
                 apiKey: "AIzaSyAyIWoTYlzTkaSZ9x-ySiHtzATBM9XFrYw",
                 authDomain: "asx-watchlist-app.firebaseapp.com",
-                projectId: "asx-watchlist-app",
+                projectId: "asx-watchlist-app", // THIS IS THE PROJECT ID
                 storageBucket: "asx-watchlist-app.firebasestorage.app",
-                messagingSenderId: "671024168765",
-                appId: "1:671024168765:web:f2b62cd0e77a126c0ecf54",
+                appId: "1:671024168765:web:f2b62cd0e77a126c0ecf54", // THIS IS THE WEB APP ID
                 measurementId: "G-J24BTJ34D2"
             };
             firebaseInitError = null; // Clear error, as config is now provided
@@ -168,8 +167,8 @@
         // Make Firebase instances and core functions globally accessible to script.js
         window.firestoreDb = db;
         window.firebaseAuth = auth;
-        // IMPORTANT: Pass the actual appId from the Firebase config, not a default.
-        window.getFirebaseAppId = () => firebaseConfig.appId || appId; 
+        // IMPORTANT: Now we return the projectId for the 'artifacts' collection path
+        window.getFirebaseAppId = () => firebaseConfig.projectId; 
         window.firestore = {
             collection, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc,
             query, where, writeBatch, FieldValue: FieldValue // Expose FieldValue for operations like deleteField
@@ -195,7 +194,7 @@
             console.warn("Firebase: Auth object is null, skipping authentication attempt in module script.");
         }
 
-        console.log("index.html (v65) script module loaded."); // Updated HTML version log
+        console.log("index.html (v66) script module loaded."); // Updated HTML version log
     </script>
 
     <!-- Main Header Section -->
@@ -529,7 +528,7 @@
     </div>
 
     <!-- Your main script.js - Loaded last to ensure all HTML elements are available -->
-    <script src="script.js?v=124"></script> <!-- IMPORTANT: This version should match your script.js file -->
+    <script src="script.js?v=125"></script> <!-- IMPORTANT: This version should match your script.js file -->
     <script>
         // Register service worker - This block is typically placed at the end of the body
         // to ensure the page content loads first.
