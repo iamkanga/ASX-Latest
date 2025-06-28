@@ -70,8 +70,8 @@
 
         // IMPORTANT: These variables (__app_id, __firebase_config, __initial_auth_token)
         // are automatically provided by the Canvas environment at runtime.
-        // DO NOT hardcode your Firebase API keys or project IDs here.
-        let appId = 'default-app-id';
+        // For GitHub Pages deployment, they are NOT provided, so we need fallbacks.
+        let appId = 'default-app-id'; // Fallback for appId
         let firebaseConfig = {};
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
@@ -83,7 +83,7 @@
             console.log(`Firebase Init: __app_id detected: '${appId}'`);
         } else {
             console.warn("Firebase Init: __app_id is not defined or is empty. Using default 'default-app-id'.");
-            firebaseInitError = "App ID not provided by environment.";
+            // No error message here, as it's common for static hosting.
         }
 
         // Safely get and parse __firebase_config
@@ -103,9 +103,19 @@
                 firebaseInitError = "Firebase config could not be parsed.";
             }
         } else {
-            console.error("Firebase Init: __firebase_config is not defined or is empty. Firebase will not initialize correctly.");
-            firebaseConfig = { projectId: "no-config-provided", apiKey: "no-config-provided" };
-            firebaseInitError = "Firebase configuration not provided by environment.";
+            console.warn("Firebase Init: __firebase_config is not defined or is empty. Using hardcoded fallback for GitHub Pages.");
+            // HARDCODED FALLBACK FOR GITHUB PAGES DEMO
+            // Replace these with your actual Firebase project config if you want to connect to your own project.
+            firebaseConfig = {
+                apiKey: "YOUR_FIREBASE_API_KEY_HERE", // Replace with your actual Firebase API Key
+                authDomain: "YOUR_FIREBASE_PROJECT_ID.firebaseapp.com", // Replace with your actual Firebase Auth Domain
+                projectId: "YOUR_FIREBASE_PROJECT_ID", // Replace with your actual Firebase Project ID
+                storageBucket: "YOUR_FIREBASE_PROJECT_ID.appspot.com", // Replace with your actual Storage Bucket
+                messagingSenderId: "YOUR_FIREBASE_MESSAGING_SENDER_ID", // Replace with your actual Messaging Sender ID
+                appId: "YOUR_FIREBASE_APP_ID" // Replace with your actual Firebase App ID
+            };
+            firebaseInitError = "Firebase configuration not provided by environment. Using hardcoded values.";
+            console.warn("WARNING: Firebase configuration is hardcoded. This is for demonstration purposes on static hosting only. For production, use environment variables.");
         }
 
         console.log("Firebase Init: Attempting to initialize with config:", firebaseConfig);
@@ -114,15 +124,15 @@
         let db;
         let auth;
 
-        if (firebaseInitError) {
-            // If there's an issue with config, don't even try to initialize Firebase SDK
-            console.error(`Firebase: Skipping initialization due to configuration error: ${firebaseInitError}`);
-            document.body.innerHTML = `
+        // If hardcoded values are still placeholders, or if parsing failed, display error and stop.
+        if (firebaseInitError && firebaseConfig.projectId.includes("YOUR_FIREBASE_PROJECT_ID")) {
+             document.body.innerHTML = `
                 <div class="firebase-error-display">
                     <h2>Application Initialization Error</h2>
                     <p>Failed to load essential application components.</p>
                     <p>Reason: <strong>Firebase Configuration Missing or Invalid.</strong></p>
-                    <p>Please ensure the environment variables are correctly set up.</p>
+                    <p>For GitHub Pages, you must hardcode Firebase config in index.html.</p>
+                    <p><strong>Please replace "YOUR_FIREBASE_API_KEY_HERE", "YOUR_FIREBASE_PROJECT_ID", etc., with your actual Firebase project credentials in index.html.</strong></p>
                     <p>Error Detail: ${firebaseInitError}</p>
                 </div>
             `;
@@ -132,38 +142,37 @@
             window.getFirebaseAppId = () => 'error-app-id';
             window.firestore = undefined;
             window.authFunctions = undefined;
-            // Removed the `return;` here, as it was causing the "Illegal return statement" error in some environments.
-            // The `document.body.innerHTML` replacement effectively stops further rendering anyway.
-        } else {
-            try {
-                app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-                console.log("Firebase: Initialized successfully.");
-            } catch (error) {
-                console.error("Firebase: Initialization failed in index.html module script:", error);
-                firebaseInitError = `Firebase SDK Init Failed: ${error.message}`;
-                document.body.innerHTML = `
-                    <div class="firebase-error-display">
-                        <h2>Application Initialization Error</h2>
-                        <p>Failed to load essential application components.</p>
-                        <p>Reason: <strong>Firebase SDK Initialization Failed.</strong></p>
-                        <p>Please ensure the Firebase configuration is valid and network is available.</p>
-                        <p>Error Detail: ${firebaseInitError}</p>
-                    </div>
-                `;
-                // Set globals to undefined to signal script.js that Firebase is not ready
-                window.firestoreDb = undefined;
-                window.firebaseAuth = undefined;
-                window.getFirebaseAppId = () => 'error-app-id';
-                window.firestore = undefined;
-                window.authFunctions = undefined;
-                // Removed the `return;` here as well.
-            }
+            return; // Stop module script execution
+        }
+
+
+        try {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+            console.log("Firebase: Initialized successfully.");
+        } catch (error) {
+            console.error("Firebase: Initialization failed in index.html module script:", error);
+            firebaseInitError = `Firebase SDK Init Failed: ${error.message}`;
+            document.body.innerHTML = `
+                <div class="firebase-error-display">
+                    <h2>Application Initialization Error</h2>
+                    <p>Failed to load essential application components.</p>
+                    <p>Reason: <strong>Firebase SDK Initialization Failed.</strong></p>
+                    <p>Please ensure the Firebase configuration is valid and network is available.</p>
+                    <p>Error Detail: ${firebaseInitError}</p>
+                </div>
+            `;
+            // Set globals to undefined to signal script.js that Firebase is not ready
+            window.firestoreDb = undefined;
+            window.firebaseAuth = undefined;
+            window.getFirebaseAppId = () => 'error-app-id';
+            window.firestore = undefined;
+            window.authFunctions = undefined;
+            return; // Stop module script execution
         }
 
         // Make Firebase instances and core functions globally accessible to script.js
-        // These will be undefined if initialization failed, and script.js will handle that.
         window.firestoreDb = db;
         window.firebaseAuth = auth;
         window.getFirebaseAppId = () => appId; // Function to return the appId
@@ -192,7 +201,7 @@
             console.warn("Firebase: Auth object is null, skipping authentication attempt in module script.");
         }
 
-        console.log("index.html (v49) script module loaded."); // Updated HTML version log
+        console.log("index.html (v51) script module loaded."); // Updated HTML version log
     </script>
 
     <!-- Main Header Section -->
@@ -526,7 +535,7 @@
     </div>
 
     <!-- Your main script.js - Loaded last to ensure all HTML elements are available -->
-    <script src="script.js?v=113"></script> <!-- IMPORTANT: This version should match your script.js file -->
+    <script src="script.js?v=114"></script> <!-- IMPORTANT: This version should match your script.js file -->
     <script>
         // Register service worker - This block is typically placed at the end of the body
         // to ensure the page content loads first.

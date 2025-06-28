@@ -1,4 +1,4 @@
-// File Version: v113 (Updated by Gemini for Firebase errors and robustness)
+// File Version: v114 (Updated by Gemini for Firebase errors and robustness)
 // Last Updated: 2025-06-28 (Improved Firebase initialization checks, fixed window.getFirebaseAppId access, Service Worker v26)
 
 // This script interacts with Firebase Firestore for data storage.
@@ -7,7 +7,7 @@
 // from the <script type="module"> block in index.html.
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v113) DOMContentLoaded fired."); // New log to confirm script version and DOM ready
+    console.log("script.js (v114) DOMContentLoaded fired."); // New log to confirm script version and DOM ready
 
     // --- Core Helper Functions (DECLARED FIRST FOR HOISTING) ---
     // Moved toggleAppSidebar here to ensure it's defined before any calls within this scope.
@@ -1252,10 +1252,10 @@ document.addEventListener('DOMContentLoaded', function() {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./service-worker.js', { scope: './' }) 
                 .then(registration => {
-                    console.log('Service Worker (v28) from script.js: Registered with scope:', registration.scope); // Increment SW version
+                    console.log('Service Worker (v29) from script.js: Registered with scope:', registration.scope); // Increment SW version
                 })
                 .catch(error => {
-                    console.error('Service Worker (v28) from script.js: Registration failed:', error); // Increment SW version
+                    console.error('Service Worker (v29) from script.js: Registration failed:', error); // Increment SW version
                 });
         });
     }
