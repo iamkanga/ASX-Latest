@@ -1,4 +1,4 @@
-<!-- Version v58 - **CRITICAL UPDATE: PLEASE REPLACE YOUR ENTIRE index.html WITH THIS CONTENT** - 2025-06-28 16:05 -->
+<!-- Version v59 - **CRITICAL UPDATE: PLEASE REPLACE YOUR ENTIRE index.html WITH THIS CONTENT** - 2025-06-28 16:10 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -199,14 +199,8 @@
             console.warn("Firebase: Auth object is null, skipping authentication attempt in module script.");
         }
 
-        console.log("index.html (v58) script module loaded."); // Updated HTML version log
-
-        // Call the new initialization function in script.js after Firebase setup
-        if (typeof window.initializeFirebaseDependentLogic === 'function') {
-            window.initializeFirebaseDependentLogic();
-        } else {
-            console.error("script.js: initializeFirebaseDependentLogic function not found. Firebase-dependent logic will not run.");
-        }
+        console.log("index.html (v59) script module loaded."); // Updated HTML version log
+        // Removed the call to window.initializeFirebaseDependentLogic()
     </script>
 
     <!-- Main Header Section -->
@@ -540,7 +534,7 @@
     </div>
 
     <!-- Your main script.js - Loaded last to ensure all HTML elements are available -->
-    <script src="script.js?v=118"></script> <!-- IMPORTANT: This version should match your script.js file -->
+    <script src="script.js?v=120"></script> <!-- IMPORTANT: This version should match your script.js file -->
     <script>
         // Register service worker - This block is typically placed at the end of the body
         // to ensure the page content loads first.

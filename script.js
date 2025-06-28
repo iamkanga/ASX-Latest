@@ -1,4 +1,4 @@
-// File Version: v119 (Updated by Gemini for Firebase errors and robustness)
+// File Version: v120 (Updated by Gemini for Firebase errors and robustness)
 // Last Updated: 2025-06-28 (Moved all core logic and variables to global scope for correct timing)
 
 // This script interacts with Firebase Firestore for data storage.
@@ -26,7 +26,7 @@ let userWatchlists = [];
 let currentWatchlistId = null;
 let currentWatchlistName = '';
 
-// --- UI Element References (Declared globally for access by all functions) ---
+// --- UI Element References (Declared globally for access by all functions, populated in DOMContentLoaded) ---
 let mainTitle;
 let addShareHeaderBtn;
 let newShareBtn;
@@ -1125,7 +1125,7 @@ async function migrateOldSharesToWatchlist() {
 
 // --- DOMContentLoaded Listener for UI Element References and Event Listeners ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v119) DOMContentLoaded fired.");
+    console.log("script.js (v120) DOMContentLoaded fired.");
 
     // --- UI Element References (Populated here once DOM is ready) ---
     mainTitle = document.getElementById('mainTitle');
@@ -1235,10 +1235,10 @@ document.addEventListener('DOMContentLoaded', function() {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./service-worker.js', { scope: './' }) 
                 .then(registration => {
-                    console.log('Service Worker (v35) from script.js: Registered with scope:', registration.scope);
+                    console.log('Service Worker (v36) from script.js: Registered with scope:', registration.scope);
                 })
                 .catch(error => {
-                    console.error('Service Worker (v35) from script.js: Registration failed:', error);
+                    console.error('Service Worker (v36) from script.js: Registration failed:', error);
                 });
         });
     }
@@ -1279,6 +1279,51 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // --- Authentication Functions Event Listener ---
+    // Now that all UI elements are referenced, set up the auth listener
+    // This will trigger data loading and UI updates after Firebase is ready and user auth state is known
+    if (window.firebaseAuth && typeof window.getFirebaseAppId === 'function') {
+        db = window.firestoreDb; // Assign global db from window
+        auth = window.firebaseAuth; // Assign global auth from window
+        currentAppId = window.getFirebaseAppId(); // Assign global appId from window
+        console.log(`[Firebase Init] App ID: ${currentAppId}`);
+
+        if (googleAuthBtn) {
+            googleAuthBtn.disabled = false;
+            console.log("[Auth] Google Auth button enabled.");
+        }
+
+        window.authFunctions.onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUserId = user.uid;
+                updateAuthButtonText(true, user.email || user.displayName);
+                console.log("[AuthState] User signed in:", user.uid);
+                if (user.email && user.email.toLowerCase() === KANGA_EMAIL) {
+                    mainTitle.textContent = "Kanga's Share Watchlist";
+                } else {
+                    mainTitle.textContent = "My Share Watchlist";
+                }
+                updateMainButtonsState(true);
+                if (loadingIndicator) loadingIndicator.style.display = 'none';
+                await loadUserWatchlists();
+            } else {
+                currentUserId = null;
+                updateAuthButtonText(false);
+                mainTitle.textContent = "Share Watchlist";
+                console.log("[AuthState] User signed out.");
+                updateMainButtonsState(false);
+                clearShareList();
+                clearWatchlistUI();
+                if (loadingIndicator) loadingIndicator.style.display = 'none';
+            }
+        });
+    } else {
+        console.error("[Firebase] Firebase global variables or getFirebaseAppId function not available. Cannot set up auth listener or proceed with Firebase operations.");
+        updateAuthButtonText(false);
+        updateMainButtonsState(false);
+        if (loadingIndicator) loadingIndicator.style.display = 'none';
+    }
+
+
     if (googleAuthBtn) {
         googleAuthBtn.addEventListener('click', async () => {
             console.log("[Auth] Google Auth Button Clicked.");
