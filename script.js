@@ -1,5 +1,5 @@
-// File Version: v127 (Updated by Gemini for Header & Sidebar Button Fixes)
-// Last Updated: 2025-06-28 (Fixed header button positions, sidebar close button position, Google Auth button state)
+// File Version: v128 (Updated by Gemini for Syntax Error Fix and Button States)
+// Last Updated: 2025-06-28 (Fixed SyntaxError, ensured Google Auth button is always actionable)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -966,7 +966,7 @@ async function loadUserWatchlists() {
     if (!db || !currentUserId || !window.firestore) {
         console.warn("[Watchlist] Firestore DB, User ID, or Firestore functions not available for loading watchlists.");
         if (loadingIndicator) loadingIndicator.style.display = 'none';
-        updateMainButtonsState(false);
+        updateMainButtonsState(false); // Disable core app buttons
         return;
     }
 
@@ -1013,7 +1013,7 @@ async function loadUserWatchlists() {
 
         renderWatchlistSelect();
         renderSortSelect();
-        updateMainButtonsState(true);
+        updateMainButtonsState(true); // Enable core app buttons
 
         const migratedSomething = await migrateOldSharesToWatchlist();
         if (!migratedSomething) {
@@ -1024,7 +1024,7 @@ async function loadUserWatchlists() {
     } catch (error) {
         console.error("[Watchlist] Error loading user watchlists:", error);
         showCustomAlert("Error loading watchlists: " + error.message);
-        updateMainButtonsState(false);
+        updateMainButtonsState(false); // Disable core app buttons on error
     } finally {
         if (loadingIndicator) loadingIndicator.style.display = 'none';
     }
@@ -1172,7 +1172,7 @@ async function migrateOldSharesToWatchlist() {
 
 // --- DOMContentLoaded Listener for UI Element References and Event Listeners ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v127) DOMContentLoaded fired.");
+    console.log("script.js (v128) DOMContentLoaded fired.");
 
     // --- UI Element References (Populated here once DOM is ready) ---
     mainTitle = document.getElementById('mainTitle');
@@ -1279,6 +1279,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (loadingIndicator) loadingIndicator.style.display = 'block';
     renderWatchlistSelect(); // Call this immediately to show the placeholder
     // Google Auth buttons should be enabled here, regardless of initial auth state
+    // They are explicitly enabled by updateMainButtonsState, but ensure they are not disabled by other means
     if (googleAuthBtnSidebar) googleAuthBtnSidebar.disabled = false;
     if (googleAuthBtnFooter) googleAuthBtnFooter.disabled = false;
     loadAndApplySavedTheme(); // Applies theme and updates themeToggleBtn text
@@ -1837,4 +1838,64 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     scrollToTopBtn.style.opacity = '0';
                     setTimeout(() => {
-                        scrollToTo
+                        scrollToTopBtn.style.display = 'none';
+                    }, 300);
+                }
+            } else {
+                scrollToTopBtn.style.display = 'none';
+            }
+        });
+        if (window.innerWidth > 768) {
+            scrollToTopBtn.style.display = 'none';
+        }
+        scrollToTopBtn.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); console.log("[UI] Scrolled to top."); });
+    }
+
+    // --- Hamburger/Sidebar Menu Logic Event Listeners ---
+    if (hamburgerBtn && appSidebar && closeMenuBtn && sidebarOverlay) {
+        hamburgerBtn.addEventListener('click', () => {
+            console.log("[Button] Hamburger button clicked.");
+            toggleAppSidebar();
+        });
+        closeMenuBtn.addEventListener('click', () => {
+            console.log("[Button] Close Menu button clicked.");
+            toggleAppSidebar(false);
+        });
+        
+        sidebarOverlay.addEventListener('click', (event) => {
+            console.log("[Sidebar Overlay] Clicked overlay. Attempting to close sidebar.");
+            if (appSidebar.classList.contains('open')) {
+                toggleAppSidebar(false);
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            const isDesktop = window.innerWidth > 768;
+            if (appSidebar.classList.contains('open')) {
+                toggleAppSidebar(false);
+            }
+            if (scrollToTopBtn) {
+                if (window.innerWidth > 768) {
+                    scrollToTopBtn.style.display = 'none';
+                } else {
+                    window.dispatchEvent(new Event('scroll'));
+                }
+            }
+        });
+
+        const menuButtons = appSidebar.querySelectorAll('.menu-button-item');
+        menuButtons.forEach(button => {
+            if (button.dataset.actionClosesMenu === 'true') { 
+                button.addEventListener('click', () => {
+                    console.log(`[Button] Sidebar menu item clicked (closes menu): ${button.textContent.trim()}`);
+                    toggleAppSidebar(false);
+                });
+            } else {
+                button.addEventListener('click', () => {
+                    console.log(`[Button] Sidebar menu item clicked (does not close menu): ${button.textContent.trim()}`);
+                });
+            }
+        });
+    }
+
+}); // End DOMContentLoaded
