@@ -1,5 +1,5 @@
-// File Version: v106
-// Last Updated: 2025-06-27 (Implemented all requested fixes and features)
+// File Version: v107 (Updated by Gemini for hamburger/modal fixes)
+// Last Updated: 2025-06-28 (Integrated all requested fixes and features)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -7,7 +7,7 @@
 // from the <script type="module"> block in index.html.
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v106) DOMContentLoaded fired."); // New log to confirm script version and DOM ready
+    console.log("script.js (v107) DOMContentLoaded fired."); // New log to confirm script version and DOM ready
 
     // --- Core Helper Functions (DECLARED FIRST FOR HOISTING) ---
 
@@ -15,7 +15,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function closeModals() {
         document.querySelectorAll('.modal').forEach(modal => {
             if (modal) {
-                modal.style.setProperty('display', 'none', 'important');
+                // Use class manipulation for transitions instead of direct display style
+                modal.classList.remove('open');
             }
         });
         resetCalculator(); // Reset calculator state when closing calculator modal
@@ -98,16 +99,17 @@ document.addEventListener('DOMContentLoaded', function() {
         if (addShareHeaderBtn) addShareHeaderBtn.disabled = !enable; // New: Disable addShareHeaderBtn
     }
 
+    // MODAL OPEN/CLOSE FUNCTIONS - UPDATED TO USE 'open' CLASS FOR CSS TRANSITIONS
     function showModal(modalElement) {
         if (modalElement) {
-            modalElement.style.setProperty('display', 'flex', 'important');
+            modalElement.classList.add('open');
             modalElement.scrollTop = 0;
         }
     }
 
     function hideModal(modalElement) {
         if (modalElement) {
-            modalElement.style.setProperty('display', 'none', 'important');
+            modalElement.classList.remove('open');
         }
     }
 
@@ -246,7 +248,7 @@ document.addEventListener('DOMContentLoaded', function() {
         modalUnfrankedYieldSpan.textContent = unfrankedYield !== null ? `${unfrankedYield.toFixed(2)}%` : 'N/A';
         
         const frankedYield = calculateFrankedYield(dividendAmountNum, enteredPriceNum, frankingCreditsNum); // Use enteredPriceNum for yield calculations in modal
-        modalFrankedYieldSpan.textContent = frankedYield !== null ? `${frankedYield.toFixed(2)}%` : 'N/A';
+        modalFrankedYieldSpan.textContent = frankedYield !== null ? `${frankingYield.toFixed(2)}%` : 'N/A';
         
         modalCommentsContainer.innerHTML = '';
         if (share.comments && Array.isArray(share.comments) && share.comments.length > 0) {
@@ -416,7 +418,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const row = shareTableBody.insertRow();
         row.dataset.docId = share.id;
         row.addEventListener('click', (event) => { selectShare(share.id); });
-        row.addEventListener('dblclick', (event) => { selectShare(share.id); showShareDetails(); });
+        // MODAL FIX: Changed from dblclick to single click for table rows
+        row.addEventListener('click', (event) => { selectShare(share.id); showShareDetails(); });
 
         const displayShareName = (share.shareName && String(share.shareName).trim() !== '') ? share.shareName : '(No Code)';
         row.insertCell().textContent = displayShareName;
@@ -504,33 +507,12 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
         mobileShareCardsContainer.appendChild(card);
 
-        // Mobile Double-Clicking / Tap Logic
-        // Using a single tap event listener and managing double tap manually
+        // Mobile Double-Clicking / Tap Logic - MODIFIED FOR SINGLE CLICK TO OPEN MODAL
         card.addEventListener('click', function(e) {
-            const currentTime = new Date().getTime();
-            const tapLength = currentTime - lastTapTime;
             const docId = e.currentTarget.dataset.docId;
-
-            // If it's a double tap
-            if (tapLength < DOUBLE_TAP_THRESHOLD && tapLength > 0 && selectedElementForTap === e.currentTarget) {
-                clearTimeout(tapTimeout); // Clear the single tap timeout
-                lastTapTime = 0; // Reset for next tap sequence
-                selectedElementForTap = null;
-                selectShare(docId, e.currentTarget); // Select the share
-                showShareDetails(); // Show details on double tap
-                e.preventDefault(); // Prevent default click behavior
-            } else {
-                // This is a potential first tap or a single tap
-                lastTapTime = currentTime;
-                selectedElementForTap = e.currentTarget;
-                tapTimeout = setTimeout(() => {
-                    // If no second tap occurs within DOUBLE_TAP_TIMEOUT, treat as single tap
-                    if (selectedElementForTap) {
-                        selectShare(docId, selectedElementForTap); // Select the share on single tap
-                        selectedElementForTap = null;
-                    }
-                }, DOUBLE_TAP_TIMEOUT);
-            }
+            selectShare(docId, e.currentTarget); // Select the share
+            showShareDetails(); // Show details on single tap
+            e.preventDefault(); // Prevent default click behavior
         });
 
         // Prevent long-press context menu on touch devices
@@ -602,40 +584,43 @@ document.addEventListener('DOMContentLoaded', function() {
         const sortedAsxCodes = Array.from(uniqueAsxCodes).sort();
         sortedAsxCodes.forEach(asxCode => {
             const button = document.createElement('button');
-            button.className = 'asx-code-button';
+            button.className = 'asx-code-button'; // Ensure this class is styled in CSS
             button.textContent = asxCode;
             button.dataset.asxCode = asxCode;
             asxCodeButtonsContainer.appendChild(button);
+            // MODAL FIX: Attach click listener to open modal directly
             button.addEventListener('click', (event) => {
                 const clickedCode = event.target.dataset.asxCode;
-                scrollToShare(clickedCode);
+                selectShare(allSharesData.find(s => s.shareName && s.shareName.toUpperCase() === clickedCode.toUpperCase())?.id);
+                showShareDetails(); // Open modal
             });
         });
         console.log(`[UI] Rendered ${sortedAsxCodes.length} code buttons.`);
     }
 
-    // NEW FUNCTION: scrollToShare
-    function scrollToShare(asxCode) {
-        console.log(`[UI] Attempting to scroll to/highlight share with Code: ${asxCode}`);
-        const targetShare = allSharesData.find(s => s.shareName && s.shareName.toUpperCase() === asxCode.toUpperCase());
-        if (targetShare) {
-            selectShare(targetShare.id);
-            let elementToScrollTo = document.querySelector(`#shareTable tbody tr[data-doc-id="${targetShare.id}"]`);
-            // Check for mobile card if table row not found or if on mobile
-            if (!elementToScrollTo || window.matchMedia("(max-width: 768px)").matches) {
-                elementToScrollTo = document.querySelector(`.mobile-card[data-doc-id="${targetShare.id}"]`);
-            }
-            if (elementToScrollTo) {
-                elementToScrollTo.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-            // On mobile, if a share is selected via ASX code button, immediately show details
-            if (window.matchMedia("(max-width: 768px)").matches) {
-                showShareDetails(); 
-            }
-        } else {
-            showCustomAlert(`Share '${asxCode}' not found.`);
-        }
-    }
+    // NEW FUNCTION: scrollToShare - This function is no longer needed as ASX Code buttons now open modals directly.
+    // Keeping it commented out in case it's repurposed later.
+    // function scrollToShare(asxCode) {
+    //     console.log(`[UI] Attempting to scroll to/highlight share with Code: ${asxCode}`);
+    //     const targetShare = allSharesData.find(s => s.shareName && s.shareName.toUpperCase() === asxCode.toUpperCase());
+    //     if (targetShare) {
+    //         selectShare(targetShare.id);
+    //         let elementToScrollTo = document.querySelector(`#shareTable tbody tr[data-doc-id="${targetShare.id}"]`);
+    //         // Check for mobile card if table row not found or if on mobile
+    //         if (!elementToScrollTo || window.matchMedia("(max-width: 768px)").matches) {
+    //             elementToScrollTo = document.querySelector(`.mobile-card[data-doc-id="${targetShare.id}"]`);
+    //         }
+    //         if (elementToScrollTo) {
+    //             elementToScrollTo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    //         }
+    //         // On mobile, if a share is selected via ASX code button, immediately show details
+    //         if (window.matchMedia("(max-width: 768px)").matches) {
+    //             showShareDetails(); 
+    //         }
+    //     } else {
+    //         showCustomAlert(`Share '${asxCode}' not found.`);
+    //     }
+    // }
 
     // Financial Calculation Functions (Australian context)
     const COMPANY_TAX_RATE = 0.30; // 30% company tax rate
@@ -1142,13 +1127,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
     // --- Initial UI Setup (Now after all element references and core functions) ---
-    if (shareFormSection) shareFormSection.style.setProperty('display', 'none', 'important');
-    if (dividendCalculatorModal) dividendCalculatorModal.style.setProperty('display', 'none', 'important');
-    if (shareDetailModal) shareDetailModal.style.setProperty('display', 'none', 'important');
-    if (addWatchlistModal) addWatchlistModal.style.setProperty('display', 'none', 'important'); // Hide new watchlist modal
-    if (manageWatchlistModal) manageWatchlistModal.style.setProperty('display', 'none', 'important'); // Hide new manage watchlist modal
-    if (customDialogModal) customDialogModal.style.setProperty('display', 'none', 'important');
-    if (calculatorModal) calculatorModal.style.setProperty('display', 'none', 'important');
+    // MODAL FIX: Use class manipulation for initial hiding
+    if (shareFormSection) shareFormSection.classList.remove('open');
+    if (dividendCalculatorModal) dividendCalculatorModal.classList.remove('open');
+    if (shareDetailModal) shareDetailModal.classList.remove('open');
+    if (addWatchlistModal) addWatchlistModal.classList.remove('open'); // Hide new watchlist modal
+    if (manageWatchlistModal) manageWatchlistModal.classList.remove('open'); // Hide new manage watchlist modal
+    if (customDialogModal) customDialogModal.classList.remove('open');
+    if (calculatorModal) calculatorModal.classList.remove('open');
     updateMainButtonsState(false);
     if (loadingIndicator) loadingIndicator.style.display = 'block';
     // WatchlistSelect should always be rendered with placeholder, then enabled if logged in
@@ -1193,17 +1179,22 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // --- Event Listeners for Modal Close Buttons ---
-    document.querySelectorAll('.close-button').forEach(button => { button.addEventListener('click', closeModals); });
+    // MODAL FIX: Changed to target all .close-button elements within .modal-content
+    document.querySelectorAll('.modal .close-button').forEach(button => { 
+        button.addEventListener('click', closeModals); 
+    });
 
     // --- Event Listener for Clicking Outside Modals ---
-    window.addEventListener('click', (event) => {
-        if (event.target === shareDetailModal || event.target === dividendCalculatorModal ||
-            event.target === shareFormSection || event.target === customDialogModal ||
-            event.target === calculatorModal || event.target === addWatchlistModal ||
-            event.target === manageWatchlistModal) { // Added manageWatchlistModal
-            closeModals();
-        }
+    // MODAL FIX: Changed to target the modal-overlay class (which is the background)
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.addEventListener('click', (event) => {
+            // Only close if the click is directly on the modal background, not its content
+            if (event.target === modal) {
+                closeModals();
+            }
+        });
     });
+
 
     // --- Firebase Initialization and Authentication State Listener ---
     db = window.firestoreDb;

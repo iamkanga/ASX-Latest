@@ -1,5 +1,5 @@
-/* File Version: v45 */
-/* Last Updated: 2025-06-27 (Button layout, Hamburger X size, Sign-in button centering, ghosted text, Price display restructure) */
+/* File Version: v46 (Updated by Gemini for modal/sidebar transitions and button styling) */
+/* Last Updated: 2025-06-28 (Button layout, Hamburger X size, Sign-in button centering, ghosted text, Price display restructure) */
 
 :root {
     /* Light Theme (Default) - Adjusted for more vibrancy */
@@ -315,10 +315,13 @@ h1#mainTitle {
     background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
     z-index: 999; /* Below the sidebar, above content */
     display: none; /* Hidden by default, shown by JS */
+    opacity: 0; /* Start hidden for transition */
+    transition: opacity 0.3s ease-in-out; /* Smooth fade in/out */
 }
 
 .sidebar-overlay.open {
     display: block; /* Show when sidebar is open */
+    opacity: 1; /* Fade in */
 }
 
 
@@ -398,7 +401,8 @@ h1#mainTitle {
     padding-right: 15px; /* Match main container padding */
 }
 
-.asx-code-btn {
+/* Renamed from .asx-code-btn to .asx-code-button for consistency with JS */
+.asx-code-button { 
     background-color: var(--asx-button-bg);
     color: var(--asx-button-text);
     border: 1px solid var(--input-border);
@@ -410,11 +414,11 @@ h1#mainTitle {
     transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
-.asx-code-btn:hover {
+.asx-code-button:hover {
     background-color: var(--asx-button-hover-bg);
 }
 
-.asx-code-btn.active {
+.asx-code-button.active {
     background-color: var(--asx-button-active-bg);
     color: var(--asx-button-active-text);
     border-color: var(--asx-button-active-bg);
@@ -569,9 +573,8 @@ table tbody tr:not(.selected):hover {
 }
 
 
-/* Modals (General) */
+/* Modals (General) - MODIFIED FOR TRANSITIONS */
 .modal {
-    display: none;
     position: fixed;
     z-index: 1000;
     left: 0;
@@ -580,7 +583,18 @@ table tbody tr:not(.selected):hover {
     height: 100%;
     overflow: auto;
     background-color: var(--modal-bg);
-    padding-top: 60px;
+    padding-top: 60px; /* Space from top */
+    
+    /* Initial hidden state for transition */
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0s linear 0.3s, opacity 0.3s ease-in-out; /* Delay visibility change */
+}
+
+.modal.open {
+    visibility: visible;
+    opacity: 1;
+    transition-delay: 0s; /* Show immediately */
 }
 
 .modal-content {
@@ -594,6 +608,16 @@ table tbody tr:not(.selected):hover {
     width: 90%;
     box-sizing: border-box;
     color: var(--text-color);
+
+    /* Initial hidden state for transition */
+    transform: translateY(20px); /* Start slightly below */
+    opacity: 0;
+    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+}
+
+.modal.open .modal-content {
+    transform: translateY(0); /* Slide into view */
+    opacity: 1;
 }
 
 .add-share-modal-content {
@@ -1033,7 +1057,7 @@ table tbody tr:not(.selected):hover {
     /* Centering the icon */
     display: flex; /* Make it a flex container */
     justify-content: center; /* Center horizontally */
-    align-items: center; /* Center vertically */
+    align-items: center;
     padding: 0; /* Remove default padding */
 }
 
