@@ -1,5 +1,5 @@
-// File Version: v120 (Updated by Gemini for Firebase errors and robustness)
-// Last Updated: 2025-06-28 (Moved all core logic and variables to global scope for correct timing)
+// File Version: v121 (Updated by Gemini for Firebase errors and robustness)
+// Last Updated: 2025-06-28 (Added detailed logging for button clicks and Firebase auth)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -145,6 +145,7 @@ function closeModals() {
     resetCalculator();
     deselectCurrentShare();
     if (autoDismissTimeout) { clearTimeout(autoDismissTimeout); autoDismissTimeout = null; }
+    console.log("[Modals] All modals closed.");
 }
 
 function showCustomAlert(message, duration = 1000) {
@@ -159,6 +160,7 @@ function showCustomAlert(message, duration = 1000) {
     showModal(customDialogModal);
     if (autoDismissTimeout) { clearTimeout(autoDismissTimeout); }
     autoDismissTimeout = setTimeout(() => { hideModal(customDialogModal); autoDismissTimeout = null; }, duration);
+    console.log(`[Alert] Showing alert: "${message}" for ${duration}ms.`);
 }
 
 function showCustomConfirm(message, onConfirm, onCancel = null) {
@@ -176,9 +178,10 @@ function showCustomConfirm(message, onConfirm, onCancel = null) {
     customDialogCancelBtn.style.display = 'block';
     showModal(customDialogModal);
     if (autoDismissTimeout) { clearTimeout(autoDismissTimeout); }
-    customDialogConfirmBtn.onclick = () => { hideModal(customDialogModal); if (onConfirm) onConfirm(); currentDialogCallback = null; };
-    customDialogCancelBtn.onclick = () => { hideModal(customDialogModal); if (onCancel) onCancel(); currentDialogCallback = null; };
+    customDialogConfirmBtn.onclick = () => { hideModal(customDialogModal); if (onConfirm) onConfirm(); currentDialogCallback = null; console.log("[Confirm] Confirmed."); };
+    customDialogCancelBtn.onclick = () => { hideModal(customDialogModal); if (onCancel) onCancel(); currentDialogCallback = null; console.log("[Confirm] Canceled."); };
     currentDialogCallback = () => { hideModal(customDialogModal); if (onCancel) onCancel(); currentDialogCallback = null; };
+    console.log(`[Confirm] Showing confirm: "${message}"`);
 }
 
 function formatDate(dateString) {
@@ -201,6 +204,9 @@ function formatDateTime(dateString) {
 function updateAuthButtonText(isSignedIn, userName = 'Sign In') {
     if (googleAuthBtn) {
         googleAuthBtn.textContent = isSignedIn ? (userName || 'Signed In') : 'Sign In';
+        console.log(`[Auth UI] Google Auth button text updated to: ${googleAuthBtn.textContent}`);
+    } else {
+        console.warn("[Auth UI] googleAuthBtn element not found when trying to update text.");
     }
 }
 
@@ -215,20 +221,27 @@ function updateMainButtonsState(enable) {
     if (addShareHeaderBtn) addShareHeaderBtn.disabled = !enable;
 
     if (themeToggleBtn) {
-        themeToggleBtn.disabled = false;
+        themeToggleBtn.disabled = false; // Theme toggle is always enabled
     }
+    console.log(`[UI State] Main buttons enabled: ${enable}. Watchlist edit/delete disabled if only one watchlist: ${userWatchlists.length <= 1}`);
 }
 
 function showModal(modalElement) {
     if (modalElement) {
         modalElement.classList.add('open');
         modalElement.scrollTop = 0;
+        console.log(`[Modal] Opened modal: ${modalElement.id}`);
+    } else {
+        console.error("[Modal] Attempted to open null modal element.");
     }
 }
 
 function hideModal(modalElement) {
     if (modalElement) {
         modalElement.classList.remove('open');
+        console.log(`[Modal] Closed modal: ${modalElement.id}`);
+    } else {
+        console.warn("[Modal] Attempted to close null modal element.");
     }
 }
 
@@ -271,6 +284,7 @@ function truncateText(text, maxLength) {
 }
 
 function addCommentSection(title = '', text = '') {
+    if (!commentsFormContainer) { console.error("[Comments] commentsFormContainer not found."); return; }
     const commentSectionDiv = document.createElement('div');
     commentSectionDiv.className = 'comment-section';
     commentSectionDiv.innerHTML = `
@@ -283,20 +297,23 @@ function addCommentSection(title = '', text = '') {
     commentsFormContainer.appendChild(commentSectionDiv);
     commentSectionDiv.querySelector('.comment-delete-btn').addEventListener('click', (event) => {
         event.target.closest('.comment-section').remove();
+        console.log("[Comments] Comment section deleted.");
     });
+    console.log("[Comments] Added new comment section.");
 }
 
 function clearForm() {
     formInputs.forEach(input => {
         if (input) { input.value = ''; }
     });
-    commentsFormContainer.innerHTML = '';
+    if (commentsFormContainer) commentsFormContainer.innerHTML = '';
     addCommentSection();
     selectedShareDocId = null;
     console.log("[Form] Form fields cleared and selectedShareDocId reset.");
 }
 
 function showEditFormForSelectedShare() {
+    console.log("[Form] Attempting to open edit form.");
     if (!selectedShareDocId) {
         showCustomAlert("Please select a share to edit.");
         return;
@@ -327,6 +344,7 @@ function showEditFormForSelectedShare() {
 }
 
 function showShareDetails() {
+    console.log("[Details] Attempting to open share details modal.");
     if (!selectedShareDocId) {
         showCustomAlert("Please select a share to view details.");
         return;
@@ -489,6 +507,7 @@ function renderWatchlistSelect() {
          watchlistSelect.value = '';
     }
     watchlistSelect.disabled = false;
+    console.log("[UI Update] Watchlist select rendered.");
 }
 
 function renderSortSelect() {
@@ -509,6 +528,7 @@ function renderSortSelect() {
     if (!sortSelect.value || sortSelect.value === '') {
         sortSelect.value = '';
     }
+    console.log("[UI Update] Sort select rendered.");
 }
 
 function addShareToTable(share) {
@@ -675,6 +695,7 @@ function renderAsxCodeButtons() {
         button.dataset.asxCode = asxCode;
         asxCodeButtonsContainer.appendChild(button);
         button.addEventListener('click', (event) => {
+            console.log(`[ASX Button] Clicked ASX code button: ${event.target.dataset.asxCode}`);
             const clickedCode = event.target.dataset.asxCode;
             selectShare(allSharesData.find(s => s.shareName && s.shareName.toUpperCase() === clickedCode.toUpperCase())?.id);
             showShareDetails();
@@ -861,6 +882,7 @@ function applySystemDefaultTheme() {
 }
 
 function toggleTheme() {
+    console.log("[Theme] Toggling theme.");
     currentThemeIndex++;
     if (currentThemeIndex >= themes.length) {
         currentThemeIndex = -1;
@@ -896,6 +918,7 @@ function loadAndApplySavedTheme() {
         applySystemDefaultTheme();
         if (themeToggleBtn) themeToggleBtn.innerHTML = '<i class="fas fa-desktop"></i> System Default';
     }
+    console.log("[Theme] Loaded and applied saved theme.");
 }
 
 function getDefaultWatchlistId(userId) {
@@ -1125,7 +1148,7 @@ async function migrateOldSharesToWatchlist() {
 
 // --- DOMContentLoaded Listener for UI Element References and Event Listeners ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v120) DOMContentLoaded fired.");
+    console.log("script.js (v121) DOMContentLoaded fired.");
 
     // --- UI Element References (Populated here once DOM is ready) ---
     mainTitle = document.getElementById('mainTitle');
@@ -1223,25 +1246,71 @@ document.addEventListener('DOMContentLoaded', function() {
     if (manageWatchlistModal) manageWatchlistModal.classList.remove('open');
     if (customDialogModal) customDialogModal.classList.remove('open');
     if (calculatorModal) calculatorModal.classList.remove('open');
-    updateMainButtonsState(false);
+    updateMainButtonsState(false); // Initially disable all auth-dependent buttons
     if (loadingIndicator) loadingIndicator.style.display = 'block';
-    renderWatchlistSelect();
-    if (googleAuthBtn) googleAuthBtn.disabled = true;
+    renderWatchlistSelect(); // Call this immediately to show the placeholder
+    if (googleAuthBtn) googleAuthBtn.disabled = true; // Keep disabled until Firebase auth is ready
     if (addShareHeaderBtn) addShareHeaderBtn.disabled = true;
-    loadAndApplySavedTheme();
+    loadAndApplySavedTheme(); // Applies theme and updates themeToggleBtn text
 
     // --- PWA Service Worker Registration ---
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./service-worker.js', { scope: './' }) 
                 .then(registration => {
-                    console.log('Service Worker (v36) from script.js: Registered with scope:', registration.scope);
+                    console.log('Service Worker (v37) from script.js: Registered with scope:', registration.scope);
                 })
                 .catch(error => {
-                    console.error('Service Worker (v36) from script.js: Registration failed:', error);
+                    console.error('Service Worker (v37) from script.js: Registration failed:', error);
                 });
         });
     }
+
+    // --- Firebase Auth Listener (Moved to DOMContentLoaded for reliable element access) ---
+    // This will trigger data loading and UI updates after Firebase is ready and user auth state is known
+    if (window.firebaseAuth && typeof window.getFirebaseAppId === 'function') {
+        db = window.firestoreDb; // Assign global db from window
+        auth = window.firebaseAuth; // Assign global auth from window
+        currentAppId = window.getFirebaseAppId(); // Assign global appId from window
+        console.log(`[Firebase Init] App ID: ${currentAppId}`);
+
+        if (googleAuthBtn) {
+            googleAuthBtn.disabled = false;
+            console.log("[Auth] Google Auth button enabled.");
+        }
+
+        window.authFunctions.onAuthStateChanged(auth, async (user) => {
+            console.log("[AuthState] onAuthStateChanged fired. User:", user ? user.uid : "null");
+            if (user) {
+                currentUserId = user.uid;
+                updateAuthButtonText(true, user.email || user.displayName);
+                console.log("[AuthState] User signed in:", user.uid);
+                if (user.email && user.email.toLowerCase() === KANGA_EMAIL) {
+                    mainTitle.textContent = "Kanga's Share Watchlist";
+                } else {
+                    mainTitle.textContent = "My Share Watchlist";
+                }
+                updateMainButtonsState(true); // Enable auth-dependent buttons
+                if (loadingIndicator) loadingIndicator.style.display = 'none';
+                await loadUserWatchlists();
+            } else {
+                currentUserId = null;
+                updateAuthButtonText(false);
+                mainTitle.textContent = "Share Watchlist";
+                console.log("[AuthState] User signed out.");
+                updateMainButtonsState(false); // Disable auth-dependent buttons
+                clearShareList();
+                clearWatchlistUI();
+                if (loadingIndicator) loadingIndicator.style.display = 'none';
+            }
+        });
+    } else {
+        console.error("[Firebase] Firebase global variables or getFirebaseAppId function not available. Cannot set up auth listener or proceed with Firebase operations.");
+        updateAuthButtonText(false);
+        updateMainButtonsState(false);
+        if (loadingIndicator) loadingIndicator.style.display = 'none';
+    }
+
 
     // --- Event Listeners for Input Fields ---
     if (shareNameInput) {
@@ -1279,57 +1348,12 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // --- Authentication Functions Event Listener ---
-    // Now that all UI elements are referenced, set up the auth listener
-    // This will trigger data loading and UI updates after Firebase is ready and user auth state is known
-    if (window.firebaseAuth && typeof window.getFirebaseAppId === 'function') {
-        db = window.firestoreDb; // Assign global db from window
-        auth = window.firebaseAuth; // Assign global auth from window
-        currentAppId = window.getFirebaseAppId(); // Assign global appId from window
-        console.log(`[Firebase Init] App ID: ${currentAppId}`);
-
-        if (googleAuthBtn) {
-            googleAuthBtn.disabled = false;
-            console.log("[Auth] Google Auth button enabled.");
-        }
-
-        window.authFunctions.onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                currentUserId = user.uid;
-                updateAuthButtonText(true, user.email || user.displayName);
-                console.log("[AuthState] User signed in:", user.uid);
-                if (user.email && user.email.toLowerCase() === KANGA_EMAIL) {
-                    mainTitle.textContent = "Kanga's Share Watchlist";
-                } else {
-                    mainTitle.textContent = "My Share Watchlist";
-                }
-                updateMainButtonsState(true);
-                if (loadingIndicator) loadingIndicator.style.display = 'none';
-                await loadUserWatchlists();
-            } else {
-                currentUserId = null;
-                updateAuthButtonText(false);
-                mainTitle.textContent = "Share Watchlist";
-                console.log("[AuthState] User signed out.");
-                updateMainButtonsState(false);
-                clearShareList();
-                clearWatchlistUI();
-                if (loadingIndicator) loadingIndicator.style.display = 'none';
-            }
-        });
-    } else {
-        console.error("[Firebase] Firebase global variables or getFirebaseAppId function not available. Cannot set up auth listener or proceed with Firebase operations.");
-        updateAuthButtonText(false);
-        updateMainButtonsState(false);
-        if (loadingIndicator) loadingIndicator.style.display = 'none';
-    }
-
-
     if (googleAuthBtn) {
         googleAuthBtn.addEventListener('click', async () => {
             console.log("[Auth] Google Auth Button Clicked.");
             const currentAuth = window.firebaseAuth;
             if (!currentAuth || !window.authFunctions) {
-                console.warn("[Auth] Auth service not ready or functions not loaded. Cannot process click. Is button still disabled?");
+                console.warn("[Auth] Auth service not ready or functions not loaded. Cannot process click.");
                 showCustomAlert("Authentication service not ready. Please try again in a moment.");
                 return;
             }
@@ -1337,13 +1361,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log("[Auth] Current user exists, attempting sign out.");
                 try {
                     await window.authFunctions.signOut(currentAuth);
-                    console.log("[Auth] User signed out.");
+                    console.log("[Auth] User signed out successfully.");
                 } catch (error) {
                     console.error("[Auth] Sign-Out failed:", error);
                     showCustomAlert("Sign-Out failed: " + error.message);
                 }
             } else {
-                console.log("[Auth] No current user, attempting sign in.");
+                console.log("[Auth] No current user, attempting Google sign in with popup.");
                 try {
                     const provider = window.authFunctions.GoogleAuthProviderInstance;
                     if (!provider) {
@@ -1351,12 +1375,22 @@ document.addEventListener('DOMContentLoaded', function() {
                         showCustomAlert("Authentication service not ready. Please ensure Firebase module script is loaded.");
                         return;
                     }
+                    // Attempt sign-in with popup
                     await window.authFunctions.signInWithPopup(currentAuth, provider);
                     console.log("[Auth] Google Sign-In successful.");
                 }
                 catch (error) {
                     console.error("[Auth] Google Sign-In failed:", error.message);
-                    showCustomAlert("Google Sign-In failed: " + error.message);
+                    // Check for common errors like popup closed by user or popup blocked
+                    if (error.code === 'auth/popup-closed-by-user') {
+                        showCustomAlert("Sign-in cancelled. Popup closed by user.", 2000);
+                    } else if (error.code === 'auth/cancelled-popup-request') {
+                        showCustomAlert("Sign-in cancelled. Another popup request was already in progress.", 2000);
+                    } else if (error.code === 'auth/popup-blocked') {
+                        showCustomAlert("Sign-in failed: Popup blocked. Please allow popups for this site.", 3000);
+                    } else {
+                        showCustomAlert("Google Sign-In failed: " + error.message, 3000);
+                    }
                 }
             }
         });
@@ -1365,6 +1399,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- Event Listener for Watchlist Dropdown ---
     if (watchlistSelect) {
         watchlistSelect.addEventListener('change', async () => {
+            console.log("[Watchlist Select] Change event detected.");
             currentWatchlistId = watchlistSelect.value;
             const selectedWatchlistObj = userWatchlists.find(w => w.id === currentWatchlistId);
             if (selectedWatchlistObj) {
@@ -1372,18 +1407,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log(`[Watchlist Change] User selected: '${currentWatchlistName}' (ID: ${currentWatchlistId})`);
                 await saveLastSelectedWatchlistId(currentWatchlistId);
                 await loadShares();
+            } else {
+                console.warn("[Watchlist Change] Selected watchlist not found in userWatchlists array.");
             }
         });
     }
 
     // --- Event Listener for Sort Dropdown ---
     if (sortSelect) {
-        sortSelect.addEventListener('change', sortShares);
+        sortSelect.addEventListener('change', () => {
+            console.log("[Sort Select] Change event detected.");
+            sortShares();
+        });
     }
 
     // --- Share Form Functions (Add/Edit) Event Listeners ---
     if (newShareBtn) {
         newShareBtn.addEventListener('click', () => {
+            console.log("[Button] 'Add New Share' (Sidebar) clicked.");
             clearForm();
             formTitle.textContent = 'Add New Share';
             deleteShareFromFormBtn.style.display = 'none';
@@ -1395,6 +1436,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (addShareHeaderBtn) {
         addShareHeaderBtn.addEventListener('click', () => {
+            console.log("[Button] 'Add New Share' (Header) clicked.");
             clearForm();
             formTitle.textContent = 'Add New Share';
             deleteShareFromFormBtn.style.display = 'none';
@@ -1405,6 +1447,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (saveShareBtn) {
         saveShareBtn.addEventListener('click', async () => {
+            console.log("[Button] 'Save Share' clicked.");
             const shareName = shareNameInput.value.trim().toUpperCase();
             if (!shareName) { showCustomAlert("Code is required!"); return; }
 
@@ -1471,11 +1514,15 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     if (cancelFormBtn) {
-        cancelFormBtn.addEventListener('click', () => { clearForm(); hideModal(shareFormSection); console.log("[Form] Form canceled."); });
+        cancelFormBtn.addEventListener('click', () => {
+            console.log("[Button] 'Cancel Form' clicked.");
+            clearForm(); hideModal(shareFormSection); console.log("[Form] Form canceled.");
+        });
     }
 
     if (deleteShareFromFormBtn) {
         deleteShareFromFormBtn.addEventListener('click', () => {
+            console.log("[Button] 'Delete Share' clicked.");
             if (selectedShareDocId) {
                 showCustomConfirm("Are you sure you want to delete this share? This action cannot be undone.", async () => {
                     try {
@@ -1495,12 +1542,16 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     if (addCommentSectionBtn) {
-        addCommentSectionBtn.addEventListener('click', () => addCommentSection());
+        addCommentSectionBtn.addEventListener('click', () => {
+            console.log("[Button] 'Add Comment Section' clicked.");
+            addCommentSection();
+        });
     }
 
     // --- Share Detail Modal Functions Event Listeners ---
     if (editShareFromDetailBtn) {
         editShareFromDetailBtn.addEventListener('click', () => {
+            console.log("[Button] 'Edit Share' (from detail modal) clicked.");
             hideModal(shareDetailModal);
             showEditFormForSelectedShare();
         });
@@ -1509,6 +1560,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- Add Watchlist Modal Functions Event Listeners ---
     if (addWatchlistBtn) {
         addWatchlistBtn.addEventListener('click', () => {
+            console.log("[Button] 'Add Watchlist' clicked.");
             if (newWatchlistNameInput) newWatchlistNameInput.value = '';
             showModal(addWatchlistModal);
             newWatchlistNameInput.focus();
@@ -1518,6 +1570,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (saveWatchlistBtn) {
         saveWatchlistBtn.addEventListener('click', async () => {
+            console.log("[Button] 'Save Watchlist' clicked.");
             const watchlistName = newWatchlistNameInput.value.trim();
             if (!watchlistName) {
                 showCustomAlert("Watchlist name is required!");
@@ -1554,6 +1607,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (cancelAddWatchlistBtn) {
         cancelAddWatchlistBtn.addEventListener('click', () => {
+            console.log("[Button] 'Cancel Add Watchlist' clicked.");
             hideModal(addWatchlistModal);
             if (newWatchlistNameInput) newWatchlistNameInput.value = '';
             console.log("[Watchlist] Add Watchlist canceled.");
@@ -1563,6 +1617,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- Manage Watchlist Modal (Edit/Delete) Functions ---
     if (editWatchlistBtn) {
         editWatchlistBtn.addEventListener('click', () => {
+            console.log("[Button] 'Manage Watchlist' clicked.");
             if (!currentWatchlistId) {
                 showCustomAlert("Please select a watchlist to edit.");
                 return;
@@ -1577,6 +1632,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (saveWatchlistNameBtn) {
         saveWatchlistNameBtn.addEventListener('click', async () => {
+            console.log("[Button] 'Save Watchlist Name' clicked.");
             const newName = editWatchlistNameInput.value.trim();
             if (!newName) {
                 showCustomAlert("Watchlist name cannot be empty!");
@@ -1610,6 +1666,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (deleteWatchlistInModalBtn) {
         deleteWatchlistInModalBtn.addEventListener('click', () => {
+            console.log("[Button] 'Delete Watchlist' (in modal) clicked.");
             if (!currentWatchlistId || userWatchlists.length <= 1) {
                 showCustomAlert("Cannot delete the last watchlist. Please create another watchlist first.");
                 return;
@@ -1648,6 +1705,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (cancelManageWatchlistBtn) {
         cancelManageWatchlistBtn.addEventListener('click', () => {
+            console.log("[Button] 'Cancel Manage Watchlist' clicked.");
             hideModal(manageWatchlistModal);
             editWatchlistNameInput.value = '';
             console.log("[Watchlist] Manage Watchlist canceled.");
@@ -1657,7 +1715,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- Dividend Calculator Functions Event Listeners ---
     if (dividendCalcBtn) {
         dividendCalcBtn.addEventListener('click', () => {
-            console.log("[UI] Dividend button clicked. Attempting to open modal.");
+            console.log("[Button] 'Dividend Calculator' clicked.");
             calcDividendAmountInput.value = ''; calcCurrentPriceInput.value = ''; calcFrankingCreditsInput.value = '';
             calcUnfrankedYieldSpan.textContent = '-'; calcFrankedYieldSpan.textContent = '-'; calcEstimatedDividend.textContent = '-';
             investmentValueSelect.value = '10000';
@@ -1693,6 +1751,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- Standard Calculator Functions Event Listeners ---
     if (standardCalcBtn) {
         standardCalcBtn.addEventListener('click', () => {
+            console.log("[Button] 'Standard Calculator' clicked.");
             resetCalculator();
             showModal(calculatorModal);
             console.log("[UI] Standard Calculator modal opened.");
@@ -1706,6 +1765,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!target.classList.contains('calc-btn')) { return; }
             const value = target.dataset.value;
             const action = target.dataset.action;
+            console.log(`[Calculator] Button clicked - Value: ${value}, Action: ${action}`);
             if (value) { appendNumber(value); }
             else if (action) { handleAction(action); }
         });
@@ -1777,8 +1837,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- Hamburger/Sidebar Menu Logic Event Listeners ---
     if (hamburgerBtn && appSidebar && closeMenuBtn && sidebarOverlay) {
-        hamburgerBtn.addEventListener('click', () => toggleAppSidebar());
-        closeMenuBtn.addEventListener('click', () => toggleAppSidebar(false));
+        hamburgerBtn.addEventListener('click', () => {
+            console.log("[Button] Hamburger button clicked.");
+            toggleAppSidebar();
+        });
+        closeMenuBtn.addEventListener('click', () => {
+            console.log("[Button] Close Menu button clicked.");
+            toggleAppSidebar(false);
+        });
         
         sidebarOverlay.addEventListener('click', (event) => {
             console.log("[Sidebar Overlay] Clicked overlay. Attempting to close sidebar.");
@@ -1805,7 +1871,12 @@ document.addEventListener('DOMContentLoaded', function() {
         menuButtons.forEach(button => {
             if (button.dataset.actionClosesMenu === 'true') { 
                 button.addEventListener('click', () => {
+                    console.log(`[Button] Sidebar menu item clicked (closes menu): ${button.textContent.trim()}`);
                     toggleAppSidebar(false);
+                });
+            } else {
+                button.addEventListener('click', () => {
+                    console.log(`[Button] Sidebar menu item clicked (does not close menu): ${button.textContent.trim()}`);
                 });
             }
         });
