@@ -1,5 +1,5 @@
-// File Version: v108 (Updated by Gemini for hamburger/modal fixes, theme cycling, and modal display)
-// Last Updated: 2025-06-28 (Integrated all requested fixes and features)
+// File Version: v109 (Updated by Gemini for toggleAppSidebar ReferenceError, theme cycling, and modal display)
+// Last Updated: 2025-06-28 (Moved toggleAppSidebar for better hoisting, integrated all requested features)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -7,9 +7,38 @@
 // from the <script type="module"> block in index.html.
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v108) DOMContentLoaded fired."); // New log to confirm script version and DOM ready
+    console.log("script.js (v109) DOMContentLoaded fired."); // New log to confirm script version and DOM ready
 
     // --- Core Helper Functions (DECLARED FIRST FOR HOISTING) ---
+    // Moved toggleAppSidebar here to ensure it's defined before any calls within this scope.
+    function toggleAppSidebar(force) {
+        const isSidebarOpen = appSidebar.classList.contains('open');
+        const isForcedOpen = (typeof force === 'boolean' && force === true);
+        const isForcedClosed = (typeof force === 'boolean' && force === false);
+
+        // Determine the target state based on 'force' or current state
+        let targetState;
+        if (isForcedOpen) { targetState = true; }
+        else if (isForcedClosed) { targetState = false; }
+        else { targetState = !isSidebarOpen; } // Toggle if no force specified
+
+        if (targetState) {
+            appSidebar.classList.add('open');
+            sidebarOverlay.classList.add('open'); // Show overlay
+            document.body.classList.add('sidebar-active'); // Shift content
+            document.documentElement.style.overflowX = 'hidden'; // Prevent horizontal scroll on html
+            document.body.style.overflowX = 'hidden'; // Prevent horizontal scroll on body
+            document.body.style.overflowY = 'hidden'; // Prevent vertical scroll on body when sidebar is open
+        } else {
+            appSidebar.classList.remove('open');
+            sidebarOverlay.classList.remove('open'); // Hide overlay
+            document.body.classList.remove('sidebar-active'); // Revert content shift
+            document.documentElement.style.overflowX = ''; // Allow horizontal scroll if needed
+            document.body.style.overflowX = ''; // Allow horizontal scroll if needed
+            document.body.style.overflowY = ''; // Allow vertical scroll on body
+        }
+        console.log(`[Menu] App sidebar toggled. Open: ${appSidebar.classList.contains('open')}`);
+    }
 
     // Centralized Modal Closing Function
     function closeModals() {
@@ -703,27 +732,27 @@ document.addEventListener('DOMContentLoaded', function() {
     // Theme Toggling Logic - MODIFIED FOR 20 THEMES + SYSTEM DEFAULT
     const themes = [
         // 10 Bright Themes
-        { name: "Bright Blue", bg: "#e0f2f7", text: "#003366", header: "#a7d9ed", card: "#ffffff", border: "#87c9e0", button: "#007bff", hover: "#0056b3", sidebar: "#a7d9ed" },
-        { name: "Sunny Yellow", bg: "#fffbe6", text: "#664d00", header: "#ffe066", card: "#ffffff", border: "#ffcc00", button: "#e6a700", hover: "#b38000", sidebar: "#ffe066" },
-        { name: "Vibrant Green", bg: "#e6ffe6", text: "#006600", header: "#a7ed87", card: "#ffffff", border: "#87e087", button: "#28a745", hover: "#218838", sidebar: "#a7ed87" },
-        { name: "Energetic Orange", bg: "#fff0e6", text: "#804000", header: "#ffb380", card: "#ffffff", border: "#ff9933", button: "#ff8c00", hover: "#cc7000", sidebar: "#ffb380" },
-        { name: "Deep Purple", bg: "#f0e6ff", text: "#4d0066", header: "#cc99ff", card: "#ffffff", border: "#b366ff", button: "#8a2be2", hover: "#6b1fa8", sidebar: "#cc99ff" },
-        { name: "Aqua Teal", bg: "#e6fafa", text: "#004d4d", header: "#80e6e6", card: "#ffffff", border: "#4ddede", button: "#008080", hover: "#006666", sidebar: "#80e6e6" },
-        { name: "Crimson Red", bg: "#ffe6e6", text: "#660000", header: "#ff8080", card: "#ffffff", border: "#ff3333", button: "#cc0000", hover: "#990000", sidebar: "#ff8080" },
-        { name: "Lime Green", bg: "#f0ffe6", text: "#334d00", header: "#ccee99", card: "#ffffff", border: "#aacc66", button: "#66cc00", hover: "#52a300", sidebar: "#ccee99" },
-        { name: "Hot Pink", bg: "#ffe6f0", text: "#66004d", header: "#ff99cc", card: "#ffffff", border: "#ff66b3", button: "#ff0080", hover: "#cc0066", sidebar: "#ff99cc" },
-        { name: "Gold Rush", bg: "#fffaf0", text: "#664000", header: "#ffdf80", card: "#ffffff", border: "#ffbf00", button: "#d4af37", hover: "#a88a2c", sidebar: "#ffdf80" },
+        { name: "Bright Blue", bg: "#e0f2f7", text: "#003366", header: "#a7d9ed", card: "#ffffff", border: "#87c9e0", button: "#007bff", hover: "#0056b3", sidebar: "#a7d9ed", asx_active_text: "#fff" },
+        { name: "Sunny Yellow", bg: "#fffbe6", text: "#664d00", header: "#ffe066", card: "#ffffff", border: "#ffcc00", button: "#e6a700", hover: "#b38000", sidebar: "#ffe066", asx_active_text: "#fff" },
+        { name: "Vibrant Green", bg: "#e6ffe6", text: "#006600", header: "#a7ed87", card: "#ffffff", border: "#87e087", button: "#28a745", hover: "#218838", sidebar: "#a7ed87", asx_active_text: "#fff" },
+        { name: "Energetic Orange", bg: "#fff0e6", text: "#804000", header: "#ffb380", card: "#ffffff", border: "#ff9933", button: "#ff8c00", hover: "#cc7000", sidebar: "#ffb380", asx_active_text: "#fff" },
+        { name: "Deep Purple", bg: "#f0e6ff", text: "#4d0066", header: "#cc99ff", card: "#ffffff", border: "#b366ff", button: "#8a2be2", hover: "#6b1fa8", sidebar: "#cc99ff", asx_active_text: "#fff" },
+        { name: "Aqua Teal", bg: "#e6fafa", text: "#004d4d", header: "#80e6e6", card: "#ffffff", border: "#4ddede", button: "#008080", hover: "#006666", sidebar: "#80e6e6", asx_active_text: "#fff" },
+        { name: "Crimson Red", bg: "#ffe6e6", text: "#660000", header: "#ff8080", card: "#ffffff", border: "#ff3333", button: "#cc0000", hover: "#990000", sidebar: "#ff8080", asx_active_text: "#fff" },
+        { name: "Lime Green", bg: "#f0ffe6", text: "#334d00", header: "#ccee99", card: "#ffffff", border: "#aacc66", button: "#66cc00", hover: "#52a300", sidebar: "#ccee99", asx_active_text: "#fff" },
+        { name: "Hot Pink", bg: "#ffe6f0", text: "#66004d", header: "#ff99cc", card: "#ffffff", border: "#ff66b3", button: "#ff0080", hover: "#cc0066", sidebar: "#ff99cc", asx_active_text: "#fff" },
+        { name: "Gold Rush", bg: "#fffaf0", text: "#664000", header: "#ffdf80", card: "#ffffff", border: "#ffbf00", button: "#d4af37", hover: "#a88a2c", sidebar: "#ffdf80", asx_active_text: "#fff" },
         // 10 Subtle Themes
-        { name: "Soft Grey", bg: "#f4f7f6", text: "#333", header: "#e6e9eb", card: "#ffffff", border: "#c9d2d4", button: "#6c757d", hover: "#545b62", sidebar: "#e6e9eb" },
-        { name: "Muted Blue", bg: "#e9eff2", text: "#4a5568", header: "#c9d5db", card: "#f0f4f7", border: "#aebbc2", button: "#4299e1", hover: "#3182ce", sidebar: "#c9d5db" },
-        { name: "Earthy Green", bg: "#f0f5ee", text: "#4a574a", header: "#d1d9cf", card: "#f8fbf7", border: "#b8c2b8", button: "#48bb78", hover: "#38a169", sidebar: "#d1d9cf" },
-        { name: "Warm Beige", bg: "#fbf8f3", text: "#6b462f", header: "#e8dcd2", card: "#ffffff", border: "#d4c0b0", button: "#dd6b20", hover: "#c05621", sidebar: "#e8dcd2" },
-        { name: "Cool Grey", bg: "#eef2f5", text: "#4c5563", header: "#d4dae0", card: "#f7f9fb", border: "#c0c7cf", button: "#63b3ed", hover: "#4299e1", sidebar: "#d4dae0" },
-        { name: "Dusty Rose", bg: "#fcf0f2", text: "#713f48", header: "#ebd2d5", card: "#ffffff", border: "#d9b3b8", button: "#e53e3e", hover: "#c53030", sidebar: "#ebd2d5" },
-        { name: "Lavender Mist", bg: "#f5f3fa", text: "#5c4f70", header: "#dcd7e3", card: "#ffffff", border: "#c4b8d0", button: "#805ad5", hover: "#6b46c1", sidebar: "#dcd7e3" },
-        { name: "Ocean Breeze", bg: "#e6f7f7", text: "#31708f", header: "#b3e0e0", card: "#ffffff", border: "#80caca", button: "#2b6cb0", hover: "#2c5282", sidebar: "#b3e0e0" },
-        { name: "Sandstone", bg: "#fdf8ed", text: "#7b341f", header: "#e8d9c2", card: "#ffffff", border: "#d4b89b", button: "#a05a2c", hover: "#8a4b2b", sidebar: "#e8d9c2" },
-        { name: "Forest Night", bg: "#2a363b", text: "#e0e0e0", header: "#3b4a50", card: "#3f5259", border: "#5a6a70", button: "#4a7dff", hover: "#3a6cd9", sidebar: "#3b4a50" } // Darker subtle theme
+        { name: "Soft Grey", bg: "#f4f7f6", text: "#333", header: "#e6e9eb", card: "#ffffff", border: "#c9d2d4", button: "#6c757d", hover: "#545b62", sidebar: "#e6e9eb", asx_active_text: "#fff" },
+        { name: "Muted Blue", bg: "#e9eff2", text: "#4a5568", header: "#c9d5db", card: "#f0f4f7", border: "#aebbc2", button: "#4299e1", hover: "#3182ce", sidebar: "#c9d5db", asx_active_text: "#fff" },
+        { name: "Earthy Green", bg: "#f0f5ee", text: "#4a574a", header: "#d1d9cf", card: "#f8fbf7", border: "#b8c2b8", button: "#48bb78", hover: "#38a169", sidebar: "#d1d9cf", asx_active_text: "#fff" },
+        { name: "Warm Beige", bg: "#fbf8f3", text: "#6b462f", header: "#e8dcd2", card: "#ffffff", border: "#d4c0b0", button: "#dd6b20", hover: "#c05621", sidebar: "#e8dcd2", asx_active_text: "#fff" },
+        { name: "Cool Grey", bg: "#eef2f5", text: "#4c5563", header: "#d4dae0", card: "#f7f9fb", border: "#c0c7cf", button: "#63b3ed", hover: "#4299e1", sidebar: "#d4dae0", asx_active_text: "#fff" },
+        { name: "Dusty Rose", bg: "#fcf0f2", text: "#713f48", header: "#ebd2d5", card: "#ffffff", border: "#d9b3b8", button: "#e53e3e", hover: "#c53030", sidebar: "#ebd2d2", asx_active_text: "#fff" },
+        { name: "Lavender Mist", bg: "#f5f3fa", text: "#5c4f70", header: "#dcd7e3", card: "#ffffff", border: "#c4b8d0", button: "#805ad5", hover: "#6b46c1", sidebar: "#dcd7e3", asx_active_text: "#fff" },
+        { name: "Ocean Breeze", bg: "#e6f7f7", text: "#31708f", header: "#b3e0e0", card: "#ffffff", border: "#80caca", button: "#2b6cb0", hover: "#2c5282", sidebar: "#b3e0e0", asx_active_text: "#fff" },
+        { name: "Sandstone", bg: "#fdf8ed", text: "#7b341f", header: "#e8d9c2", card: "#ffffff", border: "#d4b89b", button: "#a05a2c", hover: "#8a4b2b", sidebar: "#e8d9c2", asx_active_text: "#fff" },
+        { name: "Forest Night", bg: "#2a363b", text: "#e0e0e0", header: "#3b4a50", card: "#3f5259", border: "#5a6a70", button: "#4a7dff", hover: "#3a6cd9", sidebar: "#3b4a50", asx_active_text: "#fff" } // Darker subtle theme
     ];
 
     let currentThemeIndex = -1; // -1 for system default, 0 to 19 for custom themes
@@ -748,7 +777,7 @@ document.addEventListener('DOMContentLoaded', function() {
         root.style.setProperty('--asx-button-hover-bg', theme.hover);
         root.style.setProperty('--asx-button-text', theme.text);
         root.style.setProperty('--asx-button-active-bg', theme.button);
-        root.style.setProperty('--asx-button-active-text', theme.button);
+        root.style.setProperty('--asx-button-active-text', theme.asx_active_text || theme.button); // Use specific or button text color
         root.style.setProperty('--danger-button-bg', '#dc3545'); // Keep consistent danger
         root.style.setProperty('--danger-button-hover-bg', '#c82333');
         root.style.setProperty('--secondary-button-bg', '#6c757d'); // Keep consistent secondary
@@ -1237,10 +1266,10 @@ document.addEventListener('DOMContentLoaded', function() {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./service-worker.js', { scope: './' }) 
                 .then(registration => {
-                    console.log('Service Worker (v23) from script.js: Registered with scope:', registration.scope); 
+                    console.log('Service Worker (v24) from script.js: Registered with scope:', registration.scope); // Increment SW version
                 })
                 .catch(error => {
-                    console.error('Service Worker (v23) from script.js: Registration failed:', error);
+                    console.error('Service Worker (v24) from script.js: Registration failed:', error); // Increment SW version
                 });
         });
     }
