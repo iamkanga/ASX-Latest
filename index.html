@@ -49,7 +49,7 @@
         let firebaseConfig = {};
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
-        // Safely parse __firebase_config and set appId
+        // Safely parse __firebase_config. If it's missing or invalid, use a fallback.
         if (typeof __app_id !== 'undefined') {
             appId = __app_id;
         } else {
@@ -60,19 +60,16 @@
             try {
                 firebaseConfig = JSON.parse(__firebase_config);
                 if (!firebaseConfig.projectId) {
-                    console.error("Firebase Init: Parsed firebaseConfig is missing 'projectId'. Check __firebase_config.");
-                    // Fallback to a minimal config if projectId is missing
-                    firebaseConfig = { projectId: "missing-project-id", apiKey: "missing-api-key" };
+                    console.error("Firebase Init: Parsed firebaseConfig is missing 'projectId'. Using a placeholder.");
+                    firebaseConfig.projectId = "placeholder-project-id"; // Provide a fallback
                 }
             } catch (e) {
-                console.error("Firebase Init: Error parsing __firebase_config:", e);
-                // Fallback to a minimal config on parse error
-                firebaseConfig = { projectId: "parse-error", apiKey: "parse-error" };
+                console.error("Firebase Init: Error parsing __firebase_config. Using a minimal fallback.", e);
+                firebaseConfig = { projectId: "parse-error-fallback", apiKey: "parse-error-fallback" };
             }
         } else {
-            console.error("Firebase Init: __firebase_config is not defined or is empty. Firebase will not initialize correctly.");
-            // Fallback to a minimal config if __firebase_config is not defined/empty
-            firebaseConfig = { projectId: "not-provided", apiKey: "not-provided" };
+            console.warn("Firebase Init: __firebase_config is not defined or is empty. Using a minimal fallback config.");
+            firebaseConfig = { projectId: "no-config-provided", apiKey: "no-config-provided" };
         }
 
         console.log("Firebase Init: Attempting to initialize with config:", firebaseConfig);
@@ -88,9 +85,9 @@
             console.log("Firebase: Initialized successfully.");
         } catch (error) {
             console.error("Firebase: Initialization failed in index.html module script:", error);
-            // Display a user-friendly error message if initialization fails
-            document.body.innerHTML = '<div class="error-message"><p>Application failed to initialize Firebase.</p><p>Please ensure your environment provides Firebase configuration and try again.</p><p>Error: ' + error.message + '</p></div>';
-            return; // Stop script execution
+            // IMPORTANT: Removed the document.body.innerHTML replacement here.
+            // Let script.js handle UI disablement.
+            return; // Stop this module script execution
         }
 
         // Make Firebase instances and core functions globally accessible to script.js
@@ -117,7 +114,7 @@
                 .catch(error => console.error("Firebase: Anonymous sign-in failed:", error));
         }
 
-        console.log("index.html (v47) script module loaded and DOMContentLoaded fired."); // Updated HTML version log
+        console.log("index.html (v48) script module loaded and DOMContentLoaded fired."); // Updated HTML version log
     </script>
 
     <!-- Main Header Section -->
