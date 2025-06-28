@@ -1,4 +1,4 @@
-<!-- Version v52 - Unique identifier to force browser cache refresh - 2025-06-28 15:30 -->
+<!-- Version v54 - **CRITICAL UPDATE: PLEASE REPLACE YOUR ENTIRE index.html WITH THIS CONTENT** - 2025-06-28 15:40 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -143,7 +143,6 @@
             window.getFirebaseAppId = () => 'error-app-id';
             window.firestore = undefined;
             window.authFunctions = undefined;
-            // Removed the `return;` here.
         } else {
             try {
                 app = initializeApp(firebaseConfig);
@@ -168,7 +167,6 @@
                 window.getFirebaseAppId = () => 'error-app-id';
                 window.firestore = undefined;
                 window.authFunctions = undefined;
-                // Removed the `return;` here.
             }
         }
 
@@ -201,7 +199,7 @@
             console.warn("Firebase: Auth object is null, skipping authentication attempt in module script.");
         }
 
-        console.log("index.html (v52) script module loaded."); // Updated HTML version log
+        console.log("index.html (v54) script module loaded."); // Updated HTML version log
     </script>
 
     <!-- Main Header Section -->
@@ -535,7 +533,7 @@
     </div>
 
     <!-- Your main script.js - Loaded last to ensure all HTML elements are available -->
-    <script src="script.js?v=114"></script> <!-- IMPORTANT: This version should match your script.js file -->
+    <script src="script.js?v=115"></script> <!-- IMPORTANT: This version should match your script.js file -->
     <script>
         // Register service worker - This block is typically placed at the end of the body
         // to ensure the page content loads first.
