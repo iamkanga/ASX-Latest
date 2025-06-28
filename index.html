@@ -45,20 +45,58 @@
         // IMPORTANT: These variables (__app_id, __firebase_config, __initial_auth_token)
         // are automatically provided by the Canvas environment at runtime.
         // DO NOT hardcode your Firebase API keys or project IDs here.
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        let appId = 'default-app-id';
+        let firebaseConfig = {};
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
-        // Initialize Firebase app and services
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
+        // Safely parse __firebase_config and set appId
+        if (typeof __app_id !== 'undefined') {
+            appId = __app_id;
+        } else {
+            console.warn("Firebase Init: __app_id is not defined. Using default 'default-app-id'.");
+        }
+
+        if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+            try {
+                firebaseConfig = JSON.parse(__firebase_config);
+                if (!firebaseConfig.projectId) {
+                    console.error("Firebase Init: Parsed firebaseConfig is missing 'projectId'. Check __firebase_config.");
+                    // Fallback to a minimal config if projectId is missing
+                    firebaseConfig = { projectId: "missing-project-id", apiKey: "missing-api-key" };
+                }
+            } catch (e) {
+                console.error("Firebase Init: Error parsing __firebase_config:", e);
+                // Fallback to a minimal config on parse error
+                firebaseConfig = { projectId: "parse-error", apiKey: "parse-error" };
+            }
+        } else {
+            console.error("Firebase Init: __firebase_config is not defined or is empty. Firebase will not initialize correctly.");
+            // Fallback to a minimal config if __firebase_config is not defined/empty
+            firebaseConfig = { projectId: "not-provided", apiKey: "not-provided" };
+        }
+
+        console.log("Firebase Init: Attempting to initialize with config:", firebaseConfig);
+
+        let app;
+        let db;
+        let auth;
+
+        try {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+            console.log("Firebase: Initialized successfully.");
+        } catch (error) {
+            console.error("Firebase: Initialization failed in index.html module script:", error);
+            // Display a user-friendly error message if initialization fails
+            document.body.innerHTML = '<div class="error-message"><p>Application failed to initialize Firebase.</p><p>Please ensure your environment provides Firebase configuration and try again.</p><p>Error: ' + error.message + '</p></div>';
+            return; // Stop script execution
+        }
 
         // Make Firebase instances and core functions globally accessible to script.js
-        // This is a common pattern for integrating Firebase with vanilla JS in this environment.
         window.firestoreDb = db;
         window.firebaseAuth = auth;
-        window.getFirebaseAppId = () => appId;
+        window.getFirebaseAppId = () => appId; // Function to return the appId
         window.firestore = {
             collection, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc,
             query, where, writeBatch, FieldValue: FieldValue // Expose FieldValue for operations like deleteField
@@ -69,7 +107,6 @@
         };
 
         // Attempt authentication using the provided custom token or anonymously
-        // This ensures the app can interact with Firestore immediately upon loading.
         if (initialAuthToken) {
             signInWithCustomToken(auth, initialAuthToken)
                 .then(() => console.log("Firebase: Signed in with custom token."))
@@ -80,8 +117,7 @@
                 .catch(error => console.error("Firebase: Anonymous sign-in failed:", error));
         }
 
-        console.log("Firebase: Initialized successfully with config.");
-        console.log("index.html (v46) script module loaded and DOMContentLoaded fired."); // Updated HTML version log
+        console.log("index.html (v47) script module loaded and DOMContentLoaded fired."); // Updated HTML version log
     </script>
 
     <!-- Main Header Section -->
@@ -163,7 +199,7 @@
             <button id="themeToggleBtn" class="menu-button-item" data-action-closes-menu="false">
                 <i class="fas fa-palette"></i> Toggle Theme
             </button>
-            <!-- Other settings can go here as needed -->
+            <!-- Other settings can go here -->
         </div>
 
         <h3 class="text-lg font-semibold mb-3">Account</h3>
@@ -415,7 +451,7 @@
     </div>
 
     <!-- Your main script.js - Loaded last to ensure all HTML elements are available -->
-    <script src="script.js?v=109"></script> <!-- IMPORTANT: Ensure this version matches your script.js file -->
+    <script src="script.js?v=111"></script> <!-- IMPORTANT: Ensure this version matches your script.js file -->
     <script>
         // Register service worker - This block is typically placed at the end of the body
         // to ensure the page content loads first.

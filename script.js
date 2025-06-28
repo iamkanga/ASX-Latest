@@ -1,5 +1,5 @@
-// File Version: v110 (Updated by Gemini for Firebase errors and robustness)
-// Last Updated: 2025-06-28 (Improved Firebase initialization checks, fixed window.getFirebaseAppId access)
+// File Version: v111 (Updated by Gemini for Firebase errors and robustness)
+// Last Updated: 2025-06-28 (Improved Firebase initialization checks, fixed window.getFirebaseAppId access, Service Worker v26)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -7,7 +7,7 @@
 // from the <script type="module"> block in index.html.
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v110) DOMContentLoaded fired."); // New log to confirm script version and DOM ready
+    console.log("script.js (v111) DOMContentLoaded fired."); // New log to confirm script version and DOM ready
 
     // --- Core Helper Functions (DECLARED FIRST FOR HOISTING) ---
     // Moved toggleAppSidebar here to ensure it's defined before any calls within this scope.
@@ -645,13 +645,6 @@ document.addEventListener('DOMContentLoaded', function() {
     //         if (!elementToScrollTo || window.matchMedia("(max-width: 768px)").matches) {
     //             elementToScrollTo = document.querySelector(`.mobile-card[data-doc-id="${targetShare.id}"]`);
     //         }
-    //         if (elementToScrollTo) {
-    //             elementToScrollTo.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    //         }
-    //         // On mobile, if a share is selected via ASX code button, immediately show details
-    //         if (window.matchMedia("(max-width: 768px)").matches) {
-    //             showShareDetails(); 
-    //         }
     //     } else {
     //         showCustomAlert(`Share '${asxCode}' not found.`);
     //     }
@@ -1224,17 +1217,6 @@ document.addEventListener('DOMContentLoaded', function() {
     let allSharesData = [];
     let currentDialogCallback = null;
     let autoDismissTimeout = null;
-    let lastTapTime = 0;
-    let tapTimeout;
-    let selectedElementForTap = null;
-    let longPressTimer;
-    const LONG_PRESS_THRESHOLD = 400; // Increased sensitivity for long press
-    const DOUBLE_TAP_THRESHOLD = 300; // Max time between taps for double tap
-    const DOUBLE_TAP_TIMEOUT = 250; // Timeout to register single tap vs potential double tap
-    let touchStartX = 0;
-    let touchStartY = 0;
-    let touchMoved = false;
-    const TOUCH_MOVE_THRESHOLD = 10;
     const KANGA_EMAIL = 'iamkanga@gmail.com';
     let currentCalculatorInput = '';
     let operator = null;
@@ -1270,10 +1252,10 @@ document.addEventListener('DOMContentLoaded', function() {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./service-worker.js', { scope: './' }) 
                 .then(registration => {
-                    console.log('Service Worker (v25) from script.js: Registered with scope:', registration.scope); // Increment SW version
+                    console.log('Service Worker (v26) from script.js: Registered with scope:', registration.scope); // Increment SW version
                 })
                 .catch(error => {
-                    console.error('Service Worker (v25) from script.js: Registration failed:', error); // Increment SW version
+                    console.error('Service Worker (v26) from script.js: Registration failed:', error); // Increment SW version
                 });
         });
     }
@@ -1319,6 +1301,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- Firebase Initialization and Authentication State Listener ---
     // Safely assign Firebase globals after checking they exist
+    // This block now relies on the index.html module script to have successfully initialized Firebase
     if (window.firestoreDb && window.firebaseAuth && typeof window.getFirebaseAppId === 'function') {
         db = window.firestoreDb;
         auth = window.firebaseAuth;
@@ -1326,6 +1309,7 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log(`[Firebase Init] App ID: ${currentAppId}`); // Log the retrieved App ID
     } else {
         console.error("[Firebase] Firebase global variables or getFirebaseAppId function not available. Cannot proceed with Firebase operations.");
+        // Display a user-friendly error message if Firebase is not ready
         document.body.innerHTML = '<div class="error-message"><p>Application failed to initialize Firebase.</p><p>Please ensure your environment provides Firebase configuration and try again.</p></div>';
         if (loadingIndicator) loadingIndicator.style.display = 'none';
         updateMainButtonsState(false); // Disable all buttons
