@@ -1,5 +1,5 @@
-/* File Version: v54 */
-/* Last Updated: 2025-06-28 (Version bump) */
+/* File Version: v57 */
+/* Last Updated: 2025-06-28 (UI Refinements: consolidated watchlist, spacing, modal aesthetics) */
 
 /* Base styles for the entire application */
 body {
@@ -139,16 +139,20 @@ body.dark-theme {
 .watchlist-controls-row {
     display: flex;
     flex-wrap: wrap;
-    justify-content: space-between;
+    justify-content: center; /* Centered on mobile & desktop */
     align-items: center;
-    gap: 10px;
+    gap: 10px; /* Reduced gap */
     margin-top: 10px;
+    padding-top: 10px; /* Added padding to separate from header-top-row */
+    padding-bottom: 10px; /* Added padding to separate from asxCodeButtonsContainer */
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .watchlist-group, .sort-group {
     display: flex;
     align-items: center;
-    gap: 8px;
+    /* Removed gap: 8px here, using gap on parent instead */
 }
 
 .dropdown-large {
@@ -160,6 +164,15 @@ body.dark-theme {
     font-size: 1rem;
     transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
     min-width: 150px; /* Ensure dropdown has minimum width */
+    /* Custom arrow for dropdowns */
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236c757d%22%20d%3D%22M287%2069.9a14.7%2014.7%200%200%200-20.8%200L146.2%20189.9%2026.3%2069.9a14.7%2014.7%200%200%200-20.8%2020.8L135.8%20216.7a14.7%2014.7%200%200%200%2020.8%200L287%2090.7a14.7%2014.7%200%200%200%200-20.8z%22%2F%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    background-position: right 12px top 50%;
+    background-size: 12px auto;
+    padding-right: 30px; /* Make space for the arrow */
+    appearance: none; /* Remove default arrow */
+    -webkit-appearance: none;
+    -moz-appearance: none;
 }
 
 .dropdown-large:focus {
@@ -167,23 +180,17 @@ body.dark-theme {
     border-color: var(--button-bg);
     box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.5); /* Tailwind blue-500 with opacity */
 }
-
-/* Watchlist and Sort Buttons */
-.watchlist-group button {
-    padding: 8px 12px;
-    border-radius: 8px;
-    font-size: 0.875rem; /* text-sm */
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    transition: background-color 0.2s ease, color 0.2s ease;
+/* Style for placeholder option */
+.dropdown-large option[value=""][disabled] {
+    color: var(--label-color); /* Greyed out for placeholder */
+    font-weight: 400;
+}
+/* Style for actual options */
+.dropdown-large option:not([value=""]) {
+    color: var(--text-color);
+    font-weight: 600;
 }
 
-.watchlist-group button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
 
 /* ASX Code Buttons Container */
 .asx-code-buttons-container {
@@ -313,6 +320,7 @@ body.sidebar-active {
     gap: 10px;
     transition: background-color 0.2s ease, transform 0.1s ease;
     width: 100%; /* Ensure buttons take full width */
+    box-sizing: border-box; /* Include padding in width */
 }
 
 .menu-button-item:hover {
@@ -577,12 +585,14 @@ body.sidebar-active {
 
 .form-action-buttons, .modal-action-buttons, .custom-dialog-buttons {
     display: flex;
-    justify-content: flex-end;
+    justify-content: center; /* Center the group of buttons */
     gap: 10px;
     margin-top: 20px;
+    flex-wrap: nowrap; /* Keep buttons on one line */
 }
 
-.primary-button, .secondary-button, .danger-button {
+.form-action-buttons button, .modal-action-buttons button, .custom-dialog-buttons button {
+    flex-grow: 1; /* Allow buttons to expand and fill space */
     padding: 12px 20px;
     border-radius: 8px;
     border: none;
@@ -594,6 +604,12 @@ body.sidebar-active {
     align-items: center;
     justify-content: center;
     gap: 8px;
+    max-width: 180px; /* Default max-width for desktop */
+}
+
+/* Specific styling for 3-button layouts to ensure even distribution */
+.form-action-buttons.three-buttons button {
+    max-width: 150px; /* Adjust max-width for 3 buttons to fit better */
 }
 
 .primary-button {
@@ -785,7 +801,7 @@ body.sidebar-active {
 .ghosted-text {
     color: var(--ghosted-text-color);
     font-size: 0.85rem;
-    text-align: center;
+    text-align: left; /* Explicitly left-align */
     margin-top: 5px;
 }
 
@@ -955,6 +971,47 @@ body.sidebar-active {
     transform: translateY(-3px);
 }
 
+/* --- New Combined Manage Watchlists Modal Styles --- */
+.tab-buttons {
+    display: flex;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.tab-button {
+    flex-grow: 1;
+    padding: 12px 15px;
+    background-color: var(--table-header-bg); /* Lighter background for inactive tab */
+    color: var(--text-color);
+    border: none;
+    border-bottom: 2px solid transparent; /* Highlight for active tab */
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+    text-align: center;
+    border-radius: 8px 8px 0 0; /* Rounded top corners */
+}
+
+.tab-button:hover {
+    background-color: var(--table-row-hover-bg); /* Subtle hover */
+}
+
+.tab-button.active {
+    background-color: var(--modal-content-bg); /* Match modal content background for active tab */
+    border-bottom-color: var(--button-bg); /* Active color */
+    color: var(--button-bg); /* Active text color */
+}
+
+.tab-content {
+    display: none; /* Hidden by default */
+    padding-top: 10px; /* Space below tabs */
+}
+
+.tab-content.active {
+    display: block; /* Show active tab content */
+}
+
 
 /* Responsive Adjustments */
 @media (max-width: 768px) {
@@ -965,28 +1022,18 @@ body.sidebar-active {
     .watchlist-controls-row {
         flex-direction: column;
         align-items: stretch;
+        gap: 10px; /* Keep gap for vertical stacking */
     }
 
     .watchlist-group, .sort-group {
         width: 100%;
-        flex-direction: column;
-        align-items: stretch;
-        gap: 5px;
+        flex-direction: row; /* Keep dropdown and its potential label on one line */
+        justify-content: center; /* Center the dropdown itself */
+        gap: 0; /* Remove gap between label and dropdown if labels were present */
     }
-
-    .watchlist-group label, .sort-group label {
-        align-self: flex-start;
-        margin-bottom: 5px;
-    }
-
     .dropdown-large {
-        width: 100%;
+        width: 100%; /* Full width on mobile */
         min-width: unset;
-    }
-
-    .watchlist-group button {
-        width: 100%;
-        margin-top: 5px;
     }
 
     .share-list-section {
@@ -999,23 +1046,214 @@ body.sidebar-active {
 
     .modal-content {
         width: 95%;
-        margin: 0 10px; /* Add horizontal margin on small screens */
+        margin: 20px auto; /* Adjust margin for mobile */
+        padding: 20px; /* Adjust padding for mobile */
     }
 
     .form-action-buttons, .modal-action-buttons, .custom-dialog-buttons {
-        flex-direction: column;
+        flex-direction: row; /* Keep buttons in a row */
+        flex-wrap: nowrap; /* Prevent wrapping */
+        justify-content: space-between; /* Distribute space evenly */
+        gap: 5px; /* Reduce gap to fit more buttons */
     }
 
-    .primary-button, .secondary-button, .danger-button {
-        width: 100%;
+    .form-action-buttons button, .modal-action-buttons button, .custom-dialog-buttons button {
+        flex-grow: 1; /* Allow buttons to grow */
+        max-width: unset; /* Remove max-width on mobile */
+        padding: 10px 8px; /* Adjust padding for smaller buttons */
+        font-size: 0.9rem; /* Slightly smaller font for tighter fit */
     }
 
-    /* Adjust footer for mobile */
-    .fixed-footer {
-        padding: 10px;
+    /* Specific adjustment for 3-button layouts on mobile */
+    .form-action-buttons.three-buttons button {
+        max-width: unset; /* Let flex-grow handle sizing */
     }
+    
+    .comments-form-container .add-section-btn {
+        width: 35px;
+        height: 35px;
+        font-size: 1.8rem;
+    }
+
+    /* Ensure scroll-to-top button is shown on mobile when scrolled (JS will manage visibility based on scroll) */
+    #scrollToTopBtn {
+        right: 10px;
+        bottom: 10px;
+        display: flex; /* Always display initially, JS controls opacity/final display */
+    }
+
+    /* Mobile Sign-In Button Centering */
     .google-auth-btn {
+        width: 100%; /* Make footer button full width */
+        justify-content: center;
+    }
+
+    /* Combined Watchlist Modal Tabs on Mobile */
+    .tab-buttons {
+        flex-direction: row; /* Keep tabs in a row */
+        flex-wrap: nowrap;
+    }
+    .tab-button {
+        padding: 10px;
+        font-size: 0.9rem;
+    }
+}
+
+/* Desktop (min-width: 769px) */
+@media (min-width: 769px) {
+    header {
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        flex-wrap: nowrap;
+        padding-bottom: 0;
+        gap: 10px;
+        height: auto;
+    }
+
+    .header-top-row {
+        width: 100%;
+        margin-bottom: 0;
+        justify-content: center;
+        flex-grow: 0;
+        height: auto;
+        position: relative;
+    }
+
+    h1#mainTitle {
+        font-size: 2.2rem;
+        text-align: center;
+        order: 1;
+        margin-left: 0;
+        flex-grow: 1;
+        padding-left: 0;
+        padding-right: 0;
+        line-height: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Hamburger button on desktop - always visible, but only for toggling */
+    .hamburger-btn {
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 2rem;
+        padding: 5px 10px;
+        height: auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        order: 0;
+    }
+
+    /* New: Header "Add Share" Button on desktop - position left */
+    #addShareHeaderBtn {
+        display: block;
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        padding: 5px 10px;
+    }
+
+    /* App Sidebar specific for desktop - initially hidden, slides in/out */
+    .app-sidebar {
+        left: -280px; /* Start hidden on desktop too */
+        width: 260px; /* Fixed width */
+        box-shadow: 2px 0 5px var(--shadow-color);
+        border-right: 1px solid var(--sidebar-border);
+        position: fixed;
+        top: 0;
+        height: 100%;
+        padding-top: calc(70px + 20px); /* Space for fixed header (70px) + padding */
+        z-index: 998; /* Lower z-index than modals, but above main content */
+        transition: left 0.3s ease-in-out; 
+    }
+    /* Show close button on desktop sidebar */
+    .app-sidebar .close-menu-btn {
+        display: block;
+        top: 10px;
+        right: 15px;
+        font-size: 1.5rem; /* Reduced size for desktop */
+    }
+    /* Overlay for desktop when sidebar is open */
+    .sidebar-overlay.open {
+        display: block;
+        background-color: rgba(0, 0, 0, 0.1); /* More ghosted for desktop */
+        pointer-events: none; /* Allow clicks to pass through to main content */
+    }
+
+    /* Shift main content & footer to the right when sidebar is open on desktop */
+    body.sidebar-active main.container {
+        margin-left: 260px; /* Match sidebar width */
+        width: calc(100% - 260px);
+    }
+    body.sidebar-active footer.fixed-footer {
+        margin-left: 260px; /* Match sidebar width */
+        width: calc(100% - 260px);
+    }
+
+    /* Watchlist and Sort controls on Desktop: Ensure they are on the same line and centralized */
+    .watchlist-controls-row {
         width: 100%;
         justify-content: center;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        gap: 20px; /* Adjusted gap for desktop */
+        padding: 15px 0;
+        border-top: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--border-color);
+    }
+    .watchlist-group,
+    .sort-group {
+        width: auto;
+        justify-content: flex-start;
+        padding: 0;
+    }
+    .dropdown-large {
+        min-width: 180px;
+        width: auto;
+    }
+
+    .fixed-footer {
+        padding: 15px 20px;
+    }
+
+    /* Ensure table is visible and cards are hidden on desktop */
+    table {
+        display: table;
+    }
+
+    .mobile-share-cards {
+        display: none;
+    }
+
+    /* Ensure scroll-to-top button is hidden on desktop */
+    #scrollToTopBtn {
+        display: none; /* Always hidden on desktop */
+    }
+
+    /* Modal buttons on desktop */
+    .form-action-buttons button, .modal-action-buttons button, .custom-dialog-buttons button {
+        max-width: 180px; /* Keep max-width for desktop */
+    }
+    .form-action-buttons.three-buttons button {
+        max-width: 150px; /* Adjust max-width for 3 buttons to fit better */
+    }
+}
+
+/* Specific adjustments for very large screens (optional) */
+@media (min-width: 1024px) {
+    header {
+        padding: 20px 30px;
+    }
+    h1#mainTitle {
+        font-size: 2.5rem;
+    }
+    .container {
+        padding: 0 20px;
     }
 }

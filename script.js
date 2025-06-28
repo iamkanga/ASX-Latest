@@ -1,5 +1,5 @@
-// File Version: v125 (Updated by Gemini for Firebase errors and robustness)
-// Last Updated: 2025-06-28 (Version bump)
+// File Version: v126 (Updated by Gemini for UI Refinements and Watchlist Consolidation)
+// Last Updated: 2025-06-28 (Implemented consolidated watchlist management, spacing, modal aesthetics)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -92,17 +92,22 @@ let hamburgerBtn;
 let appSidebar;
 let closeMenuBtn;
 let sidebarOverlay;
-let addWatchlistBtn;
-let editWatchlistBtn;
-let addWatchlistModal;
+
+// Consolidated Watchlist Management Modal Elements
+let manageWatchlistsSidebarBtn;
+let manageWatchlistsCombinedModal;
+let showAddWatchlistTab;
+let showEditWatchlistTab;
+let addWatchlistSection;
+let editWatchlistSection;
 let newWatchlistNameInput;
 let saveWatchlistBtn;
 let cancelAddWatchlistBtn;
-let manageWatchlistModal;
 let editWatchlistNameInput;
 let saveWatchlistNameBtn;
 let deleteWatchlistInModalBtn;
 let cancelManageWatchlistBtn;
+
 
 // Array of all form input elements for easy iteration and form clearing (excluding dynamic comments)
 let formInputs = []; // Initialized here, populated in DOMContentLoaded
@@ -223,17 +228,18 @@ function updateMainButtonsState(enable) {
     if (standardCalcBtn) standardCalcBtn.disabled = !enable;
     if (dividendCalcBtn) dividendCalcBtn.disabled = !enable;
     if (watchlistSelect) watchlistSelect.disabled = !enable;
-    if (addWatchlistBtn) addWatchlistBtn.disabled = !enable;
-    // Disable edit/delete watchlist if there's only one watchlist, regardless of auth state
-    const disableEditDeleteWatchlist = !enable || userWatchlists.length <= 1;
-    if (editWatchlistBtn) editWatchlistBtn.disabled = disableEditDeleteWatchlist;
-    if (deleteWatchlistInModalBtn) deleteWatchlistInModalBtn.disabled = disableEditDeleteWatchlist;
+    if (manageWatchlistsSidebarBtn) manageWatchlistsSidebarBtn.disabled = !enable; // New: Manage Watchlists button
+    
+    // Disable delete if there's only one watchlist, regardless of auth state
+    const disableDeleteWatchlist = !enable || userWatchlists.length <= 1;
+    if (deleteWatchlistInModalBtn) deleteWatchlistInModalBtn.disabled = disableDeleteWatchlist;
+    
     if (addShareHeaderBtn) addShareHeaderBtn.disabled = !enable;
 
     if (themeToggleBtn) {
         themeToggleBtn.disabled = false; // Theme toggle is always enabled
     }
-    console.log(`[UI State] Main buttons enabled: ${enable}. Watchlist edit/delete disabled if only one watchlist: ${disableEditDeleteWatchlist}`);
+    console.log(`[UI State] Main buttons enabled: ${enable}. Watchlist edit/delete disabled if only one watchlist: ${disableDeleteWatchlist}`);
 }
 
 function showModal(modalElement) {
@@ -490,7 +496,8 @@ function renderWatchlistSelect() {
     watchlistSelect.innerHTML = '';
     const placeholderOption = document.createElement('option');
     placeholderOption.value = '';
-    placeholderOption.textContent = 'Watchlist';
+    // Updated placeholder text for watchlist dropdown
+    placeholderOption.textContent = currentUserId ? 'Select Watchlist' : 'No Watchlist Selected';
     placeholderOption.disabled = true;
     placeholderOption.selected = true; 
     watchlistSelect.appendChild(placeholderOption);
@@ -524,13 +531,13 @@ function renderSortSelect() {
     if (!sortSelect) { console.error("[renderSortSelect] sortSelect element not found."); return; }
     const firstOption = sortSelect.options[0];
     if (firstOption && firstOption.value === '') {
-        firstOption.textContent = 'Sort';
+        firstOption.textContent = 'Sort'; // Placeholder text for sort dropdown
         firstOption.disabled = true;
         firstOption.selected = true;
     } else {
         const placeholderOption = document.createElement('option');
         placeholderOption.value = '';
-        placeholderOption.textContent = 'Sort';
+        placeholderOption.textContent = 'Sort'; // Placeholder text for sort dropdown
         placeholderOption.disabled = true;
         placeholderOption.selected = true;
         sortSelect.insertBefore(placeholderOption, sortSelect.firstChild);
@@ -798,7 +805,7 @@ const themes = [
     { name: "Soft Grey", bg: "#f4f7f6", text: "#333", header: "#e6e9eb", card: "#ffffff", border: "#c9d2d4", button: "#6c757d", hover: "#545b62", sidebar: "#e6e9eb", asx_active_text: "#fff" },
     { name: "Muted Blue", bg: "#e9eff2", text: "#4a5568", header: "#c9d5db", card: "#f0f4f7", border: "#aebbc2", button: "#4299e1", hover: "#3182ce", sidebar: "#c9d5db", asx_active_text: "#fff" },
     { name: "Earthy Green", bg: "#f0f5ee", text: "#4a574a", header: "#d1d9cf", card: "#f8fbf7", border: "#b8c2b8", button: "#48bb78", hover: "#38a169", sidebar: "#d1d9cf", asx_active_text: "#fff" },
-    { name: "Warm Beige", bg: "#fbf8f3", text: "#6b462f", header: "#e8dcd2", card: "#ffffff", border: "#d4c0b0", button: "#dd6b20", hover: "#c05621", sidebar: "#e8dcd2", asx_active_text: "#fff" },
+    { name: "Warm Beige", bg: "#fbf8ed", text: "#6b462f", header: "#e8dcd2", card: "#ffffff", border: "#d4c0b0", button: "#dd6b20", hover: "#c05621", sidebar: "#e8d9c2", asx_active_text: "#fff" },
     { name: "Cool Grey", bg: "#eef2f5", text: "#4c5563", header: "#d4dae0", card: "#f7f9fb", border: "#c0c7cf", button: "#63b3ed", hover: "#4299e1", sidebar: "#d4dae0", asx_active_text: "#fff" },
     { name: "Dusty Rose", bg: "#fcf0f2", text: "#713f48", header: "#ebd2d5", card: "#ffffff", border: "#d9b3b8", button: "#e53e3e", hover: "#c53030", sidebar: "#ebd2d2", asx_active_text: "#fff" },
     { name: "Lavender Mist", bg: "#f5f3fa", text: "#5c4f70", header: "#dcd7e3", card: "#ffffff", border: "#c4b8d0", button: "#805ad5", hover: "#6b46c1", sidebar: "#dcd7e3", asx_active_text: "#fff" },
@@ -1159,7 +1166,7 @@ async function migrateOldSharesToWatchlist() {
 
 // --- DOMContentLoaded Listener for UI Element References and Event Listeners ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v125) DOMContentLoaded fired.");
+    console.log("script.js (v126) DOMContentLoaded fired.");
 
     // --- UI Element References (Populated here once DOM is ready) ---
     mainTitle = document.getElementById('mainTitle');
@@ -1232,17 +1239,22 @@ document.addEventListener('DOMContentLoaded', function() {
         sidebarOverlay.classList.add('sidebar-overlay');
         document.body.appendChild(sidebarOverlay);
     }
-    addWatchlistBtn = document.getElementById('addWatchlistBtn');
-    editWatchlistBtn = document.getElementById('editWatchlistBtn');
-    addWatchlistModal = document.getElementById('addWatchlistModal');
+    
+    // Consolidated Watchlist Management Modal Elements
+    manageWatchlistsSidebarBtn = document.getElementById('manageWatchlistsSidebarBtn');
+    manageWatchlistsCombinedModal = document.getElementById('manageWatchlistsCombinedModal');
+    showAddWatchlistTab = document.getElementById('showAddWatchlistTab');
+    showEditWatchlistTab = document.getElementById('showEditWatchlistTab');
+    addWatchlistSection = document.getElementById('addWatchlistSection');
+    editWatchlistSection = document.getElementById('editWatchlistSection');
     newWatchlistNameInput = document.getElementById('newWatchlistName');
     saveWatchlistBtn = document.getElementById('saveWatchlistBtn');
     cancelAddWatchlistBtn = document.getElementById('cancelAddWatchlistBtn');
-    manageWatchlistModal = document.getElementById('manageWatchlistModal');
     editWatchlistNameInput = document.getElementById('editWatchlistName');
     saveWatchlistNameBtn = document.getElementById('saveWatchlistNameBtn');
     deleteWatchlistInModalBtn = document.getElementById('deleteWatchlistInModalBtn');
     cancelManageWatchlistBtn = document.getElementById('cancelManageWatchlistBtn');
+
 
     // Populate formInputs array after elements are referenced
     formInputs = [
@@ -1254,8 +1266,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (shareFormSection) shareFormSection.classList.remove('open');
     if (dividendCalculatorModal) dividendCalculatorModal.classList.remove('open');
     if (shareDetailModal) shareDetailModal.classList.remove('open');
-    if (addWatchlistModal) addWatchlistModal.classList.remove('open');
-    if (manageWatchlistModal) manageWatchlistModal.classList.remove('open');
+    if (manageWatchlistsCombinedModal) manageWatchlistsCombinedModal.classList.remove('open'); // New combined modal
     if (customDialogModal) customDialogModal.classList.remove('open');
     if (calculatorModal) calculatorModal.classList.remove('open');
     updateMainButtonsState(false); // Initially disable all auth-dependent buttons
@@ -1272,59 +1283,13 @@ document.addEventListener('DOMContentLoaded', function() {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./service-worker.js', { scope: './' }) 
                 .then(registration => {
-                    console.log('Service Worker (v37) from script.js: Registered with scope:', registration.scope);
+                    console.log('Service Worker (v37) from script.js: Registered with scope:', registration.scope); 
                 })
                 .catch(error => {
                     console.error('Service Worker (v37) from script.js: Registration failed:', error);
                 });
         });
     }
-
-    // --- Firebase Auth Listener (Moved to DOMContentLoaded for reliable element access) ---
-    // This will trigger data loading and UI updates after Firebase is ready and user auth state is known
-    if (window.firebaseAuth && typeof window.getFirebaseAppId === 'function') {
-        db = window.firestoreDb; // Assign global db from window
-        auth = window.firebaseAuth; // Assign global auth from window
-        currentAppId = window.getFirebaseAppId(); // Assign global appId from window
-        console.log(`[Firebase Init] App ID: ${currentAppId}`);
-
-        // Enable Google Auth buttons once Firebase Auth is available
-        if (googleAuthBtnSidebar) googleAuthBtnSidebar.disabled = false;
-        if (googleAuthBtnFooter) googleAuthBtnFooter.disabled = false;
-        console.log("[Auth] Google Auth buttons enabled.");
-
-        window.authFunctions.onAuthStateChanged(auth, async (user) => {
-            console.log("[AuthState] onAuthStateChanged fired. User:", user ? user.uid : "null");
-            if (user) {
-                currentUserId = user.uid;
-                updateAuthButtonText(true, user.email || user.displayName);
-                console.log("[AuthState] User signed in:", user.uid);
-                if (user.email && user.email.toLowerCase() === KANGA_EMAIL) {
-                    mainTitle.textContent = "Kanga's Share Watchlist";
-                } else {
-                    mainTitle.textContent = "My Share Watchlist";
-                }
-                updateMainButtonsState(true); // Enable auth-dependent buttons
-                if (loadingIndicator) loadingIndicator.style.display = 'none';
-                await loadUserWatchlists();
-            } else {
-                currentUserId = null;
-                updateAuthButtonText(false);
-                mainTitle.textContent = "Share Watchlist";
-                console.log("[AuthState] User signed out.");
-                updateMainButtonsState(false); // Disable auth-dependent buttons
-                clearShareList();
-                clearWatchlistUI();
-                if (loadingIndicator) loadingIndicator.style.display = 'none';
-            }
-        });
-    } else {
-        console.error("[Firebase] Firebase global variables or getFirebaseAppId function not available. Cannot set up auth listener or proceed with Firebase operations.");
-        updateAuthButtonText(false);
-        updateMainButtonsState(false);
-        if (loadingIndicator) loadingIndicator.style.display = 'none';
-    }
-
 
     // --- Event Listeners for Input Fields ---
     if (shareNameInput) {
@@ -1578,20 +1543,61 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- Add Watchlist Modal Functions Event Listeners ---
-    if (addWatchlistBtn) {
-        addWatchlistBtn.addEventListener('click', () => {
-            console.log("[Button] 'Add Watchlist' clicked.");
+    // --- NEW: Consolidated Manage Watchlists Modal Functions Event Listeners ---
+    if (manageWatchlistsSidebarBtn) {
+        manageWatchlistsSidebarBtn.addEventListener('click', () => {
+            console.log("[Button] 'Manage Watchlists' clicked.");
+            // Reset modal state
             if (newWatchlistNameInput) newWatchlistNameInput.value = '';
-            showModal(addWatchlistModal);
-            newWatchlistNameInput.focus();
-            toggleAppSidebar(false);
+            if (editWatchlistNameInput) editWatchlistNameInput.value = currentWatchlistName;
+
+            // Set initial tab to Add New
+            showAddWatchlistTab.classList.add('active');
+            showEditWatchlistTab.classList.remove('active');
+            addWatchlistSection.classList.add('active');
+            editWatchlistSection.classList.remove('active');
+
+            // Update delete button state
+            if (deleteWatchlistInModalBtn) {
+                deleteWatchlistInModalBtn.disabled = userWatchlists.length <= 1;
+            }
+
+            showModal(manageWatchlistsCombinedModal);
+            newWatchlistNameInput.focus(); // Focus on add tab's input
+            toggleAppSidebar(false); // Close sidebar
         });
     }
 
-    if (saveWatchlistBtn) {
+    if (showAddWatchlistTab) {
+        showAddWatchlistTab.addEventListener('click', () => {
+            showAddWatchlistTab.classList.add('active');
+            showEditWatchlistTab.classList.remove('active');
+            addWatchlistSection.classList.add('active');
+            editWatchlistSection.classList.remove('active');
+            newWatchlistNameInput.focus();
+            console.log("[Watchlist Tabs] Switched to 'Add New' tab.");
+        });
+    }
+
+    if (showEditWatchlistTab) {
+        showEditWatchlistTab.addEventListener('click', () => {
+            showEditWatchlistTab.classList.add('active');
+            showAddWatchlistTab.classList.remove('active');
+            editWatchlistSection.classList.add('active');
+            addWatchlistSection.classList.remove('active');
+            editWatchlistNameInput.value = currentWatchlistName; // Ensure it's updated
+            // Update delete button state when switching to edit tab
+            if (deleteWatchlistInModalBtn) {
+                deleteWatchlistInModalBtn.disabled = userWatchlists.length <= 1;
+            }
+            editWatchlistNameInput.focus();
+            console.log("[Watchlist Tabs] Switched to 'Edit/Delete' tab.");
+        });
+    }
+
+    if (saveWatchlistBtn) { // Add New Watchlist (from combined modal)
         saveWatchlistBtn.addEventListener('click', async () => {
-            console.log("[Button] 'Save Watchlist' clicked.");
+            console.log("[Button] 'Add Watchlist' clicked (from combined modal).");
             const watchlistName = newWatchlistNameInput.value.trim();
             if (!watchlistName) {
                 showCustomAlert("Watchlist name is required!");
@@ -1611,7 +1617,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
                 showCustomAlert(`Watchlist '${watchlistName}' added!`, 1500);
                 console.log(`[Firestore] Watchlist '${watchlistName}' added with ID: ${newWatchlistRef.id}`);
-                hideModal(addWatchlistModal);
+                hideModal(manageWatchlistsCombinedModal);
                 
                 currentWatchlistId = newWatchlistRef.id;
                 currentWatchlistName = watchlistName;
@@ -1626,35 +1632,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    if (cancelAddWatchlistBtn) {
+    if (cancelAddWatchlistBtn) { // Cancel Add Watchlist (from combined modal)
         cancelAddWatchlistBtn.addEventListener('click', () => {
             console.log("[Button] 'Cancel Add Watchlist' clicked.");
-            hideModal(addWatchlistModal);
+            hideModal(manageWatchlistsCombinedModal);
             if (newWatchlistNameInput) newWatchlistNameInput.value = '';
             console.log("[Watchlist] Add Watchlist canceled.");
         });
     }
 
-    // --- Manage Watchlist Modal (Edit/Delete) Functions ---
-    if (editWatchlistBtn) {
-        editWatchlistBtn.addEventListener('click', () => {
-            console.log("[Button] 'Manage Watchlist' clicked.");
-            if (!currentWatchlistId) {
-                showCustomAlert("Please select a watchlist to edit.");
-                return;
-            }
-            editWatchlistNameInput.value = currentWatchlistName;
-            // Disable delete if it's the last watchlist
-            if (deleteWatchlistInModalBtn) {
-                deleteWatchlistInModalBtn.disabled = userWatchlists.length <= 1;
-            }
-            showModal(manageWatchlistModal);
-            editWatchlistNameInput.focus();
-            toggleAppSidebar(false);
-        });
-    }
-
-    if (saveWatchlistNameBtn) {
+    if (saveWatchlistNameBtn) { // Save Watchlist Name (from combined modal)
         saveWatchlistNameBtn.addEventListener('click', async () => {
             console.log("[Button] 'Save Watchlist Name' clicked.");
             const newName = editWatchlistNameInput.value.trim();
@@ -1664,7 +1651,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             if (newName === currentWatchlistName) {
                 showCustomAlert("Watchlist name is already the same.");
-                hideModal(manageWatchlistModal);
+                hideModal(manageWatchlistsCombinedModal);
                 return;
             }
             if (userWatchlists.some(w => w.name.toLowerCase() === newName.toLowerCase() && w.id !== currentWatchlistId)) {
@@ -1677,7 +1664,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 await window.firestore.updateDoc(watchlistDocRef, { name: newName });
                 showCustomAlert(`Watchlist renamed to '${newName}'!`, 1500);
                 console.log(`[Firestore] Watchlist (ID: ${currentWatchlistId}) renamed to '${newName}'.`);
-                hideModal(manageWatchlistModal);
+                hideModal(manageWatchlistsCombinedModal);
                 currentWatchlistName = newName;
                 await loadUserWatchlists();
                 await loadShares();
@@ -1688,7 +1675,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    if (deleteWatchlistInModalBtn) {
+    if (deleteWatchlistInModalBtn) { // Delete Watchlist (from combined modal)
         deleteWatchlistInModalBtn.addEventListener('click', () => {
             console.log("[Button] 'Delete Watchlist' (in modal) clicked.");
             if (!currentWatchlistId || userWatchlists.length <= 1) {
@@ -1727,10 +1714,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    if (cancelManageWatchlistBtn) {
+    if (cancelManageWatchlistBtn) { // Cancel Manage Watchlist (from combined modal)
         cancelManageWatchlistBtn.addEventListener('click', () => {
             console.log("[Button] 'Cancel Manage Watchlist' clicked.");
-            hideModal(manageWatchlistModal);
+            hideModal(manageWatchlistsCombinedModal);
             editWatchlistNameInput.value = '';
             console.log("[Watchlist] Manage Watchlist canceled.");
         });
@@ -1775,7 +1762,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- Standard Calculator Functions Event Listeners ---
     if (standardCalcBtn) {
         standardCalcBtn.addEventListener('click', () => {
-            console.log("[Button] 'Standard Calculator' clicked.");
             resetCalculator();
             showModal(calculatorModal);
             console.log("[UI] Standard Calculator modal opened.");

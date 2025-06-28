@@ -1,4 +1,4 @@
-<!-- Version v66 - **CRITICAL UPDATE: PLEASE REPLACE YOUR ENTIRE index.html WITH THIS CONTENT** - 2025-06-28 16:45 -->
+<!-- Version v69 - **CRITICAL UPDATE: PLEASE REPLACE YOUR ENTIRE index.html WITH THIS CONTENT** - 2025-06-28 17:45 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,7 +8,7 @@
     <!-- Tailwind CSS CDN - Loaded first for base utility classes -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Custom CSS for specific styling and overrides - Loaded after Tailwind -->
-    <link rel="stylesheet" href="style.css?v=54"> <!-- IMPORTANT: This version should match your style.css file -->
+    <link rel="stylesheet" href="style.css?v=57"> <!-- IMPORTANT: This version should match your style.css file -->
     <!-- Google Fonts for 'Inter' -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome for icons - Used throughout the app for buttons and indicators -->
@@ -194,41 +194,31 @@
             console.warn("Firebase: Auth object is null, skipping authentication attempt in module script.");
         }
 
-        console.log("index.html (v66) script module loaded."); // Updated HTML version log
+        console.log("index.html (v69) script module loaded."); // Updated HTML version log
     </script>
 
     <!-- Main Header Section -->
     <header class="header">
         <div class="header-top-row">
-            <!-- Hamburger Menu Button - Visible on all screen sizes -->
-            <button id="hamburgerBtn" class="hamburger-btn" aria-label="Open menu">
-                <i class="fas fa-bars"></i> <!-- Font Awesome hamburger icon -->
+            <!-- New "Add Share" button on the main screen - positioned left -->
+            <button id="addShareHeaderBtn" class="header-action-btn" aria-label="Add new share">
+                <i class="fas fa-plus"></i> <!-- Font Awesome plus icon -->
             </button>
             <!-- Main Title - Dynamically updated by script.js based on auth state -->
             <h1 id="mainTitle">Share Watchlist</h1>
-            <!-- Add New Share Button in Header - Visible on all screen sizes -->
-            <button id="addShareHeaderBtn" class="header-action-btn" aria-label="Add new share">
-                <i class="fas fa-plus"></i> <!-- Font Awesome plus icon -->
+            <!-- Hamburger Menu Button - Visible on all screen sizes -->
+            <button id="hamburgerBtn" class="hamburger-btn" aria-label="Open menu">
+                <i class="fas fa-bars"></i> <!-- Font Awesome hamburger icon -->
             </button>
         </div>
         <!-- Watchlist and Sort Controls Row - Contains dropdowns and watchlist management buttons -->
         <div class="watchlist-controls-row">
             <div class="watchlist-group">
-                <label for="watchlistSelect" class="text-gray-700 font-medium">Watchlist:</label>
                 <select id="watchlistSelect" class="dropdown-large">
                     <option value="" disabled selected>Loading Watchlists...</option>
                 </select>
-                <!-- Add Watchlist Button -->
-                <button id="addWatchlistBtn" class="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 transition-colors duration-200 text-sm" title="Add New Watchlist">
-                    <i class="fas fa-plus"></i>
-                </button>
-                <!-- Manage Watchlist Button (Edit/Delete) -->
-                <button id="editWatchlistBtn" class="bg-gray-300 text-gray-800 p-2 rounded-md hover:bg-gray-400 transition-colors duration-200 text-sm" title="Manage Current Watchlist">
-                    <i class="fas fa-cog"></i> <!-- Cog icon for settings/manage -->
-                </button>
             </div>
             <div class="sort-group">
-                <label for="sortSelect" class="text-gray-700 font-medium">Sort by:</label>
                 <select id="sortSelect" class="dropdown-large">
                     <option value="" disabled selected>Sort</option>
                     <option value="shareName-asc">Code (A-Z)</option>
@@ -267,6 +257,14 @@
             </button>
             <button id="standardCalcBtn" class="menu-button-item" data-action-closes-menu="true">
                 <i class="fas fa-calculator"></i> Standard Calculator
+            </button>
+        </div>
+
+        <h3 class="text-lg font-semibold mb-3">Watchlists</h3>
+        <div class="menu-buttons-group">
+            <!-- Consolidated Watchlist Management Button -->
+            <button id="manageWatchlistsSidebarBtn" class="menu-button-item" data-action-closes-menu="true">
+                <i class="fas fa-list-ul"></i> Manage Watchlists
             </button>
         </div>
 
@@ -403,7 +401,7 @@
                     <i class="fas fa-external-link-alt"></i> CommSec.com.au
                 </a>
                 <!-- Ghosted text for CommSec login reminder -->
-                <span id="commSecLoginMessage" class="ghosted-text block">Requires single CommSec login per session.</span>
+                <span id="commSecLoginMessage" class="ghosted-text text-left block">Requires single CommSec login per session.</span>
             </div>
 
             <div class="modal-action-buttons">
@@ -444,7 +442,7 @@
                 <label for="investmentValueSelect">Investment Value ($):</label>
                 <select id="investmentValueSelect">
                     <option value="1000">1,000</option>
-                    <option value="5000">5000</option>
+                    <option value="5000">5,000</option>
                     <option value="10000" selected>10,000</option>
                     <option value="25000">25,000</option>
                     <option value="50000">50,000</option>
@@ -487,31 +485,36 @@
         </div>
     </div>
 
-    <!-- Add Watchlist Modal -->
-    <div id="addWatchlistModal" class="modal">
+    <!-- Combined Manage Watchlists Modal -->
+    <div id="manageWatchlistsCombinedModal" class="modal">
         <div class="modal-content">
             <button class="close-button">&times;</button>
-            <h2 class="text-center">Add New Watchlist</h2>
-            <label for="newWatchlistName">Watchlist Name:</label>
-            <input type="text" id="newWatchlistName" placeholder="e.g., Tech Stocks" maxlength="50">
-            <div class="form-action-buttons">
-                <button type="button" id="cancelAddWatchlistBtn" class="secondary-button">Cancel</button>
-                <button type="submit" id="saveWatchlistBtn" class="primary-button">Add Watchlist</button>
-            </div>
-        </div>
-    </div>
+            <h2 class="text-center">Manage Watchlists</h2>
 
-    <!-- Manage Watchlist Modal (Edit/Delete) -->
-    <div id="manageWatchlistModal" class="modal">
-        <div class="modal-content">
-            <button class="close-button">&times;</button>
-            <h2 class="text-center">Manage Watchlist</h2>
-            <label for="editWatchlistName">Watchlist Name:</label>
-            <input type="text" id="editWatchlistName" placeholder="e.g., My Watchlist" maxlength="50">
-            <div class="form-action-buttons">
-                <button type="button" id="cancelManageWatchlistBtn" class="secondary-button">Cancel</button>
-                <button type="button" id="deleteWatchlistInModalBtn" class="danger-button">Delete Watchlist</button>
-                <button type="submit" id="saveWatchlistNameBtn" class="primary-button">Save Name</button>
+            <div class="tab-buttons">
+                <button id="showAddWatchlistTab" class="tab-button active">Add New</button>
+                <button id="showEditWatchlistTab" class="tab-button">Edit/Delete</button>
+            </div>
+
+            <!-- Add New Watchlist Section -->
+            <div id="addWatchlistSection" class="tab-content active">
+                <label for="newWatchlistName">Watchlist Name:</label>
+                <input type="text" id="newWatchlistName" placeholder="e.g., Tech Stocks" maxlength="50">
+                <div class="form-action-buttons">
+                    <button type="button" id="cancelAddWatchlistBtn" class="secondary-button">Cancel</button>
+                    <button type="submit" id="saveWatchlistBtn" class="primary-button">Add Watchlist</button>
+                </div>
+            </div>
+
+            <!-- Edit/Delete Current Watchlist Section -->
+            <div id="editWatchlistSection" class="tab-content">
+                <label for="editWatchlistName">Watchlist Name:</label>
+                <input type="text" id="editWatchlistName" maxlength="50">
+                <div class="form-action-buttons three-buttons">
+                    <button type="button" id="deleteWatchlistInModalBtn" class="danger-button">Delete Watchlist</button>
+                    <button type="button" id="cancelManageWatchlistBtn" class="secondary-button">Cancel</button>
+                    <button type="submit" id="saveWatchlistNameBtn" class="primary-button">Save Name</button>
+                </div>
             </div>
         </div>
     </div>
@@ -528,7 +531,7 @@
     </div>
 
     <!-- Your main script.js - Loaded last to ensure all HTML elements are available -->
-    <script src="script.js?v=125"></script> <!-- IMPORTANT: This version should match your script.js file -->
+    <script src="script.js?v=126"></script> <!-- IMPORTANT: This version should match your script.js file -->
     <script>
         // Register service worker - This block is typically placed at the end of the body
         // to ensure the page content loads first.
