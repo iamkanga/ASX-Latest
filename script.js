@@ -1964,7 +1964,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 mainTitle.textContent = 'Share Watchlist'; // Reset title
                 console.log("[Auth State] User signed out or is anonymous.");
                 clearWatchlistUI();
-                clearShareList();
+                clearShareList(); 
                 updateMainButtonsState(false); // Disable core app buttons
                 if (loadingIndicator) loadingIndicator.style.display = 'none';
                 // If not signed in, sign in anonymously to allow basic interaction (e.g., for creating a new account)
