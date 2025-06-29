@@ -1,4 +1,4 @@
-/* File Version: v60 */
+/* File Version: v61 */
 /* Last Updated: 2025-06-28 (Final Modal Scrolling & Comments Hidden) */
 
 :root {
@@ -628,6 +628,8 @@ h1#mainTitle {
     padding: 5px 10px; /* Make it easier to tap */
     z-index: 11; /* Above other elements in header */
     display: block; /* Ensure it's always displayed */
+    font-family: 'Font Awesome 5 Free'; /* Explicitly set font for icon */
+    font-weight: 900; /* Use solid icon */
 }
 
 .hamburger-btn:hover {

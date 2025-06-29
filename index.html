@@ -8,7 +8,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍆</text></svg>">
 
     <!-- Linking to your separate style.css file -->
-    <link rel="stylesheet" href="style.css?v=60"> <!-- Updated CSS version for new styles -->
+    <link rel="stylesheet" href="style.css?v=61"> <!-- Updated CSS version for new styles -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -196,7 +196,7 @@
             <h2 id="modalShareName">Share Details</h2>
             <div class="modal-body-scrollable"> <!-- NEW SCROLLABLE WRAPPER -->
                 <p><strong>Entry Date:</strong> <span id="modalEntryDate"></span></p>
-                <p><strong>Entered Price:</strong> <span id="modalEnteredPrice"></span></p>
+                <p><strong>Entered Price:</b> <span id="modalEnteredPrice"></span></p>
                 <p><strong>Target Price:</strong> <span id="modalTargetPrice"></span></p>
                 <p><strong>Dividend Amount:</strong> <span id="modalDividendAmount"></span></p>
                 <p><strong>Franking Credits:</strong> <span id="modalFrankingCredits"></span></p>
@@ -353,9 +353,13 @@
 
         // Firebase configuration (provided by the environment)
         let firebaseConfig = {};
+        let isConfigProvided = false;
+
         if (typeof __firebase_config !== 'undefined' && __firebase_config) {
             try {
                 firebaseConfig = JSON.parse(__firebase_config);
+                isConfigProvided = true;
+                console.log("Firebase: __firebase_config successfully parsed.");
             } catch (e) {
                 console.error("Error parsing __firebase_config:", e);
                 document.getElementById('loadingIndicator').innerHTML = `
@@ -381,79 +385,89 @@
         let app;
         let db;
         let auth;
-        let firebaseInitialized = false;
 
-        async function initializeFirebaseAndAuth() {
-            if (Object.keys(firebaseConfig).length > 0) {
-                try {
-                    app = initializeApp(firebaseConfig);
-                    db = getFirestore(app);
-                    auth = getAuth(app);
-                    
-                    // Attempt to sign in with custom token or anonymously
-                    if (initialAuthToken) {
-                        await signInWithCustomToken(auth, initialAuthToken);
-                        console.log("Firebase: Signed in with custom token.");
-                    } else {
-                        await signInAnonymously(auth);
-                        console.log("Firebase: Signed in anonymously.");
-                    }
-                    firebaseInitialized = true; // This flag indicates auth is also ready or attempted
+        // Function to initialize Firebase and expose global objects
+        async function initializeFirebaseAndExposeGlobals() {
+            if (!isConfigProvided) {
+                console.warn("Firebase: Skipping initialization as no valid config was provided.");
+                // Ensure global Firebase objects are NOT set if config is missing
+                window.firestoreDb = null;
+                window.firebaseAuth = null;
+                window.getFirebaseAppId = () => currentAppId; // Still provide app ID even if no Firebase
+                window.firestore = null;
+                window.authFunctions = null;
+                return;
+            }
 
-                    // Expose Firebase objects globally *after* successful initialization
-                    window.firestoreDb = db;
-                    window.firebaseAuth = auth;
-                    window.getFirebaseAppId = () => currentAppId;
-                    window.firestore = {
-                        collection: collection,
-                        doc: doc,
-                        getDoc: getDoc,
-                        addDoc: addDoc,
-                        setDoc: setDoc,
-                        updateDoc: updateDoc,
-                        deleteDoc: deleteDoc,
-                        onSnapshot: onSnapshot,
-                        query: query,
-                        where: where,
-                        getDocs: getDocs,
-                        deleteField: FieldValue.delete,
-                        writeBatch: writeBatch
-                    };
-                    window.authFunctions = {
-                        GoogleAuthProviderInstance: new GoogleAuthProvider(),
-                        signInAnonymously: signInAnonymously,
-                        signInWithCustomToken: signInWithCustomToken,
-                        signInWithPopup: signInWithPopup,
-                        signOut: signOut,
-                        onAuthStateChanged: onAuthStateChanged
-                    };
-                    console.log("Firebase: Global window objects set.");
-
-                } catch (error) {
-                    console.error("Firebase Initialization or Auth error:", error);
-                    document.getElementById('loadingIndicator').innerHTML = `
-                        <div class="error-message">
-                            <p>Error initializing Firebase or authentication. Please ensure your Firebase project is set up correctly and security rules allow anonymous or custom token sign-in.</p>
-                            <p>Details: ${error.message}</p>
-                        </div>
-                    `;
-                    firebaseInitialized = false; // Ensure this is false on error
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                // Attempt to sign in with custom token or anonymously
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                    console.log("Firebase: Signed in with custom token.");
+                } else {
+                    await signInAnonymously(auth);
+                    console.log("Firebase: Signed in anonymously.");
                 }
-            } else {
-                // Message already displayed by the initial check for firebaseConfig
-                firebaseInitialized = false; // Ensure this is false
+                
+                // Expose Firebase objects globally *after* successful initialization AND auth attempt
+                window.firestoreDb = db;
+                window.firebaseAuth = auth;
+                window.getFirebaseAppId = () => currentAppId;
+                window.firestore = {
+                    collection: collection,
+                    doc: doc,
+                    getDoc: getDoc,
+                    addDoc: addDoc,
+                    setDoc: setDoc,
+                    updateDoc: updateDoc,
+                    deleteDoc: deleteDoc,
+                    onSnapshot: onSnapshot,
+                    query: query,
+                    where: where,
+                    getDocs: getDocs,
+                    deleteField: FieldValue.delete,
+                    writeBatch: writeBatch
+                };
+                window.authFunctions = {
+                    GoogleAuthProviderInstance: new GoogleAuthProvider(),
+                    signInAnonymously: signInAnonymously,
+                    signInWithCustomToken: signInWithCustomToken,
+                    signInWithPopup: signInWithPopup,
+                    signOut: signOut,
+                    onAuthStateChanged: onAuthStateChanged
+                };
+                console.log("Firebase: Global window objects set successfully.");
+
+            } catch (error) {
+                console.error("Firebase Initialization or Auth error:", error);
+                document.getElementById('loadingIndicator').innerHTML = `
+                    <div class="error-message">
+                        <p>Error initializing Firebase or authentication. Please ensure your Firebase project is set up correctly and security rules allow anonymous or custom token sign-in.</p>
+                        <p>Details: ${error.message}</p>
+                    </div>
+                `;
+                // Ensure global Firebase objects are NOT set if initialization failed
+                window.firestoreDb = null;
+                window.firebaseAuth = null;
+                window.getFirebaseAppId = () => currentAppId;
+                window.firestore = null;
+                window.authFunctions = null;
             }
         }
 
-        // Call initialization function immediately when the module script loads
-        initializeFirebaseAndAuth();
+        // Call the initialization function immediately when the module script loads
+        initializeFirebaseAndExposeGlobals();
 
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log("index.html (v60) script module loaded and DOMContentLoaded fired."); // Updated version number
+            console.log("index.html (v61) script module loaded and DOMContentLoaded fired.");
             // script.js will now rely on window.firestoreDb and window.firebaseAuth being set here
         }); 
     </script>
     <!-- Linking to your separate script.js file -->
-    <script src="script.js?v=120"></script>
+    <script src="script.js?v=122"></script>
 </body>
 </html>

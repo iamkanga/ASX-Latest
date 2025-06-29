@@ -1,4 +1,4 @@
-// File Version: v121
+// File Version: v122
 // Last Updated: 2025-06-28 (Firebase Readiness & Logic Initialization)
 
 // This script interacts with Firebase Firestore for data storage.
@@ -116,7 +116,7 @@ const saveWatchlistBtn = document.getElementById('saveWatchlistBtn');
 const cancelAddWatchlistBtn = document.getElementById('cancelAddWatchlistBtn');
 const manageWatchlistModal = document.getElementById('manageWatchlistModal');
 const editWatchlistNameInput = document.getElementById('editWatchlistName');
-const saveWatchlistNameBtn = document = document.getElementById('saveWatchlistNameBtn');
+const saveWatchlistNameBtn = document.getElementById('saveWatchlistNameBtn');
 const deleteWatchlistInModalBtn = document.getElementById('deleteWatchlistInModalBtn');
 const cancelManageWatchlistBtn = document.getElementById('cancelManageWatchlistBtn');
 
@@ -1128,11 +1128,11 @@ async function initializeAppLogic() {
     if (manageWatchlistModal) manageWatchlistModal.style.setProperty('display', 'none', 'important');
     if (customDialogModal) customDialogModal.style.setProperty('display', 'none', 'important');
     if (calculatorModal) calculatorModal.style.setProperty('display', 'none', 'important');
-    updateMainButtonsState(false); // Will be enabled by auth state change
+    
+    // Buttons will be enabled based on auth state, not here directly
+    updateMainButtonsState(false); 
     if (loadingIndicator) loadingIndicator.style.display = 'block';
     renderWatchlistSelect(); // Render initial empty watchlist select
-    if (googleAuthBtn) googleAuthBtn.disabled = true; // Will be enabled by auth state change
-    if (addShareHeaderBtn) addShareHeaderBtn.disabled = true; // Will be enabled by auth state change
     
     // Apply theme on initial load
     const savedCustomTheme = localStorage.getItem('selectedTheme');
@@ -1750,16 +1750,16 @@ async function initializeAppLogic() {
 
 // --- DOMContentLoaded Event Listener (Main entry point) ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v121) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v122) DOMContentLoaded fired."); // Updated version number
 
     // Check if Firebase objects are available from the module script in index.html
-    // If they are, proceed with initializing the main app logic.
+    // If they are, proceed with setting up the auth state listener.
     // If not, it means Firebase initialization failed in index.html, and an error message is already displayed.
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
         auth = window.firebaseAuth;
         currentAppId = window.getFirebaseAppId();
-        console.log("[Firebase Ready] DB, Auth, and AppId assigned from window. Calling initializeAppLogic.");
+        console.log("[Firebase Ready] DB, Auth, and AppId assigned from window. Setting up auth state listener.");
         
         // Listen for auth state changes to trigger the main app logic
         window.authFunctions.onAuthStateChanged(auth, async (user) => {
@@ -1786,6 +1786,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (loadingIndicator) loadingIndicator.style.display = 'none';
             }
             // This ensures initializeAppLogic runs only once after the initial auth state is determined
+            // It's crucial that this runs *after* the user state is known, as many UI elements depend on it.
             if (!window._appLogicInitialized) {
                 initializeAppLogic();
                 window._appLogicInitialized = true; // Prevent re-running
