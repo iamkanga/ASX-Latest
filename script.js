@@ -1,5 +1,5 @@
-// File Version: v119
-// Last Updated: 2025-06-28 (Firebase, Auth & Watchlist Fix)
+// File Version: v114
+// Last Updated: 2025-06-28 (Hamburger Fix & Theme Cycling)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -44,7 +44,7 @@ const CUSTOM_THEMES = [
 ];
 let currentCustomThemeIndex = -1; // To track the current theme in the cycle
 
-// --- UI Element References (Declared globally for all functions to access) ---
+// --- UI Element References (Declared globally for access by all functions) ---
 const mainTitle = document.getElementById('mainTitle');
 const addShareHeaderBtn = document.getElementById('addShareHeaderBtn');
 const newShareBtn = document.getElementById('newShareBtn');
@@ -52,7 +52,7 @@ const standardCalcBtn = document.getElementById('standardCalcBtn');
 const dividendCalcBtn = document.getElementById('dividendCalcBtn');
 const asxCodeButtonsContainer = document.getElementById('asxCodeButtonsContainer');
 const shareFormSection = document.getElementById('shareFormSection');
-const formCloseButton = document.querySelector('.form-close-button'); // This might be null, using generic close-button instead
+const formCloseButton = document.querySelector('.form-close-button');
 const formTitle = document.getElementById('formTitle');
 const saveShareBtn = document.getElementById('saveShareBtn');
 const cancelFormBtn = document.getElementById('cancelFormBtn');
@@ -63,7 +63,7 @@ const targetPriceInput = document.getElementById('targetPrice');
 const dividendAmountInput = document.getElementById('dividendAmount');
 const frankingCreditsInput = document.getElementById('frankingCredits');
 const commentsFormContainer = document.getElementById('commentsFormContainer');
-const addCommentSectionBtn = document.getElementById('addCommentSectionBtn'); 
+const addCommentSectionBtn = document.getElementById('addCommentSectionBtn');
 const shareTableBody = document.querySelector('#shareTable tbody');
 const mobileShareCardsContainer = document.getElementById('mobileShareCards');
 const loadingIndicator = document.getElementById('loadingIndicator');
@@ -278,37 +278,20 @@ function truncateText(text, maxLength) {
 }
 
 // Function to add a comment section to the form
-// NOTE: Comment section functionality is currently NOT being actively fixed per user request.
-// This function remains for structural integrity based on index.html.
 function addCommentSection(title = '', text = '') {
-    console.log(`[Comments] Adding comment section: Title='${title}', Text='${text.substring(0, 30)}...'`);
     const commentSectionDiv = document.createElement('div');
     commentSectionDiv.className = 'comment-section';
     commentSectionDiv.innerHTML = `
         <div class="comment-section-header">
-            <input type="text" class="comment-title-input" placeholder="Comment Title" value="${escapeHtml(title)}">
+            <input type="text" class="comment-title-input" placeholder="Comment Title" value="${title}">
             <button type="button" class="comment-delete-btn">&times;</button>
         </div>
-        <textarea class="comment-text-input" placeholder="Your comments here...">${escapeHtml(text)}</textarea>
+        <textarea class="comment-text-input" placeholder="Your comments here...">${text}</textarea>
     `;
     commentsFormContainer.appendChild(commentSectionDiv);
     commentSectionDiv.querySelector('.comment-delete-btn').addEventListener('click', (event) => {
         event.target.closest('.comment-section').remove();
-        console.log("[Comments] Comment section removed.");
     });
-}
-
-// Helper to escape HTML for input values
-function escapeHtml(text) {
-    if (typeof text !== 'string') return text; // Handle non-string inputs gracefully
-    const map = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#039;'
-    };
-    return text.replace(/[&<>"']/g, function(m) { return map[m]; });
 }
 
 // Function to clear the form fields
@@ -316,9 +299,8 @@ function clearForm() {
     formInputs.forEach(input => {
         if (input) { input.value = ''; }
     });
-    // Keeping commentsFormContainer clear, as comments are not being actively fixed
-    if (commentsFormContainer) commentsFormContainer.innerHTML = ''; 
-    // addCommentSection(); // Do not add default comment section if comments are abandoned
+    commentsFormContainer.innerHTML = '';
+    addCommentSection(); // Add one empty comment section by default
     selectedShareDocId = null;
     console.log("[Form] Form fields cleared and selectedShareDocId reset.");
 }
@@ -341,10 +323,13 @@ function showEditFormForSelectedShare() {
     dividendAmountInput.value = Number(shareToEdit.dividendAmount) !== null && !isNaN(Number(shareToEdit.dividendAmount)) ? Number(shareToEdit.dividendAmount).toFixed(3) : '';
     frankingCreditsInput.value = Number(shareToEdit.frankingCredits) !== null && !isNaN(Number(shareToEdit.frankingCredits)) ? Number(shareToEdit.frankingCredits).toFixed(1) : '';
     
-    // Comments section is not being actively fixed, so clear it.
-    if (commentsFormContainer) commentsFormContainer.innerHTML = ''; 
-    if (addCommentSectionBtn) addCommentSectionBtn.style.display = 'none'; // Hide the add comment button
-    
+    commentsFormContainer.innerHTML = '';
+    if (shareToEdit.comments && Array.isArray(shareToEdit.comments)) {
+        shareToEdit.comments.forEach(comment => addCommentSection(comment.title, comment.text));
+    }
+    if (shareToEdit.comments === undefined || shareToEdit.comments.length === 0) {
+        addCommentSection();
+    }
     deleteShareFromFormBtn.style.display = 'inline-flex';
     showModal(shareFormSection);
     shareNameInput.focus();
@@ -377,17 +362,28 @@ function showShareDetails() {
     const frankingCreditsNum = Number(share.frankingCredits);
     modalFrankingCredits.textContent = (!isNaN(frankingCreditsNum) && frankingCreditsNum !== null) ? `${frankingCreditsNum.toFixed(1)}%` : 'N/A';
     
-    const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, enteredPriceNum); 
+    const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, enteredPriceNum);
     modalUnfrankedYieldSpan.textContent = unfrankedYield !== null ? `${unfrankedYield.toFixed(2)}%` : 'N/A';
     
     const frankedYield = calculateFrankedYield(dividendAmountNum, enteredPriceNum, frankingCreditsNum);
     modalFrankedYieldSpan.textContent = frankedYield !== null ? `${frankedYield.toFixed(2)}%` : 'N/A';
     
     modalCommentsContainer.innerHTML = '';
-    // Per user request, comments section is not being actively fixed.
-    // Display a simple "No comments" message for now.
-    modalCommentsContainer.innerHTML = '<p style="text-align: center; color: var(--label-color);">No comments for this share.</p>';
-
+    if (share.comments && Array.isArray(share.comments) && share.comments.length > 0) {
+        share.comments.forEach(comment => {
+            if (comment.title || comment.text) {
+                const commentDiv = document.createElement('div');
+                commentDiv.className = 'modal-comment-item';
+                commentDiv.innerHTML = `
+                    <strong>${comment.title || 'General Comment'}</strong>
+                    <p>${comment.text || ''}</p>
+                `;
+                modalCommentsContainer.appendChild(commentDiv);
+            }
+        });
+    } else {
+        modalCommentsContainer.innerHTML = '<p style="text-align: center; color: var(--label-color);">No comments for this share.</p>';
+    }
 
     if (modalMarketIndexLink && share.shareName) {
         const marketIndexUrl = `https://www.marketindex.com.au/asx/${share.shareName.toLowerCase()}`;
@@ -578,9 +574,11 @@ function addShareToTable(share) {
     `;
 
     const commentsCell = row.insertCell();
-    // Per user request, comments section is not being actively fixed.
-    // Display a simple "No comments" message for now.
-    commentsCell.textContent = 'No comments';
+    let commentsText = '';
+    if (share.comments && Array.isArray(share.comments) && share.comments.length > 0 && share.comments[0].text) {
+        commentsText = share.comments[0].text;
+    }
+    commentsCell.textContent = truncateText(commentsText, 70);
     console.log(`[Render] Added share ${displayShareName} to table.`);
 }
 
@@ -600,8 +598,10 @@ function addShareToMobileCards(share) {
     const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, enteredPriceNum);
     const frankedYield = calculateFrankedYield(dividendAmountNum, enteredPriceNum, frankingCreditsNum);
 
-    // Per user request, comments section is not being actively fixed.
-    const commentsSummary = 'No comments';
+    let commentsSummary = '-';
+    if (share.comments && Array.isArray(share.comments) && share.comments.length > 0 && share.comments[0].text) {
+        commentsSummary = truncateText(share.comments[0].text, 70);
+    }
 
     const displayTargetPrice = (!isNaN(targetPriceNum) && targetPriceNum !== null) ? targetPriceNum.toFixed(2) : '-';
     const displayDividendAmount = (!isNaN(dividendAmountNum) && dividendAmountNum !== null) ? dividendAmountNum.toFixed(2) : '-';
@@ -701,7 +701,7 @@ function renderAsxCodeButtons() {
     const sharesInCurrentWatchlist = allSharesData.filter(share => share.watchlistId === currentWatchlistId);
     sharesInCurrentWatchlist.forEach(share => {
         if (share.shareName && typeof share.shareName === 'string' && share.shareName.trim() !== '') {
-                uniqueAsxCodes.add(share.shareName.trim().toUpperCase());
+            uniqueAsxCodes.add(share.shareName.trim().toUpperCase());
         }
     });
     if (uniqueAsxCodes.size === 0) {
@@ -1072,15 +1072,20 @@ async function migrateOldSharesToWatchlist() {
                 updatePayload.lastPriceUpdateTime = new Date().toISOString();
                 console.log(`[Migration] Share '${doc.id}': Setting missing lastPriceUpdateTime.`);
             }
-            // Per user request, comments section is not being actively fixed.
-            // Ensure comments are stored as an empty array or null for now.
-            if (shareData.hasOwnProperty('comments') && (typeof shareData.comments !== 'object' || shareData.comments === null || !Array.isArray(shareData.comments))) {
-                needsUpdate = true;
-                updatePayload.comments = []; // Set to empty array
-                console.warn(`[Migration] Share '${doc.id}': Comments field was not an array, setting to empty array.`);
+            if (typeof shareData.comments === 'string' && shareData.comments.trim() !== '') {
+                try {
+                    const parsedComments = JSON.parse(shareData.comments);
+                    if (Array.isArray(parsedComments)) {
+                        needsUpdate = true;
+                        updatePayload.comments = parsedComments;
+                        console.log(`[Migration] Share '${doc.id}': Converted comments string to array.`);
+                    }
+                } catch (e) {
+                    needsUpdate = true;
+                    updatePayload.comments = [{ title: "General Comments", text: shareData.comments }];
+                    console.log(`[Migration] Share '${doc.id}': Wrapped comments string as single comment object.`);
+                }
             }
-
-
             if (needsUpdate) { sharesToUpdate.push({ ref: doc.ref, data: updatePayload }); }
         });
         if (sharesToUpdate.length > 0) {
@@ -1129,7 +1134,7 @@ function toggleAppSidebar(forceState = null) {
 
 // --- DOMContentLoaded Event Listener (Main execution block) ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v119) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v114) DOMContentLoaded fired.");
 
     // --- Initial UI Setup ---
     if (shareFormSection) shareFormSection.style.setProperty('display', 'none', 'important');
@@ -1160,10 +1165,10 @@ document.addEventListener('DOMContentLoaded', function() {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./service-worker.js', { scope: './' }) 
                 .then(registration => {
-                    console.log('Service Worker (v46) from script.js: Registered with scope:', registration.scope); 
+                    console.log('Service Worker (v24) from script.js: Registered with scope:', registration.scope); 
                 })
                 .catch(error => {
-                    console.error('Service Worker (v46) from script.js: Registration failed:', error);
+                    console.error('Service Worker (v24) from script.js: Registration failed:', error);
                 });
         });
     }
@@ -1178,9 +1183,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (event.key === 'Enter') {
                     event.preventDefault();
                     if (index === formInputs.length - 1) {
-                        // Per user request, comments section is not being actively fixed.
-                        // So, if this is the last input, just try to save.
-                        if (saveShareBtn) { saveShareBtn.click(); }
+                        const currentCommentInputs = commentsFormContainer.querySelector('.comment-title-input');
+                        if (currentCommentInputs) { currentCommentInputs.focus(); }
+                        else if (saveShareBtn) { saveShareBtn.click(); }
                     } else {
                         if (formInputs[index + 1]) formInputs[index + 1].focus();
                     }
@@ -1203,56 +1208,45 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // --- Firebase Initialization and Authentication State Listener ---
-    // Ensure db and auth are assigned from window objects after Firebase is initialized in index.html
-    // Use a small delay/interval to ensure window.firestoreDb is populated
-    const checkFirebaseReady = setInterval(() => {
-        if (window.firestoreDb && window.firebaseAuth) {
-            clearInterval(checkFirebaseReady);
-            db = window.firestoreDb;
-            auth = window.firebaseAuth;
-            currentAppId = window.getFirebaseAppId();
-            console.log("[Firebase Ready] DB and Auth objects assigned from window.");
+    db = window.firestoreDb;
+    auth = window.firebaseAuth;
+    currentAppId = window.getFirebaseAppId();
 
-            if (auth) {
-                if (googleAuthBtn) {
-                    googleAuthBtn.disabled = false;
-                    console.log("[Auth] Google Auth button enabled.");
+    if (auth) {
+        if (googleAuthBtn) {
+            googleAuthBtn.disabled = false;
+            console.log("[Auth] Google Auth button enabled.");
+        }
+        window.authFunctions.onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUserId = user.uid;
+                updateAuthButtonText(true, user.email || user.displayName);
+                console.log("[AuthState] User signed in:", user.uid);
+                if (user.email && user.email.toLowerCase() === KANGA_EMAIL) {
+                    mainTitle.textContent = "Kanga's Share Watchlist";
+                } else {
+                    mainTitle.textContent = "My Share Watchlist";
                 }
-                window.authFunctions.onAuthStateChanged(auth, async (user) => {
-                    if (user) {
-                        currentUserId = user.uid;
-                        updateAuthButtonText(true, user.email || user.displayName);
-                        console.log("[AuthState] User signed in:", user.uid);
-                        if (user.email && user.email.toLowerCase() === KANGA_EMAIL) {
-                            mainTitle.textContent = "Kanga's Share Watchlist";
-                        } else {
-                            mainTitle.textContent = "My Share Watchlist";
-                        }
-                        updateMainButtonsState(true);
-                        if (loadingIndicator) loadingIndicator.style.display = 'none';
-                        await loadUserWatchlists();
-                    } else {
-                        currentUserId = null;
-                        updateAuthButtonText(false);
-                        mainTitle.textContent = "Share Watchlist";
-                        console.log("[AuthState] User signed out.");
-                        updateMainButtonsState(false);
-                        clearShareList();
-                        clearWatchlistUI();
-                        if (loadingIndicator) loadingIndicator.style.display = 'none';
-                    }
-                });
+                updateMainButtonsState(true);
+                if (loadingIndicator) loadingIndicator.style.display = 'none';
+                await loadUserWatchlists();
             } else {
-                console.error("[Firebase] Firebase Auth not available. Cannot set up auth state listener or proceed with data loading.");
-                updateAuthButtonState(false);
+                currentUserId = null;
+                updateAuthButtonText(false);
+                mainTitle.textContent = "Share Watchlist";
+                console.log("[AuthState] User signed out.");
                 updateMainButtonsState(false);
+                clearShareList();
+                clearWatchlistUI();
                 if (loadingIndicator) loadingIndicator.style.display = 'none';
             }
-        } else {
-            console.log("[Firebase Ready Check] Waiting for Firebase to be initialized in index.html...");
-        }
-    }, 100); // Check every 100ms
-
+        });
+    } else {
+        console.error("[Firebase] Firebase Auth not available. Cannot set up auth state listener or proceed with data loading.");
+        updateAuthButtonText(false);
+        updateMainButtonsState(false);
+        if (loadingIndicator) loadingIndicator.style.display = 'none';
+    }
 
     // --- Authentication Functions Event Listener ---
     if (googleAuthBtn) {
@@ -1318,7 +1312,6 @@ document.addEventListener('DOMContentLoaded', function() {
             clearForm();
             formTitle.textContent = 'Add New Share';
             deleteShareFromFormBtn.style.display = 'none';
-            if (addCommentSectionBtn) addCommentSectionBtn.style.display = 'none'; // Hide the add comment button
             showModal(shareFormSection);
             shareNameInput.focus();
             toggleAppSidebar(false); 
@@ -1330,7 +1323,6 @@ document.addEventListener('DOMContentLoaded', function() {
             clearForm();
             formTitle.textContent = 'Add New Share';
             deleteShareFromFormBtn.style.display = 'none';
-            if (addCommentSectionBtn) addCommentSectionBtn.style.display = 'none'; // Hide the add comment button
             showModal(shareFormSection);
             shareNameInput.focus();
         });
@@ -1346,9 +1338,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const dividendAmount = parseFloat(dividendAmountInput.value);
             const frankingCredits = parseFloat(frankingCreditsInput.value);
 
-            // Comments are not being actively fixed, so save an empty array.
-            const comments = []; 
-            console.log("[Comments] Comments section is temporarily abandoned, saving empty array.");
+            const comments = [];
+            commentsFormContainer.querySelectorAll('.comment-section').forEach(section => {
+                const titleInput = section.querySelector('.comment-title-input');
+                const textInput = section.querySelector('.comment-text-input');
+                if (titleInput.value.trim() || textInput.value.trim()) {
+                    comments.push({ title: titleInput.value.trim(), text: textInput.value.trim() });
+                }
+            });
 
             const shareData = {
                 shareName: shareName,
@@ -1356,7 +1353,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 targetPrice: isNaN(targetPrice) ? null : targetPrice,
                 dividendAmount: isNaN(dividendAmount) ? null : dividendAmount,
                 frankingCredits: isNaN(frankingCredits) ? null : frankingCredits,
-                comments: comments, // Save the collected comments array (empty for now)
+                comments: comments,
                 userId: currentUserId,
                 watchlistId: currentWatchlistId,
                 lastPriceUpdateTime: new Date().toISOString()
@@ -1422,11 +1419,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Hide the add comment button, as comments are temporarily abandoned
     if (addCommentSectionBtn) {
-        addCommentSectionBtn.style.display = 'none'; 
-    } else {
-        console.warn("[Comments] addCommentSectionBtn element NOT found! Cannot hide it.");
+        addCommentSectionBtn.addEventListener('click', () => addCommentSection());
     }
 
     // --- Share Detail Modal Functions Event Listeners ---
@@ -1666,7 +1660,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // --- Theme Toggling Logic ---
+    // --- Theme Toggling Logic Event Listener ---
     function applyDefaultLightDarkTheme() {
         const body = document.body;
         const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -1680,7 +1674,7 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 body.classList.remove('dark-theme');
             }
-            console.log(`[Theme] Reverted to saved default theme: ${savedDefaultTheme}`);
+            console.log(`[Theme] Applied saved default theme: ${savedDefaultTheme}`);
         } else {
             if (systemPrefersDark) {
                 body.classList.add('dark-theme');
@@ -1688,7 +1682,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 body.classList.remove('dark-theme');
             }
             localStorage.setItem('theme', systemPrefersDark ? 'dark' : 'light');
-            console.log(`[Theme] Reverted to system default theme: ${systemPrefersDark ? 'dark' : 'light'}`);
+            console.log(`[Theme] Applied system default theme: ${systemPrefersDark ? 'dark' : 'light'}`);
         }
         // When reverting to default, ensure custom theme is not selected in dropdown
         if (colorThemeSelect) {
@@ -1714,7 +1708,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    if (revertToDefaultThemeBtn) {
+    if (revertToDefaultThemeBtn) { // Changed from revertToDefaultThemeLink
         revertToDefaultThemeBtn.addEventListener('click', (event) => {
             event.preventDefault();
             applyTheme('none'); // This will trigger applyDefaultLightDarkTheme
