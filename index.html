@@ -1,540 +1,1303 @@
-<!-- Version v75 - **CRITICAL UPDATE: PLEASE REPLACE YOUR ENTIRE index.html WITH THIS CONTENT** - 2025-06-28 18:30 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ASX Watchlist App</title>
-    <!-- Tailwind CSS CDN - Loaded first for base utility classes -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Custom CSS for specific styling and overrides - Loaded after Tailwind -->
-    <link rel="stylesheet" href="style.css?v=62"> <!-- IMPORTANT: This version should match your style.css file -->
-    <!-- Google Fonts for 'Inter' -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <!-- Font Awesome for icons -->
+    <!-- Favicon - Placeholder as per instructions -->
+    <link rel="icon" href="https://placehold.co/32x32/007bff/ffffff?text=ASX" type="image/png">
+
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <!-- Tailwind CSS CDN - IMPORTANT: Not for production! -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* This inline style block is for critical initial hiding to prevent "flash of unstyled content" (FOUC)
-           before the main script loads and applies classes for transitions.
-           Most styling and transitions are handled in style.css. */
+        /* Custom CSS Variables for Theming */
+        :root {
+            --background-color: #f8f9fa;
+            --text-color: #343a40;
+            --header-bg: #e9ecef;
+            --card-bg: #ffffff;
+            --border-color: #dee2e6;
+            --button-bg: #007bff;
+            --button-text: #ffffff;
+            --button-hover-bg: #0056b3;
+            --input-bg: #ffffff;
+            --input-border: #ced4da;
+            --modal-bg: rgba(0, 0, 0, 0.6);
+            --modal-content-bg: #ffffff;
+            --table-header-bg: #e9ecef;
+            --table-row-hover-bg: #f1f3f5;
+            --asx-button-bg: #e9ecef;
+            --asx-button-hover-bg: #d6d8db;
+            --asx-button-text: #343a40;
+            --asx-button-active-bg: #007bff;
+            --asx-button-active-text: #ffffff;
+            --danger-button-bg: #dc3545;
+            --danger-button-hover-bg: #c82333;
+            --secondary-button-bg: #6c757d;
+            --secondary-button-hover-bg: #545b62;
+            --google-auth-btn-bg: #dd4b39;
+            --google-auth-btn-hover-bg: #c23321;
+            --label-color: #495057;
+            --shadow-color: rgba(0, 0, 0, 0.15);
+            --sidebar-bg: #e9ecef;
+            --sidebar-border: #dee2e6;
+            --sidebar-text: #343a40;
+            --close-sidebar-btn-color: #343a40;
+            --ghosted-text-color: #6c757d;
+        }
+
+        /* Dark Theme Overrides */
+        body.dark-theme {
+            --background-color: #1a202c;
+            --text-color: #e2e8f0;
+            --header-bg: #2d3748;
+            --card-bg: #2d3748;
+            --border-color: #4a5568;
+            --button-bg: #4299e1;
+            --button-text: #ffffff;
+            --button-hover-bg: #3182ce;
+            --input-bg: #2d3748;
+            --input-border: #4a5568;
+            --modal-bg: rgba(0, 0, 0, 0.8);
+            --modal-content-bg: #2d3748;
+            --table-header-bg: #2d3748;
+            --table-row-hover-bg: #4a5568;
+            --asx-button-bg: #4a5568;
+            --asx-button-hover-bg: #636b77;
+            --asx-button-text: #e2e8f0;
+            --asx-button-active-bg: #4299e1;
+            --asx-button-active-text: #ffffff;
+            --danger-button-bg: #e53e3e;
+            --danger-button-hover-bg: #c53030;
+            --secondary-button-bg: #718096;
+            --secondary-button-hover-bg: #5c6b7e;
+            --google-auth-btn-bg: #e53e3e;
+            --google-auth-btn-hover-bg: #c53030;
+            --label-color: #a0aec0;
+            --shadow-color: rgba(0, 0, 0, 0.4);
+            --sidebar-bg: #2d3748;
+            --sidebar-border: #4a5568;
+            --sidebar-text: #e2e8f0;
+            --close-sidebar-btn-color: #e2e8f0;
+            --ghosted-text-color: #a0aec0;
+        }
+
         body {
-            font-family: 'Inter', sans-serif; /* Ensures Inter font is applied early */
-        }
-        /* Error message styling */
-        .firebase-error-display {
-            background-color: #fee2e2; /* Red-100 */
-            color: #ef4444; /* Red-500 */
-            border: 1px solid #ef4444;
-            padding: 20px;
-            margin: 40px auto;
-            border-radius: 8px;
-            max-width: 600px;
-            text-align: center;
             font-family: 'Inter', sans-serif;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            z-index: 10000; /* Even higher z-index for error messages */
-            position: relative; /* Ensure z-index applies */
+            background-color: var(--background-color);
+            color: var(--text-color);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            margin: 0;
+            display: flex;
+            min-height: 100vh;
+            flex-direction: column;
+            overflow-x: hidden; /* Prevent horizontal scroll */
         }
-        .firebase-error-display h2 {
-            font-size: 1.5em;
-            margin-top: 0;
-            margin-bottom: 10px;
+
+        /* Layout for desktop */
+        .app-container {
+            display: flex;
+            flex: 1;
+            width: 100%;
         }
-        .firebase-error-display p {
-            margin-bottom: 5px;
-            line-height: 1.5;
+
+        /* Sidebar styling */
+        .app-sidebar {
+            width: 250px;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--sidebar-border);
+            padding: 1.5rem;
+            box-shadow: 2px 0 5px var(--shadow-color);
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+            transform: translateX(0);
+            flex-shrink: 0;
+            position: sticky;
+            top: 0;
+            height: 100vh; /* Make sidebar full height */
+            overflow-y: auto; /* Enable scrolling for sidebar content */
+            z-index: 20; /* Ensure sidebar is above main content */
         }
-        .firebase-error-display p:last-child {
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .close-menu-btn {
+            display: none; /* Hidden on desktop */
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            color: var(--close-sidebar-btn-color);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 9999px;
+            transition: background-color 0.2s ease;
+        }
+
+        .close-menu-btn:hover {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .menu-button-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            border-radius: 0.5rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            text-align: left;
+            width: 100%;
+            border: none;
+            box-shadow: 0 2px 4px var(--shadow-color);
+        }
+
+        .menu-button-item:hover {
+            background-color: var(--button-hover-bg);
+            transform: translateY(-1px);
+        }
+
+        .menu-button-item:disabled {
+            background-color: var(--secondary-button-bg);
+            cursor: not-allowed;
+            opacity: 0.6;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .menu-button-item i {
+            font-size: 1.25rem;
+        }
+
+        .sidebar-footer {
+            margin-top: auto; /* Pushes footer to the bottom */
+            padding-top: 2rem;
+            border-top: 1px solid var(--sidebar-border);
+            text-align: center;
+            font-size: 0.875rem;
+            color: var(--ghosted-text-color);
+        }
+
+        .sidebar-footer #googleAuthBtn {
+            background-color: var(--google-auth-btn-bg);
+            color: var(--button-text);
+            margin-top: 1rem;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .sidebar-footer #googleAuthBtn:hover {
+            background-color: var(--google-auth-btn-hover-bg);
+        }
+
+        /* Main content area */
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto; /* Enable scrolling for main content */
+        }
+
+        header {
+            background-color: var(--header-bg);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px var(--shadow-color);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        header h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin: 0;
+            flex-grow: 1;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .header-buttons button {
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            padding: 0.6rem 1.2rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            border: none;
+            box-shadow: 0 2px 4px var(--shadow-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .header-buttons button:hover {
+            background-color: var(--button-hover-bg);
+            transform: translateY(-1px);
+        }
+
+        .header-buttons button:disabled {
+            background-color: var(--secondary-button-bg);
+            cursor: not-allowed;
+            opacity: 0.6;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .header-buttons .hamburger-btn {
+            display: none; /* Hidden on desktop */
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            color: var(--text-color);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 9999px;
+            transition: background-color 0.2s ease;
+        }
+
+        .header-buttons .hamburger-btn:hover {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+
+        .filter-sort-section {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-sort-section select {
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--input-border);
+            border-radius: 0.5rem;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            font-size: 1rem;
+            flex: 1;
+            min-width: 150px;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+            appearance: none; /* Remove default arrow */
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23495057%22%20d%3D%22M287%2C197.393L146.2%2C56.607L5.4%2C197.393h281.6z%22%2F%3E%3C%2Fsvg%3E'); /* Custom arrow */
+            background-repeat: no-repeat;
+            background-position: right 0.7em top 50%;
+            background-size: 0.65em auto;
+        }
+
+        .filter-sort-section select:focus {
+            border-color: var(--button-bg);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+        }
+
+        .filter-sort-section select:disabled {
+            background-color: var(--secondary-button-bg);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .asx-code-buttons-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            justify-content: center;
+            padding: 0.5rem;
+            background-color: var(--card-bg);
+            border-radius: 0.75rem;
+            box-shadow: 0 2px 8px var(--shadow-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .asx-code-button {
+            padding: 0.5rem 1rem;
+            background-color: var(--asx-button-bg);
+            color: var(--asx-button-text);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+        }
+
+        .asx-code-button:hover {
+            background-color: var(--asx-button-hover-bg);
+            transform: translateY(-1px);
+        }
+
+        .asx-code-button.active {
+            background-color: var(--asx-button-active-bg);
+            color: var(--asx-button-active-text);
+            border-color: var(--asx-button-active-bg);
+            box-shadow: 0 2px 6px rgba(0, 123, 255, 0.4);
+        }
+
+        .share-list-section {
+            background-color: var(--card-bg);
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 12px var(--shadow-color);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .share-list-section table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .share-list-section th, .share-list-section td {
+            padding: 1rem 1.25rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .share-list-section th {
+            background-color: var(--table-header-bg);
+            font-weight: 600;
+            color: var(--text-color);
+            text-transform: uppercase;
+            font-size: 0.875rem;
+            letter-spacing: 0.05em;
+        }
+
+        .share-list-section tbody tr {
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .share-list-section tbody tr:hover {
+            background-color: var(--table-row-hover-bg);
+        }
+
+        .share-list-section tbody tr.selected {
+            background-color: var(--table-row-hover-bg);
+            outline: 2px solid var(--button-bg);
+            outline-offset: -2px;
+        }
+
+        .share-list-section .dividend-yield-cell-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            margin-bottom: 0.2rem;
+        }
+        .share-list-section .dividend-yield-cell-content:last-child {
             margin-bottom: 0;
+        }
+        .share-list-section .dividend-yield-cell-content .value {
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .loading-indicator {
+            display: none; /* Hidden by default */
+            text-align: center;
+            padding: 2rem;
+            font-size: 1.2rem;
+            color: var(--label-color);
+        }
+
+        /* Mobile Cards (Hidden by default on desktop) */
+        .mobile-share-cards {
+            display: none;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .mobile-card {
+            background-color: var(--card-bg);
+            border-radius: 0.75rem;
+            box-shadow: 0 2px 8px var(--shadow-color);
+            padding: 1.25rem;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: transform 0.1s ease, box-shadow 0.2s ease;
+        }
+
+        .mobile-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+
+        .mobile-card.selected {
+            outline: 2px solid var(--button-bg);
+            outline-offset: -2px;
+        }
+
+        .mobile-card h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-top: 0;
+            margin-bottom: 0.75rem;
+            color: var(--text-color);
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .mobile-card p {
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .mobile-card p strong {
+            color: var(--label-color);
+            flex-shrink: 0;
+            margin-right: 0.5rem;
+        }
+
+        .mobile-card .card-comments {
+            font-style: italic;
+            color: var(--ghosted-text-color);
+            margin-top: 1rem;
+            border-top: 1px solid var(--border-color);
+            padding-top: 0.75rem;
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--header-bg);
+            padding: 1rem 2rem;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+            font-size: 0.875rem;
+            color: var(--ghosted-text-color);
+            margin-top: auto; /* Pushes footer to the bottom */
+            box-shadow: 0 -2px 4px var(--shadow-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        footer #googleAuthBtn {
+            background-color: var(--google-auth-btn-bg);
+            color: var(--button-text);
+            padding: 0.6rem 1.2rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            border: none;
+            box-shadow: 0 2px 4px var(--shadow-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        footer #googleAuthBtn:hover {
+            background-color: var(--google-auth-btn-hover-bg);
+            transform: translateY(-1px);
+        }
+
+        /* Modals */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--modal-bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            overflow-y: auto; /* Allow modal content to scroll */
+            padding: 1rem;
+        }
+
+        .modal.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background-color: var(--modal-content-bg);
+            padding: 2rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 8px 20px var(--shadow-color);
+            width: 90%;
+            max-width: 600px;
+            position: relative;
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+            border: 1px solid var(--border-color);
+            max-height: 90vh; /* Limit content height */
+            overflow-y: auto; /* Enable scrolling for modal content */
+        }
+
+        .modal.open .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+
+        .modal-header h2 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin: 0;
+        }
+
+        .modal-header .close-button {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            color: var(--text-color);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 9999px;
+            transition: background-color 0.2s ease;
+        }
+
+        .modal-header .close-button:hover {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--label-color);
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="number"],
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--input-border);
+            border-radius: 0.5rem;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            font-size: 1rem;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .form-group input[type="text"]:focus,
+        .form-group input[type="number"]:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            border-color: var(--button-bg);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+        }
+
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .comments-container {
+            margin-top: 1.5rem;
+            border-top: 1px dashed var(--border-color);
+            padding-top: 1.5rem;
+        }
+
+        .comment-section {
+            background-color: var(--background-color);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .comment-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .comment-title-input {
+            flex-grow: 1;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--input-border);
+            border-radius: 0.4rem;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            font-size: 0.95rem;
+            font-weight: 500;
+            margin-right: 0.75rem;
+        }
+
+        .comment-delete-btn {
+            background-color: var(--danger-button-bg);
+            color: var(--button-text);
+            border: none;
+            border-radius: 0.4rem;
+            padding: 0.4rem 0.7rem;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .comment-delete-btn:hover {
+            background-color: var(--danger-button-hover-bg);
+        }
+
+        .comment-text-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--input-border);
+            border-radius: 0.5rem;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            font-size: 1rem;
+            min-height: 60px;
+            resize: vertical;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+            padding-top: 1.5rem;
+        }
+
+        .form-actions button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            border: none;
+            box-shadow: 0 2px 4px var(--shadow-color);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-actions .save-btn {
+            background-color: var(--button-bg);
+            color: var(--button-text);
+        }
+
+        .form-actions .save-btn:hover {
+            background-color: var(--button-hover-bg);
+            transform: translateY(-1px);
+        }
+
+        .form-actions .cancel-btn {
+            background-color: var(--secondary-button-bg);
+            color: var(--button-text);
+        }
+
+        .form-actions .cancel-btn:hover {
+            background-color: var(--secondary-button-hover-bg);
+            transform: translateY(-1px);
+        }
+
+        .form-actions .delete-btn {
+            background-color: var(--danger-button-bg);
+            color: var(--button-text);
+            margin-right: auto; /* Pushes delete button to the left */
+        }
+
+        .form-actions .delete-btn:hover {
+            background-color: var(--danger-button-hover-bg);
+            transform: translateY(-1px);
+        }
+
+        /* Share Detail Modal Specifics */
+        .share-detail-info p {
+            margin-bottom: 0.75rem;
+            font-size: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .share-detail-info p strong {
+            color: var(--label-color);
+            flex-shrink: 0;
+            margin-right: 0.5rem;
+        }
+
+        .share-detail-info .yield-display {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-top: 1px dashed var(--border-color);
+            margin-top: 0.75rem;
+            font-weight: 600;
+        }
+
+        .share-detail-info .yield-display span:first-child {
+            color: var(--label-color);
+        }
+
+        .modal-comments-section {
+            margin-top: 1.5rem;
+            border-top: 1px dashed var(--border-color);
+            padding-top: 1.5rem;
+        }
+
+        .modal-comments-section h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-color);
+        }
+
+        .modal-comment-item {
+            background-color: var(--background-color);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .modal-comment-item strong {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--label-color);
+        }
+
+        .modal-comment-item p {
+            margin: 0;
+        }
+
+        .modal-links {
+            margin-top: 1.5rem;
+            border-top: 1px dashed var(--border-color);
+            padding-top: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .modal-links a {
+            color: var(--button-bg);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .modal-links a:hover {
+            color: var(--button-hover-bg);
+            text-decoration: underline;
+        }
+
+        .commsec-message {
+            margin-top: 1rem;
+            font-size: 0.875rem;
+            color: var(--ghosted-text-color);
+            text-align: center;
+        }
+        
+        /* Calculator Modals */
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+
+        .calc-btn {
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            padding: 1.25rem;
+            border-radius: 0.5rem;
+            font-size: 1.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            border: none;
+            box-shadow: 0 2px 4px var(--shadow-color);
+        }
+
+        .calc-btn:hover {
+            background-color: var(--button-hover-bg);
+            transform: translateY(-1px);
+        }
+
+        .calc-btn.operator {
+            background-color: var(--secondary-button-bg);
+        }
+        .calc-btn.operator:hover {
+            background-color: var(--secondary-button-hover-bg);
+        }
+        .calc-btn.equals {
+            background-color: #28a745; /* Green for equals */
+        }
+        .calc-btn.equals:hover {
+            background-color: #218838;
+        }
+        .calc-btn.clear {
+            background-color: var(--danger-button-bg);
+        }
+        .calc-btn.clear:hover {
+            background-color: var(--danger-button-hover-bg);
+        }
+        .calc-btn.span-2 {
+            grid-column: span 2;
+        }
+
+        .calculator-display {
+            background-color: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            text-align: right;
+            margin-bottom: 1rem;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .calculator-display .input-line {
+            font-size: 1.2rem;
+            color: var(--label-color);
+            min-height: 1.2em;
+            word-break: break-all;
+        }
+
+        .calculator-display .result-line {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-color);
+            min-height: 1.5em;
+            word-break: break-all;
+        }
+
+        /* Custom Dialog Modal */
+        .custom-dialog-modal .modal-content {
+            max-width: 400px;
+            text-align: center;
+        }
+        .custom-dialog-modal .modal-header {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .custom-dialog-modal .modal-header h2 {
+            display: none; /* Hide title, message is central */
+        }
+        .custom-dialog-modal .close-button {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            font-size: 1.5rem;
+        }
+        .custom-dialog-modal .message {
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+            padding: 0 1rem;
+        }
+        .custom-dialog-modal .dialog-actions {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+        .custom-dialog-modal .dialog-actions button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            border: none;
+            box-shadow: 0 2px 4px var(--shadow-color);
+        }
+        .custom-dialog-modal #customDialogConfirmBtn {
+            background-color: var(--button-bg);
+            color: var(--button-text);
+        }
+        .custom-dialog-modal #customDialogConfirmBtn:hover {
+            background-color: var(--button-hover-bg);
+        }
+        .custom-dialog-modal #customDialogCancelBtn {
+            background-color: var(--secondary-button-bg);
+            color: var(--button-text);
+        }
+        .custom-dialog-modal #customDialogCancelBtn:hover {
+            background-color: var(--secondary-button-hover-bg);
+        }
+
+        /* Manage Watchlists Modal */
+        .watchlist-tabs {
+            display: flex;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .watchlist-tabs button {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            background-color: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            color: var(--label-color);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 1rem;
+        }
+
+        .watchlist-tabs button:hover {
+            color: var(--text-color);
+            border-color: var(--button-hover-bg);
+        }
+
+        .watchlist-tabs button.active {
+            color: var(--button-bg);
+            border-color: var(--button-bg);
+        }
+
+        .watchlist-tab-content {
+            display: none;
+            padding-top: 1rem;
+        }
+
+        .watchlist-tab-content.active {
+            display: block;
+        }
+
+        .watchlist-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .watchlist-list li {
+            background-color: var(--background-color);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 500;
+        }
+
+        .watchlist-list li span {
+            flex-grow: 1;
+            color: var(--text-color);
+        }
+
+        .watchlist-list li button {
+            background-color: var(--danger-button-bg);
+            color: var(--button-text);
+            border: none;
+            border-radius: 0.4rem;
+            padding: 0.3rem 0.6rem;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .watchlist-list li button:hover {
+            background-color: var(--danger-button-hover-bg);
+        }
+
+        /* Scroll to top button */
+        .scroll-to-top {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            border: none;
+            border-radius: 9999px; /* Fully rounded */
+            width: 50px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 8px var(--shadow-color);
+            transition: opacity 0.3s ease, transform 0.2s ease, background-color 0.2s ease;
+            opacity: 0;
+            visibility: hidden;
+            z-index: 90;
+        }
+
+        .scroll-to-top:hover {
+            background-color: var(--button-hover-bg);
+            transform: translateY(-2px);
+        }
+
+        .scroll-to-top.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Sidebar Overlay for Mobile */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 15;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .sidebar-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        body.sidebar-active {
+            overflow-y: hidden; /* Prevent body scroll when sidebar is open on mobile */
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .app-sidebar {
+                transform: translateX(-100%);
+                position: fixed; /* Fixed position on mobile */
+                height: 100vh; /* Full height */
+                width: 280px; /* Wider sidebar on mobile */
+                box-shadow: none; /* No shadow when closed */
+            }
+
+            .app-sidebar.open {
+                transform: translateX(0);
+                box-shadow: 2px 0 5px var(--shadow-color);
+            }
+
+            .main-content {
+                padding: 1rem;
+            }
+
+            header {
+                padding: 0.75rem 1rem;
+            }
+
+            header h1 {
+                font-size: 1.5rem;
+                text-align: center;
+                flex-grow: 1;
+                margin-left: 0;
+            }
+
+            .header-buttons {
+                gap: 0.5rem;
+            }
+
+            .header-buttons #addShareHeaderBtn {
+                padding: 0.5rem 1rem;
+            }
+
+            .header-buttons .hamburger-btn {
+                display: block; /* Show hamburger on mobile */
+            }
+
+            .app-sidebar .close-menu-btn {
+                display: block; /* Show close button in sidebar on mobile */
+            }
+
+            .app-container {
+                flex-direction: column; /* Stack content on mobile */
+            }
+
+            .share-list-section table {
+                display: none; /* Hide table on mobile */
+            }
+
+            .mobile-share-cards {
+                display: flex; /* Show mobile cards on mobile */
+            }
+
+            .filter-sort-section {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+
+            .filter-sort-section select {
+                width: 100%;
+                min-width: unset;
+            }
+
+            .form-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .form-actions button {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .form-actions .delete-btn {
+                margin-right: 0;
+            }
+
+            .modal-content {
+                width: 95%;
+                padding: 1.5rem;
+            }
+
+            .modal-header h2 {
+                font-size: 1.5rem;
+            }
+
+            .modal-header .close-button {
+                font-size: 1.8rem;
+            }
+
+            .calculator-grid {
+                gap: 0.5rem;
+            }
+
+            .calc-btn {
+                padding: 1rem;
+                font-size: 1.2rem;
+            }
+
+            .calculator-display .result-line {
+                font-size: 2rem;
+            }
+
+            .scroll-to-top {
+                bottom: 1rem;
+                right: 1rem;
+                width: 45px;
+                height: 45px;
+                font-size: 1.3rem;
+            }
+
+            footer {
+                flex-direction: column;
+                gap: 0.75rem;
+                padding: 0.75rem 1rem;
+            }
         }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col">
-    <!-- Firebase SDKs - These MUST be loaded before your main script.js
-         They provide the global 'window.firestoreDb', 'window.firebaseAuth', etc. -->
+<body>
+    <!-- Firebase Initialization Script -->
     <script type="module">
-        // Import necessary Firebase modules from CDN
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import {
-            getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged,
-            signInAnonymously, signInWithCustomToken // signInWithCustomToken is used by the Canvas environment
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import {
-            getFirestore, collection, doc, getDoc, getDocs, addDoc, setDoc, updateDoc,
-            deleteDoc, query, where, writeBatch, FieldValue, // FieldValue is needed for deleteField
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, writeBatch, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // IMPORTANT: These variables (__app_id, __firebase_config, __initial_auth_token)
-        // are automatically provided by the Canvas environment at runtime.
-        // For GitHub Pages deployment, they are NOT provided, so we need fallbacks.
-        let appId = 'default-app-id'; // Fallback for appId
-        let firebaseConfig = {};
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        // Expose Firebase modules globally for script.js to use
+        window.firestore = {
+            initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut,
+            getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, writeBatch, deleteField
+        };
+        window.authFunctions = {
+            getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signInWithPopup, signOut,
+            GoogleAuthProviderInstance: new GoogleAuthProvider() // Expose instance
+        };
 
-        let firebaseInitError = null; // Flag to track Firebase initialization status
+        // Environment variables for Firebase config (for Canvas environment)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        window.getFirebaseAppId = () => appId; // Expose app ID globally
 
-        // Safely get and parse __app_id
-        if (typeof __app_id !== 'undefined' && __app_id !== null && __app_id.trim() !== '') {
-            appId = __app_id;
-            console.log(`Firebase Init: __app_id detected: '${appId}'`);
-        } else {
-            console.warn("Firebase Init: __app_id is not defined or is empty. Using default 'default-app-id'.");
-            // No error message here, as it's common for static hosting.
-        }
-
-        // Safely get and parse __firebase_config
-        if (typeof __firebase_config !== 'undefined' && __firebase_config !== null && __firebase_config.trim() !== '') {
+        let firebaseConfig;
+        if (typeof __firebase_config !== 'undefined' && __firebase_config) {
             try {
                 firebaseConfig = JSON.parse(__firebase_config);
-                // Ensure projectId is present, as it's required by Firebase SDK
-                if (!firebaseConfig.projectId) {
-                    console.error("Firebase Init: Parsed firebaseConfig is missing 'projectId'. Using a placeholder.");
-                    firebaseConfig.projectId = "placeholder-project-id"; // Provide a fallback
-                    firebaseInitError = "Firebase config missing 'projectId'.";
-                }
-                console.log("Firebase Init: __firebase_config successfully parsed.");
+                console.log("Firebase Init: __firebase_config loaded from environment.");
             } catch (e) {
-                console.error("Firebase Init: Error parsing __firebase_config. Using a minimal fallback.", e);
-                firebaseConfig = { projectId: "parse-error-fallback", apiKey: "parse-error-fallback" };
-                firebaseInitError = "Firebase config could not be parsed.";
+                console.error("Firebase Init: Error parsing __firebase_config:", e);
+                // Fallback to hardcoded if parsing fails
+                firebaseConfig = {
+                    apiKey: "AIzaSyAyIWoTYlzTkaSZ9x-ySiHtzATBM9XFrYw",
+                    authDomain: "asx-watchlist-app.firebaseapp.com",
+                    projectId: "asx-watchlist-app",
+                    storageBucket: "asx-watchlist-app.firebasestorage.app",
+                    messagingSenderId: "671024168765",
+                    appId: "1:671024168765:web:f2b62cd0e77a126c0ecf54",
+                    measurementId: "G-G6L0Q9S3QY"
+                };
+                console.warn("Firebase Init: __firebase_config is not defined or is empty. Using hardcoded fallback for GitHub Pages.");
             }
         } else {
-            console.warn("Firebase Init: __firebase_config is not defined or is empty. Using hardcoded fallback for GitHub Pages.");
-            // HARDCODED FALLBACK FOR GITHUB PAGES DEMO
-            // This is the Firebase config provided by the user.
+            // Hardcoded Firebase config for GitHub Pages deployment
             firebaseConfig = {
                 apiKey: "AIzaSyAyIWoTYlzTkaSZ9x-ySiHtzATBM9XFrYw",
                 authDomain: "asx-watchlist-app.firebaseapp.com",
-                projectId: "asx-watchlist-app", // THIS IS THE PROJECT ID
+                projectId: "asx-watchlist-app",
                 storageBucket: "asx-watchlist-app.firebasestorage.app",
-                appId: "1:671024168765:web:f2b62cd0e77a126c0ecf54", // THIS IS THE WEB APP ID
-                measurementId: "G-J24BTJ34D2"
+                messagingSenderId: "671024168765",
+                appId: "1:671024168765:web:f2b62cd0e77a126c0ecf54",
+                measurementId: "G-G6L0Q9S3QY"
             };
-            firebaseInitError = null; // Clear error, as config is now provided
-            console.warn("WARNING: Firebase configuration is hardcoded. This is for demonstration purposes on static hosting only. For production, use environment variables.");
+            console.warn("Firebase Init: __firebase_config is not defined or is empty. Using hardcoded fallback for GitHub Pages.");
         }
 
+        console.warn("WARNING: Firebase configuration is hardcoded. This is for demonstration purposes on static hosting only. For production, use environment variables.");
         console.log("Firebase Init: Attempting to initialize with config:", firebaseConfig);
 
-        let app;
-        let db;
-        let auth;
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
 
-        // If firebaseInitError is still set (e.g., if projectId was missing even in the provided config),
-        // or if the provided config was somehow invalid, display the error.
-        if (firebaseInitError) {
-             document.body.innerHTML = `
-                <div class="firebase-error-display">
-                    <h2>Application Initialization Error</h2>
-                    <p>Failed to load essential application components.</p>
-                    <p>Reason: <strong>Firebase Configuration Missing or Invalid.</strong></p>
-                    <p>Error Detail: ${firebaseInitError}</p>
-                </div>
-            `;
-            // Set globals to undefined to signal script.js that Firebase is not ready
-            window.firestoreDb = undefined;
-            window.firebaseAuth = undefined;
-            window.getFirebaseAppId = () => 'error-app-id';
-            window.firestore = undefined;
-            window.authFunctions = undefined;
-        } else {
-            try {
-                app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-                console.log("Firebase: Initialized successfully.");
-            } catch (error) {
-                console.error("Firebase: Initialization failed in index.html module script:", error);
-                firebaseInitError = `Firebase SDK Init Failed: ${error.message}`;
-                document.body.innerHTML = `
-                    <div class="firebase-error-display">
-                        <h2>Application Initialization Error</h2>
-                        <p>Failed to load essential application components.</p>
-                        <p>Reason: <strong>Firebase SDK Initialization Failed.</strong></p>
-                        <p>Please ensure the Firebase configuration is valid and network is available.</p>
-                        <p>Error Detail: ${firebaseInitError}</p>
-                    </div>
-                `;
-                // Set globals to undefined to signal script.js that Firebase is not ready
-                window.firestoreDb = undefined;
-                window.firebaseAuth = undefined;
-                window.getFirebaseAppId = () => 'error-app-id';
-                window.firestore = undefined;
-                window.authFunctions = undefined;
-            }
-        }
-
-        // Make Firebase instances and core functions globally accessible to script.js
+        // Expose initialized instances globally
         window.firestoreDb = db;
         window.firebaseAuth = auth;
-        // IMPORTANT: Now we return the projectId for the 'artifacts' collection path
-        window.getFirebaseAppId = () => firebaseConfig.projectId; 
-        window.firestore = {
-            collection, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc,
-            query, where, writeBatch, FieldValue: FieldValue // Expose FieldValue for operations like deleteField
-        };
-        window.authFunctions = {
-            signInWithPopup, GoogleAuthProviderInstance: new GoogleAuthProvider(), signOut, onAuthStateChanged,
-            signInAnonymously, // Expose signInAnonymously for unauthenticated access
-        };
 
-        // Attempt authentication using the provided custom token or anonymously
-        // Only attempt if auth object was successfully created
-        if (auth) {
-            if (initialAuthToken) {
-                signInWithCustomToken(auth, initialAuthToken)
-                    .then(() => console.log("Firebase: Signed in with custom token."))
-                    .catch(error => console.error("Firebase: Custom token sign-in failed:", error));
-            } else {
-                signInAnonymously(auth)
-                    .then(() => console.log("Firebase: Signed in anonymously."))
-                    .catch(error => console.error("Firebase: Anonymous sign-in failed:", error));
-            }
-        } else {
-            console.warn("Firebase: Auth object is null, skipping authentication attempt in module script.");
-        }
+        console.log("Firebase: Initialized successfully.");
 
-        console.log("index.html (v75) script module loaded."); // Updated HTML version log
-    </script>
-
-    <!-- Main Header Section -->
-    <header class="header">
-        <div class="header-top-row">
-            <!-- Hamburger Menu Button - Positioned left -->
-            <button id="hamburgerBtn" class="hamburger-btn" aria-label="Open menu">
-                <i class="fas fa-bars"></i> <!-- Font Awesome hamburger icon -->
-            </button>
-            <!-- Main Title - Dynamically updated by script.js based on auth state -->
-            <h1 id="mainTitle">Share Watchlist</h1>
-            <!-- New "Add Share" button on the main screen - Positioned right -->
-            <button id="addShareHeaderBtn" class="header-action-btn" aria-label="Add new share">
-                <i class="fas fa-plus"></i> <!-- Font Awesome plus icon -->
-            </button>
-        </div>
-        <!-- Watchlist and Sort Controls Row - Contains dropdowns and watchlist management buttons -->
-        <div class="watchlist-controls-row">
-            <div class="watchlist-group">
-                <select id="watchlistSelect" class="dropdown-large">
-                    <option value="" disabled selected>Loading Watchlists...</option>
-                </select>
-            </div>
-            <div class="sort-group">
-                <select id="sortSelect" class="dropdown-large">
-                    <option value="" disabled selected>Sort</option>
-                    <option value="shareName-asc">Code (A-Z)</option>
-                    <option value="shareName-desc">Code (Z-A)</option>
-                    <option value="currentPrice-asc">Entered Price (Low-High)</option>
-                    <option value="currentPrice-desc">Entered Price (High-Low)</option>
-                    <option value="targetPrice-asc">Target Price (Low-High)</option>
-                    <option value="targetPrice-desc">Target Price (High-Low)</option>
-                    <option value="dividendAmount-asc">Dividend (Low-High)</option>
-                    <option value="dividendAmount-desc">Dividend (High-Low)</option>
-                    <option value="frankingCredits-asc">Franking (Low-High)</option>
-                    <option value="frankingCredits-desc">Franking (High-Low)</option>
-                    <option value="entryDate-asc">Entry Date (Oldest-Newest)</option>
-                    <option value="entryDate-desc">Entry Date (Newest-Oldest)</option>
-                </select>
-            </div>
-        </div>
-        <!-- ASX Code Buttons Container - Dynamically populated by script.js -->
-        <div id="asxCodeButtonsContainer" class="asx-code-buttons-container">
-            <!-- ASX code buttons will be dynamically loaded here by script.js -->
-        </div>
-    </header>
-
-    <!-- App Sidebar - This slides in from the left on desktop and covers part of the screen on mobile -->
-    <nav id="appSidebar" class="app-sidebar">
-        <!-- Close button for the sidebar -->
-        <button id="closeMenuBtn" class="close-menu-btn" aria-label="Close menu">&times;</button>
-        <h3 class="text-lg font-semibold mb-3">Tools</h3>
-        <div class="menu-buttons-group">
-            <!-- Buttons for adding shares and calculators -->
-            <button id="newShareBtn" class="menu-button-item" data-action-closes-menu="true">
-                <i class="fas fa-plus-circle"></i> Add New Share
-            </button>
-            <button id="dividendCalcBtn" class="menu-button-item" data-action-closes-menu="true">
-                <i class="fas fa-calculator"></i> Dividend Calculator
-            </button>
-            <button id="standardCalcBtn" class="menu-button-item" data-action-closes-menu="true">
-                <i class="fas fa-calculator"></i> Standard Calculator
-            </button>
-        </div>
-
-        <h3 class="text-lg font-semibold mb-3">Watchlists</h3>
-        <div class="menu-buttons-group">
-            <!-- Consolidated Watchlist Management Button -->
-            <button id="manageWatchlistsSidebarBtn" class="menu-button-item" data-action-closes-menu="true">
-                <i class="fas fa-list-ul"></i> Manage Watchlists
-            </button>
-        </div>
-
-        <h3 class="text-lg font-semibold mb-3">Settings</h3>
-        <div class="menu-buttons-group">
-            <!-- Theme Toggle Button - Cycles through themes -->
-            <button id="themeToggleBtn" class="menu-button-item" data-action-closes-menu="false">
-                <i class="fas fa-palette"></i> Toggle Theme
-            </button>
-            <!-- Other settings can go here -->
-        </div>
-
-        <h3 class="text-lg font-semibold mb-3">Account</h3>
-        <div class="menu-buttons-group">
-            <!-- Google Authentication Button - Text changes based on login status -->
-            <button id="googleAuthBtn" class="menu-button-item" data-action-closes-menu="false">
-                <i class="fab fa-google"></i> Sign In
-            </button>
-        </div>
-    </nav>
-    <!-- Sidebar Overlay - Dims the background when sidebar is open and allows closing on click outside -->
-    <div class="sidebar-overlay"></div>
-
-    <!-- Main Content Area - Contains the share list and mobile cards -->
-    <main class="container flex-grow">
-        <!-- Loading Indicator - Shown while data is being fetched from Firebase -->
-        <div id="loadingIndicator" class="loading" style="display: none;">
-            <i class="fas fa-spinner fa-spin mr-2"></i> Loading shares...
-        </div>
-
-        <!-- Share List Section (Table for Desktop) - Dynamically populated by script.js -->
-        <section class="share-list-section">
-            <div class="table-container">
-                <table id="shareTable">
-                    <thead>
-                        <tr>
-                            <th>Code</th>
-                            <th>Entered Price</th>
-                            <th>Target Price</th>
-                            <th>Dividend & Yields</th>
-                            <th>Comments</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Share data rows will be dynamically loaded here by script.js -->
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- Mobile Share Cards (for Mobile) - Dynamically populated by script.js -->
-        <section id="mobileShareCards" class="mobile-share-cards">
-            <!-- Mobile share cards will be dynamically loaded here by script.js -->
-        </section>
-
-        <!-- Scroll to Top Button (Mobile Only) -->
-        <button id="scrollToTopBtn" class="hidden">
-            <i class="fas fa-arrow-up"></i>
-        </button>
-    </main>
-
-    <!-- Fixed Footer - Contains the Google Auth button for quick access -->
-    <footer class="fixed-footer">
-        <!-- This is a duplicate of the Google Auth button in the sidebar, for mobile accessibility -->
-        <button id="googleAuthBtn" class="google-auth-btn">
-            <i class="fab fa-google"></i> Sign In
-        </button>
-    </footer>
-
-    <!-- MODALS SECTION - All modals are initially hidden and controlled by script.js -->
-
-    <!-- Share Form Modal (Add/Edit Share) -->
-    <div id="shareFormSection" class="modal">
-        <div class="modal-content add-share-modal-content">
-            <button class="close-button form-close-button">&times;</button>
-            <h2 id="formTitle">Add New Share</h2>
-            <label for="shareName">ASX Code:</label>
-            <input type="text" id="shareName" placeholder="e.g., CBA" maxlength="10">
-
-            <label for="currentPrice">Entered Price ($):</label>
-            <input type="number" id="currentPrice" placeholder="e.g., 105.20" step="0.01">
-
-            <label for="targetPrice">Target Price ($):</label>
-            <input type="number" id="targetPrice" placeholder="e.g., 110.00" step="0.01">
-
-            <label for="dividendAmount">Dividend Amount ($ per share):</label>
-            <input type="number" id="dividendAmount" placeholder="e.g., 2.50" step="0.001">
-
-            <label for="frankingCredits">Franking Credits (%):</label>
-            <input type="number" id="frankingCredits" placeholder="e.g., 100" step="0.1" min="0" max="100">
-
-            <div id="commentsFormContainer" class="comments-form-container">
-                <h3>Comments <button type="button" id="addCommentSectionBtn" class="add-section-btn">+</button></h3>
-                <!-- Dynamic comment sections will be added here by script.js -->
-            </div>
-
-            <div class="form-action-buttons">
-                <button type="button" id="cancelFormBtn" class="secondary-button">Cancel</button>
-                <button type="button" id="deleteShareFromFormBtn" class="danger-button" style="display: none;">Delete</button>
-                <button type="submit" id="saveShareBtn" class="primary-button">Save Share</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Share Detail Modal - Displays detailed information about a selected share -->
-    <div id="shareDetailModal" class="modal">
-        <div class="modal-content">
-            <button class="close-button">&times;</button>
-            <h2 id="modalShareName" class="text-center">Share Name</h2>
-            <p><strong>Entry Date:</strong> <span id="modalEntryDate"></span></p>
-            <!-- Entered Price - Date/Time is cleared by script.js -->
-            <p><strong>Entered Price:</strong> <span id="modalEnteredPrice"></span><span id="modalEnteredPriceDateTime" class="ghosted-text ml-2"></span></p>
-            <p><strong>Target Price:</strong> <span id="modalTargetPrice"></span></p>
-            <p><strong>Dividend Amount:</strong> <span id="modalDividendAmount"></span></p>
-            <p><strong>Franking Credits:</strong> <span id="modalFrankingCredits"></span></p>
-            <p><strong>Unfranked Yield:</strong> <span id="modalUnfrankedYield"></span></p>
-            <p><strong>Franked Yield:</strong> <span id="modalFrankedYield"></span></p>
-
-            <div id="modalCommentsContainer">
-                <h3>Comments</h3>
-                <!-- Comments will be dynamically loaded here by script.js -->
-            </div>
-
-            <div class="external-links-section">
-                <h3>External Links</h3>
-                <!-- External links to financial sites -->
-                <a id="modalMarketIndexLink" href="#" target="_blank" rel="noopener noreferrer" class="external-link">
-                    <i class="fas fa-external-link-alt"></i> MarketIndex.com.au
-                </a>
-                <a id="modalFoolLink" href="#" target="_blank" rel="noopener noreferrer" class="external-link">
-                    <i class="fas fa-external-link-alt"></i> Fool.com.au
-                </a>
-                <a id="modalCommSecLink" href="#" target="_blank" rel="noopener noreferrer" class="external-link">
-                    <i class="fas fa-external-link-alt"></i> CommSec.com.au
-                </a>
-                <!-- Ghosted text for CommSec login reminder -->
-                <span id="commSecLoginMessage" class="ghosted-text text-left block">Requires single CommSec login per session.</span>
-            </div>
-
-            <div class="modal-action-buttons">
-                <button id="editShareFromDetailBtn" class="primary-button">Edit Share</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Dividend Calculator Modal -->
-    <div id="dividendCalculatorModal" class="modal">
-        <div class="modal-content calculator-modal-content">
-            <button class="close-button calc-close-button">&times;</button>
-            <h2 class="text-center">Dividend Calculator</h2>
-
-            <div class="calc-input-group">
-                <label for="calcCurrentPrice">Share Price ($):</label>
-                <input type="number" id="calcCurrentPrice" placeholder="e.g., 100.00" step="0.01">
-            </div>
-
-            <div class="calc-input-group">
-                <label for="calcDividendAmount">Dividend Amount ($ per share):</label>
-                <input type="number" id="calcDividendAmount" placeholder="e.g., 2.50" step="0.001">
-            </div>
-
-            <div class="calc-input-group">
-                <label for="calcFrankingCredits">Franking Credits (%):</label>
-                <input type="number" id="calcFrankingCredits" placeholder="e.g., 100" step="0.1" min="0" max="100">
-            </div>
-
-            <hr>
-
-            <p><strong>Unfranked Yield:</strong> <span id="calcUnfrankedYield">-</span></p>
-            <p><strong>Franked Yield:</strong> <span id="calcFrankedYield">-</span></p>
-
-            <hr>
-
-            <div class="calc-input-group">
-                <label for="investmentValueSelect">Investment Value ($):</label>
-                <select id="investmentValueSelect">
-                    <option value="1000">1,000</option>
-                    <option value="5000">5,000</option>
-                    <option value="10000" selected>10,000</option>
-                    <option value="25000">25,000</option>
-                    <option value="50000">50,000</option>
-                    <option value="100000">100,000</option>
-                </select>
-            </div>
-            <p><strong>Estimated Annual Dividend Income:</strong> <span id="calcEstimatedDividend">-</span></p>
-        </div>
-    </div>
-
-    <!-- Standard Calculator Modal -->
-    <div id="calculatorModal" class="modal">
-        <div class="modal-content calculator-modal-content">
-            <button class="close-button">&times;</button>
-            <h2 class="text-center">Standard Calculator</h2>
-            <div class="calculator-display">
-                <div id="calculatorInput" class="calculator-input"></div>
-                <div id="calculatorResult" class="calculator-result">0</div>
-            </div>
-            <div class="calculator-buttons">
-                <button class="calc-btn clear" data-action="clear">C</button>
-                <button class="calc-btn operator" data-action="percentage">%</button>
-                <button class="calc-btn operator" data-action="divide">÷</button>
-                <button class="calc-btn" data-value="7">7</button>
-                <button class="calc-btn" data-value="8">8</button>
-                <button class="calc-btn" data-value="9">9</button>
-                <button class="calc-btn operator" data-action="multiply">×</button>
-                <button class="calc-btn" data-value="4">4</button>
-                <button class="calc-btn" data-value="5">5</button>
-                <button class="calc-btn" data-value="6">6</button>
-                <button class="calc-btn operator" data-action="subtract">-</button>
-                <button class="calc-btn" data-value="1">1</button>
-                <button class="calc-btn" data-value="2">2</button>
-                <button class="calc-btn" data-value="3">3</button>
-                <button class="calc-btn operator" data-action="add">+</button>
-                <button class="calc-btn zero" data-value="0">0</button>
-                <button class="calc-btn" data-value=".">.</button>
-                <button class="calc-btn equals" data-action="calculate">=</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Combined Manage Watchlists Modal -->
-    <div id="manageWatchlistsCombinedModal" class="modal">
-        <div class="modal-content">
-            <button class="close-button">&times;</button>
-            <h2 class="text-center">Manage Watchlists</h2>
-
-            <div class="tab-buttons">
-                <button id="showAddWatchlistTab" class="tab-button active">Add New</button>
-                <button id="showEditWatchlistTab" class="tab-button">Edit/Delete</button>
-            </div>
-
-            <!-- Add New Watchlist Section -->
-            <div id="addWatchlistSection" class="tab-content active">
-                <label for="newWatchlistName">Watchlist Name:</label>
-                <input type="text" id="newWatchlistName" placeholder="e.g., Tech Stocks" maxlength="50">
-                <div class="form-action-buttons">
-                    <button type="button" id="cancelAddWatchlistBtn" class="secondary-button">Cancel</button>
-                    <button type="submit" id="saveWatchlistBtn" class="primary-button">Add Watchlist</button>
-                </div>
-            </div>
-
-            <!-- Edit/Delete Current Watchlist Section -->
-            <div id="editWatchlistSection" class="tab-content">
-                <label for="editWatchlistName">Watchlist Name:</label>
-                <input type="text" id="editWatchlistName" maxlength="50">
-                <div class="form-action-buttons three-buttons">
-                    <button type="button" id="deleteWatchlistInModalBtn" class="danger-button">Delete Watchlist</button>
-                    <button type="button" id="cancelManageWatchlistBtn" class="secondary-button">Cancel</button>
-                    <button type="submit" id="saveWatchlistNameBtn" class="primary-button">Save Name</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Custom Dialog Modal (for custom alerts/confirms) -->
-    <div id="customDialogModal" class="modal">
-        <div class="modal-content">
-            <h3 id="customDialogMessage" class="text-lg font-medium text-center mb-4"></h3>
-            <div class="custom-dialog-buttons">
-                <button id="customDialogCancelBtn" class="secondary-button">Cancel</button>
-                <button id="customDialogConfirmBtn" class="primary-button">OK</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Your main script.js - Loaded last to ensure all HTML elements are available -->
-    <script src="script.js?v=134"></script> <!-- IMPORTANT: This version should match your script.js file -->
-    <script>
-        // Register service worker - This block is typically placed at the end of the body
-        // to ensure the page content loads first.
+        // Register Service Worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./service-worker.js', { scope: './' })
@@ -547,5 +1310,353 @@
             });
         }
     </script>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside id="appSidebar" class="app-sidebar">
+            <div class="sidebar-header">
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-200">Menu</h2>
+                <button id="closeMenuBtn" class="close-menu-btn"><i class="fas fa-times"></i></button>
+            </div>
+            <nav class="sidebar-menu">
+                <button id="newShareBtn" class="menu-button-item" data-action-closes-menu="true">
+                    <i class="fas fa-plus-circle"></i> Add New Share
+                </button>
+                <button id="manageWatchlistsSidebarBtn" class="menu-button-item" data-action-closes-menu="true">
+                    <i class="fas fa-list-alt"></i> Manage Watchlists
+                </button>
+                <button id="standardCalcBtn" class="menu-button-item" data-action-closes-menu="true">
+                    <i class="fas fa-calculator"></i> Standard Calculator
+                </button>
+                <button id="dividendCalcBtn" class="menu-button-item" data-action-closes-menu="true">
+                    <i class="fas fa-chart-line"></i> Dividend Calculator
+                </button>
+                <button id="themeToggleBtn" class="menu-button-item" data-action-closes-menu="false">
+                    <i class="fas fa-palette"></i> System Default
+                </button>
+            </nav>
+            <div class="sidebar-footer">
+                <p>&copy; 2025 ASX Watchlist App</p>
+                <button id="googleAuthBtn" class="menu-button-item">
+                    <i class="fab fa-google"></i> Sign In
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <header>
+                <button id="hamburgerBtn" class="hamburger-btn"><i class="fas fa-bars"></i></button>
+                <h1 id="mainTitle">Share Watchlist</h1>
+                <div class="header-buttons">
+                    <button id="addShareHeaderBtn">
+                        <i class="fas fa-plus"></i> Add Share
+                    </button>
+                </div>
+            </header>
+
+            <section class="filter-sort-section mt-6">
+                <select id="watchlistSelect" class="rounded-lg shadow-sm">
+                    <option value="" disabled selected>Loading Watchlists...</option>
+                </select>
+                <select id="sortSelect" class="rounded-lg shadow-sm">
+                    <option value="" disabled selected>Sort</option>
+                    <option value="shareName-asc">Code (A-Z)</option>
+                    <option value="shareName-desc">Code (Z-A)</option>
+                    <option value="currentPrice-asc">Current Price (Low to High)</option>
+                    <option value="currentPrice-desc">Current Price (High to Low)</option>
+                    <option value="targetPrice-asc">Target Price (Low to High)</option>
+                    <option value="targetPrice-desc">Target Price (High to Low)</option>
+                    <option value="dividendAmount-asc">Dividend (Low to High)</option>
+                    <option value="dividendAmount-desc">Dividend (High to Low)</option>
+                    <option value="frankingCredits-asc">Franking (Low to High)</option>
+                    <option value="frankingCredits-desc">Franking (High to Low)</option>
+                    <option value="entryDate-asc">Entry Date (Oldest First)</option>
+                    <option value="entryDate-desc">Entry Date (Newest First)</option>
+                </select>
+            </section>
+
+            <section id="asxCodeButtonsContainer" class="asx-code-buttons-container mb-6"></section>
+
+            <div id="loadingIndicator" class="loading-indicator">
+                <i class="fas fa-spinner fa-spin mr-2"></i> Loading data...
+            </div>
+
+            <!-- Desktop Share Table -->
+            <section class="share-list-section hidden md:block">
+                <table class="w-full">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Entry Price</th>
+                            <th>Target Price</th>
+                            <th>Dividend Info</th>
+                            <th>Comments</th>
+                        </tr>
+                    </thead>
+                    <tbody id="shareTable">
+                        <!-- Share rows will be inserted here by JavaScript -->
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Mobile Share Cards -->
+            <section id="mobileShareCards" class="mobile-share-cards md:hidden">
+                <!-- Share cards will be inserted here by JavaScript -->
+            </section>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>Managed by iamkanga@gmail.com</p>
+        <button id="googleAuthBtn">
+            <i class="fab fa-google"></i> Sign In
+        </button>
+    </footer>
+
+    <!-- Share Form Modal -->
+    <div id="shareFormSection" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="formTitle">Add New Share</h2>
+                <button class="close-button">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="shareName">ASX Code:</label>
+                    <input type="text" id="shareName" placeholder="e.g., BHP" required class="rounded-md">
+                </div>
+                <div class="form-group">
+                    <label for="currentPrice">Current Price ($):</label>
+                    <input type="number" id="currentPrice" step="0.01" placeholder="e.g., 25.50" class="rounded-md">
+                </div>
+                <div class="form-group">
+                    <label for="targetPrice">Target Price ($):</label>
+                    <input type="number" id="targetPrice" step="0.01" placeholder="e.g., 30.00" class="rounded-md">
+                </div>
+                <div class="form-group">
+                    <label for="dividendAmount">Dividend Amount ($ per share):</label>
+                    <input type="number" id="dividendAmount" step="0.001" placeholder="e.g., 1.250" class="rounded-md">
+                </div>
+                <div class="form-group">
+                    <label for="frankingCredits">Franking Credits (%):</label>
+                    <input type="number" id="frankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 100" class="rounded-md">
+                </div>
+                <div id="commentsFormContainer" class="comments-container">
+                    <!-- Comment sections will be added here by JavaScript -->
+                </div>
+                <button id="addCommentSectionBtn" class="menu-button-item mt-4">
+                    <i class="fas fa-comment-dots"></i> Add Comment Section
+                </button>
+            </div>
+            <div class="form-actions">
+                <button id="deleteShareFromFormBtn" class="delete-btn">
+                    <i class="fas fa-trash-alt"></i> Delete
+                </button>
+                <button id="cancelFormBtn" class="cancel-btn">
+                    <i class="fas fa-times-circle"></i> Cancel
+                </button>
+                <button id="saveShareBtn" class="save-btn">
+                    <i class="fas fa-save"></i> Save Share
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Share Detail Modal -->
+    <div id="shareDetailModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalShareName">Share Details</h2>
+                <button class="close-button">&times;</button>
+            </div>
+            <div class="modal-body share-detail-info">
+                <p><strong>Entry Date:</strong> <span id="modalEntryDate"></span></p>
+                <p><strong>Entered Price:</strong> <span id="modalEnteredPrice"></span></p>
+                <p><strong>Entry Price Date/Time:</strong> <span id="modalEnteredPriceDateTime"></span></p>
+                <p><strong>Target Price:</strong> <span id="modalTargetPrice"></span></p>
+                <p><strong>Dividend Amount:</strong> <span id="modalDividendAmount"></span></p>
+                <p><strong>Franking Credits:</strong> <span id="modalFrankingCredits"></span></p>
+                <p class="yield-display"><strong>Unfranked Yield:</strong> <span id="modalUnfrankedYield"></span></p>
+                <p class="yield-display"><strong>Franked Yield:</strong> <span id="modalFrankedYield"></span></p>
+
+                <div id="modalCommentsContainer" class="modal-comments-section">
+                    <h3>Comments</h3>
+                    <!-- Comments will be inserted here by JavaScript -->
+                </div>
+
+                <div class="modal-links">
+                    <a id="modalMarketIndexLink" href="#" target="_blank" rel="noopener noreferrer">
+                        <i class="fas fa-external-link-alt"></i> View on MarketIndex.com.au
+                    </a>
+                    <a id="modalFoolLink" href="#" target="_blank" rel="noopener noreferrer">
+                        <i class="fas fa-external-link-alt"></i> View on Fool.com.au
+                    </a>
+                    <a id="modalCommSecLink" href="#" target="_blank" rel="noopener noreferrer">
+                        <i class="fas fa-external-link-alt"></i> View on CommSec.com.au
+                    </a>
+                    <p id="commSecLoginMessage" class="commsec-message">Note: CommSec may require login to view details.</p>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button id="editShareFromDetailBtn" class="save-btn">
+                    <i class="fas fa-edit"></i> Edit Share
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dividend Calculator Modal -->
+    <div id="dividendCalculatorModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Dividend Calculator</h2>
+                <button class="close-button">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="calcCurrentPrice">Current Price ($):</label>
+                    <input type="number" id="calcCurrentPrice" step="0.01" placeholder="e.g., 25.50" class="rounded-md">
+                </div>
+                <div class="form-group">
+                    <label for="calcDividendAmount">Dividend Amount ($ per share):</label>
+                    <input type="number" id="calcDividendAmount" step="0.001" placeholder="e.g., 1.250" class="rounded-md">
+                </div>
+                <div class="form-group">
+                    <label for="calcFrankingCredits">Franking Credits (%):</label>
+                    <input type="number" id="calcFrankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 100" class="rounded-md">
+                </div>
+                <p class="yield-display"><strong>Unfranked Yield:</strong> <span id="calcUnfrankedYield"></span></p>
+                <p class="yield-display"><strong>Franked Yield:</strong> <span id="calcFrankedYield"></span></p>
+                
+                <div class="form-group mt-4">
+                    <label for="investmentValueSelect">Estimated Investment Value ($):</label>
+                    <select id="investmentValueSelect" class="rounded-md">
+                        <option value="1000">1,000</option>
+                        <option value="5000">5,000</option>
+                        <option value="10000" selected>10,000</option>
+                        <option value="25000">25,000</option>
+                        <option value="50000">50,000</option>
+                        <option value="100000">100,000</option>
+                    </select>
+                </div>
+                <p class="yield-display"><strong>Estimated Annual Dividend:</strong> <span id="calcEstimatedDividend"></span></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Standard Calculator Modal -->
+    <div id="calculatorModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Standard Calculator</h2>
+                <button class="close-button">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="calculator-display">
+                    <div id="calculatorInput" class="input-line"></div>
+                    <div id="calculatorResult" class="result-line">0</div>
+                </div>
+                <div class="calculator-buttons">
+                    <button class="calc-btn clear" data-action="clear">C</button>
+                    <button class="calc-btn operator" data-action="percentage">%</button>
+                    <button class="calc-btn operator" data-action="divide">÷</button>
+                    <button class="calc-btn" data-value="7">7</button>
+                    <button class="calc-btn" data-value="8">8</button>
+                    <button class="calc-btn" data-value="9">9</button>
+                    <button class="calc-btn operator" data-action="multiply">×</button>
+                    <button class="calc-btn" data-value="4">4</button>
+                    <button class="calc-btn" data-value="5">5</button>
+                    <button class="calc-btn" data-value="6">6</button>
+                    <button class="calc-btn operator" data-action="subtract">-</button>
+                    <button class="calc-btn" data-value="1">1</button>
+                    <button class="calc-btn" data-value="2">2</button>
+                    <button class="calc-btn" data-value="3">3</button>
+                    <button class="calc-btn operator" data-action="add">+</button>
+                    <button class="calc-btn span-2" data-value="0">0</button>
+                    <button class="calc-btn" data-value=".">.</button>
+                    <button class="calc-btn equals" data-action="calculate">=</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Dialog Modal (for alerts and confirms) -->
+    <div id="customDialogModal" class="modal custom-dialog-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Message</h2>
+                <button class="close-button">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="customDialogMessage" class="message"></p>
+                <div class="dialog-actions">
+                    <button id="customDialogConfirmBtn"></button>
+                    <button id="customDialogCancelBtn"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEW: Consolidated Manage Watchlists Modal -->
+    <div id="manageWatchlistsCombinedModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Manage Watchlists</h2>
+                <button class="close-button">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="watchlist-tabs">
+                    <button id="showAddWatchlistTab" class="active">Add New Watchlist</button>
+                    <button id="showEditWatchlistTab">Edit/Delete Watchlist</button>
+                </div>
+
+                <div id="addWatchlistSection" class="watchlist-tab-content active">
+                    <div class="form-group">
+                        <label for="newWatchlistName">New Watchlist Name:</label>
+                        <input type="text" id="newWatchlistName" placeholder="e.g., My Growth Portfolio" class="rounded-md">
+                    </div>
+                    <div class="form-actions justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <button id="cancelAddWatchlistBtn" class="cancel-btn">
+                            <i class="fas fa-times-circle"></i> Cancel
+                        </button>
+                        <button id="saveWatchlistBtn" class="save-btn">
+                            <i class="fas fa-plus-circle"></i> Add Watchlist
+                        </button>
+                    </div>
+                </div>
+
+                <div id="editWatchlistSection" class="watchlist-tab-content">
+                    <div class="form-group">
+                        <label for="editWatchlistName">Current Watchlist Name:</label>
+                        <input type="text" id="editWatchlistName" class="rounded-md" readonly>
+                    </div>
+                    <div class="form-actions pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <button id="deleteWatchlistInModalBtn" class="delete-btn">
+                            <i class="fas fa-trash-alt"></i> Delete Current Watchlist
+                        </button>
+                        <button id="cancelManageWatchlistBtn" class="cancel-btn">
+                            <i class="fas fa-times-circle"></i> Cancel
+                        </button>
+                        <button id="saveWatchlistNameBtn" class="save-btn">
+                            <i class="fas fa-save"></i> Save New Name
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scroll to Top Button -->
+    <button id="scrollToTopBtn" class="scroll-to-top">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay"></div>
+
+    <!-- Main JavaScript File -->
+    <script src="script.js" type="module"></script>
 </body>
 </html>
