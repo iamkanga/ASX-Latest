@@ -1,5 +1,5 @@
-// File Version: v115
-// Last Updated: 2025-06-28 (Multi-Comment Feature)
+// File Version: v116
+// Last Updated: 2025-06-28 (Multi-Comment Refinement)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -283,15 +283,27 @@ function addCommentSection(title = '', text = '') {
     commentSectionDiv.className = 'comment-section';
     commentSectionDiv.innerHTML = `
         <div class="comment-section-header">
-            <input type="text" class="comment-title-input" placeholder="Comment Title" value="${title}">
+            <input type="text" class="comment-title-input" placeholder="Comment Title" value="${escapeHtml(title)}">
             <button type="button" class="comment-delete-btn">&times;</button>
         </div>
-        <textarea class="comment-text-input" placeholder="Your comments here...">${text}</textarea>
+        <textarea class="comment-text-input" placeholder="Your comments here...">${escapeHtml(text)}</textarea>
     `;
     commentsFormContainer.appendChild(commentSectionDiv);
     commentSectionDiv.querySelector('.comment-delete-btn').addEventListener('click', (event) => {
         event.target.closest('.comment-section').remove();
     });
+}
+
+// Helper to escape HTML for input values
+function escapeHtml(text) {
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, function(m) { return map[m]; });
 }
 
 // Function to clear the form fields
@@ -325,9 +337,9 @@ function showEditFormForSelectedShare() {
     
     commentsFormContainer.innerHTML = ''; // Clear existing comments before populating
     if (shareToEdit.comments && Array.isArray(shareToEdit.comments) && shareToEdit.comments.length > 0) {
-        shareToEdit.comments.forEach(comment => addCommentSection(comment.title, comment.text));
+        shareToEdit.comments.forEach(comment => addCommentSection(comment.title || '', comment.text || ''));
     } else {
-        addCommentSection(); // Add one empty comment section if no comments exist
+        addCommentSection(); // Add one empty comment section if no comments exist or comments array is empty
     }
     deleteShareFromFormBtn.style.display = 'inline-flex';
     showModal(shareFormSection);
@@ -369,20 +381,22 @@ function showShareDetails() {
     
     modalCommentsContainer.innerHTML = '';
     if (share.comments && Array.isArray(share.comments) && share.comments.length > 0) {
+        let hasDisplayedComments = false;
         share.comments.forEach(comment => {
             // Only display comments that have either a title or text
             if (comment.title || comment.text) {
                 const commentDiv = document.createElement('div');
                 commentDiv.className = 'modal-comment-item';
                 commentDiv.innerHTML = `
-                    <strong>${comment.title || 'General Comment'}</strong>
-                    <p>${comment.text || ''}</p>
+                    <strong>${escapeHtml(comment.title || 'General Comment')}</strong>
+                    <p>${escapeHtml(comment.text || '')}</p>
                 `;
                 modalCommentsContainer.appendChild(commentDiv);
+                hasDisplayedComments = true;
             }
         });
         // If after filtering, no comments are left, show the "No comments" message
-        if (modalCommentsContainer.children.length === 0) {
+        if (!hasDisplayedComments) {
             modalCommentsContainer.innerHTML = '<p style="text-align: center; color: var(--label-color);">No comments for this share.</p>';
         }
     } else {
@@ -1152,7 +1166,7 @@ function toggleAppSidebar(forceState = null) {
 
 // --- DOMContentLoaded Event Listener (Main execution block) ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v115) DOMContentLoaded fired.");
+    console.log("script.js (v116) DOMContentLoaded fired.");
 
     // --- Initial UI Setup ---
     if (shareFormSection) shareFormSection.style.setProperty('display', 'none', 'important');
