@@ -1,5 +1,5 @@
-// File Version: v116
-// Last Updated: 2025-06-28 (Multi-Comment Refinement)
+// File Version: v117
+// Last Updated: 2025-06-28 (Multi-Comment Debugging)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -44,7 +44,7 @@ const CUSTOM_THEMES = [
 ];
 let currentCustomThemeIndex = -1; // To track the current theme in the cycle
 
-// --- UI Element References (Declared globally for access by all functions) ---
+// --- UI Element References (Declared globally for all functions to access) ---
 const mainTitle = document.getElementById('mainTitle');
 const addShareHeaderBtn = document.getElementById('addShareHeaderBtn');
 const newShareBtn = document.getElementById('newShareBtn');
@@ -63,7 +63,7 @@ const targetPriceInput = document.getElementById('targetPrice');
 const dividendAmountInput = document.getElementById('dividendAmount');
 const frankingCreditsInput = document.getElementById('frankingCredits');
 const commentsFormContainer = document.getElementById('commentsFormContainer');
-const addCommentSectionBtn = document.getElementById('addCommentSectionBtn');
+const addCommentSectionBtn = document.getElementById('addCommentSectionBtn'); // The button in question
 const shareTableBody = document.querySelector('#shareTable tbody');
 const mobileShareCardsContainer = document.getElementById('mobileShareCards');
 const loadingIndicator = document.getElementById('loadingIndicator');
@@ -279,6 +279,7 @@ function truncateText(text, maxLength) {
 
 // Function to add a comment section to the form
 function addCommentSection(title = '', text = '') {
+    console.log(`[Comments] Adding comment section: Title='${title}', Text='${text.substring(0, 30)}...'`);
     const commentSectionDiv = document.createElement('div');
     commentSectionDiv.className = 'comment-section';
     commentSectionDiv.innerHTML = `
@@ -291,11 +292,13 @@ function addCommentSection(title = '', text = '') {
     commentsFormContainer.appendChild(commentSectionDiv);
     commentSectionDiv.querySelector('.comment-delete-btn').addEventListener('click', (event) => {
         event.target.closest('.comment-section').remove();
+        console.log("[Comments] Comment section removed.");
     });
 }
 
 // Helper to escape HTML for input values
 function escapeHtml(text) {
+    if (typeof text !== 'string') return text; // Handle non-string inputs gracefully
     const map = {
         '&': '&amp;',
         '<': '&lt;',
@@ -1166,7 +1169,7 @@ function toggleAppSidebar(forceState = null) {
 
 // --- DOMContentLoaded Event Listener (Main execution block) ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v116) DOMContentLoaded fired.");
+    console.log("script.js (v117) DOMContentLoaded fired.");
 
     // --- Initial UI Setup ---
     if (shareFormSection) shareFormSection.style.setProperty('display', 'none', 'important');
@@ -1215,8 +1218,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (event.key === 'Enter') {
                     event.preventDefault();
                     if (index === formInputs.length - 1) {
-                        const currentCommentInputs = commentsFormContainer.querySelector('.comment-title-input');
-                        if (currentCommentInputs) { currentCommentInputs.focus(); }
+                        // Attempt to focus the first comment title input, or save if none
+                        const firstCommentInput = commentsFormContainer.querySelector('.comment-title-input');
+                        if (firstCommentInput) { firstCommentInput.focus(); }
                         else if (saveShareBtn) { saveShareBtn.click(); }
                     } else {
                         if (formInputs[index + 1]) formInputs[index + 1].focus();
@@ -1457,7 +1461,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     if (addCommentSectionBtn) {
-        addCommentSectionBtn.addEventListener('click', () => addCommentSection());
+        console.log("[Comments] addCommentSectionBtn element found. Attaching click listener.");
+        addCommentSectionBtn.addEventListener('click', () => {
+            console.log("[Comments] Add Comment button clicked.");
+            addCommentSection();
+        });
+    } else {
+        console.error("[Comments] addCommentSectionBtn element NOT found!");
     }
 
     // --- Share Detail Modal Functions Event Listeners ---
