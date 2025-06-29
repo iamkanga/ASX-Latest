@@ -1,5 +1,5 @@
-// File Version: v139 (Restored Original Style & Two Watchlist Modals)
-// Last Updated: 2025-06-28 (Adapted to original HTML structure and separate watchlist modals)
+// File Version: v140 (truncateText function scope fix)
+// Last Updated: 2025-06-28 (Moved truncateText to global helper functions)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -15,7 +15,7 @@ let selectedShareDocId = null;
 let allSharesData = [];
 let currentDialogCallback = null;
 let autoDismissTimeout = null;
-const KANGA_EMAIL = 'iamkanga@gmail.0com'; // Corrected email typo
+const KANGA_EMAIL = 'iamkanga@gmail.com'; // Corrected email typo
 let currentCalculatorInput = '';
 let operator = null;
 let previousCalculatorInput = '';
@@ -110,6 +110,13 @@ let cancelManageWatchlistBtn; // Cancel button in Manage Watchlist modal
 let formInputs = []; // Initialized here, populated in DOMContentLoaded
 
 // --- Core Helper Functions (Declared globally for immediate availability) ---
+
+function truncateText(text, maxLength) {
+    if (typeof text !== 'string' || text.length <= maxLength) {
+        return text;
+    }
+    return text.substring(0, maxLength) + '...';
+}
 
 function toggleAppSidebar(force) {
     const isSidebarOpen = appSidebar.classList.contains('open');
@@ -1200,7 +1207,7 @@ async function migrateOldSharesToWatchlist() {
 
 // --- DOMContentLoaded Listener for UI Element References and Event Listeners ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v139) DOMContentLoaded fired."); // Updated script version log
+    console.log("script.js (v140) DOMContentLoaded fired."); // Updated script version log
 
     // --- Initialize Firebase variables from window globals ---
     // These must be assigned before any Firebase operations.
