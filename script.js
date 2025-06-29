@@ -1,5 +1,5 @@
-// File Version: v117
-// Last Updated: 2025-06-28 (Multi-Comment Debugging)
+// File Version: v118
+// Last Updated: 2025-06-28 (Comments & Modal Button Fix)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -317,7 +317,7 @@ function clearForm() {
     commentsFormContainer.innerHTML = ''; // Clear all existing comment sections
     addCommentSection(); // Add one empty comment section by default
     selectedShareDocId = null;
-    console.log("[Form] Form fields cleared and selectedShareDocId reset.");
+    console.log("[Form] Form fields cleared and selectedShareDocId reset. One empty comment section added.");
 }
 
 // Function to show the edit form with selected share's data
@@ -341,8 +341,10 @@ function showEditFormForSelectedShare() {
     commentsFormContainer.innerHTML = ''; // Clear existing comments before populating
     if (shareToEdit.comments && Array.isArray(shareToEdit.comments) && shareToEdit.comments.length > 0) {
         shareToEdit.comments.forEach(comment => addCommentSection(comment.title || '', comment.text || ''));
+        console.log(`[Comments] Populated ${shareToEdit.comments.length} comments for editing.`);
     } else {
         addCommentSection(); // Add one empty comment section if no comments exist or comments array is empty
+        console.log("[Comments] No existing comments, added one empty comment section for editing.");
     }
     deleteShareFromFormBtn.style.display = 'inline-flex';
     showModal(shareFormSection);
@@ -1169,7 +1171,7 @@ function toggleAppSidebar(forceState = null) {
 
 // --- DOMContentLoaded Event Listener (Main execution block) ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v117) DOMContentLoaded fired.");
+    console.log("script.js (v118) DOMContentLoaded fired.");
 
     // --- Initial UI Setup ---
     if (shareFormSection) shareFormSection.style.setProperty('display', 'none', 'important');
@@ -1387,6 +1389,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     comments.push({ title: title, text: text });
                 }
             });
+            console.log("[Comments] Collected comments for saving:", comments);
 
             const shareData = {
                 shareName: shareName,
@@ -1463,7 +1466,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (addCommentSectionBtn) {
         console.log("[Comments] addCommentSectionBtn element found. Attaching click listener.");
         addCommentSectionBtn.addEventListener('click', () => {
-            console.log("[Comments] Add Comment button clicked.");
+            console.log("[Comments] Add Comment button clicked. Calling addCommentSection().");
             addCommentSection();
         });
     } else {

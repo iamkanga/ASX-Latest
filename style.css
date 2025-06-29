@@ -1,5 +1,5 @@
-/* File Version: v55 */
-/* Last Updated: 2025-06-28 (Add Comment Button Visibility) */
+/* File Version: v56 */
+/* Last Updated: 2025-06-28 (Add Comment Button Visibility Fix) */
 
 :root {
     /* Light Theme (Default) - Adjusted for more vibrancy */
@@ -1188,28 +1188,36 @@ table tbody tr:not(.selected):hover {
     margin-bottom: 15px;
     font-size: 1.2em;
     color: var(--text-color);
+    border-bottom: none; /* Remove extra border */
+    padding-bottom: 0;
     /* Ensure no overflow issues for the button */
     overflow: visible; /* Explicitly allow content to overflow if needed */
     min-height: 30px; /* Ensure enough height for the button to be visible */
 }
 
-.comments-form-container .add-section-btn {
+/* NEW: Styling for the #addCommentSectionBtn */
+.add-section-btn {
     background-color: var(--button-bg);
     color: var(--button-text);
     border: none;
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    font-size: 1.5em;
+    border-radius: 8px; /* Slightly rounded rectangle */
+    padding: 8px 15px; /* Adjusted padding for better button feel */
+    font-size: 1em; /* Standard font size */
     line-height: 1;
-    display: flex;
+    display: flex; /* Use flex to align icon and text */
     justify-content: center;
     align-items: center;
+    gap: 8px; /* Space between icon and text */
     cursor: pointer;
     transition: background-color 0.2s ease;
+    margin-top: 15px; /* Space above the button */
+    margin-bottom: 20px; /* Space below the button */
+    width: fit-content; /* Shrink to fit content */
+    margin-left: auto; /* Center the button */
+    margin-right: auto; /* Center the button */
 }
 
-.comments-form-container .add-section-btn:hover {
+.add-section-btn:hover {
     background-color: var(--button-hover-bg);
 }
 
