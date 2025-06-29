@@ -1,5 +1,5 @@
-// File Version: v134 (Updated by Gemini for Service Worker Log Consistency)
-// Last Updated: 2025-06-28 (Improved watchlist display, sidebar behavior, and general robustness)
+// File Version: v135 (Fixed ReferenceError: editWatchlistNameInput is not defined)
+// Last Updated: 2025-06-28 (Corrected variable declaration for editWatchlistNameInput)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -103,7 +103,7 @@ let editWatchlistSection;
 let newWatchlistNameInput;
 let saveWatchlistBtn;
 let cancelAddWatchlistBtn;
-editWatchlistNameInput;
+let editWatchlistNameInput; // CORRECTED: Added 'let' keyword here
 let saveWatchlistNameBtn;
 let deleteWatchlistInModalBtn;
 let cancelManageWatchlistBtn;
@@ -1175,7 +1175,7 @@ async function migrateOldSharesToWatchlist() {
 
 // --- DOMContentLoaded Listener for UI Element References and Event Listeners ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v134) DOMContentLoaded fired."); // Updated script version log
+    console.log("script.js (v135) DOMContentLoaded fired."); // Updated script version log
 
     // --- Initialize Firebase variables from window globals ---
     // These must be assigned before any Firebase operations.
@@ -1274,7 +1274,7 @@ document.addEventListener('DOMContentLoaded', function() {
     newWatchlistNameInput = document.getElementById('newWatchlistName');
     saveWatchlistBtn = document.getElementById('saveWatchlistBtn');
     cancelAddWatchlistBtn = document.getElementById('cancelAddWatchlistBtn');
-    editWatchlistNameInput = document.getElementById('editWatchlistName');
+    editWatchlistNameInput = document.getElementById('editWatchlistName'); // Element reference
     saveWatchlistNameBtn = document.getElementById('saveWatchlistNameBtn');
     deleteWatchlistInModalBtn = document.getElementById('deleteWatchlistInModalBtn');
     cancelManageWatchlistBtn = document.getElementById('cancelManageWatchlistBtn');
@@ -1577,6 +1577,7 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log("[Button] 'Manage Watchlists' clicked.");
             // Reset modal state
             if (newWatchlistNameInput) newWatchlistNameInput.value = '';
+            // Ensure editWatchlistNameInput is defined before trying to access its value
             if (editWatchlistNameInput) editWatchlistNameInput.value = currentWatchlistName;
 
             // Set initial tab to Add New
@@ -1746,7 +1747,7 @@ document.addEventListener('DOMContentLoaded', function() {
         cancelManageWatchlistBtn.addEventListener('click', () => {
             console.log("[Button] 'Cancel Manage Watchlist' clicked.");
             hideModal(manageWatchlistsCombinedModal);
-            editWatchlistNameInput.value = '';
+            if (editWatchlistNameInput) editWatchlistNameInput.value = '';
             console.log("[Watchlist] Manage Watchlist canceled.");
         });
     }
@@ -1964,7 +1965,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 mainTitle.textContent = 'Share Watchlist'; // Reset title
                 console.log("[Auth State] User signed out or is anonymous.");
                 clearWatchlistUI();
-                clearShareList(); 
+                clearShareList();
                 updateMainButtonsState(false); // Disable core app buttons
                 if (loadingIndicator) loadingIndicator.style.display = 'none';
                 // If not signed in, sign in anonymously to allow basic interaction (e.g., for creating a new account)
