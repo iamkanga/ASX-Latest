@@ -1,5 +1,5 @@
-/* File Version: v46 */
-/* Last Updated: 2025-06-27 (Button layout, Hamburger X size, Sign-in button centering, ghosted text, Price display restructure, Sidebar overlay behavior) */
+/* File Version: v47 */
+/* Last Updated: 2025-06-28 (Implemented 20 new themes, theme selector, and revert link) */
 
 :root {
     /* Light Theme (Default) - Adjusted for more vibrancy */
@@ -73,6 +73,453 @@ body.dark-theme {
     --close-sidebar-btn-color: #bbb;
     --ghosted-text-color: #a0a0a0; /* New variable for ghosted text in dark theme */
 }
+
+/* --- NEW THEMES --- */
+
+/* Bold Themes */
+body.theme-bold-1 { /* Ocean */
+    --background-color: #001f3f;
+    --text-color: #e0f2f7;
+    --header-bg: #003366;
+    --card-bg: #004080;
+    --border-color: #0050a0;
+    --button-bg: #007bff;
+    --button-hover-bg: #0056b3;
+    --input-bg: #002b5c;
+    --input-border: #004a99;
+    --modal-content-bg: #004080;
+    --table-header-bg: #003a75;
+    --table-row-hover-bg: #004e9e;
+    --asx-button-bg: #004080;
+    --asx-button-hover-bg: #0056b3;
+    --asx-button-active-bg: #007bff;
+    --label-color: #a0c0e0;
+    --sidebar-bg: #003366;
+    --sidebar-border: #0050a0;
+    --sidebar-text: #e0f2f7;
+}
+body.theme-bold-2 { /* Forest */
+    --background-color: #0a3d0a;
+    --text-color: #e6ffe6;
+    --header-bg: #1a521a;
+    --card-bg: #226622;
+    --border-color: #2b7a2b;
+    --button-bg: #3cb371;
+    --button-hover-bg: #2e8b57;
+    --input-bg: #1e4d1e;
+    --input-border: #2a6a2a;
+    --modal-content-bg: #226622;
+    --table-header-bg: #1a521a;
+    --table-row-hover-bg: #2e8b57;
+    --asx-button-bg: #226622;
+    --asx-button-hover-bg: #2e8b57;
+    --asx-button-active-bg: #3cb371;
+    --label-color: #a0d0a0;
+    --sidebar-bg: #1a521a;
+    --sidebar-border: #2b7a2b;
+    --sidebar-text: #e6ffe6;
+}
+body.theme-bold-3 { /* Sunset */
+    --background-color: #4a0e0e;
+    --text-color: #fff0e0;
+    --header-bg: #6b1a1a;
+    --card-bg: #8c2a2a;
+    --border-color: #a33a3a;
+    --button-bg: #e74c3c;
+    --button-hover-bg: #c0392b;
+    --input-bg: #5c1e1e;
+    --input-border: #7a2a2a;
+    --modal-content-bg: #8c2a2a;
+    --table-header-bg: #6b1a1a;
+    --table-row-hover-bg: #c0392b;
+    --asx-button-bg: #8c2a2a;
+    --asx-button-hover-bg: #c0392b;
+    --asx-button-active-bg: #e74c3c;
+    --label-color: #e0a0a0;
+    --sidebar-bg: #6b1a1a;
+    --sidebar-border: #a33a3a;
+    --sidebar-text: #fff0e0;
+}
+body.theme-bold-4 { /* Royal */
+    --background-color: #2a0a4a;
+    --text-color: #f0e0ff;
+    --header-bg: #3d1a6b;
+    --card-bg: #5c2a8c;
+    --border-color: #7a3aa3;
+    --button-bg: #8e44ad;
+    --button-hover-bg: #702a8c;
+    --input-bg: #3a1e5c;
+    --input-border: #5a2a7a;
+    --modal-content-bg: #5c2a8c;
+    --table-header-bg: #3d1a6b;
+    --table-row-hover-bg: #702a8c;
+    --asx-button-bg: #5c2a8c;
+    --asx-button-hover-bg: #702a8c;
+    --asx-button-active-bg: #8e44ad;
+    --label-color: #c0a0e0;
+    --sidebar-bg: #3d1a6b;
+    --sidebar-border: #7a3aa3;
+    --sidebar-text: #f0e0ff;
+}
+body.theme-bold-5 { /* Grape */
+    --background-color: #3f003f;
+    --text-color: #ffe0ff;
+    --header-bg: #660066;
+    --card-bg: #800080;
+    --border-color: #a000a0;
+    --button-bg: #cc00cc;
+    --button-hover-bg: #a000a0;
+    --input-bg: #5c005c;
+    --input-border: #990099;
+    --modal-content-bg: #800080;
+    --table-header-bg: #660066;
+    --table-row-hover-bg: #a000a0;
+    --asx-button-bg: #800080;
+    --asx-button-hover-bg: #a000a0;
+    --asx-button-active-bg: #cc00cc;
+    --label-color: #e0a0e0;
+    --sidebar-bg: #660066;
+    --sidebar-border: #a000a0;
+    --sidebar-text: #ffe0ff;
+}
+body.theme-bold-6 { /* Fire */
+    --background-color: #5c1a00;
+    --text-color: #fff5e0;
+    --header-bg: #8c2a00;
+    --card-bg: #b33600;
+    --border-color: #cc4400;
+    --button-bg: #ff6600;
+    --button-hover-bg: #cc5200;
+    --input-bg: #7a2a00;
+    --input-border: #a03600;
+    --modal-content-bg: #b33600;
+    --table-header-bg: #8c2a00;
+    --table-row-hover-bg: #cc5200;
+    --asx-button-bg: #b33600;
+    --asx-button-hover-bg: #cc5200;
+    --asx-button-active-bg: #ff6600;
+    --label-color: #ffe0a0;
+    --sidebar-bg: #8c2a00;
+    --sidebar-border: #cc4400;
+    --sidebar-text: #fff5e0;
+}
+body.theme-bold-7 { /* Emerald */
+    --background-color: #004d40;
+    --text-color: #e0fff0;
+    --header-bg: #00695c;
+    --card-bg: #00897b;
+    --border-color: #00a896;
+    --button-bg: #00c853;
+    --button-hover-bg: #009624;
+    --input-bg: #005c4f;
+    --input-border: #007a6e;
+    --modal-content-bg: #00897b;
+    --table-header-bg: #00695c;
+    --table-row-hover-bg: #009624;
+    --asx-button-bg: #00897b;
+    --asx-button-hover-bg: #009624;
+    --asx-button-active-bg: #00c853;
+    --label-color: #a0e0c0;
+    --sidebar-bg: #00695c;
+    --sidebar-border: #00a896;
+    --sidebar-text: #e0fff0;
+}
+body.theme-bold-8 { /* Plum */
+    --background-color: #330033;
+    --text-color: #f0e0f0;
+    --header-bg: #4d004d;
+    --card-bg: #660066;
+    --border-color: #800080;
+    --button-bg: #993399;
+    --button-hover-bg: #7f2a7f;
+    --input-bg: #400040;
+    --input-border: #600060;
+    --modal-content-bg: #660066;
+    --table-header-bg: #4d004d;
+    --table-row-hover-bg: #7f2a7f;
+    --asx-button-bg: #660066;
+    --asx-button-hover-bg: #7f2a7f;
+    --asx-button-active-bg: #993399;
+    --label-color: #c0a0c0;
+    --sidebar-bg: #4d004d;
+    --sidebar-border: #800080;
+    --sidebar-text: #f0e0f0;
+}
+body.theme-bold-9 { /* Aqua */
+    --background-color: #003333;
+    --text-color: #e0ffff;
+    --header-bg: #004d4d;
+    --card-bg: #006666;
+    --border-color: #008080;
+    --button-bg: #00cccc;
+    --button-hover-bg: #00a0a0;
+    --input-bg: #004040;
+    --input-border: #006060;
+    --modal-content-bg: #006666;
+    --table-header-bg: #004d4d;
+    --table-row-hover-bg: #00a0a0;
+    --asx-button-bg: #006666;
+    --asx-button-hover-bg: #00a0a0;
+    --asx-button-active-bg: #00cccc;
+    --label-color: #a0e0e0;
+    --sidebar-bg: #004d4d;
+    --sidebar-border: #008080;
+    --sidebar-text: #e0ffff;
+}
+body.theme-bold-10 { /* Ruby */
+    --background-color: #4d0026;
+    --text-color: #ffe0f0;
+    --header-bg: #660033;
+    --card-bg: #800040;
+    --border-color: #99004d;
+    --button-bg: #cc0066;
+    --button-hover-bg: #a00052;
+    --input-bg: #5c002e;
+    --input-border: #7a003d;
+    --modal-content-bg: #800040;
+    --table-header-bg: #660033;
+    --table-row-hover-bg: #a00052;
+    --asx-button-bg: #800040;
+    --asx-button-hover-bg: #a00052;
+    --asx-button-active-bg: #cc0066;
+    --label-color: #e0a0c0;
+    --sidebar-bg: #660033;
+    --sidebar-border: #99004d;
+    --sidebar-text: #ffe0f0;
+}
+
+/* Subtle Themes */
+body.theme-subtle-1 { /* Sky */
+    --background-color: #e0f2f7;
+    --text-color: #334e68;
+    --header-bg: #cce9f2;
+    --card-bg: #ffffff;
+    --border-color: #a0dceb;
+    --button-bg: #60a8c2;
+    --button-hover-bg: #4a8ca0;
+    --input-bg: #f5fafd;
+    --input-border: #b0d8e4;
+    --modal-content-bg: #ffffff;
+    --table-header-bg: #e0f2f7;
+    --table-row-hover-bg: #d0eef5;
+    --asx-button-bg: #e0f2f7;
+    --asx-button-hover-bg: #d0eef5;
+    --asx-button-active-bg: #60a8c2;
+    --asx-button-text: #334e68;
+    --asx-button-active-text: #fff;
+    --label-color: #6a8ba3;
+    --sidebar-bg: #cce9f2;
+    --sidebar-border: #a0dceb;
+    --sidebar-text: #334e68;
+}
+body.theme-subtle-2 { /* Earth */
+    --background-color: #f0f0e0;
+    --text-color: #5c4033;
+    --header-bg: #e0e0c0;
+    --card-bg: #ffffff;
+    --border-color: #d0d0b0;
+    --button-bg: #8b7355;
+    --button-hover-bg: #735c45;
+    --input-bg: #fffbf0;
+    --input-border: #c0c0a0;
+    --modal-content-bg: #ffffff;
+    --table-header-bg: #e0e0c0;
+    --table-row-hover-bg: #e8e8d8;
+    --asx-button-bg: #e0e0c0;
+    --asx-button-hover-bg: #e8e8d8;
+    --asx-button-active-bg: #8b7355;
+    --asx-button-text: #5c4033;
+    --asx-button-active-text: #fff;
+    --label-color: #8c7a6b;
+    --sidebar-bg: #e0e0c0;
+    --sidebar-border: #d0d0b0;
+    --sidebar-text: #5c4033;
+}
+body.theme-subtle-3 { /* Rose */
+    --background-color: #f7e9ed;
+    --text-color: #683340;
+    --header-bg: #f2dce0;
+    --card-bg: #ffffff;
+    --border-color: #ebc0c8;
+    --button-bg: #c2607a;
+    --button-hover-bg: #a04a60;
+    --input-bg: #fdf5f7;
+    --input-border: #e4b0b8;
+    --modal-content-bg: #ffffff;
+    --table-header-bg: #f2dce0;
+    --table-row-hover-bg: #f5d0d8;
+    --asx-button-bg: #f2dce0;
+    --asx-button-hover-bg: #f5d0d8;
+    --asx-button-active-bg: #c2607a;
+    --asx-button-text: #683340;
+    --asx-button-active-text: #fff;
+    --label-color: #a36a7b;
+    --sidebar-bg: #f2dce0;
+    --sidebar-border: #ebc0c8;
+    --sidebar-text: #683340;
+}
+body.theme-subtle-4 { /* Lavender */
+    --background-color: #f0e0f7;
+    --text-color: #403368;
+    --header-bg: #e0d0f2;
+    --card-bg: #ffffff;
+    --border-color: #ebc0f0;
+    --button-bg: #8c60c2;
+    --button-hover-bg: #734a9b;
+    --input-bg: #fdf5ff;
+    --input-border: #d8b0e4;
+    --modal-content-bg: #ffffff;
+    --table-header-bg: #e0d0f2;
+    --table-row-hover-bg: #e8d0f5;
+    --asx-button-bg: #e0d0f2;
+    --asx-button-hover-bg: #e8d0f5;
+    --asx-button-active-bg: #8c60c2;
+    --asx-button-text: #403368;
+    --asx-button-active-text: #fff;
+    --label-color: #7b6a9b;
+    --sidebar-bg: #e0d0f2;
+    --sidebar-border: #ebc0f0;
+    --sidebar-text: #403368;
+}
+body.theme-subtle-5 { /* Mint */
+    --background-color: #e0f7f0;
+    --text-color: #336840;
+    --header-bg: #d0f2e0;
+    --card-bg: #ffffff;
+    --border-color: #b0ebc0;
+    --button-bg: #60c27a;
+    --button-hover-bg: #4a9b60;
+    --input-bg: #f5fff7;
+    --input-border: #b8e4c0;
+    --modal-content-bg: #ffffff;
+    --table-header-bg: #d0f2e0;
+    --table-row-hover-bg: #d8f5e0;
+    --asx-button-bg: #d0f2e0;
+    --asx-button-hover-bg: #d8f5e0;
+    --asx-button-active-bg: #60c27a;
+    --asx-button-text: #336840;
+    --asx-button-active-text: #fff;
+    --label-color: #6a9b7b;
+    --sidebar-bg: #d0f2e0;
+    --sidebar-border: #b0ebc0;
+    --sidebar-text: #336840;
+}
+body.theme-subtle-6 { /* Sand */
+    --background-color: #f7f2e0;
+    --text-color: #685c33;
+    --header-bg: #f2e9d0;
+    --card-bg: #ffffff;
+    --border-color: #ebdfb0;
+    --button-bg: #c2a860;
+    --button-hover-bg: #9b8c4a;
+    --input-bg: #fffdf5;
+    --input-border: #e4dcb8;
+    --modal-content-bg: #ffffff;
+    --table-header-bg: #f2e9d0;
+    --table-row-hover-bg: #f5e8d0;
+    --asx-button-bg: #f2e9d0;
+    --asx-button-hover-bg: #f5e8d0;
+    --asx-button-active-bg: #c2a860;
+    --asx-button-text: #685c33;
+    --asx-button-active-text: #fff;
+    --label-color: #9b8c6a;
+    --sidebar-bg: #f2e9d0;
+    --sidebar-border: #ebdfb0;
+    --sidebar-text: #685c33;
+}
+body.theme-subtle-7 { /* Graphite */
+    --background-color: #e6e6e6;
+    --text-color: #404040;
+    --header-bg: #d0d0d0;
+    --card-bg: #ffffff;
+    --border-color: #b0b0b0;
+    --button-bg: #808080;
+    --button-hover-bg: #606060;
+    --input-bg: #f0f0f0;
+    --input-border: #c0c0c0;
+    --modal-content-bg: #ffffff;
+    --table-header-bg: #d0d0d0;
+    --table-row-hover-bg: #e0e0e0;
+    --asx-button-bg: #d0d0d0;
+    --asx-button-hover-bg: #e0e0e0;
+    --asx-button-active-bg: #808080;
+    --asx-button-text: #404040;
+    --asx-button-active-text: #fff;
+    --label-color: #707070;
+    --sidebar-bg: #d0d0d0;
+    --sidebar-border: #b0b0b0;
+    --sidebar-text: #404040;
+}
+body.theme-subtle-8 { /* Peach */
+    --background-color: #f7ede0;
+    --text-color: #684a33;
+    --header-bg: #f2e0d0;
+    --card-bg: #ffffff;
+    --border-color: #ebc8b0;
+    --button-bg: #c27a60;
+    --button-hover-bg: #9b604a;
+    --input-bg: #fdf7f5;
+    --input-border: #e4c0b8;
+    --modal-content-bg: #ffffff;
+    --table-header-bg: #f2e0d0;
+    --table-row-hover-bg: #f5d8d0;
+    --asx-button-bg: #f2e0d0;
+    --asx-button-hover-bg: #f5d8d0;
+    --asx-button-active-bg: #c27a60;
+    --asx-button-text: #684a33;
+    --asx-button-active-text: #fff;
+    --label-color: #9b7b6a;
+    --sidebar-bg: #f2e0d0;
+    --sidebar-border: #ebc8b0;
+    --sidebar-text: #684a33;
+}
+body.theme-subtle-9 { /* Teal */
+    --background-color: #e0f7f7;
+    --text-color: #336868;
+    --header-bg: #d0f2f2;
+    --card-bg: #ffffff;
+    --border-color: #b0ebeb;
+    --button-bg: #60c2c2;
+    --button-hover-bg: #4a9b9b;
+    --input-bg: #f5fdfd;
+    --input-border: #b8e4e4;
+    --modal-content-bg: #ffffff;
+    --table-header-bg: #d0f2f2;
+    --table-row-hover-bg: #d8f5f5;
+    --asx-button-bg: #d0f2f2;
+    --asx-button-hover-bg: #d8f5f5;
+    --asx-button-active-bg: #60c2c2;
+    --asx-button-text: #336868;
+    --asx-button-active-text: #fff;
+    --label-color: #6a9b9b;
+    --sidebar-bg: #d0f2f2;
+    --sidebar-border: #b0ebeb;
+    --sidebar-text: #336868;
+}
+body.theme-subtle-10 { /* Stone */
+    --background-color: #f0f0f0;
+    --text-color: #5c5c5c;
+    --header-bg: #e0e0e0;
+    --card-bg: #ffffff;
+    --border-color: #d0d0d0;
+    --button-bg: #8b8b8b;
+    --button-hover-bg: #737373;
+    --input-bg: #fcfcfc;
+    --input-border: #c0c0c0;
+    --modal-content-bg: #ffffff;
+    --table-header-bg: #e0e0e0;
+    --table-row-hover-bg: #e8e8e8;
+    --asx-button-bg: #e0e0e0;
+    --asx-button-hover-bg: #e8e8e8;
+    --asx-button-active-bg: #8b8b8b;
+    --asx-button-text: #5c5c5c;
+    --asx-button-active-text: #fff;
+    --label-color: #8c8c8c;
+    --sidebar-bg: #e0e0e0;
+    --sidebar-border: #d0d0d0;
+    --sidebar-text: #5c5c5c;
+}
+
 
 /* Base Styles */
 html, body {
@@ -310,6 +757,37 @@ h1#mainTitle {
 
 .menu-button-item.danger-button:hover {
     background-color: var(--danger-button-hover-bg);
+}
+
+/* New Theme Selector Dropdown in Sidebar */
+.theme-select-label {
+    color: var(--sidebar-text);
+    font-size: 0.9em;
+    margin-bottom: 5px;
+    display: block;
+    font-weight: 600;
+}
+
+.menu-dropdown { /* Apply dropdown styling to select within menu */
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 10px; /* Space between dropdown and next item */
+}
+
+/* Subtle link for reverting to default theme */
+.menu-link {
+    color: var(--button-bg); /* Use primary button color for links */
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9em;
+    display: block; /* Make it take full width */
+    padding: 5px 0; /* Add some padding for clickability */
+    transition: color 0.2s ease;
+}
+
+.menu-link:hover {
+    color: var(--button-hover-bg);
+    text-decoration: underline;
 }
 
 

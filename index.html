@@ -8,7 +8,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍆</text></svg>">
 
     <!-- Linking to your separate style.css file -->
-    <link rel="stylesheet" href="style.css?v=46"> <!-- Updated CSS version for new styles -->
+    <link rel="stylesheet" href="style.css?v=47"> <!-- Updated CSS version for new styles -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -60,8 +60,41 @@
             <div class="menu-section">
                 <h3>Theme</h3>
                 <div class="menu-buttons-group">
-                    <!-- Consolidated Theme Toggle Button -->
-                    <button id="themeToggleBtn" class="menu-button-item" data-action-closes-menu="false"><i class="fas fa-moon"></i> Toggle Theme</button>
+                    <!-- Theme Toggle Button - Toggles default light/dark -->
+                    <button id="themeToggleBtn" class="menu-button-item" data-action-closes-menu="false"><i class="fas fa-moon"></i> Toggle Default Theme</button>
+                    
+                    <!-- New Theme Selector Dropdown -->
+                    <label for="colorThemeSelect" class="theme-select-label">Choose Color Theme:</label>
+                    <select id="colorThemeSelect" class="dropdown-large menu-dropdown" data-action-closes-menu="false">
+                        <option value="none" selected>No Custom Theme</option>
+                        <optgroup label="Bold Themes">
+                            <option value="bold-1">Bold Ocean</option>
+                            <option value="bold-2">Bold Forest</option>
+                            <option value="bold-3">Bold Sunset</option>
+                            <option value="bold-4">Bold Royal</option>
+                            <option value="bold-5">Bold Grape</option>
+                            <option value="bold-6">Bold Fire</option>
+                            <option value="bold-7">Bold Emerald</option>
+                            <option value="bold-8">Bold Plum</option>
+                            <option value="bold-9">Bold Aqua</option>
+                            <option value="bold-10">Bold Ruby</option>
+                        </optgroup>
+                        <optgroup label="Subtle Themes">
+                            <option value="subtle-1">Subtle Sky</option>
+                            <option value="subtle-2">Subtle Earth</option>
+                            <option value="subtle-3">Subtle Rose</option>
+                            <option value="subtle-4">Subtle Lavender</option>
+                            <option value="subtle-5">Subtle Mint</option>
+                            <option value="subtle-6">Subtle Sand</option>
+                            <option value="subtle-7">Subtle Graphite</option>
+                            <option value="subtle-8">Subtle Peach</option>
+                            <option value="subtle-9">Subtle Teal</option>
+                            <option value="subtle-10">Subtle Stone</option>
+                        </optgroup>
+                    </select>
+
+                    <!-- Subtle link to revert to default light/dark theme -->
+                    <a href="#" id="revertToDefaultThemeLink" class="menu-link" data-action-closes-menu="false">Revert to Default Light/Dark</a>
                 </div>
             </div>
         </nav>
@@ -384,10 +417,10 @@
         } : null;
 
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log("index.html (v53) script module loaded and DOMContentLoaded fired."); // Updated version number
+            console.log("index.html (v54) script module loaded and DOMContentLoaded fired."); // Updated version number
         }); 
     </script>
     <!-- Linking to your separate script.js file -->
-    <script src="script.js?v=108"></script>
+    <script src="script.js?v=110"></script>
 </body>
 </html>

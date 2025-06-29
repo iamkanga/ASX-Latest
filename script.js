@@ -1,5 +1,5 @@
-// File Version: v109
-// Last Updated: 2025-06-28 (ASX code buttons now consistently open share detail modal)
+// File Version: v110
+// Last Updated: 2025-06-28 (Implemented 20 new themes, theme selector, and revert link)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -7,7 +7,7 @@
 // from the <script type="module"> block in index.html.
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v109) DOMContentLoaded fired."); // New log to confirm script version and DOM ready
+    console.log("script.js (v110) DOMContentLoaded fired."); // New log to confirm script version and DOM ready
 
     // --- Core Helper Functions (DECLARED FIRST FOR HOISTING) ---
 
@@ -721,74 +721,70 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Theme Toggling Logic
-    function toggleTheme() {
+    function applyTheme(themeName) {
         const body = document.body;
-        if (body.classList.contains('dark-theme')) {
-            body.classList.remove('dark-theme');
-            localStorage.setItem('theme', 'light');
-            if (themeToggleBtn) themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i> Toggle Theme';
+        // Remove all existing theme classes first
+        body.className = body.className.split(' ').filter(c => !c.startsWith('theme-')).join(' ');
+
+        if (themeName && themeName !== 'none') {
+            body.classList.add(`theme-${themeName}`);
+            localStorage.setItem('selectedTheme', themeName);
+            console.log(`[Theme] Applied custom theme: ${themeName}`);
         } else {
-            body.classList.add('dark-theme');
-            localStorage.setItem('theme', 'dark');
-            if (themeToggleBtn) themeToggleBtn.innerHTML = '<i class="fas fa-sun"></i> Toggle Theme';
+            localStorage.removeItem('selectedTheme');
+            applyDefaultLightDarkTheme(); // Revert to system default or last light/dark
+            console.log("[Theme] Reverted to default light/dark theme.");
         }
-        console.log(`[Theme] Theme toggled to: ${localStorage.getItem('theme')}`);
+        updateThemeToggleAndSelector();
     }
 
-    function applySavedTheme() {
-        const savedTheme = localStorage.getItem('theme');
-        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    function applyDefaultLightDarkTheme() {
         const body = document.body;
-        if (savedTheme) {
-            if (savedTheme === 'dark') {
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const savedDefaultTheme = localStorage.getItem('theme'); // 'light' or 'dark'
+
+        // Remove any custom theme class
+        body.className = body.className.split(' ').filter(c => !c.startsWith('theme-')).join(' ');
+
+        if (savedDefaultTheme) {
+            if (savedDefaultTheme === 'dark') {
                 body.classList.add('dark-theme');
-                if (themeToggleBtn) themeToggleBtn.innerHTML = '<i class="fas fa-sun"></i> Toggle Theme';
             } else {
                 body.classList.remove('dark-theme');
-                if (themeToggleBtn) themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i> Toggle Theme';
             }
-            console.log(`[Theme] Applied saved theme: ${savedTheme}`);
+            console.log(`[Theme] Applied saved default theme: ${savedDefaultTheme}`);
         } else {
             if (systemPrefersDark) {
                 body.classList.add('dark-theme');
-                if (themeToggleBtn) themeToggleBtn.innerHTML = '<i class="fas fa-sun"></i> Toggle Theme';
             } else {
-                document.body.classList.remove('dark-theme');
-                if (themeToggleBtn) themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i> Toggle Theme';
+                body.classList.remove('dark-theme');
             }
             localStorage.setItem('theme', systemPrefersDark ? 'dark' : 'light');
             console.log(`[Theme] Applied system default theme: ${systemPrefersDark ? 'dark' : 'light'}`);
         }
     }
 
-    // Hamburger/Sidebar Menu Logic (Unified for Mobile & Desktop)
-    function toggleAppSidebar(force) {
-        const isSidebarOpen = appSidebar.classList.contains('open');
-        const isForcedOpen = (typeof force === 'boolean' && force === true);
-        const isForcedClosed = (typeof force === 'boolean' && force === false);
+    function updateThemeToggleAndSelector() {
+        const currentCustomTheme = localStorage.getItem('selectedTheme');
+        const currentDefaultTheme = localStorage.getItem('theme'); // 'light' or 'dark'
 
-        // Determine the target state based on 'force' or current state
-        let targetState;
-        if (isForcedOpen) { targetState = true; }
-        else if (isForcedClosed) { targetState = false; }
-        else { targetState = !isSidebarOpen; } // Toggle if no force specified
-
-        if (targetState) {
-            appSidebar.classList.add('open');
-            sidebarOverlay.classList.add('open'); // Show overlay
-            document.body.classList.add('sidebar-active'); // Shift content
-            document.documentElement.style.overflowX = 'hidden'; // Prevent horizontal scroll on html
-            document.body.style.overflowX = 'hidden'; // Prevent horizontal scroll on body
-            document.body.style.overflowY = 'hidden'; // Prevent vertical scroll on body when sidebar is open
-        } else {
-            appSidebar.classList.remove('open');
-            sidebarOverlay.classList.remove('open'); // Hide overlay
-            document.body.classList.remove('sidebar-active'); // Revert content shift
-            document.documentElement.style.overflowX = ''; // Allow horizontal scroll if needed
-            document.body.style.overflowX = ''; // Allow horizontal scroll if needed
-            document.body.style.overflowY = ''; // Allow vertical scroll on body
+        // Update theme toggle button text
+        if (themeToggleBtn) {
+            if (currentDefaultTheme === 'dark') {
+                themeToggleBtn.innerHTML = '<i class="fas fa-sun"></i> Toggle Default Theme';
+            } else {
+                themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i> Toggle Default Theme';
+            }
         }
-        console.log(`[Menu] App sidebar toggled. Open: ${appSidebar.classList.contains('open')}`);
+
+        // Update theme selector dropdown
+        if (colorThemeSelect) {
+            if (currentCustomTheme) {
+                colorThemeSelect.value = currentCustomTheme;
+            } else {
+                colorThemeSelect.value = 'none'; // Select "No Custom Theme"
+            }
+        }
     }
 
 
@@ -1088,6 +1084,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const calculatorButtons = document.querySelector('.calculator-buttons');
     const watchlistSelect = document.getElementById('watchlistSelect');
     const themeToggleBtn = document.getElementById('themeToggleBtn'); // Unified ID
+    const colorThemeSelect = document.getElementById('colorThemeSelect'); // New theme selector dropdown
+    const revertToDefaultThemeLink = document.getElementById('revertToDefaultThemeLink'); // New revert link
     const scrollToTopBtn = document.getElementById('scrollToTopBtn');
     const hamburgerBtn = document.getElementById('hamburgerBtn');
     const appSidebar = document.getElementById('appSidebar'); // Renamed from mobileMenu
@@ -1166,7 +1164,15 @@ document.addEventListener('DOMContentLoaded', function() {
     renderWatchlistSelect(); // Call this immediately to show the placeholder
     if (googleAuthBtn) googleAuthBtn.disabled = true;
     if (addShareHeaderBtn) addShareHeaderBtn.disabled = true; // Disable new add share button initially
-    applySavedTheme(); // Applies theme and updates themeToggleBtn text
+    
+    // Apply theme on initial load
+    const savedCustomTheme = localStorage.getItem('selectedTheme');
+    if (savedCustomTheme) {
+        applyTheme(savedCustomTheme);
+    } else {
+        applyDefaultLightDarkTheme();
+    }
+    updateThemeToggleAndSelector();
 
 
     // --- PWA Service Worker Registration ---
@@ -1686,23 +1692,54 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- Theme Toggling Logic Event Listener ---
     if (themeToggleBtn) { // This is the unified theme toggle button
-        themeToggleBtn.addEventListener('click', toggleTheme);
+        themeToggleBtn.addEventListener('click', () => {
+            const body = document.body;
+            // First, remove any custom theme class
+            body.className = body.className.split(' ').filter(c => !c.startsWith('theme-')).join(' ');
+            localStorage.removeItem('selectedTheme'); // Clear custom theme preference
+
+            // Then, toggle the default light/dark theme
+            if (body.classList.contains('dark-theme')) {
+                body.classList.remove('dark-theme');
+                localStorage.setItem('theme', 'light');
+            } else {
+                body.classList.add('dark-theme');
+                localStorage.setItem('theme', 'dark');
+            }
+            console.log(`[Theme] Toggled default theme to: ${localStorage.getItem('theme')}`);
+            updateThemeToggleAndSelector(); // Update UI elements
+        });
+    }
+
+    // New: Event listener for the color theme dropdown
+    if (colorThemeSelect) {
+        colorThemeSelect.addEventListener('change', (event) => {
+            const selectedTheme = event.target.value;
+            applyTheme(selectedTheme);
+        });
+    }
+
+    // New: Event listener for the revert to default theme link
+    if (revertToDefaultThemeLink) {
+        revertToDefaultThemeLink.addEventListener('click', (event) => {
+            event.preventDefault(); // Prevent default link behavior
+            applyTheme('none'); // Calling with 'none' will trigger default light/dark logic
+        });
     }
 
     // Listen for system theme changes (if no explicit saved theme is set)
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
-        // Only react to system changes if no explicit theme is saved by the user
-        if (!localStorage.getItem('theme')) {
+        // Only react to system changes if no explicit custom theme is selected AND no default theme is explicitly saved
+        if (!localStorage.getItem('selectedTheme') && !localStorage.getItem('theme')) {
             if (event.matches) {
                 document.body.classList.add('dark-theme');
-                if (themeToggleBtn) themeToggleBtn.innerHTML = '<i class="fas fa-sun"></i> Toggle Theme';
                 localStorage.setItem('theme', 'dark'); // Save system preference
             } else {
                 document.body.classList.remove('dark-theme');
-                if (themeToggleBtn) themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i> Toggle Theme';
                 localStorage.setItem('theme', 'light'); // Save system preference
             }
             console.log("[Theme] System theme preference changed and applied.");
+            updateThemeToggleAndSelector();
         }
     });
 
