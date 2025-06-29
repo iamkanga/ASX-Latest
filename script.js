@@ -1,5 +1,5 @@
-// File Version: v137 (Final attempt at cache bust)
-// Last Updated: 2025-06-28 (Incremented version to force update)
+// File Version: v138 (Fixed shareTableBody reference)
+// Last Updated: 2025-06-28 (Fixed shareTableBody initialization)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -46,7 +46,7 @@ let dividendAmountInput;
 let frankingCreditsInput;
 let commentsFormContainer;
 let addCommentSectionBtn;
-let shareTableBody;
+let shareTableBody; // This variable will be correctly assigned in DOMContentLoaded
 let mobileShareCardsContainer;
 let loadingIndicator;
 let googleAuthBtnSidebar; // Specific reference for sidebar button
@@ -557,7 +557,11 @@ function renderSortSelect() {
 }
 
 function addShareToTable(share) {
-    if (!shareTableBody) { console.error("[addShareToTable] shareTableBody element not found."); return; }
+    // Check if shareTableBody is valid before attempting to insert a row
+    if (!shareTableBody) {
+        console.error("[addShareToTable] shareTableBody element not found. Cannot add share to table.");
+        return;
+    }
     const row = shareTableBody.insertRow();
     row.dataset.docId = share.id;
     row.addEventListener('click', (event) => { selectShare(share.id); });
@@ -663,15 +667,20 @@ function selectShare(docId) {
     deselectCurrentShare();
     if (docId) {
         selectedShareDocId = docId;
-        const tableRow = shareTableBody.querySelector(`tr[data-doc-id="${docId}"]`);
-        if (tableRow) {
-            tableRow.classList.add('selected');
-            console.log(`[Selection] Selected table row for docId: ${docId}`);
+        // Ensure shareTableBody is not null before querying
+        if (shareTableBody) {
+            const tableRow = shareTableBody.querySelector(`tr[data-doc-id="${docId}"]`);
+            if (tableRow) {
+                tableRow.classList.add('selected');
+                console.log(`[Selection] Selected table row for docId: ${docId}`);
+            }
         }
-        const mobileCard = mobileShareCardsContainer.querySelector(`.mobile-card[data-doc-id="${docId}"]`);
-        if (mobileCard) {
-            mobileCard.classList.add('selected');
-            console.log(`[Selection] Selected mobile card for docId: ${docId}`);
+        if (mobileShareCardsContainer) {
+            const mobileCard = mobileShareCardsContainer.querySelector(`.mobile-card[data-doc-id="${docId}"]`);
+            if (mobileCard) {
+                mobileCard.classList.add('selected');
+                console.log(`[Selection] Selected mobile card for docId: ${docId}`);
+            }
         }
         console.log(`[Selection] New share selected: ${docId}.`);
     }
@@ -691,15 +700,20 @@ function renderWatchlist() {
         noSharesMessage.style.marginTop = '20px';
         noSharesMessage.style.color = 'var(--label-color)';
         if (window.matchMedia("(max-width: 768px)").matches) {
-            mobileShareCardsContainer.appendChild(noSharesMessage);
+            if (mobileShareCardsContainer) mobileShareCardsContainer.appendChild(noSharesMessage);
         } else {
-            const row = shareTableBody.insertRow();
-            const cell = row.insertCell();
-            cell.colSpan = 5; // Span all columns
-            cell.textContent = "No shares in this watchlist. Add a new share to get started!";
-            cell.style.textAlign = 'center';
-            cell.style.padding = '20px';
-            cell.style.color = 'var(--label-color)';
+            // Ensure shareTableBody is valid before trying to insert a row
+            if (shareTableBody) {
+                const row = shareTableBody.insertRow();
+                const cell = row.insertCell();
+                cell.colSpan = 5; // Span all columns
+                cell.textContent = "No shares in this watchlist. Add a new share to get started!";
+                cell.style.textAlign = 'center';
+                cell.style.padding = '20px';
+                cell.style.color = 'var(--label-color)';
+            } else {
+                console.error("[Render] shareTableBody is null, cannot display 'no shares' message in table.");
+            }
         }
     } else {
         sharesToRender.forEach((share) => {
@@ -781,9 +795,7 @@ function estimateDividendIncome(investmentValue, dividendAmountPerShare, current
 function updateCalculatorDisplay() {
     calculatorInput.textContent = previousCalculatorInput + (operator ? ` ${getOperatorSymbol(operator)} ` : '') + currentCalculatorInput;
     if (resultDisplayed) { /* nothing */ }
-    else if (currentCalculatorInput !== '') { calculatorResult.textContent = currentCalculatorInput; }
-    else if (previousCalculatorInput !== '' && operator) { calculatorResult.textContent = previousCalculatorInput; }
-    else { calculatorResult.textContent = '0'; }
+    else { if (currentCalculatorInput !== '') { calculatorResult.textContent = currentCalculatorInput; } else if (previousCalculatorInput !== '' && operator) { calculatorResult.textContent = previousCalculatorInput; } else { calculatorResult.textContent = '0'; } }
 }
 
 function calculateResult() {
@@ -902,7 +914,7 @@ function applySystemDefaultTheme() {
     root.style.removeProperty('--table-header-bg');
     root.style.removeProperty('--table-row-hover-bg');
     root.style.removeProperty('--asx-button-bg');
-    root.style.removeProperty('--asx-button-hover-bg',);
+    root.style.removeProperty('--asx-button-hover-bg');
     root.style.removeProperty('--asx-button-text');
     root.style.removeProperty('--asx-button-active-bg');
     root.style.removeProperty('--asx-button-active-text');
@@ -1074,7 +1086,7 @@ async function loadShares() {
         });
         console.log(`[Shares] Shares loaded successfully for watchlist: '${currentWatchlistName}' (ID: ${currentWatchlistId}). Total shares: ${allSharesData.length}`);
         console.log("[Shares] All shares data (after load):", allSharesData);
-        sortShares();
+        sortShares(); // This will call renderWatchlist()
         renderAsxCodeButtons();
     }
     catch (error) {
@@ -1234,7 +1246,8 @@ document.addEventListener('DOMContentLoaded', function() {
     frankingCreditsInput = document.getElementById('frankingCredits');
     commentsFormContainer = document.getElementById('commentsFormContainer');
     addCommentSectionBtn = document.getElementById('addCommentSectionBtn');
-    shareTableBody = document.querySelector('#shareTable tbody');
+    // FIX: Correctly reference the tbody element by its ID
+    shareTableBody = document.getElementById('shareTable'); // Changed from document.querySelector('#shareTable tbody')
     mobileShareCardsContainer = document.getElementById('mobileShareCards');
     loadingIndicator = document.getElementById('loadingIndicator');
     googleAuthBtnSidebar = document.querySelector('#appSidebar #googleAuthBtn'); // Specific selector
