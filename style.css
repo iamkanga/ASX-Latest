@@ -1,5 +1,5 @@
-/* File Version: v58 */
-/* Last Updated: 2025-06-28 (Modal Scrolling & Button Fix) */
+/* File Version: v59 */
+/* Last Updated: 2025-06-28 (Final Modal Scrolling & Button Fix) */
 
 :root {
     /* Light Theme (Default) - Adjusted for more vibrancy */
@@ -1095,6 +1095,8 @@ table tbody tr:not(.selected):hover {
     padding-right: 10px; /* Add some padding for scrollbar */
     margin-right: -10px; /* Compensate for padding to avoid extra space */
     box-sizing: border-box;
+    /* Ensure content inside doesn't overflow horizontally */
+    overflow-x: hidden; 
 }
 
 .add-share-modal-content {
@@ -1177,7 +1179,7 @@ table tbody tr:not(.selected):hover {
     outline: none;
 }
 
-/* Comments Section in Form */
+/* Comments Section in Form (Keeping for now, but not actively fixing) */
 .comments-form-container h3 {
     display: flex; /* Make it a flex container */
     align-items: center; /* Vertically align items */
@@ -1195,7 +1197,7 @@ table tbody tr:not(.selected):hover {
     min-height: 30px; /* Ensure enough height for the button to be visible */
 }
 
-/* Styling for the #addCommentSectionBtn */
+/* Styling for the #addCommentSectionBtn (Keeping for now, but not actively fixing) */
 .add-section-btn {
     background-color: var(--button-bg);
     color: var(--button-text);
@@ -1246,7 +1248,7 @@ table tbody tr:not(.selected):hover {
     color: var(--danger-button-hover-bg);
 }
 
-/* Textarea in comments - apply scrollbar only if content overflows */
+/* Textarea in comments - apply scrollbar only if content overflows (Keeping for now, but not actively fixing) */
 .comment-section textarea {
     min-height: 80px; /* Minimum height for usability */
     max-height: 150px; /* Max height before scrollbar appears */
