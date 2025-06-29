@@ -1,5 +1,5 @@
-// File Version: v113
-// Last Updated: 2025-06-28 (Theme Toggle & Revert Button)
+// File Version: v112
+// Last Updated: 2025-06-28 (Fixed hamburger menu not opening)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -7,7 +7,7 @@
 // from the <script type="module"> block in index.html.
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v113) DOMContentLoaded fired."); // New log to confirm script version and DOM ready
+    console.log("script.js (v112) DOMContentLoaded fired."); // New log to confirm script version and DOM ready
 
     // --- Core Helper Functions (DECLARED FIRST FOR HOISTING) ---
 
@@ -721,28 +721,18 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Theme Toggling Logic
-    const customThemes = [
-        'bold-1', 'bold-2', 'bold-3', 'bold-4', 'bold-5', 'bold-6', 'bold-7', 'bold-8', 'bold-9', 'bold-10',
-        'subtle-1', 'subtle-2', 'subtle-3', 'subtle-4', 'subtle-5', 'subtle-6', 'subtle-7', 'subtle-8', 'subtle-9', 'subtle-10'
-    ];
-    let currentCustomThemeIndex = -1; // -1 means no custom theme is active
-
     function applyTheme(themeName) {
         const body = document.body;
-        // Remove all existing theme classes first (including dark-theme and custom themes)
-        body.className = body.className.split(' ').filter(c => !c.startsWith('theme-') && c !== 'dark-theme').join(' ');
+        // Remove all existing theme classes first
+        body.className = body.className.split(' ').filter(c => !c.startsWith('theme-')).join(' ');
 
         if (themeName && themeName !== 'none') {
             body.classList.add(`theme-${themeName}`);
             localStorage.setItem('selectedTheme', themeName);
-            localStorage.removeItem('theme'); // Remove default light/dark preference if custom theme is selected
-            currentCustomThemeIndex = customThemes.indexOf(themeName);
             console.log(`[Theme] Applied custom theme: ${themeName}`);
         } else {
-            // Revert to default light/dark theme
             localStorage.removeItem('selectedTheme');
-            applyDefaultLightDarkTheme(); // This will re-apply light/dark based on saved preference or system
-            currentCustomThemeIndex = -1;
+            applyDefaultLightDarkTheme(); // Revert to system default or last light/dark
             console.log("[Theme] Reverted to default light/dark theme.");
         }
         updateThemeToggleAndSelector();
@@ -753,7 +743,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         const savedDefaultTheme = localStorage.getItem('theme'); // 'light' or 'dark'
 
-        // Ensure no custom theme class is present
+        // Remove any custom theme class
         body.className = body.className.split(' ').filter(c => !c.startsWith('theme-')).join(' ');
 
         if (savedDefaultTheme) {
@@ -778,9 +768,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const currentCustomTheme = localStorage.getItem('selectedTheme');
         const currentDefaultTheme = localStorage.getItem('theme'); // 'light' or 'dark'
 
-        // Update theme toggle button text (always "Toggle Theme" with palette icon)
+        // Update theme toggle button text
         if (themeToggleBtn) {
-            themeToggleBtn.innerHTML = '<i class="fas fa-palette"></i> Toggle Theme';
+            if (currentDefaultTheme === 'dark') {
+                themeToggleBtn.innerHTML = '<i class="fas fa-sun"></i> Toggle Default Theme';
+            } else {
+                themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i> Toggle Default Theme';
+            }
         }
 
         // Update theme selector dropdown
@@ -1091,7 +1085,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const watchlistSelect = document.getElementById('watchlistSelect');
     const themeToggleBtn = document.getElementById('themeToggleBtn'); // Unified ID
     const colorThemeSelect = document.getElementById('colorThemeSelect'); // New theme selector dropdown
-    const revertToDefaultThemeBtn = document.getElementById('revertToDefaultThemeBtn'); // Changed from revertToDefaultThemeLink
+    const revertToDefaultThemeLink = document.getElementById('revertToDefaultThemeLink'); // New revert link
     const scrollToTopBtn = document.getElementById('scrollToTopBtn');
     const hamburgerBtn = document.getElementById('hamburgerBtn');
     const appSidebar = document.getElementById('appSidebar'); // Renamed from mobileMenu
@@ -1729,23 +1723,20 @@ document.addEventListener('DOMContentLoaded', function() {
     if (themeToggleBtn) { // This is the unified theme toggle button
         themeToggleBtn.addEventListener('click', () => {
             const body = document.body;
-            // Get the current custom theme from localStorage
-            const currentThemeName = localStorage.getItem('selectedTheme');
-            let nextThemeName;
+            // First, remove any custom theme class
+            body.className = body.className.split(' ').filter(c => !c.startsWith('theme-')).join(' ');
+            localStorage.removeItem('selectedTheme'); // Clear custom theme preference
 
-            if (currentThemeName && customThemes.includes(currentThemeName)) {
-                // If a custom theme is active, find its index and go to the next one
-                currentCustomThemeIndex = customThemes.indexOf(currentThemeName);
-                currentCustomThemeIndex = (currentCustomThemeIndex + 1) % customThemes.length;
-                nextThemeName = customThemes[currentCustomThemeIndex];
+            // Then, toggle the default light/dark theme
+            if (body.classList.contains('dark-theme')) {
+                body.classList.remove('dark-theme');
+                localStorage.setItem('theme', 'light');
             } else {
-                // If no custom theme is active, start with the first one in the list
-                currentCustomThemeIndex = 0;
-                nextThemeName = customThemes[currentCustomThemeIndex];
+                body.classList.add('dark-theme');
+                localStorage.setItem('theme', 'dark');
             }
-            
-            applyTheme(nextThemeName);
-            console.log(`[Theme] Toggled custom theme to: ${nextThemeName}`);
+            console.log(`[Theme] Toggled default theme to: ${localStorage.getItem('theme')}`);
+            updateThemeToggleAndSelector(); // Update UI elements
         });
     }
 
@@ -1757,12 +1748,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // New: Event listener for the revert to default theme button (formerly a link)
-    if (revertToDefaultThemeBtn) {
-        revertToDefaultThemeBtn.addEventListener('click', (event) => {
-            event.preventDefault(); // Prevent default button behavior if it were a submit
+    // New: Event listener for the revert to default theme link
+    if (revertToDefaultThemeLink) {
+        revertToDefaultThemeLink.addEventListener('click', (event) => {
+            event.preventDefault(); // Prevent default link behavior
             applyTheme('none'); // Calling with 'none' will trigger default light/dark logic
-            console.log("[Theme] Reverted to default light/dark theme via button.");
         });
     }
 
@@ -1792,4 +1782,80 @@ document.addEventListener('DOMContentLoaded', function() {
                     scrollToTopBtn.style.display = 'flex'; // Use flex to center arrow
                     scrollToTopBtn.style.opacity = '1';
                 } else {
-                    scrollToTo
+                    scrollToTopBtn.style.opacity = '0';
+                    setTimeout(() => { // Hide completely after fade out
+                        scrollToTopBtn.style.display = 'none';
+                    }, 300); // Match CSS transition duration
+                }
+            } else {
+                // Ensure it's hidden on desktop
+                scrollToTopBtn.style.display = 'none';
+            }
+        });
+        // Initial check for desktop to hide it immediately if window is resized or loaded on desktop
+        if (window.innerWidth > 768) {
+            scrollToTopBtn.style.display = 'none';
+        }
+        scrollToTopBtn.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); console.log("[UI] Scrolled to top."); });
+    }
+
+    // --- Hamburger/Sidebar Menu Logic Event Listeners ---
+    if (hamburgerBtn && appSidebar && closeMenuBtn && sidebarOverlay) {
+        hamburgerBtn.addEventListener('click', (event) => {
+            event.stopPropagation(); // Prevent this click from immediately closing the sidebar via document listener
+            toggleAppSidebar(); // No force, just toggle
+        });
+        closeMenuBtn.addEventListener('click', () => toggleAppSidebar(false)); // Force close
+        
+        // Event listener for clicking outside the sidebar (on the overlay)
+        sidebarOverlay.addEventListener('click', (event) => {
+            console.log("[Sidebar Overlay] Clicked overlay. Attempting to close sidebar.");
+            // Check if the sidebar is actually open before attempting to close via overlay
+            if (appSidebar.classList.contains('open')) {
+                toggleAppSidebar(false); // Force close
+            }
+        });
+
+        // New: Global click listener to close sidebar when clicking outside on desktop
+        document.addEventListener('click', (event) => {
+            const isDesktop = window.innerWidth > 768; // Define desktop breakpoint (matches CSS breakpoint)
+            // Only act if sidebar is open AND on desktop AND click is not on sidebar itself AND not on hamburger button
+            if (appSidebar.classList.contains('open') && isDesktop &&
+                !appSidebar.contains(event.target) && !hamburgerBtn.contains(event.target)) {
+                console.log("[Global Click] Clicked outside sidebar on desktop. Closing sidebar.");
+                toggleAppSidebar(false); // Force close
+            }
+        });
+
+        // Handle resize event to adapt sidebar behavior
+        window.addEventListener('resize', () => {
+            const isDesktop = window.innerWidth > 768;
+            // If sidebar is open, close it on resize to prevent layout issues
+            if (appSidebar.classList.contains('open')) {
+                toggleAppSidebar(false); // Force close
+            }
+            // Re-evaluate scroll-to-top button visibility on resize
+            if (scrollToTopBtn) {
+                if (window.innerWidth > 768) {
+                    scrollToTopBtn.style.display = 'none';
+                } else {
+                    // Re-trigger scroll event to evaluate visibility based on scroll position
+                    window.dispatchEvent(new Event('scroll'));
+                }
+            }
+        });
+
+        // Add event listeners to close menu when certain menu buttons are clicked
+        const menuButtons = appSidebar.querySelectorAll('.menu-button-item');
+        menuButtons.forEach(button => {
+            // Check if the button has the data-action-closes-menu attribute set to 'true'
+            // The theme toggle button has 'false', so it will be excluded.
+            if (button.dataset.actionClosesMenu === 'true') { 
+                button.addEventListener('click', () => {
+                    toggleAppSidebar(false); // Explicitly close the sidebar after these actions
+                });
+            }
+        });
+    }
+
+}); // End DOMContentLoaded
