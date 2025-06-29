@@ -1,4 +1,4 @@
-// File Version: v111
+// File Version: v112
 // Last Updated: 2025-06-28 (Fixed hamburger menu not opening)
 
 // This script interacts with Firebase Firestore for data storage.
@@ -7,7 +7,7 @@
 // from the <script type="module"> block in index.html.
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v111) DOMContentLoaded fired."); // New log to confirm script version and DOM ready
+    console.log("script.js (v112) DOMContentLoaded fired."); // New log to confirm script version and DOM ready
 
     // --- Core Helper Functions (DECLARED FIRST FOR HOISTING) ---
 
@@ -1148,6 +1148,35 @@ document.addEventListener('DOMContentLoaded', function() {
     let userWatchlists = [];
     let currentWatchlistId = null;
     let currentWatchlistName = '';
+
+
+    // --- TOGGLE SIDEBAR FUNCTION (MOVED TO GLOBAL SCOPE) ---
+    // This function needs to be accessible by multiple event listeners.
+    function toggleAppSidebar(forceState = null) {
+        const isDesktop = window.innerWidth > 768; // Matches CSS breakpoint
+        const isOpen = appSidebar.classList.contains('open');
+
+        if (forceState === true || (forceState === null && !isOpen)) {
+            // Open sidebar
+            appSidebar.classList.add('open');
+            sidebarOverlay.classList.add('open');
+            if (isDesktop) {
+                document.body.classList.add('sidebar-active');
+                sidebarOverlay.style.pointerEvents = 'none'; // Allow clicks to pass through on desktop
+            } else {
+                document.body.classList.remove('sidebar-active'); // No body shift on mobile
+                sidebarOverlay.style.pointerEvents = 'auto'; // Block clicks on mobile
+            }
+            console.log("[Sidebar] Sidebar opened.");
+        } else if (forceState === false || (forceState === null && isOpen)) {
+            // Close sidebar
+            appSidebar.classList.remove('open');
+            sidebarOverlay.classList.remove('open');
+            document.body.classList.remove('sidebar-active'); // Always remove body shift when closing
+            sidebarOverlay.style.pointerEvents = 'none'; // Always disable overlay clicks when closed
+            console.log("[Sidebar] Sidebar closed.");
+        }
+    }
 
 
     // --- Initial UI Setup (Now after all element references and core functions) ---
