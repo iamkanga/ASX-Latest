@@ -3,170 +3,304 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ASX Watchlist App</title>
-    <!-- Favicon - Placeholder as per instructions -->
-    <link rel="icon" href="https://placehold.co/32x32/007bff/ffffff?text=ASX" type="image/png">
+    <title>Share Tracker</title>
+    <!-- Favicon: Eggplant emoji -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍆</text></svg>">
 
-    <!-- Google Fonts: Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Font Awesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
-    <!-- Tailwind CSS CDN - IMPORTANT: Not for production! -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Embedded CSS from your style.css (v46) -->
     <style>
-        /* Custom CSS Variables for Theming */
+        /* File Version: v46 */
+        /* Last Updated: 2025-06-27 (Button layout, Hamburger X size, Sign-in button centering, ghosted text, Price display restructure, Sidebar overlay behavior) */
+
         :root {
-            --background-color: #f8f9fa;
-            --text-color: #343a40;
-            --header-bg: #e9ecef;
-            --card-bg: #ffffff;
-            --border-color: #dee2e6;
+            /* Light Theme (Default) - Adjusted for more vibrancy */
+            --background-color: #eef2f3; /* Slightly brighter background */
+            --text-color: #333;
+            --header-bg: #d9e2e4; /* More distinct header */
+            --card-bg: #ffffff; /* White cards/sections */
+            --border-color: #c9d2d4; /* Slightly more defined borders */
             --button-bg: #007bff;
-            --button-text: #ffffff;
+            --button-text: #fff;
             --button-hover-bg: #0056b3;
-            --input-bg: #ffffff;
-            --input-border: #ced4da;
-            --modal-bg: rgba(0, 0, 0, 0.6);
-            --modal-content-bg: #ffffff;
-            --table-header-bg: #e9ecef;
-            --table-row-hover-bg: #f1f3f5;
-            --asx-button-bg: #e9ecef;
-            --asx-button-hover-bg: #d6d8db;
-            --asx-button-text: #343a40;
-            --asx-button-active-bg: #007bff;
-            --asx-button-active-text: #ffffff;
+            --input-bg: #fff;
+            --input-border: #b0b8bb; /* Slightly darker input borders */
+            --modal-bg: rgba(0, 0, 0, 0.6); /* Slightly darker modal overlay */
+            --modal-content-bg: #fff;
+            --table-header-bg: #e6e9eb; /* Slightly more prominent table header */
+            --table-row-hover-bg: #f0f4f5; /* Subtle hover effect */
+            --asx-button-bg: #e2e8ea; /* Slightly more defined light grey for ASX code buttons */
+            --asx-button-hover-bg: #d0d7d9;
+            --asx-button-text: #333;
+            --asx-button-active-bg: #007bff; /* Blue for active ASX button */
+            --asx-button-active-text: #fff;
             --danger-button-bg: #dc3545;
             --danger-button-hover-bg: #c82333;
             --secondary-button-bg: #6c757d;
             --secondary-button-hover-bg: #545b62;
-            --google-auth-btn-bg: #dd4b39;
+            --google-auth-btn-bg: #dd4b39; /* Google red */
             --google-auth-btn-hover-bg: #c23321;
-            --label-color: #495057;
-            --shadow-color: rgba(0, 0, 0, 0.15);
-            --sidebar-bg: #e9ecef;
-            --sidebar-border: #dee2e6;
-            --sidebar-text: #343a40;
-            --close-sidebar-btn-color: #343a40;
-            --ghosted-text-color: #6c757d;
+            --label-color: #555; /* For form labels / secondary text */
+            --shadow-color: rgba(0, 0, 0, 0.15); /* Slightly more visible shadows */
+            --sidebar-bg: #d9e2e4; /* Same as header bg for consistency */
+            --sidebar-border: #c9d2d4;
+            --sidebar-text: #333;
+            --close-sidebar-btn-color: #666;
+            --sidebar-width: 280px; /* Define sidebar width as a variable */
+            --ghosted-text-color: #888; /* New variable for ghosted text */
         }
 
-        /* Dark Theme Overrides */
+        /* Dark Theme */
         body.dark-theme {
-            --background-color: #1a202c;
-            --text-color: #e2e8f0;
-            --header-bg: #2d3748;
-            --card-bg: #2d3748;
-            --border-color: #4a5568;
-            --button-bg: #4299e1;
-            --button-text: #ffffff;
-            --button-hover-bg: #3182ce;
-            --input-bg: #2d3748;
-            --input-border: #4a5568;
+            --background-color: #1a1a2e; /* Deep purple/blue */
+            --text-color: #e0e0e0;
+            --header-bg: #272740; /* Slightly darker header for contrast */
+            --card-bg: #2e2e4a; /* Darker cards */
+            --border-color: #444;
+            --button-bg: #4a7dff; /* Brighter blue for buttons */
+            --button-text: #fff;
+            --button-hover-bg: #3a6cd9;
+            --input-bg: #3c3c5c;
+            --input-border: #555;
             --modal-bg: rgba(0, 0, 0, 0.8);
-            --modal-content-bg: #2d3748;
-            --table-header-bg: #2d3748;
-            --table-row-hover-bg: #4a5568;
-            --asx-button-bg: #4a5568;
-            --asx-button-hover-bg: #636b77;
-            --asx-button-text: #e2e8f0;
-            --asx-button-active-bg: #4299e1;
-            --asx-button-active-text: #ffffff;
-            --danger-button-bg: #e53e3e;
-            --danger-button-hover-bg: #c53030;
-            --secondary-button-bg: #718096;
-            --secondary-button-hover-bg: #5c6b7e;
-            --google-auth-btn-bg: #e53e3e;
-            --google-auth-btn-hover-bg: #c53030;
-            --label-color: #a0aec0;
+            --modal-content-bg: #2e2e4a;
+            --table-header-bg: #3a3a5a;
+            --table-row-hover-bg: #333350;
+            --asx-button-bg: #3a3a5a;
+            --asx-button-hover-bg: #4a4a6a;
+            --asx-button-text: #e0e0e0;
+            --asx-button-active-bg: #4a7dff;
+            --asx-button-active-text: #fff;
+            --danger-button-bg: #e74c3c;
+            --danger-button-hover-bg: #c0392b;
+            --secondary-button-bg: #7f8c8d;
+            --secondary-button-hover-bg: #616e70;
+            --google-auth-btn-bg: #e74c3c; /* Darker red for Google in dark theme */
+            --google-auth-btn-hover-bg: #c0392b;
+            --label-color: #bbb;
             --shadow-color: rgba(0, 0, 0, 0.4);
-            --sidebar-bg: #2d3748;
-            --sidebar-border: #4a5568;
-            --sidebar-text: #e2e8f0;
-            --close-sidebar-btn-color: #e2e8f0;
-            --ghosted-text-color: #a0aec0;
+            --sidebar-bg: #272740;
+            --sidebar-border: #444;
+            --sidebar-text: #e0e0e0;
+            --close-sidebar-btn-color: #bbb;
+            --ghosted-text-color: #a0a0a0; /* New variable for ghosted text in dark theme */
         }
 
+        /* Base Styles */
+        html, body {
+            /* Ensure no horizontal overflow that causes sliding */
+            overflow-x: hidden; 
+        }
         body {
             font-family: 'Inter', sans-serif;
+            margin: 0; /* Ensure no default body margin */
+            padding: 0; /* Ensure no default body padding */
+            box-sizing: border-box;
             background-color: var(--background-color);
             color: var(--text-color);
-            transition: background-color 0.3s ease, color 0.3s ease;
-            margin: 0;
-            display: flex;
-            min-height: 100vh;
-            flex-direction: column;
-            overflow-x: hidden; /* Prevent horizontal scroll */
+            /* Transition for properties that change when sidebar opens/closes */
+            transition: background-color 0.3s ease, color 0.3s ease, margin-left 0.3s ease, width 0.3s ease;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
-        /* Layout for desktop */
-        .app-container {
-            display: flex;
-            flex: 1;
-            width: 100%;
+        /* Class added to body when sidebar is open, to shift content */
+        body.sidebar-active {
+            margin-left: var(--sidebar-width);
+            width: calc(100% - var(--sidebar-width));
         }
 
-        /* Sidebar styling */
-        .app-sidebar {
-            width: 250px;
-            background-color: var(--sidebar-bg);
-            border-right: 1px solid var(--sidebar-border);
-            padding: 1.5rem;
-            box-shadow: 2px 0 5px var(--shadow-color);
-            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
-            transform: translateX(0);
-            flex-shrink: 0;
-            position: sticky;
-            top: 0;
-            height: 100vh; /* Make sidebar full height */
-            overflow-y: auto; /* Enable scrolling for sidebar content */
-            z-index: 20; /* Ensure sidebar is above main content */
+        /* Main content container. Will shift on desktop when sidebar opens */
+        .container {
+            max-width: 1200px; /* Main content max width */
+            margin: 20px auto; /* Center main content */
+            padding: 0 15px;
+            position: relative;
+            /* Transition inherited from body.sidebar-active */
         }
 
-        .sidebar-header {
+        /* Header */
+        header {
+            background-color: var(--header-bg);
+            padding: 15px 20px;
+            box-shadow: 0 2px 4px var(--shadow-color);
             display: flex;
-            justify-content: space-between;
+            flex-direction: column; /* Stack rows vertically for desktop layout */
+            gap: 10px;
+            position: relative; /* For absolute positioning of hamburger menu */
+            height: auto; /* Allow height to adjust based on content */
+        }
+
+        .header-top-row {
+            display: flex;
+            justify-content: center; /* Center the title by default */
             align-items: center;
-            margin-bottom: 2rem;
+            gap: 15px;
+            position: relative;
+            /* Ensure no horizontal overflow */
+            width: 100%; 
+            box-sizing: border-box;
+            padding: 0 15px; /* Add some padding to prevent content from touching edges */
+        }
+
+        h1#mainTitle {
+            margin: 0;
+            font-size: 1.8em;
+            font-weight: 700;
+            color: var(--text-color);
+            text-align: center; /* Ensures title is centered within its flex item */
+            flex-grow: 1; /* Allows title to take available space */
+        }
+
+        /* New: Header "Add Share" Button */
+        .header-action-btn {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.8em; /* Match hamburger size for consistency */
+            cursor: pointer;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            padding: 5px 10px;
+            z-index: 11;
+            display: block;
+        }
+
+        .header-action-btn-left {
+            left: 0; /* Position to the far left */
+        }
+
+        .header-action-btn-right {
+            right: 0; /* Position to the far right (for hamburger) */
+        }
+
+
+        .header-action-btn:hover {
+            color: var(--button-hover-bg);
+        }
+
+
+        /* Hamburger/Sidebar Toggle Button */
+        .hamburger-btn { /* This is now .header-action-btn-right implicitly */
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.8em; /* Larger icon for easy tapping */
+            cursor: pointer;
+            position: absolute; /* Position to the far right of the header-top-row */
+            right: 0; /* Moved to right */
+            top: 50%;
+            transform: translateY(-50%);
+            padding: 5px 10px; /* Make it easier to tap */
+            z-index: 11; /* Above other elements in header */
+            display: block; /* Ensure it's always displayed */
+        }
+
+        .hamburger-btn:hover {
+            color: var(--button-hover-bg);
+        }
+
+        /* App Sidebar (Unified for Mobile & Desktop) */
+        .app-sidebar {
+            position: fixed; /* Fixed to viewport */
+            top: 0;
+            left: calc(-1 * var(--sidebar-width)); /* Hidden off-screen to the left by default */
+            width: var(--sidebar-width); /* Use variable for width */
+            height: 100%;
+            background-color: var(--sidebar-bg);
+            box-shadow: 2px 0 5px var(--shadow-color);
+            transition: left 0.3s ease-in-out; /* Smooth slide-in/out */
+            z-index: 1000; /* High z-index to be on top of everything */
+            padding: 20px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto; /* Enable scrolling if content is long */
+            border-right: 1px solid var(--sidebar-border);
+        }
+
+        .app-sidebar.open {
+            left: 0; /* Slide in when .open class is added */
         }
 
         .close-menu-btn {
-            display: none; /* Hidden on desktop */
-            background: none;
-            border: none;
-            font-size: 1.8rem;
             color: var(--close-sidebar-btn-color);
+            font-size: 2.5em; /* Large X icon */
+            position: absolute;
+            top: 10px;
+            right: 15px;
             cursor: pointer;
-            padding: 0.5rem;
-            border-radius: 9999px;
-            transition: background-color 0.2s ease;
+            padding: 5px;
+            line-height: 1; /* Remove extra line height */
+            display: block; /* Ensure the close button is always visible in the sidebar */
+            background: none; /* Ensure no background */
+            border: none; /* Ensure no border */
+            font-family: sans-serif; /* Ensure a standard font for 'X' */
         }
 
         .close-menu-btn:hover {
-            background-color: rgba(0, 0, 0, 0.1);
+            color: var(--danger-button-bg);
         }
 
-        .sidebar-menu {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
+        .app-sidebar h3 {
+            color: var(--sidebar-text);
+            margin-top: 20px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 5px;
+            font-size: 1.1em;
         }
 
-        .menu-button-item {
+        .menu-buttons-group {
             display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 0.75rem 1rem;
+            flex-direction: column; /* Stack buttons vertically */
+            gap: 10px; /* Space between buttons */
+            margin-bottom: 20px;
+        }
+
+        /* Ensure themeToggleBtn gets menu-button-item styling */
+        #themeToggleBtn.menu-button-item {
             background-color: var(--button-bg);
             color: var(--button-text);
-            border-radius: 0.5rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background-color 0.2s ease, transform 0.1s ease;
-            text-align: left;
-            width: 100%;
+            padding: 12px 15px;
             border: none;
-            box-shadow: 0 2px 4px var(--shadow-color);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            width: 100%; /* Full width within the menu */
+            box-sizing: border-box;
+            justify-content: flex-start; /* Align text and icon to the left */
+        }
+
+        #themeToggleBtn.menu-button-item:hover {
+            background-color: var(--button-hover-bg);
+            transform: translateY(-1px);
+        }
+
+
+        .menu-button-item { /* Class for all buttons inside the sidebar */
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            padding: 12px 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            width: 100%; /* Full width within the menu */
+            box-sizing: border-box;
+            justify-content: flex-start; /* Align text and icon to the left */
         }
 
         .menu-button-item:hover {
@@ -177,694 +311,709 @@
         .menu-button-item:disabled {
             background-color: var(--secondary-button-bg);
             cursor: not-allowed;
-            opacity: 0.6;
-            transform: none;
-            box-shadow: none;
+            opacity: 0.7;
         }
 
-        .menu-button-item i {
-            font-size: 1.25rem;
+        /* Specific style for danger buttons in menu (like delete watchlist) */
+        .menu-button-item.danger-button {
+            background-color: var(--danger-button-bg);
         }
 
-        .sidebar-footer {
-            margin-top: auto; /* Pushes footer to the bottom */
-            padding-top: 2rem;
-            border-top: 1px solid var(--sidebar-border);
-            text-align: center;
-            font-size: 0.875rem;
-            color: var(--ghosted-text-color);
+        .menu-button-item.danger-button:hover {
+            background-color: var(--danger-button-hover-bg);
         }
 
-        .sidebar-footer #googleAuthBtn {
-            background-color: var(--google-auth-btn-bg);
-            color: var(--button-text);
-            margin-top: 1rem;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .sidebar-footer #googleAuthBtn:hover {
-            background-color: var(--google-auth-btn-hover-bg);
-        }
 
-        /* Main content area */
-        .main-content {
-            flex: 1;
-            padding: 2rem;
-            overflow-y: auto; /* Enable scrolling for main content */
-        }
-
-        header {
-            background-color: var(--header-bg);
-            padding: 1rem 2rem;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 4px var(--shadow-color);
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        header h1 {
-            font-size: 1.75rem;
-            font-weight: 600;
-            color: var(--text-color);
-            margin: 0;
-            flex-grow: 1;
-        }
-
-        .header-buttons {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
-
-        .header-buttons button {
-            background-color: var(--button-bg);
-            color: var(--button-text);
-            padding: 0.6rem 1.2rem;
-            border-radius: 0.5rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background-color 0.2s ease, transform 0.1s ease;
-            border: none;
-            box-shadow: 0 2px 4px var(--shadow-color);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .header-buttons button:hover {
-            background-color: var(--button-hover-bg);
-            transform: translateY(-1px);
-        }
-
-        .header-buttons button:disabled {
-            background-color: var(--secondary-button-bg);
-            cursor: not-allowed;
-            opacity: 0.6;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .header-buttons .hamburger-btn {
-            display: none; /* Hidden on desktop */
-            background: none;
-            border: none;
-            font-size: 1.8rem;
-            color: var(--text-color);
-            cursor: pointer;
-            padding: 0.5rem;
-            border-radius: 9999px;
-            transition: background-color 0.2s ease;
-        }
-
-        .header-buttons .hamburger-btn:hover {
-            background-color: rgba(0, 0, 0, 0.1);
-        }
-
-        .filter-sort-section {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
-        }
-
-        .filter-sort-section select {
-            padding: 0.75rem 1rem;
-            border: 1px solid var(--input-border);
-            border-radius: 0.5rem;
-            background-color: var(--input-bg);
-            color: var(--text-color);
-            font-size: 1rem;
-            flex: 1;
-            min-width: 150px;
-            box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
-            appearance: none; /* Remove default arrow */
-            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23495057%22%20d%3D%22M287%2C197.393L146.2%2C56.607L5.4%2C197.393h281.6z%22%2F%3E%3C%2Fsvg%3E'); /* Custom arrow */
-            background-repeat: no-repeat;
-            background-position: right 0.7em top 50%;
-            background-size: 0.65em auto;
-        }
-
-        .filter-sort-section select:focus {
-            border-color: var(--button-bg);
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
-        }
-
-        .filter-sort-section select:disabled {
-            background-color: var(--secondary-button-bg);
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-
-        .asx-code-buttons-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            margin-bottom: 1.5rem;
-            justify-content: center;
-            padding: 0.5rem;
-            background-color: var(--card-bg);
-            border-radius: 0.75rem;
-            box-shadow: 0 2px 8px var(--shadow-color);
-            border: 1px solid var(--border-color);
-        }
-
-        .asx-code-button {
-            padding: 0.5rem 1rem;
-            background-color: var(--asx-button-bg);
-            color: var(--asx-button-text);
-            border: 1px solid var(--border-color);
-            border-radius: 0.5rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background-color 0.2s ease, transform 0.1s ease;
-        }
-
-        .asx-code-button:hover {
-            background-color: var(--asx-button-hover-bg);
-            transform: translateY(-1px);
-        }
-
-        .asx-code-button.active {
-            background-color: var(--asx-button-active-bg);
-            color: var(--asx-button-active-text);
-            border-color: var(--asx-button-active-bg);
-            box-shadow: 0 2px 6px rgba(0, 123, 255, 0.4);
-        }
-
-        .share-list-section {
-            background-color: var(--card-bg);
-            border-radius: 0.75rem;
-            box-shadow: 0 4px 12px var(--shadow-color);
-            overflow: hidden;
-            border: 1px solid var(--border-color);
-        }
-
-        .share-list-section table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .share-list-section th, .share-list-section td {
-            padding: 1rem 1.25rem;
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .share-list-section th {
-            background-color: var(--table-header-bg);
-            font-weight: 600;
-            color: var(--text-color);
-            text-transform: uppercase;
-            font-size: 0.875rem;
-            letter-spacing: 0.05em;
-        }
-
-        .share-list-section tbody tr {
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-        }
-
-        .share-list-section tbody tr:hover {
-            background-color: var(--table-row-hover-bg);
-        }
-
-        .share-list-section tbody tr.selected {
-            background-color: var(--table-row-hover-bg);
-            outline: 2px solid var(--button-bg);
-            outline-offset: -2px;
-        }
-
-        .share-list-section .dividend-yield-cell-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.9rem;
-            margin-bottom: 0.2rem;
-        }
-        .share-list-section .dividend-yield-cell-content:last-child {
-            margin-bottom: 0;
-        }
-        .share-list-section .dividend-yield-cell-content .value {
-            font-weight: 600;
-            color: var(--text-color);
-        }
-
-        .loading-indicator {
-            display: none; /* Hidden by default */
-            text-align: center;
-            padding: 2rem;
-            font-size: 1.2rem;
-            color: var(--label-color);
-        }
-
-        /* Mobile Cards (Hidden by default on desktop) */
-        .mobile-share-cards {
-            display: none;
-            flex-direction: column;
-            gap: 1rem;
-            margin-top: 1.5rem;
-        }
-
-        .mobile-card {
-            background-color: var(--card-bg);
-            border-radius: 0.75rem;
-            box-shadow: 0 2px 8px var(--shadow-color);
-            padding: 1.25rem;
-            border: 1px solid var(--border-color);
-            cursor: pointer;
-            transition: transform 0.1s ease, box-shadow 0.2s ease;
-        }
-
-        .mobile-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px var(--shadow-color);
-        }
-
-        .mobile-card.selected {
-            outline: 2px solid var(--button-bg);
-            outline-offset: -2px;
-        }
-
-        .mobile-card h3 {
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin-top: 0;
-            margin-bottom: 0.75rem;
-            color: var(--text-color);
-            text-align: center;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 0.5rem;
-        }
-
-        .mobile-card p {
-            margin-bottom: 0.5rem;
-            font-size: 0.95rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .mobile-card p strong {
-            color: var(--label-color);
-            flex-shrink: 0;
-            margin-right: 0.5rem;
-        }
-
-        .mobile-card .card-comments {
-            font-style: italic;
-            color: var(--ghosted-text-color);
-            margin-top: 1rem;
-            border-top: 1px solid var(--border-color);
-            padding-top: 0.75rem;
-        }
-
-        /* Footer */
-        footer {
-            background-color: var(--header-bg);
-            padding: 1rem 2rem;
-            border-top: 1px solid var(--border-color);
-            text-align: center;
-            font-size: 0.875rem;
-            color: var(--ghosted-text-color);
-            margin-top: auto; /* Pushes footer to the bottom */
-            box-shadow: 0 -2px 4px var(--shadow-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-        footer #googleAuthBtn {
-            background-color: var(--google-auth-btn-bg);
-            color: var(--button-text);
-            padding: 0.6rem 1.2rem;
-            border-radius: 0.5rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background-color 0.2s ease, transform 0.1s ease;
-            border: none;
-            box-shadow: 0 2px 4px var(--shadow-color);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        footer #googleAuthBtn:hover {
-            background-color: var(--google-auth-btn-hover-bg);
-            transform: translateY(-1px);
-        }
-
-        /* Modals */
-        .modal {
+        /* Overlay for sidebar when open */
+        .sidebar-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: var(--modal-bg);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-            overflow-y: auto; /* Allow modal content to scroll */
-            padding: 1rem;
+            background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black for mobile, will be overridden for desktop */
+            z-index: 999; /* Below the sidebar, above content */
+            display: none; /* Hidden by default, shown by JS */
         }
 
-        .modal.open {
-            opacity: 1;
-            visibility: visible;
+        .sidebar-overlay.open {
+            display: block; /* Show when sidebar is open */
+        }
+
+
+        /* Watchlist and Sort Controls */
+        .watchlist-controls-row {
+            display: flex;
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+            justify-content: center; /* CENTERED ON MOBILE & DESKTOP */
+            align-items: center;
+            gap: 15px 25px; /* Vertical and horizontal gap */
+            padding: 10px 0;
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+            /* Ensure no horizontal overflow */
+            width: 100%; 
+            box-sizing: border-box;
+            padding-left: 15px; /* Add some padding to prevent content from touching edges */
+            padding-right: 15px; /* Add some padding to prevent content from touching edges */
+        }
+
+        .watchlist-group,
+        .sort-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dropdown-large {
+            padding: 10px 15px;
+            border: 1px solid var(--input-border);
+            border-radius: 8px;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            font-size: 1em;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            cursor: pointer;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            min-width: 150px;
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236c757d%22%20d%3D%22M287%2069.9a14.7%2014.7%200%200%200-20.8%200L146.2%20189.9%2026.3%2069.9a14.7%2014.7%200%200%200-20.8%2020.8L135.8%20216.7a14.7%2014.7%200%200%200%2020.8%200L287%2090.7a14.7%2014.7%200%200%200%200-20.8z%22%2F%3E%3C%2Fsvg%3E'); /* Custom arrow */
+            background-repeat: no-repeat;
+            background-position: right 12px top 50%;
+            background-size: 12px auto;
+            padding-right: 30px;
+            max-height: 45px; /* Limit height to prevent scrollbar if only a few items */
+            overflow-y: hidden; /* Hide scrollbar if content fits */
+        }
+
+        .dropdown-large option[value=""][disabled] {
+            color: var(--label-color);
+            font-weight: 400;
+        }
+        .dropdown-large option:not([value=""]) {
+            color: var(--text-color);
+            font-weight: 600;
+        }
+
+        .dropdown-large:focus {
+            border-color: var(--button-bg);
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+            outline: none;
+        }
+
+
+        /* ASX Code Buttons Container */
+        .asx-code-buttons-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center; /* CENTRALIZED ON MOBILE & DESKTOP */
+            gap: 8px;
+            padding: 10px 0;
+            /* Ensure no horizontal overflow */
+            width: 100%;
+            box-sizing: border-box;
+            padding-left: 15px; /* Match main container padding */
+            padding-right: 15px; /* Match main container padding */
+        }
+
+        .asx-code-btn {
+            background-color: var(--asx-button-bg);
+            color: var(--asx-button-text);
+            border: 1px solid var(--input-border);
+            border-radius: 20px;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+        }
+
+        .asx-code-btn:hover {
+            background-color: var(--asx-button-hover-bg);
+        }
+
+        .asx-code-btn.active {
+            background-color: var(--asx-button-active-bg);
+            color: var(--asx-button-active-text);
+            border-color: var(--asx-button-active-bg);
+        }
+
+
+        /* Main Content / Table */
+        .share-list-section {
+            margin-top: 20px;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 2px 8px var(--shadow-color);
+            overflow: hidden;
+            /* Ensure no horizontal overflow */
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            color: var(--text-color);
+        }
+
+        table th, table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.9em;
+        }
+
+        table th {
+            background-color: var(--table-header-bg);
+            font-weight: 600;
+            color: var(--text-color);
+            white-space: nowrap;
+        }
+
+        table tbody tr {
+            transition: background-color 0.2s ease;
+            cursor: pointer;
+        }
+
+        table tbody tr.selected {
+            background-color: var(--table-row-hover-bg);
+            font-weight: 600;
+        }
+
+        table tbody tr:not(.selected):hover {
+            background-color: var(--table-row-hover-bg);
+        }
+
+        /* Mobile Cards (Hidden by default on desktop) */
+        .mobile-share-cards {
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            gap: 15px;
+            padding: 15px;
+            /* Ensure no horizontal shifting */
+            position: relative; /* Establish positioning context */
+            left: 0; /* Keep it fixed horizontally */
+            right: 0;
+            width: 100%; /* Ensure it takes full width */
+            box-sizing: border-box; /* Include padding in width */
+        }
+
+        .mobile-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 5px var(--shadow-color);
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .mobile-card.selected {
+            background-color: var(--table-row-hover-bg);
+            border-color: var(--button-bg);
+            font-weight: 600;
+        }
+
+        .mobile-card:not(.selected):hover {
+            background-color: var(--table-row-hover-bg);
+        }
+
+        .mobile-card h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: var(--text-color);
+            font-size: 1.2em;
+        }
+
+        .mobile-card p {
+            margin: 5px 0;
+            font-size: 0.9em;
+            color: var(--text-color);
+        }
+
+        .mobile-card p strong {
+                color: var(--label-color);
+        }
+
+        /* Fixed Footer & Auth Button */
+        .fixed-footer {
+            position: sticky;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: var(--header-bg);
+            box-shadow: 0 -2px 4px var(--shadow-color);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: center; /* Ensures horizontal centering for button */
+            align-items: center;
+            z-index: 500;
+            transition: margin-left 0.3s ease, width 0.3s ease; /* For sidebar shift */
+        }
+
+        .google-auth-btn {
+            background-color: var(--google-auth-btn-bg);
+            color: var(--button-text);
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            /* Ensure it's centered */
+            margin: 0 auto; /* This should center it horizontally within its flex container */
+        }
+
+        .google-auth-btn:hover {
+            background-color: var(--google-auth-btn-hover-bg);
+            transform: translateY(-2px);
+        }
+
+        .google-auth-btn:disabled {
+            background-color: var(--secondary-button-bg);
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+
+        /* Modals (General) */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: var(--modal-bg);
+            padding-top: 60px;
         }
 
         .modal-content {
             background-color: var(--modal-content-bg);
-            padding: 2rem;
-            border-radius: 0.75rem;
-            box-shadow: 0 8px 20px var(--shadow-color);
-            width: 90%;
-            max-width: 600px;
+            margin: 5% auto;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px var(--shadow-color);
             position: relative;
-            transform: translateY(20px);
-            transition: transform 0.3s ease;
-            border: 1px solid var(--border-color);
-            max-height: 90vh; /* Limit content height */
-            overflow-y: auto; /* Enable scrolling for modal content */
-        }
-
-        .modal.open .modal-content {
-            transform: translateY(0);
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 1rem;
-        }
-
-        .modal-header h2 {
-            font-size: 1.75rem;
-            font-weight: 600;
+            max-width: 500px;
+            width: 90%;
+            box-sizing: border-box;
             color: var(--text-color);
-            margin: 0;
         }
 
-        .modal-header .close-button {
-            background: none;
-            border: none;
-            font-size: 2rem;
+        .add-share-modal-content {
+            max-height: 85vh; /* Adjusted for mobile button visibility */
+            overflow-y: auto;
+            padding-bottom: 80px; /* Add padding to account for fixed footer on mobile */
+        }
+
+        .modal-content h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            text-align: center;
             color: var(--text-color);
+            font-size: 1.6em;
+        }
+
+        .close-button {
+            color: var(--text-color);
+            font-size: 2em;
+            position: absolute;
+            top: 10px;
+            right: 20px;
             cursor: pointer;
-            padding: 0.5rem;
-            border-radius: 9999px;
-            transition: background-color 0.2s ease;
+            transition: color 0.2s ease;
         }
 
-        .modal-header .close-button:hover {
-            background-color: rgba(0, 0, 0, 0.1);
+        .close-button:hover,
+        .close-button:focus {
+            color: var(--danger-button-bg);
+            text-decoration: none;
+            cursor: pointer;
         }
 
-        .form-group {
-            margin-bottom: 1rem;
+        /* Ghosted text for messages */
+        .ghosted-text {
+            color: var(--ghosted-text-color);
+            font-size: 0.85em;
+            opacity: 0.8;
+            margin-top: 5px;
+            margin-bottom: 5px;
+            display: block; /* Ensure it takes its own line */
         }
 
-        .form-group label {
+        /* Specific styling for CommSec message */
+        .commsec-message {
+            font-size: 0.75em; /* Smaller font size */
+            margin-top: 0; /* Reduce top margin */
+            margin-bottom: 0; /* Reduce bottom margin */
+            line-height: 1.2; /* Tighter line height */
+        }
+
+
+        /* Form Styling within Modals */
+        .modal-content label {
             display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
+            margin-bottom: 8px;
+            font-weight: 600;
             color: var(--label-color);
+            font-size: 0.95em;
         }
 
-        .form-group input[type="text"],
-        .form-group input[type="number"],
-        .form-group textarea,
-        .form-group select {
-            width: 100%;
-            padding: 0.75rem 1rem;
+        .modal-content input[type="text"],
+        .modal-content input[type="number"],
+        .modal-content textarea {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 15px;
             border: 1px solid var(--input-border);
-            border-radius: 0.5rem;
+            border-radius: 5px;
             background-color: var(--input-bg);
             color: var(--text-color);
-            font-size: 1rem;
-            box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+            font-size: 1em;
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
-        .form-group input[type="text"]:focus,
-        .form-group input[type="number"]:focus,
-        .form-group textarea:focus,
-        .form-group select:focus {
+        .modal-content input[type="text"]:focus,
+        .modal-content input[type="number"]:focus,
+        .modal-content textarea:focus {
             border-color: var(--button-bg);
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
             outline: none;
-            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
         }
 
-        .form-group textarea {
-            min-height: 80px;
-            resize: vertical;
-        }
-
-        .comments-container {
-            margin-top: 1.5rem;
-            border-top: 1px dashed var(--border-color);
-            padding-top: 1.5rem;
-        }
-
-        .comment-section {
-            background-color: var(--background-color);
-            border: 1px solid var(--border-color);
-            border-radius: 0.5rem;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
-        }
-
-        .comment-section-header {
+        /* Comments Section in Form */
+        .comments-form-container h3 {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 0.75rem;
-        }
-
-        .comment-title-input {
-            flex-grow: 1;
-            padding: 0.5rem 0.75rem;
-            border: 1px solid var(--input-border);
-            border-radius: 0.4rem;
-            background-color: var(--input-bg);
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 5px;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            font-size: 1.2em;
             color: var(--text-color);
-            font-size: 0.95rem;
-            font-weight: 500;
-            margin-right: 0.75rem;
         }
 
-        .comment-delete-btn {
-            background-color: var(--danger-button-bg);
+        .comments-form-container .add-section-btn {
+            background-color: var(--button-bg);
             color: var(--button-text);
             border: none;
-            border-radius: 0.4rem;
-            padding: 0.4rem 0.7rem;
-            font-size: 1.2rem;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            font-size: 1.5em;
+            line-height: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             cursor: pointer;
             transition: background-color 0.2s ease;
         }
 
-        .comment-delete-btn:hover {
-            background-color: var(--danger-button-hover-bg);
+        .comments-form-container .add-section-btn:hover {
+            background-color: var(--button-hover-bg);
         }
 
-        .comment-text-input {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            border: 1px solid var(--input-border);
-            border-radius: 0.5rem;
-            background-color: var(--input-bg);
-            color: var(--text-color);
-            font-size: 1rem;
-            min-height: 60px;
-            resize: vertical;
+        .comment-section {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: var(--card-bg);
+            position: relative;
         }
 
-        .form-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 1rem;
-            margin-top: 1.5rem;
-            border-top: 1px solid var(--border-color);
-            padding-top: 1.5rem;
-        }
-
-        .form-actions button {
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s ease, transform 0.1s ease;
+        .comment-section .comment-delete-btn {
+            background: none;
             border: none;
-            box-shadow: 0 2px 4px var(--shadow-color);
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
+            color: var(--danger-button-bg);
+            font-size: 1.5em;
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            cursor: pointer;
+            transition: color 0.2s ease;
         }
 
-        .form-actions .save-btn {
+        .comment-section .comment-delete-btn:hover {
+            color: var(--danger-button-hover-bg);
+        }
+
+        /* Textarea in comments - apply scrollbar only if content overflows */
+        .comment-section textarea {
+            min-height: 80px; /* Minimum height for usability */
+            max-height: 150px; /* Max height before scrollbar appears */
+            overflow-y: auto; /* Enable vertical scrollbar when content overflows */
+            resize: vertical; /* Allow vertical resizing */
+        }
+
+
+        /* Styling for buttons in the Add/Edit Share modal (form-action-buttons) */
+        .form-action-buttons,
+        .modal-action-buttons,
+        .custom-dialog-buttons { /* Added custom-dialog-buttons here */
+            display: flex;
+            flex-wrap: nowrap; /* Force no wrapping on desktop */
+            justify-content: center; /* Center the group of buttons */
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        .form-action-buttons button,
+        .modal-action-buttons button,
+        .custom-dialog-buttons button { /* Added custom-dialog-buttons button */
+            flex-grow: 1;
+            max-width: 180px; /* Default max-width for desktop */
+            padding: 12px 18px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        .form-action-buttons #saveShareBtn,
+        .modal-action-buttons #editShareFromDetailBtn,
+        .form-action-buttons #saveWatchlistBtn, /* Added saveWatchlistBtn */
+        .form-action-buttons #saveWatchlistNameBtn, /* Added saveWatchlistNameBtn */
+        .custom-dialog-buttons #customDialogConfirmBtn { /* Added customDialogConfirmBtn */
             background-color: var(--button-bg);
             color: var(--button-text);
         }
 
-        .form-actions .save-btn:hover {
+        .form-action-buttons #saveShareBtn:hover,
+        .modal-action-buttons #editShareFromDetailBtn:hover,
+        .form-action-buttons #saveWatchlistBtn:hover, /* Added saveWatchlistBtn */
+        .form-action-buttons #saveWatchlistNameBtn:hover, /* Added saveWatchlistNameBtn */
+        .custom-dialog-buttons #customDialogConfirmBtn:hover { /* Added customDialogConfirmBtn */
             background-color: var(--button-hover-bg);
             transform: translateY(-1px);
         }
 
-        .form-actions .cancel-btn {
+        .form-action-buttons #cancelFormBtn,
+        .form-action-buttons #cancelAddWatchlistBtn, /* Added cancelAddWatchlistBtn */
+        .form-action-buttons #cancelManageWatchlistBtn, /* Added cancelManageWatchlistBtn */
+        .custom-dialog-buttons #customDialogCancelBtn { /* Added customDialogCancelBtn */
             background-color: var(--secondary-button-bg);
             color: var(--button-text);
         }
 
-        .form-actions .cancel-btn:hover {
+        .form-action-buttons #cancelFormBtn:hover,
+        .form-action-buttons #cancelAddWatchlistBtn:hover, /* Added cancelAddWatchlistBtn */
+        .form-action-buttons #cancelManageWatchlistBtn:hover, /* Added cancelManageWatchlistBtn */
+        .custom-dialog-buttons #customDialogCancelBtn:hover { /* Added customDialogCancelBtn */
             background-color: var(--secondary-button-hover-bg);
             transform: translateY(-1px);
         }
 
-        .form-actions .delete-btn {
+        .form-action-buttons #deleteShareFromFormBtn,
+        .form-action-buttons #deleteWatchlistInModalBtn { /* Added deleteWatchlistInModalBtn */
             background-color: var(--danger-button-bg);
             color: var(--button-text);
-            margin-right: auto; /* Pushes delete button to the left */
         }
 
-        .form-actions .delete-btn:hover {
+        .form-action-buttons #deleteShareFromFormBtn:hover,
+        .form-action-buttons #deleteWatchlistInModalBtn:hover { /* Added deleteWatchlistInModalBtn */
             background-color: var(--danger-button-hover-bg);
             transform: translateY(-1px);
         }
 
-        /* Share Detail Modal Specifics */
-        .share-detail-info p {
-            margin-bottom: 0.75rem;
-            font-size: 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .share-detail-info p strong {
-            color: var(--label-color);
-            flex-shrink: 0;
-            margin-right: 0.5rem;
-        }
-
-        .share-detail-info .yield-display {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.5rem 0;
-            border-top: 1px dashed var(--border-color);
-            margin-top: 0.75rem;
-            font-weight: 600;
-        }
-
-        .share-detail-info .yield-display span:first-child {
-            color: var(--label-color);
-        }
-
-        .modal-comments-section {
-            margin-top: 1.5rem;
-            border-top: 1px dashed var(--border-color);
-            padding-top: 1.5rem;
-        }
-
-        .modal-comments-section h3 {
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
+        /* Share Details Modal Styling */
+        #modalCommentsContainer h3 {
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 5px;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            font-size: 1.2em;
             color: var(--text-color);
         }
 
         .modal-comment-item {
-            background-color: var(--background-color);
+            background-color: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 0.5rem;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
-        }
-
-        .modal-comment-item strong {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: var(--label-color);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
         }
 
         .modal-comment-item p {
             margin: 0;
+            line-height: 1.5;
         }
 
-        .modal-links {
-            margin-top: 1.5rem;
-            border-top: 1px dashed var(--border-color);
-            padding-top: 1.5rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
+        .modal-comment-item strong {
+            color: var(--label-color);
+            font-size: 0.95em;
+            display: block;
+            margin-bottom: 5px;
         }
 
-        .modal-links a {
-            color: var(--button-bg);
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.2s ease;
-            display: inline-flex;
+        /* External Links Section in Share Details Modal */
+        .external-links-section {
+            margin-top: 25px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 15px;
+        }
+
+        .external-links-section h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+            color: var(--text-color);
+            border-bottom: none; /* Remove extra border */
+            padding-bottom: 0;
+        }
+
+        .external-link {
+            display: inline-flex; /* Use flex to align icon and text */
             align-items: center;
-            gap: 0.5rem;
+            gap: 8px; /* Space between icon and text */
+            color: var(--button-bg); /* Use primary button color for links */
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 10px;
+            transition: color 0.2s ease;
         }
 
-        .modal-links a:hover {
+        .external-link:hover {
             color: var(--button-hover-bg);
             text-decoration: underline;
         }
 
-        .commsec-message {
-            margin-top: 1rem;
-            font-size: 0.875rem;
-            color: var(--ghosted-text-color);
-            text-align: center;
+        /* Dividend Calculator Modal */
+        .calculator-modal-content {
+            /* Specific styles if needed */
         }
-        
-        /* Calculator Modals */
-        .calculator-grid {
+        .calc-input-group {
+            margin-bottom: 15px;
+        }
+
+        .calc-input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--label-color);
+            font-size: 0.95em;
+        }
+
+        .calc-input-group input[type="number"],
+        .calc-input-group select {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid var(--input-border);
+            border-radius: 5px;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            font-size: 1em;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236c757d%22%20d%3D%22M287%2069.9a14.7%2014.7%200%200%200-20.8%200L146.2%20189.9%2026.3%2069.9a14.7%2014.7%200%200%200-20.8%2020.8L135.8%20216.7a14.7%2014.7%200%200%200%2020.8%200L287%2090.7a14.7%2014.7%200%200%200%200-20.8z%22%2F%3E%3C%2Fsvg%3E'); /* Custom arrow */
+            background-repeat: no-repeat;
+            background-position: right 12px top 50%;
+            background-size: 12px auto;
+            padding-right: 30px;
+        }
+
+        .calc-input-group input[type="number"]:focus,
+        .calc-input-group select:focus {
+            border-color: var(--button-bg);
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+            outline: none;
+        }
+
+        .calculator-modal-content hr {
+            border: none;
+            border-top: 1px solid var(--border-color);
+            margin: 20px 0;
+        }
+
+        /* Standard Calculator Styling */
+        .calculator-display {
+            background-color: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: right;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            overflow: hidden;
+        }
+
+        .calculator-input {
+            font-size: 1.2em;
+            color: var(--label-color);
+            min-height: 20px;
+            white-space: nowrap;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .calculator-result {
+            font-size: 2.2em;
+            font-weight: 700;
+            color: var(--text-color);
+            min-height: 30px;
+            white-space: nowrap;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .calculator-buttons {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 0.75rem;
-            margin-top: 1.5rem;
+            gap: 10px;
         }
 
         .calc-btn {
             background-color: var(--button-bg);
             color: var(--button-text);
-            padding: 1.25rem;
-            border-radius: 0.5rem;
-            font-size: 1.5rem;
+            border: none;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 1.5em;
             font-weight: 600;
             cursor: pointer;
             transition: background-color 0.2s ease, transform 0.1s ease;
-            border: none;
-            box-shadow: 0 2px 4px var(--shadow-color);
         }
 
         .calc-btn:hover {
             background-color: var(--button-hover-bg);
             transform: translateY(-1px);
+        }
+
+        .calc-btn.clear {
+            background-color: var(--danger-button-bg);
+        }
+        .calc-btn.clear:hover {
+            background-color: var(--danger-button-hover-bg);
         }
 
         .calc-btn.operator {
@@ -873,368 +1022,420 @@
         .calc-btn.operator:hover {
             background-color: var(--secondary-button-hover-bg);
         }
+
         .calc-btn.equals {
-            background-color: #28a745; /* Green for equals */
+            background-color: #28a745;
         }
         .calc-btn.equals:hover {
             background-color: #218838;
         }
-        .calc-btn.clear {
-            background-color: var(--danger-button-bg);
-        }
-        .calc-btn.clear:hover {
-            background-color: var(--danger-button-hover-bg);
-        }
-        .calc-btn.span-2 {
+
+        .calc-btn.zero {
             grid-column: span 2;
         }
 
-        .calculator-display {
-            background-color: var(--input-bg);
-            border: 1px solid var(--input-border);
-            border-radius: 0.5rem;
-            padding: 1rem;
-            text-align: right;
-            margin-bottom: 1rem;
-            min-height: 80px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            overflow: hidden;
-            box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
-        }
-
-        .calculator-display .input-line {
-            font-size: 1.2rem;
-            color: var(--label-color);
-            min-height: 1.2em;
-            word-break: break-all;
-        }
-
-        .calculator-display .result-line {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: var(--text-color);
-            min-height: 1.5em;
-            word-break: break-all;
-        }
 
         /* Custom Dialog Modal */
-        .custom-dialog-modal .modal-content {
-            max-width: 400px;
-            text-align: center;
-        }
-        .custom-dialog-modal .modal-header {
-            border-bottom: none;
-            margin-bottom: 0;
-            padding-bottom: 0;
-        }
-        .custom-dialog-modal .modal-header h2 {
-            display: none; /* Hide title, message is central */
-        }
-        .custom-dialog-modal .close-button {
-            position: absolute;
-            top: 0.5rem;
-            right: 0.5rem;
-            font-size: 1.5rem;
-        }
-        .custom-dialog-modal .message {
-            font-size: 1.1rem;
-            margin-bottom: 1.5rem;
-            padding: 0 1rem;
-        }
-        .custom-dialog-modal .dialog-actions {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-        }
-        .custom-dialog-modal .dialog-actions button {
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s ease, transform 0.1s ease;
-            border: none;
-            box-shadow: 0 2px 4px var(--shadow-color);
-        }
-        .custom-dialog-modal #customDialogConfirmBtn {
-            background-color: var(--button-bg);
-            color: var(--button-text);
-        }
-        .custom-dialog-modal #customDialogConfirmBtn:hover {
-            background-color: var(--button-hover-bg);
-        }
-        .custom-dialog-modal #customDialogCancelBtn {
-            background-color: var(--secondary-button-bg);
-            color: var(--button-text);
-        }
-        .custom-dialog-modal #customDialogCancelBtn:hover {
-            background-color: var(--secondary-button-hover-bg);
-        }
+        /* Removed custom-dialog-buttons specific styling here as it's now grouped above */
 
-        /* Manage Watchlists Modal */
-        .watchlist-tabs {
-            display: flex;
-            margin-bottom: 1.5rem;
-            border-bottom: 1px solid var(--border-color);
-        }
 
-        .watchlist-tabs button {
-            flex: 1;
-            padding: 0.75rem 1rem;
-            background-color: transparent;
-            border: none;
-            border-bottom: 3px solid transparent;
-            color: var(--label-color);
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-size: 1rem;
-        }
-
-        .watchlist-tabs button:hover {
-            color: var(--text-color);
-            border-color: var(--button-hover-bg);
-        }
-
-        .watchlist-tabs button.active {
-            color: var(--button-bg);
-            border-color: var(--button-bg);
-        }
-
-        .watchlist-tab-content {
-            display: none;
-            padding-top: 1rem;
-        }
-
-        .watchlist-tab-content.active {
-            display: block;
-        }
-
-        .watchlist-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .watchlist-list li {
-            background-color: var(--background-color);
-            border: 1px solid var(--border-color);
-            border-radius: 0.5rem;
-            padding: 0.75rem 1rem;
-            margin-bottom: 0.75rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: 500;
-        }
-
-        .watchlist-list li span {
-            flex-grow: 1;
-            color: var(--text-color);
-        }
-
-        .watchlist-list li button {
-            background-color: var(--danger-button-bg);
-            color: var(--button-text);
-            border: none;
-            border-radius: 0.4rem;
-            padding: 0.3rem 0.6rem;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-        }
-
-        .watchlist-list li button:hover {
-            background-color: var(--danger-button-hover-bg);
-        }
-
-        /* Scroll to top button */
-        .scroll-to-top {
+        /* Scroll to Top Button */
+        #scrollToTopBtn {
             position: fixed;
-            bottom: 2rem;
-            right: 2rem;
+            bottom: 20px;
+            right: 20px;
+            z-index: 900;
             background-color: var(--button-bg);
             color: var(--button-text);
             border: none;
-            border-radius: 9999px; /* Fully rounded */
+            border-radius: 50%; /* Circle shape */
             width: 50px;
             height: 50px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 1.5rem;
+            font-size: 1.8em; /* Slightly larger for a thicker arrow look */
             cursor: pointer;
             box-shadow: 0 4px 8px var(--shadow-color);
-            transition: opacity 0.3s ease, transform 0.2s ease, background-color 0.2s ease;
-            opacity: 0;
-            visibility: hidden;
-            z-index: 90;
+            transition: background-color 0.3s ease, transform 0.2s ease, opacity 0.3s ease;
+            
+            /* Centering the icon */
+            display: flex; /* Make it a flex container */
+            justify-content: center; /* Center horizontally */
+            align-items: center; /* Center vertically */
+            padding: 0; /* Remove default padding */
         }
 
-        .scroll-to-top:hover {
+        #scrollToTopBtn:hover {
             background-color: var(--button-hover-bg);
             transform: translateY(-2px);
         }
-
-        .scroll-to-top.show {
-            opacity: 1;
-            visibility: visible;
+        /* Ensure the Font Awesome icon itself is solid (fas) for a thicker appearance */
+        #scrollToTopBtn .fas {
+            font-weight: 900; /* Force solid weight for Font Awesome icons */
         }
 
-        /* Sidebar Overlay for Mobile */
-        .sidebar-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 15;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
+
+        /* Loading Indicator */
+        .loading {
+            text-align: center;
+            padding: 20px;
+            font-size: 1.2em;
+            color: var(--label-color);
         }
 
-        .sidebar-overlay.open {
-            opacity: 1;
-            visibility: visible;
+        /* Error Message for Firebase Init */
+        .error-message {
+            background-color: #ffe0e0;
+            color: #cc0000;
+            border: 1px solid #cc0000;
+            padding: 15px;
+            margin: 20px auto;
+            border-radius: 8px;
+            max-width: 600px;
+            text-align: center;
+        }
+        .dark-theme .error-message {
+            background-color: #5a1a1a;
+            color: #ffcccc;
+            border-color: #ffcccc;
+        }
+        .error-message p {
+            margin: 0 0 10px 0;
+        }
+        .error-message p:last-child {
+            margin-bottom: 0;
         }
 
-        body.sidebar-active {
-            overflow-y: hidden; /* Prevent body scroll when sidebar is open on mobile */
-        }
 
-        /* Responsive Design */
+        /* --- Responsive Design / Media Queries --- */
+
+        /* Mobile devices (portrait and landscape) and smaller tablets */
         @media (max-width: 768px) {
-            .app-sidebar {
-                transform: translateX(-100%);
-                position: fixed; /* Fixed position on mobile */
-                height: 100vh; /* Full height */
-                width: 280px; /* Wider sidebar on mobile */
-                box-shadow: none; /* No shadow when closed */
-            }
-
-            .app-sidebar.open {
-                transform: translateX(0);
-                box-shadow: 2px 0 5px var(--shadow-color);
-            }
-
-            .main-content {
-                padding: 1rem;
-            }
-
-            header {
-                padding: 0.75rem 1rem;
-            }
-
-            header h1 {
-                font-size: 1.5rem;
-                text-align: center;
+            h1#mainTitle {
+                font-size: 1.5em; /* Smaller title on mobile */
                 flex-grow: 1;
-                margin-left: 0;
+                white-space: normal; /* Allow text to wrap */
+                overflow: visible; /* Prevent truncation */
+                text-overflow: clip; /* Prevent ellipsis */
+                text-align: center; /* Center title on mobile */
+                padding-left: 50px; /* Space for hamburger button */
+                padding-right: 50px; /* Space for new add share button */
+                box-sizing: border-box;
+                line-height: 1.3; /* Allow more space for two lines */
             }
 
-            .header-buttons {
-                gap: 0.5rem;
+            .header-top-row {
+                justify-content: space-between;
+                width: 100%;
+                /* Ensure no horizontal overflow */
+                padding-left: 15px; /* Match main container padding */
+                padding-right: 15px; /* Match main container padding */
             }
 
-            .header-buttons #addShareHeaderBtn {
-                padding: 0.5rem 1rem;
+            /* Hamburger button on mobile - position right */
+            .hamburger-btn {
+                display: block; /* Always display */
+                position: absolute;
+                right: 0;
+                top: 50%;
+                transform: translateY(-50%);
+                padding: 5px 10px;
             }
 
-            .header-buttons .hamburger-btn {
-                display: block; /* Show hamburger on mobile */
+            /* New: Header "Add Share" Button on mobile - position left */
+            #addShareHeaderBtn {
+                display: block; /* Always display */
+                position: absolute;
+                left: 0; /* Position to the far left */
+                top: 50%;
+                transform: translateY(-50%);
+                padding: 5px 10px;
             }
 
+            /* Sidebar specific for mobile - full screen takeover */
+            .app-sidebar {
+                left: calc(-1 * var(--sidebar-width)); /* Hidden by default */
+                width: 100%; /* Take full width of screen */
+                max-width: var(--sidebar-width); /* Limit max width on larger mobiles if needed */
+                padding-top: 70px; /* Space for header in overlay */
+            }
+            .app-sidebar.open {
+                left: 0; /* Slide in */
+            }
+            /* Show close button on mobile sidebar */
             .app-sidebar .close-menu-btn {
-                display: block; /* Show close button in sidebar on mobile */
+                display: block;
+                top: 10px;
+                right: 15px;
+                font-size: 2em; /* Slightly smaller for mobile */
+            }
+            /* Overlay for mobile when sidebar is open */
+            .sidebar-overlay.open {
+                display: block;
+                background-color: rgba(0, 0, 0, 0.5); /* Keep semi-transparent for mobile */
+                pointer-events: auto; /* Ensure it blocks clicks on mobile */
             }
 
-            .app-container {
-                flex-direction: column; /* Stack content on mobile */
+            /* Watchlist and Sort Controls on Mobile: Ensure they are on the same line */
+            .watchlist-controls-row {
+                flex-wrap: nowrap; /* Prevent wrapping */
+                overflow-x: auto; /* Allow horizontal scroll if content overflows */
+                justify-content: flex-start; /* Align to start if it overflows */
+                -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+            }
+            .watchlist-group,
+            .sort-group {
+                flex-shrink: 0; /* Prevent items from shrinking */
+            }
+            .dropdown-large {
+                min-width: 120px; /* Smaller min-width for mobile dropdowns */
+                padding: 8px 12px; /* Smaller padding */
+                font-size: 0.9em; /* Smaller font */
+                padding-right: 25px; /* Adjust padding for smaller arrow */
+                background-size: 10px auto; /* Smaller arrow */
             }
 
-            .share-list-section table {
-                display: none; /* Hide table on mobile */
+
+            /* Mobile Cards: Prevent horizontal sliding */
+            .mobile-share-cards {
+                display: flex;
+                /* Ensure no horizontal shifting */
+                position: relative; /* Establish positioning context */
+                left: 0; /* Keep it fixed horizontally */
+                right: 0;
+                width: 100%; /* Ensure it takes full width */
+                box-sizing: border-box; /* Include padding in width */
+            }
+            /* Hide table on mobile */
+            table {
+                display: none;
+            }
+
+            /* Modals wider on mobile */
+            .modal-content {
+                width: 95%;
+                margin: 20px auto;
+                padding: 20px;
+            }
+            .add-share-modal-content {
+                max-height: calc(100vh - 120px); /* Adjusted to ensure buttons are visible above soft keyboard/nav bar */
+                padding-bottom: 20px; /* Ensure enough padding at the bottom */
+            }
+
+            /* Align "Cancel" and "Save" buttons on the same line for mobile */
+            .form-action-buttons,
+            .modal-action-buttons,
+            .custom-dialog-buttons { /* Added custom-dialog-buttons here */
+                display: flex; /* Ensure flex is applied */
+                flex-direction: row; /* Keep buttons in a row */
+                flex-wrap: nowrap; /* Force no wrapping on mobile as requested */
+                justify-content: space-around; /* Distribute space evenly */
+                gap: 5px; /* Reduce gap to fit more buttons */
+            }
+            .form-action-buttons button,
+            .modal-action-buttons button,
+            .custom-dialog-buttons button { /* Added custom-dialog-buttons button */
+                width: auto; /* Allow buttons to size naturally */
+                flex-grow: 1; /* Allow buttons to grow and fill space */
+                min-width: unset; /* Remove min-width restriction */
+                max-width: unset; /* Remove max-width restriction */
+                padding: 12px 8px; /* Adjust padding for smaller buttons */
+                font-size: 0.9em; /* Slightly smaller font for tighter fit */
+            }
+            /* Specific adjustment for the delete button if it's alone on a line */
+            .form-action-buttons #deleteShareFromFormBtn,
+            .form-action-buttons #deleteWatchlistInModalBtn { /* Added for new delete button */
+                width: auto; /* Ensure it follows the new layout */
+                max-width: unset; /* Remove max-width restriction for mobile */
+            }
+            
+            .comments-form-container .add-section-btn {
+                width: 35px;
+                height: 35px;
+                font-size: 1.8em;
+            }
+
+            /* Ensure scroll-to-top button is shown on mobile when scrolled (JS will manage visibility based on scroll) */
+            #scrollToTopBtn {
+                /* Adjust positioning to avoid overlap/sliding */
+                right: 10px; /* Move slightly closer to the edge */
+                bottom: 10px; /* Move slightly closer to the bottom */
+                display: flex; /* Always display initially, JS controls opacity/final display */
+            }
+
+            /* Mobile Sign-In Button Centering */
+            .google-auth-btn {
+                margin: 0 auto; /* Explicitly center */
+                left: unset; /* Remove any conflicting left positioning */
+                right: unset; /* Remove any conflicting right positioning */
+                transform: none; /* Remove any conflicting transforms */
+            }
+        }
+
+        /* Desktop (min-width: 769px) */
+        @media (min-width: 769px) {
+            header {
+                flex-direction: column; /* Stack rows vertically for desktop layout */
+                justify-content: flex-start;
+                align-items: center; /* Center items horizontally */
+                flex-wrap: nowrap;
+                padding-bottom: 0;
+                gap: 10px; /* Space between header rows */
+                height: auto; /* Allow height to adjust based on content */
+            }
+
+            .header-top-row {
+                width: 100%; /* Take full width to allow centering of title */
+                margin-bottom: 0;
+                justify-content: center; /* Center the title */
+                flex-grow: 0; /* Don't grow */
+                height: auto; /* Allow height to adjust */
+                position: relative; /* For hamburger button absolute positioning */
+            }
+
+            h1#mainTitle {
+                font-size: 2.2em;
+                text-align: center; /* Center title within its space */
+                order: 1; /* Place after hamburger button visually */
+                margin-left: 0; /* No margin needed from hamburger */
+                flex-grow: 1; /* Allow title to take available space */
+                padding-left: 0;
+                padding-right: 0;
+                line-height: 1; /* Single line */
+                white-space: nowrap; /* Prevent wrapping */
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            /* Hamburger button on desktop - always visible, but only for toggling */
+            .hamburger-btn {
+                position: absolute; /* Position absolutely within header-top-row */
+                right: 0; /* Position to the far right */
+                top: 50%;
+                transform: translateY(-50%);
+                font-size: 2em; /* Slightly larger for desktop visual weight */
+                padding: 5px 10px;
+                height: auto; /* Let content determine height */
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                order: 0; /* Place first in header-top-row */
+            }
+
+            /* New: Header "Add Share" Button on desktop - position left */
+            #addShareHeaderBtn {
+                display: block; /* Always display */
+                position: absolute;
+                left: 0; /* Position to the far left */
+                top: 50%;
+                transform: translateY(-50%);
+                padding: 5px 10px;
+            }
+
+            /* App Sidebar specific for desktop - initially hidden, slides in/out */
+            .app-sidebar {
+                left: calc(-1 * var(--sidebar-width)); /* Start hidden on desktop too */
+                width: var(--sidebar-width); /* Fixed width */
+                box-shadow: 2px 0 5px var(--shadow-color); /* Add shadow for desktop sidebar */
+                border-right: 1px solid var(--sidebar-border);
+                position: fixed;
+                top: 0;
+                height: 100%;
+                padding-top: calc(70px + 20px); /* Space for fixed header (70px) + padding */
+                z-index: 998; /* Lower z-index than modals, but above main content */
+                /* Enable transition on desktop for toggle effect */
+                transition: left 0.3s ease-in-out; 
+            }
+            /* Show close button on desktop sidebar */
+            .app-sidebar .close-menu-btn {
+                display: block;
+                top: 10px;
+                right: 15px;
+                font-size: 1.5em; /* Reduced size for desktop */
+            }
+            /* Overlay for desktop when sidebar is open */
+            .sidebar-overlay.open {
+                display: block;
+                background-color: rgba(0, 0, 0, 0.1); /* More ghosted for desktop */
+                pointer-events: none; /* Allow clicks to pass through to main content */
+            }
+
+            /* Shift main content & footer to the right when sidebar is open on desktop */
+            body.sidebar-active main.container {
+                margin-left: var(--sidebar-width);
+                width: calc(100% - var(--sidebar-width));
+            }
+            body.sidebar-active footer.fixed-footer {
+                margin-left: var(--sidebar-width);
+                width: calc(100% - var(--sidebar-width));
+            }
+
+            /* Watchlist and Sort controls on Desktop: Ensure they are on the same line and centralized */
+            .watchlist-controls-row {
+                width: 100%; /* Take full width to allow centering */
+                justify-content: center; /* Center the group */
+                flex-direction: row; /* Ensure they are in a row */
+                flex-wrap: nowrap; /* Prevent wrapping on desktop */
+                gap: 20px 40px; /* Adjust gap for desktop */
+                padding: 15px 0;
+                border-top: 1px solid var(--border-color); /* Ensure borders are here */
+                border-bottom: 1px solid var(--border-color);
+            }
+            .watchlist-group,
+            .sort-group {
+                width: auto; /* Let content determine width */
+                justify-content: flex-start; /* Align content within group to start */
+                padding: 0;
+            }
+            .dropdown-large {
+                min-width: 180px;
+                width: auto;
+            }
+
+            .fixed-footer {
+                padding: 15px 20px;
+            }
+
+            /* Ensure table is visible and cards are hidden on desktop */
+            table {
+                display: table;
             }
 
             .mobile-share-cards {
-                display: flex; /* Show mobile cards on mobile */
+                display: none;
             }
 
-            .filter-sort-section {
-                flex-direction: column;
-                gap: 0.75rem;
+            /* Ensure scroll-to-top button is hidden on desktop */
+            #scrollToTopBtn {
+                display: none; /* Always hidden on desktop */
             }
+        }
 
-            .filter-sort-section select {
-                width: 100%;
-                min-width: unset;
+        /* Specific adjustments for very large screens (optional) */
+        @media (min-width: 1024px) {
+            header {
+                padding: 20px 30px;
             }
-
-            .form-actions {
-                flex-direction: column;
-                align-items: stretch;
+            h1#mainTitle {
+                font-size: 2.5em;
             }
-
-            .form-actions button {
-                width: 100%;
-                justify-content: center;
+            .container {
+                padding: 0 20px;
             }
-
-            .form-actions .delete-btn {
-                margin-right: 0;
-            }
-
-            .modal-content {
-                width: 95%;
-                padding: 1.5rem;
-            }
-
-            .modal-header h2 {
-                font-size: 1.5rem;
-            }
-
-            .modal-header .close-button {
-                font-size: 1.8rem;
-            }
-
-            .calculator-grid {
-                gap: 0.5rem;
-            }
-
-            .calc-btn {
-                padding: 1rem;
-                font-size: 1.2rem;
-            }
-
-            .calculator-display .result-line {
-                font-size: 2rem;
-            }
-
-            .scroll-to-top {
-                bottom: 1rem;
-                right: 1rem;
-                width: 45px;
-                height: 45px;
-                font-size: 1.3rem;
-            }
-
-            footer {
-                flex-direction: column;
-                gap: 0.75rem;
-                padding: 0.75rem 1rem;
+            /* Adjust sidebar padding for larger header (if header height changes significantly) */
+            .app-sidebar {
+                /* Re-evaluate if header height changes. E.g., calc(HEADER_HEIGHT_ON_DESKTOP + 20px) */
             }
         }
     </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
-    <!-- Firebase Initialization Script -->
+    <!-- Firebase and main script loading -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, writeBatch, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, FieldValue, deleteField, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; // Added writeBatch
 
         // Expose Firebase modules globally for script.js to use
         window.firestore = {
@@ -1265,7 +1466,7 @@
                     storageBucket: "asx-watchlist-app.firebasestorage.app",
                     messagingSenderId: "671024168765",
                     appId: "1:671024168765:web:f2b62cd0e77a126c0ecf54",
-                    measurementId: "G-G6L0Q9S3QY"
+                    measurementId: "G-J24BTJ34D2"
                 };
                 console.warn("Firebase Init: __firebase_config is not defined or is empty. Using hardcoded fallback for GitHub Pages.");
             }
@@ -1278,7 +1479,7 @@
                 storageBucket: "asx-watchlist-app.firebasestorage.app",
                 messagingSenderId: "671024168765",
                 appId: "1:671024168765:web:f2b62cd0e77a126c0ecf54",
-                measurementId: "G-G6L0Q9S3QY"
+                measurementId: "G-J24BTJ34D2"
             };
             console.warn("Firebase Init: __firebase_config is not defined or is empty. Using hardcoded fallback for GitHub Pages.");
         }
@@ -1311,350 +1512,300 @@
         }
     </script>
 
-    <div class="app-container">
-        <!-- Sidebar -->
-        <aside id="appSidebar" class="app-sidebar">
-            <div class="sidebar-header">
-                <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-200">Menu</h2>
-                <button id="closeMenuBtn" class="close-menu-btn"><i class="fas fa-times"></i></button>
-            </div>
-            <nav class="sidebar-menu">
-                <button id="newShareBtn" class="menu-button-item" data-action-closes-menu="true">
-                    <i class="fas fa-plus-circle"></i> Add New Share
-                </button>
-                <button id="manageWatchlistsSidebarBtn" class="menu-button-item" data-action-closes-menu="true">
-                    <i class="fas fa-list-alt"></i> Manage Watchlists
-                </button>
-                <button id="standardCalcBtn" class="menu-button-item" data-action-closes-menu="true">
-                    <i class="fas fa-calculator"></i> Standard Calculator
-                </button>
-                <button id="dividendCalcBtn" class="menu-button-item" data-action-closes-menu="true">
-                    <i class="fas fa-chart-line"></i> Dividend Calculator
-                </button>
-                <button id="themeToggleBtn" class="menu-button-item" data-action-closes-menu="false">
-                    <i class="fas fa-palette"></i> System Default
-                </button>
-            </nav>
-            <div class="sidebar-footer">
-                <p>&copy; 2025 ASX Watchlist App</p>
-                <button id="googleAuthBtn" class="menu-button-item">
-                    <i class="fab fa-google"></i> Sign In
-                </button>
-            </div>
-        </aside>
+    <header>
+        <div class="header-top-row">
+            <!-- New "Add Share" button on the main screen - positioned left -->
+            <button id="addShareHeaderBtn" class="header-action-btn header-action-btn-left">
+                <i class="fas fa-plus"></i>
+            </button>
+            <h1 id="mainTitle">Share Watchlist</h1> <!-- Default text before login -->
+            <!-- Hamburger/Sidebar Toggle Button -->
+            <button id="hamburgerBtn" class="hamburger-btn">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
 
-        <!-- Main Content Area -->
-        <div class="main-content">
-            <header>
-                <button id="hamburgerBtn" class="hamburger-btn"><i class="fas fa-bars"></i></button>
-                <h1 id="mainTitle">Share Watchlist</h1>
-                <div class="header-buttons">
-                    <button id="addShareHeaderBtn">
-                        <i class="fas fa-plus"></i> Add Share
-                    </button>
+        <!-- Mobile Menu / Desktop Sidebar Content -->
+        <nav id="appSidebar" class="app-sidebar">
+            <button id="closeMenuBtn" class="close-menu-btn">X</button>
+            
+            <div class="menu-section">
+                <h3>Share Actions</h3>
+                <div class="menu-buttons-group">
+                    <!-- Consolidated Share Action Buttons -->
+                    <button id="newShareBtn" class="menu-button-item" data-action-closes-menu="true"><i class="fas fa-plus-circle"></i> Add New Share</button>
                 </div>
-            </header>
+            </div>
 
-            <section class="filter-sort-section mt-6">
-                <select id="watchlistSelect" class="rounded-lg shadow-sm">
-                    <option value="" disabled selected>Loading Watchlists...</option>
+            <div class="menu-section">
+                <h3>Watchlists</h3>
+                <div class="menu-buttons-group">
+                    <button id="addWatchlistBtn" class="menu-button-item" data-action-closes-menu="true"><i class="fas fa-list-ul"></i> Add Watchlist</button>
+                    <!-- Changed delete button to edit button -->
+                    <button id="editWatchlistBtn" class="menu-button-item" data-action-closes-menu="true"><i class="fas fa-edit"></i> Edit Current Watchlist</button>
+                </div>
+            </div>
+
+            <div class="menu-section">
+                <h3>Calculators</h3>
+                <div class="menu-buttons-group">
+                    <!-- Consolidated Calculator Buttons -->
+                    <button id="standardCalcBtn" class="menu-button-item" data-action-closes-menu="true"><i class="fas fa-calculator"></i> Standard</button>
+                    <button id="dividendCalcBtn" class="menu-button-item" data-action-closes-menu="true"><i class="fas fa-money-bill-wave"></i> Dividend</button>
+                </div>
+            </div>
+
+            <div class="menu-section">
+                <h3>Theme</h3>
+                <div class="menu-buttons-group">
+                    <!-- Consolidated Theme Toggle Button -->
+                    <button id="themeToggleBtn" class="menu-button-item" data-action-closes-menu="false"><i class="fas fa-moon"></i> Toggle Theme</button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Sidebar overlay for desktop to handle clicks outside -->
+        <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+        <!-- Watchlist and Sort controls -->
+        <div class="watchlist-controls-row">
+            <div class="watchlist-group">
+                <select id="watchlistSelect" class="dropdown-large">
+                    <!-- Options populated by JS, including 'Watchlist' placeholder -->
                 </select>
-                <select id="sortSelect" class="rounded-lg shadow-sm">
-                    <option value="" disabled selected>Sort</option>
+            </div>
+
+            <div class="sort-group">
+                <select id="sortSelect" class="dropdown-large">
+                    <option value="" disabled selected>Sort</option> <!-- Explicit "Sort" placeholder -->
+                    <option value="entryDate-desc">Date Added (Newest)</option>
+                    <option value="entryDate-asc">Date Added (Oldest)</option>
                     <option value="shareName-asc">Code (A-Z)</option>
                     <option value="shareName-desc">Code (Z-A)</option>
-                    <option value="currentPrice-asc">Current Price (Low to High)</option>
-                    <option value="currentPrice-desc">Current Price (High to Low)</option>
-                    <option value="targetPrice-asc">Target Price (Low to High)</option>
-                    <option value="targetPrice-desc">Target Price (High to Low)</option>
-                    <option value="dividendAmount-asc">Dividend (Low to High)</option>
-                    <option value="dividendAmount-desc">Dividend (High to Low)</option>
-                    <option value="frankingCredits-asc">Franking (Low to High)</option>
-                    <option value="frankingCredits-desc">Franking (High to Low)</option>
-                    <option value="entryDate-asc">Entry Date (Oldest First)</option>
-                    <option value="entryDate-desc">Entry Date (Newest First)</option>
+                    <option value="dividendAmount-desc">Dividend (High-Low)</option>
+                    <option value="dividendAmount-asc">Dividend (Low-High)</option>
                 </select>
-            </section>
-
-            <section id="asxCodeButtonsContainer" class="asx-code-buttons-container mb-6"></section>
-
-            <div id="loadingIndicator" class="loading-indicator">
-                <i class="fas fa-spinner fa-spin mr-2"></i> Loading data...
             </div>
+        </div>
+        
+        <!-- ASX Code buttons container -->
+        <div id="asxCodeButtonsContainer" class="asx-code-buttons-container">
+            <!-- ASX code buttons will be dynamically added here -->
+        </div>
+    </header>
 
-            <!-- Desktop Share Table -->
-            <section class="share-list-section hidden md:block">
-                <table class="w-full">
+    <main class="container">
+        <!-- Message for Firebase initialization errors -->
+        <div id="firebaseInitError" class="error-message" style="display: none;">
+            <p><strong>Error:</strong> Firebase failed to initialize.</p>
+            <p>This is usually due to missing or incorrect Firebase configuration. Please ensure your <code>firebaseConfig</code> in <code>index.html</code> is correctly set up from your Firebase project settings.</p>
+            <p>Core application features will not work without a valid Firebase connection.</p>
+        </div>
+
+        <div id="loadingIndicator" class="loading" style="display: none;">Loading shares...</div>
+        <div class="share-list-section">
+            <div class="table-container">
+                <table id="shareTable">
                     <thead>
                         <tr>
                             <th>Code</th>
-                            <th>Entry Price</th>
+                            <th>Entered Price</th>
                             <th>Target Price</th>
-                            <th>Dividend Info</th>
+                            <th>Dividends</th>
                             <th>Comments</th>
                         </tr>
                     </thead>
-                    <tbody id="shareTable">
-                        <!-- Share rows will be inserted here by JavaScript -->
+                    <tbody>
+                        <!-- Share rows will be dynamically added here -->
                     </tbody>
                 </table>
-            </section>
-
-            <!-- Mobile Share Cards -->
-            <section id="mobileShareCards" class="mobile-share-cards md:hidden">
-                <!-- Share cards will be inserted here by JavaScript -->
-            </section>
+            </div>
+            <div id="mobileShareCards" class="mobile-share-cards">
+                <!-- Mobile share cards will be dynamically added here -->
+            </div>
         </div>
-    </div>
+    </main>
 
-    <!-- Footer -->
-    <footer>
-        <p>Managed by iamkanga@gmail.com</p>
-        <button id="googleAuthBtn">
-            <i class="fab fa-google"></i> Sign In
-        </button>
+    <footer class="fixed-footer">
+        <button id="googleAuthBtn" class="google-auth-btn">Sign In</button>
     </footer>
 
+    <!-- Scroll-to-Top Button -->
+    <button id="scrollToTopBtn" title="Go to top"><i class="fas fa-arrow-up"></i></button>
+
+    <!-- Modals -->
     <!-- Share Form Modal -->
     <div id="shareFormSection" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="formTitle">Add New Share</h2>
-                <button class="close-button">&times;</button>
+        <div class="modal-content add-share-modal-content">
+            <span class="close-button form-close-button">&times;</span>
+            <h2 id="formTitle">Add New Share</h2>
+            <label for="shareName">Code:</label>
+            <input type="text" id="shareName" placeholder="e.g., BHP" required>
+
+            <label for="currentPrice">Entered Price ($):</label>
+            <input type="number" id="currentPrice" step="0.01" placeholder="e.g., 25.50">
+
+            <label for="targetPrice">Target Price ($):</label>
+            <input type="number" id="targetPrice" step="0.01" placeholder="e.g., 30.00">
+
+            <label for="dividendAmount">Dividend Amount (per share, annual $):</label>
+            <input type="number" id="dividendAmount" step="0.001" placeholder="e.g., 1.250">
+
+            <label for="frankingCredits">Franking Credits (%):</label>
+            <input type="number" id="frankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 70 for 70%">
+
+            <div id="commentsFormContainer" class="comments-form-container">
+                <h3>Comments <button type="button" id="addCommentSectionBtn" class="add-section-btn">+</button></h3>
+                <!-- Comment sections will be dynamically added here by JS -->
             </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="shareName">ASX Code:</label>
-                    <input type="text" id="shareName" placeholder="e.g., BHP" required class="rounded-md">
-                </div>
-                <div class="form-group">
-                    <label for="currentPrice">Current Price ($):</label>
-                    <input type="number" id="currentPrice" step="0.01" placeholder="e.g., 25.50" class="rounded-md">
-                </div>
-                <div class="form-group">
-                    <label for="targetPrice">Target Price ($):</label>
-                    <input type="number" id="targetPrice" step="0.01" placeholder="e.g., 30.00" class="rounded-md">
-                </div>
-                <div class="form-group">
-                    <label for="dividendAmount">Dividend Amount ($ per share):</label>
-                    <input type="number" id="dividendAmount" step="0.001" placeholder="e.g., 1.250" class="rounded-md">
-                </div>
-                <div class="form-group">
-                    <label for="frankingCredits">Franking Credits (%):</label>
-                    <input type="number" id="frankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 100" class="rounded-md">
-                </div>
-                <div id="commentsFormContainer" class="comments-container">
-                    <!-- Comment sections will be added here by JavaScript -->
-                </div>
-                <button id="addCommentSectionBtn" class="menu-button-item mt-4">
-                    <i class="fas fa-comment-dots"></i> Add Comment Section
-                </button>
-            </div>
-            <div class="form-actions">
-                <button id="deleteShareFromFormBtn" class="delete-btn">
-                    <i class="fas fa-trash-alt"></i> Delete
-                </button>
-                <button id="cancelFormBtn" class="cancel-btn">
-                    <i class="fas fa-times-circle"></i> Cancel
-                </button>
-                <button id="saveShareBtn" class="save-btn">
-                    <i class="fas fa-save"></i> Save Share
-                </button>
+
+            <!-- Buttons for Add/Edit Share Modal - will be styled to be on one line -->
+            <div class="form-action-buttons modal-form-buttons">
+                <button type="button" id="deleteShareFromFormBtn" class="danger-button"><i class="fas fa-trash-alt"></i> Delete Share</button>
+                <button type="button" id="cancelFormBtn" class="secondary-buttons"><i class="fas fa-times-circle"></i> Cancel</button>
+                <button type="submit" id="saveShareBtn"><i class="fas fa-save"></i> Save Share</button>
             </div>
         </div>
     </div>
 
-    <!-- Share Detail Modal -->
+    <!-- Share Details Modal (Still needed for double-click on table/card) -->
     <div id="shareDetailModal" class="modal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="modalShareName">Share Details</h2>
-                <button class="close-button">&times;</button>
-            </div>
-            <div class="modal-body share-detail-info">
-                <p><strong>Entry Date:</strong> <span id="modalEntryDate"></span></p>
-                <p><strong>Entered Price:</strong> <span id="modalEnteredPrice"></span></p>
-                <p><strong>Entry Price Date/Time:</strong> <span id="modalEnteredPriceDateTime"></span></p>
-                <p><strong>Target Price:</strong> <span id="modalTargetPrice"></span></p>
-                <p><strong>Dividend Amount:</strong> <span id="modalDividendAmount"></span></p>
-                <p><strong>Franking Credits:</strong> <span id="modalFrankingCredits"></span></p>
-                <p class="yield-display"><strong>Unfranked Yield:</strong> <span id="modalUnfrankedYield"></span></p>
-                <p class="yield-display"><strong>Franked Yield:</strong> <span id="modalFrankedYield"></span></p>
+            <span class="close-button">&times;</span>
+            <h2 id="modalShareName">Share Details</h2>
+            <p><strong>Entry Date:</strong> <span id="modalEntryDate"></span></p>
+            <p><strong>Entered Price:</strong> <span id="modalEnteredPrice"></span></p> <!-- Removed date/time span -->
+            <p><strong>Target Price:</strong> <span id="modalTargetPrice"></span></p>
+            <p><strong>Dividend Amount:</strong> <span id="modalDividendAmount"></span></p>
+            <p><strong>Franking Credits:</strong> <span id="modalFrankingCredits"></span></p>
+            <p><strong>Unfranked Yield:</strong> <span id="modalUnfrankedYield"></span></p>
+            <p><strong>Franked Yield:</strong> <span id="modalFrankedYield"></span></p>
 
-                <div id="modalCommentsContainer" class="modal-comments-section">
-                    <h3>Comments</h3>
-                    <!-- Comments will be inserted here by JavaScript -->
-                </div>
-
-                <div class="modal-links">
-                    <a id="modalMarketIndexLink" href="#" target="_blank" rel="noopener noreferrer">
-                        <i class="fas fa-external-link-alt"></i> View on MarketIndex.com.au
-                    </a>
-                    <a id="modalFoolLink" href="#" target="_blank" rel="noopener noreferrer">
-                        <i class="fas fa-external-link-alt"></i> View on Fool.com.au
-                    </a>
-                    <a id="modalCommSecLink" href="#" target="_blank" rel="noopener noreferrer">
-                        <i class="fas fa-external-link-alt"></i> View on CommSec.com.au
-                    </a>
-                    <p id="commSecLoginMessage" class="commsec-message">Note: CommSec may require login to view details.</p>
-                </div>
+            <div id="modalCommentsContainer" class="modal-comments-sections">
+                <h3>Comments</h3>
+                <!-- Comments will be displayed here -->
             </div>
-            <div class="form-actions">
-                <button id="editShareFromDetailBtn" class="save-btn">
-                    <i class="fas fa-edit"></i> Edit Share
-                </button>
+
+            <div class="external-links-section">
+                <h3>External Links</h3>
+                <p><a id="modalMarketIndexLink" href="#" target="_blank" class="external-link"><i class="fas fa-external-link-alt"></i> View on MarketIndex.com.au</a></p>
+                <p><a id="modalFoolLink" href="#" target="_blank" class="external-link"><i class="fas fa-external-link-alt"></i> View on Fool.com.au</a></p>
+                <p><a id="modalCommSecLink" href="#" target="_blank" class="external-link"><i class="fas fa-external-link-alt"></i> View on CommSec.com.au</a></p>
+                <p id="commSecLoginMessage" class="ghosted-text commsec-message">Requires single CommSec login per session</p>
+            </div>
+
+            <div class="modal-action-buttons">
+                <button type="button" id="editShareFromDetailBtn"><i class="fas fa-edit"></i> Edit Share</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Watchlist Modal -->
+    <div id="addWatchlistModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Add New Watchlist</h2>
+            <label for="newWatchlistName">Watchlist Name:</label>
+            <input type="text" id="newWatchlistName" placeholder="e.g., Tech Stocks" required>
+            <div class="form-action-buttons">
+                <button type="button" id="cancelAddWatchlistBtn" class="secondary-buttons"><i class="fas fa-times-circle"></i> Cancel</button>
+                <button type="button" id="saveWatchlistBtn"><i class="fas fa-save"></i> Save Watchlist</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manage Watchlist Modal (New) -->
+    <div id="manageWatchlistModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Manage Watchlist</h2>
+            <label for="editWatchlistName">Watchlist Name:</label>
+            <input type="text" id="editWatchlistName" required>
+            <div class="form-action-buttons">
+                <button type="button" id="deleteWatchlistInModalBtn" class="danger-button"><i class="fas fa-trash-alt"></i> Delete Watchlist</button>
+                <button type="button" id="cancelManageWatchlistBtn" class="secondary-buttons"><i class="fas fa-times-circle"></i> Cancel</button>
+                <button type="button" id="saveWatchlistNameBtn"><i class="fas fa-save"></i> Save Name</button>
             </div>
         </div>
     </div>
 
     <!-- Dividend Calculator Modal -->
     <div id="dividendCalculatorModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Dividend Calculator</h2>
-                <button class="close-button">&times;</button>
+        <div class="modal-content calculator-modal-content">
+            <span class="close-button calc-close-button">&times;</span>
+            <h2>Dividend Calculator</h2>
+            <div class="calc-input-group">
+                <label for="calcCurrentPrice">Share Price ($):</label>
+                <input type="number" id="calcCurrentPrice" step="0.01" placeholder="e.g., 25.50">
             </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="calcCurrentPrice">Current Price ($):</label>
-                    <input type="number" id="calcCurrentPrice" step="0.01" placeholder="e.g., 25.50" class="rounded-md">
-                </div>
-                <div class="form-group">
-                    <label for="calcDividendAmount">Dividend Amount ($ per share):</label>
-                    <input type="number" id="calcDividendAmount" step="0.001" placeholder="e.g., 1.250" class="rounded-md">
-                </div>
-                <div class="form-group">
-                    <label for="calcFrankingCredits">Franking Credits (%):</label>
-                    <input type="number" id="calcFrankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 100" class="rounded-md">
-                </div>
-                <p class="yield-display"><strong>Unfranked Yield:</strong> <span id="calcUnfrankedYield"></span></p>
-                <p class="yield-display"><strong>Franked Yield:</strong> <span id="calcFrankedYield"></span></p>
-                
-                <div class="form-group mt-4">
-                    <label for="investmentValueSelect">Estimated Investment Value ($):</label>
-                    <select id="investmentValueSelect" class="rounded-md">
-                        <option value="1000">1,000</option>
-                        <option value="5000">5,000</option>
-                        <option value="10000" selected>10,000</option>
-                        <option value="25000">25,000</option>
-                        <option value="50000">50,000</option>
-                        <option value="100000">100,000</option>
-                    </select>
-                </div>
-                <p class="yield-display"><strong>Estimated Annual Dividend:</strong> <span id="calcEstimatedDividend"></span></p>
+            <div class="calc-input-group">
+                <label for="calcDividendAmount">Dividend Amount (per share, annual $):</label>
+                <input type="number" id="calcDividendAmount" step="0.001" placeholder="e.g., 1.250">
             </div>
+            <div class="calc-input-group">
+                <label for="calcFrankingCredits">Franking Credits (%):</label>
+                <input type="number" id="calcFrankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 70 for 70%">
+            </div>
+            <p><strong>Unfranked Yield:</strong> <span id="calcUnfrankedYield">-</span></p>
+            <p><strong>Franked Yield:</strong> <span id="calcFrankedYield">-</span></p>
+            <hr>
+            <div class="calc-input-group">
+                <label for="investmentValueSelect">Investment Value:</label>
+                <select id="investmentValueSelect">
+                    <option value="1000">$1,000</option>
+                    <option value="5000">$5,000</option>
+                    <option value="10000" selected>$10,000</option>
+                    <option value="25000">$25,000</option>
+                    <option value="50000">$50,000</option>
+                    <option value="100000">$100,000</option>
+                </select>
+            </div>
+            <p><strong>Estimated Annual Dividend:</strong> <span id="calcEstimatedDividend">-</span></p>
         </div>
     </div>
 
     <!-- Standard Calculator Modal -->
     <div id="calculatorModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Standard Calculator</h2>
-                <button class="close-button">&times;</button>
+        <div class="modal-content calculator-modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Standard Calculator</h2>
+            <div class="calculator-display">
+                <div id="calculatorInput" class="calculator-input"></div>
+                <div id="calculatorResult" class="calculator-result">0</div>
             </div>
-            <div class="modal-body">
-                <div class="calculator-display">
-                    <div id="calculatorInput" class="input-line"></div>
-                    <div id="calculatorResult" class="result-line">0</div>
-                </div>
-                <div class="calculator-buttons">
-                    <button class="calc-btn clear" data-action="clear">C</button>
-                    <button class="calc-btn operator" data-action="percentage">%</button>
-                    <button class="calc-btn operator" data-action="divide">÷</button>
-                    <button class="calc-btn" data-value="7">7</button>
-                    <button class="calc-btn" data-value="8">8</button>
-                    <button class="calc-btn" data-value="9">9</button>
-                    <button class="calc-btn operator" data-action="multiply">×</button>
-                    <button class="calc-btn" data-value="4">4</button>
-                    <button class="calc-btn" data-value="5">5</button>
-                    <button class="calc-btn" data-value="6">6</button>
-                    <button class="calc-btn operator" data-action="subtract">-</button>
-                    <button class="calc-btn" data-value="1">1</button>
-                    <button class="calc-btn" data-value="2">2</button>
-                    <button class="calc-btn" data-value="3">3</button>
-                    <button class="calc-btn operator" data-action="add">+</button>
-                    <button class="calc-btn span-2" data-value="0">0</button>
-                    <button class="calc-btn" data-value=".">.</button>
-                    <button class="calc-btn equals" data-action="calculate">=</button>
-                </div>
+            <div class="calculator-buttons">
+                <button class="calc-btn clear" data-action="clear">C</button>
+                <button class="calc-btn operator" data-action="percentage">%</button>
+                <button class="calc-btn operator" data-action="divide">÷</button>
+                <button class="calc-btn" data-value="7">7</button>
+                <button class="calc-btn" data-value="8">8</button>
+                <button class="calc-btn" data-value="9">9</button>
+                <button class="calc-btn operator" data-action="multiply">×</button>
+                <button class="calc-btn" data-value="4">4</button>
+                <button class="calc-btn" data-value="5">5</button>
+                <button class="calc-btn" data-value="6">6</button>
+                <button class="calc-btn operator" data-action="subtract">-</button>
+                <button class="calc-btn" data-value="1">1</button>
+                <button class="calc-btn" data-value="2">2</button>
+                <button class="calc-btn" data-value="3">3</button>
+                <button class="calc-btn operator" data-action="add">+</button>
+                <button class="calc-btn zero" data-value="0">0</button>
+                <button class="calc-btn" data-value=".">.</button>
+                <button class="calc-btn equals" data-action="calculate">=</button>
             </div>
         </div>
     </div>
 
-    <!-- Custom Dialog Modal (for alerts and confirms) -->
-    <div id="customDialogModal" class="modal custom-dialog-modal">
+    <!-- Custom Dialog Modal for Alerts/Confirms -->
+    <div id="customDialogModal" class="modal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h2>Message</h2>
-                <button class="close-button">&times;</button>
-            </div>
-            <div class="modal-body">
-                <p id="customDialogMessage" class="message"></p>
-                <div class="dialog-actions">
-                    <button id="customDialogConfirmBtn"></button>
-                    <button id="customDialogCancelBtn"></button>
-                </div>
+            <p id="customDialogMessage"></p>
+            <div class="custom-dialog-buttons">
+                <button id="customDialogConfirmBtn" class="secondary-buttons">OK</button>
+                <button id="customDialogCancelBtn" class="danger-button">Cancel</button>
             </div>
         </div>
     </div>
-
-    <!-- NEW: Consolidated Manage Watchlists Modal -->
-    <div id="manageWatchlistsCombinedModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Manage Watchlists</h2>
-                <button class="close-button">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="watchlist-tabs">
-                    <button id="showAddWatchlistTab" class="active">Add New Watchlist</button>
-                    <button id="showEditWatchlistTab">Edit/Delete Watchlist</button>
-                </div>
-
-                <div id="addWatchlistSection" class="watchlist-tab-content active">
-                    <div class="form-group">
-                        <label for="newWatchlistName">New Watchlist Name:</label>
-                        <input type="text" id="newWatchlistName" placeholder="e.g., My Growth Portfolio" class="rounded-md">
-                    </div>
-                    <div class="form-actions justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
-                        <button id="cancelAddWatchlistBtn" class="cancel-btn">
-                            <i class="fas fa-times-circle"></i> Cancel
-                        </button>
-                        <button id="saveWatchlistBtn" class="save-btn">
-                            <i class="fas fa-plus-circle"></i> Add Watchlist
-                        </button>
-                    </div>
-                </div>
-
-                <div id="editWatchlistSection" class="watchlist-tab-content">
-                    <div class="form-group">
-                        <label for="editWatchlistName">Current Watchlist Name:</label>
-                        <input type="text" id="editWatchlistName" class="rounded-md" readonly>
-                    </div>
-                    <div class="form-actions pt-4 border-t border-gray-200 dark:border-gray-700">
-                        <button id="deleteWatchlistInModalBtn" class="delete-btn">
-                            <i class="fas fa-trash-alt"></i> Delete Current Watchlist
-                        </button>
-                        <button id="cancelManageWatchlistBtn" class="cancel-btn">
-                            <i class="fas fa-times-circle"></i> Cancel
-                        </button>
-                        <button id="saveWatchlistNameBtn" class="save-btn">
-                            <i class="fas fa-save"></i> Save New Name
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Scroll to Top Button -->
-    <button id="scrollToTopBtn" class="scroll-to-top">
-        <i class="fas fa-arrow-up"></i>
-    </button>
-
-    <!-- Sidebar Overlay -->
-    <div class="sidebar-overlay"></div>
 
     <!-- Main JavaScript File -->
     <script src="script.js" type="module"></script>

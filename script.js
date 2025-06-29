@@ -1,5 +1,5 @@
-// File Version: v138 (Fixed shareTableBody reference)
-// Last Updated: 2025-06-28 (Fixed shareTableBody initialization)
+// File Version: v139 (Restored Original Style & Two Watchlist Modals)
+// Last Updated: 2025-06-28 (Adapted to original HTML structure and separate watchlist modals)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -15,7 +15,7 @@ let selectedShareDocId = null;
 let allSharesData = [];
 let currentDialogCallback = null;
 let autoDismissTimeout = null;
-const KANGA_EMAIL = 'iamkanga@gmail.com';
+const KANGA_EMAIL = 'iamkanga@gmail.0com'; // Corrected email typo
 let currentCalculatorInput = '';
 let operator = null;
 let previousCalculatorInput = '';
@@ -34,7 +34,7 @@ let standardCalcBtn;
 let dividendCalcBtn;
 let asxCodeButtonsContainer;
 let shareFormSection;
-let formCloseButton;
+let formCloseButton; // For share form
 let formTitle;
 let saveShareBtn;
 let cancelFormBtn;
@@ -46,16 +46,15 @@ let dividendAmountInput;
 let frankingCreditsInput;
 let commentsFormContainer;
 let addCommentSectionBtn;
-let shareTableBody; // This variable will be correctly assigned in DOMContentLoaded
+let shareTableBody;
 let mobileShareCardsContainer;
 let loadingIndicator;
-let googleAuthBtnSidebar; // Specific reference for sidebar button
-let googleAuthBtnFooter; // Specific reference for footer button
+let googleAuthBtn; // Unified reference for the single Google Auth button in the footer
 let shareDetailModal;
 let modalShareName;
 let modalEntryDate;
 let modalEnteredPrice;
-let modalEnteredPriceDateTime;
+let modalEnteredPriceDateTime; // This element no longer exists in the HTML, but keeping for now if needed later.
 let modalTargetPrice;
 let modalDividendAmount;
 let modalFrankingCredits;
@@ -68,7 +67,7 @@ let modalFoolLink;
 let modalCommSecLink;
 let commSecLoginMessage;
 let dividendCalculatorModal;
-let calcCloseButton;
+let calcCloseButton; // For dividend calculator
 let calcCurrentPriceInput;
 let calcDividendAmountInput;
 let calcFrankingCreditsInput;
@@ -82,31 +81,29 @@ let customDialogMessage;
 let customDialogConfirmBtn;
 let customDialogCancelBtn;
 let calculatorModal;
-let calculatorInput;
-let calculatorResult;
-let calculatorButtons;
+let calculatorInput; // For standard calculator display
+let calculatorResult; // For standard calculator result
+let calculatorButtons; // For standard calculator button grid
 let watchlistSelect;
 let themeToggleBtn;
 let scrollToTopBtn;
 let hamburgerBtn;
 let appSidebar;
-let closeMenuBtn;
+let closeMenuBtn; // For sidebar
 let sidebarOverlay;
 
-// Consolidated Watchlist Management Modal Elements
-let manageWatchlistsSidebarBtn;
-let manageWatchlistsCombinedModal;
-let showAddWatchlistTab;
-let showEditWatchlistTab;
-let addWatchlistSection;
-let editWatchlistSection;
-let newWatchlistNameInput;
-let saveWatchlistBtn;
-let cancelAddWatchlistBtn;
-let editWatchlistNameInput; 
-let saveWatchlistNameBtn;
-let deleteWatchlistInModalBtn;
-let cancelManageWatchlistBtn;
+// Watchlist Management Modals (Separate as per user's request)
+let addWatchlistBtn; // Sidebar button for Add Watchlist
+let editWatchlistBtn; // Sidebar button for Edit/Delete Watchlist
+let addWatchlistModal; // The actual Add Watchlist modal
+let manageWatchlistModal; // The actual Manage Watchlist modal
+let newWatchlistNameInput; // Input in Add Watchlist modal
+let saveWatchlistBtn; // Save button in Add Watchlist modal
+let cancelAddWatchlistBtn; // Cancel button in Add Watchlist modal
+let editWatchlistNameInput; // Input in Manage Watchlist modal
+let saveWatchlistNameBtn; // Save button in Manage Watchlist modal
+let deleteWatchlistInModalBtn; // Delete button in Manage Watchlist modal
+let cancelManageWatchlistBtn; // Cancel button in Manage Watchlist modal
 
 
 // Array of all form input elements for easy iteration and form clearing (excluding dynamic comments)
@@ -144,7 +141,7 @@ function toggleAppSidebar(force) {
 function closeModals() {
     document.querySelectorAll('.modal').forEach(modal => {
         if (modal) {
-            modal.classList.remove('open');
+            modal.style.display = 'none'; // Use display: none for modals
         }
     });
     resetCalculator();
@@ -162,9 +159,9 @@ function showCustomAlert(message, duration = 1000) {
     customDialogMessage.textContent = message;
     customDialogConfirmBtn.style.display = 'none';
     customDialogCancelBtn.style.display = 'none';
-    showModal(customDialogModal);
-    if (autoDismissTimeout) { clearTimeout(autoDismissTimeout); }
-    autoDismissTimeout = setTimeout(() => { hideModal(customDialogModal); autoDismissTimeout = null; }, duration);
+    customDialogModal.style.display = 'block'; // Show modal
+    if (autoDismissTimeout) { clearTimeout(autoDismissTimeout); autoDismissTimeout = null; } // Clear any existing timeout
+    autoDismissTimeout = setTimeout(() => { customDialogModal.style.display = 'none'; autoDismissTimeout = null; }, duration);
     console.log(`[Alert] Showing alert: "${message}" for ${duration}ms.`);
 }
 
@@ -178,16 +175,17 @@ function showCustomConfirm(message, onConfirm, onCancel = null) {
     }
     customDialogMessage.textContent = message;
     customDialogConfirmBtn.textContent = 'Yes';
-    customDialogConfirmBtn.style.display = 'block';
+    customDialogConfirmBtn.style.display = 'inline-block'; // Show confirm button
     customDialogCancelBtn.textContent = 'No';
-    customDialogCancelBtn.style.display = 'block';
-    showModal(customDialogModal);
-    if (autoDismissTimeout) { clearTimeout(autoDismissTimeout); }
-    customDialogConfirmBtn.onclick = () => { hideModal(customDialogModal); if (onConfirm) onConfirm(); currentDialogCallback = null; console.log("[Confirm] Confirmed."); };
-    customDialogCancelBtn.onclick = () => { hideModal(customDialogModal); if (onCancel) onCancel(); currentDialogCallback = null; console.log("[Confirm] Canceled."); };
-    currentDialogCallback = () => { hideModal(customDialogModal); if (onCancel) onCancel(); currentDialogCallback = null; };
+    customDialogCancelBtn.style.display = 'inline-block'; // Show cancel button
+    customDialogModal.style.display = 'block'; // Show modal
+    if (autoDismissTimeout) { clearTimeout(autoDismissTimeout); autoDismissTimeout = null; } // Clear any existing timeout
+    customDialogConfirmBtn.onclick = () => { customDialogModal.style.display = 'none'; if (onConfirm) onConfirm(); currentDialogCallback = null; console.log("[Confirm] Confirmed."); };
+    customDialogCancelBtn.onclick = () => { customDialogModal.style.display = 'none'; if (onCancel) onCancel(); currentDialogCallback = null; console.log("[Confirm] Canceled."); };
+    currentDialogCallback = () => { customDialogModal.style.display = 'none'; if (onCancel) onCancel(); currentDialogCallback = null; };
     console.log(`[Confirm] Showing confirm: "${message}"`);
 }
+
 
 function formatDate(dateString) {
     if (!dateString) return '';
@@ -208,17 +206,11 @@ function formatDateTime(dateString) {
 
 function updateAuthButtonText(isSignedIn, userName = 'Sign In') {
     const buttonText = isSignedIn ? (userName || 'Signed In') : 'Sign In';
-    if (googleAuthBtnSidebar) {
-        googleAuthBtnSidebar.textContent = buttonText;
-        console.log(`[Auth UI] Sidebar Google Auth button text updated to: ${buttonText}`);
+    if (googleAuthBtn) {
+        googleAuthBtn.textContent = buttonText;
+        console.log(`[Auth UI] Google Auth button text updated to: ${buttonText}`);
     } else {
-        console.warn("[Auth UI] googleAuthBtnSidebar element not found when trying to update text.");
-    }
-    if (googleAuthBtnFooter) {
-        googleAuthBtnFooter.textContent = buttonText;
-        console.log(`[Auth UI] Footer Google Auth button text updated to: ${buttonText}`);
-    } else {
-        console.warn("[Auth UI] googleAuthBtnFooter element not found when trying to update text.");
+        console.warn("[Auth UI] googleAuthBtn element not found when trying to update text.");
     }
 }
 
@@ -228,7 +220,8 @@ function updateMainButtonsState(enable) {
     if (standardCalcBtn) standardCalcBtn.disabled = !enable;
     if (dividendCalcBtn) dividendCalcBtn.disabled = !enable;
     if (watchlistSelect) watchlistSelect.disabled = !enable;
-    if (manageWatchlistsSidebarBtn) manageWatchlistsSidebarBtn.disabled = !enable;
+    if (addWatchlistBtn) addWatchlistBtn.disabled = !enable; // Specific to separate modals
+    if (editWatchlistBtn) editWatchlistBtn.disabled = !enable; // Specific to separate modals
     if (addShareHeaderBtn) addShareHeaderBtn.disabled = !enable;
 
     // Delete watchlist button state depends on number of watchlists
@@ -240,16 +233,15 @@ function updateMainButtonsState(enable) {
         themeToggleBtn.disabled = false; 
     }
     
-    // Google Auth buttons should always be clickable to allow sign-in/sign-out
-    if (googleAuthBtnSidebar) googleAuthBtnSidebar.disabled = false;
-    if (googleAuthBtnFooter) googleAuthBtnFooter.disabled = false;
+    // Google Auth button should always be clickable to allow sign-in/sign-out
+    if (googleAuthBtn) googleAuthBtn.disabled = false;
 
     console.log(`[UI State] Main buttons enabled: ${enable}. Watchlist edit/delete disabled if only one watchlist: ${disableDeleteWatchlist}`);
 }
 
 function showModal(modalElement) {
     if (modalElement) {
-        modalElement.classList.add('open');
+        modalElement.style.display = 'block'; // Use display: block for modals
         modalElement.scrollTop = 0;
         console.log(`[Modal] Opened modal: ${modalElement.id}`);
     } else {
@@ -259,7 +251,7 @@ function showModal(modalElement) {
 
 function hideModal(modalElement) {
     if (modalElement) {
-        modalElement.classList.remove('open');
+        modalElement.style.display = 'none'; // Use display: none for modals
         console.log(`[Modal] Closed modal: ${modalElement.id}`);
     } else {
         console.warn("[Modal] Attempted to close null modal element.");
@@ -288,7 +280,7 @@ function clearShareList() {
 }
 
 function deselectCurrentShare() {
-    const currentlySelected = document.querySelectorAll('.share-list-section tr.selected, .mobile-card.selected');
+    const currentlySelected = document.querySelectorAll('#shareTable tr.selected, .mobile-card.selected');
     console.log(`[Selection] Attempting to deselect ${currentlySelected.length} elements.`);
     currentlySelected.forEach(el => {
         el.classList.remove('selected');
@@ -297,22 +289,13 @@ function deselectCurrentShare() {
     console.log("[Selection] Share deselected. selectedShareDocId is now null.");
 }
 
-function truncateText(text, maxLength) {
-    if (typeof text !== 'string' || text.length <= maxLength) {
-        return text;
-    }
-    return text.substring(0, maxLength) + '...';
-}
-
 function addCommentSection(title = '', text = '') {
     if (!commentsFormContainer) { console.error("[Comments] commentsFormContainer not found."); return; }
     const commentSectionDiv = document.createElement('div');
     commentSectionDiv.className = 'comment-section';
     commentSectionDiv.innerHTML = `
-        <div class="comment-section-header">
-            <input type="text" class="comment-title-input" placeholder="Comment Title" value="${title}">
-            <button type="button" class="comment-delete-btn">&times;</button>
-        </div>
+        <input type="text" class="comment-title-input" placeholder="Comment Title" value="${title}">
+        <button type="button" class="comment-delete-btn">&times;</button>
         <textarea class="comment-text-input" placeholder="Your comments here...">${text}</textarea>
     `;
     commentsFormContainer.appendChild(commentSectionDiv);
@@ -328,7 +311,7 @@ function clearForm() {
         if (input) { input.value = ''; }
     });
     if (commentsFormContainer) commentsFormContainer.innerHTML = '';
-    addCommentSection();
+    addCommentSection(); // Add a default empty comment section
     selectedShareDocId = null;
     console.log("[Form] Form fields cleared and selectedShareDocId reset.");
 }
@@ -380,7 +363,7 @@ function showShareDetails() {
     
     const enteredPriceNum = Number(share.currentPrice);
     modalEnteredPrice.textContent = (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? `$${enteredPriceNum.toFixed(2)}` : 'N/A';
-    modalEnteredPriceDateTime.textContent = '';
+    // modalEnteredPriceDateTime.textContent = ''; // This element no longer exists in the HTML
 
     const targetPriceNum = Number(share.targetPrice);
     modalTargetPrice.textContent = (!isNaN(targetPriceNum) && targetPriceNum !== null) ? `$${targetPriceNum.toFixed(2)}` : 'N/A';
@@ -411,7 +394,7 @@ function showShareDetails() {
             }
         });
     } else {
-        modalCommentsContainer.innerHTML = '<p style="text-align: center; color: var(--label-color);">No comments for this share.</p>';
+        modalCommentsContainer.innerHTML = '<p class="ghosted-text" style="text-align: center;">No comments for this share.</p>';
     }
 
     if (modalMarketIndexLink && share.shareName) {
@@ -565,7 +548,7 @@ function addShareToTable(share) {
     const row = shareTableBody.insertRow();
     row.dataset.docId = share.id;
     row.addEventListener('click', (event) => { selectShare(share.id); });
-    row.addEventListener('click', (event) => { selectShare(share.id); showShareDetails(); });
+    row.addEventListener('dblclick', (event) => { selectShare(share.id); showShareDetails(); }); // Double click to show details
 
     const displayShareName = (share.shareName && String(share.shareName).trim() !== '') ? share.shareName : '(No Code)';
     row.insertCell().textContent = displayShareName;
@@ -651,7 +634,14 @@ function addShareToMobileCards(share) {
 
     card.addEventListener('click', function(e) {
         const docId = e.currentTarget.dataset.docId;
-        selectShare(docId, e.currentTarget);
+        selectShare(docId);
+        // showShareDetails(); // Moved to dblclick for mobile cards
+        e.preventDefault();
+    });
+
+    card.addEventListener('dblclick', function(e) {
+        const docId = e.currentTarget.dataset.docId;
+        selectShare(docId);
         showShareDetails();
         e.preventDefault();
     });
@@ -751,7 +741,7 @@ function renderAsxCodeButtons() {
     const sortedAsxCodes = Array.from(uniqueAsxCodes).sort();
     sortedAsxCodes.forEach(asxCode => {
         const button = document.createElement('button');
-        button.className = 'asx-code-button';
+        button.className = 'asx-code-btn'; // Changed class name
         button.textContent = asxCode;
         button.dataset.asxCode = asxCode;
         asxCodeButtonsContainer.appendChild(button);
@@ -837,7 +827,7 @@ const themes = [
     { name: "Bright Blue", bg: "#e0f2f7", text: "#003366", header: "#a7d9ed", card: "#ffffff", border: "#87c9e0", button: "#007bff", hover: "#0056b3", sidebar: "#a7d9ed", asx_active_text: "#fff" },
     { name: "Sunny Yellow", bg: "#fffbe6", text: "#664d00", header: "#ffe066", card: "#ffffff", border: "#ffcc00", button: "#e6a700", hover: "#b38000", sidebar: "#ffe066", asx_active_text: "#fff" },
     { name: "Vibrant Green", bg: "#e6ffe6", text: "#006600", header: "#a7ed87", card: "#ffffff", border: "#87e087", button: "#28a745", hover: "#218838", sidebar: "#a7ed87", asx_active_text: "#fff" },
-    { name: "Energetic Orange", bg: "#fff0e6", text: "#804000", header: "#ffb380", card: "#ffffff", border: "#ff9933", button: "#ff8c00", hover: "#cc7000", sidebar: "#ffb380", asx_active_text: "#fff" },
+    { name: "Energetic Orange", bg: "#fff0e6", text: "#804000", header: "#ffb380", card: "#ffffff", border: "#ffcc00", button: "#ff8c00", hover: "#cc7000", sidebar: "#ffb380", asx_active_text: "#fff" }, // Corrected button hover for Orange
     { name: "Deep Purple", bg: "#f0e6ff", text: "#4d0066", header: "#cc99ff", card: "#ffffff", border: "#b366ff", button: "#8a2be2", hover: "#6b1fa8", sidebar: "#cc99ff", asx_active_text: "#fff" },
     { name: "Aqua Teal", bg: "#e6fafa", text: "#004d4d", header: "#80e6e6", card: "#ffffff", border: "#4ddede", button: "#008080", hover: "#006666", sidebar: "#80e6e6", asx_active_text: "#fff" },
     { name: "Crimson Red", bg: "#ffe6e6", text: "#660000", header: "#ff8080", card: "#ffffff", border: "#ff3333", button: "#cc0000", hover: "#990000", sidebar: "#ff8080", asx_active_text: "#fff" },
@@ -866,34 +856,34 @@ function applyTheme(theme) {
     root.style.setProperty('--card-bg', theme.card);
     root.style.setProperty('--border-color', theme.border);
     root.style.setProperty('--button-bg', theme.button);
-    root.style.setProperty('--button-text', theme.text);
+    root.style.setProperty('--button-text', theme.button_text || theme.text); // Use specific button text color if defined
     root.style.setProperty('--button-hover-bg', theme.hover);
-    root.style.setProperty('--input-bg', theme.card);
-    root.style.setProperty('--input-border', theme.border);
-    root.style.setProperty('--modal-bg', 'rgba(0, 0, 0, 0.6)');
-    root.style.setProperty('--modal-content-bg', theme.card);
-    root.style.setProperty('--table-header-bg', theme.header);
-    root.style.setProperty('--table-row-hover-bg', theme.bg);
-    root.style.setProperty('--asx-button-bg', theme.header);
-    root.style.setProperty('--asx-button-hover-bg', theme.hover);
-    root.style.setProperty('--asx-button-text', theme.text);
-    root.style.setProperty('--asx-button-active-bg', theme.button);
-    root.style.setProperty('--asx-button-active-text', theme.asx_active_text || theme.button);
-    root.style.setProperty('--danger-button-bg', '#dc3545');
-    root.style.setProperty('--danger-button-hover-bg', '#c82333');
-    root.style.setProperty('--secondary-button-bg', '#6c757d');
-    root.style.setProperty('--secondary-button-hover-bg', '#545b62');
-    root.style.setProperty('--google-auth-btn-bg', '#dd4b39');
-    root.style.setProperty('--google-auth-btn-hover-bg', '#c23321');
-    root.style.setProperty('--label-color', theme.text);
-    root.style.setProperty('--shadow-color', 'rgba(0, 0, 0, 0.15)');
-    root.style.setProperty('--sidebar-bg', theme.header);
-    root.style.setProperty('--sidebar-border', theme.border);
-    root.style.setProperty('--sidebar-text', theme.text);
-    root.style.setProperty('--close-sidebar-btn-color', theme.text);
-    root.style.setProperty('--ghosted-text-color', theme.text);
+    root.style.setProperty('--input-bg', theme.input_bg || theme.card);
+    root.style.setProperty('--input-border', theme.input_border || theme.border);
+    root.style.setProperty('--modal-bg', theme.modal_bg || 'rgba(0, 0, 0, 0.6)');
+    root.style.setProperty('--modal-content-bg', theme.modal_content_bg || theme.card);
+    root.style.setProperty('--table-header-bg', theme.table_header_bg || theme.header);
+    root.style.setProperty('--table-row-hover-bg', theme.table_row_hover_bg || theme.bg);
+    root.style.setProperty('--asx-button-bg', theme.asx_button_bg || theme.header);
+    root.style.setProperty('--asx-button-hover-bg', theme.asx_button_hover_bg || theme.hover);
+    root.style.setProperty('--asx-button-text', theme.asx_button_text || theme.text);
+    root.style.setProperty('--asx-button-active-bg', theme.asx_button_active_bg || theme.button);
+    root.style.setProperty('--asx-button-active-text', theme.asx_button_active_text || theme.button_text || theme.text);
+    root.style.setProperty('--danger-button-bg', theme.danger_button_bg || '#dc3545');
+    root.style.setProperty('--danger-button-hover-bg', theme.danger_button_hover_bg || '#c82333');
+    root.style.setProperty('--secondary-button-bg', theme.secondary_button_bg || '#6c757d');
+    root.style.setProperty('--secondary-button-hover-bg', theme.secondary_button_hover_bg || '#545b62');
+    root.style.setProperty('--google-auth-btn-bg', theme.google_auth_btn_bg || '#dd4b39');
+    root.style.setProperty('--google-auth-btn-hover-bg', theme.google_auth_btn_hover_bg || '#c23321');
+    root.style.setProperty('--label-color', theme.label_color || theme.text);
+    root.style.setProperty('--shadow-color', theme.shadow_color || 'rgba(0, 0, 0, 0.15)');
+    root.style.setProperty('--sidebar-bg', theme.sidebar_bg || theme.header);
+    root.style.setProperty('--sidebar-border', theme.sidebar_border || theme.border);
+    root.style.setProperty('--sidebar-text', theme.sidebar_text || theme.text);
+    root.style.setProperty('--close-sidebar-btn-color', theme.close_sidebar_btn_color || theme.text);
+    root.style.setProperty('--ghosted-text-color', theme.ghosted_text_color || '#888');
 
-    document.body.classList.remove('dark-theme');
+    document.body.classList.remove('dark-theme'); // Ensure dark-theme class is removed for light themes
     console.log(`[Theme] Applied custom theme: ${theme.name}`);
 }
 
@@ -932,6 +922,7 @@ function applySystemDefaultTheme() {
     root.style.removeProperty('--close-sidebar-btn-color');
     root.style.removeProperty('--ghosted-text-color');
 
+    // Apply dark-theme class based on system preference if no custom theme is selected
     if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
         document.body.classList.add('dark-theme');
     } else {
@@ -944,7 +935,7 @@ function toggleTheme() {
     console.log("[Theme] Toggling theme.");
     currentThemeIndex++;
     if (currentThemeIndex >= themes.length) {
-        currentThemeIndex = -1;
+        currentThemeIndex = -1; // Loop back to system default
     }
 
     if (currentThemeIndex === -1) {
@@ -1209,7 +1200,7 @@ async function migrateOldSharesToWatchlist() {
 
 // --- DOMContentLoaded Listener for UI Element References and Event Listeners ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v137) DOMContentLoaded fired."); // Updated script version log
+    console.log("script.js (v139) DOMContentLoaded fired."); // Updated script version log
 
     // --- Initialize Firebase variables from window globals ---
     // These must be assigned before any Firebase operations.
@@ -1234,7 +1225,7 @@ document.addEventListener('DOMContentLoaded', function() {
     dividendCalcBtn = document.getElementById('dividendCalcBtn');
     asxCodeButtonsContainer = document.getElementById('asxCodeButtonsContainer');
     shareFormSection = document.getElementById('shareFormSection');
-    formCloseButton = document.querySelector('.form-close-button');
+    formCloseButton = document.querySelector('#shareFormSection .close-button'); // Specific selector for share form close button
     formTitle = document.getElementById('formTitle');
     saveShareBtn = document.getElementById('saveShareBtn');
     cancelFormBtn = document.getElementById('cancelFormBtn');
@@ -1246,17 +1237,14 @@ document.addEventListener('DOMContentLoaded', function() {
     frankingCreditsInput = document.getElementById('frankingCredits');
     commentsFormContainer = document.getElementById('commentsFormContainer');
     addCommentSectionBtn = document.getElementById('addCommentSectionBtn');
-    // FIX: Correctly reference the tbody element by its ID
-    shareTableBody = document.getElementById('shareTable'); // Changed from document.querySelector('#shareTable tbody')
+    shareTableBody = document.querySelector('#shareTable tbody'); // Corrected from document.getElementById('shareTable')
     mobileShareCardsContainer = document.getElementById('mobileShareCards');
     loadingIndicator = document.getElementById('loadingIndicator');
-    googleAuthBtnSidebar = document.querySelector('#appSidebar #googleAuthBtn'); // Specific selector
-    googleAuthBtnFooter = document.querySelector('footer #googleAuthBtn'); // Specific selector
+    googleAuthBtn = document.getElementById('googleAuthBtn'); // Unified reference
     shareDetailModal = document.getElementById('shareDetailModal');
     modalShareName = document.getElementById('modalShareName');
     modalEntryDate = document.getElementById('modalEntryDate');
     modalEnteredPrice = document.getElementById('modalEnteredPrice');
-    modalEnteredPriceDateTime = document.getElementById('modalEnteredPriceDateTime');
     modalTargetPrice = document.getElementById('modalTargetPrice');
     modalDividendAmount = document.getElementById('modalDividendAmount');
     modalFrankingCredits = document.getElementById('modalFrankingCredits');
@@ -1269,7 +1257,7 @@ document.addEventListener('DOMContentLoaded', function() {
     modalCommSecLink = document.getElementById('modalCommSecLink');
     commSecLoginMessage = document.getElementById('commSecLoginMessage');
     dividendCalculatorModal = document.getElementById('dividendCalculatorModal');
-    calcCloseButton = document.querySelector('.calc-close-button');
+    calcCloseButton = document.querySelector('#dividendCalculatorModal .close-button'); // Specific for dividend calculator
     calcCurrentPriceInput = document.getElementById('calcCurrentPrice');
     calcDividendAmountInput = document.getElementById('calcDividendAmount');
     calcFrankingCreditsInput = document.getElementById('calcFrankingCredits');
@@ -1291,29 +1279,21 @@ document.addEventListener('DOMContentLoaded', function() {
     scrollToTopBtn = document.getElementById('scrollToTopBtn');
     hamburgerBtn = document.getElementById('hamburgerBtn');
     appSidebar = document.getElementById('appSidebar');
-    closeMenuBtn = document.getElementById('closeMenuBtn');
-    sidebarOverlay = document.querySelector('.sidebar-overlay');
-    if (!sidebarOverlay) {
-        sidebarOverlay = document.createElement('div');
-        sidebarOverlay.classList.add('sidebar-overlay');
-        document.body.appendChild(sidebarOverlay);
-    }
-    
-    // Consolidated Watchlist Management Modal Elements
-    manageWatchlistsSidebarBtn = document.getElementById('manageWatchlistsSidebarBtn');
-    manageWatchlistsCombinedModal = document.getElementById('manageWatchlistsCombinedModal');
-    showAddWatchlistTab = document.getElementById('showAddWatchlistTab');
-    showEditWatchlistTab = document.getElementById('showEditWatchlistTab');
-    addWatchlistSection = document.getElementById('addWatchlistSection');
-    editWatchlistSection = document.getElementById('editWatchlistSection');
+    closeMenuBtn = document.getElementById('closeMenuBtn'); // For sidebar
+    sidebarOverlay = document.getElementById('sidebarOverlay'); // Get by ID
+
+    // Watchlist Management Modals (Separate as per user's request)
+    addWatchlistBtn = document.getElementById('addWatchlistBtn');
+    editWatchlistBtn = document.getElementById('editWatchlistBtn');
+    addWatchlistModal = document.getElementById('addWatchlistModal');
+    manageWatchlistModal = document.getElementById('manageWatchlistModal');
     newWatchlistNameInput = document.getElementById('newWatchlistName');
     saveWatchlistBtn = document.getElementById('saveWatchlistBtn');
     cancelAddWatchlistBtn = document.getElementById('cancelAddWatchlistBtn');
-    editWatchlistNameInput = document.getElementById('editWatchlistName'); // Element reference
+    editWatchlistNameInput = document.getElementById('editWatchlistName');
     saveWatchlistNameBtn = document.getElementById('saveWatchlistNameBtn');
     deleteWatchlistInModalBtn = document.getElementById('deleteWatchlistInModalBtn');
     cancelManageWatchlistBtn = document.getElementById('cancelManageWatchlistBtn');
-
 
     // Populate formInputs array after elements are referenced
     formInputs = [
@@ -1322,37 +1302,21 @@ document.addEventListener('DOMContentLoaded', function() {
     ];
 
     // --- Initial UI Setup ---
-    if (shareFormSection) shareFormSection.classList.remove('open');
-    if (dividendCalculatorModal) dividendCalculatorModal.classList.remove('open');
-    if (shareDetailModal) shareDetailModal.classList.remove('open');
-    if (manageWatchlistsCombinedModal) manageWatchlistsCombinedModal.classList.remove('open'); // New combined modal
-    if (customDialogModal) customDialogModal.classList.remove('open');
-    if (calculatorModal) calculatorModal.classList.remove('open');
+    // Use style.display = 'none' for modals
+    if (shareFormSection) shareFormSection.style.display = 'none';
+    if (dividendCalculatorModal) dividendCalculatorModal.style.display = 'none';
+    if (shareDetailModal) shareDetailModal.style.display = 'none';
+    if (addWatchlistModal) addWatchlistModal.style.display = 'none'; // Separate modal
+    if (manageWatchlistModal) manageWatchlistModal.style.display = 'none'; // Separate modal
+    if (customDialogModal) customDialogModal.style.display = 'none';
+    if (calculatorModal) calculatorModal.style.display = 'none';
+
     updateMainButtonsState(false); // Initially disable core app functionality buttons
     if (loadingIndicator) loadingIndicator.style.display = 'block';
     renderWatchlistSelect(); // Call this immediately to show the placeholder
-    // Google Auth buttons should be enabled here, regardless of initial auth state
-    // They are explicitly enabled by updateMainButtonsState, but ensure they are not disabled by other means
-    if (googleAuthBtnSidebar) googleAuthBtnSidebar.disabled = false;
-    if (googleAuthBtnFooter) googleAuthBtnFooter.disabled = false;
+    // Google Auth button should be enabled here, regardless of initial auth state
+    if (googleAuthBtn) googleAuthBtn.disabled = false;
     loadAndApplySavedTheme(); // Applies theme and updates themeToggleBtn text
-
-    // --- PWA Service Worker Registration ---
-    // Moved to index.html for earlier loading and better control.
-    // This block is left here as a comment to indicate it was previously here.
-    /*
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./service-worker.js', { scope: './' }) 
-                .then(registration => {
-                    console.log('Service Worker (v37) from script.js: Registered with scope:', registration.scope); 
-                })
-                .catch(error => {
-                    console.error('Service Worker (v37) from script.js: Registration failed:', error);
-                });
-        });
-    }
-    */
 
     // --- Event Listeners for Input Fields ---
     if (shareNameInput) {
@@ -1363,17 +1327,30 @@ document.addEventListener('DOMContentLoaded', function() {
             input.addEventListener('keydown', function(event) {
                 if (event.key === 'Enter') {
                     event.preventDefault();
-                    if (index === formInputs.length - 1) {
-                        const currentCommentInputs = commentsFormContainer.querySelector('.comment-title-input');
-                        if (currentCommentInputs) { currentCommentInputs.focus(); }
-                        else if (saveShareBtn) { saveShareBtn.click(); }
+                    // If it's the last input in the main form, try to focus on comments or save button
+                    if (input === frankingCreditsInput) {
+                        const firstCommentTitleInput = commentsFormContainer.querySelector('.comment-title-input');
+                        if (firstCommentTitleInput) {
+                            firstCommentTitleInput.focus();
+                        } else if (addCommentSectionBtn) {
+                            addCommentSectionBtn.focus(); // Focus on add comment button
+                        } else if (saveShareBtn) {
+                            saveShareBtn.focus(); // Fallback to save button
+                        }
                     } else {
-                        if (formInputs[index + 1]) formInputs[index + 1].focus();
+                        // Find the next input in the formInputs array
+                        const nextInput = formInputs[index + 1];
+                        if (nextInput) {
+                            nextInput.focus();
+                        } else if (saveShareBtn) {
+                            saveShareBtn.focus(); // If no next input, focus on save
+                        }
                     }
                 }
             });
         }
     });
+
 
     // --- Event Listeners for Modal Close Buttons ---
     document.querySelectorAll('.modal .close-button').forEach(button => { 
@@ -1390,60 +1367,54 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // --- Authentication Functions Event Listener ---
-    // Attach event listeners to both Google Auth buttons
-    const attachGoogleAuthListener = (button) => {
-        if (button) {
-            button.addEventListener('click', async () => {
-                console.log(`[Auth] Google Auth Button Clicked. (Source: ${button.id === 'googleAuthBtn' ? 'Sidebar/Footer' : 'Unknown'})`);
-                // Use the locally assigned 'auth' variable
-                if (!auth || !window.authFunctions) {
-                    console.warn("[Auth] Auth service not ready or functions not loaded. Cannot process click.");
-                    showCustomAlert("Authentication service not ready. Please try again in a moment.");
-                    return;
+    // Attach event listener to the single Google Auth button
+    if (googleAuthBtn) {
+        googleAuthBtn.addEventListener('click', async () => {
+            console.log(`[Auth] Google Auth Button Clicked.`);
+            // Use the locally assigned 'auth' variable
+            if (!auth || !window.authFunctions) {
+                console.warn("[Auth] Auth service not ready or functions not loaded. Cannot process click.");
+                showCustomAlert("Authentication service not ready. Please try again in a moment.");
+                return;
+            }
+            if (auth.currentUser && auth.currentUser.isAnonymous === false) { // Check if explicitly signed in
+                console.log("[Auth] Explicit user exists, attempting sign out.");
+                try {
+                    await window.authFunctions.signOut(auth);
+                    console.log("[Auth] User signed out successfully.");
+                } catch (error) {
+                    console.error("[Auth] Sign-Out failed:", error);
+                    showCustomAlert("Sign-Out failed: " + error.message);
                 }
-                if (auth.currentUser && auth.currentUser.isAnonymous === false) { // Check if explicitly signed in
-                    console.log("[Auth] Explicit user exists, attempting sign out.");
-                    try {
-                        await window.authFunctions.signOut(auth);
-                        console.log("[Auth] User signed out successfully.");
-                    } catch (error) {
-                        console.error("[Auth] Sign-Out failed:", error);
-                        showCustomAlert("Sign-Out failed: " + error.message);
+            } else {
+                console.log("[Auth] No explicit user, attempting Google sign in with popup.");
+                try {
+                    const provider = window.authFunctions.GoogleAuthProviderInstance;
+                    if (!provider) {
+                        console.error("[Auth] GoogleAuthProvider instance not found. Is Firebase module script loaded?");
+                        showCustomAlert("Authentication service not ready. Please ensure Firebase module script is loaded.");
+                        return;
                     }
-                } else {
-                    console.log("[Auth] No explicit user, attempting Google sign in with popup.");
-                    try {
-                        const provider = window.authFunctions.GoogleAuthProviderInstance;
-                        if (!provider) {
-                            console.error("[Auth] GoogleAuthProvider instance not found. Is Firebase module script loaded?");
-                            showCustomAlert("Authentication service not ready. Please ensure Firebase module script is loaded.");
-                            return;
-                        }
-                        // Attempt sign-in with popup
-                        await window.authFunctions.signInWithPopup(auth, provider);
-                        console.log("[Auth] Google Sign-In successful.");
-                    }
-                    catch (error) {
-                        console.error("[Auth] Google Sign-In failed:", error.message);
-                        // Check for common errors like popup closed by user or popup blocked
-                        if (error.code === 'auth/popup-closed-by-user') {
-                            showCustomAlert("Sign-in cancelled. Popup closed by user.", 2000);
-                        } else if (error.code === 'auth/cancelled-popup-request') {
-                            showCustomAlert("Sign-in cancelled. Another popup request was already in progress.", 2000);
-                        } else if (error.code === 'auth/popup-blocked') {
-                            showCustomAlert("Sign-in failed: Popup blocked. Please allow popups for this site.", 3000);
-                        } else {
-                            showCustomAlert("Google Sign-In failed: " + error.message, 3000);
-                        }
+                    // Attempt sign-in with popup
+                    await window.authFunctions.signInWithPopup(auth, provider);
+                    console.log("[Auth] Google Sign-In successful.");
+                }
+                catch (error) {
+                    console.error("[Auth] Google Sign-In failed:", error.message);
+                    // Check for common errors like popup closed by user or popup blocked
+                    if (error.code === 'auth/popup-closed-by-user') {
+                        showCustomAlert("Sign-in cancelled. Popup closed by user.", 2000);
+                    } else if (error.code === 'auth/cancelled-popup-request') {
+                        showCustomAlert("Sign-in cancelled. Another popup request was already in progress.", 2000);
+                    } else if (error.code === 'auth/popup-blocked') {
+                        showCustomAlert("Sign-in failed: Popup blocked. Please allow popups for this site.", 3000);
+                    } else {
+                        showCustomAlert("Google Sign-In failed: " + error.message, 3000);
                     }
                 }
-            });
-        }
-    };
-
-    attachGoogleAuthListener(googleAuthBtnSidebar);
-    attachGoogleAuthListener(googleAuthBtnFooter);
-
+            }
+        });
+    }
 
     // --- Event Listener for Watchlist Dropdown ---
     if (watchlistSelect) {
@@ -1606,62 +1577,38 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- NEW: Consolidated Manage Watchlists Modal Functions Event Listeners ---
-    if (manageWatchlistsSidebarBtn) {
-        manageWatchlistsSidebarBtn.addEventListener('click', () => {
-            console.log("[Button] 'Manage Watchlists' clicked.");
-            // Reset modal state
-            if (newWatchlistNameInput) newWatchlistNameInput.value = '';
-            // Ensure editWatchlistNameInput is defined before trying to access its value
-            if (editWatchlistNameInput) editWatchlistNameInput.value = currentWatchlistName;
-
-            // Set initial tab to Add New
-            showAddWatchlistTab.classList.add('active');
-            showEditWatchlistTab.classList.remove('active');
-            addWatchlistSection.classList.add('active');
-            editWatchlistSection.classList.remove('active');
-
-            // Update delete button state
-            if (deleteWatchlistInModalBtn) {
-                deleteWatchlistInModalBtn.disabled = userWatchlists.length <= 1;
-            }
-
-            showModal(manageWatchlistsCombinedModal);
-            newWatchlistNameInput.focus(); // Focus on add tab's input
-            toggleAppSidebar(false); // Close sidebar
-        });
-    }
-
-    if (showAddWatchlistTab) {
-        showAddWatchlistTab.addEventListener('click', () => {
-            showAddWatchlistTab.classList.add('active');
-            showEditWatchlistTab.classList.remove('active');
-            addWatchlistSection.classList.add('active');
-            editWatchlistSection.classList.remove('active');
+    // --- Watchlist Management Modals (Separate Modals) ---
+    if (addWatchlistBtn) {
+        addWatchlistBtn.addEventListener('click', () => {
+            console.log("[Button] 'Add Watchlist' clicked.");
+            if (newWatchlistNameInput) newWatchlistNameInput.value = ''; // Clear input
+            showModal(addWatchlistModal);
             newWatchlistNameInput.focus();
-            console.log("[Watchlist Tabs] Switched to 'Add New' tab.");
+            toggleAppSidebar(false);
         });
     }
 
-    if (showEditWatchlistTab) {
-        showEditWatchlistTab.addEventListener('click', () => {
-            showEditWatchlistTab.classList.add('active');
-            showAddWatchlistTab.classList.remove('active');
-            editWatchlistSection.classList.add('active');
-            addWatchlistSection.classList.remove('active');
-            editWatchlistNameInput.value = currentWatchlistName; // Ensure it's updated
-            // Update delete button state when switching to edit tab
+    if (editWatchlistBtn) {
+        editWatchlistBtn.addEventListener('click', () => {
+            console.log("[Button] 'Edit Watchlist' clicked.");
+            if (!currentWatchlistId) {
+                showCustomAlert("Please select a watchlist first.");
+                return;
+            }
+            if (editWatchlistNameInput) editWatchlistNameInput.value = currentWatchlistName; // Populate with current name
+            // Disable delete button if only one watchlist exists
             if (deleteWatchlistInModalBtn) {
                 deleteWatchlistInModalBtn.disabled = userWatchlists.length <= 1;
             }
+            showModal(manageWatchlistModal);
             editWatchlistNameInput.focus();
-            console.log("[Watchlist Tabs] Switched to 'Edit/Delete' tab.");
+            toggleAppSidebar(false);
         });
     }
 
-    if (saveWatchlistBtn) { // Add New Watchlist (from combined modal)
+    if (saveWatchlistBtn) { // Save button in Add Watchlist Modal
         saveWatchlistBtn.addEventListener('click', async () => {
-            console.log("[Button] 'Add Watchlist' clicked (from combined modal).");
+            console.log("[Button] 'Save Watchlist' clicked (from Add Watchlist modal).");
             const watchlistName = newWatchlistNameInput.value.trim();
             if (!watchlistName) {
                 showCustomAlert("Watchlist name is required!");
@@ -1681,7 +1628,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
                 showCustomAlert(`Watchlist '${watchlistName}' added!`, 1500);
                 console.log(`[Firestore] Watchlist '${watchlistName}' added with ID: ${newWatchlistRef.id}`);
-                hideModal(manageWatchlistsCombinedModal);
+                hideModal(addWatchlistModal);
                 
                 currentWatchlistId = newWatchlistRef.id;
                 currentWatchlistName = watchlistName;
@@ -1696,16 +1643,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    if (cancelAddWatchlistBtn) { // Cancel Add Watchlist (from combined modal)
+    if (cancelAddWatchlistBtn) { // Cancel button in Add Watchlist Modal
         cancelAddWatchlistBtn.addEventListener('click', () => {
             console.log("[Button] 'Cancel Add Watchlist' clicked.");
-            hideModal(manageWatchlistsCombinedModal);
+            hideModal(addWatchlistModal);
             if (newWatchlistNameInput) newWatchlistNameInput.value = '';
             console.log("[Watchlist] Add Watchlist canceled.");
         });
     }
 
-    if (saveWatchlistNameBtn) { // Save Watchlist Name (from combined modal)
+    if (saveWatchlistNameBtn) { // Save Name button in Manage Watchlist Modal
         saveWatchlistNameBtn.addEventListener('click', async () => {
             console.log("[Button] 'Save Watchlist Name' clicked.");
             const newName = editWatchlistNameInput.value.trim();
@@ -1715,7 +1662,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             if (newName === currentWatchlistName) {
                 showCustomAlert("Watchlist name is already the same.");
-                hideModal(manageWatchlistsCombinedModal);
+                hideModal(manageWatchlistModal);
                 return;
             }
             if (userWatchlists.some(w => w.name.toLowerCase() === newName.toLowerCase() && w.id !== currentWatchlistId)) {
@@ -1728,7 +1675,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 await window.firestore.updateDoc(watchlistDocRef, { name: newName });
                 showCustomAlert(`Watchlist renamed to '${newName}'!`, 1500);
                 console.log(`[Firestore] Watchlist (ID: ${currentWatchlistId}) renamed to '${newName}'.`);
-                hideModal(manageWatchlistsCombinedModal);
+                hideModal(manageWatchlistModal);
                 currentWatchlistName = newName;
                 await loadUserWatchlists();
                 await loadShares();
@@ -1739,7 +1686,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    if (deleteWatchlistInModalBtn) { // Delete Watchlist (from combined modal)
+    if (deleteWatchlistInModalBtn) { // Delete Watchlist button in Manage Watchlist Modal
         deleteWatchlistInModalBtn.addEventListener('click', () => {
             console.log("[Button] 'Delete Watchlist' (in modal) clicked.");
             if (!currentWatchlistId || userWatchlists.length <= 1) {
@@ -1778,10 +1725,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    if (cancelManageWatchlistBtn) { // Cancel Manage Watchlist (from combined modal)
+    if (cancelManageWatchlistBtn) { // Cancel button in Manage Watchlist Modal
         cancelManageWatchlistBtn.addEventListener('click', () => {
             console.log("[Button] 'Cancel Manage Watchlist' clicked.");
-            hideModal(manageWatchlistsCombinedModal);
+            hideModal(manageWatchlistModal);
             if (editWatchlistNameInput) editWatchlistNameInput.value = '';
             console.log("[Watchlist] Manage Watchlist canceled.");
         });
@@ -1935,10 +1882,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const isDesktop = window.innerWidth > 768;
             // On desktop, ensure sidebar is always open and overlay is hidden
             if (isDesktop) {
-                appSidebar.classList.add('open');
-                sidebarOverlay.classList.remove('open');
-                document.body.classList.remove('sidebar-active'); // Ensure no overflow hidden
-                document.body.style.overflowY = ''; // Restore body scroll
+                // appSidebar.classList.add('open'); // No longer automatically open on desktop
+                // sidebarOverlay.classList.remove('open');
+                // document.body.classList.remove('sidebar-active'); // Ensure no overflow hidden
+                // document.body.style.overflowY = '';
             } else {
                 // On mobile, if sidebar is open, force close it on resize to prevent layout issues
                 if (appSidebar.classList.contains('open')) {
@@ -1957,7 +1904,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Initial state check for sidebar on load
         if (window.innerWidth > 768) {
-            appSidebar.classList.add('open'); // Always open on desktop
+            // appSidebar.classList.add('open'); // No longer automatically open on desktop
             sidebarOverlay.classList.remove('open'); // No overlay on desktop
             document.body.classList.remove('sidebar-active'); // No overflow hidden on desktop
             document.body.style.overflowY = '';
