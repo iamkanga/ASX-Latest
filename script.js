@@ -902,7 +902,7 @@ function applySystemDefaultTheme() {
     root.style.removeProperty('--table-header-bg');
     root.style.removeProperty('--table-row-hover-bg');
     root.style.removeProperty('--asx-button-bg');
-    root.style.removeProperty('--asx-button-hover-bg');
+    root.style.removeProperty('--asx-button-hover-bg',);
     root.style.removeProperty('--asx-button-text');
     root.style.removeProperty('--asx-button-active-bg');
     root.style.removeProperty('--asx-button-active-text');
