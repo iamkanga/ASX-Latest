@@ -1,5 +1,5 @@
-// File Version: v132 (Updated by Gemini for Watchlist Placeholder Fix)
-// Last Updated: 2025-06-28 (Fixed watchlist dropdown placeholder selection logic)
+// File Version: v134 (Updated by Gemini for Service Worker Log Consistency)
+// Last Updated: 2025-06-28 (Improved watchlist display, sidebar behavior, and general robustness)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -103,7 +103,7 @@ let editWatchlistSection;
 let newWatchlistNameInput;
 let saveWatchlistBtn;
 let cancelAddWatchlistBtn;
-let editWatchlistNameInput;
+editWatchlistNameInput;
 let saveWatchlistNameBtn;
 let deleteWatchlistInModalBtn;
 let cancelManageWatchlistBtn;
@@ -128,16 +128,15 @@ function toggleAppSidebar(force) {
         appSidebar.classList.add('open');
         sidebarOverlay.classList.add('open');
         document.body.classList.add('sidebar-active');
-        document.documentElement.style.overflowX = 'hidden';
-        document.body.style.overflowX = 'hidden';
-        document.body.style.overflowY = 'hidden';
+        // Prevent body scroll only when sidebar is open on mobile
+        if (window.innerWidth <= 768) {
+            document.body.style.overflowY = 'hidden';
+        }
     } else {
         appSidebar.classList.remove('open');
         sidebarOverlay.classList.remove('open');
         document.body.classList.remove('sidebar-active');
-        document.documentElement.style.overflowX = '';
-        document.body.style.overflowX = '';
-        document.body.style.overflowY = '';
+        document.body.style.overflowY = ''; // Restore body scroll
     }
     console.log(`[Menu] App sidebar toggled. Open: ${appSidebar.classList.contains('open')}`);
 }
@@ -606,6 +605,7 @@ function addShareToTable(share) {
 
 function addShareToMobileCards(share) {
     if (!mobileShareCardsContainer) { console.error("[addShareToMobileCards] mobileShareCardsContainer element not found."); return; }
+    // Only add to mobile cards if screen width is mobile
     if (!window.matchMedia("(max-width: 768px)").matches) { return; }
 
     const card = document.createElement('div');
@@ -683,10 +683,31 @@ function renderWatchlist() {
     const sharesToRender = allSharesData.filter(share => share.watchlistId === currentWatchlistId);
     console.log(`[Render] Shares filtered for rendering. Total shares to render: ${sharesToRender.length}`);
 
-    sharesToRender.forEach((share) => {
-        addShareToTable(share);
-        addShareToMobileCards(share); 
-    });
+    if (sharesToRender.length === 0) {
+        // Display a message if no shares in the current watchlist
+        const noSharesMessage = document.createElement('p');
+        noSharesMessage.textContent = "No shares in this watchlist. Add a new share to get started!";
+        noSharesMessage.style.textAlign = 'center';
+        noSharesMessage.style.marginTop = '20px';
+        noSharesMessage.style.color = 'var(--label-color)';
+        if (window.matchMedia("(max-width: 768px)").matches) {
+            mobileShareCardsContainer.appendChild(noSharesMessage);
+        } else {
+            const row = shareTableBody.insertRow();
+            const cell = row.insertCell();
+            cell.colSpan = 5; // Span all columns
+            cell.textContent = "No shares in this watchlist. Add a new share to get started!";
+            cell.style.textAlign = 'center';
+            cell.style.padding = '20px';
+            cell.style.color = 'var(--label-color)';
+        }
+    } else {
+        sharesToRender.forEach((share) => {
+            addShareToTable(share);
+            addShareToMobileCards(share); 
+        });
+    }
+
     if (selectedShareDocId) {
          const stillExists = sharesToRender.some(share => share.id === selectedShareDocId);
          if (stillExists) {
@@ -926,27 +947,6 @@ function toggleTheme() {
     }
 }
 
-function loadAndApplySavedTheme() {
-    const savedThemeIndex = localStorage.getItem('themeIndex');
-    if (savedThemeIndex !== null) {
-        currentThemeIndex = parseInt(savedThemeIndex, 10);
-        if (currentThemeIndex >= 0 && currentThemeIndex < themes.length) {
-            const selectedTheme = themes[currentThemeIndex];
-            applyTheme(selectedTheme);
-            if (themeToggleBtn) themeToggleBtn.innerHTML = `<i class="fas fa-palette"></i> ${selectedTheme.name}`;
-        } else {
-            currentThemeIndex = -1;
-            applySystemDefaultTheme();
-            if (themeToggleBtn) themeToggleBtn.innerHTML = '<i class="fas fa-desktop"></i> System Default';
-        }
-    } else {
-        currentThemeIndex = -1;
-        applySystemDefaultTheme();
-        if (themeToggleBtn) themeToggleBtn.innerHTML = '<i class="fas fa-desktop"></i> System Default';
-    }
-    console.log("[Theme] Loaded and applied saved theme.");
-}
-
 function getDefaultWatchlistId(userId) {
     return `${userId}_${DEFAULT_WATCHLIST_ID_SUFFIX}`;
 }
@@ -1175,7 +1175,7 @@ async function migrateOldSharesToWatchlist() {
 
 // --- DOMContentLoaded Listener for UI Element References and Event Listeners ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v132) DOMContentLoaded fired.");
+    console.log("script.js (v134) DOMContentLoaded fired."); // Updated script version log
 
     // --- Initialize Firebase variables from window globals ---
     // These must be assigned before any Firebase operations.
@@ -1303,6 +1303,9 @@ document.addEventListener('DOMContentLoaded', function() {
     loadAndApplySavedTheme(); // Applies theme and updates themeToggleBtn text
 
     // --- PWA Service Worker Registration ---
+    // Moved to index.html for earlier loading and better control.
+    // This block is left here as a comment to indicate it was previously here.
+    /*
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./service-worker.js', { scope: './' }) 
@@ -1314,6 +1317,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
         });
     }
+    */
 
     // --- Event Listeners for Input Fields ---
     if (shareNameInput) {
@@ -1863,8 +1867,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 scrollToTopBtn.style.display = 'none';
             }
         });
+        // Initial check on load
         if (window.innerWidth > 768) {
             scrollToTopBtn.style.display = 'none';
+        } else {
+            // Trigger scroll event to check initial visibility on mobile
+            window.dispatchEvent(new Event('scroll'));
         }
         scrollToTopBtn.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); console.log("[UI] Scrolled to top."); });
     }
@@ -1889,17 +1897,40 @@ document.addEventListener('DOMContentLoaded', function() {
 
         window.addEventListener('resize', () => {
             const isDesktop = window.innerWidth > 768;
-            if (appSidebar.classList.contains('open')) {
-                toggleAppSidebar(false);
+            // On desktop, ensure sidebar is always open and overlay is hidden
+            if (isDesktop) {
+                appSidebar.classList.add('open');
+                sidebarOverlay.classList.remove('open');
+                document.body.classList.remove('sidebar-active'); // Ensure no overflow hidden
+                document.body.style.overflowY = ''; // Restore body scroll
+            } else {
+                // On mobile, if sidebar is open, force close it on resize to prevent layout issues
+                if (appSidebar.classList.contains('open')) {
+                    toggleAppSidebar(false);
+                }
             }
+            // Re-evaluate scroll-to-top button visibility on resize
             if (scrollToTopBtn) {
                 if (window.innerWidth > 768) {
                     scrollToTopBtn.style.display = 'none';
                 } else {
-                    window.dispatchEvent(new Event('scroll'));
+                    window.dispatchEvent(new Event('scroll')); // Re-trigger scroll event to check visibility
                 }
             }
         });
+
+        // Initial state check for sidebar on load
+        if (window.innerWidth > 768) {
+            appSidebar.classList.add('open'); // Always open on desktop
+            sidebarOverlay.classList.remove('open'); // No overlay on desktop
+            document.body.classList.remove('sidebar-active'); // No overflow hidden on desktop
+            document.body.style.overflowY = '';
+        } else {
+            appSidebar.classList.remove('open'); // Start closed on mobile
+            sidebarOverlay.classList.remove('open');
+            document.body.classList.remove('sidebar-active');
+            document.body.style.overflowY = '';
+        }
 
         const menuButtons = appSidebar.querySelectorAll('.menu-button-item');
         menuButtons.forEach(button => {
@@ -1939,7 +1970,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // If not signed in, sign in anonymously to allow basic interaction (e.g., for creating a new account)
                 try {
                     await window.authFunctions.signInAnonymously(auth); // Use the locally assigned 'auth' variable
-                    console.log("[Auth State] Signed in anonymously after sign out.");
+                    console.log("[Auth State] Error signing in anonymously:", error);
                 } catch (error) {
                     console.error("[Auth State] Error signing in anonymously:", error);
                 }
