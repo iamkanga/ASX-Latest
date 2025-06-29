@@ -1,5 +1,5 @@
-// File Version: v136 (Fixed loadAndApplySavedTheme scope)
-// Last Updated: 2025-06-28 (Moved loadAndApplySavedTheme function definition)
+// File Version: v137 (Final attempt at cache bust)
+// Last Updated: 2025-06-28 (Incremented version to force update)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -103,7 +103,7 @@ let editWatchlistSection;
 let newWatchlistNameInput;
 let saveWatchlistBtn;
 let cancelAddWatchlistBtn;
-let editWatchlistNameInput; // Corrected: Added 'let' keyword here
+let editWatchlistNameInput; 
 let saveWatchlistNameBtn;
 let deleteWatchlistInModalBtn;
 let cancelManageWatchlistBtn;
@@ -1197,7 +1197,7 @@ async function migrateOldSharesToWatchlist() {
 
 // --- DOMContentLoaded Listener for UI Element References and Event Listeners ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v136) DOMContentLoaded fired."); // Updated script version log
+    console.log("script.js (v137) DOMContentLoaded fired."); // Updated script version log
 
     // --- Initialize Firebase variables from window globals ---
     // These must be assigned before any Firebase operations.
