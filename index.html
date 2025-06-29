@@ -8,7 +8,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍆</text></svg>">
 
     <!-- Linking to your separate style.css file -->
-    <link rel="stylesheet" href="style.css?v=57"> <!-- Updated CSS version for new styles -->
+    <link rel="stylesheet" href="style.css?v=59"> <!-- Updated CSS version for new styles -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -21,7 +21,7 @@
                 <i class="fas fa-bars"></i>
             </button>
             <h1 id="mainTitle">Share Watchlist</h1>
-            <!-- New "Add Share" button on the main screen - positioned right -->
+            <!-- New "Add Share" button on the main screen - Positioned Right -->
             <button id="addShareHeaderBtn" class="header-action-btn header-action-btn-right" aria-label="Add new share">
                 <i class="fas fa-plus-circle"></i>
             </button>
@@ -351,7 +351,8 @@
         import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, FieldValue, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Firebase configuration (provided by the environment)
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        // Ensure __firebase_config is always parsed, even if it's an empty string or undefined, to avoid errors.
+        const firebaseConfig = typeof __firebase_config !== 'undefined' && __firebase_config ? JSON.parse(__firebase_config) : {};
         const currentAppId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
@@ -360,33 +361,71 @@
         let auth;
         let firebaseInitialized = false;
 
-        try {
-            if (Object.keys(firebaseConfig).length > 0) {
-                app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
+        // Use a flag to ensure Firebase is only initialized once
+        let isFirebaseAppInitialized = false;
 
-                // Attempt to sign in with custom token or anonymously
-                (async () => {
-                    try {
-                        if (initialAuthToken) {
-                            await signInWithCustomToken(auth, initialAuthToken);
-                            console.log("Firebase: Signed in with custom token.");
-                        } else {
-                            await signInAnonymously(auth);
-                            console.log("Firebase: Signed in anonymously.");
-                        }
-                        firebaseInitialized = true;
-                    } catch (error) {
-                        console.error("Firebase Auth initialization error:", error);
-                        document.getElementById('loadingIndicator').innerHTML = `
-                            <div class="error-message">
-                                <p>Error initializing authentication. Please ensure your Firebase project is set up correctly and security rules allow anonymous or custom token sign-in.</p>
-                                <p>Details: ${error.message}</p>
-                            </div>
-                        `;
+        async function initializeFirebaseAndAuth() {
+            if (isFirebaseAppInitialized) {
+                console.log("Firebase: App already initialized. Skipping re-initialization.");
+                return;
+            }
+
+            if (Object.keys(firebaseConfig).length > 0) {
+                try {
+                    app = initializeApp(firebaseConfig);
+                    db = getFirestore(app);
+                    auth = getAuth(app);
+                    isFirebaseAppInitialized = true; // Set flag after successful initialization
+
+                    // Attempt to sign in with custom token or anonymously
+                    if (initialAuthToken) {
+                        await signInWithCustomToken(auth, initialAuthToken);
+                        console.log("Firebase: Signed in with custom token.");
+                    } else {
+                        await signInAnonymously(auth);
+                        console.log("Firebase: Signed in anonymously.");
                     }
-                })();
+                    firebaseInitialized = true; // This flag indicates auth is also ready or attempted
+
+                    // Expose Firebase objects globally *after* successful initialization
+                    window.firestoreDb = db;
+                    window.firebaseAuth = auth;
+                    window.getFirebaseAppId = () => currentAppId;
+                    window.firestore = {
+                        collection: collection,
+                        doc: doc,
+                        getDoc: getDoc,
+                        addDoc: addDoc,
+                        setDoc: setDoc,
+                        updateDoc: updateDoc,
+                        deleteDoc: deleteDoc,
+                        onSnapshot: onSnapshot,
+                        query: query,
+                        where: where,
+                        getDocs: getDocs,
+                        deleteField: FieldValue.delete,
+                        writeBatch: writeBatch
+                    };
+                    window.authFunctions = {
+                        GoogleAuthProviderInstance: new GoogleAuthProvider(),
+                        signInAnonymously: signInAnonymously,
+                        signInWithCustomToken: signInWithCustomToken,
+                        signInWithPopup: signInWithPopup,
+                        signOut: signOut,
+                        onAuthStateChanged: onAuthStateChanged
+                    };
+                    console.log("Firebase: Global window objects set.");
+
+                } catch (error) {
+                    console.error("Firebase Initialization or Auth error:", error);
+                    document.getElementById('loadingIndicator').innerHTML = `
+                        <div class="error-message">
+                            <p>Error initializing Firebase or authentication. Please ensure your Firebase project is set up correctly and security rules allow anonymous or custom token sign-in.</p>
+                            <p>Details: ${error.message}</p>
+                        </div>
+                    `;
+                    firebaseInitialized = false; // Ensure this is false on error
+                }
             } else {
                 console.warn("Firebase: No configuration found. Firebase services will not be available.");
                 document.getElementById('loadingIndicator').innerHTML = `
@@ -395,51 +434,20 @@
                         <p>Firebase services (like data storage and authentication) will not be available.</p>
                     </div>
                 `;
+                firebaseInitialized = false; // Ensure this is false
             }
-        } catch (e) {
-            console.error("Firebase: Error initializing Firebase App:", e);
-            document.getElementById('loadingIndicator').innerHTML = `
-                <div class="error-message">
-                    <p>Failed to initialize Firebase. This might be due to an incorrect configuration or network issues.</p>
-                    <p>Details: ${e.message}</p>
-                </div>
-            `;
-            firebaseInitialized = false;
         }
 
-        window.firestoreDb = firebaseInitialized ? db : null;
-        window.firebaseAuth = firebaseInitialized ? auth : null;
-        window.getFirebaseAppId = () => currentAppId;
-        window.firestore = firebaseInitialized ? {
-            collection: collection,
-            doc: doc,
-            getDoc: getDoc,
-            addDoc: addDoc,
-            setDoc: setDoc,
-            updateDoc: updateDoc,
-            deleteDoc: deleteDoc,
-            onSnapshot: onSnapshot,
-            query: query,
-            where: where,
-            getDocs: getDocs,
-            deleteField: FieldValue.delete,
-            writeBatch: writeBatch // Exposed writeBatch
-        } : null;
-        
-        window.authFunctions = firebaseInitialized ? {
-            GoogleAuthProviderInstance: new GoogleAuthProvider(),
-            signInAnonymously: signInAnonymously,
-            signInWithCustomToken: signInWithCustomToken,
-            signInWithPopup: signInWithPopup,
-            signOut: signOut,
-            onAuthStateChanged: onAuthStateChanged
-        } : null;
+        // Call initialization function when the script module loads
+        initializeFirebaseAndAuth();
 
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log("index.html (v58) script module loaded and DOMContentLoaded fired."); // Updated version number
+            console.log("index.html (v59) script module loaded and DOMContentLoaded fired."); // Updated version number
+            // Ensure script.js starts its logic after Firebase has attempted initialization
+            // The script.js will then check window.firestoreDb and window.firebaseAuth
         }); 
     </script>
     <!-- Linking to your separate script.js file -->
-    <script src="script.js?v=118"></script>
+    <script src="script.js?v=119"></script>
 </body>
 </html>
