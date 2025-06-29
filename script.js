@@ -1,5 +1,5 @@
-// File Version: v108
-// Last Updated: 2025-06-28 (Header button swap, refined sidebar auto-close)
+// File Version: v109
+// Last Updated: 2025-06-28 (ASX code buttons now consistently open share detail modal)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -7,7 +7,7 @@
 // from the <script type="module"> block in index.html.
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v108) DOMContentLoaded fired."); // New log to confirm script version and DOM ready
+    console.log("script.js (v109) DOMContentLoaded fired."); // New log to confirm script version and DOM ready
 
     // --- Core Helper Functions (DECLARED FIRST FOR HOISTING) ---
 
@@ -641,10 +641,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (elementToScrollTo) {
                 elementToScrollTo.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
-            // On mobile, if a share is selected via ASX code button, immediately show details
-            if (window.matchMedia("(max-width: 768px)").matches) {
-                showShareDetails(); 
-            }
+            // Always open the share details modal when an ASX code button is clicked
+            showShareDetails(); 
         } else {
             showCustomAlert(`Share '${asxCode}' not found.`);
         }

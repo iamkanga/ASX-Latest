@@ -334,7 +334,7 @@ h1#mainTitle {
 .watchlist-controls-row {
     display: flex;
     flex-wrap: wrap; /* Allow wrapping on smaller screens */
-    justify-content: center; /* CENTERED ON MOBILE & DESKTOP */
+    justify-content: center; /* CENTRALIZED ON MOBILE & DESKTOP */
     align-items: center;
     gap: 15px 25px; /* Vertical and horizontal gap */
     padding: 10px 0;
