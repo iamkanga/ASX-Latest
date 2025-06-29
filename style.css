@@ -1,5 +1,5 @@
-/* File Version: v51 */
-/* Last Updated: 2025-06-28 (Theme Toggle & Revert Button Styling) */
+/* File Version: v52 */
+/* Last Updated: 2025-06-28 (Modal Scrolling Fix) */
 
 :root {
     /* Light Theme (Default) - Adjusted for more vibrancy */
@@ -46,7 +46,6 @@ body.dark-theme {
     --card-bg: #2e2e4a; /* Darker cards */
     --border-color: #444;
     --button-bg: #4a7dff; /* Brighter blue for buttons */
-    --button-text: #fff;
     --button-hover-bg: #3a6cd9;
     --input-bg: #3c3c5c;
     --input-border: #555;
@@ -845,7 +844,7 @@ h1#mainTitle {
     cursor: pointer;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
     min-width: 150px;
-    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236c757d%22%20d%3D%22M287%2069.9a14.7%2014.7%200%200%200-20.8%200L146.2%20189.9%2026.3%2069.9a14.7%2014.7%200%200%200-20.8%2020.8L135.8%20216.7a14.7%2014.7%200%200%200%2020.8%200L287%2090.7a14.7%2014.7%200%200%200%200-20.8z%22%2F%3E%3C%2Fsvg%3E'); /* Custom arrow */
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http://www.w3.org/2000/svg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236c757d%22%20d%3D%22M287%2069.9a14.7%2014.7%200%200%200-20.8%200L146.2%20189.9%2026.3%2069.9a14.7%2014.7%200%200%200-20.8%2020.8L135.8%20216.7a14.7%2014.7%200%200%200%2020.8%200L287%2090.7a14.7%2014.7%200%200%200%200-20.8z%22%2F%3E%3C%2Fsvg%3E'); /* Custom arrow */
     background-repeat: no-repeat;
     background-position: right 12px top 50%;
     background-size: 12px auto;
@@ -1064,9 +1063,11 @@ table tbody tr:not(.selected):hover {
     top: 0;
     width: 100%;
     height: 100%;
-    overflow: auto;
+    overflow: auto; /* Allow modal itself to scroll if content is too large for viewport */
     background-color: var(--modal-bg);
-    padding-top: 60px;
+    padding-top: 60px; /* Space from top */
+    padding-bottom: 20px; /* Space from bottom for buttons */
+    box-sizing: border-box; /* Include padding in height calculation */
 }
 
 .modal-content {
@@ -1080,13 +1081,26 @@ table tbody tr:not(.selected):hover {
     width: 90%;
     box-sizing: border-box;
     color: var(--text-color);
+
+    /* Flexbox for internal layout: header + scrollable body + fixed footer buttons */
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh; /* Set a max height for the modal content itself */
 }
 
-.add-share-modal-content {
-    max-height: 85vh; /* Adjusted for mobile button visibility */
-    overflow-y: auto;
-    padding-bottom: 80px; /* Add padding to account for fixed footer on mobile */
+/* NEW: Scrollable body within the modal content */
+.modal-body-scrollable {
+    flex-grow: 1; /* Allows this section to take up available space */
+    overflow-y: auto; /* Enable vertical scrolling for this specific area */
+    padding-right: 10px; /* Add some padding for scrollbar */
+    margin-right: -10px; /* Compensate for padding to avoid extra space */
+    box-sizing: border-box;
+    /* Ensure content inside doesn't overflow horizontally */
+    overflow-x: hidden; 
 }
+
+/* Removed add-share-modal-content specific max-height and padding-bottom */
+/* as it's now handled by .modal-content and .modal-body-scrollable */
 
 .modal-content h2 {
     margin-top: 0;
@@ -1164,19 +1178,26 @@ table tbody tr:not(.selected):hover {
 }
 
 /* Comments Section in Form */
+.comments-form-container {
+    margin-top: 20px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 15px;
+}
+
 .comments-form-container h3 {
     display: flex;
-    align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 5px;
-    margin-top: 25px;
+    align-items: center;
+    margin-top: 0;
     margin-bottom: 15px;
     font-size: 1.2em;
     color: var(--text-color);
+    border-bottom: none; /* Remove extra border */
+    padding-bottom: 0;
 }
 
-.comments-form-container .add-section-btn {
+/* Styling for the Add Comment Section Button */
+.add-section-btn {
     background-color: var(--button-bg);
     color: var(--button-text);
     border: none;
@@ -1184,16 +1205,17 @@ table tbody tr:not(.selected):hover {
     width: 30px;
     height: 30px;
     font-size: 1.5em;
-    line-height: 1;
     display: flex;
     justify-content: center;
     align-items: center;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    flex-shrink: 0; /* Prevent shrinking */
 }
 
-.comments-form-container .add-section-btn:hover {
+.add-section-btn:hover {
     background-color: var(--button-hover-bg);
+    transform: translateY(-1px);
 }
 
 .comment-section {
@@ -1205,16 +1227,30 @@ table tbody tr:not(.selected):hover {
     position: relative;
 }
 
+.comment-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.comment-section-header .comment-title-input {
+    flex-grow: 1;
+    margin-bottom: 0; /* Remove bottom margin from input */
+    margin-right: 10px;
+    font-weight: 600;
+}
+
 .comment-section .comment-delete-btn {
     background: none;
     border: none;
     color: var(--danger-button-bg);
     font-size: 1.5em;
-    position: absolute;
-    top: 5px;
-    right: 5px;
     cursor: pointer;
     transition: color 0.2s ease;
+    line-height: 1;
+    padding: 0;
+    flex-shrink: 0; /* Prevent shrinking */
 }
 
 .comment-section .comment-delete-btn:hover {
@@ -1239,6 +1275,9 @@ table tbody tr:not(.selected):hover {
     justify-content: center; /* Center the group of buttons */
     gap: 10px;
     margin-top: 25px;
+    flex-shrink: 0; /* Prevent these button groups from shrinking */
+    padding-top: 15px; /* Add padding above buttons to separate from scrollable content */
+    border-top: 1px solid var(--border-color); /* Add a subtle separator line */
 }
 
 .form-action-buttons button,
@@ -1279,42 +1318,48 @@ table tbody tr:not(.selected):hover {
     transform: translateY(-1px);
 }
 
-.form-action-buttons #cancelFormBtn,
-.form-action-buttons #cancelAddWatchlistBtn, /* Added cancelAddWatchlistBtn */
-.form-action-buttons #cancelManageWatchlistBtn, /* Added cancelManageWatchlistBtn */
-.custom-dialog-buttons #customDialogCancelBtn { /* Added customDialogCancelBtn */
+.form-action-buttons .secondary-buttons, /* Use the class for consistency */
+.modal-action-buttons .secondary-buttons,
+.custom-dialog-buttons .secondary-buttons { /* Use the class for consistency */
     background-color: var(--secondary-button-bg);
     color: var(--button-text);
 }
 
-.form-action-buttons #cancelFormBtn:hover,
-.form-action-buttons #cancelAddWatchlistBtn:hover, /* Added cancelAddWatchlistBtn */
-.form-action-buttons #cancelManageWatchlistBtn:hover, /* Added cancelManageWatchlistBtn */
-.custom-dialog-buttons #customDialogCancelBtn:hover { /* Added customDialogCancelBtn */
+.form-action-buttons .secondary-buttons:hover,
+.modal-action-buttons .secondary-buttons:hover,
+.custom-dialog-buttons .secondary-buttons:hover {
     background-color: var(--secondary-button-hover-bg);
     transform: translateY(-1px);
 }
 
-.form-action-buttons #deleteShareFromFormBtn,
-.form-action-buttons #deleteWatchlistInModalBtn { /* Added deleteWatchlistInModalBtn */
+.form-action-buttons .danger-button,
+.modal-action-buttons .danger-button,
+.custom-dialog-buttons .danger-button {
     background-color: var(--danger-button-bg);
     color: var(--button-text);
 }
 
-.form-action-buttons #deleteShareFromFormBtn:hover,
-.form-action-buttons #deleteWatchlistInModalBtn:hover { /* Added deleteWatchlistInModalBtn */
+.form-action-buttons .danger-button:hover,
+.modal-action-buttons .danger-button:hover,
+.custom-dialog-buttons .danger-button:hover {
     background-color: var(--danger-button-hover-bg);
     transform: translateY(-1px);
 }
 
 /* Share Details Modal Styling */
-#modalCommentsContainer h3 {
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 5px;
+.modal-comments-sections {
     margin-top: 25px;
-    margin-bottom: 15px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 15px;
+}
+
+.modal-comments-sections h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
     font-size: 1.2em;
     color: var(--text-color);
+    border-bottom: none; /* Remove extra border */
+    padding-bottom: 0;
 }
 
 .modal-comment-item {
@@ -1399,7 +1444,7 @@ table tbody tr:not(.selected):hover {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
-    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236c757d%22%20d%3D%22M287%2069.9a14.7%2014.7%200%200%200-20.8%200L146.2%20189.9%2026.3%2069.9a14.7%2014.7%200%200%200-20.8%2020.8L135.8%20216.7a14.7%2014.7%200%200%200%2020.8%200L287%2090.7a14.7%2014.7%200%200%200%200-20.8z%22%2F%3E%3C%2Fsvg%3E'); /* Custom arrow */
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http://www.w3.org/2000/svg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236c757d%22%20d%3D%22M287%2069.9a14.7%2014.7%200%200%200-20.8%200L146.2%20189.9%2026.3%2069.9a14.7%2014.7%200%200%200-20.8%2020.8L135.8%20216.7a14.7%2014.7%200%200%200%2020.8%200L287%2090.7a14.7%2014.7%200%200%200%200-20.8z%22%2F%3E%3C%2Fsvg%3E'); /* Custom arrow */
     background-repeat: no-repeat;
     background-position: right 12px top 50%;
     background-size: 12px auto;
@@ -1682,11 +1727,7 @@ table tbody tr:not(.selected):hover {
         margin: 20px auto;
         padding: 20px;
     }
-    .add-share-modal-content {
-        max-height: calc(100vh - 120px); /* Adjusted to ensure buttons are visible above soft keyboard/nav bar */
-        padding-bottom: 20px; /* Ensure enough padding at the bottom */
-    }
-
+    
     /* Align "Cancel" and "Save" buttons on the same line for mobile */
     .form-action-buttons,
     .modal-action-buttons,
@@ -1732,7 +1773,7 @@ table tbody tr:not(.selected):hover {
     .google-auth-btn {
         margin: 0 auto; /* Explicitly center */
         left: unset; /* Remove any conflicting left positioning */
-        right: unset; /* Remove any conflicting right positioning */
+        right: unset; /* Remove any conflicting transforms */
         transform: none; /* Remove any conflicting transforms */
     }
 }
