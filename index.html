@@ -16,14 +16,14 @@
 <body>
     <header>
         <div class="header-top-row">
-            <!-- New "Add Share" button on the main screen - positioned left -->
-            <button id="addShareHeaderBtn" class="header-action-btn header-action-btn-left">
-                <i class="fas fa-plus"></i>
+            <!-- Hamburger/Sidebar Toggle Button - NOW ON LEFT -->
+            <button id="hamburgerBtn" class="hamburger-btn header-action-btn-left">
+                <i class="fas fa-bars"></i>
             </button>
             <h1 id="mainTitle">Share Watchlist</h1> <!-- Default text before login -->
-            <!-- Hamburger/Sidebar Toggle Button -->
-            <button id="hamburgerBtn" class="hamburger-btn">
-                <i class="fas fa-bars"></i>
+            <!-- New "Add Share" button on the main screen - NOW ON RIGHT -->
+            <button id="addShareHeaderBtn" class="header-action-btn header-action-btn-right">
+                <i class="fas fa-plus"></i>
             </button>
         </div>
 
@@ -384,7 +384,7 @@
         } : null;
 
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log("index.html (v52) script module loaded and DOMContentLoaded fired."); // Updated version number
+            console.log("index.html (v53) script module loaded and DOMContentLoaded fired."); // Updated version number
         }); 
     </script>
     <!-- Linking to your separate script.js file -->

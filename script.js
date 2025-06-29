@@ -1,5 +1,5 @@
-// File Version: v107
-// Last Updated: 2025-06-27 (Implemented all requested fixes and features)
+// File Version: v108
+// Last Updated: 2025-06-28 (Header button swap, refined sidebar auto-close)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -7,7 +7,7 @@
 // from the <script type="module"> block in index.html.
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v107) DOMContentLoaded fired."); // New log to confirm script version and DOM ready
+    console.log("script.js (v108) DOMContentLoaded fired."); // New log to confirm script version and DOM ready
 
     // --- Core Helper Functions (DECLARED FIRST FOR HOISTING) ---
 
@@ -529,7 +529,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 clearTimeout(tapTimeout); // Clear the single tap timeout
                 lastTapTime = 0; // Reset for next tap sequence
                 selectedElementForTap = null;
-                selectShare(docId, e.currentTarget); // Select the share
+                selectShare(docId); // Select the share
                 showShareDetails(); // Show details on double tap
                 e.preventDefault(); // Prevent default click behavior
             } else {
@@ -539,7 +539,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 tapTimeout = setTimeout(() => {
                     // If no second tap occurs within DOUBLE_TAP_TIMEOUT, treat as single tap
                     if (selectedElementForTap) {
-                        selectShare(docId, selectedElementForTap); // Select the share on single tap
+                        selectShare(docId); // Select the share on single tap
                         selectedElementForTap = null;
                     }
                 }, DOUBLE_TAP_TIMEOUT);
@@ -1737,7 +1737,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- Hamburger/Sidebar Menu Logic Event Listeners ---
     if (hamburgerBtn && appSidebar && closeMenuBtn && sidebarOverlay) {
-        hamburgerBtn.addEventListener('click', () => toggleAppSidebar()); // No force, just toggle
+        hamburgerBtn.addEventListener('click', (event) => {
+            event.stopPropagation(); // Prevent this click from immediately closing the sidebar via document listener
+            toggleAppSidebar(); // No force, just toggle
+        });
         closeMenuBtn.addEventListener('click', () => toggleAppSidebar(false)); // Force close
         
         // Event listener for clicking outside the sidebar (on the overlay)
@@ -1745,6 +1748,17 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log("[Sidebar Overlay] Clicked overlay. Attempting to close sidebar.");
             // Check if the sidebar is actually open before attempting to close via overlay
             if (appSidebar.classList.contains('open')) {
+                toggleAppSidebar(false); // Force close
+            }
+        });
+
+        // New: Global click listener to close sidebar when clicking outside on desktop
+        document.addEventListener('click', (event) => {
+            const isDesktop = window.innerWidth > 768; // Define desktop breakpoint (matches CSS breakpoint)
+            // Only act if sidebar is open AND on desktop AND click is not on sidebar itself AND not on hamburger button
+            if (appSidebar.classList.contains('open') && isDesktop &&
+                !appSidebar.contains(event.target) && !hamburgerBtn.contains(event.target)) {
+                console.log("[Global Click] Clicked outside sidebar on desktop. Closing sidebar.");
                 toggleAppSidebar(false); // Force close
             }
         });
@@ -1770,7 +1784,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Add event listeners to close menu when certain menu buttons are clicked
         const menuButtons = appSidebar.querySelectorAll('.menu-button-item');
         menuButtons.forEach(button => {
-            // Corrected: Use camelCase for dataset property access
+            // Check if the button has the data-action-closes-menu attribute set to 'true'
+            // The theme toggle button has 'false', so it will be excluded.
             if (button.dataset.actionClosesMenu === 'true') { 
                 button.addEventListener('click', () => {
                     toggleAppSidebar(false); // Explicitly close the sidebar after these actions

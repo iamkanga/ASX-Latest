@@ -155,12 +155,13 @@ h1#mainTitle {
     display: block;
 }
 
-.header-action-btn-left {
+/* Swapped positions for header buttons */
+.header-action-btn-left { /* Now for Hamburger */
     left: 0; /* Position to the far left */
 }
 
-.header-action-btn-right {
-    right: 0; /* Position to the far right (for hamburger) */
+.header-action-btn-right { /* Now for Add Share button */
+    right: 0; /* Position to the far right */
 }
 
 
@@ -170,14 +171,13 @@ h1#mainTitle {
 
 
 /* Hamburger/Sidebar Toggle Button */
-.hamburger-btn { /* This is now .header-action-btn-right implicitly */
+.hamburger-btn { /* This is now .header-action-btn-left implicitly */
     background: none;
     border: none;
     color: var(--text-color);
     font-size: 1.8em; /* Larger icon for easy tapping */
     cursor: pointer;
-    position: absolute; /* Position to the far right of the header-top-row */
-    right: 0; /* Moved to right */
+    /* Removed explicit positioning here as it's now handled by .header-action-btn-left */
     top: 50%;
     transform: translateY(-50%);
     padding: 5px 10px; /* Make it easier to tap */
@@ -1119,21 +1119,21 @@ table tbody tr:not(.selected):hover {
         padding-right: 15px; /* Match main container padding */
     }
 
-    /* Hamburger button on mobile - position right */
+    /* Hamburger button on mobile - position left */
     .hamburger-btn {
         display: block; /* Always display */
         position: absolute;
-        right: 0;
+        left: 0; /* Position to the far left */
         top: 50%;
         transform: translateY(-50%);
         padding: 5px 10px;
     }
 
-    /* New: Header "Add Share" Button on mobile - position left */
+    /* New: Header "Add Share" Button on mobile - position right */
     #addShareHeaderBtn {
         display: block; /* Always display */
         position: absolute;
-        left: 0; /* Position to the far left */
+        right: 0; /* Position to the far right */
         top: 50%;
         transform: translateY(-50%);
         padding: 5px 10px;
@@ -1294,10 +1294,10 @@ table tbody tr:not(.selected):hover {
         text-overflow: ellipsis;
     }
 
-    /* Hamburger button on desktop - always visible, but only for toggling */
+    /* Hamburger button on desktop - now on the left */
     .hamburger-btn {
         position: absolute; /* Position absolutely within header-top-row */
-        right: 0; /* Position to the far right */
+        left: 0; /* Position to the far left */
         top: 50%;
         transform: translateY(-50%);
         font-size: 2em; /* Slightly larger for desktop visual weight */
@@ -1309,11 +1309,11 @@ table tbody tr:not(.selected):hover {
         order: 0; /* Place first in header-top-row */
     }
 
-    /* New: Header "Add Share" Button on desktop - position left */
+    /* New: Header "Add Share" Button on desktop - now on the right */
     #addShareHeaderBtn {
         display: block; /* Always display */
         position: absolute;
-        left: 0; /* Position to the far left */
+        right: 0; /* Position to the far right */
         top: 50%;
         transform: translateY(-50%);
         padding: 5px 10px;
