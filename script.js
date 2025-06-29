@@ -1,5 +1,5 @@
-// File Version: v114
-// Last Updated: 2025-06-28 (Hamburger Fix & Theme Cycling)
+// File Version: v115
+// Last Updated: 2025-06-28 (Multi-Comment Feature)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -299,7 +299,7 @@ function clearForm() {
     formInputs.forEach(input => {
         if (input) { input.value = ''; }
     });
-    commentsFormContainer.innerHTML = '';
+    commentsFormContainer.innerHTML = ''; // Clear all existing comment sections
     addCommentSection(); // Add one empty comment section by default
     selectedShareDocId = null;
     console.log("[Form] Form fields cleared and selectedShareDocId reset.");
@@ -323,12 +323,11 @@ function showEditFormForSelectedShare() {
     dividendAmountInput.value = Number(shareToEdit.dividendAmount) !== null && !isNaN(Number(shareToEdit.dividendAmount)) ? Number(shareToEdit.dividendAmount).toFixed(3) : '';
     frankingCreditsInput.value = Number(shareToEdit.frankingCredits) !== null && !isNaN(Number(shareToEdit.frankingCredits)) ? Number(shareToEdit.frankingCredits).toFixed(1) : '';
     
-    commentsFormContainer.innerHTML = '';
-    if (shareToEdit.comments && Array.isArray(shareToEdit.comments)) {
+    commentsFormContainer.innerHTML = ''; // Clear existing comments before populating
+    if (shareToEdit.comments && Array.isArray(shareToEdit.comments) && shareToEdit.comments.length > 0) {
         shareToEdit.comments.forEach(comment => addCommentSection(comment.title, comment.text));
-    }
-    if (shareToEdit.comments === undefined || shareToEdit.comments.length === 0) {
-        addCommentSection();
+    } else {
+        addCommentSection(); // Add one empty comment section if no comments exist
     }
     deleteShareFromFormBtn.style.display = 'inline-flex';
     showModal(shareFormSection);
@@ -362,7 +361,7 @@ function showShareDetails() {
     const frankingCreditsNum = Number(share.frankingCredits);
     modalFrankingCredits.textContent = (!isNaN(frankingCreditsNum) && frankingCreditsNum !== null) ? `${frankingCreditsNum.toFixed(1)}%` : 'N/A';
     
-    const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, enteredPriceNum);
+    const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, enteredPriceNum); 
     modalUnfrankedYieldSpan.textContent = unfrankedYield !== null ? `${unfrankedYield.toFixed(2)}%` : 'N/A';
     
     const frankedYield = calculateFrankedYield(dividendAmountNum, enteredPriceNum, frankingCreditsNum);
@@ -371,6 +370,7 @@ function showShareDetails() {
     modalCommentsContainer.innerHTML = '';
     if (share.comments && Array.isArray(share.comments) && share.comments.length > 0) {
         share.comments.forEach(comment => {
+            // Only display comments that have either a title or text
             if (comment.title || comment.text) {
                 const commentDiv = document.createElement('div');
                 commentDiv.className = 'modal-comment-item';
@@ -381,6 +381,10 @@ function showShareDetails() {
                 modalCommentsContainer.appendChild(commentDiv);
             }
         });
+        // If after filtering, no comments are left, show the "No comments" message
+        if (modalCommentsContainer.children.length === 0) {
+            modalCommentsContainer.innerHTML = '<p style="text-align: center; color: var(--label-color);">No comments for this share.</p>';
+        }
     } else {
         modalCommentsContainer.innerHTML = '<p style="text-align: center; color: var(--label-color);">No comments for this share.</p>';
     }
@@ -575,6 +579,7 @@ function addShareToTable(share) {
 
     const commentsCell = row.insertCell();
     let commentsText = '';
+    // Display the text of the first comment if it exists
     if (share.comments && Array.isArray(share.comments) && share.comments.length > 0 && share.comments[0].text) {
         commentsText = share.comments[0].text;
     }
@@ -599,6 +604,7 @@ function addShareToMobileCards(share) {
     const frankedYield = calculateFrankedYield(dividendAmountNum, enteredPriceNum, frankingCreditsNum);
 
     let commentsSummary = '-';
+    // Display the text of the first comment if it exists
     if (share.comments && Array.isArray(share.comments) && share.comments.length > 0 && share.comments[0].text) {
         commentsSummary = truncateText(share.comments[0].text, 70);
     }
@@ -701,7 +707,7 @@ function renderAsxCodeButtons() {
     const sharesInCurrentWatchlist = allSharesData.filter(share => share.watchlistId === currentWatchlistId);
     sharesInCurrentWatchlist.forEach(share => {
         if (share.shareName && typeof share.shareName === 'string' && share.shareName.trim() !== '') {
-            uniqueAsxCodes.add(share.shareName.trim().toUpperCase());
+                uniqueAsxCodes.add(share.shareName.trim().toUpperCase());
         }
     });
     if (uniqueAsxCodes.size === 0) {
@@ -1072,6 +1078,7 @@ async function migrateOldSharesToWatchlist() {
                 updatePayload.lastPriceUpdateTime = new Date().toISOString();
                 console.log(`[Migration] Share '${doc.id}': Setting missing lastPriceUpdateTime.`);
             }
+            // Migration for existing string comments to array of objects
             if (typeof shareData.comments === 'string' && shareData.comments.trim() !== '') {
                 try {
                     const parsedComments = JSON.parse(shareData.comments);
@@ -1079,13 +1086,24 @@ async function migrateOldSharesToWatchlist() {
                         needsUpdate = true;
                         updatePayload.comments = parsedComments;
                         console.log(`[Migration] Share '${doc.id}': Converted comments string to array.`);
+                    } else { // If it's a string but not JSON array, treat as single general comment
+                        needsUpdate = true;
+                        updatePayload.comments = [{ title: "General Comments", text: shareData.comments }];
+                        console.log(`[Migration] Share '${doc.id}': Wrapped comments string as single comment object.`);
                     }
-                } catch (e) {
+                } catch (e) { // If JSON parsing fails, treat as single general comment
                     needsUpdate = true;
                     updatePayload.comments = [{ title: "General Comments", text: shareData.comments }];
-                    console.log(`[Migration] Share '${doc.id}': Wrapped comments string as single comment object.`);
+                    console.log(`[Migration] Share '${doc.id}': Wrapped comments string as single comment object (JSON parse failed).`);
                 }
+            } else if (shareData.hasOwnProperty('comments') && !Array.isArray(shareData.comments)) {
+                // If comments exist but are not an array (e.g., null, undefined, or other non-string/non-array types)
+                needsUpdate = true;
+                updatePayload.comments = []; // Set to empty array
+                console.warn(`[Migration] Share '${doc.id}': Comments field was not an array, setting to empty array.`);
             }
+
+
             if (needsUpdate) { sharesToUpdate.push({ ref: doc.ref, data: updatePayload }); }
         });
         if (sharesToUpdate.length > 0) {
@@ -1134,7 +1152,7 @@ function toggleAppSidebar(forceState = null) {
 
 // --- DOMContentLoaded Event Listener (Main execution block) ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v114) DOMContentLoaded fired.");
+    console.log("script.js (v115) DOMContentLoaded fired.");
 
     // --- Initial UI Setup ---
     if (shareFormSection) shareFormSection.style.setProperty('display', 'none', 'important');
@@ -1338,12 +1356,17 @@ document.addEventListener('DOMContentLoaded', function() {
             const dividendAmount = parseFloat(dividendAmountInput.value);
             const frankingCredits = parseFloat(frankingCreditsInput.value);
 
+            // Collect all comments from the dynamically added sections
             const comments = [];
             commentsFormContainer.querySelectorAll('.comment-section').forEach(section => {
                 const titleInput = section.querySelector('.comment-title-input');
                 const textInput = section.querySelector('.comment-text-input');
-                if (titleInput.value.trim() || textInput.value.trim()) {
-                    comments.push({ title: titleInput.value.trim(), text: textInput.value.trim() });
+                const title = titleInput ? titleInput.value.trim() : '';
+                const text = textInput ? textInput.value.trim() : '';
+                
+                // Only add comment if either title or text is not empty
+                if (title || text) {
+                    comments.push({ title: title, text: text });
                 }
             });
 
@@ -1353,7 +1376,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 targetPrice: isNaN(targetPrice) ? null : targetPrice,
                 dividendAmount: isNaN(dividendAmount) ? null : dividendAmount,
                 frankingCredits: isNaN(frankingCredits) ? null : frankingCredits,
-                comments: comments,
+                comments: comments, // Save the collected comments array
                 userId: currentUserId,
                 watchlistId: currentWatchlistId,
                 lastPriceUpdateTime: new Date().toISOString()
@@ -1674,7 +1697,7 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 body.classList.remove('dark-theme');
             }
-            console.log(`[Theme] Applied saved default theme: ${savedDefaultTheme}`);
+            console.log(`[Theme] Reverted to saved default theme: ${savedDefaultTheme}`);
         } else {
             if (systemPrefersDark) {
                 body.classList.add('dark-theme');
@@ -1682,7 +1705,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 body.classList.remove('dark-theme');
             }
             localStorage.setItem('theme', systemPrefersDark ? 'dark' : 'light');
-            console.log(`[Theme] Applied system default theme: ${systemPrefersDark ? 'dark' : 'light'}`);
+            console.log(`[Theme] Reverted to system default theme: ${systemPrefersDark ? 'dark' : 'light'}`);
         }
         // When reverting to default, ensure custom theme is not selected in dropdown
         if (colorThemeSelect) {
@@ -1708,7 +1731,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    if (revertToDefaultThemeBtn) { // Changed from revertToDefaultThemeLink
+    if (revertToDefaultThemeBtn) {
         revertToDefaultThemeBtn.addEventListener('click', (event) => {
             event.preventDefault();
             applyTheme('none'); // This will trigger applyDefaultLightDarkTheme
