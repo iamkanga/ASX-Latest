@@ -1,5 +1,5 @@
-/* File Version: v49 */
-/* Last Updated: 2025-06-28 (Fixed hamburger menu not opening) */
+/* File Version: v51 */
+/* Last Updated: 2025-06-28 (Theme Toggle & Revert Button Styling) */
 
 :root {
     /* Light Theme (Default) - Adjusted for more vibrancy */
@@ -774,20 +774,20 @@ h1#mainTitle {
     margin-bottom: 10px; /* Space between dropdown and next item */
 }
 
-/* Subtle link for reverting to default theme */
-.menu-link {
-    color: var(--button-bg); /* Use primary button color for links */
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 0.9em;
-    display: block; /* Make it take full width */
-    padding: 5px 0; /* Add some padding for clickability */
-    transition: color 0.2s ease;
+/* Styling for the new Revert to Default Theme Button */
+#revertToDefaultThemeBtn {
+    /* Inherits .menu-button-item and .secondary-buttons styles */
+    /* Override or add specific styles here if needed */
+    justify-content: center; /* Center content (icons and text) */
 }
 
-.menu-link:hover {
-    color: var(--button-hover-bg);
-    text-decoration: underline;
+#revertToDefaultThemeBtn .fas {
+    margin-right: 5px; /* Space between icons and text */
+}
+
+#revertToDefaultThemeBtn .fas + .fas {
+    margin-left: -5px; /* Overlap icons slightly for a combined look */
+    margin-right: 10px; /* Space after the second icon */
 }
 
 
