@@ -1,5 +1,5 @@
-// File Version: v135 (Fixed ReferenceError: editWatchlistNameInput is not defined)
-// Last Updated: 2025-06-28 (Corrected variable declaration for editWatchlistNameInput)
+// File Version: v136 (Fixed loadAndApplySavedTheme scope)
+// Last Updated: 2025-06-28 (Moved loadAndApplySavedTheme function definition)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -103,7 +103,7 @@ let editWatchlistSection;
 let newWatchlistNameInput;
 let saveWatchlistBtn;
 let cancelAddWatchlistBtn;
-let editWatchlistNameInput; // CORRECTED: Added 'let' keyword here
+let editWatchlistNameInput; // Corrected: Added 'let' keyword here
 let saveWatchlistNameBtn;
 let deleteWatchlistInModalBtn;
 let cancelManageWatchlistBtn;
@@ -947,6 +947,28 @@ function toggleTheme() {
     }
 }
 
+// Moved loadAndApplySavedTheme function here to ensure it's defined before being called in DOMContentLoaded
+function loadAndApplySavedTheme() {
+    const savedThemeIndex = localStorage.getItem('themeIndex');
+    if (savedThemeIndex !== null) {
+        currentThemeIndex = parseInt(savedThemeIndex, 10);
+        if (currentThemeIndex >= 0 && currentThemeIndex < themes.length) {
+            applyTheme(themes[currentThemeIndex]);
+            if (themeToggleBtn) themeToggleBtn.innerHTML = `<i class="fas fa-palette"></i> ${themes[currentThemeIndex].name}`;
+            console.log("[Theme] Loaded and applied saved theme.");
+        } else {
+            console.warn("[Theme] Saved theme index out of bounds, applying system default.");
+            applySystemDefaultTheme();
+            localStorage.removeItem('themeIndex');
+            if (themeToggleBtn) themeToggleBtn.innerHTML = '<i class="fas fa-desktop"></i> System Default';
+        }
+    } else {
+        applySystemDefaultTheme();
+        if (themeToggleBtn) themeToggleBtn.innerHTML = '<i class="fas fa-desktop"></i> System Default';
+        console.log("[Theme] No saved theme found, applying system default.");
+    }
+}
+
 function getDefaultWatchlistId(userId) {
     return `${userId}_${DEFAULT_WATCHLIST_ID_SUFFIX}`;
 }
@@ -1175,7 +1197,7 @@ async function migrateOldSharesToWatchlist() {
 
 // --- DOMContentLoaded Listener for UI Element References and Event Listeners ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v135) DOMContentLoaded fired."); // Updated script version log
+    console.log("script.js (v136) DOMContentLoaded fired."); // Updated script version log
 
     // --- Initialize Firebase variables from window globals ---
     // These must be assigned before any Firebase operations.
@@ -1971,7 +1993,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // If not signed in, sign in anonymously to allow basic interaction (e.g., for creating a new account)
                 try {
                     await window.authFunctions.signInAnonymously(auth); // Use the locally assigned 'auth' variable
-                    console.log("[Auth State] Error signing in anonymously:", error);
+                    console.log("[Auth State] Signed in anonymously after sign out.");
                 } catch (error) {
                     console.error("[Auth State] Error signing in anonymously:", error);
                 }
