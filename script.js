@@ -1,5 +1,5 @@
-// File Version: v120
-// Last Updated: 2025-06-28 (Firebase, Auth & Watchlist Fix)
+// File Version: v121
+// Last Updated: 2025-06-28 (Firebase Readiness & Logic Initialization)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -52,7 +52,6 @@ const standardCalcBtn = document.getElementById('standardCalcBtn');
 const dividendCalcBtn = document.getElementById('dividendCalcBtn');
 const asxCodeButtonsContainer = document.getElementById('asxCodeButtonsContainer');
 const shareFormSection = document.getElementById('shareFormSection');
-// const formCloseButton = document.querySelector('.form-close-button'); // This element might not exist, using generic close-button instead
 const formTitle = document.getElementById('formTitle');
 const saveShareBtn = document.getElementById('saveShareBtn');
 const cancelFormBtn = document.getElementById('cancelFormBtn');
@@ -117,7 +116,7 @@ const saveWatchlistBtn = document.getElementById('saveWatchlistBtn');
 const cancelAddWatchlistBtn = document.getElementById('cancelAddWatchlistBtn');
 const manageWatchlistModal = document.getElementById('manageWatchlistModal');
 const editWatchlistNameInput = document.getElementById('editWatchlistName');
-const saveWatchlistNameBtn = document.getElementById('saveWatchlistNameBtn');
+const saveWatchlistNameBtn = document = document.getElementById('saveWatchlistNameBtn');
 const deleteWatchlistInModalBtn = document.getElementById('deleteWatchlistInModalBtn');
 const cancelManageWatchlistBtn = document.getElementById('cancelManageWatchlistBtn');
 
@@ -1116,12 +1115,12 @@ function toggleAppSidebar(forceState = null) {
     }
 }
 
+// --- Main Application Logic Initialization Function ---
+// This function will be called ONLY when Firebase is confirmed ready.
+async function initializeAppLogic() {
+    console.log("initializeAppLogic: Firebase is ready. Starting app logic.");
 
-// --- DOMContentLoaded Event Listener (Main execution block) ---
-document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v120) DOMContentLoaded fired."); // Updated version number
-
-    // --- Initial UI Setup ---
+    // --- Initial UI Setup (moved from DOMContentLoaded) ---
     if (shareFormSection) shareFormSection.style.setProperty('display', 'none', 'important');
     if (dividendCalculatorModal) dividendCalculatorModal.style.setProperty('display', 'none', 'important');
     if (shareDetailModal) shareDetailModal.style.setProperty('display', 'none', 'important');
@@ -1129,11 +1128,11 @@ document.addEventListener('DOMContentLoaded', function() {
     if (manageWatchlistModal) manageWatchlistModal.style.setProperty('display', 'none', 'important');
     if (customDialogModal) customDialogModal.style.setProperty('display', 'none', 'important');
     if (calculatorModal) calculatorModal.style.setProperty('display', 'none', 'important');
-    updateMainButtonsState(false);
+    updateMainButtonsState(false); // Will be enabled by auth state change
     if (loadingIndicator) loadingIndicator.style.display = 'block';
     renderWatchlistSelect(); // Render initial empty watchlist select
-    if (googleAuthBtn) googleAuthBtn.disabled = true;
-    if (addShareHeaderBtn) addShareHeaderBtn.disabled = true;
+    if (googleAuthBtn) googleAuthBtn.disabled = true; // Will be enabled by auth state change
+    if (addShareHeaderBtn) addShareHeaderBtn.disabled = true; // Will be enabled by auth state change
     
     // Apply theme on initial load
     const savedCustomTheme = localStorage.getItem('selectedTheme');
@@ -1143,7 +1142,6 @@ document.addEventListener('DOMContentLoaded', function() {
         applyDefaultLightDarkTheme();
     }
     updateThemeToggleAndSelector();
-
 
     // --- PWA Service Worker Registration ---
     if ('serviceWorker' in navigator) {
@@ -1191,50 +1189,6 @@ document.addEventListener('DOMContentLoaded', function() {
             closeModals();
         }
     });
-
-    // --- Firebase Initialization and Authentication State Listener ---
-    // This block will run after the module script in index.html has attempted Firebase initialization.
-    // window.firestoreDb and window.firebaseAuth should now be reliably set if initialization was successful.
-    db = window.firestoreDb;
-    auth = window.firebaseAuth;
-    currentAppId = window.getFirebaseAppId();
-
-    if (auth) {
-        if (googleAuthBtn) {
-            googleAuthBtn.disabled = false;
-            console.log("[Auth] Google Auth button enabled.");
-        }
-        window.authFunctions.onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                currentUserId = user.uid;
-                updateAuthButtonText(true, user.email || user.displayName);
-                console.log("[AuthState] User signed in:", user.uid);
-                if (user.email && user.email.toLowerCase() === KANGA_EMAIL) {
-                    mainTitle.textContent = "Kanga's Share Watchlist";
-                } else {
-                    mainTitle.textContent = "My Share Watchlist";
-                }
-                updateMainButtonsState(true);
-                if (loadingIndicator) loadingIndicator.style.display = 'none';
-                await loadUserWatchlists(); // Load watchlists only after user is authenticated
-            } else {
-                currentUserId = null;
-                updateAuthButtonText(false);
-                mainTitle.textContent = "Share Watchlist";
-                console.log("[AuthState] User signed out.");
-                updateMainButtonsState(false);
-                clearShareList();
-                clearWatchlistUI();
-                if (loadingIndicator) loadingIndicator.style.display = 'none';
-            }
-        });
-    } else {
-        console.error("[Firebase] Firebase Auth not available. Cannot set up auth state listener or proceed with data loading.");
-        updateAuthButtonText(false);
-        updateMainButtonsState(false);
-        if (loadingIndicator) loadingIndicator.style.display = 'none';
-    }
-
 
     // --- Authentication Functions Event Listener ---
     if (googleAuthBtn) {
@@ -1792,4 +1746,63 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+} // End initializeAppLogic
+
+// --- DOMContentLoaded Event Listener (Main entry point) ---
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("script.js (v121) DOMContentLoaded fired."); // Updated version number
+
+    // Check if Firebase objects are available from the module script in index.html
+    // If they are, proceed with initializing the main app logic.
+    // If not, it means Firebase initialization failed in index.html, and an error message is already displayed.
+    if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
+        db = window.firestoreDb;
+        auth = window.firebaseAuth;
+        currentAppId = window.getFirebaseAppId();
+        console.log("[Firebase Ready] DB, Auth, and AppId assigned from window. Calling initializeAppLogic.");
+        
+        // Listen for auth state changes to trigger the main app logic
+        window.authFunctions.onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUserId = user.uid;
+                updateAuthButtonText(true, user.email || user.displayName);
+                console.log("[AuthState] User signed in:", user.uid);
+                if (user.email && user.email.toLowerCase() === KANGA_EMAIL) {
+                    mainTitle.textContent = "Kanga's Share Watchlist";
+                } else {
+                    mainTitle.textContent = "My Share Watchlist";
+                }
+                updateMainButtonsState(true);
+                if (loadingIndicator) loadingIndicator.style.display = 'none';
+                await loadUserWatchlists(); // Load watchlists only after user is authenticated
+            } else {
+                currentUserId = null;
+                updateAuthButtonText(false);
+                mainTitle.textContent = "Share Watchlist";
+                console.log("[AuthState] User signed out.");
+                updateMainButtonsState(false);
+                clearShareList();
+                clearWatchlistUI();
+                if (loadingIndicator) loadingIndicator.style.display = 'none';
+            }
+            // This ensures initializeAppLogic runs only once after the initial auth state is determined
+            if (!window._appLogicInitialized) {
+                initializeAppLogic();
+                window._appLogicInitialized = true; // Prevent re-running
+            }
+        });
+        
+        // Enable the Google Auth button immediately if Firebase is available
+        if (googleAuthBtn) {
+            googleAuthBtn.disabled = false;
+            console.log("[Auth] Google Auth button enabled on DOMContentLoaded.");
+        }
+
+    } else {
+        console.error("[Firebase] Firebase objects (db, auth, appId, firestore, authFunctions) are not available on DOMContentLoaded. Firebase initialization likely failed in index.html.");
+        // The error message for missing config is already displayed by index.html
+        updateAuthButtonText(false);
+        updateMainButtonsState(false);
+        if (loadingIndicator) loadingIndicator.style.display = 'none';
+    }
 }); // End DOMContentLoaded
