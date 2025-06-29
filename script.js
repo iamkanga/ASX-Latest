@@ -1,5 +1,5 @@
-// File Version: v110
-// Last Updated: 2025-06-28 (Implemented 20 new themes, theme selector, and revert link)
+// File Version: v111
+// Last Updated: 2025-06-28 (Fixed hamburger menu not opening)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -7,7 +7,7 @@
 // from the <script type="module"> block in index.html.
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v110) DOMContentLoaded fired."); // New log to confirm script version and DOM ready
+    console.log("script.js (v111) DOMContentLoaded fired."); // New log to confirm script version and DOM ready
 
     // --- Core Helper Functions (DECLARED FIRST FOR HOISTING) ---
 
