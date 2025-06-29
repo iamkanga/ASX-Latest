@@ -1,5 +1,5 @@
-// File Version: v140 (truncateText function scope fix)
-// Last Updated: 2025-06-28 (Moved truncateText to global helper functions)
+// File Version: v141 (Watchlist Loading Debugging)
+// Last Updated: 2025-06-29 (Added detailed logging for watchlists fetched from Firestore)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -1011,10 +1011,15 @@ async function loadUserWatchlists() {
 
     if (loadingIndicator) loadingIndicator.style.display = 'block';
     try {
-        console.log("[Watchlist] Fetching user watchlists...");
+        console.log("[Watchlist] Fetching user watchlists for UID:", currentUserId); // Added log for current UID
         const querySnapshot = await window.firestore.getDocs(watchlistsColRef);
-        querySnapshot.forEach(doc => { userWatchlists.push({ id: doc.id, name: doc.data().name }); });
-        console.log(`[Watchlist] Found ${userWatchlists.length} existing watchlists.`);
+        
+        const fetchedWatchlistIds = []; // New array to store fetched IDs
+        querySnapshot.forEach(doc => {
+            userWatchlists.push({ id: doc.id, name: doc.data().name });
+            fetchedWatchlistIds.push(doc.id); // Store ID
+        });
+        console.log(`[Watchlist] Found ${userWatchlists.length} existing watchlists. Fetched IDs:`, fetchedWatchlistIds); // Modified log to show IDs
 
         if (userWatchlists.length === 0) {
             const defaultWatchlistRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/watchlists/${getDefaultWatchlistId(currentUserId)}`);
@@ -1207,7 +1212,7 @@ async function migrateOldSharesToWatchlist() {
 
 // --- DOMContentLoaded Listener for UI Element References and Event Listeners ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v140) DOMContentLoaded fired."); // Updated script version log
+    console.log("script.js (v141) DOMContentLoaded fired."); // Updated script version log
 
     // --- Initialize Firebase variables from window globals ---
     // These must be assigned before any Firebase operations.
