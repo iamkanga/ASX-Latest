@@ -1,5 +1,5 @@
-/* File Version: v56 */
-/* Last Updated: 2025-06-28 (Add Comment Button Visibility Fix) */
+/* File Version: v51 */
+/* Last Updated: 2025-06-28 (Theme Toggle & Revert Button Styling) */
 
 :root {
     /* Light Theme (Default) - Adjusted for more vibrancy */
@@ -46,6 +46,7 @@ body.dark-theme {
     --card-bg: #2e2e4a; /* Darker cards */
     --border-color: #444;
     --button-bg: #4a7dff; /* Brighter blue for buttons */
+    --button-text: #fff;
     --button-hover-bg: #3a6cd9;
     --input-bg: #3c3c5c;
     --input-border: #555;
@@ -55,6 +56,7 @@ body.dark-theme {
     --table-row-hover-bg: #333350;
     --asx-button-bg: #3a3a5a;
     --asx-button-hover-bg: #4a4a6a;
+    --asx-button-text: #e0e0e0;
     --asx-button-active-bg: #4a7dff;
     --asx-button-active-text: #fff;
     --danger-button-bg: #e74c3c;
@@ -1062,11 +1064,9 @@ table tbody tr:not(.selected):hover {
     top: 0;
     width: 100%;
     height: 100%;
-    overflow: auto; /* Allow modal itself to scroll if content is too large for viewport */
+    overflow: auto;
     background-color: var(--modal-bg);
-    padding-top: 60px; /* Space from top */
-    padding-bottom: 20px; /* Space from bottom for buttons */
-    box-sizing: border-box; /* Include padding in height calculation */
+    padding-top: 60px;
 }
 
 .modal-content {
@@ -1080,26 +1080,12 @@ table tbody tr:not(.selected):hover {
     width: 90%;
     box-sizing: border-box;
     color: var(--text-color);
-
-    /* Flexbox for internal layout: main content + fixed footer buttons */
-    display: flex;
-    flex-direction: column;
-    max-height: 90vh; /* Set a max height for the modal content itself */
-    overflow: hidden; /* Hide overflow on the content wrapper itself, will be handled by inner scrollable div */
-}
-
-/* New: Scrollable body within the modal content */
-.modal-body-scrollable {
-    flex-grow: 1; /* Allows this section to take up available space */
-    overflow-y: auto; /* Enable vertical scrolling for this specific area */
-    padding-right: 10px; /* Add some padding for scrollbar */
-    margin-right: -10px; /* Compensate for padding to avoid extra space */
-    box-sizing: border-box;
 }
 
 .add-share-modal-content {
-    /* No specific max-height needed here, handled by .modal-content */
-    padding-bottom: 80px; /* Add padding to account for fixed footer on mobile, if .modal-body-scrollable isn't used */
+    max-height: 85vh; /* Adjusted for mobile button visibility */
+    overflow-y: auto;
+    padding-bottom: 80px; /* Add padding to account for fixed footer on mobile */
 }
 
 .modal-content h2 {
@@ -1179,45 +1165,34 @@ table tbody tr:not(.selected):hover {
 
 /* Comments Section in Form */
 .comments-form-container h3 {
-    display: flex; /* Make it a flex container */
-    align-items: center; /* Vertically align items */
-    justify-content: space-between; /* Push text to left, button to right */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     border-bottom: 1px solid var(--border-color);
     padding-bottom: 5px;
     margin-top: 25px;
     margin-bottom: 15px;
     font-size: 1.2em;
     color: var(--text-color);
-    border-bottom: none; /* Remove extra border */
-    padding-bottom: 0;
-    /* Ensure no overflow issues for the button */
-    overflow: visible; /* Explicitly allow content to overflow if needed */
-    min-height: 30px; /* Ensure enough height for the button to be visible */
 }
 
-/* NEW: Styling for the #addCommentSectionBtn */
-.add-section-btn {
+.comments-form-container .add-section-btn {
     background-color: var(--button-bg);
     color: var(--button-text);
     border: none;
-    border-radius: 8px; /* Slightly rounded rectangle */
-    padding: 8px 15px; /* Adjusted padding for better button feel */
-    font-size: 1em; /* Standard font size */
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    font-size: 1.5em;
     line-height: 1;
-    display: flex; /* Use flex to align icon and text */
+    display: flex;
     justify-content: center;
     align-items: center;
-    gap: 8px; /* Space between icon and text */
     cursor: pointer;
     transition: background-color 0.2s ease;
-    margin-top: 15px; /* Space above the button */
-    margin-bottom: 20px; /* Space below the button */
-    width: fit-content; /* Shrink to fit content */
-    margin-left: auto; /* Center the button */
-    margin-right: auto; /* Center the button */
 }
 
-.add-section-btn:hover {
+.comments-form-container .add-section-btn:hover {
     background-color: var(--button-hover-bg);
 }
 
@@ -1264,7 +1239,6 @@ table tbody tr:not(.selected):hover {
     justify-content: center; /* Center the group of buttons */
     gap: 10px;
     margin-top: 25px;
-    flex-shrink: 0; /* Prevent these button groups from shrinking */
 }
 
 .form-action-buttons button,
@@ -1341,8 +1315,6 @@ table tbody tr:not(.selected):hover {
     margin-bottom: 15px;
     font-size: 1.2em;
     color: var(--text-color);
-    border-bottom: none; /* Remove extra border */
-    padding-bottom: 0;
 }
 
 .modal-comment-item {
@@ -1711,8 +1683,8 @@ table tbody tr:not(.selected):hover {
         padding: 20px;
     }
     .add-share-modal-content {
-        /* This is now handled by .modal-body-scrollable within the modal-content flex container */
-        padding-bottom: 20px; /* Keep some padding for mobile, though buttons are now flex-shrink:0 */
+        max-height: calc(100vh - 120px); /* Adjusted to ensure buttons are visible above soft keyboard/nav bar */
+        padding-bottom: 20px; /* Ensure enough padding at the bottom */
     }
 
     /* Align "Cancel" and "Save" buttons on the same line for mobile */
@@ -1760,7 +1732,7 @@ table tbody tr:not(.selected):hover {
     .google-auth-btn {
         margin: 0 auto; /* Explicitly center */
         left: unset; /* Remove any conflicting left positioning */
-        right: unset; /* Remove any conflicting transforms */
+        right: unset; /* Remove any conflicting right positioning */
         transform: none; /* Remove any conflicting transforms */
     }
 }
