@@ -1,5 +1,5 @@
-// File Version: v118
-// Last Updated: 2025-06-30 (Added debugging logs for sort order saving)
+// File Version: v119
+// Last Updated: 2025-06-30 (Fixed sort order display before login)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -508,26 +508,33 @@ function renderWatchlistSelect() {
 // Render options in the sort by dropdown
 function renderSortSelect() {
     if (!sortSelect) { console.error("[renderSortSelect] sortSelect element not found."); return; }
-    const firstOption = sortSelect.options[0];
-    if (firstOption && firstOption.value === '') {
-        firstOption.textContent = 'Sort';
-        firstOption.disabled = true;
-        firstOption.selected = true;
-    } else {
-        const placeholderOption = document.createElement('option');
-        placeholderOption.value = '';
-        placeholderOption.textContent = 'Sort';
-        placeholderOption.disabled = true;
-        placeholderOption.selected = true;
-        sortSelect.insertBefore(placeholderOption, sortSelect.firstChild);
-    }
-    // Load saved sort preference from global variable (which is loaded from Firebase)
-    if (currentSortOrder && Array.from(sortSelect.options).some(option => option.value === currentSortOrder)) {
+    // Always reset to placeholder first
+    sortSelect.innerHTML = '<option value="" disabled selected>Sort</option>';
+
+    // Re-add other options
+    const options = [
+        { value: "entryDate-desc", text: "Date Added (Newest)" },
+        { value: "entryDate-asc", text: "Date Added (Oldest)" },
+        { value: "shareName-asc", text: "Code (A-Z)" },
+        { value: "shareName-desc", text: "Code (Z-A)" },
+        { value: "dividendAmount-desc", text: "Dividend (High-Low)" },
+        { value: "dividendAmount-asc", text: "Dividend (Low-High)" }
+    ];
+    options.forEach(opt => {
+        const optionElement = document.createElement('option');
+        optionElement.value = opt.value;
+        optionElement.textContent = opt.text;
+        sortSelect.appendChild(optionElement);
+    });
+
+    // Apply saved sort preference if user is logged in and preference exists
+    if (currentUserId && currentSortOrder && Array.from(sortSelect.options).some(option => option.value === currentSortOrder)) {
         sortSelect.value = currentSortOrder;
         console.log(`[Sort] Applied saved sort order: ${currentSortOrder}`);
     } else {
-        sortSelect.value = ''; // Reset to placeholder if no saved or invalid
-        currentSortOrder = ''; // Reset global variable
+        // If not logged in or no saved preference, ensure placeholder is selected
+        sortSelect.value = ''; 
+        console.log("[Sort] No valid saved sort order or not logged in, defaulting to placeholder.");
     }
 }
 
@@ -1009,14 +1016,15 @@ async function loadUserWatchlists() {
         renderWatchlistSelect();
         
         // Apply saved sort order
-        if (savedSortOrder && Array.from(sortSelect.options).some(option => option.value === savedSortOrder)) {
+        if (currentUserId && savedSortOrder && Array.from(sortSelect.options).some(option => option.value === savedSortOrder)) {
             currentSortOrder = savedSortOrder;
             sortSelect.value = currentSortOrder;
             console.log(`[Sort] Applied saved sort order: ${currentSortOrder}`);
         } else {
-            currentSortOrder = 'entryDate-desc'; // Fallback to default
-            sortSelect.value = currentSortOrder;
-            console.log("[Sort] No valid saved sort order, defaulting to 'entryDate-desc'.");
+            // If not logged in or no saved preference, ensure placeholder is selected
+            sortSelect.value = ''; 
+            currentSortOrder = ''; // Ensure global variable is reset too
+            console.log("[Sort] No valid saved sort order or not logged in, defaulting to placeholder.");
         }
         renderSortSelect(); // Render with loaded sort preference
         
@@ -1802,7 +1810,7 @@ async function initializeAppLogic() {
 
 // --- DOMContentLoaded Event Listener (Main entry point) ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v118) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v119) DOMContentLoaded fired."); // Updated version number
 
     // Check if Firebase objects are available from the module script in index.html
     // If they are, proceed with setting up the auth state listener.
