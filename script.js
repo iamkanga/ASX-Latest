@@ -1,5 +1,5 @@
-// File Version: v119
-// Last Updated: 2025-06-30 (Fixed sort order display before login)
+// File Version: v120
+// Last Updated: 2025-06-30 (Theme CSS integration and minor fixes)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -534,6 +534,7 @@ function renderSortSelect() {
     } else {
         // If not logged in or no saved preference, ensure placeholder is selected
         sortSelect.value = ''; 
+        currentSortOrder = ''; // Ensure global variable is reset too
         console.log("[Sort] No valid saved sort order or not logged in, defaulting to placeholder.");
     }
 }
@@ -1810,7 +1811,7 @@ async function initializeAppLogic() {
 
 // --- DOMContentLoaded Event Listener (Main entry point) ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v119) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v120) DOMContentLoaded fired."); // Updated version number
 
     // Check if Firebase objects are available from the module script in index.html
     // If they are, proceed with setting up the auth state listener.
