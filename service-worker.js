@@ -23,46 +23,52 @@ self.addEventListener('install', (event) => {
                 console.log('Service Worker v46: Cache opened'); // Updated log
                 return cache.addAll(CACHED_ASSETS);
             })
-            .then(() => {
-                console.log('Service Worker v46: All assets added to cache. Calling skipWaiting.'); // Updated log
-                return self.skipWaiting(); // Force the new service worker to activate immediately
-            })
-            .catch(error => {
-                console.error('Service Worker v46: Installation failed:', error); // Updated log
-            })
     );
 });
 
 self.addEventListener('activate', (event) => {
-    console.log('Service Worker v46: Activating...'); // Updated log
+    console.log('Service Worker v46: Activating...'); // Updated log for version
     event.waitUntil(
         caches.keys().then((cacheNames) => {
             return Promise.all(
                 cacheNames.map((cacheName) => {
                     if (cacheName !== CACHE_NAME) {
-                        console.log(`Service Worker v46: Deleting old cache: ${cacheName}`); // Updated log
+                        console.log('Service Worker v46: Deleting old cache:', cacheName); // Updated log
                         return caches.delete(cacheName);
                     }
-                    return null;
                 })
-            ).then(() => self.clients.claim()); // Take control of clients immediately
+            );
         })
     );
 });
 
 self.addEventListener('fetch', (event) => {
-    // Only handle GET requests, ignore others (like POST, PUT, DELETE)
+    // Only handle GET requests for caching. Do NOT cache POST, PUT, DELETE requests.
     if (event.request.method === 'GET') {
         event.respondWith(
             caches.match(event.request).then((cachedResponse) => {
+                // If a cached response is found, return it immediately
+                if (cachedResponse) {
+                    console.log(`Service Worker v46: Serving from cache: ${event.request.url}`); // Updated log
+                    return cachedResponse;
+                }
+
+                // Otherwise, fetch from the network
                 const fetchPromise = fetch(event.request).then((networkResponse) => {
-                    // Cache successful responses for future use
-                    if (networkResponse.ok) {
-                        const responseToCache = networkResponse.clone();
-                        caches.open(CACHE_NAME).then((cache) => {
-                            cache.put(event.request, responseToCache);
-                        });
+                    // Check if we received a valid response
+                    if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+                        return networkResponse;
                     }
+
+                    // IMPORTANT: Clone the response. A response is a stream
+                    // and can only be consumed once. We must clone it so that
+                    // the browser can consume one and we can consume the other.
+                    const responseToCache = networkResponse.clone();
+
+                    caches.open(CACHE_NAME).then((cache) => {
+                        cache.put(event.request, responseToCache);
+                    });
+
                     return networkResponse;
                 }).catch(error => {
                     console.error(`Service Worker v46: Network fetch failed for ${event.request.url}.`, error); // Updated log
