@@ -1,5 +1,5 @@
-// File Version: v120
-// Last Updated: 2025-06-28 (Theme & Loading Indicator Robustness)
+// File Version: v121
+// Last Updated: 2025-06-28 (Fix for applyDefaultLightDarkTheme ReferenceError)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -836,6 +836,37 @@ function resetCalculator() {
 }
 
 // Theme Toggling Logic
+// Moved applyDefaultLightDarkTheme to global scope
+function applyDefaultLightDarkTheme() {
+    const body = document.body;
+    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    let effectiveDefaultTheme = localStorage.getItem('theme'); // Get previously saved default preference
+
+    body.className = body.className.split(' ').filter(c => !c.startsWith('theme-') && c !== 'dark-theme').join(' ');
+
+    // If no explicit default preference saved, use system preference as the new saved default
+    if (!effectiveDefaultTheme) {
+        effectiveDefaultTheme = systemPrefersDark ? 'dark' : 'light';
+        localStorage.setItem('theme', effectiveDefaultTheme); // Explicitly save this default
+        console.log(`[Theme] No default theme preference found, setting to system preference: ${effectiveDefaultTheme} and saving.`);
+    } else {
+        console.log(`[Theme] Using previously saved default theme: ${effectiveDefaultTheme}`);
+    }
+
+    // Apply the determined default theme
+    if (effectiveDefaultTheme === 'dark') {
+        body.classList.add('dark-theme');
+    } else {
+        body.classList.remove('dark-theme');
+    }
+    console.log(`[Theme] Reverted to default theme: ${effectiveDefaultTheme}. Body class: ${body.className}`);
+    // When reverting to default, ensure custom theme is not selected in dropdown
+    if (colorThemeSelect) {
+        colorThemeSelect.value = 'none';
+    }
+    currentCustomThemeIndex = -1; // Reset index
+}
+
 function applyTheme(themeName) {
     const body = document.body;
     // Remove all existing theme classes (both 'dark-theme' and 'theme-X')
@@ -847,27 +878,7 @@ function applyTheme(themeName) {
         localStorage.removeItem('theme'); // Clear default light/dark preference if custom theme is selected
         console.log(`[Theme] Applied custom theme: ${themeName}. Body class: ${body.className}`);
     } else { // themeName is 'none' (revert to default)
-        localStorage.removeItem('selectedTheme'); // Always clear custom theme preference
-
-        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        let effectiveDefaultTheme = localStorage.getItem('theme'); // Get previously saved default preference
-
-        // If no explicit default preference saved, use system preference as the new saved default
-        if (!effectiveDefaultTheme) {
-            effectiveDefaultTheme = systemPrefersDark ? 'dark' : 'light';
-            localStorage.setItem('theme', effectiveDefaultTheme); // Explicitly save this default
-            console.log(`[Theme] No default theme preference found, setting to system preference: ${effectiveDefaultTheme} and saving.`);
-        } else {
-            console.log(`[Theme] Using previously saved default theme: ${effectiveDefaultTheme}`);
-        }
-
-        // Apply the determined default theme
-        if (effectiveDefaultTheme === 'dark') {
-            body.classList.add('dark-theme');
-        } else {
-            body.classList.remove('dark-theme');
-        }
-        console.log(`[Theme] Reverted to default theme: ${effectiveDefaultTheme}. Body class: ${body.className}`);
+        applyDefaultLightDarkTheme(); // Call the now globally available function
     }
     updateThemeToggleAndSelector();
 }
@@ -1771,7 +1782,7 @@ async function initializeAppLogic() {
 
 // --- DOMContentLoaded Event Listener (Main entry point) ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v120) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v121) DOMContentLoaded fired."); // Updated version number
 
     // Check if Firebase objects are available from the module script in index.html
     // If they are, proceed with setting up the auth state listener.
