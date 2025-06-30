@@ -1,5 +1,5 @@
 // File Version: v121
-// Last Updated: 2025-06-28 (Fix for applyDefaultLightDarkTheme ReferenceError)
+// Last Updated: 2025-06-28 (Theme & Loading Indicator Debugging)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -836,37 +836,6 @@ function resetCalculator() {
 }
 
 // Theme Toggling Logic
-// Moved applyDefaultLightDarkTheme to global scope
-function applyDefaultLightDarkTheme() {
-    const body = document.body;
-    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    let effectiveDefaultTheme = localStorage.getItem('theme'); // Get previously saved default preference
-
-    body.className = body.className.split(' ').filter(c => !c.startsWith('theme-') && c !== 'dark-theme').join(' ');
-
-    // If no explicit default preference saved, use system preference as the new saved default
-    if (!effectiveDefaultTheme) {
-        effectiveDefaultTheme = systemPrefersDark ? 'dark' : 'light';
-        localStorage.setItem('theme', effectiveDefaultTheme); // Explicitly save this default
-        console.log(`[Theme] No default theme preference found, setting to system preference: ${effectiveDefaultTheme} and saving.`);
-    } else {
-        console.log(`[Theme] Using previously saved default theme: ${effectiveDefaultTheme}`);
-    }
-
-    // Apply the determined default theme
-    if (effectiveDefaultTheme === 'dark') {
-        body.classList.add('dark-theme');
-    } else {
-        body.classList.remove('dark-theme');
-    }
-    console.log(`[Theme] Reverted to default theme: ${effectiveDefaultTheme}. Body class: ${body.className}`);
-    // When reverting to default, ensure custom theme is not selected in dropdown
-    if (colorThemeSelect) {
-        colorThemeSelect.value = 'none';
-    }
-    currentCustomThemeIndex = -1; // Reset index
-}
-
 function applyTheme(themeName) {
     const body = document.body;
     // Remove all existing theme classes (both 'dark-theme' and 'theme-X')
@@ -878,7 +847,27 @@ function applyTheme(themeName) {
         localStorage.removeItem('theme'); // Clear default light/dark preference if custom theme is selected
         console.log(`[Theme] Applied custom theme: ${themeName}. Body class: ${body.className}`);
     } else { // themeName is 'none' (revert to default)
-        applyDefaultLightDarkTheme(); // Call the now globally available function
+        localStorage.removeItem('selectedTheme'); // Always clear custom theme preference
+
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        let effectiveDefaultTheme = localStorage.getItem('theme'); // Get previously saved default preference
+
+        // If no explicit default preference saved, use system preference as the new saved default
+        if (!effectiveDefaultTheme) {
+            effectiveDefaultTheme = systemPrefersDark ? 'dark' : 'light';
+            localStorage.setItem('theme', effectiveDefaultTheme); // Explicitly save this default
+            console.log(`[Theme] No default theme preference found, setting to system preference: ${effectiveDefaultTheme} and saving.`);
+        } else {
+            console.log(`[Theme] Using previously saved default theme: ${effectiveDefaultTheme}`);
+        }
+
+        // Apply the determined default theme
+        if (effectiveDefaultTheme === 'dark') {
+            body.classList.add('dark-theme');
+        } else {
+            body.classList.remove('dark-theme');
+        }
+        console.log(`[Theme] Reverted to default theme: ${effectiveDefaultTheme}. Body class: ${body.className}`);
     }
     updateThemeToggleAndSelector();
 }
@@ -894,6 +883,8 @@ function updateThemeToggleAndSelector() {
         themeToggleBtn.innerHTML = '<i class="fas fa-palette"></i> Toggle Theme';
         themeToggleBtn.disabled = false; // Ensure it's always enabled
         console.log(`[Theme Controls] themeToggleBtn.disabled: ${themeToggleBtn.disabled}`);
+    } else {
+        console.warn("[Theme Controls] themeToggleBtn element not found.");
     }
 
     // Update theme selector dropdown
@@ -910,12 +901,16 @@ function updateThemeToggleAndSelector() {
         }
         colorThemeSelect.disabled = false; // Ensure it's always enabled
         console.log(`[Theme Controls] colorThemeSelect.disabled: ${colorThemeSelect.disabled}`);
+    } else {
+        console.warn("[Theme Controls] colorThemeSelect element not found.");
     }
 
     // Update revert button
     if (revertToDefaultThemeBtn) {
         revertToDefaultThemeBtn.disabled = false; // Ensure it's always enabled
         console.log(`[Theme Controls] revertToDefaultThemeBtn.disabled: ${revertToDefaultThemeBtn.disabled}`);
+    } else {
+        console.warn("[Theme Controls] revertToDefaultThemeBtn element not found.");
     }
 }
 
@@ -961,11 +956,11 @@ async function loadUserPreferences() {
         hideLoading(); // Ensure loading indicator hides if essential services are missing
         return;
     }
-    const userProfileDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/profile/settings`);
-
+    
+    showLoading(); // Show loading indicator at the start of this async function
     try {
-        showLoading();
         console.log("[Preferences] Fetching user preferences...");
+        const userProfileDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/profile/settings`);
         const userProfileSnap = await window.firestore.getDoc(userProfileDocRef);
         let lastSelectedWatchlistId = null;
         let lastSelectedSortOrder = '';
@@ -1046,7 +1041,7 @@ async function loadShares() {
         hideLoading(); // Ensure loading indicator hides
         return;
     }
-    showLoading();
+    showLoading(); // Show loading indicator at the start of this async function
     allSharesData = [];
     try {
         const sharesCol = window.firestore.collection(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`);
@@ -1075,7 +1070,7 @@ async function migrateOldSharesToWatchlist() {
         console.warn("[Migration] Firestore DB, User ID, or Firestore functions not available for migration.");
         return false;
     }
-    showLoading();
+    showLoading(); // Show loading indicator at the start of this async function
     const sharesCol = window.firestore.collection(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`);
     const q = window.firestore.query(sharesCol);
     let sharesToUpdate = [];
@@ -1795,35 +1790,40 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Listen for auth state changes to trigger the main app logic
         window.authFunctions.onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                currentUserId = user.uid;
-                updateAuthButtonText(true, user.email || user.displayName);
-                console.log("[AuthState] User signed in:", user.uid);
-                if (user.email && user.email.toLowerCase() === KANGA_EMAIL) {
-                    mainTitle.textContent = "Kanga's Share Watchlist";
+            try { // Added try-finally block to ensure loading indicator hides
+                if (user) {
+                    currentUserId = user.uid;
+                    updateAuthButtonText(true, user.email || user.displayName);
+                    console.log("[AuthState] User signed in:", user.uid);
+                    if (user.email && user.email.toLowerCase() === KANGA_EMAIL) {
+                        mainTitle.textContent = "Kanga's Share Watchlist";
+                    } else {
+                        mainTitle.textContent = "My Share Watchlist";
+                    }
+                    showLoading(); // Show loading indicator immediately upon sign-in
+                    await loadUserPreferences(); // This populates userWatchlists and loads last sort order
+                    // Enable main buttons AFTER user preferences and watchlists are loaded
+                    updateMainButtonsState(true); 
                 } else {
-                    mainTitle.textContent = "My Share Watchlist";
+                    currentUserId = null;
+                    updateAuthButtonText(false);
+                    mainTitle.textContent = "Share Watchlist";
+                    console.log("[AuthState] User signed out.");
+                    updateMainButtonsState(false);
+                    clearShareList();
+                    clearWatchlistUI();
                 }
-                showLoading(); // Show loading indicator immediately upon sign-in
-                await loadUserPreferences(); // This populates userWatchlists and loads last sort order
-                // Enable main buttons AFTER user preferences and watchlists are loaded
-                updateMainButtonsState(true); 
-                hideLoading(); // Hide loading indicator after all data and UI updates are complete
-            } else {
-                currentUserId = null;
-                updateAuthButtonText(false);
-                mainTitle.textContent = "Share Watchlist";
-                console.log("[AuthState] User signed out.");
-                updateMainButtonsState(false);
-                clearShareList();
-                clearWatchlistUI();
-                hideLoading(); // Ensure loading hides on logout
-            }
-            // This ensures initializeAppLogic runs only once after the initial auth state is determined
-            // It's crucial that this runs *after* the user state is known, as many UI elements depend on it.
-            if (!window._appLogicInitialized) {
-                initializeAppLogic();
-                window._appLogicInitialized = true; // Prevent re-running
+                // This ensures initializeAppLogic runs only once after the initial auth state is determined
+                // It's crucial that this runs *after* the user state is known, as many UI elements depend on it.
+                if (!window._appLogicInitialized) {
+                    initializeAppLogic();
+                    window._appLogicInitialized = true; // Prevent re-running
+                }
+            } catch (error) {
+                console.error("[AuthStateChanged] Error during auth state processing:", error);
+                showCustomAlert("Error during login/logout: " + error.message);
+            } finally {
+                hideLoading(); // Ensure loading hides after auth state change is fully processed
             }
         });
         
