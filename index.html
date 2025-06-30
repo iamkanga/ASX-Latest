@@ -33,13 +33,15 @@
         let db;
         let firebaseInitialized = false;
 
-        if (Object.keys(firebaseConfig).length === 0) {
+        // Check for essential Firebase config properties
+        if (!firebaseConfig || !firebaseConfig.apiKey || !firebaseConfig.projectId) {
             console.error("Firebase: Configuration is missing or invalid (apiKey or projectId). Firebase will not initialize.");
             document.addEventListener('DOMContentLoaded', () => {
                 const loadingIndicator = document.getElementById('loadingIndicator');
                 if (loadingIndicator) loadingIndicator.style.display = 'none';
                 const errorDiv = document.getElementById('firebaseInitError');
                 if (errorDiv) {
+                    errorDiv.textContent = "Error: Firebase configuration is missing or invalid. Please ensure apiKey and projectId are provided in the environment.";
                     errorDiv.style.display = 'block';
                 }
             });
@@ -78,6 +80,7 @@
                     if (loadingIndicator) loadingIndicator.style.display = 'none';
                     const errorDiv = document.getElementById('firebaseInitError');
                     if (errorDiv) {
+                        errorDiv.textContent = `Error: Firebase initialization failed: ${error.message}. Check console for details.`;
                         errorDiv.style.display = 'block';
                     }
                 });
@@ -230,7 +233,7 @@
             <!-- Message for Firebase initialization errors -->
             <div id="firebaseInitError" class="error-message" style="display: none;">
                 <p><strong>Error:</strong> Firebase failed to initialize.</p>
-                <p>This is usually due to missing or incorrect Firebase configuration. Please ensure your <code>firebaseConfig</code> in <code>index.html</code> is correctly set up from your Firebase project settings.</p>
+                <p>This is usually due to missing or incorrect Firebase configuration. Please ensure your <code>apiKey</code> and <code>projectId</code> are correctly provided in the Canvas environment variables (`__firebase_config`).</p>
                 <p>Core application features will not work without a valid Firebase connection.</p>
             </div>
 
