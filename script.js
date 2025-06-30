@@ -1,5 +1,5 @@
-// File Version: v120
-// Last Updated: 2025-06-28 (Syntax Error Fix)
+// File Version: v121
+// Last Updated: 2025-06-28 (Sort Order & Theme Persistence Fixes)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -423,10 +423,13 @@ function showShareDetails() {
 }
 
 // Watchlist Sorting Logic
-function sortShares() {
-    const sortValue = sortSelect.value;
+// Modified to accept an optional sortValue parameter for explicit sorting
+function sortShares(explicitSortValue = null) {
+    const sortValue = explicitSortValue || sortSelect.value;
+    console.log(`[Sort] sortShares called. Explicit value: ${explicitSortValue}, Dropdown value: ${sortSelect.value}. Using effective sortValue: ${sortValue}`);
+
     if (!sortValue || sortValue === '') {
-        console.log("[Sort] Sort placeholder selected, no explicit sorting applied.");
+        console.log("[Sort] Sort placeholder selected or no valid sort value provided, no explicit sorting applied.");
         renderWatchlist();
         return;
     }
@@ -521,8 +524,6 @@ function renderSortSelect() {
         placeholderOption.selected = true;
         sortSelect.insertBefore(placeholderOption, sortSelect.firstChild);
     }
-    // Ensure that if a valid value is already set, it remains selected.
-    // The previous logic was fine here, as it only adds the placeholder if not already there.
     // The actual setting of the value happens in loadUserPreferences.
 }
 
@@ -820,6 +821,7 @@ function resetCalculator() {
 // Theme Toggling Logic
 function applyTheme(themeName) {
     const body = document.body;
+    console.log(`[Theme] applyTheme called with: ${themeName}. Current body classes: ${body.className}`);
     // Remove all existing theme classes (both 'dark-theme' and 'theme-X')
     body.className = body.className.split(' ').filter(c => !c.startsWith('theme-') && c !== 'dark-theme').join(' ');
 
@@ -827,12 +829,13 @@ function applyTheme(themeName) {
         body.classList.add(`theme-${themeName}`);
         localStorage.setItem('selectedTheme', themeName);
         localStorage.removeItem('theme'); // Clear default light/dark preference if custom theme is selected
-        console.log(`[Theme] Applied custom theme: ${themeName}. Body class: ${body.className}`);
+        console.log(`[Theme] Applied custom theme: ${themeName}. New body class: ${body.className}`);
     } else { // themeName is 'none' (revert to default)
         localStorage.removeItem('selectedTheme'); // Always clear custom theme preference
 
         const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         let effectiveDefaultTheme = localStorage.getItem('theme'); // Get previously saved default preference
+        console.log(`[Theme] Reverting to default. System prefers dark: ${systemPrefersDark}, Saved default theme: ${effectiveDefaultTheme}`);
 
         // If no explicit default preference saved, use system preference as the new saved default
         if (!effectiveDefaultTheme) {
@@ -849,7 +852,7 @@ function applyTheme(themeName) {
         } else {
             body.classList.remove('dark-theme');
         }
-        console.log(`[Theme] Reverted to default theme: ${effectiveDefaultTheme}. Body class: ${body.className}`);
+        console.log(`[Theme] Reverted to default theme: ${effectiveDefaultTheme}. New body class: ${body.className}`);
     }
     updateThemeToggleAndSelector();
 }
@@ -857,6 +860,7 @@ function applyTheme(themeName) {
 function updateThemeToggleAndSelector() {
     const currentCustomTheme = localStorage.getItem('selectedTheme');
     const currentDefaultTheme = localStorage.getItem('theme'); // 'light' or 'dark'
+    console.log(`[Theme Selector] updateThemeToggleAndSelector called. Custom theme: ${currentCustomTheme}, Default theme: ${currentDefaultTheme}`);
 
     // Update theme toggle button icon
     if (themeToggleBtn) {
@@ -884,8 +888,10 @@ function updateThemeToggleAndSelector() {
 // This function needs to be defined BEFORE it's called in initializeAppLogic.
 function applyDefaultLightDarkTheme() {
     const body = document.body;
+    console.log(`[Theme] applyDefaultLightDarkTheme called. Current body classes: ${body.className}`);
     const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     let savedDefaultTheme = localStorage.getItem('theme'); // 'light' or 'dark'
+    console.log(`[Theme] Default theme logic. System prefers dark: ${systemPrefersDark}, Saved default theme: ${savedDefaultTheme}`);
 
     // Remove all custom theme classes
     body.className = body.className.split(' ').filter(c => !c.startsWith('theme-') && c !== 'dark-theme').join(' ');
@@ -904,7 +910,7 @@ function applyDefaultLightDarkTheme() {
     } else {
         body.classList.remove('dark-theme');
     }
-    console.log(`[Theme] Applied default theme: ${savedDefaultTheme}. Body class: ${body.className}`);
+    console.log(`[Theme] Applied default theme: ${savedDefaultTheme}. New body class: ${body.className}`);
     updateThemeToggleAndSelector(); // Update the UI elements for theme selection
 }
 
@@ -1001,11 +1007,11 @@ async function loadUserPreferences() {
 
         renderWatchlistSelect();
         
-        // Apply sort order preference
+        // Apply sort order preference to the dropdown
         if (sortSelect) {
             if (lastSelectedSortOrder && Array.from(sortSelect.options).some(option => option.value === lastSelectedSortOrder)) {
                 sortSelect.value = lastSelectedSortOrder;
-                console.log(`[Sort] Applied saved sort order: ${lastSelectedSortOrder}. Current sortSelect.value: ${sortSelect.value}`);
+                console.log(`[Sort] Applied saved sort order to dropdown: ${lastSelectedSortOrder}. Current sortSelect.value: ${sortSelect.value}`);
             } else {
                 sortSelect.value = ''; // Reset to placeholder if no saved or invalid
                 console.log("[Sort] No valid saved sort order found or sortSelect not available, resetting sort dropdown.");
@@ -1016,7 +1022,7 @@ async function loadUserPreferences() {
         const migratedSomething = await migrateOldSharesToWatchlist();
         if (!migratedSomething) {
             console.log("[Watchlist] No old shares to migrate/update, directly loading shares for current watchlist.");
-            await loadShares();
+            await loadShares(lastSelectedSortOrder); // Pass the loaded sort order directly
         }
 
     } catch (error) {
@@ -1029,7 +1035,8 @@ async function loadUserPreferences() {
 
 
 // Load shares from Firestore
-async function loadShares() {
+// Modified to accept an optional sortOrder parameter
+async function loadShares(sortOrder = null) {
     if (!db || !currentUserId || !currentWatchlistId || !window.firestore) {
         console.warn("[Shares] Firestore DB, User ID, Watchlist ID, or Firestore functions not available for loading shares. Clearing list.");
         clearShareList();
@@ -1048,7 +1055,7 @@ async function loadShares() {
         });
         console.log(`[Shares] Shares loaded successfully for watchlist: '${currentWatchlistName}' (ID: ${currentWatchlistId}). Total shares: ${allSharesData.length}`);
         console.log("[Shares] All shares data (after load):", allSharesData);
-        sortShares(); // Apply sorting after loading shares
+        sortShares(sortOrder); // Pass the sortOrder to sortShares
         renderAsxCodeButtons();
     } catch (error) {
         console.error("[Shares] Error loading shares:", error);
@@ -1141,7 +1148,9 @@ async function migrateOldSharesToWatchlist() {
             for (const item of sharesToUpdate) { await window.firestore.updateDoc(item.ref, item.data); }
             showCustomAlert(`Migrated/Updated ${sharesToUpdate.length} old shares.`, 2000);
             console.log("[Migration] Migration complete. Reloading shares.");
-            await loadShares();
+            // When migrating, we need to reload shares, and the sort order should be applied from preferences.
+            // loadShares will be called by loadUserPreferences, and it will pass the correct sort order.
+            // So, no need to call loadShares here directly.
             anyMigrationPerformed = true;
         } else {
             console.log("[Migration] No old shares found requiring migration or schema update.");
@@ -1183,6 +1192,8 @@ function toggleAppSidebar(forceState = null) {
 // This function will be called ONLY when Firebase is confirmed ready.
 async function initializeAppLogic() {
     console.log("initializeAppLogic: Firebase is ready. Starting app logic.");
+    console.log(`[Theme Init] localStorage 'selectedTheme': ${localStorage.getItem('selectedTheme')}`);
+    console.log(`[Theme Init] localStorage 'theme': ${localStorage.getItem('theme')}`);
 
     // --- Initial UI Setup (moved from DOMContentLoaded) ---
     if (shareFormSection) shareFormSection.style.setProperty('display', 'none', 'important');
@@ -1204,7 +1215,7 @@ async function initializeAppLogic() {
     if (savedCustomTheme) {
         applyTheme(savedCustomTheme);
     } else {
-        applyDefaultLightDarkTheme(); // This is the call that was causing the error due to definition order
+        applyDefaultLightDarkTheme(); 
     }
     updateThemeToggleAndSelector();
 
@@ -1307,7 +1318,7 @@ async function initializeAppLogic() {
                 currentWatchlistName = selectedWatchlistObj.name;
                 console.log(`[Watchlist Change] User selected: '${currentWatchlistName}' (ID: ${currentWatchlistId})`);
                 await saveLastSelectedWatchlistId(currentWatchlistId);
-                await loadShares();
+                await loadShares(); // loadShares will now use the current sortSelect.value
             }
         });
     }
@@ -1315,7 +1326,7 @@ async function initializeAppLogic() {
     // --- Event Listener for Sort Dropdown ---
     if (sortSelect) {
         sortSelect.addEventListener('change', async () => { // Made async to save preference
-            sortShares();
+            sortShares(); // This will use sortSelect.value
             await saveSortOrderPreference(sortSelect.value); // Save preference on change
         });
     }
@@ -1402,7 +1413,7 @@ async function initializeAppLogic() {
                     showCustomAlert(`Share '${shareName}' added successfully!`, 1500);
                     console.log(`[Firestore] Share '${shareName}' added with ID: ${newDocRef.id}`);
                 }
-                await loadShares();
+                await loadShares(); // loadShares will now use the current sortSelect.value
                 closeModals();
             } catch (error) {
                 console.error("[Firestore] Error saving share:", error);
@@ -1428,7 +1439,7 @@ async function initializeAppLogic() {
                         showCustomAlert("Share deleted successfully!", 1500);
                         console.log(`[Firestore] Share (ID: ${selectedShareDocId}) deleted.`);
                         closeModals();
-                        await loadShares();
+                        await loadShares(); // loadShares will now use the current sortSelect.value
                     } catch (error) {
                         console.error("[Firestore] Error deleting share:", error);
                         showCustomAlert("Error deleting share: " + error.message);
@@ -1483,8 +1494,7 @@ async function initializeAppLogic() {
                 currentWatchlistName = watchlistName;
                 await saveLastSelectedWatchlistId(currentWatchlistId);
                 await loadUserPreferences(); // Reload all user preferences including watchlists
-                await loadShares();
-
+                // loadShares will be called by loadUserPreferences
             } catch (error) {
                 console.error("[Firestore] Error adding watchlist:", error);
                 showCustomAlert("Error adding watchlist: " + error.message);
@@ -1540,7 +1550,7 @@ async function initializeAppLogic() {
                 hideModal(manageWatchlistModal);
                 currentWatchlistName = newName;
                 await loadUserPreferences(); // Reload all user preferences including watchlists
-                await loadShares();
+                // loadShares will be called by loadUserPreferences
             } catch (error) {
                 console.error("[Firestore] Error renaming watchlist:", error);
                 showCustomAlert("Error renaming watchlist: " + error.message);
@@ -1577,7 +1587,7 @@ async function initializeAppLogic() {
                     closeModals();
 
                     await loadUserPreferences(); // Reload all user preferences including watchlists
-                    await loadShares();
+                    // loadShares will be called by loadUserPreferences
                 } catch (error) {
                     console.error("[Firestore] Error deleting watchlist:", error);
                     showCustomAlert("Error deleting watchlist: " + error.message);
@@ -1768,7 +1778,7 @@ async function initializeAppLogic() {
 
 // --- DOMContentLoaded Event Listener (Main entry point) ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v120) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v121) DOMContentLoaded fired."); // Updated version number
 
     // Check if Firebase objects are available from the module script in index.html
     // If they are, proceed with setting up the auth state listener.
@@ -1793,7 +1803,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (loadingIndicator) loadingIndicator.style.display = 'block';
                 await loadUserPreferences(); // This populates userWatchlists and loads last sort order
                 // Enable main buttons AFTER user preferences and watchlists are loaded
-                updateMainButtonsState(true); // <--- MOVED HERE to ensure data is ready
+                updateMainButtonsState(true); 
             } else {
                 currentUserId = null;
                 updateAuthButtonText(false);
