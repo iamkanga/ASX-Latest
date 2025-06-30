@@ -1,5 +1,5 @@
-// File Version: v123
-// Last Updated: 2025-06-30 (Fixes for theme scope, PWA, sort persistence)
+// File Version: v114
+// Last Updated: 2025-06-28 (Hamburger Fix & Theme Cycling)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -362,7 +362,7 @@ function showShareDetails() {
     const frankingCreditsNum = Number(share.frankingCredits);
     modalFrankingCredits.textContent = (!isNaN(frankingCreditsNum) && frankingCreditsNum !== null) ? `${frankingCreditsNum.toFixed(1)}%` : 'N/A';
     
-    const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, enteredPriceNum); 
+    const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, enteredPriceNum);
     modalUnfrankedYieldSpan.textContent = unfrankedYield !== null ? `${unfrankedYield.toFixed(2)}%` : 'N/A';
     
     const frankedYield = calculateFrankedYield(dividendAmountNum, enteredPriceNum, frankingCreditsNum);
@@ -519,13 +519,8 @@ function renderSortSelect() {
         placeholderOption.selected = true;
         sortSelect.insertBefore(placeholderOption, sortSelect.firstChild);
     }
-    // Load saved sort preference
-    const savedSortOrder = localStorage.getItem('sortOrder');
-    if (savedSortOrder && Array.from(sortSelect.options).some(option => option.value === savedSortOrder)) {
-        sortSelect.value = savedSortOrder;
-        console.log(`[Sort] Loaded saved sort order: ${savedSortOrder}`);
-    } else {
-        sortSelect.value = ''; // Reset to placeholder if no saved or invalid
+    if (!sortSelect.value || sortSelect.value === '') {
+        sortSelect.value = '';
     }
 }
 
@@ -706,7 +701,7 @@ function renderAsxCodeButtons() {
     const sharesInCurrentWatchlist = allSharesData.filter(share => share.watchlistId === currentWatchlistId);
     sharesInCurrentWatchlist.forEach(share => {
         if (share.shareName && typeof share.shareName === 'string' && share.shareName.trim() !== '') {
-                uniqueAsxCodes.add(share.shareName.trim().toUpperCase());
+            uniqueAsxCodes.add(share.shareName.trim().toUpperCase());
         }
     });
     if (uniqueAsxCodes.size === 0) {
@@ -718,7 +713,7 @@ function renderAsxCodeButtons() {
     const sortedAsxCodes = Array.from(uniqueAsxCodes).sort();
     sortedAsxCodes.forEach(asxCode => {
         const button = document.createElement('button');
-        button.className = 'asx-code-btn'; // Changed from asx-code-button to asx-code-btn
+        button.className = 'asx-code-button';
         button.textContent = asxCode;
         button.dataset.asxCode = asxCode;
         asxCodeButtonsContainer.appendChild(button);
@@ -820,7 +815,7 @@ function resetCalculator() {
     console.log("[Calculator] Calculator state reset.");
 }
 
-// Theme Toggling Logic (MOVED TO GLOBAL SCOPE)
+// Theme Toggling Logic
 function applyTheme(themeName) {
     const body = document.body;
     // Remove all existing theme classes (both 'dark-theme' and 'theme-X')
@@ -834,43 +829,28 @@ function applyTheme(themeName) {
     } else {
         localStorage.removeItem('selectedTheme'); // Clear custom theme preference
         // Revert to system default or last saved default light/dark
-        applyDefaultLightDarkTheme(); // Call the now globally accessible function
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const savedDefaultTheme = localStorage.getItem('theme'); // 'light' or 'dark'
+
+        if (savedDefaultTheme) {
+            if (savedDefaultTheme === 'dark') {
+                body.classList.add('dark-theme');
+            } else {
+                body.classList.remove('dark-theme');
+            }
+            console.log(`[Theme] Reverted to saved default theme: ${savedDefaultTheme}`);
+        } else {
+            if (systemPrefersDark) {
+                body.classList.add('dark-theme');
+            } else {
+                body.classList.remove('dark-theme');
+            }
+            localStorage.setItem('theme', systemPrefersDark ? 'dark' : 'light');
+            console.log(`[Theme] Reverted to system default theme: ${systemPrefersDark ? 'dark' : 'light'}`);
+        }
     }
     updateThemeToggleAndSelector();
 }
-
-// NEW: This function is now in the global scope
-function applyDefaultLightDarkTheme() {
-    const body = document.body;
-    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const savedDefaultTheme = localStorage.getItem('theme'); // 'light' or 'dark'
-
-    // Ensure all custom theme classes are removed
-    body.className = body.className.split(' ').filter(c => !c.startsWith('theme-') && c !== 'dark-theme').join(' ');
-
-    if (savedDefaultTheme) {
-        if (savedDefaultTheme === 'dark') {
-            body.classList.add('dark-theme');
-        } else {
-            body.classList.remove('dark-theme');
-        }
-        console.log(`[Theme] Reverted to saved default theme: ${savedDefaultTheme}`);
-    } else {
-        if (systemPrefersDark) {
-            body.classList.add('dark-theme');
-        } else {
-            body.classList.remove('dark-theme');
-        }
-        localStorage.setItem('theme', systemPrefersDark ? 'dark' : 'light');
-        console.log(`[Theme] Reverted to system default theme: ${systemPrefersDark ? 'dark' : 'light'}`);
-    }
-    // When reverting to default, ensure custom theme is not selected in dropdown
-    if (colorThemeSelect) {
-        colorThemeSelect.value = 'none';
-    }
-    currentCustomThemeIndex = -1; // Reset index
-}
-
 
 function updateThemeToggleAndSelector() {
     const currentCustomTheme = localStorage.getItem('selectedTheme');
@@ -916,21 +896,6 @@ async function saveLastSelectedWatchlistId(watchlistId) {
     }
 }
 
-// Save the last selected sort order to user's profile
-async function saveSortOrderPreference(sortOrder) {
-    if (!db || !currentUserId || !window.firestore) {
-        console.warn("[Sort] Cannot save sort order preference: DB, User ID, or Firestore functions not available.");
-        return;
-    }
-    const userProfileDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/profile/settings`);
-    try {
-        await window.firestore.setDoc(userProfileDocRef, { sortOrder: sortOrder }, { merge: true });
-        console.log(`[Sort] Saved sort order preference: ${sortOrder}`);
-    } catch (error) {
-        console.error("[Sort] Error saving sort order preference:", error);
-    }
-}
-
 // Load watchlists from Firestore and set the current one
 async function loadUserWatchlists() {
     if (!db || !currentUserId) {
@@ -963,12 +928,9 @@ async function loadUserWatchlists() {
 
         const userProfileSnap = await window.firestore.getDoc(userProfileDocRef);
         let lastSelectedWatchlistId = null;
-        let savedSortOrder = null;
         if (userProfileSnap.exists()) {
             lastSelectedWatchlistId = userProfileSnap.data().lastSelectedWatchlistId;
-            savedSortOrder = userProfileSnap.data().sortOrder;
             console.log(`[Watchlist] Found last selected watchlist in profile: ${lastSelectedWatchlistId}`);
-            console.log(`[Sort] Found saved sort order in profile: ${savedSortOrder}`);
         }
 
         let targetWatchlist = null;
@@ -987,10 +949,7 @@ async function loadUserWatchlists() {
         }
 
         renderWatchlistSelect();
-        renderSortSelect(); // Render with loaded sort preference
-        if (savedSortOrder && sortSelect.value !== savedSortOrder) {
-            sortSelect.value = savedSortOrder; // Ensure dropdown reflects saved value
-        }
+        renderSortSelect();
         updateMainButtonsState(true);
 
         const migratedSomething = await migrateOldSharesToWatchlist();
@@ -1113,6 +1072,20 @@ async function migrateOldSharesToWatchlist() {
                 updatePayload.lastPriceUpdateTime = new Date().toISOString();
                 console.log(`[Migration] Share '${doc.id}': Setting missing lastPriceUpdateTime.`);
             }
+            if (typeof shareData.comments === 'string' && shareData.comments.trim() !== '') {
+                try {
+                    const parsedComments = JSON.parse(shareData.comments);
+                    if (Array.isArray(parsedComments)) {
+                        needsUpdate = true;
+                        updatePayload.comments = parsedComments;
+                        console.log(`[Migration] Share '${doc.id}': Converted comments string to array.`);
+                    }
+                } catch (e) {
+                    needsUpdate = true;
+                    updatePayload.comments = [{ title: "General Comments", text: shareData.comments }];
+                    console.log(`[Migration] Share '${doc.id}': Wrapped comments string as single comment object.`);
+                }
+            }
             if (needsUpdate) { sharesToUpdate.push({ ref: doc.ref, data: updatePayload }); }
         });
         if (sharesToUpdate.length > 0) {
@@ -1158,12 +1131,12 @@ function toggleAppSidebar(forceState = null) {
     }
 }
 
-// --- Main Application Logic Initialization Function ---
-// This function will be called ONLY when Firebase is confirmed ready.
-async function initializeAppLogic() {
-    console.log("initializeAppLogic: Firebase is ready. Starting app logic.");
 
-    // --- Initial UI Setup (moved from DOMContentLoaded) ---
+// --- DOMContentLoaded Event Listener (Main execution block) ---
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("script.js (v114) DOMContentLoaded fired.");
+
+    // --- Initial UI Setup ---
     if (shareFormSection) shareFormSection.style.setProperty('display', 'none', 'important');
     if (dividendCalculatorModal) dividendCalculatorModal.style.setProperty('display', 'none', 'important');
     if (shareDetailModal) shareDetailModal.style.setProperty('display', 'none', 'important');
@@ -1171,11 +1144,11 @@ async function initializeAppLogic() {
     if (manageWatchlistModal) manageWatchlistModal.style.setProperty('display', 'none', 'important');
     if (customDialogModal) customDialogModal.style.setProperty('display', 'none', 'important');
     if (calculatorModal) calculatorModal.style.setProperty('display', 'none', 'important');
-    
-    // Buttons will be enabled based on auth state, not here directly
-    // updateMainButtonsState(false); // Removed this, as it's handled by onAuthStateChanged
+    updateMainButtonsState(false);
     if (loadingIndicator) loadingIndicator.style.display = 'block';
-    renderWatchlistSelect(); // Render initial empty watchlist select
+    renderWatchlistSelect();
+    if (googleAuthBtn) googleAuthBtn.disabled = true;
+    if (addShareHeaderBtn) addShareHeaderBtn.disabled = true;
     
     // Apply theme on initial load
     const savedCustomTheme = localStorage.getItem('selectedTheme');
@@ -1186,15 +1159,16 @@ async function initializeAppLogic() {
     }
     updateThemeToggleAndSelector();
 
+
     // --- PWA Service Worker Registration ---
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./service-worker.js', { scope: './' }) 
                 .then(registration => {
-                    console.log('Service Worker (v46) from script.js: Registered with scope:', registration.scope); 
+                    console.log('Service Worker (v24) from script.js: Registered with scope:', registration.scope); 
                 })
                 .catch(error => {
-                    console.error('Service Worker (v46) from script.js: Registration failed:', error);
+                    console.error('Service Worker (v24) from script.js: Registration failed:', error);
                 });
         });
     }
@@ -1209,9 +1183,9 @@ async function initializeAppLogic() {
                 if (event.key === 'Enter') {
                     event.preventDefault();
                     if (index === formInputs.length - 1) {
-                        if (addCommentSectionBtn && addCommentSectionBtn.offsetParent !== null) { // Check if visible
-                            addCommentSectionBtn.click();
-                        } else if (saveShareBtn) { saveShareBtn.click(); }
+                        const currentCommentInputs = commentsFormContainer.querySelector('.comment-title-input');
+                        if (currentCommentInputs) { currentCommentInputs.focus(); }
+                        else if (saveShareBtn) { saveShareBtn.click(); }
                     } else {
                         if (formInputs[index + 1]) formInputs[index + 1].focus();
                     }
@@ -1219,10 +1193,6 @@ async function initializeAppLogic() {
             });
         }
     });
-
-    if (addCommentSectionBtn) {
-        addCommentSectionBtn.addEventListener('click', () => addCommentSection());
-    }
 
     // --- Event Listeners for Modal Close Buttons ---
     document.querySelectorAll('.close-button').forEach(button => { button.addEventListener('click', closeModals); });
@@ -1237,13 +1207,54 @@ async function initializeAppLogic() {
         }
     });
 
+    // --- Firebase Initialization and Authentication State Listener ---
+    db = window.firestoreDb;
+    auth = window.firebaseAuth;
+    currentAppId = window.getFirebaseAppId();
+
+    if (auth) {
+        if (googleAuthBtn) {
+            googleAuthBtn.disabled = false;
+            console.log("[Auth] Google Auth button enabled.");
+        }
+        window.authFunctions.onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUserId = user.uid;
+                updateAuthButtonText(true, user.email || user.displayName);
+                console.log("[AuthState] User signed in:", user.uid);
+                if (user.email && user.email.toLowerCase() === KANGA_EMAIL) {
+                    mainTitle.textContent = "Kanga's Share Watchlist";
+                } else {
+                    mainTitle.textContent = "My Share Watchlist";
+                }
+                updateMainButtonsState(true);
+                if (loadingIndicator) loadingIndicator.style.display = 'none';
+                await loadUserWatchlists();
+            } else {
+                currentUserId = null;
+                updateAuthButtonText(false);
+                mainTitle.textContent = "Share Watchlist";
+                console.log("[AuthState] User signed out.");
+                updateMainButtonsState(false);
+                clearShareList();
+                clearWatchlistUI();
+                if (loadingIndicator) loadingIndicator.style.display = 'none';
+            }
+        });
+    } else {
+        console.error("[Firebase] Firebase Auth not available. Cannot set up auth state listener or proceed with data loading.");
+        updateAuthButtonText(false);
+        updateMainButtonsState(false);
+        if (loadingIndicator) loadingIndicator.style.display = 'none';
+    }
+
     // --- Authentication Functions Event Listener ---
     if (googleAuthBtn) {
         googleAuthBtn.addEventListener('click', async () => {
             console.log("[Auth] Google Auth Button Clicked.");
             const currentAuth = window.firebaseAuth;
             if (!currentAuth || !window.authFunctions) {
-                console.warn("[Auth] Auth service not ready or functions not loaded. Cannot process click.");
+                console.warn("[Auth] Auth service not ready or functions not loaded. Cannot process click. Is button still disabled?");
                 showCustomAlert("Authentication service not ready. Please try again in a moment.");
                 return;
             }
@@ -1292,10 +1303,7 @@ async function initializeAppLogic() {
 
     // --- Event Listener for Sort Dropdown ---
     if (sortSelect) {
-        sortSelect.addEventListener('change', async () => { // Made async to await save
-            sortShares();
-            await saveSortOrderPreference(sortSelect.value); // Save the selected sort order
-        });
+        sortSelect.addEventListener('change', sortShares);
     }
 
     // --- Share Form Functions (Add/Edit) Event Listeners ---
@@ -1332,10 +1340,10 @@ async function initializeAppLogic() {
 
             const comments = [];
             commentsFormContainer.querySelectorAll('.comment-section').forEach(section => {
-                const title = section.querySelector('.comment-title-input').value.trim();
-                const text = section.querySelector('.comment-text-input').value.trim();
-                if (title || text) { // Only save if there's content
-                    comments.push({ title: title, text: text });
+                const titleInput = section.querySelector('.comment-title-input');
+                const textInput = section.querySelector('.comment-text-input');
+                if (titleInput.value.trim() || textInput.value.trim()) {
+                    comments.push({ title: titleInput.value.trim(), text: textInput.value.trim() });
                 }
             });
 
@@ -1345,7 +1353,7 @@ async function initializeAppLogic() {
                 targetPrice: isNaN(targetPrice) ? null : targetPrice,
                 dividendAmount: isNaN(dividendAmount) ? null : dividendAmount,
                 frankingCredits: isNaN(frankingCredits) ? null : frankingCredits,
-                comments: comments, // Save the collected comments array
+                comments: comments,
                 userId: currentUserId,
                 watchlistId: currentWatchlistId,
                 lastPriceUpdateTime: new Date().toISOString()
@@ -1409,6 +1417,10 @@ async function initializeAppLogic() {
                 });
             } else { showCustomAlert("No share selected for deletion."); }
         });
+    }
+
+    if (addCommentSectionBtn) {
+        addCommentSectionBtn.addEventListener('click', () => addCommentSection());
     }
 
     // --- Share Detail Modal Functions Event Listeners ---
@@ -1648,6 +1660,37 @@ async function initializeAppLogic() {
         }
     }
 
+    // --- Theme Toggling Logic Event Listener ---
+    function applyDefaultLightDarkTheme() {
+        const body = document.body;
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const savedDefaultTheme = localStorage.getItem('theme'); // 'light' or 'dark'
+
+        body.className = body.className.split(' ').filter(c => !c.startsWith('theme-') && c !== 'dark-theme').join(' ');
+
+        if (savedDefaultTheme) {
+            if (savedDefaultTheme === 'dark') {
+                body.classList.add('dark-theme');
+            } else {
+                body.classList.remove('dark-theme');
+            }
+            console.log(`[Theme] Applied saved default theme: ${savedDefaultTheme}`);
+        } else {
+            if (systemPrefersDark) {
+                body.classList.add('dark-theme');
+            } else {
+                body.classList.remove('dark-theme');
+            }
+            localStorage.setItem('theme', systemPrefersDark ? 'dark' : 'light');
+            console.log(`[Theme] Applied system default theme: ${systemPrefersDark ? 'dark' : 'light'}`);
+        }
+        // When reverting to default, ensure custom theme is not selected in dropdown
+        if (colorThemeSelect) {
+            colorThemeSelect.value = 'none';
+        }
+        currentCustomThemeIndex = -1; // Reset index
+    }
+
     if (themeToggleBtn) {
         themeToggleBtn.addEventListener('click', () => {
             // Determine the next custom theme
@@ -1665,7 +1708,7 @@ async function initializeAppLogic() {
         });
     }
 
-    if (revertToDefaultThemeBtn) {
+    if (revertToDefaultThemeBtn) { // Changed from revertToDefaultThemeLink
         revertToDefaultThemeBtn.addEventListener('click', (event) => {
             event.preventDefault();
             applyTheme('none'); // This will trigger applyDefaultLightDarkTheme
@@ -1759,64 +1802,4 @@ async function initializeAppLogic() {
         });
     }
 
-} // End initializeAppLogic
-
-// --- DOMContentLoaded Event Listener (Main entry point) ---
-document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v123) DOMContentLoaded fired."); // Updated version number
-
-    // Check if Firebase objects are available from the module script in index.html
-    // If they are, proceed with setting up the auth state listener.
-    // If not, it means Firebase initialization failed in index.html, and an.
-    if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
-        db = window.firestoreDb;
-        auth = window.firebaseAuth;
-        currentAppId = window.getFirebaseAppId();
-        console.log("[Firebase Ready] DB, Auth, and AppId assigned from window. Setting up auth state listener.");
-        
-        // Listen for auth state changes to trigger the main app logic
-        window.authFunctions.onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                currentUserId = user.uid;
-                updateAuthButtonText(true, user.email || user.displayName);
-                console.log("[AuthState] User signed in:", user.uid);
-                if (user.email && user.email.toLowerCase() === KANGA_EMAIL) {
-                    mainTitle.textContent = "Kanga's Share Watchlist";
-                } else {
-                    mainTitle.textContent = "My Share Watchlist";
-                }
-                updateMainButtonsState(true);
-                // Removed loadingIndicator.style.display = 'none'; here, as loadUserWatchlists will handle it
-                await loadUserWatchlists(); // Load watchlists only after user is authenticated
-            } else {
-                currentUserId = null;
-                updateAuthButtonText(false);
-                mainTitle.textContent = "Share Watchlist";
-                console.log("[AuthState] User signed out.");
-                updateMainButtonsState(false);
-                clearShareList();
-                clearWatchlistUI();
-                if (loadingIndicator) loadingIndicator.style.display = 'none';
-            }
-            // This ensures initializeAppLogic runs only once after the initial auth state is determined
-            // It's crucial that this runs *after* the user state is known, as many UI elements depend on it.
-            if (!window._appLogicInitialized) {
-                initializeAppLogic();
-                window._appLogicInitialized = true; // Prevent re-running
-            }
-        });
-        
-        // Enable the Google Auth button immediately if Firebase is available
-        if (googleAuthBtn) {
-            googleAuthBtn.disabled = false;
-            console.log("[Auth] Google Auth button enabled on DOMContentLoaded.");
-        }
-
-    } else {
-        console.error("[Firebase] Firebase objects (db, auth, appId, firestore, authFunctions) are not available on DOMContentLoaded. Firebase initialization likely failed in index.html.");
-        // The error message for missing config is already displayed by index.html
-        updateAuthButtonText(false);
-        updateMainButtonsState(false);
-        if (loadingIndicator) loadingIndicator.style.display = 'none';
-    }
 }); // End DOMContentLoaded
