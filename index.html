@@ -8,7 +8,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍆</text></svg>">
 
     <!-- Linking to your separate style.css file -->
-    <link rel="stylesheet" href="style.css?v=51"> <!-- Updated CSS version for new styles -->
+    <link rel="stylesheet" href="style.css?v=52"> <!-- Updated CSS version for new styles -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -174,28 +174,30 @@
     <!-- Modals -->
     <!-- Share Form Modal -->
     <div id="shareFormSection" class="modal">
-        <div class="modal-content add-share-modal-content">
+        <div class="modal-content">
             <span class="close-button form-close-button">&times;</span>
             <h2 id="formTitle">Add New Share</h2>
-            <label for="shareName">Code:</label> <!-- Removed ASX -->
-            <input type="text" id="shareName" placeholder="e.g., BHP" required>
+            <div class="modal-body-scrollable"> <!-- NEW SCROLLABLE WRAPPER -->
+                <label for="shareName">Code:</label> <!-- Removed ASX -->
+                <input type="text" id="shareName" placeholder="e.g., BHP" required>
 
-            <label for="currentPrice">Entered Price ($):</label> <!-- Changed label to Entered Price -->
-            <input type="number" id="currentPrice" step="0.01" placeholder="e.g., 25.50">
+                <label for="currentPrice">Entered Price ($):</label> <!-- Changed label to Entered Price -->
+                <input type="number" id="currentPrice" step="0.01" placeholder="e.g., 25.50">
 
-            <label for="targetPrice">Target Price ($):</label>
-            <input type="number" id="targetPrice" step="0.01" placeholder="e.g., 30.00">
+                <label for="targetPrice">Target Price ($):</label>
+                <input type="number" id="targetPrice" step="0.01" placeholder="e.g., 30.00">
 
-            <label for="dividendAmount">Dividend Amount (per share, annual $):</label>
-            <input type="number" id="dividendAmount" step="0.001" placeholder="e.g., 1.250">
+                <label for="dividendAmount">Dividend Amount (per share, annual $):</label>
+                <input type="number" id="dividendAmount" step="0.001" placeholder="e.g., 1.250">
 
-            <label for="frankingCredits">Franking Credits (%):</label>
-            <input type="number" id="frankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 70 for 70%">
+                <label for="frankingCredits">Franking Credits (%):</label>
+                <input type="number" id="frankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 70 for 70%">
 
-            <div id="commentsFormContainer" class="comments-form-container">
-                <h3>Comments <button type="button" id="addCommentSectionBtn" class="add-section-btn">+</button></h3>
-                <!-- Comment sections will be dynamically added here by JS -->
-            </div>
+                <div id="commentsFormContainer" class="comments-form-container">
+                    <h3>Comments <button type="button" id="addCommentSectionBtn" class="add-section-btn">+</button></h3>
+                    <!-- Comment sections will be dynamically added here by JS -->
+                </div>
+            </div> <!-- END modal-body-scrollable -->
 
             <!-- Buttons for Add/Edit Share Modal - will be styled to be on one line -->
             <div class="form-action-buttons modal-form-buttons">
@@ -211,26 +213,28 @@
         <div class="modal-content">
             <span class="close-button">&times;</span>
             <h2 id="modalShareName">Share Details</h2>
-            <p><strong>Entry Date:</strong> <span id="modalEntryDate"></span></p>
-            <p><strong>Entered Price:</strong> <span id="modalEnteredPrice"></span></p> <!-- Removed date/time span -->
-            <p><strong>Target Price:</strong> <span id="modalTargetPrice"></span></p>
-            <p><strong>Dividend Amount:</strong> <span id="modalDividendAmount"></span></p>
-            <p><strong>Franking Credits:</strong> <span id="modalFrankingCredits"></span></p>
-            <p><strong>Unfranked Yield:</strong> <span id="modalUnfrankedYield"></span></p>
-            <p><strong>Franked Yield:</strong> <span id="modalFrankedYield"></span></p>
+            <div class="modal-body-scrollable"> <!-- NEW SCROLLABLE WRAPPER -->
+                <p><strong>Entry Date:</strong> <span id="modalEntryDate"></span></p>
+                <p><strong>Entered Price:</strong> <span id="modalEnteredPrice"></span></p> <!-- Removed date/time span -->
+                <p><strong>Target Price:</strong> <span id="modalTargetPrice"></span></p>
+                <p><strong>Dividend Amount:</strong> <span id="modalDividendAmount"></span></p>
+                <p><strong>Franking Credits:</strong> <span id="modalFrankingCredits"></span></p>
+                <p><strong>Unfranked Yield:</strong> <span id="modalUnfrankedYield"></span></p>
+                <p><strong>Franked Yield:</strong> <span id="modalFrankedYield"></span></p>
 
-            <div id="modalCommentsContainer" class="modal-comments-sections">
-                <h3>Comments</h3>
-                <!-- Comments will be displayed here -->
-            </div>
+                <div id="modalCommentsContainer" class="modal-comments-sections">
+                    <h3>Comments</h3>
+                    <!-- Comments will be displayed here -->
+                </div>
 
-            <div class="external-links-section">
-                <h3>External Links</h3>
-                <p><a id="modalMarketIndexLink" href="#" target="_blank" class="external-link"><i class="fas fa-external-link-alt"></i> View on MarketIndex.com.au</a></p>
-                <p><a id="modalFoolLink" href="#" target="_blank" class="external-link"><i class="fas fa-external-link-alt"></i> View on Fool.com.au</a></p>
-                <p><a id="modalCommSecLink" href="#" target="_blank" class="external-link"><i class="fas fa-external-link-alt"></i> View on CommSec.com.au</a></p>
-                <p id="commSecLoginMessage" class="ghosted-text commsec-message">Requires single CommSec login per session</p> <!-- NEW COMMSEC LOGIN MESSAGE with new class -->
-            </div>
+                <div class="external-links-section">
+                    <h3>External Links</h3>
+                    <p><a id="modalMarketIndexLink" href="#" target="_blank" class="external-link"><i class="fas fa-external-link-alt"></i> View on MarketIndex.com.au</a></p>
+                    <p><a id="modalFoolLink" href="#" target="_blank" class="external-link"><i class="fas fa-external-link-alt"></i> View on Fool.com.au</a></p>
+                    <p><a id="modalCommSecLink" href="#" target="_blank" class="external-link"><i class="fas fa-external-link-alt"></i> View on CommSec.com.au</a></p>
+                    <p id="commSecLoginMessage" class="ghosted-text commsec-message">Requires single CommSec login per session</p> <!-- NEW COMMSEC LOGIN MESSAGE with new class -->
+                </div>
+            </div> <!-- END modal-body-scrollable -->
 
             <div class="modal-action-buttons">
                 <button type="button" id="editShareFromDetailBtn"><i class="fas fa-edit"></i> Edit Share</button>
@@ -243,8 +247,10 @@
         <div class="modal-content">
             <span class="close-button">&times;</span>
             <h2>Add New Watchlist</h2>
-            <label for="newWatchlistName">Watchlist Name:</label>
-            <input type="text" id="newWatchlistName" placeholder="e.g., Tech Stocks" required>
+            <div class="modal-body-scrollable"> <!-- NEW SCROLLABLE WRAPPER -->
+                <label for="newWatchlistName">Watchlist Name:</label>
+                <input type="text" id="newWatchlistName" placeholder="e.g., Tech Stocks" required>
+            </div> <!-- END modal-body-scrollable -->
             <div class="form-action-buttons">
                 <button type="button" id="cancelAddWatchlistBtn" class="secondary-buttons"><i class="fas fa-times-circle"></i> Cancel</button>
                 <button type="button" id="saveWatchlistBtn"><i class="fas fa-save"></i> Save Watchlist</button>
@@ -257,8 +263,10 @@
         <div class="modal-content">
             <span class="close-button">&times;</span>
             <h2>Manage Watchlist</h2>
-            <label for="editWatchlistName">Watchlist Name:</label>
-            <input type="text" id="editWatchlistName" required>
+            <div class="modal-body-scrollable"> <!-- NEW SCROLLABLE WRAPPER -->
+                <label for="editWatchlistName">Watchlist Name:</label>
+                <input type="text" id="editWatchlistName" required>
+            </div> <!-- END modal-body-scrollable -->
             <div class="form-action-buttons">
                 <button type="button" id="deleteWatchlistInModalBtn" class="danger-button"><i class="fas fa-trash-alt"></i> Delete Watchlist</button>
                 <button type="button" id="cancelManageWatchlistBtn" class="secondary-buttons"><i class="fas fa-times-circle"></i> Cancel</button>
@@ -272,33 +280,35 @@
         <div class="modal-content calculator-modal-content">
             <span class="close-button calc-close-button">&times;</span>
             <h2>Dividend Calculator</h2>
-            <div class="calc-input-group">
-                <label for="calcCurrentPrice">Share Price ($):</label> <!-- Reordered and renamed -->
-                <input type="number" id="calcCurrentPrice" step="0.01" placeholder="e.g., 25.50">
-            </div>
-            <div class="calc-input-group">
-                <label for="calcDividendAmount">Dividend Amount (per share, annual $):</label> <!-- Reordered -->
-                <input type="number" id="calcDividendAmount" step="0.001" placeholder="e.g., 1.250">
-            </div>
-            <div class="calc-input-group">
-                <label for="calcFrankingCredits">Franking Credits (%):</label> <!-- Reordered -->
-                <input type="number" id="calcFrankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 70 for 70%">
-            </div>
-            <p><strong>Unfranked Yield:</strong> <span id="calcUnfrankedYield">-</span></p>
-            <p><strong>Franked Yield:</strong> <span id="calcFrankedYield">-</span></p>
-            <hr>
-            <div class="calc-input-group">
-                <label for="investmentValueSelect">Investment Value:</label>
-                <select id="investmentValueSelect">
-                    <option value="1000">$1,000</option>
-                    <option value="5000">$5,000</option>
-                    <option value="10000" selected>$10,000</option>
-                    <option value="25000">$25,000</option>
-                    <option value="50000">$50,000</option>
-                    <option value="100000">$100,000</option>
-                </select>
-            </div>
-            <p><strong>Estimated Annual Dividend:</strong> <span id="calcEstimatedDividend">-</span></p>
+            <div class="modal-body-scrollable"> <!-- NEW SCROLLABLE WRAPPER -->
+                <div class="calc-input-group">
+                    <label for="calcCurrentPrice">Share Price ($):</label> <!-- Reordered and renamed -->
+                    <input type="number" id="calcCurrentPrice" step="0.01" placeholder="e.g., 25.50">
+                </div>
+                <div class="calc-input-group">
+                    <label for="calcDividendAmount">Dividend Amount (per share, annual $):</label> <!-- Reordered -->
+                    <input type="number" id="calcDividendAmount" step="0.001" placeholder="e.g., 1.250">
+                </div>
+                <div class="calc-input-group">
+                    <label for="calcFrankingCredits">Franking Credits (%):</label> <!-- Reordered -->
+                    <input type="number" id="calcFrankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 70 for 70%">
+                </div>
+                <p><strong>Unfranked Yield:</strong> <span id="calcUnfrankedYield">-</span></p>
+                <p><strong>Franked Yield:</strong> <span id="calcFrankedYield">-</span></p>
+                <hr>
+                <div class="calc-input-group">
+                    <label for="investmentValueSelect">Investment Value:</label>
+                    <select id="investmentValueSelect">
+                        <option value="1000">$1,000</option>
+                        <option value="5000">$5,000</option>
+                        <option value="10000" selected>$10,000</option>
+                        <option value="25000">$25,000</option>
+                        <option value="50000">$50,000</option>
+                        <option value="100000">$100,000</option>
+                    </select>
+                </div>
+                <p><strong>Estimated Annual Dividend:</strong> <span id="calcEstimatedDividend">-</span></p>
+            </div> <!-- END modal-body-scrollable -->
         </div>
     </div>
 
@@ -307,37 +317,41 @@
         <div class="modal-content calculator-modal-content">
             <span class="close-button">&times;</span>
             <h2>Standard Calculator</h2>
-            <div class="calculator-display">
-                <div id="calculatorInput" class="calculator-input"></div>
-                <div id="calculatorResult" class="calculator-result">0</div>
-            </div>
-            <div class="calculator-buttons">
-                <button class="calc-btn clear" data-action="clear">C</button>
-                <button class="calc-btn operator" data-action="percentage">%</button>
-                <button class="calc-btn operator" data-action="divide">÷</button>
-                <button class="calc-btn" data-value="7">7</button>
-                <button class="calc-btn" data-value="8">8</button>
-                <button class="calc-btn" data-value="9">9</button>
-                <button class="calc-btn operator" data-action="multiply">×</button>
-                <button class="calc-btn" data-value="4">4</button>
-                <button class="calc-btn" data-value="5">5</button>
-                <button class="calc-btn" data-value="6">6</button>
-                <button class="calc-btn operator" data-action="subtract">-</button>
-                <button class="calc-btn" data-value="1">1</button>
-                <button class="calc-btn" data-value="2">2</button>
-                <button class="calc-btn" data-value="3">3</button>
-                <button class="calc-btn operator" data-action="add">+</button>
-                <button class="calc-btn zero" data-value="0">0</button>
-                <button class="calc-btn" data-value=".">.</button>
-                <button class="calc-btn equals" data-action="calculate">=</button>
-            </div>
+            <div class="modal-body-scrollable"> <!-- NEW SCROLLABLE WRAPPER -->
+                <div class="calculator-display">
+                    <div id="calculatorInput" class="calculator-input"></div>
+                    <div id="calculatorResult" class="calculator-result">0</div>
+                </div>
+                <div class="calculator-buttons">
+                    <button class="calc-btn clear" data-action="clear">C</button>
+                    <button class="calc-btn operator" data-action="percentage">%</button>
+                    <button class="calc-btn operator" data-action="divide">÷</button>
+                    <button class="calc-btn" data-value="7">7</button>
+                    <button class="calc-btn" data-value="8">8</button>
+                    <button class="calc-btn" data-value="9">9</button>
+                    <button class="calc-btn operator" data-action="multiply">×</button>
+                    <button class="calc-btn" data-value="4">4</button>
+                    <button class="calc-btn" data-value="5">5</button>
+                    <button class="calc-btn" data-value="6">6</button>
+                    <button class="calc-btn operator" data-action="subtract">-</button>
+                    <button class="calc-btn" data-value="1">1</button>
+                    <button class="calc-btn" data-value="2">2</button>
+                    <button class="calc-btn" data-value="3">3</button>
+                    <button class="calc-btn operator" data-action="add">+</button>
+                    <button class="calc-btn zero" data-value="0">0</button>
+                    <button class="calc-btn" data-value=".">.</button>
+                    <button class="calc-btn equals" data-action="calculate">=</button>
+                </div>
+            </div> <!-- END modal-body-scrollable -->
         </div>
     </div>
 
     <!-- Custom Dialog Modal for Alerts/Confirms -->
     <div id="customDialogModal" class="modal">
         <div class="modal-content">
-            <p id="customDialogMessage"></p>
+            <div class="modal-body-scrollable"> <!-- NEW SCROLLABLE WRAPPER -->
+                <p id="customDialogMessage"></p>
+            </div> <!-- END modal-body-scrollable -->
             <div class="custom-dialog-buttons">
                 <button id="customDialogConfirmBtn" class="secondary-buttons">OK</button>
                 <button id="customDialogCancelBtn" class="danger-button">Cancel</button>
@@ -419,10 +433,10 @@
         } : null;
 
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log("index.html (v58) script module loaded and DOMContentLoaded fired."); // Updated version number
+            console.log("index.html (v52) script module loaded and DOMContentLoaded fired."); // Updated version number
         }); 
     </script>
     <!-- Linking to your separate script.js file -->
-    <script src="script.js?v=114"></script>
+    <script src="script.js?v=115"></script>
 </body>
 </html>
