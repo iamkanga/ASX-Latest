@@ -1,5 +1,5 @@
-// File Version: v120
-// Last Updated: 2025-06-30 (Theme CSS integration and minor fixes)
+// File Version: v117
+// Last Updated: 2025-06-30 (Fixed ghosted buttons on refresh)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -36,9 +36,8 @@ const DEFAULT_WATCHLIST_ID_SUFFIX = 'default';
 let userWatchlists = [];
 let currentWatchlistId = null;
 let currentWatchlistName = '';
-let currentSortOrder = 'entryDate-desc'; // Default sort order, now a global variable
 
-// Theme related variables (kept for compatibility with existing HTML/CSS, but not actively managed for saving in this version)
+// Theme related variables
 const CUSTOM_THEMES = [
     'bold-1', 'bold-2', 'bold-3', 'bold-4', 'bold-5', 'bold-6', 'bold-7', 'bold-8', 'bold-9', 'bold-10',
     'subtle-1', 'subtle-2', 'subtle-3', 'subtle-4', 'subtle-5', 'subtle-6', 'subtle-7', 'subtle-8', 'subtle-9', 'subtle-10'
@@ -217,8 +216,7 @@ function updateMainButtonsState(enable) {
     if (dividendCalcBtn) dividendCalcBtn.disabled = !enable;
     if (watchlistSelect) watchlistSelect.disabled = !enable; 
     if (addWatchlistBtn) addWatchlistBtn.disabled = !enable;
-    // Enable editWatchlistBtn if there's at least one watchlist
-    if (editWatchlistBtn) editWatchlistBtn.disabled = !enable || userWatchlists.length === 0; 
+    if (editWatchlistBtn) editWatchlistBtn.disabled = !enable || userWatchlists.length <= 1; 
     if (deleteWatchlistInModalBtn) deleteWatchlistInModalBtn.disabled = !enable || userWatchlists.length <= 1;
     if (addShareHeaderBtn) addShareHeaderBtn.disabled = !enable;
 }
@@ -424,7 +422,7 @@ function showShareDetails() {
 
 // Watchlist Sorting Logic
 function sortShares() {
-    const sortValue = currentSortOrder; // Use currentSortOrder global variable
+    const sortValue = sortSelect.value;
     if (!sortValue || sortValue === '') {
         console.log("[Sort] Sort placeholder selected, no explicit sorting applied.");
         renderWatchlist();
@@ -508,34 +506,26 @@ function renderWatchlistSelect() {
 // Render options in the sort by dropdown
 function renderSortSelect() {
     if (!sortSelect) { console.error("[renderSortSelect] sortSelect element not found."); return; }
-    // Always reset to placeholder first
-    sortSelect.innerHTML = '<option value="" disabled selected>Sort</option>';
-
-    // Re-add other options
-    const options = [
-        { value: "entryDate-desc", text: "Date Added (Newest)" },
-        { value: "entryDate-asc", text: "Date Added (Oldest)" },
-        { value: "shareName-asc", text: "Code (A-Z)" },
-        { value: "shareName-desc", text: "Code (Z-A)" },
-        { value: "dividendAmount-desc", text: "Dividend (High-Low)" },
-        { value: "dividendAmount-asc", text: "Dividend (Low-High)" }
-    ];
-    options.forEach(opt => {
-        const optionElement = document.createElement('option');
-        optionElement.value = opt.value;
-        optionElement.textContent = opt.text;
-        sortSelect.appendChild(optionElement);
-    });
-
-    // Apply saved sort preference if user is logged in and preference exists
-    if (currentUserId && currentSortOrder && Array.from(sortSelect.options).some(option => option.value === currentSortOrder)) {
-        sortSelect.value = currentSortOrder;
-        console.log(`[Sort] Applied saved sort order: ${currentSortOrder}`);
+    const firstOption = sortSelect.options[0];
+    if (firstOption && firstOption.value === '') {
+        firstOption.textContent = 'Sort';
+        firstOption.disabled = true;
+        firstOption.selected = true;
     } else {
-        // If not logged in or no saved preference, ensure placeholder is selected
-        sortSelect.value = ''; 
-        currentSortOrder = ''; // Ensure global variable is reset too
-        console.log("[Sort] No valid saved sort order or not logged in, defaulting to placeholder.");
+        const placeholderOption = document.createElement('option');
+        placeholderOption.value = '';
+        placeholderOption.textContent = 'Sort';
+        placeholderOption.disabled = true;
+        placeholderOption.selected = true;
+        sortSelect.insertBefore(placeholderOption, sortSelect.firstChild);
+    }
+    // Load saved sort preference
+    const savedSortOrder = localStorage.getItem('sortOrder');
+    if (savedSortOrder && Array.from(sortSelect.options).some(option => option.value === savedSortOrder)) {
+        sortSelect.value = savedSortOrder;
+        console.log(`[Sort] Loaded saved sort order: ${savedSortOrder}`);
+    } else {
+        sortSelect.value = ''; // Reset to placeholder if no saved or invalid
     }
 }
 
@@ -830,32 +820,21 @@ function resetCalculator() {
     console.log("[Calculator] Calculator state reset.");
 }
 
-// Theme Toggling Logic (Simplified for this version, no saving to Firestore)
-/**
- * Applies a given theme to the body. This version does not save theme preferences to Firestore,
- * as per the user's request to focus on sort order. It relies on local storage for basic light/dark
- * and will apply custom themes if the CSS is present.
- * @param {string} themeName - The name of the theme to apply (e.g., 'light', 'dark', 'bold-1', 'system-default').
- */
+// Theme Toggling Logic
 function applyTheme(themeName) {
     const body = document.body;
-    // Remove all existing theme classes (e.g., 'dark-theme', 'theme-X', 'bold-X-theme', 'subtle-X-theme')
-    body.className = body.className.split(' ').filter(c => !c.endsWith('-theme')).join(' ');
+    // Remove all existing theme classes (both 'dark-theme' and 'theme-X')
+    body.className = body.className.split(' ').filter(c => !c.startsWith('theme-') && c !== 'dark-theme').join(' ');
 
-    if (themeName === 'system-default') {
-        // No specific theme class, relies on CSS prefers-color-scheme
-        body.removeAttribute('data-theme'); // Remove data-theme attribute
-        console.log("[Theme] Reverted to system default theme.");
-        currentCustomThemeIndex = -1; // Reset index for cycling
-        localStorage.removeItem('selectedTheme'); // Clear custom theme from local storage
-        localStorage.removeItem('theme'); // Clear light/dark preference from local storage
-    } else {
-        body.classList.add(themeName + '-theme'); // Add specific theme class, e.g., 'bold-1-theme'
-        body.setAttribute('data-theme', themeName); // Set data-theme attribute for reference
+    if (themeName && themeName !== 'none') {
+        body.classList.add(`theme-${themeName}`);
+        localStorage.setItem('selectedTheme', themeName);
+        localStorage.removeItem('theme'); // Clear default light/dark preference if custom theme is selected
         console.log(`[Theme] Applied custom theme: ${themeName}`);
-        currentCustomThemeIndex = CUSTOM_THEMES.indexOf(themeName); // Update index for cycling
-        localStorage.setItem('selectedTheme', themeName); // Save custom theme to local storage
-        localStorage.removeItem('theme'); // Clear light/dark preference if custom theme is selected
+    } else {
+        localStorage.removeItem('selectedTheme'); // Clear custom theme preference
+        // Revert to system default or last saved default light/dark
+        applyDefaultLightDarkTheme();
     }
     updateThemeToggleAndSelector();
 }
@@ -894,7 +873,7 @@ function applyDefaultLightDarkTheme() {
 
 function updateThemeToggleAndSelector() {
     const currentCustomTheme = localStorage.getItem('selectedTheme');
-    // const currentDefaultTheme = localStorage.getItem('theme'); // Not used directly here
+    const currentDefaultTheme = localStorage.getItem('theme'); // 'light' or 'dark'
 
     // Update theme toggle button icon
     if (themeToggleBtn) {
@@ -938,18 +917,13 @@ async function saveLastSelectedWatchlistId(watchlistId) {
 
 // Save the last selected sort order to user's profile
 async function saveSortOrderPreference(sortOrder) {
-    console.log(`[Sort Debug] Attempting to save sort order: ${sortOrder}`);
-    console.log(`[Sort Debug] db: ${db ? 'Available' : 'Not Available'}`);
-    console.log(`[Sort Debug] currentUserId: ${currentUserId}`);
-    console.log(`[Sort Debug] window.firestore: ${window.firestore ? 'Available' : 'Not Available'}`);
-
     if (!db || !currentUserId || !window.firestore) {
-        console.warn("[Sort] Cannot save sort order preference: DB, User ID, or Firestore functions not available. Skipping save.");
+        console.warn("[Sort] Cannot save sort order preference: DB, User ID, or Firestore functions not available.");
         return;
     }
     const userProfileDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/profile/settings`);
     try {
-        await window.firestore.setDoc(userProfileDocRef, { lastSortOrder: sortOrder }, { merge: true });
+        await window.firestore.setDoc(userProfileDocRef, { sortOrder: sortOrder }, { merge: true });
         console.log(`[Sort] Saved sort order preference: ${sortOrder}`);
     } catch (error) {
         console.error("[Sort] Error saving sort order preference:", error);
@@ -989,14 +963,11 @@ async function loadUserWatchlists() {
         const userProfileSnap = await window.firestore.getDoc(userProfileDocRef);
         let lastSelectedWatchlistId = null;
         let savedSortOrder = null;
-        // let savedTheme = null; // Removed theme loading for this version
         if (userProfileSnap.exists()) {
             lastSelectedWatchlistId = userProfileSnap.data().lastSelectedWatchlistId;
-            savedSortOrder = userProfileSnap.data().lastSortOrder; // Changed from 'sortOrder' to 'lastSortOrder'
-            // savedTheme = userProfileSnap.data().lastTheme; // Removed theme loading for this version
+            savedSortOrder = userProfileSnap.data().sortOrder;
             console.log(`[Watchlist] Found last selected watchlist in profile: ${lastSelectedWatchlistId}`);
             console.log(`[Sort] Found saved sort order in profile: ${savedSortOrder}`);
-            // console.log(`[Theme] Found saved theme in profile: ${savedTheme}`); // Removed theme loading for this version
         }
 
         let targetWatchlist = null;
@@ -1015,32 +986,11 @@ async function loadUserWatchlists() {
         }
 
         renderWatchlistSelect();
-        
-        // Apply saved sort order
-        if (currentUserId && savedSortOrder && Array.from(sortSelect.options).some(option => option.value === savedSortOrder)) {
-            currentSortOrder = savedSortOrder;
-            sortSelect.value = currentSortOrder;
-            console.log(`[Sort] Applied saved sort order: ${currentSortOrder}`);
-        } else {
-            // If not logged in or no saved preference, ensure placeholder is selected
-            sortSelect.value = ''; 
-            currentSortOrder = ''; // Ensure global variable is reset too
-            console.log("[Sort] No valid saved sort order or not logged in, defaulting to placeholder.");
-        }
         renderSortSelect(); // Render with loaded sort preference
-        
-        // Apply theme (using local storage, not Firestore, for this version)
-        const savedCustomTheme = localStorage.getItem('selectedTheme');
-        if (savedCustomTheme) {
-            applyTheme(savedCustomTheme);
-        } else {
-            applyDefaultLightDarkTheme();
+        if (savedSortOrder && sortSelect.value !== savedSortOrder) {
+            sortSelect.value = savedSortOrder; // Ensure dropdown reflects saved value
         }
-        updateThemeToggleAndSelector(); // Ensure UI reflects the applied theme
-
-        // Moved from initializeAppLogic to here, after userWatchlists is populated
-        // This ensures the button state is correctly set based on the number of watchlists
-        updateMainButtonsState(true); 
+        updateMainButtonsState(true);
 
         const migratedSomething = await migrateOldSharesToWatchlist();
         if (!migratedSomething) {
@@ -1182,7 +1132,6 @@ async function migrateOldSharesToWatchlist() {
     }
 }
 
-
 // --- TOGGLE SIDEBAR FUNCTION (MOVED TO GLOBAL SCOPE) ---
 function toggleAppSidebar(forceState = null) {
     const isDesktop = window.innerWidth > 768;
@@ -1222,9 +1171,11 @@ async function initializeAppLogic() {
     if (customDialogModal) customDialogModal.style.setProperty('display', 'none', 'important');
     if (calculatorModal) calculatorModal.style.setProperty('display', 'none', 'important');
     
+    // Removed: Buttons will be enabled based on auth state, not here directly
+    // Removed: updateMainButtonsState(false); // This line caused the buttons to be disabled prematurely
     renderWatchlistSelect(); // Render initial empty watchlist select
     
-    // Apply theme on initial load (using local storage, not Firestore, for this version)
+    // Apply theme on initial load
     const savedCustomTheme = localStorage.getItem('selectedTheme');
     if (savedCustomTheme) {
         applyTheme(savedCustomTheme);
@@ -1238,10 +1189,10 @@ async function initializeAppLogic() {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./service-worker.js', { scope: './' }) 
                 .then(registration => {
-                    console.log('Service Worker (v47) from script.js: Registered with scope:', registration.scope); 
+                    console.log('Service Worker (v46) from script.js: Registered with scope:', registration.scope); 
                 })
                 .catch(error => {
-                    console.error('Service Worker (v47) from script.js: Registration failed:', error);
+                    console.error('Service Worker (v46) from script.js: Registration failed:', error);
                 });
         });
     }
@@ -1339,10 +1290,10 @@ async function initializeAppLogic() {
 
     // --- Event Listener for Sort Dropdown ---
     if (sortSelect) {
-        sortSelect.addEventListener('change', async () => { // Made async to allow await
-            currentSortOrder = sortSelect.value; // Update global variable
+        sortSelect.addEventListener('change', () => {
             sortShares();
-            await saveSortOrderPreference(currentSortOrder); // Save the preference to Firestore
+            // In v115, saveSortOrderPreference was not yet implemented here.
+            // It was added in v123. So, no save here for this reversion.
         });
     }
 
@@ -1716,7 +1667,7 @@ async function initializeAppLogic() {
     if (revertToDefaultThemeBtn) {
         revertToDefaultThemeBtn.addEventListener('click', (event) => {
             event.preventDefault();
-            applyTheme('system-default'); // This will trigger applyDefaultLightDarkTheme
+            applyTheme('none'); // This will trigger applyDefaultLightDarkTheme
             console.log("[Theme] Reverted to default light/dark theme via button.");
         });
     }
@@ -1811,7 +1762,7 @@ async function initializeAppLogic() {
 
 // --- DOMContentLoaded Event Listener (Main entry point) ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v120) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v117) DOMContentLoaded fired."); // Updated version number
 
     // Check if Firebase objects are available from the module script in index.html
     // If they are, proceed with setting up the auth state listener.
