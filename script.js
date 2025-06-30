@@ -1,5 +1,5 @@
-// File Version: v117
-// Last Updated: 2025-06-28 (Button Enabling Fix)
+// File Version: v118
+// Last Updated: 2025-06-28 (Fixes for Button Ghosting, Sort Order & Theme Persistence)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -521,9 +521,9 @@ function renderSortSelect() {
         placeholderOption.selected = true;
         sortSelect.insertBefore(placeholderOption, sortSelect.firstChild);
     }
-    if (!sortSelect.value || sortSelect.value === '') {
-        sortSelect.value = '';
-    }
+    // Ensure that if a valid value is already set, it remains selected.
+    // The previous logic was fine here, as it only adds the placeholder if not already there.
+    // The actual setting of the value happens in loadUserPreferences.
 }
 
 // Add Share to UI Functions
@@ -827,29 +827,29 @@ function applyTheme(themeName) {
         body.classList.add(`theme-${themeName}`);
         localStorage.setItem('selectedTheme', themeName);
         localStorage.removeItem('theme'); // Clear default light/dark preference if custom theme is selected
-        console.log(`[Theme] Applied custom theme: ${themeName}`);
-    } else {
-        localStorage.removeItem('selectedTheme'); // Clear custom theme preference
-        // Revert to system default or last saved default light/dark
-        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const savedDefaultTheme = localStorage.getItem('theme'); // 'light' or 'dark'
+        console.log(`[Theme] Applied custom theme: ${themeName}. Body class: ${body.className}`);
+    } else { // themeName is 'none' (revert to default)
+        localStorage.removeItem('selectedTheme'); // Always clear custom theme preference
 
-        if (savedDefaultTheme) {
-            if (savedDefaultTheme === 'dark') {
-                body.classList.add('dark-theme');
-            } else {
-                body.classList.remove('dark-theme');
-            }
-            console.log(`[Theme] Reverted to saved default theme: ${savedDefaultTheme}`);
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        let effectiveDefaultTheme = localStorage.getItem('theme'); // Get previously saved default preference
+
+        // If no explicit default preference saved, use system preference as the new saved default
+        if (!effectiveDefaultTheme) {
+            effectiveDefaultTheme = systemPrefersDark ? 'dark' : 'light';
+            localStorage.setItem('theme', effectiveDefaultTheme); // Explicitly save this default
+            console.log(`[Theme] No default theme preference found, setting to system preference: ${effectiveDefaultTheme} and saving.`);
         } else {
-            if (systemPrefersDark) {
-                body.classList.add('dark-theme');
-            } else {
-                body.classList.remove('dark-theme');
-            }
-            localStorage.setItem('theme', systemPrefersDark ? 'dark' : 'light');
-            console.log(`[Theme] Reverted to system default theme: ${systemPrefersDark ? 'dark' : 'light'}`);
+            console.log(`[Theme] Using previously saved default theme: ${effectiveDefaultTheme}`);
         }
+
+        // Apply the determined default theme
+        if (effectiveDefaultTheme === 'dark') {
+            body.classList.add('dark-theme');
+        } else {
+            body.classList.remove('dark-theme');
+        }
+        console.log(`[Theme] Reverted to default theme: ${effectiveDefaultTheme}. Body class: ${body.className}`);
     }
     updateThemeToggleAndSelector();
 }
@@ -871,9 +871,11 @@ function updateThemeToggleAndSelector() {
             colorThemeSelect.value = currentCustomTheme;
             // Update currentCustomThemeIndex to match the selected theme
             currentCustomThemeIndex = CUSTOM_THEMES.indexOf(currentCustomTheme);
+            console.log(`[Theme Selector] Set dropdown to custom theme: ${currentCustomTheme}`);
         } else {
             colorThemeSelect.value = 'none'; // Select "No Custom Theme"
             currentCustomThemeIndex = -1; // Reset index if no custom theme
+            console.log(`[Theme Selector] Set dropdown to "No Custom Theme".`);
         }
     }
 }
@@ -969,14 +971,16 @@ async function loadUserPreferences() {
         renderWatchlistSelect();
         
         // Apply sort order preference
-        if (sortSelect && lastSelectedSortOrder && Array.from(sortSelect.options).some(option => option.value === lastSelectedSortOrder)) {
-            sortSelect.value = lastSelectedSortOrder;
-            console.log(`[Sort] Applied saved sort order: ${lastSelectedSortOrder}`);
-        } else {
-            sortSelect.value = ''; // Reset to placeholder if no saved or invalid
-            console.log("[Sort] No valid saved sort order found, resetting sort dropdown.");
+        if (sortSelect) {
+            if (lastSelectedSortOrder && Array.from(sortSelect.options).some(option => option.value === lastSelectedSortOrder)) {
+                sortSelect.value = lastSelectedSortOrder;
+                console.log(`[Sort] Applied saved sort order: ${lastSelectedSortOrder}. Current sortSelect.value: ${sortSelect.value}`);
+            } else {
+                sortSelect.value = ''; // Reset to placeholder if no saved or invalid
+                console.log("[Sort] No valid saved sort order found or sortSelect not available, resetting sort dropdown.");
+            }
+            renderSortSelect(); // Ensure placeholder is correctly set if no value
         }
-        renderSortSelect(); // Ensure placeholder is correctly set if no value
 
         const migratedSomething = await migrateOldSharesToWatchlist();
         if (!migratedSomething) {
@@ -1640,74 +1644,21 @@ async function initializeAppLogic() {
         }
     }
 
-    // --- Theme Toggling Logic ---
-    function applyDefaultLightDarkTheme() {
-        const body = document.body;
-        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const savedDefaultTheme = localStorage.getItem('theme'); // 'light' or 'dark'
-
-        body.className = body.className.split(' ').filter(c => !c.startsWith('theme-') && c !== 'dark-theme').join(' ');
-
-        if (savedDefaultTheme) {
-            if (savedDefaultTheme === 'dark') {
-                body.classList.add('dark-theme');
-            } else {
-                body.classList.remove('dark-theme');
-            }
-            console.log(`[Theme] Reverted to saved default theme: ${savedDefaultTheme}`);
-        } else {
-            if (systemPrefersDark) {
-                body.classList.add('dark-theme');
-            } else {
-                body.classList.remove('dark-theme');
-            }
-            localStorage.setItem('theme', systemPrefersDark ? 'dark' : 'light');
-            console.log(`[Theme] Reverted to system default theme: ${systemPrefersDark ? 'dark' : 'light'}`);
-        }
-        // When reverting to default, ensure custom theme is not selected in dropdown
-        if (colorThemeSelect) {
-            colorThemeSelect.value = 'none';
-        }
-        currentCustomThemeIndex = -1; // Reset index
-    }
-
-    if (themeToggleBtn) {
-        themeToggleBtn.addEventListener('click', () => {
-            // Determine the next custom theme
-            currentCustomThemeIndex = (currentCustomThemeIndex + 1) % CUSTOM_THEMES.length;
-            const nextTheme = CUSTOM_THEMES[currentCustomThemeIndex];
-            applyTheme(nextTheme);
-            console.log(`[Theme] Cycled to next custom theme: ${nextTheme}`);
-        });
-    }
-
-    if (colorThemeSelect) {
-        colorThemeSelect.addEventListener('change', (event) => {
-            const selectedTheme = event.target.value;
-            applyTheme(selectedTheme);
-        });
-    }
-
-    if (revertToDefaultThemeBtn) {
-        revertToDefaultThemeBtn.addEventListener('click', (event) => {
-            event.preventDefault();
-            applyTheme('none'); // This will trigger applyDefaultLightDarkTheme
-            console.log("[Theme] Reverted to default light/dark theme via button.");
-        });
-    }
-
     // Listen for system theme changes (if no explicit saved theme is set)
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+        // Only react to system changes if no custom theme is selected AND no explicit default theme is saved
         if (!localStorage.getItem('selectedTheme') && !localStorage.getItem('theme')) {
             if (event.matches) {
                 document.body.classList.add('dark-theme');
-                localStorage.setItem('theme', 'dark');
+                localStorage.setItem('theme', 'dark'); // Save this system preference as the default
             } else {
                 document.body.classList.remove('dark-theme');
-                localStorage.setItem('theme', 'light');
+                localStorage.setItem('theme', 'light'); // Save this system preference as the default
             }
-            console.log("[Theme] System theme preference changed and applied.");
+            console.log("[Theme] System theme preference changed and applied as new default.");
             updateThemeToggleAndSelector();
+        } else {
+            console.log("[Theme] System theme preference changed, but custom or explicit default theme is active, so not applying.");
         }
     });
 
@@ -1786,7 +1737,7 @@ async function initializeAppLogic() {
 
 // --- DOMContentLoaded Event Listener (Main entry point) ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v117) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v118) DOMContentLoaded fired."); // Updated version number
 
     // Check if Firebase objects are available from the module script in index.html
     // If they are, proceed with setting up the auth state listener.
