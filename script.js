@@ -1,5 +1,5 @@
-// File Version: v118
-// Last Updated: 2025-06-30 (Remember Sort Order & Theme)
+// File Version: v119
+// Last Updated: 2025-06-30 (Enabled Edit Watchlist Button for Single Watchlist)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -218,7 +218,8 @@ function updateMainButtonsState(enable) {
     if (dividendCalcBtn) dividendCalcBtn.disabled = !enable;
     if (watchlistSelect) watchlistSelect.disabled = !enable; 
     if (addWatchlistBtn) addWatchlistBtn.disabled = !enable;
-    if (editWatchlistBtn) editWatchlistBtn.disabled = !enable || userWatchlists.length <= 1; 
+    // Enable editWatchlistBtn if there's at least one watchlist
+    if (editWatchlistBtn) editWatchlistBtn.disabled = !enable || userWatchlists.length === 0; 
     if (deleteWatchlistInModalBtn) deleteWatchlistInModalBtn.disabled = !enable || userWatchlists.length <= 1;
     if (addShareHeaderBtn) addShareHeaderBtn.disabled = !enable;
 }
@@ -987,7 +988,9 @@ async function loadUserWatchlists() {
         }
         updateThemeToggleAndSelector(); // Ensure UI reflects the applied theme
 
-        updateMainButtonsState(true);
+        // Moved from initializeAppLogic to here, after userWatchlists is populated
+        // This ensures the button state is correctly set based on the number of watchlists
+        updateMainButtonsState(true); 
 
         const migratedSomething = await migrateOldSharesToWatchlist();
         if (!migratedSomething) {
@@ -1751,7 +1754,7 @@ async function initializeAppLogic() {
 
 // --- DOMContentLoaded Event Listener (Main entry point) ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v118) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v119) DOMContentLoaded fired."); // Updated version number
 
     // Check if Firebase objects are available from the module script in index.html
     // If they are, proceed with setting up the auth state listener.
@@ -1773,7 +1776,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     mainTitle.textContent = "My Share Watchlist";
                 }
-                updateMainButtonsState(true);
+                // updateMainButtonsState(true); // This is now called inside loadUserWatchlists
                 await loadUserWatchlists(); // Load watchlists and preferences after user is authenticated
             } else {
                 currentUserId = null;
