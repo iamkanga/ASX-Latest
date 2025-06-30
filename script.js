@@ -1,5 +1,5 @@
-// File Version: v115
-// Last Updated: 2025-06-28 (Modal Scrolling Support)
+// File Version: v116
+// Last Updated: 2025-06-28 (Remember Sort Order & Prevent Double Add)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -896,24 +896,47 @@ async function saveLastSelectedWatchlistId(watchlistId) {
     }
 }
 
-// Load watchlists from Firestore and set the current one
-async function loadUserWatchlists() {
-    if (!db || !currentUserId) {
-        console.warn("[Watchlist] Firestore DB or User ID not available for loading watchlists.");
+// Save the last selected sort order to user's profile
+async function saveSortOrderPreference(sortValue) {
+    if (!db || !currentUserId || !window.firestore) {
+        console.warn("[Sort] Cannot save sort order preference: DB, User ID, or Firestore functions not available.");
         return;
     }
-    userWatchlists = [];
-    const watchlistsColRef = window.firestore ? window.firestore.collection(db, `artifacts/${currentAppId}/users/${currentUserId}/watchlists`) : null;
-    const userProfileDocRef = window.firestore ? window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/profile/settings`) : null;
+    const userProfileDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/profile/settings`);
+    try {
+        await window.firestore.setDoc(userProfileDocRef, { lastSelectedSortOrder: sortValue }, { merge: true });
+        console.log(`[Sort] Saved last selected sort order: ${sortValue}`);
+    } catch (error) {
+        console.error("[Sort] Error saving sort order preference:", error);
+    }
+}
 
-    if (!watchlistsColRef || !userProfileDocRef) {
-        console.error("[Watchlist] Firestore collection or doc reference is null. Cannot load watchlists.");
-        showCustomAlert("Firestore services not fully initialized. Cannot load watchlists.");
+// Load user preferences (watchlist and sort order) from Firestore
+async function loadUserPreferences() {
+    if (!db || !currentUserId || !window.firestore) {
+        console.warn("[Preferences] Firestore DB, User ID, or Firestore functions not available for loading preferences.");
         return;
     }
+    const userProfileDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/profile/settings`);
 
     try {
-        console.log("[Watchlist] Fetching user watchlists...");
+        console.log("[Preferences] Fetching user preferences...");
+        const userProfileSnap = await window.firestore.getDoc(userProfileDocRef);
+        let lastSelectedWatchlistId = null;
+        let lastSelectedSortOrder = '';
+
+        if (userProfileSnap.exists()) {
+            const data = userProfileSnap.data();
+            lastSelectedWatchlistId = data.lastSelectedWatchlistId;
+            lastSelectedSortOrder = data.lastSelectedSortOrder || '';
+            console.log(`[Preferences] Found last selected watchlist: ${lastSelectedWatchlistId}, Sort Order: ${lastSelectedSortOrder}`);
+        } else {
+            console.log("[Preferences] No user profile settings found.");
+        }
+
+        // Load watchlists first
+        userWatchlists = [];
+        const watchlistsColRef = window.firestore.collection(db, `artifacts/${currentAppId}/users/${currentUserId}/watchlists`);
         const querySnapshot = await window.firestore.getDocs(watchlistsColRef);
         querySnapshot.forEach(doc => { userWatchlists.push({ id: doc.id, name: doc.data().name }); });
         console.log(`[Watchlist] Found ${userWatchlists.length} existing watchlists.`);
@@ -925,13 +948,6 @@ async function loadUserWatchlists() {
             console.log("[Watchlist] Created default watchlist.");
         }
         userWatchlists.sort((a, b) => a.name.localeCompare(b.name));
-
-        const userProfileSnap = await window.firestore.getDoc(userProfileDocRef);
-        let lastSelectedWatchlistId = null;
-        if (userProfileSnap.exists()) {
-            lastSelectedWatchlistId = userProfileSnap.data().lastSelectedWatchlistId;
-            console.log(`[Watchlist] Found last selected watchlist in profile: ${lastSelectedWatchlistId}`);
-        }
 
         let targetWatchlist = null;
         if (lastSelectedWatchlistId) { targetWatchlist = userWatchlists.find(w => w.id === lastSelectedWatchlistId); }
@@ -949,8 +965,17 @@ async function loadUserWatchlists() {
         }
 
         renderWatchlistSelect();
-        renderSortSelect();
         updateMainButtonsState(true);
+
+        // Apply sort order preference
+        if (sortSelect && lastSelectedSortOrder && Array.from(sortSelect.options).some(option => option.value === lastSelectedSortOrder)) {
+            sortSelect.value = lastSelectedSortOrder;
+            console.log(`[Sort] Applied saved sort order: ${lastSelectedSortOrder}`);
+        } else {
+            sortSelect.value = ''; // Reset to placeholder if no saved or invalid
+            console.log("[Sort] No valid saved sort order found, resetting sort dropdown.");
+        }
+        renderSortSelect(); // Ensure placeholder is correctly set if no value
 
         const migratedSomething = await migrateOldSharesToWatchlist();
         if (!migratedSomething) {
@@ -959,12 +984,13 @@ async function loadUserWatchlists() {
         }
 
     } catch (error) {
-        console.error("[Watchlist] Error loading user watchlists:", error);
-        showCustomAlert("Error loading watchlists: " + error.message);
+        console.error("[Preferences] Error loading user preferences:", error);
+        showCustomAlert("Error loading user preferences: " + error.message);
     } finally {
         if (loadingIndicator) loadingIndicator.style.display = 'none';
     }
 }
+
 
 // Load shares from Firestore
 async function loadShares() {
@@ -986,7 +1012,7 @@ async function loadShares() {
         });
         console.log(`[Shares] Shares loaded successfully for watchlist: '${currentWatchlistName}' (ID: ${currentWatchlistId}). Total shares: ${allSharesData.length}`);
         console.log("[Shares] All shares data (after load):", allSharesData);
-        sortShares();
+        sortShares(); // Apply sorting after loading shares
         renderAsxCodeButtons();
     } catch (error) {
         console.error("[Shares] Error loading shares:", error);
@@ -1251,7 +1277,10 @@ async function initializeAppLogic() {
 
     // --- Event Listener for Sort Dropdown ---
     if (sortSelect) {
-        sortSelect.addEventListener('change', sortShares);
+        sortSelect.addEventListener('change', async () => { // Made async to save preference
+            sortShares();
+            await saveSortOrderPreference(sortSelect.value); // Save preference on change
+        });
     }
 
     // --- Share Form Functions (Add/Edit) Event Listeners ---
@@ -1278,8 +1307,15 @@ async function initializeAppLogic() {
 
     if (saveShareBtn) {
         saveShareBtn.addEventListener('click', async () => {
+            // Disable button immediately to prevent multiple clicks
+            saveShareBtn.disabled = true;
+
             const shareName = shareNameInput.value.trim().toUpperCase();
-            if (!shareName) { showCustomAlert("Code is required!"); return; }
+            if (!shareName) { 
+                showCustomAlert("Code is required!"); 
+                saveShareBtn.disabled = false; // Re-enable on validation failure
+                return; 
+            }
 
             const currentPrice = parseFloat(currentPriceInput.value);
             const targetPrice = parseFloat(targetPriceInput.value);
@@ -1307,39 +1343,37 @@ async function initializeAppLogic() {
                 lastPriceUpdateTime: new Date().toISOString()
             };
 
-            if (selectedShareDocId) {
-                const existingShare = allSharesData.find(s => s.id === selectedShareDocId);
-                if (existingShare) { shareData.previousFetchedPrice = existingShare.lastFetchedPrice; }
-                else { shareData.previousFetchedPrice = shareData.currentPrice; }
-                shareData.lastFetchedPrice = shareData.currentPrice;
+            try {
+                if (selectedShareDocId) {
+                    const existingShare = allSharesData.find(s => s.id === selectedShareDocId);
+                    // Preserve previousFetchedPrice if it exists, otherwise use currentPrice
+                    shareData.previousFetchedPrice = existingShare ? existingShare.lastFetchedPrice : shareData.currentPrice;
+                    shareData.lastFetchedPrice = shareData.currentPrice; // Update lastFetchedPrice to current input
 
-                try {
                     const shareDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, selectedShareDocId);
                     await window.firestore.updateDoc(shareDocRef, shareData);
                     showCustomAlert(`Share '${shareName}' updated successfully!`, 1500);
                     console.log(`[Firestore] Share '${shareName}' (ID: ${selectedShareDocId}) updated.`);
-                } catch (error) {
-                    console.error("[Firestore] Error updating share:", error);
-                    showCustomAlert("Error updating share: " + error.message);
-                }
-            } else {
-                shareData.entryDate = new Date().toISOString();
-                shareData.lastFetchedPrice = shareData.currentPrice;
-                shareData.previousFetchedPrice = shareData.currentPrice;
+                } else {
+                    shareData.entryDate = new Date().toISOString();
+                    shareData.lastFetchedPrice = shareData.currentPrice;
+                    shareData.previousFetchedPrice = shareData.currentPrice; // For new shares, prev and last are the same initially
 
-                try {
                     const sharesColRef = window.firestore.collection(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`);
                     const newDocRef = await window.firestore.addDoc(sharesColRef, shareData);
                     selectedShareDocId = newDocRef.id;
                     showCustomAlert(`Share '${shareName}' added successfully!`, 1500);
                     console.log(`[Firestore] Share '${shareName}' added with ID: ${newDocRef.id}`);
-                } catch (error) {
-                    console.error("[Firestore] Error adding share:", error);
-                    showCustomAlert("Error adding share: " + error.message);
                 }
+                await loadShares();
+                closeModals();
+            } catch (error) {
+                console.error("[Firestore] Error saving share:", error);
+                showCustomAlert("Error saving share: " + error.message);
+            } finally {
+                // Re-enable button regardless of success or failure
+                saveShareBtn.disabled = false;
             }
-            await loadShares();
-            closeModals();
         });
     }
 
@@ -1411,7 +1445,7 @@ async function initializeAppLogic() {
                 currentWatchlistId = newWatchlistRef.id;
                 currentWatchlistName = watchlistName;
                 await saveLastSelectedWatchlistId(currentWatchlistId);
-                await loadUserWatchlists();
+                await loadUserPreferences(); // Reload all user preferences including watchlists
                 await loadShares();
 
             } catch (error) {
@@ -1468,7 +1502,7 @@ async function initializeAppLogic() {
                 console.log(`[Firestore] Watchlist (ID: ${currentWatchlistId}) renamed to '${newName}'.`);
                 hideModal(manageWatchlistModal);
                 currentWatchlistName = newName;
-                await loadUserWatchlists();
+                await loadUserPreferences(); // Reload all user preferences including watchlists
                 await loadShares();
             } catch (error) {
                 console.error("[Firestore] Error renaming watchlist:", error);
@@ -1505,7 +1539,7 @@ async function initializeAppLogic() {
                     showCustomAlert(`Watchlist '${watchlistToDeleteName}' and its shares deleted successfully!`, 2000);
                     closeModals();
 
-                    await loadUserWatchlists();
+                    await loadUserPreferences(); // Reload all user preferences including watchlists
                     await loadShares();
                 } catch (error) {
                     console.error("[Firestore] Error deleting watchlist:", error);
@@ -1750,7 +1784,7 @@ async function initializeAppLogic() {
 
 // --- DOMContentLoaded Event Listener (Main entry point) ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v115) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v116) DOMContentLoaded fired."); // Updated version number
 
     // Check if Firebase objects are available from the module script in index.html
     // If they are, proceed with setting up the auth state listener.
@@ -1773,8 +1807,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     mainTitle.textContent = "My Share Watchlist";
                 }
                 updateMainButtonsState(true);
-                if (loadingIndicator) loadingIndicator.style.display = 'none';
-                await loadUserWatchlists(); // Load watchlists only after user is authenticated
+                if (loadingIndicator) loadingIndicator.style.display = 'block';
+                await loadUserPreferences(); // Load all user preferences including watchlists and sort order
             } else {
                 currentUserId = null;
                 updateAuthButtonText(false);
