@@ -17,14 +17,13 @@
     <link rel="manifest" href="manifest.json">
 </head>
 <body>
-    <!-- Firebase App and Auth Initialization (HARDCODED CONFIG - as per original base version) -->
+    <!-- Firebase App and Auth Initialization -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signOut, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, writeBatch, deleteField, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // IMPORTANT: Firebase configuration is hardcoded here based on your provided details.
-        // This is used to bypass environment variable issues you are facing.
+        // Firebase configuration (HARDCODED from your provided details)
         const firebaseConfig = {
             apiKey: "AIzaSyAyIWoTYlzTkaSZ9x-ySiHtzATBM9XFrYw",
             authDomain: "asx-watchlist-app.firebaseapp.com",
@@ -35,7 +34,7 @@
             measurementId: "G-J24BTJ34D2"
         };
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'; // Still use __app_id for collection paths
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
         let firebaseApp;
         let auth;
@@ -49,7 +48,6 @@
             firebaseInitialized = true;
             console.log("Firebase: Initialized successfully with hardcoded config.");
 
-            // Sign in with custom token or anonymously if no token
             if (initialAuthToken) {
                 signInWithCustomToken(auth, initialAuthToken)
                     .then((userCredential) => {
@@ -81,7 +79,6 @@
             });
         }
 
-        // Expose Firebase instances globally for script.js
         window.firestoreDb = firebaseInitialized ? db : null;
         window.firebaseAuth = firebaseInitialized ? auth : null;
         window.getFirebaseAppId = () => appId;
@@ -95,37 +92,32 @@
         } : null;
 
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log("index.html (v52) script module loaded and DOMContentLoaded fired."); // Original version number
+            console.log("index.html (v52) script module loaded and DOMContentLoaded fired.");
         }); 
     </script>
-    <!-- Linking to your separate script.js file -->
-    <script src="script.js?v=115"></script> <!-- Original script version -->
+    <!-- Linking to your separate script.js file with 'defer' -->
+    <script src="script.js?v=115" defer></script>
     
     <div class="min-h-screen flex flex-col">
-        <!-- Loading Indicator -->
         <div id="loadingIndicator" class="loading" style="display: none;">Loading shares...</div>
 
         <header>
             <div class="header-top-row">
-                <!-- Hamburger/Sidebar Toggle Button - NOW ON LEFT -->
                 <button id="hamburgerBtn" class="hamburger-btn header-action-btn-left">
                     <i class="fas fa-bars"></i>
                 </button>
-                <h1 id="mainTitle">Share Watchlist</h1> <!-- Default text before login -->
-                <!-- New "Add Share" button on the main screen - NOW ON RIGHT -->
+                <h1 id="mainTitle">Share Watchlist</h1>
                 <button id="addShareHeaderBtn" class="header-action-btn header-action-btn-right">
                     <i class="fas fa-plus"></i>
                 </button>
             </div>
 
-            <!-- Mobile Menu / Desktop Sidebar Content -->
             <nav id="appSidebar" class="app-sidebar">
-                <button id="closeMenuBtn" class="close-menu-btn">X</button> <!-- Changed to simple X -->
+                <button id="closeMenuBtn" class="close-menu-btn">X</button>
                 
                 <div class="menu-section">
                     <h3>Share Actions</h3>
                     <div class="menu-buttons-group">
-                        <!-- Consolidated Share Action Buttons -->
                         <button id="newShareBtn" class="menu-button-item" data-action-closes-menu="true"><i class="fas fa-plus-circle"></i> Add New Share</button>
                     </div>
                 </div>
@@ -134,7 +126,6 @@
                     <h3>Watchlists</h3>
                     <div class="menu-buttons-group">
                         <button id="addWatchlistBtn" class="menu-button-item" data-action-closes-menu="true"><i class="fas fa-list-ul"></i> Add Watchlist</button>
-                        <!-- Changed delete button to edit button -->
                         <button id="editWatchlistBtn" class="menu-button-item" data-action-closes-menu="true"><i class="fas fa-edit"></i> Edit Current Watchlist</button>
                     </div>
                 </div>
@@ -142,7 +133,6 @@
                 <div class="menu-section">
                     <h3>Calculators</h3>
                     <div class="menu-buttons-group">
-                        <!-- Consolidated Calculator Buttons -->
                         <button id="standardCalcBtn" class="menu-button-item" data-action-closes-menu="true"><i class="fas fa-calculator"></i> Standard</button>
                         <button id="dividendCalcBtn" class="menu-button-item" data-action-closes-menu="true"><i class="fas fa-money-bill-wave"></i> Dividend</button>
                     </div>
@@ -151,10 +141,8 @@
                 <div class="menu-section">
                     <h3>Theme</h3>
                     <div class="menu-buttons-group">
-                        <!-- Theme Toggle Button - NOW CYCLES CUSTOM THEMES -->
                         <button id="themeToggleBtn" class="menu-button-item" data-action-closes-menu="false"><i class="fas fa-palette"></i> Toggle Theme</button>
                         
-                        <!-- New Theme Selector Dropdown -->
                         <label for="colorThemeSelect" class="theme-select-label">Choose Color Theme:</label>
                         <select id="colorThemeSelect" class="dropdown-large menu-dropdown" data-action-closes-menu="false">
                             <option value="none" selected>No Custom Theme</option>
@@ -184,7 +172,6 @@
                             </optgroup>
                         </select>
 
-                        <!-- Revert to Default Theme Button - NOW A BUTTON WITH ICONS -->
                         <button id="revertToDefaultThemeBtn" class="menu-button-item secondary-buttons" data-action-closes-menu="false">
                             <i class="fas fa-sun"></i><i class="fas fa-moon"></i> Revert to Default
                         </button>
@@ -192,42 +179,35 @@
                 </div>
             </nav>
 
-            <!-- Sidebar overlay for desktop to handle clicks outside -->
             <div id="sidebarOverlay" class="sidebar-overlay"></div>
 
-            <!-- Watchlist and Sort controls -->
             <div class="watchlist-controls-row">
                 <div class="watchlist-group">
                     <select id="watchlistSelect" class="dropdown-large">
-                        <!-- Options populated by JS, including 'Watchlist' placeholder -->
                     </select>
                 </div>
 
                 <div class="sort-group">
                     <select id="sortSelect" class="dropdown-large">
-                        <option value="" disabled selected>Sort</option> <!-- Explicit "Sort" placeholder -->
+                        <option value="" disabled selected>Sort</option>
                         <option value="entryDate-desc">Date Added (Newest)</option>
                         <option value="entryDate-asc">Date Added (Oldest)</option>
-                        <option value="shareName-asc">Code (A-Z)</option> <!-- Removed ASX -->
-                        <option value="shareName-desc">Code (Z-A)</option> <!-- Removed ASX -->
-                        <!-- Removed Current Price sorting options as per new display -->
+                        <option value="shareName-asc">Code (A-Z)</option>
+                        <option value="shareName-desc">Code (Z-A)</option>
                         <option value="dividendAmount-desc">Dividend (High-Low)</option>
                         <option value="dividendAmount-asc">Dividend (Low-High)</option>
                     </select>
                 </div>
             </div>
             
-            <!-- ASX Code buttons container -->
             <div id="asxCodeButtonsContainer" class="asx-code-buttons-container">
-                <!-- ASX code buttons will be dynamically added here -->
             </div>
         </header>
 
         <main class="container">
-            <!-- Message for Firebase initialization errors -->
             <div id="firebaseInitError" class="error-message" style="display: none;">
                 <p><strong>Error:</strong> Firebase failed to initialize.</p>
-                <p>This is usually due to missing or incorrect Firebase configuration. Please ensure your <code>apiKey</code> and <code>projectId</code> are correctly provided in the Canvas environment variables (`__firebase_config`).</p>
+                <p>This is usually due to missing or incorrect Firebase configuration. Please ensure your <code>apiKey</code> and <code>projectId</code> are correctly provided.</p>
                 <p>Core application features will not work without a valid Firebase connection.</p>
             </div>
 
@@ -236,20 +216,18 @@
                     <table id="shareTable">
                         <thead>
                             <tr>
-                                <th>Code</th> <!-- Removed ASX -->
-                                <th>Entered Price</th> <!-- Renamed from Current Price -->
+                                <th>Code</th>
+                                <th>Entered Price</th>
                                 <th>Target Price</th>
                                 <th>Dividends</th>
                                 <th>Comments</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <!-- Share rows will be dynamically added here -->
                         </tbody>
                     </table>
                 </div>
                 <div id="mobileShareCards" class="mobile-share-cards">
-                    <!-- Mobile share cards will be dynamically added here -->
                 </div>
             </div>
         </main>
@@ -258,20 +236,17 @@
             <button id="googleAuthBtn" class="google-auth-btn">Sign In</button>
         </footer>
 
-        <!-- Scroll-to-Top Button -->
         <button id="scrollToTopBtn" title="Go to top"><i class="fas fa-arrow-up"></i></button>
 
-        <!-- Modals -->
-        <!-- Share Form Modal -->
         <div id="shareFormSection" class="modal">
             <div class="modal-content">
                 <span class="close-button form-close-button">&times;</span>
                 <h2 id="formTitle">Add New Share</h2>
-                <div class="modal-body-scrollable"> <!-- NEW SCROLLABLE WRAPPER -->
-                    <label for="shareName">Code:</label> <!-- Removed ASX -->
+                <div class="modal-body-scrollable">
+                    <label for="shareName">Code:</label>
                     <input type="text" id="shareName" placeholder="e.g., BHP" required>
 
-                    <label for="currentPrice">Entered Price ($):</label> <!-- Changed label to Entered Price -->
+                    <label for="currentPrice">Entered Price ($):</label>
                     <input type="number" id="currentPrice" step="0.01" placeholder="e.g., 25.50">
 
                     <label for="targetPrice">Target Price ($):</label>
@@ -285,11 +260,9 @@
 
                     <div id="commentsFormContainer" class="comments-form-container">
                         <h3>Comments <button type="button" id="addCommentSectionBtn" class="add-section-btn">+</button></h3>
-                        <!-- Comment sections will be dynamically added here by JS -->
                     </div>
-                </div> <!-- END modal-body-scrollable -->
+                </div>
 
-                <!-- Buttons for Add/Edit Share Modal - will be styled to be on one line -->
                 <div class="form-action-buttons modal-form-buttons">
                     <button type="button" id="deleteShareFromFormBtn" class="danger-button"><i class="fas fa-trash-alt"></i> Delete Share</button>
                     <button type="button" id="cancelFormBtn" class="secondary-buttons"><i class="fas fa-times-circle"></i> Cancel</button>
@@ -298,14 +271,13 @@
             </div>
         </div>
 
-        <!-- Share Details Modal (Still needed for double-click on table/card) -->
         <div id="shareDetailModal" class="modal">
             <div class="modal-content">
                 <span class="close-button">&times;</span>
                 <h2 id="modalShareName">Share Details</h2>
-                <div class="modal-body-scrollable"> <!-- NEW SCROLLABLE WRAPPER -->
+                <div class="modal-body-scrollable">
                     <p><strong>Entry Date:</strong> <span id="modalEntryDate"></span></p>
-                    <p><strong>Entered Price:</strong> <span id="modalEnteredPrice"></span></p> <!-- Removed date/time span -->
+                    <p><strong>Entered Price:</strong> <span id="modalEnteredPrice"></span></p>
                     <p><strong>Target Price:</strong> <span id="modalTargetPrice"></span></p>
                     <p><strong>Dividend Amount:</strong> <span id="modalDividendAmount"></span></p>
                     <p><strong>Franking Credits:</strong> <span id="modalFrankingCredits"></span></p>
@@ -314,7 +286,6 @@
 
                     <div id="modalCommentsContainer" class="modal-comments-sections">
                         <h3>Comments</h3>
-                        <!-- Comments will be displayed here -->
                     </div>
 
                     <div class="external-links-section">
@@ -322,9 +293,9 @@
                         <p><a id="modalMarketIndexLink" href="#" target="_blank" class="external-link"><i class="fas fa-external-link-alt"></i> View on MarketIndex.com.au</a></p>
                         <p><a id="modalFoolLink" href="#" target="_blank" class="external-link"><i class="fas fa-external-link-alt"></i> View on Fool.com.au</a></p>
                         <p><a id="modalCommSecLink" href="#" target="_blank" class="external-link"><i class="fas fa-external-link-alt"></i> View on CommSec.com.au</a></p>
-                        <p id="commSecLoginMessage" class="ghosted-text commsec-message">Requires single CommSec login per session</p> <!-- NEW COMMSEC LOGIN MESSAGE with new class -->
+                        <p id="commSecLoginMessage" class="ghosted-text commsec-message">Requires single CommSec login per session</p>
                     </div>
-                </div> <!-- END modal-body-scrollable -->
+                </div>
 
                 <div class="modal-action-buttons">
                     <button type="button" id="editShareFromDetailBtn"><i class="fas fa-edit"></i> Edit Share</button>
@@ -332,15 +303,14 @@
             </div>
         </div>
 
-        <!-- Add Watchlist Modal -->
         <div id="addWatchlistModal" class="modal">
             <div class="modal-content">
                 <span class="close-button">&times;</span>
                 <h2>Add New Watchlist</h2>
-                <div class="modal-body-scrollable"> <!-- NEW SCROLLABLE WRAPPER -->
+                <div class="modal-body-scrollable">
                     <label for="newWatchlistName">Watchlist Name:</label>
                     <input type="text" id="newWatchlistName" placeholder="e.g., Tech Stocks" required>
-                </div> <!-- END modal-body-scrollable -->
+                </div>
                 <div class="form-action-buttons">
                     <button type="button" id="cancelAddWatchlistBtn" class="secondary-buttons"><i class="fas fa-times-circle"></i> Cancel</button>
                     <button type="button" id="saveWatchlistBtn"><i class="fas fa-save"></i> Save Watchlist</button>
@@ -348,15 +318,14 @@
             </div>
         </div>
 
-        <!-- Manage Watchlist Modal (New) -->
         <div id="manageWatchlistModal" class="modal">
             <div class="modal-content">
                 <span class="close-button">&times;</span>
                 <h2>Manage Watchlist</h2>
-                <div class="modal-body-scrollable"> <!-- NEW SCROLLABLE WRAPPER -->
+                <div class="modal-body-scrollable">
                     <label for="editWatchlistName">Watchlist Name:</label>
                     <input type="text" id="editWatchlistName" required>
-                </div> <!-- END modal-body-scrollable -->
+                </div>
                 <div class="form-action-buttons">
                     <button type="button" id="deleteWatchlistInModalBtn" class="danger-button"><i class="fas fa-trash-alt"></i> Delete Watchlist</button>
                     <button type="button" id="cancelManageWatchlistBtn" class="secondary-buttons"><i class="fas fa-times-circle"></i> Cancel</button>
@@ -365,22 +334,21 @@
             </div>
         </div>
 
-        <!-- Dividend Calculator Modal -->
         <div id="dividendCalculatorModal" class="modal">
             <div class="modal-content calculator-modal-content">
                 <span class="close-button calc-close-button">&times;</span>
                 <h2>Dividend Calculator</h2>
-                <div class="modal-body-scrollable"> <!-- NEW SCROLLABLE WRAPPER -->
+                <div class="modal-body-scrollable">
                     <div class="calc-input-group">
-                        <label for="calcCurrentPrice">Share Price ($):</label> <!-- Reordered and renamed -->
+                        <label for="calcCurrentPrice">Share Price ($):</label>
                         <input type="number" id="calcCurrentPrice" step="0.01" placeholder="e.g., 25.50">
                     </div>
                     <div class="calc-input-group">
-                        <label for="calcDividendAmount">Dividend Amount (per share, annual $):</label> <!-- Reordered -->
+                        <label for="calcDividendAmount">Dividend Amount (per share, annual $):</label>
                         <input type="number" id="calcDividendAmount" step="0.001" placeholder="e.g., 1.250">
                     </div>
                     <div class="calc-input-group">
-                        <label for="calcFrankingCredits">Franking Credits (%):</label> <!-- Reordered -->
+                        <label for="calcFrankingCredits">Franking Credits (%):</label>
                         <input type="number" id="calcFrankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 70 for 70%">
                     </div>
                     <p><strong>Unfranked Yield:</strong> <span id="calcUnfrankedYield">-</span></p>
@@ -398,16 +366,15 @@
                         </select>
                     </div>
                     <p><strong>Estimated Annual Dividend:</strong> <span id="calcEstimatedDividend">-</span></p>
-                </div> <!-- END modal-body-scrollable -->
+                </div>
             </div>
         </div>
 
-        <!-- Standard Calculator Modal -->
         <div id="calculatorModal" class="modal">
             <div class="modal-content calculator-modal-content">
                 <span class="close-button">&times;</span>
                 <h2>Standard Calculator</h2>
-                <div class="modal-body-scrollable"> <!-- NEW SCROLLABLE WRAPPER -->
+                <div class="modal-body-scrollable">
                     <div class="calculator-display">
                         <div id="calculatorInput" class="calculator-input"></div>
                         <div id="calculatorResult" class="calculator-result">0</div>
@@ -432,16 +399,15 @@
                         <button class="calc-btn" data-value=".">.</button>
                         <button class="calc-btn equals" data-action="calculate">=</button>
                     </div>
-                </div> <!-- END modal-body-scrollable -->
+                </div>
             </div>
         </div>
 
-        <!-- Custom Dialog Modal for Alerts/Confirms -->
         <div id="customDialogModal" class="modal">
             <div class="modal-content">
-                <div class="modal-body-scrollable"> <!-- NEW SCROLLABLE WRAPPER -->
+                <div class="modal-body-scrollable">
                     <p id="customDialogMessage"></p>
-                </div> <!-- END modal-body-scrollable -->
+                </div>
                 <div class="custom-dialog-buttons">
                     <button id="customDialogConfirmBtn" class="secondary-buttons">OK</button>
                     <button id="customDialogCancelBtn" class="danger-button">Cancel</button>
