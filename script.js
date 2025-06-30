@@ -1,5 +1,5 @@
-// File Version: v116
-// Last Updated: 2025-06-30 (Fixed premature loading indicator display)
+// File Version: v117
+// Last Updated: 2025-06-30 (Fixed ghosted buttons on refresh)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -1171,9 +1171,8 @@ async function initializeAppLogic() {
     if (customDialogModal) customDialogModal.style.setProperty('display', 'none', 'important');
     if (calculatorModal) calculatorModal.style.setProperty('display', 'none', 'important');
     
-    // Buttons will be enabled based on auth state, not here directly
-    updateMainButtonsState(false); 
-    // Removed: if (loadingIndicator) loadingIndicator.style.display = 'block'; // This was causing the premature display
+    // Removed: Buttons will be enabled based on auth state, not here directly
+    // Removed: updateMainButtonsState(false); // This line caused the buttons to be disabled prematurely
     renderWatchlistSelect(); // Render initial empty watchlist select
     
     // Apply theme on initial load
@@ -1763,7 +1762,7 @@ async function initializeAppLogic() {
 
 // --- DOMContentLoaded Event Listener (Main entry point) ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v116) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v117) DOMContentLoaded fired."); // Updated version number
 
     // Check if Firebase objects are available from the module script in index.html
     // If they are, proceed with setting up the auth state listener.
@@ -1786,7 +1785,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     mainTitle.textContent = "My Share Watchlist";
                 }
                 updateMainButtonsState(true);
-                // Removed: if (loadingIndicator) loadingIndicator.style.display = 'none'; // This was causing the premature display
                 await loadUserWatchlists(); // Load watchlists only after user is authenticated
             } else {
                 currentUserId = null;
