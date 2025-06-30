@@ -1,5 +1,5 @@
 // File Version: v120
-// Last Updated: 2025-06-28 (Theme Function Scope Fix)
+// Last Updated: 2025-06-28 (Theme & Loading Indicator Robustness)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -93,7 +93,7 @@ const calcFrankedYieldSpan = document.getElementById('calcFrankedYield');
 const investmentValueSelect = document.getElementById('investmentValueSelect');
 const calcEstimatedDividend = document.getElementById('calcEstimatedDividend');
 const sortSelect = document.getElementById('sortSelect');
-const customDialogModal = document = document.getElementById('customDialogModal');
+const customDialogModal = document.getElementById('customDialogModal');
 const customDialogMessage = document.getElementById('customDialogMessage');
 const customDialogConfirmBtn = document.getElementById('customDialogConfirmBtn');
 const customDialogCancelBtn = document.getElementById('customDialogCancelBtn');
@@ -225,6 +225,21 @@ function updateMainButtonsState(enable) {
 
     // Theme buttons/selectors should NOT be disabled by this function.
     // Their state is managed separately by updateThemeToggleAndSelector.
+}
+
+// Centralized Loading Indicator Functions
+function showLoading() {
+    if (loadingIndicator) {
+        loadingIndicator.style.display = 'block';
+        console.log("[Loading] Indicator shown.");
+    }
+}
+
+function hideLoading() {
+    if (loadingIndicator) {
+        loadingIndicator.style.display = 'none';
+        console.log("[Loading] Indicator hidden.");
+    }
 }
 
 function showModal(modalElement) {
@@ -526,7 +541,6 @@ function renderSortSelect() {
         sortSelect.insertBefore(placeholderOption, sortSelect.firstChild);
     }
     // Ensure that if a valid value is already set, it remains selected.
-    // The previous logic was fine here, as it only adds the placeholder if not already there.
     // The actual setting of the value happens in loadUserPreferences.
 }
 
@@ -821,7 +835,7 @@ function resetCalculator() {
     console.log("[Calculator] Calculator state reset.");
 }
 
-// Theme Toggling Logic (Moved to global scope)
+// Theme Toggling Logic
 function applyTheme(themeName) {
     const body = document.body;
     // Remove all existing theme classes (both 'dark-theme' and 'theme-X')
@@ -858,61 +872,39 @@ function applyTheme(themeName) {
     updateThemeToggleAndSelector();
 }
 
-function applyDefaultLightDarkTheme() {
-    const body = document.body;
-    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    let effectiveDefaultTheme = localStorage.getItem('theme'); // Get previously saved default preference
-
-    // If no explicit default preference saved, use system preference as the new saved default
-    if (!effectiveDefaultTheme) {
-        effectiveDefaultTheme = systemPrefersDark ? 'dark' : 'light';
-        localStorage.setItem('theme', effectiveDefaultTheme); // Explicitly save this default
-        console.log(`[Theme] applyDefaultLightDarkTheme: No default theme preference found, setting to system preference: ${effectiveDefaultTheme} and saving.`);
-    } else {
-        console.log(`[Theme] applyDefaultLightDarkTheme: Using previously saved default theme: ${effectiveDefaultTheme}`);
-    }
-
-    // Apply the determined default theme
-    body.className = body.className.split(' ').filter(c => !c.startsWith('theme-') && c !== 'dark-theme').join(' '); // Clear custom themes
-    if (effectiveDefaultTheme === 'dark') {
-        body.classList.add('dark-theme');
-    } else {
-        body.classList.remove('dark-theme');
-    }
-    console.log(`[Theme] applyDefaultLightDarkTheme: Applied default theme: ${effectiveDefaultTheme}. Body class: ${body.className}`);
-    updateThemeToggleAndSelector();
-}
-
 function updateThemeToggleAndSelector() {
     const currentCustomTheme = localStorage.getItem('selectedTheme');
-    // const currentDefaultTheme = localStorage.getItem('theme'); // Not directly used for UI state here
+    const currentDefaultTheme = localStorage.getItem('theme'); // 'light' or 'dark'
 
     // Update theme toggle button icon
     if (themeToggleBtn) {
+        // The "Toggle Theme" button always uses the palette icon now.
+        // Its text doesn't need to change based on light/dark.
         themeToggleBtn.innerHTML = '<i class="fas fa-palette"></i> Toggle Theme';
         themeToggleBtn.disabled = false; // Ensure it's always enabled
-        console.log("[Theme UI] themeToggleBtn enabled.");
+        console.log(`[Theme Controls] themeToggleBtn.disabled: ${themeToggleBtn.disabled}`);
     }
 
     // Update theme selector dropdown
     if (colorThemeSelect) {
         if (currentCustomTheme) {
             colorThemeSelect.value = currentCustomTheme;
+            // Update currentCustomThemeIndex to match the selected theme
             currentCustomThemeIndex = CUSTOM_THEMES.indexOf(currentCustomTheme);
-            console.log(`[Theme UI] Set dropdown to custom theme: ${currentCustomTheme}. Index: ${currentCustomThemeIndex}`);
+            console.log(`[Theme Controls] Set dropdown to custom theme: ${currentCustomTheme}`);
         } else {
             colorThemeSelect.value = 'none'; // Select "No Custom Theme"
             currentCustomThemeIndex = -1; // Reset index if no custom theme
-            console.log(`[Theme UI] Set dropdown to "No Custom Theme". Index: ${currentCustomThemeIndex}`);
+            console.log(`[Theme Controls] Set dropdown to "No Custom Theme".`);
         }
         colorThemeSelect.disabled = false; // Ensure it's always enabled
-        console.log("[Theme UI] colorThemeSelect enabled.");
+        console.log(`[Theme Controls] colorThemeSelect.disabled: ${colorThemeSelect.disabled}`);
     }
 
     // Update revert button
     if (revertToDefaultThemeBtn) {
         revertToDefaultThemeBtn.disabled = false; // Ensure it's always enabled
-        console.log("[Theme UI] revertToDefaultThemeBtn enabled.");
+        console.log(`[Theme Controls] revertToDefaultThemeBtn.disabled: ${revertToDefaultThemeBtn.disabled}`);
     }
 }
 
@@ -955,12 +947,13 @@ async function saveSortOrderPreference(sortValue) {
 async function loadUserPreferences() {
     if (!db || !currentUserId || !window.firestore) {
         console.warn("[Preferences] Firestore DB, User ID, or Firestore functions not available for loading preferences.");
-        if (loadingIndicator) loadingIndicator.style.display = 'none'; // Ensure loading indicator hides if essential services are missing
+        hideLoading(); // Ensure loading indicator hides if essential services are missing
         return;
     }
     const userProfileDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/profile/settings`);
 
     try {
+        showLoading();
         console.log("[Preferences] Fetching user preferences...");
         const userProfileSnap = await window.firestore.getDoc(userProfileDocRef);
         let lastSelectedWatchlistId = null;
@@ -1029,7 +1022,7 @@ async function loadUserPreferences() {
         console.error("[Preferences] Error loading user preferences:", error);
         showCustomAlert("Error loading user preferences: " + error.message);
     } finally {
-        if (loadingIndicator) loadingIndicator.style.display = 'none'; // Ensure loading indicator hides
+        hideLoading(); // Ensure loading indicator hides
     }
 }
 
@@ -1039,10 +1032,10 @@ async function loadShares() {
     if (!db || !currentUserId || !currentWatchlistId || !window.firestore) {
         console.warn("[Shares] Firestore DB, User ID, Watchlist ID, or Firestore functions not available for loading shares. Clearing list.");
         clearShareList();
-        if (loadingIndicator) loadingIndicator.style.display = 'none'; // Ensure loading indicator hides
+        hideLoading(); // Ensure loading indicator hides
         return;
     }
-    if (loadingIndicator) loadingIndicator.style.display = 'block';
+    showLoading();
     allSharesData = [];
     try {
         const sharesCol = window.firestore.collection(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`);
@@ -1061,7 +1054,7 @@ async function loadShares() {
         console.error("[Shares] Error loading shares:", error);
         showCustomAlert("Error loading shares: " + error.message);
     } finally {
-        if (loadingIndicator) loadingIndicator.style.display = 'none'; // Ensure loading indicator hides
+        hideLoading(); // Ensure loading indicator hides
     }
 }
 
@@ -1071,6 +1064,7 @@ async function migrateOldSharesToWatchlist() {
         console.warn("[Migration] Firestore DB, User ID, or Firestore functions not available for migration.");
         return false;
     }
+    showLoading();
     const sharesCol = window.firestore.collection(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`);
     const q = window.firestore.query(sharesCol);
     let sharesToUpdate = [];
@@ -1159,8 +1153,7 @@ async function migrateOldSharesToWatchlist() {
         showCustomAlert("Error during data migration: " + error.message);
         return false;
     } finally {
-        // Ensure loading indicator hides even if migration fails
-        if (loadingIndicator) loadingIndicator.style.display = 'none';
+        hideLoading(); // Ensure loading indicator hides even if migration fails
     }
 }
 
@@ -1206,7 +1199,7 @@ async function initializeAppLogic() {
     // Buttons will be enabled based on auth state, not here directly
     // This call is now redundant here as it will be called after loadUserPreferences in onAuthStateChanged
     // updateMainButtonsState(false); 
-    if (loadingIndicator) loadingIndicator.style.display = 'block';
+    showLoading(); // Show loading indicator at the very start of app logic initialization
     renderWatchlistSelect(); // Render initial empty watchlist select
     
     // Apply theme on initial load
@@ -1216,8 +1209,7 @@ async function initializeAppLogic() {
     } else {
         applyDefaultLightDarkTheme();
     }
-    // updateThemeToggleAndSelector() is called inside applyTheme/applyDefaultLightDarkTheme
-    // so no need to call it again here.
+    updateThemeToggleAndSelector(); // Ensure theme controls are enabled here
 
     // --- PWA Service Worker Registration ---
     if ('serviceWorker' in navigator) {
@@ -1801,10 +1793,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     mainTitle.textContent = "My Share Watchlist";
                 }
-                if (loadingIndicator) loadingIndicator.style.display = 'block';
+                showLoading(); // Show loading indicator immediately upon sign-in
                 await loadUserPreferences(); // This populates userWatchlists and loads last sort order
                 // Enable main buttons AFTER user preferences and watchlists are loaded
                 updateMainButtonsState(true); 
+                hideLoading(); // Hide loading indicator after all data and UI updates are complete
             } else {
                 currentUserId = null;
                 updateAuthButtonText(false);
@@ -1813,7 +1806,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 updateMainButtonsState(false);
                 clearShareList();
                 clearWatchlistUI();
-                if (loadingIndicator) loadingIndicator.style.display = 'none'; // Ensure loading hides on logout
+                hideLoading(); // Ensure loading hides on logout
             }
             // This ensures initializeAppLogic runs only once after the initial auth state is determined
             // It's crucial that this runs *after* the user state is known, as many UI elements depend on it.
@@ -1834,6 +1827,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // The error message for missing config is already displayed by index.html
         updateAuthButtonText(false);
         updateMainButtonsState(false);
-        if (loadingIndicator) loadingIndicator.style.display = 'none';
+        hideLoading(); // Ensure loading hides if Firebase init fails
     }
 }); // End DOMContentLoaded
