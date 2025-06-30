@@ -1,5 +1,5 @@
-// File Version: v119
-// Last Updated: 2025-06-28 (Theme & Loading Indicator Fixes)
+// File Version: v120
+// Last Updated: 2025-06-28 (Theme Function Scope Fix)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -93,7 +93,7 @@ const calcFrankedYieldSpan = document.getElementById('calcFrankedYield');
 const investmentValueSelect = document.getElementById('investmentValueSelect');
 const calcEstimatedDividend = document.getElementById('calcEstimatedDividend');
 const sortSelect = document.getElementById('sortSelect');
-const customDialogModal = document.getElementById('customDialogModal');
+const customDialogModal = document = document.getElementById('customDialogModal');
 const customDialogMessage = document.getElementById('customDialogMessage');
 const customDialogConfirmBtn = document.getElementById('customDialogConfirmBtn');
 const customDialogCancelBtn = document.getElementById('customDialogCancelBtn');
@@ -821,7 +821,7 @@ function resetCalculator() {
     console.log("[Calculator] Calculator state reset.");
 }
 
-// Theme Toggling Logic
+// Theme Toggling Logic (Moved to global scope)
 function applyTheme(themeName) {
     const body = document.body;
     // Remove all existing theme classes (both 'dark-theme' and 'theme-X')
@@ -858,36 +858,61 @@ function applyTheme(themeName) {
     updateThemeToggleAndSelector();
 }
 
+function applyDefaultLightDarkTheme() {
+    const body = document.body;
+    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    let effectiveDefaultTheme = localStorage.getItem('theme'); // Get previously saved default preference
+
+    // If no explicit default preference saved, use system preference as the new saved default
+    if (!effectiveDefaultTheme) {
+        effectiveDefaultTheme = systemPrefersDark ? 'dark' : 'light';
+        localStorage.setItem('theme', effectiveDefaultTheme); // Explicitly save this default
+        console.log(`[Theme] applyDefaultLightDarkTheme: No default theme preference found, setting to system preference: ${effectiveDefaultTheme} and saving.`);
+    } else {
+        console.log(`[Theme] applyDefaultLightDarkTheme: Using previously saved default theme: ${effectiveDefaultTheme}`);
+    }
+
+    // Apply the determined default theme
+    body.className = body.className.split(' ').filter(c => !c.startsWith('theme-') && c !== 'dark-theme').join(' '); // Clear custom themes
+    if (effectiveDefaultTheme === 'dark') {
+        body.classList.add('dark-theme');
+    } else {
+        body.classList.remove('dark-theme');
+    }
+    console.log(`[Theme] applyDefaultLightDarkTheme: Applied default theme: ${effectiveDefaultTheme}. Body class: ${body.className}`);
+    updateThemeToggleAndSelector();
+}
+
 function updateThemeToggleAndSelector() {
     const currentCustomTheme = localStorage.getItem('selectedTheme');
-    const currentDefaultTheme = localStorage.getItem('theme'); // 'light' or 'dark'
+    // const currentDefaultTheme = localStorage.getItem('theme'); // Not directly used for UI state here
 
     // Update theme toggle button icon
     if (themeToggleBtn) {
-        // The "Toggle Theme" button always uses the palette icon now.
-        // Its text doesn't need to change based on light/dark.
         themeToggleBtn.innerHTML = '<i class="fas fa-palette"></i> Toggle Theme';
         themeToggleBtn.disabled = false; // Ensure it's always enabled
+        console.log("[Theme UI] themeToggleBtn enabled.");
     }
 
     // Update theme selector dropdown
     if (colorThemeSelect) {
         if (currentCustomTheme) {
             colorThemeSelect.value = currentCustomTheme;
-            // Update currentCustomThemeIndex to match the selected theme
             currentCustomThemeIndex = CUSTOM_THEMES.indexOf(currentCustomTheme);
-            console.log(`[Theme Selector] Set dropdown to custom theme: ${currentCustomTheme}`);
+            console.log(`[Theme UI] Set dropdown to custom theme: ${currentCustomTheme}. Index: ${currentCustomThemeIndex}`);
         } else {
             colorThemeSelect.value = 'none'; // Select "No Custom Theme"
             currentCustomThemeIndex = -1; // Reset index if no custom theme
-            console.log(`[Theme Selector] Set dropdown to "No Custom Theme".`);
+            console.log(`[Theme UI] Set dropdown to "No Custom Theme". Index: ${currentCustomThemeIndex}`);
         }
         colorThemeSelect.disabled = false; // Ensure it's always enabled
+        console.log("[Theme UI] colorThemeSelect enabled.");
     }
 
     // Update revert button
     if (revertToDefaultThemeBtn) {
         revertToDefaultThemeBtn.disabled = false; // Ensure it's always enabled
+        console.log("[Theme UI] revertToDefaultThemeBtn enabled.");
     }
 }
 
@@ -1191,7 +1216,8 @@ async function initializeAppLogic() {
     } else {
         applyDefaultLightDarkTheme();
     }
-    updateThemeToggleAndSelector(); // Ensure theme controls are enabled here
+    // updateThemeToggleAndSelector() is called inside applyTheme/applyDefaultLightDarkTheme
+    // so no need to call it again here.
 
     // --- PWA Service Worker Registration ---
     if ('serviceWorker' in navigator) {
@@ -1753,7 +1779,7 @@ async function initializeAppLogic() {
 
 // --- DOMContentLoaded Event Listener (Main entry point) ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v119) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v120) DOMContentLoaded fired."); // Updated version number
 
     // Check if Firebase objects are available from the module script in index.html
     // If they are, proceed with setting up the auth state listener.
@@ -1778,7 +1804,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (loadingIndicator) loadingIndicator.style.display = 'block';
                 await loadUserPreferences(); // This populates userWatchlists and loads last sort order
                 // Enable main buttons AFTER user preferences and watchlists are loaded
-                updateMainButtonsState(true); // <--- MOVED HERE to ensure data is ready
+                updateMainButtonsState(true); 
             } else {
                 currentUserId = null;
                 updateAuthButtonText(false);
