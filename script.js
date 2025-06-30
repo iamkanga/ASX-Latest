@@ -1,5 +1,5 @@
-// File Version: v116
-// Last Updated: 2025-06-28 (Remember Sort Order & Prevent Double Add)
+// File Version: v117
+// Last Updated: 2025-06-28 (Button Enabling Fix)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -216,6 +216,8 @@ function updateMainButtonsState(enable) {
     if (dividendCalcBtn) dividendCalcBtn.disabled = !enable;
     if (watchlistSelect) watchlistSelect.disabled = !enable; 
     if (addWatchlistBtn) addWatchlistBtn.disabled = !enable;
+    // editWatchlistBtn and deleteWatchlistInModalBtn depend on userWatchlists.length
+    // They are enabled only if there's more than one watchlist (i.e., not just the default)
     if (editWatchlistBtn) editWatchlistBtn.disabled = !enable || userWatchlists.length <= 1; 
     if (deleteWatchlistInModalBtn) deleteWatchlistInModalBtn.disabled = !enable || userWatchlists.length <= 1;
     if (addShareHeaderBtn) addShareHeaderBtn.disabled = !enable;
@@ -965,8 +967,7 @@ async function loadUserPreferences() {
         }
 
         renderWatchlistSelect();
-        updateMainButtonsState(true);
-
+        
         // Apply sort order preference
         if (sortSelect && lastSelectedSortOrder && Array.from(sortSelect.options).some(option => option.value === lastSelectedSortOrder)) {
             sortSelect.value = lastSelectedSortOrder;
@@ -1158,7 +1159,8 @@ async function initializeAppLogic() {
     if (calculatorModal) calculatorModal.style.setProperty('display', 'none', 'important');
     
     // Buttons will be enabled based on auth state, not here directly
-    updateMainButtonsState(false); 
+    // This call is now redundant here as it will be called after loadUserPreferences in onAuthStateChanged
+    // updateMainButtonsState(false); 
     if (loadingIndicator) loadingIndicator.style.display = 'block';
     renderWatchlistSelect(); // Render initial empty watchlist select
     
@@ -1784,7 +1786,7 @@ async function initializeAppLogic() {
 
 // --- DOMContentLoaded Event Listener (Main entry point) ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v116) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v117) DOMContentLoaded fired."); // Updated version number
 
     // Check if Firebase objects are available from the module script in index.html
     // If they are, proceed with setting up the auth state listener.
@@ -1806,9 +1808,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     mainTitle.textContent = "My Share Watchlist";
                 }
-                updateMainButtonsState(true);
                 if (loadingIndicator) loadingIndicator.style.display = 'block';
-                await loadUserPreferences(); // Load all user preferences including watchlists and sort order
+                await loadUserPreferences(); // This populates userWatchlists and loads last sort order
+                // Enable main buttons AFTER user preferences and watchlists are loaded
+                updateMainButtonsState(true); // <--- MOVED HERE to ensure data is ready
             } else {
                 currentUserId = null;
                 updateAuthButtonText(false);
