@@ -1,565 +1,5 @@
-/* General Body and Font Styles */
-body {
-    font-family: 'Inter', sans-serif;
-    background-color: var(--bg-color);
-    color: var(--text-color);
-    transition: background-color 0.3s ease, color 0.3s ease;
-    margin: 0;
-    line-height: 1.6;
-}
-
-/* Base Variables for Themes */
-:root {
-    /* Light Theme Defaults */
-    --bg-color: #f3f4f6; /* gray-100 */
-    --text-color: #1f2937; /* gray-900 */
-    --header-bg: #ffffff; /* white */
-    --header-text: #1f2937;
-    --card-bg: #ffffff;
-    --card-border: #e5e7eb; /* gray-200 */
-    --button-primary-bg: #3b82f6; /* blue-500 */
-    --button-primary-hover-bg: #2563eb; /* blue-600 */
-    --button-secondary-bg: #d1d5db; /* gray-300 */
-    --button-secondary-hover-bg: #9ca3af; /* gray-400 */
-    --button-text: #ffffff;
-    --button-secondary-text: #1f2937;
-    --input-bg: #f9fafb; /* gray-50 */
-    --input-border: #d1d5db; /* gray-300 */
-    --input-text: #1f2937;
-    --modal-bg: #ffffff;
-    --modal-overlay-bg: rgba(17, 24, 39, 0.75); /* gray-900 with opacity */
-    --table-header-bg: #f9fafb; /* gray-50 */
-    --table-border: #e5e7eb; /* gray-200 */
-    --table-row-hover-bg: #f3f4f6; /* gray-100 */
-    --link-color: #3b82f6; /* blue-600 */
-    --link-hover-color: #2563eb; /* blue-700 */
-    --success-color: #10b981; /* green-500 */
-    --error-color: #ef4444; /* red-500 */
-    --info-color: #3b82f6; /* blue-500 */
-    --label-color: #374151; /* gray-700 */
-    --sidebar-bg: #ffffff;
-    --sidebar-border: #e5e7eb;
-    --sidebar-item-hover-bg: #eff6ff; /* blue-50 */
-    --sidebar-item-text: #374151;
-    --sidebar-item-hover-text: #2563eb;
-    --accent-color: #60a5fa; /* blue-400 */ /* Used for yields */
-}
-
-/* Dark Theme Overrides */
-body.dark-theme {
-    --bg-color: #1f2937; /* gray-900 */
-    --text-color: #f3f4f6; /* gray-100 */
-    --header-bg: #111827; /* gray-900 */
-    --header-text: #f3f4f6;
-    --card-bg: #111827;
-    --card-border: #374151; /* gray-700 */
-    --button-primary-bg: #2563eb; /* blue-600 */
-    --button-primary-hover-bg: #3b82f6; /* blue-500 */
-    --button-secondary-bg: #4b5563; /* gray-600 */
-    --button-secondary-hover-bg: #6b7280; /* gray-500 */
-    --button-text: #ffffff;
-    --button-secondary-text: #f3f4f6;
-    --input-bg: #374151; /* gray-700 */
-    --input-border: #4b5563; /* gray-600 */
-    --input-text: #f3f4f6;
-    --modal-bg: #111827;
-    --modal-overlay-bg: rgba(31, 41, 55, 0.75); /* gray-900 with opacity */
-    --table-header-bg: #374151; /* gray-700 */
-    --table-border: #4b5563; /* gray-700 */
-    --table-row-hover-bg: #1f2937; /* gray-800 */
-    --link-color: #60a5fa; /* blue-400 */
-    --link-hover-color: #93c5fd; /* blue-300 */
-    --success-color: #34d399; /* green-400 */
-    --error-color: #f87171; /* red-400 */
-    --info-color: #60a5fa; /* blue-400 */
-    --label-color: #d1d5db; /* gray-200 */
-    --sidebar-bg: #111827;
-    --sidebar-border: #374151;
-    --sidebar-item-hover-bg: #1d4ed8; /* blue-700 */
-    --sidebar-item-text: #d1d5db;
-    --sidebar-item-hover-text: #ffffff;
-    --accent-color: #93c5fd; /* blue-300 */ /* Used for yields */
-}
-
-/* Custom Themes - Bold */
-body.theme-bold-1 { --bg-color: #1a1a2e; --text-color: #e0e0e0; --header-bg: #16213e; --card-bg: #0f3460; --button-primary-bg: #e94560; --button-primary-hover-bg: #b82f4b; --accent-color: #e94560; }
-body.theme-bold-2 { --bg-color: #2c3e50; --text-color: #ecf0f1; --header-bg: #34495e; --card-bg: #2c3e50; --button-primary-bg: #e74c3c; --button-primary-hover-bg: #c0392b; --accent-color: #e74c3c; }
-body.theme-bold-3 { --bg-color: #34495e; --text-color: #ecf0f1; --header-bg: #2c3e50; --card-bg: #34495e; --button-primary-bg: #f39c12; --button-primary-hover-bg: #e67e22; --accent-color: #f39c12; }
-body.theme-bold-4 { --bg-color: #4a4e69; --text-color: #e0e0e0; --header-bg: #22223b; --card-bg: #22223b; --button-primary-bg: #9a8c98; --button-primary-hover-bg: #6b636b; --accent-color: #9a8c98; }
-body.theme-bold-5 { --bg-color: #2d3142; --text-color: #e0e0e0; --header-bg: #1e212d; --card-bg: #1e212d; --button-primary-bg: #ef8354; --button-primary-hover-bg: #e65c2a; --accent-color: #ef8354; }
-body.theme-bold-6 { --bg-color: #1e1e2e; --text-color: #c0c0c0; --header-bg: #1a1a2a; --card-bg: #151525; --button-primary-bg: #ff6b6b; --button-primary-hover-bg: #ff4757; --accent-color: #ff6b6b; }
-body.theme-bold-7 { --bg-color: #212121; --text-color: #e0e0e0; --header-bg: #1a1a1a; --card-bg: #151515; --button-primary-bg: #00bcd4; --button-primary-hover-bg: #0097a7; --accent-color: #00bcd4; }
-body.theme-bold-8 { --bg-color: #0d1117; --text-color: #c9d1d9; --header-bg: #161b22; --card-bg: #010409; --button-primary-bg: #58a6ff; --button-primary-hover-bg: #2f81f7; --accent-color: #58a6ff; }
-body.theme-bold-9 { --bg-color: #282c34; --text-color: #abb2bf; --header-bg: #21252b; --card-bg: #1c2025; --button-primary-bg: #61afef; --button-primary-hover-bg: #528fc7; --accent-color: #61afef; }
-body.theme-bold-10 { --bg-color: #36393f; --text-color: #dcddde; --header-bg: #2f3136; --card-bg: #202225; --button-primary-bg: #7289da; --button-primary-hover-bg: #5b6eae; --accent-color: #7289da; }
-
-/* Custom Themes - Subtle */
-body.theme-subtle-1 { --bg-color: #f5f5f5; --text-color: #333333; --header-bg: #ffffff; --card-bg: #ffffff; --button-primary-bg: #8bc34a; --button-primary-hover-bg: #689f38; --accent-color: #8bc34a; }
-body.theme-subtle-2 { --bg-color: #e8f5e9; --text-color: #424242; --header-bg: #ffffff; --card-bg: #ffffff; --button-primary-bg: #4caf50; --button-primary-hover-bg: #388e3c; --accent-color: #4caf50; }
-body.theme-subtle-3 { --bg-color: #eceff1; --text-color: #37474f; --header-bg: #ffffff; --card-bg: #ffffff; --button-primary-bg: #78909c; --button-primary-hover-bg: #546e7a; --accent-color: #78909c; }
-body.theme-subtle-4 { --bg-color: #fce4ec; --text-color: #4a148c; --header-bg: #ffffff; --card-bg: #ffffff; --button-primary-bg: #e91e63; --button-primary-hover-bg: #c2185b; --accent-color: #e91e63; }
-body.theme-subtle-5 { --bg-color: #e3f2fd; --text-color: #1a237e; --header-bg: #ffffff; --card-bg: #ffffff; --button-primary-bg: #2196f3; --button-primary-hover-bg: #1976d2; --accent-color: #2196f3; }
-body.theme-subtle-6 { --bg-color: #fff3e0; --text-color: #e65100; --header-bg: #ffffff; --card-bg: #ffffff; --button-primary-bg: #ff9800; --button-primary-hover-bg: #f57c00; --accent-color: #ff9800; }
-body.theme-subtle-7 { --bg-color: #f3e5f5; --text-color: #4a148c; --header-bg: #ffffff; --card-bg: #ffffff; --button-primary-bg: #9c27b0; --button-primary-hover-bg: #7b1fa2; --accent-color: #9c27b0; }
-body.theme-subtle-8 { --bg-color: #e0f2f7; --text-color: #006064; --header-bg: #ffffff; --card-bg: #ffffff; --button-primary-bg: #00acc1; --button-primary-hover-bg: #00838f; --accent-color: #00acc1; }
-body.theme-subtle-9 { --bg-color: #fbe9e7; --text-color: #bf360c; --header-bg: #ffffff; --card-bg: #ffffff; --button-primary-bg: #ff5722; --button-primary-hover-bg: #e64a19; --accent-color: #ff5722; }
-body.theme-subtle-10 { --bg-color: #e0f7fa; --text-color: #004d40; --header-bg: #ffffff; --card-bg: #ffffff; --button-primary-bg: #009688; --button-primary-hover-bg: #00796b; --accent-color: #009688; }
-
-
-/* Apply variables to Tailwind-like classes */
-.bg-gray-100 { background-color: var(--bg-color); }
-.text-gray-900 { color: var(--text-color); }
-.dark\:bg-gray-900 { background-color: var(--bg-color); }
-.dark\:text-gray-100 { color: var(--text-color); }
-.bg-white { background-color: var(--card-bg); }
-.dark\:bg-gray-800 { background-color: var(--card-bg); }
-.border-gray-200 { border-color: var(--card-border); }
-.dark\:border-gray-700 { border-color: var(--card-border); }
-.bg-blue-600 { background-color: var(--button-primary-bg); }
-.hover\:bg-blue-700:hover { background-color: var(--button-primary-hover-bg); }
-.text-white { color: var(--button-text); }
-.bg-gray-300 { background-color: var(--button-secondary-bg); }
-.dark\:bg-gray-600 { background-color: var(--button-secondary-bg); }
-.hover\:bg-gray-400:hover { background-color: var(--button-secondary-hover-bg); }
-.dark\:hover\:bg-gray-700:hover { background-color: var(--button-secondary-hover-bg); }
-.text-gray-800 { color: var(--button-secondary-text); }
-.dark\:text-gray-200 { color: var(--button-secondary-text); }
-.bg-gray-50 { background-color: var(--input-bg); }
-.dark\:bg-gray-700 { background-color: var(--input-bg); }
-.border-gray-300 { border-color: var(--input-border); }
-.dark\:border-gray-600 { border-color: var(--input-border); }
-.text-gray-900 { color: var(--input-text); }
-.dark\:text-gray-100 { color: var(--input-text); }
-.modal-content { background-color: var(--modal-bg); }
-.bg-gray-800.bg-opacity-75 { background-color: var(--modal-overlay-bg); }
-.bg-gray-50 { background-color: var(--table-header-bg); }
-.dark\:bg-gray-700 { background-color: var(--table-header-bg); }
-.divide-gray-200 { border-color: var(--table-border); }
-.dark\:divide-gray-700 { border-color: var(--table-border); }
-.text-gray-500 { color: var(--label-color); }
-.dark\:text-gray-300 { color: var(--label-color); }
-.hover\:text-gray-800:hover { color: var(--text-color); }
-.dark\:hover\:text-gray-200:hover { color: var(--text-color); }
-.text-blue-600 { color: var(--link-color); }
-.hover\:underline:hover { text-decoration: underline; }
-.text-green-600 { color: var(--success-color); }
-.text-red-500 { color: var(--error-color); }
-.text-blue-500 { color: var(--info-color); }
-.dark\:text-blue-400 { color: var(--accent-color); }
-.dark\:text-green-400 { color: var(--success-color); }
-.dark\:text-red-400 { color: var(--error-color); }
-.bg-green-500 { background-color: var(--success-color); }
-.hover\:bg-green-600:hover { background-color: color-mix(in srgb, var(--success-color) 80%, black); }
-.bg-red-500 { background-color: var(--error-color); }
-.hover\:bg-red-600:hover { background-color: color-mix(in srgb, var(--error-color) 80%, black); }
-
-/* Specific element styling not easily covered by Tailwind classes or requiring more control */
-
-/* Layout and Modals */
-.min-h-screen {
-    min-height: 100vh;
-}
-
-.modal {
-    display: none; /* Hidden by default */
-    align-items: center;
-    justify-content: center;
-    position: fixed; /* Stay in place */
-    left: 0;
-    top: 0;
-    width: 100%; /* Full width */
-    height: 100%; /* Full height */
-    overflow: auto; /* Enable scroll if needed */
-    background-color: var(--modal-overlay-bg); /* Black w/ opacity */
-    z-index: 1000; /* Sit on top */
-}
-
-.modal-content {
-    background-color: var(--modal-bg);
-    margin: auto;
-    padding: 20px;
-    border-radius: 0.5rem; /* rounded-lg */
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-xl */
-    position: relative;
-    max-width: 90%; /* Responsive width */
-    max-height: 90vh; /* Max height to allow scrolling within modal if content is long */
-    overflow-y: auto; /* Enable scrolling for modal content */
-}
-
-.close-button, .form-close-button, .calc-close-button {
-    color: var(--label-color);
-    position: absolute;
-    top: 0.75rem; /* p-3 equivalent */
-    right: 0.75rem; /* p-3 equivalent */
-    font-size: 1.5rem; /* text-2xl */
-    font-weight: bold;
-    cursor: pointer;
-    background: none;
-    border: none;
-    padding: 0.5rem; /* Add padding for easier clicking */
-    border-radius: 0.25rem;
-    transition: color 0.2s ease;
-}
-
-.close-button:hover,
-.close-button:focus,
-.form-close-button:hover,
-.form-close-button:focus,
-.calc-close-button:hover,
-.calc-close-button:focus {
-    color: var(--text-color);
-    outline: none;
-}
-
-/* Table Specifics */
-.share-list-section table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.share-list-section th,
-.share-list-section td {
-    padding: 0.75rem 1.5rem; /* px-6 py-3 */
-    text-align: left;
-    border-bottom: 1px solid var(--table-border);
-}
-
-.share-list-section th {
-    background-color: var(--table-header-bg);
-    font-size: 0.75rem; /* text-xs */
-    font-weight: 500; /* font-medium */
-    color: var(--label-color);
-    text-transform: uppercase;
-    letter-spacing: 0.05em; /* tracking-wider */
-}
-
-.share-list-section tbody tr {
-    background-color: var(--card-bg);
-    transition: background-color 0.2s ease;
-    cursor: pointer;
-}
-
-.share-list-section tbody tr:hover {
-    background-color: var(--table-row-hover-bg);
-}
-
-.share-list-section tbody tr.selected {
-    background-color: var(--sidebar-item-hover-bg); /* A lighter blue */
-    border-left: 4px solid var(--info-color); /* Highlight color */
-}
-
-/* Mobile Cards */
-.mobile-card {
-    background-color: var(--card-bg);
-    padding: 1rem;
-    border-radius: 0.5rem;
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-    border: 1px solid var(--card-border);
-    transition: background-color 0.2s ease;
-    cursor: pointer;
-}
-
-.mobile-card:hover {
-    background-color: var(--table-row-hover-bg);
-}
-
-.mobile-card.selected {
-    background-color: var(--sidebar-item-hover-bg);
-    border: 2px solid var(--info-color);
-}
-
-.mobile-card h3 {
-    font-size: 1.125rem; /* text-lg */
-    font-weight: 700; /* font-bold */
-    margin-bottom: 0.5rem;
-    color: var(--text-color);
-}
-
-.mobile-card p {
-    font-size: 0.875rem; /* text-sm */
-    color: var(--label-color);
-    margin-bottom: 0.25rem;
-}
-
-.mobile-card strong {
-    color: var(--text-color);
-}
-
-.card-comments {
-    margin-top: 0.75rem;
-    font-style: italic;
-    color: var(--label-color);
-}
-
-/* Dividend/Yield Cell Styling */
-.dividend-yield-cell-content {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.875rem; /* text-sm */
-    margin-bottom: 0.25rem;
-}
-.dividend-yield-cell-content:last-child {
-    margin-bottom: 0;
-}
-.dividend-yield-cell-content .value {
-    font-weight: bold;
-    color: var(--accent-color); /* Using accent color for values */
-}
-
-
-/* Comments Section in Form */
-.comment-section {
-    border: 1px solid var(--input-border);
-    border-radius: 0.375rem; /* rounded-md */
-    padding: 0.75rem;
-    background-color: var(--input-bg);
-}
-
-.comment-section-header {
-    display: flex;
-    align-items: center;
-    margin-bottom: 0.5rem;
-}
-
-.comment-title-input {
-    flex-grow: 1;
-    border: 1px solid var(--input-border);
-    border-radius: 0.25rem;
-    padding: 0.5rem;
-    background-color: var(--input-bg);
-    color: var(--input-text);
-    margin-right: 0.5rem;
-}
-
-.comment-delete-btn {
-    background-color: var(--error-color);
-    color: white;
-    border: none;
-    border-radius: 0.25rem;
-    width: 1.75rem;
-    height: 1.75rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 1rem;
-    line-height: 1;
-    transition: background-color 0.2s ease;
-}
-
-.comment-delete-btn:hover {
-    background-color: color-mix(in srgb, var(--error-color) 80%, black);
-}
-
-.comment-text-input {
-    width: 100%;
-    min-height: 5rem;
-    border: 1px solid var(--input-border);
-    border-radius: 0.25rem;
-    padding: 0.5rem;
-    background-color: var(--input-bg);
-    color: var(--input-text);
-    resize: vertical; /* Allow vertical resizing */
-}
-
-/* Calculator specific styles */
-.calculator-display {
-    min-height: 6rem; /* Ensure enough space for input and result */
-    display: flex;
-    flex-direction: column;
-    justify-content: space-around; /* Distribute space between input and result */
-    align-items: flex-end;
-}
-
-.calculator-buttons {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0.5rem;
-}
-
-.calc-btn {
-    padding: 0.75rem;
-    border-radius: 0.375rem;
-    font-size: 1.25rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.2s ease, transform 0.1s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.calc-btn:hover {
-    transform: translateY(-1px);
-}
-
-/* Loading Spinner */
-.loader {
-    border: 8px solid #f3f3f3; /* Light grey */
-    border-top: 8px solid var(--info-color); /* Blue */
-    border-radius: 50%;
-    width: 60px;
-    height: 60px;
-    animation: spin 2s linear infinite;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-/* Sidebar styles */
-aside {
-    transform: translateX(-100%);
-    transition: transform 0.3s ease-in-out;
-    background-color: var(--sidebar-bg);
-    border-right: 1px solid var(--sidebar-border);
-}
-
-aside.open {
-    transform: translateX(0%);
-}
-
-.sidebar-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 30;
-    display: none; /* Hidden by default on all screens */
-    transition: opacity 0.3s ease-in-out;
-    opacity: 0;
-}
-
-.sidebar-overlay.open {
-    display: block; /* Show when sidebar is open */
-    opacity: 1;
-}
-
-/* Desktop-specific sidebar behavior */
-@media (min-width: 768px) {
-    aside {
-        transform: translateX(0%); /* Always visible on desktop */
-    }
-    .sidebar-overlay {
-        display: none !important; /* Never show overlay on desktop */
-    }
-    body.sidebar-active main {
-        margin-left: 16rem; /* Adjust main content margin when sidebar is active (desktop) */
-    }
-    #mainContent {
-        margin-left: 16rem; /* Default margin for desktop */
-    }
-    #hamburgerBtn {
-        display: none; /* Hide hamburger on desktop */
-    }
-    #closeMenuBtn {
-        display: none; /* Hide close button on desktop */
-    }
-}
-
-/* Mobile-specific adjustments */
-@media (max-width: 767px) {
-    aside {
-        width: 75%; /* Adjust sidebar width for mobile */
-    }
-    #mainContent {
-        margin-left: 0; /* No left margin on mobile */
-    }
-    .share-list-section {
-        display: none; /* Hide table on mobile */
-    }
-    #mobileShareCards {
-        display: grid; /* Show cards on mobile */
-    }
-    .asx-code-btn {
-        width: auto; /* Allow buttons to size naturally */
-        flex-shrink: 0; /* Prevent shrinking */
-    }
-    #addShareHeaderBtn {
-        width: 100%; /* Full width button on mobile header */
-    }
-}
-
-/* General button styling for menu items */
-.menu-button-item {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    padding: 0.75rem 1rem;
-    text-align: left;
-    color: var(--sidebar-item-text);
-    background-color: transparent;
-    border: none;
-    border-radius: 0.375rem;
-    transition: background-color 0.2s ease, color 0.2s ease;
-    cursor: pointer;
-}
-
-.menu-button-item:hover {
-    background-color: var(--sidebar-item-hover-bg);
-    color: var(--sidebar-item-hover-text);
-}
-
-.menu-button-item i {
-    margin-right: 0.75rem;
-    font-size: 1.125rem;
-}
-
-/* ASX Code Buttons */
-.asx-code-btn {
-    background-color: var(--button-secondary-bg);
-    color: var(--button-secondary-text);
-    padding: 0.5rem 1rem;
-    border-radius: 9999px; /* Tailwind's rounded-full */
-    font-size: 0.875rem; /* text-sm */
-    font-weight: 600; /* font-semibold */
-    transition: background-color 0.2s ease, transform 0.1s ease;
-    white-space: nowrap; /* Prevent text wrapping */
-    border: none;
-    cursor: pointer;
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-}
-
-.asx-code-btn:hover {
-    background-color: var(--button-secondary-hover-bg);
-    transform: translateY(-1px);
-}
-
-.asx-code-btn.selected {
-    background-color: var(--info-color);
-    color: var(--button-text);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-
-/* Select element styling */
-select {
-    appearance: none; /* Remove default browser styling */
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%234B5563%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.293%207.293a1%201%200%20011.414%200L10%2010.586l3.293-3.293a1%201%200%20111.414%201.414l-4%204a1%201%200%2001-1.414%200l-4-4a1%201%200%20010-1.414z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E');
-    background-repeat: no-repeat;
-    background-position: right 0.75rem center;
-    background-size: 1.5em 1.5em;
-    padding-right: 2.5rem; /* Make space for the custom arrow */
-}
-
-body.dark-theme select {
-    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%23D1D5DB%22%3E%3Cpath%20fill-rule%3D%22evenodd%20d%3D%22M5.293%207.293a1%201%200%20011.414%200L10%2010.586l3.293-3.293a1%201%200%20111.414%201.414l-4%204a1%201%200%2001-1.414%200l-4-4a1%201%200%20010-1.414z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E');
-}
-
-/* Ensure font-awesome icons are visible */
-.fa-bars, .fa-times, .fa-plus, .fa-calculator, .fa-money-bill-wave, .fa-folder-plus, .fa-edit, .fa-palette, .fa-undo, .fa-arrow-up, .fa-backspace {
-    color: inherit; /* Inherit color from parent button/text */
-}
-
-/* Ensure button hover/focus states are distinct */
-button:focus, select:focus, input:focus, textarea:focus {
-    outline: 2px solid var(--info-color);
-    outline-offset:/* File Version: v52 */
-/* Last Updated: 2025-06-28 (Modal Scrolling Fix) */
+/* File Version: v51 */
+/* Last Updated: 2025-06-28 (Theme Toggle & Revert Button Styling) */
 
 :root {
     /* Light Theme (Default) - Adjusted for more vibrancy */
@@ -606,6 +46,7 @@ body.dark-theme {
     --card-bg: #2e2e4a; /* Darker cards */
     --border-color: #444;
     --button-bg: #4a7dff; /* Brighter blue for buttons */
+    --button-text: #fff;
     --button-hover-bg: #3a6cd9;
     --input-bg: #3c3c5c;
     --input-border: #555;
@@ -1404,7 +845,7 @@ h1#mainTitle {
     cursor: pointer;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
     min-width: 150px;
-    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http://www.w3.org/2000/svg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236c757d%22%20d%3D%22M287%2069.9a14.7%2014.7%200%200%200-20.8%200L146.2%20189.9%2026.3%2069.9a14.7%2014.7%200%200%200-20.8%2020.8L135.8%20216.7a14.7%2014.7%200%200%200%2020.8%200L287%2090.7a14.7%2014.7%200%200%200%200-20.8z%22%2F%3E%3C%2Fsvg%3E'); /* Custom arrow */
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236c757d%22%20d%3D%22M287%2069.9a14.7%2014.7%200%200%200-20.8%200L146.2%20189.9%2026.3%2069.9a14.7%2014.7%200%200%200-20.8%2020.8L135.8%20216.7a14.7%2014.7%200%200%200%2020.8%200L287%2090.7a14.7%2014.7%200%200%200%200-20.8z%22%2F%3E%3C%2Fsvg%3E'); /* Custom arrow */
     background-repeat: no-repeat;
     background-position: right 12px top 50%;
     background-size: 12px auto;
@@ -1623,11 +1064,9 @@ table tbody tr:not(.selected):hover {
     top: 0;
     width: 100%;
     height: 100%;
-    overflow: auto; /* Allow modal itself to scroll if content is too large for viewport */
+    overflow: auto;
     background-color: var(--modal-bg);
-    padding-top: 60px; /* Space from top */
-    padding-bottom: 20px; /* Space from bottom for buttons */
-    box-sizing: border-box; /* Include padding in height calculation */
+    padding-top: 60px;
 }
 
 .modal-content {
@@ -1641,26 +1080,13 @@ table tbody tr:not(.selected):hover {
     width: 90%;
     box-sizing: border-box;
     color: var(--text-color);
-
-    /* Flexbox for internal layout: header + scrollable body + fixed footer buttons */
-    display: flex;
-    flex-direction: column;
-    max-height: 90vh; /* Set a max height for the modal content itself */
 }
 
-/* NEW: Scrollable body within the modal content */
-.modal-body-scrollable {
-    flex-grow: 1; /* Allows this section to take up available space */
-    overflow-y: auto; /* Enable vertical scrolling for this specific area */
-    padding-right: 10px; /* Add some padding for scrollbar */
-    margin-right: -10px; /* Compensate for padding to avoid extra space */
-    box-sizing: border-box;
-    /* Ensure content inside doesn't overflow horizontally */
-    overflow-x: hidden; 
+.add-share-modal-content {
+    max-height: 85vh; /* Adjusted for mobile button visibility */
+    overflow-y: auto;
+    padding-bottom: 80px; /* Add padding to account for fixed footer on mobile */
 }
-
-/* Removed add-share-modal-content specific max-height and padding-bottom */
-/* as it's now handled by .modal-content and .modal-body-scrollable */
 
 .modal-content h2 {
     margin-top: 0;
@@ -1738,26 +1164,19 @@ table tbody tr:not(.selected):hover {
 }
 
 /* Comments Section in Form */
-.comments-form-container {
-    margin-top: 20px;
-    border-top: 1px solid var(--border-color);
-    padding-top: 15px;
-}
-
 .comments-form-container h3 {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-top: 0;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 5px;
+    margin-top: 25px;
     margin-bottom: 15px;
     font-size: 1.2em;
     color: var(--text-color);
-    border-bottom: none; /* Remove extra border */
-    padding-bottom: 0;
 }
 
-/* Styling for the Add Comment Section Button */
-.add-section-btn {
+.comments-form-container .add-section-btn {
     background-color: var(--button-bg);
     color: var(--button-text);
     border: none;
@@ -1765,17 +1184,16 @@ table tbody tr:not(.selected):hover {
     width: 30px;
     height: 30px;
     font-size: 1.5em;
+    line-height: 1;
     display: flex;
     justify-content: center;
     align-items: center;
     cursor: pointer;
-    transition: background-color 0.2s ease, transform 0.1s ease;
-    flex-shrink: 0; /* Prevent shrinking */
+    transition: background-color 0.2s ease;
 }
 
-.add-section-btn:hover {
+.comments-form-container .add-section-btn:hover {
     background-color: var(--button-hover-bg);
-    transform: translateY(-1px);
 }
 
 .comment-section {
@@ -1787,30 +1205,16 @@ table tbody tr:not(.selected):hover {
     position: relative;
 }
 
-.comment-section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-}
-
-.comment-section-header .comment-title-input {
-    flex-grow: 1;
-    margin-bottom: 0; /* Remove bottom margin from input */
-    margin-right: 10px;
-    font-weight: 600;
-}
-
 .comment-section .comment-delete-btn {
     background: none;
     border: none;
     color: var(--danger-button-bg);
     font-size: 1.5em;
+    position: absolute;
+    top: 5px;
+    right: 5px;
     cursor: pointer;
     transition: color 0.2s ease;
-    line-height: 1;
-    padding: 0;
-    flex-shrink: 0; /* Prevent shrinking */
 }
 
 .comment-section .comment-delete-btn:hover {
@@ -1835,9 +1239,6 @@ table tbody tr:not(.selected):hover {
     justify-content: center; /* Center the group of buttons */
     gap: 10px;
     margin-top: 25px;
-    flex-shrink: 0; /* Prevent these button groups from shrinking */
-    padding-top: 15px; /* Add padding above buttons to separate from scrollable content */
-    border-top: 1px solid var(--border-color); /* Add a subtle separator line */
 }
 
 .form-action-buttons button,
@@ -1878,48 +1279,42 @@ table tbody tr:not(.selected):hover {
     transform: translateY(-1px);
 }
 
-.form-action-buttons .secondary-buttons, /* Use the class for consistency */
-.modal-action-buttons .secondary-buttons,
-.custom-dialog-buttons .secondary-buttons { /* Use the class for consistency */
+.form-action-buttons #cancelFormBtn,
+.form-action-buttons #cancelAddWatchlistBtn, /* Added cancelAddWatchlistBtn */
+.form-action-buttons #cancelManageWatchlistBtn, /* Added cancelManageWatchlistBtn */
+.custom-dialog-buttons #customDialogCancelBtn { /* Added customDialogCancelBtn */
     background-color: var(--secondary-button-bg);
     color: var(--button-text);
 }
 
-.form-action-buttons .secondary-buttons:hover,
-.modal-action-buttons .secondary-buttons:hover,
-.custom-dialog-buttons .secondary-buttons:hover {
+.form-action-buttons #cancelFormBtn:hover,
+.form-action-buttons #cancelAddWatchlistBtn:hover, /* Added cancelAddWatchlistBtn */
+.form-action-buttons #cancelManageWatchlistBtn:hover, /* Added cancelManageWatchlistBtn */
+.custom-dialog-buttons #customDialogCancelBtn:hover { /* Added customDialogCancelBtn */
     background-color: var(--secondary-button-hover-bg);
     transform: translateY(-1px);
 }
 
-.form-action-buttons .danger-button,
-.modal-action-buttons .danger-button,
-.custom-dialog-buttons .danger-button {
+.form-action-buttons #deleteShareFromFormBtn,
+.form-action-buttons #deleteWatchlistInModalBtn { /* Added deleteWatchlistInModalBtn */
     background-color: var(--danger-button-bg);
     color: var(--button-text);
 }
 
-.form-action-buttons .danger-button:hover,
-.modal-action-buttons .danger-button:hover,
-.custom-dialog-buttons .danger-button:hover {
+.form-action-buttons #deleteShareFromFormBtn:hover,
+.form-action-buttons #deleteWatchlistInModalBtn:hover { /* Added deleteWatchlistInModalBtn */
     background-color: var(--danger-button-hover-bg);
     transform: translateY(-1px);
 }
 
 /* Share Details Modal Styling */
-.modal-comments-sections {
+#modalCommentsContainer h3 {
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 5px;
     margin-top: 25px;
-    border-top: 1px solid var(--border-color);
-    padding-top: 15px;
-}
-
-.modal-comments-sections h3 {
-    margin-top: 0;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
     font-size: 1.2em;
     color: var(--text-color);
-    border-bottom: none; /* Remove extra border */
-    padding-bottom: 0;
 }
 
 .modal-comment-item {
@@ -2004,7 +1399,7 @@ table tbody tr:not(.selected):hover {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
-    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http://www.w3.org/2000/svg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236c757d%22%20d%3D%22M287%2069.9a14.7%2014.7%200%200%200-20.8%200L146.2%20189.9%2026.3%2069.9a14.7%2014.7%200%200%200-20.8%2020.8L135.8%20216.7a14.7%2014.7%200%200%200%2020.8%200L287%2090.7a14.7%2014.7%200%200%200%200-20.8z%22%2F%3E%3C%2Fsvg%3E'); /* Custom arrow */
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236c757d%22%20d%3D%22M287%2069.9a14.7%2014.7%200%200%200-20.8%200L146.2%20189.9%2026.3%2069.9a14.7%2014.7%200%200%200-20.8%2020.8L135.8%20216.7a14.7%2014.7%200%200%200%2020.8%200L287%2090.7a14.7%2014.7%200%200%200%200-20.8z%22%2F%3E%3C%2Fsvg%3E'); /* Custom arrow */
     background-repeat: no-repeat;
     background-position: right 12px top 50%;
     background-size: 12px auto;
@@ -2287,7 +1682,11 @@ table tbody tr:not(.selected):hover {
         margin: 20px auto;
         padding: 20px;
     }
-    
+    .add-share-modal-content {
+        max-height: calc(100vh - 120px); /* Adjusted to ensure buttons are visible above soft keyboard/nav bar */
+        padding-bottom: 20px; /* Ensure enough padding at the bottom */
+    }
+
     /* Align "Cancel" and "Save" buttons on the same line for mobile */
     .form-action-buttons,
     .modal-action-buttons,
@@ -2333,7 +1732,7 @@ table tbody tr:not(.selected):hover {
     .google-auth-btn {
         margin: 0 auto; /* Explicitly center */
         left: unset; /* Remove any conflicting left positioning */
-        right: unset; /* Remove any conflicting transforms */
+        right: unset; /* Remove any conflicting right positioning */
         transform: none; /* Remove any conflicting transforms */
     }
 }
@@ -2492,6 +1891,4 @@ table tbody tr:not(.selected):hover {
     .app-sidebar {
         /* Re-evaluate if header height changes. E.g., calc(HEADER_HEIGHT_ON_DESKTOP + 20px) */
     }
-}
- 2px;
 }
