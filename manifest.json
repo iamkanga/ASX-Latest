@@ -1,94 +1,23 @@
-// File Version: v31
-// Last Updated: 2025-06-28 (Incremented version to force update and clear cache)
-
-// Increment the cache name to force the browser to re-install this new service worker.
-const CACHE_NAME = 'asx-tracker-v31'; 
-
-// Only precache external CDN assets.
-// Local files (index.html, script.js, style.css) will be handled by the 'network-first' fetch strategy,
-// which is more resilient to GitHub Pages sub-directory hosting.
-const CACHED_ASSETS = [
-    'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap',
-    'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css',
-    'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js',
-    'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js',
-    'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js'
-];
-
-self.addEventListener('install', (event) => {
-    console.log('Service Worker v31: Installing...'); // Updated log for version
-    event.waitUntil(
-        caches.open(CACHE_NAME)
-            .then((cache) => {
-                console.log('Service Worker v31: Cache opened'); // Updated log
-                return cache.addAll(CACHED_ASSETS);
-            })
-            .then(() => {
-                console.log('Service Worker v31: All assets added to cache. Calling skipWaiting.'); // Updated log
-                return self.skipWaiting(); // Force the new service worker to activate immediately
-            })
-            .catch(error => {
-                console.error('Service Worker v31: Installation failed:', error); // Updated log
-            })
-    );
-});
-
-self.addEventListener('activate', (event) => {
-    console.log('Service Worker v31: Activating...'); // Updated log
-    event.waitUntil(
-        caches.keys().then((cacheNames) => {
-            return Promise.all(
-                cacheNames.map((cacheName) => {
-                    if (cacheName !== CACHE_NAME) {
-                        console.log(`Service Worker v31: Deleting old cache: ${cacheName}`); // Updated log
-                        return caches.delete(cacheName);
-                    }
-                    return null;
-                })
-            ).then(() => self.clients.claim()); // Take control of clients immediately
-        })
-    );
-});
-
-self.addEventListener('fetch', (event) => {
-    // Only handle GET requests, ignore others (like POST, PUT, DELETE)
-    if (event.request.method === 'GET') {
-        event.respondWith(
-            caches.match(event.request).then((cachedResponse) => {
-                const fetchPromise = fetch(event.request).then((networkResponse) => {
-                    // Cache successful responses for future use
-                    if (networkResponse.ok) {
-                        const responseToCache = networkResponse.clone();
-                        caches.open(CACHE_NAME).then((cache) => {
-                            cache.put(event.request, responseToCache);
-                        });
-                    }
-                    return networkResponse;
-                }).catch(error => {
-                    console.error(`Service Worker v31: Network fetch failed for ${event.request.url}.`, error); // Updated log
-                    // If network fails and there's no cache, or if you want to provide a specific fallback
-                    // return caches.match('/offline.html'); // Example fallback
-                });
-
-                // Return cached response immediately if available, otherwise wait for network
-                return cachedResponse || fetchPromise;
-
-            }).catch(error => {
-                console.error(`Service Worker v31: Cache match failed for ${event.request.url}.`, error); // Updated log
-                // Fallback in case both cache and network fail (unlikely given fetchPromise)
-                return fetch(event.request); // Try network one more time if cache fails
-            })
-        );
-    } else {
-        // For non-GET requests (e.g., POST, PUT, DELETE), just fetch from network
-        // Do NOT cache these requests as they modify data.
-        event.respondWith(fetch(event.request));
+{
+  "name": "Share Watchlist",
+  "short_name": "Watchlist",
+  "description": "Track your share watchlist and dividends.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#eef2f3",
+  "theme_color": "#007bff",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📈</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📈</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     }
-});
-
-self.addEventListener('message', (event) => {
-    if (event.data && event.data.type === 'SKIP_WAITING') {
-        self.skipWaiting();
-        console.log('Service Worker v31: Skip waiting message received, new SW activated.'); // Updated log
-    }
-});
+  ]
+}
