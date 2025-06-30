@@ -1,5 +1,5 @@
-// File Version: v115
-// Last Updated: 2025-06-28 (Modal Scrolling Support)
+// File Version: v116
+// Last Updated: 2025-06-30 (Fixed premature loading indicator display)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -1173,7 +1173,7 @@ async function initializeAppLogic() {
     
     // Buttons will be enabled based on auth state, not here directly
     updateMainButtonsState(false); 
-    if (loadingIndicator) loadingIndicator.style.display = 'block';
+    // Removed: if (loadingIndicator) loadingIndicator.style.display = 'block'; // This was causing the premature display
     renderWatchlistSelect(); // Render initial empty watchlist select
     
     // Apply theme on initial load
@@ -1763,7 +1763,7 @@ async function initializeAppLogic() {
 
 // --- DOMContentLoaded Event Listener (Main entry point) ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v115) DOMContentLoaded fired."); // Original version number
+    console.log("script.js (v116) DOMContentLoaded fired."); // Updated version number
 
     // Check if Firebase objects are available from the module script in index.html
     // If they are, proceed with setting up the auth state listener.
@@ -1786,7 +1786,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     mainTitle.textContent = "My Share Watchlist";
                 }
                 updateMainButtonsState(true);
-                if (loadingIndicator) loadingIndicator.style.display = 'none'; // Original behavior
+                // Removed: if (loadingIndicator) loadingIndicator.style.display = 'none'; // This was causing the premature display
                 await loadUserWatchlists(); // Load watchlists only after user is authenticated
             } else {
                 currentUserId = null;
