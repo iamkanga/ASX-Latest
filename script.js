@@ -1,5 +1,5 @@
-// File Version: v121
-// Last Updated: 2025-07-01 (Fixed sort order display before login - targeted fix)
+// File Version: v122
+// Last Updated: 2025-07-01 (Basic Light/Dark Theme Toggling)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -39,6 +39,8 @@ let currentWatchlistName = '';
 let currentSortOrder = 'entryDate-desc'; // Default sort order, now a global variable
 
 // Theme related variables (kept for compatibility with existing HTML/CSS, but not actively managed for saving in this version)
+// These themes are currently NOT supported by style.css (v54) for layout stability.
+// The dropdown and toggle button will only meaningfully interact with light/dark themes.
 const CUSTOM_THEMES = [
     'bold-1', 'bold-2', 'bold-3', 'bold-4', 'bold-5', 'bold-6', 'bold-7', 'bold-8', 'bold-9', 'bold-10',
     'subtle-1', 'subtle-2', 'subtle-3', 'subtle-4', 'subtle-5', 'subtle-6', 'subtle-7', 'subtle-8', 'subtle-9', 'subtle-10'
@@ -118,7 +120,7 @@ const saveWatchlistBtn = document.getElementById('saveWatchlistBtn');
 const cancelAddWatchlistBtn = document.getElementById('cancelAddWatchlistBtn');
 const manageWatchlistModal = document.getElementById('manageWatchlistModal');
 const editWatchlistNameInput = document.getElementById('editWatchlistName');
-const saveWatchlistNameBtn = document = document.getElementById('saveWatchlistNameBtn');
+const saveWatchlistNameBtn = document.getElementById('saveWatchlistNameBtn');
 const deleteWatchlistInModalBtn = document.getElementById('deleteWatchlistInModalBtn');
 const cancelManageWatchlistBtn = document.getElementById('cancelManageWatchlistBtn');
 
@@ -241,7 +243,7 @@ function clearWatchlistUI() {
     if (watchlistSelect) watchlistSelect.innerHTML = '';
     userWatchlists = [];
     renderWatchlistSelect();
-    renderSortSelect(); // This is called here
+    renderSortSelect();
     console.log("[UI] Watchlist UI cleared.");
 }
 
@@ -830,91 +832,98 @@ function resetCalculator() {
     console.log("[Calculator] Calculator state reset.");
 }
 
-// Theme Toggling Logic (Simplified for this version, no saving to Firestore)
+// Theme Toggling Logic
 /**
- * Applies a given theme to the body. This version does not save theme preferences to Firestore,
- * as per the user's request to focus on sort order. It relies on local storage for basic light/dark
- * and will apply custom themes if the CSS is present.
+ * Applies a given theme to the body. This version specifically handles 'system-default' (for light/dark)
+ * and 'dark-theme'. Other custom theme names from the CUSTOM_THEMES array will be ignored visually
+ * until their CSS definitions are added back to style.css.
  * @param {string} themeName - The name of the theme to apply (e.g., 'light', 'dark', 'bold-1', 'system-default').
  */
 function applyTheme(themeName) {
     const body = document.body;
     // Remove all existing theme classes (e.g., 'dark-theme', 'theme-X', 'bold-X-theme', 'subtle-X-theme')
+    // This ensures a clean slate before applying the new theme.
     body.className = body.className.split(' ').filter(c => !c.endsWith('-theme')).join(' ');
+    body.removeAttribute('data-theme'); // Always remove data-theme attribute for clean state
 
-    if (themeName === 'system-default') {
-        // No specific theme class, relies on CSS prefers-color-scheme
-        body.removeAttribute('data-theme'); // Remove data-theme attribute
-        console.log("[Theme] Reverted to system default theme.");
+    if (themeName === 'system-default' || themeName === 'none') { // 'none' from dropdown should also revert to system default
+        // Revert to system default or saved light/dark preference
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const savedDefaultTheme = localStorage.getItem('theme'); // 'light' or 'dark'
+
+        if (savedDefaultTheme) {
+            if (savedDefaultTheme === 'dark') {
+                body.classList.add('dark-theme');
+            } else {
+                body.classList.remove('dark-theme'); // Ensure light theme has no dark-theme class
+            }
+            console.log(`[Theme] Reverted to saved default theme: ${savedDefaultTheme}`);
+        } else {
+            // No saved default theme, apply system preference
+            if (systemPrefersDark) {
+                body.classList.add('dark-theme');
+            } else {
+                body.classList.remove('dark-theme');
+            }
+            localStorage.setItem('theme', systemPrefersDark ? 'dark' : 'light'); // Save system preference
+            console.log(`[Theme] Reverted to system default theme: ${systemPrefersDark ? 'dark' : 'light'}`);
+        }
+        localStorage.removeItem('selectedTheme'); // Clear any custom theme selection
         currentCustomThemeIndex = -1; // Reset index for cycling
-        localStorage.removeItem('selectedTheme'); // Clear custom theme from local storage
-        localStorage.removeItem('theme'); // Clear light/dark preference from local storage
-    } else {
-        body.classList.add(themeName + '-theme'); // Add specific theme class, e.g., 'bold-1-theme'
-        body.setAttribute('data-theme', themeName); // Set data-theme attribute for reference
+    } else if (themeName === 'dark') { // Explicitly set dark theme
+        body.classList.add('dark-theme');
+        localStorage.setItem('theme', 'dark');
+        localStorage.removeItem('selectedTheme'); // Clear custom theme selection
+        currentCustomThemeIndex = -1;
+        console.log("[Theme] Applied explicit dark theme.");
+    } else if (themeName === 'light') { // Explicitly set light theme
+        body.classList.remove('dark-theme');
+        localStorage.setItem('theme', 'light');
+        localStorage.removeItem('selectedTheme'); // Clear custom theme selection
+        currentCustomThemeIndex = -1;
+        console.log("[Theme] Applied explicit light theme.");
+    } else if (CUSTOM_THEMES.includes(themeName)) {
+        // For custom themes, add the specific class and save to local storage.
+        // Visual effect depends on style.css having definitions for these classes.
+        body.classList.add(themeName + '-theme');
+        body.setAttribute('data-theme', themeName);
+        localStorage.setItem('selectedTheme', themeName);
+        localStorage.removeItem('theme'); // Remove light/dark preference if custom theme is selected
+        currentCustomThemeIndex = CUSTOM_THEMES.indexOf(themeName);
         console.log(`[Theme] Applied custom theme: ${themeName}`);
-        currentCustomThemeIndex = CUSTOM_THEMES.indexOf(themeName); // Update index for cycling
-        localStorage.setItem('selectedTheme', themeName); // Save custom theme to local storage
-        localStorage.removeItem('theme'); // Clear light/dark preference if custom theme is selected
+    } else {
+        console.warn(`[Theme] Attempted to apply unknown theme: ${themeName}. Reverting to system default.`);
+        applyTheme('system-default'); // Fallback for unknown themes
     }
     updateThemeToggleAndSelector();
 }
 
-function applyDefaultLightDarkTheme() {
-    const body = document.body;
-    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const savedDefaultTheme = localStorage.getItem('theme'); // 'light' or 'dark'
-
-    // Ensure all custom theme classes are removed
-    body.className = body.className.split(' ').filter(c => !c.startsWith('theme-') && c !== 'dark-theme').join(' ');
-
-    if (savedDefaultTheme) {
-        if (savedDefaultTheme === 'dark') {
-            body.classList.add('dark-theme');
-        } else {
-            body.classList.remove('dark-theme');
-        }
-        console.log(`[Theme] Reverted to saved default theme: ${savedDefaultTheme}`);
-    } else {
-        if (systemPrefersDark) {
-            body.classList.add('dark-theme');
-        } else {
-            document.body.classList.remove('dark-theme');
-        }
-        localStorage.setItem('theme', systemPrefersDark ? 'dark' : 'light');
-        console.log(`[Theme] Reverted to system default theme: ${systemPrefersDark ? 'dark' : 'light'}`);
-    }
-    // When reverting to default, ensure custom theme is not selected in dropdown
-    if (colorThemeSelect) {
-        colorThemeSelect.value = 'none';
-    }
-    currentCustomThemeIndex = -1; // Reset index
-}
-
-
 function updateThemeToggleAndSelector() {
     const currentCustomTheme = localStorage.getItem('selectedTheme');
-    // const currentDefaultTheme = localStorage.getItem('theme'); // Not used directly here
+    const currentDefaultTheme = localStorage.getItem('theme'); // 'light' or 'dark'
 
-    // Update theme toggle button icon
+    // Update theme toggle button icon and text based on current state
     if (themeToggleBtn) {
-        // The "Toggle Theme" button always uses the palette icon now.
-        // Its text doesn't need to change based on light/dark.
-        themeToggleBtn.innerHTML = '<i class="fas fa-palette"></i> Toggle Theme';
+        if (document.body.classList.contains('dark-theme')) {
+            themeToggleBtn.innerHTML = '<i class="fas fa-sun"></i> Toggle Light Mode';
+        } else {
+            themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i> Toggle Dark Mode';
+        }
     }
 
     // Update theme selector dropdown
     if (colorThemeSelect) {
         if (currentCustomTheme) {
             colorThemeSelect.value = currentCustomTheme;
-            // Update currentCustomThemeIndex to match the selected theme
             currentCustomThemeIndex = CUSTOM_THEMES.indexOf(currentCustomTheme);
         } else {
-            colorThemeSelect.value = 'none'; // Select "No Custom Theme"
-            currentCustomThemeIndex = -1; // Reset index if no custom theme
+            // If no custom theme, select "No Custom Theme" in the dropdown
+            colorThemeSelect.value = 'none';
+            currentCustomThemeIndex = -1;
         }
     }
 }
+
 
 // Watchlist ID generation
 function getDefaultWatchlistId(userId) {
@@ -989,14 +998,14 @@ async function loadUserWatchlists() {
         const userProfileSnap = await window.firestore.getDoc(userProfileDocRef);
         let lastSelectedWatchlistId = null;
         let savedSortOrder = null;
-        // let savedTheme = null; // Removed theme loading for this version
+        let savedTheme = null; // Re-introduced for loading, but applyTheme handles what's active
         if (userProfileSnap.exists()) {
             lastSelectedWatchlistId = userProfileSnap.data().lastSelectedWatchlistId;
-            savedSortOrder = userProfileSnap.data().lastSortOrder; // Changed from 'sortOrder' to 'lastSortOrder'
-            // savedTheme = userProfileSnap.data().lastTheme; // Removed theme loading for this version
+            savedSortOrder = userProfileSnap.data().lastSortOrder;
+            savedTheme = userProfileSnap.data().lastTheme; // Load saved theme from Firestore
             console.log(`[Watchlist] Found last selected watchlist in profile: ${lastSelectedWatchlistId}`);
             console.log(`[Sort] Found saved sort order in profile: ${savedSortOrder}`);
-            // console.log(`[Theme] Found saved theme in profile: ${savedTheme}`); // Removed theme loading for this version
+            console.log(`[Theme] Found saved theme in profile: ${savedTheme}`);
         }
 
         let targetWatchlist = null;
@@ -1022,19 +1031,28 @@ async function loadUserWatchlists() {
             sortSelect.value = currentSortOrder;
             console.log(`[Sort] Applied saved sort order: ${currentSortOrder}`);
         } else {
-            // If not logged in or no saved preference, ensure placeholder is selected
             sortSelect.value = ''; 
-            currentSortOrder = ''; // Ensure global variable is reset too
+            currentSortOrder = ''; 
             console.log("[Sort] No valid saved sort order or not logged in, defaulting to placeholder.");
         }
-        renderSortSelect(); // Render with loaded sort preference
+        renderSortSelect(); 
         
-        // Apply theme (using local storage, not Firestore, for this version)
-        const savedCustomTheme = localStorage.getItem('selectedTheme');
-        if (savedCustomTheme) {
-            applyTheme(savedCustomTheme);
+        // Apply theme (using Firestore for persistence, localStorage as fallback/initial)
+        const localSelectedTheme = localStorage.getItem('selectedTheme');
+        const localDefaultTheme = localStorage.getItem('theme');
+        
+        if (currentUserId && savedTheme) {
+            applyTheme(savedTheme);
+            console.log(`[Theme] Applied Firestore saved theme: ${savedTheme}`);
+        } else if (localSelectedTheme) {
+            applyTheme(localSelectedTheme);
+            console.log(`[Theme] Applied localStorage custom theme: ${localSelectedTheme}`);
+        } else if (localDefaultTheme) {
+            applyTheme(localDefaultTheme); // This will apply 'light' or 'dark'
+            console.log(`[Theme] Applied localStorage default theme: ${localDefaultTheme}`);
         } else {
-            applyDefaultLightDarkTheme();
+            applyTheme('system-default'); // Fallback to system default if nothing saved
+            console.log("[Theme] Applied system default theme (no saved preference).");
         }
         updateThemeToggleAndSelector(); // Ensure UI reflects the applied theme
 
@@ -1225,12 +1243,9 @@ async function initializeAppLogic() {
     renderWatchlistSelect(); // Render initial empty watchlist select
     
     // Apply theme on initial load (using local storage, not Firestore, for this version)
-    const savedCustomTheme = localStorage.getItem('selectedTheme');
-    if (savedCustomTheme) {
-        applyTheme(savedCustomTheme);
-    } else {
-        applyDefaultLightDarkTheme();
-    }
+    // The actual theme loading logic is now in loadUserWatchlists to ensure user profile is loaded first.
+    // This initial call ensures some theme is applied even before login.
+    applyTheme('system-default'); 
     updateThemeToggleAndSelector();
 
     // --- PWA Service Worker Registration ---
@@ -1698,41 +1713,34 @@ async function initializeAppLogic() {
 
     if (themeToggleBtn) {
         themeToggleBtn.addEventListener('click', () => {
-            // Determine the next custom theme
-            currentCustomThemeIndex = (currentCustomThemeIndex + 1) % CUSTOM_THEMES.length;
-            const nextTheme = CUSTOM_THEMES[currentCustomThemeIndex];
-            applyTheme(nextTheme);
-            console.log(`[Theme] Cycled to next custom theme: ${nextTheme}`);
+            // Toggle between light and dark theme
+            const isDark = document.body.classList.contains('dark-theme');
+            applyTheme(isDark ? 'light' : 'dark');
+            console.log(`[Theme] Toggled to ${isDark ? 'light' : 'dark'} theme.`);
         });
     }
 
     if (colorThemeSelect) {
         colorThemeSelect.addEventListener('change', (event) => {
             const selectedTheme = event.target.value;
-            applyTheme(selectedTheme);
+            applyTheme(selectedTheme); // This will handle 'none', 'light', 'dark', or custom themes
         });
     }
 
     if (revertToDefaultThemeBtn) {
         revertToDefaultThemeBtn.addEventListener('click', (event) => {
             event.preventDefault();
-            applyTheme('system-default'); // This will trigger applyDefaultLightDarkTheme
+            applyTheme('system-default'); // Revert to system default preference (light/dark)
             console.log("[Theme] Reverted to default light/dark theme via button.");
         });
     }
 
     // Listen for system theme changes (if no explicit saved theme is set)
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+        // Only apply system preference if no explicit theme (from local storage or Firestore) is set
         if (!localStorage.getItem('selectedTheme') && !localStorage.getItem('theme')) {
-            if (event.matches) {
-                document.body.classList.add('dark-theme');
-                localStorage.setItem('theme', 'dark');
-            } else {
-                document.body.classList.remove('dark-theme');
-                localStorage.setItem('theme', 'light');
-            }
+            applyTheme('system-default'); // Re-apply system default
             console.log("[Theme] System theme preference changed and applied.");
-            updateThemeToggleAndSelector();
         }
     });
 
@@ -1744,7 +1752,7 @@ async function initializeAppLogic() {
                     scrollToTopBtn.style.display = 'flex';
                     scrollToTopBtn.style.opacity = '1';
                 } else {
-                    scrollToTo.style.opacity = '0';
+                    scrollToTopBtn.style.opacity = '0';
                     setTimeout(() => {
                         scrollToTopBtn.style.display = 'none';
                     }, 300);
@@ -1811,7 +1819,7 @@ async function initializeAppLogic() {
 
 // --- DOMContentLoaded Event Listener (Main entry point) ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v121) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v122) DOMContentLoaded fired."); // Updated version number
 
     // Check if Firebase objects are available from the module script in index.html
     // If they are, proceed with setting up the auth state listener.
