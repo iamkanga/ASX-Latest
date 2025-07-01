@@ -1,5 +1,5 @@
-// File Version: v132
-// Last Updated: 2025-07-01 (Ghosting Fixes & Comments Section Availability)
+// File Version: v135
+// Last Updated: 2025-07-01 (Export Watchlist to CSV)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -76,7 +76,7 @@ const modalEntryDate = document.getElementById('modalEntryDate');
 const modalEnteredPrice = document.getElementById('modalEnteredPrice');
 const modalTargetPrice = document.getElementById('modalTargetPrice');
 const modalDividendAmount = document.getElementById('modalDividendAmount');
-const modalFrankingCredits = document.getElementById('modalFrankingCredits');
+const modalFrankingCredits = document.getElementById('frankingCredits');
 const modalCommentsContainer = document.getElementById('modalCommentsContainer');
 const modalUnfrankedYieldSpan = document.getElementById('modalUnfrankedYield');
 const modalFrankedYieldSpan = document.getElementById('modalFrankedYield');
@@ -126,6 +126,7 @@ const shareContextMenu = document.getElementById('shareContextMenu');
 const contextEditShareBtn = document.getElementById('contextEditShareBtn');
 const contextDeleteShareBtn = document.getElementById('contextDeleteShareBtn');
 const logoutBtn = document.getElementById('logoutBtn'); // Now a span
+const exportWatchlistBtn = document.getElementById('exportWatchlistBtn'); // NEW: Export Watchlist Button
 
 let sidebarOverlay = document.querySelector('.sidebar-overlay');
 if (!sidebarOverlay) {
@@ -178,7 +179,9 @@ function showCustomAlert(message, duration = 1000) {
         return;
     }
     customDialogMessage.textContent = message;
+    setIconDisabled(customDialogConfirmBtn, true); // Hide and disable confirm for alert
     customDialogConfirmBtn.style.display = 'none';
+    setIconDisabled(customDialogCancelBtn, true); // Hide and disable cancel for alert
     customDialogCancelBtn.style.display = 'none';
     showModal(customDialogModal);
     if (autoDismissTimeout) { clearTimeout(autoDismissTimeout); }
@@ -197,7 +200,7 @@ function showCustomConfirm(message, onConfirm, onCancel = null) {
     // Ensure these icons are always enabled in the confirm dialog
     setIconDisabled(customDialogConfirmBtn, false); // Explicitly enable the tick icon
     customDialogConfirmBtn.style.display = 'block';
-    setIconDisabled(customDialogCancelBtn, false);
+    setIconDisabled(customDialogCancelBtn, false); // Explicitly enable the cross icon
     customDialogCancelBtn.style.display = 'block';
     showModal(customDialogModal);
     if (autoDismissTimeout) { clearTimeout(autoDismissTimeout); }
@@ -236,6 +239,7 @@ function updateMainButtonsState(enable) {
     if (newShareBtn) newShareBtn.disabled = !enable;
     if (standardCalcBtn) standardCalcBtn.disabled = !enable;
     if (dividendCalcBtn) dividendCalcBtn.disabled = !enable;
+    if (exportWatchlistBtn) exportWatchlistBtn.disabled = !enable; // NEW: Export button
     if (watchlistSelect) watchlistSelect.disabled = !enable; 
     if (addWatchlistBtn) addWatchlistBtn.disabled = !enable;
     // editWatchlistBtn's disabled state is also dependent on userWatchlists.length, handled in loadUserWatchlistsAndSettings
@@ -760,24 +764,6 @@ function addShareToMobileCards(share) {
     });
 
     console.log(`[Render] Added share ${displayShareName} to mobile cards.`);
-}
-
-function selectShare(docId) {
-    deselectCurrentShare();
-    if (docId) {
-        selectedShareDocId = docId;
-        const tableRow = shareTableBody.querySelector(`tr[data-doc-id="${docId}"]`);
-        if (tableRow) {
-            tableRow.classList.add('selected');
-            console.log(`[Selection] Selected table row for docId: ${docId}`);
-        }
-        const mobileCard = mobileShareCardsContainer.querySelector(`.mobile-card[data-doc-id="${docId}"]`);
-        if (mobileCard) {
-            mobileCard.classList.add('selected');
-            console.log(`[Selection] Selected mobile card for docId: ${docId}`);
-        }
-        console.log(`[Selection] New share selected: ${docId}.`);
-    }
 }
 
 function renderWatchlist() {
@@ -1311,6 +1297,106 @@ function toggleAppSidebar(forceState = null) {
         console.log("[Sidebar] Sidebar closed.");
     }
 }
+
+/**
+ * Escapes a string for CSV by enclosing it in double quotes and doubling any existing double quotes.
+ * @param {any} value The value to escape.
+ * @returns {string} The CSV-escaped string.
+ */
+function escapeCsvValue(value) {
+    if (value === null || value === undefined) {
+        return '';
+    }
+    let stringValue = String(value);
+    // If the string contains a comma, double quote, or newline, enclose it in double quotes.
+    // Also, escape any double quotes within the string by doubling them.
+    if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n') || stringValue.includes('\r')) {
+        stringValue = stringValue.replace(/"/g, '""'); // Escape internal double quotes
+        return `"${stringValue}"`; // Enclose in double quotes
+    }
+    return stringValue;
+}
+
+/**
+ * Exports the current watchlist data to a CSV file.
+ */
+function exportWatchlistToCSV() {
+    if (!currentUserId || !currentWatchlistId) {
+        showCustomAlert("Please sign in and select a watchlist to export.");
+        return;
+    }
+    if (allSharesData.length === 0) {
+        showCustomAlert("No shares in the current watchlist to export.", 2000);
+        return;
+    }
+
+    const sharesToExport = allSharesData.filter(share => share.watchlistId === currentWatchlistId);
+    if (sharesToExport.length === 0) {
+        showCustomAlert("No shares in the current watchlist to export after filtering.", 2000);
+        return;
+    }
+
+    const headers = [
+        "Code", "Entered Price", "Target Price", "Dividend Amount", "Franking Credits (%)",
+        "Unfranked Yield (%)", "Franked Yield (%)", "Entry Date", "Comments"
+    ];
+
+    const csvRows = [];
+    csvRows.push(headers.map(escapeCsvValue).join(',')); // Add headers
+
+    sharesToExport.forEach(share => {
+        const enteredPriceNum = Number(share.currentPrice);
+        const dividendAmountNum = Number(share.dividendAmount);
+        const frankingCreditsNum = Number(share.frankingCredits);
+        const targetPriceNum = Number(share.targetPrice);
+
+        const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, enteredPriceNum);
+        const frankedYield = calculateFrankedYield(dividendAmountNum, enteredPriceNum, frankingCreditsNum);
+
+        let allCommentsText = '';
+        if (share.comments && Array.isArray(share.comments)) {
+            allCommentsText = share.comments.map(c => {
+                let commentPart = '';
+                if (c.title) commentPart += `${c.title}: `;
+                if (c.text) commentPart += c.text;
+                return commentPart;
+            }).filter(Boolean).join('; '); // Join multiple comments with a semicolon and space
+        }
+
+        const row = [
+            share.shareName || '',
+            (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? enteredPriceNum.toFixed(2) : '',
+            (!isNaN(targetPriceNum) && targetPriceNum !== null) ? targetPriceNum.toFixed(2) : '',
+            (!isNaN(dividendAmountNum) && dividendAmountNum !== null) ? dividendAmountNum.toFixed(3) : '',
+            (!isNaN(frankingCreditsNum) && frankingCreditsNum !== null) ? frankingCreditsNum.toFixed(1) : '',
+            unfrankedYield !== null ? unfrankedYield.toFixed(2) : '',
+            frankedYield !== null ? frankedYield.toFixed(2) : '',
+            formatDate(share.entryDate) || '',
+            allCommentsText
+        ];
+        csvRows.push(row.map(escapeCsvValue).join(','));
+    });
+
+    const csvString = csvRows.join('\n');
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    
+    // Create a filename based on the watchlist name and current date
+    const formattedDate = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    const safeWatchlistName = currentWatchlistName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    link.download = `${safeWatchlistName}_watchlist_${formattedDate}.csv`;
+    
+    link.href = URL.createObjectURL(blob);
+    link.style.display = 'none'; // Hide the link
+    document.body.appendChild(link); // Append to body
+    link.click(); // Trigger download
+    document.body.removeChild(link); // Clean up
+    URL.revokeObjectURL(link.href); // Release object URL
+    
+    showCustomAlert(`Exported '${currentWatchlistName}' to CSV!`, 2000);
+    console.log(`[Export] Watchlist '${currentWatchlistName}' exported to CSV.`);
+}
+
 
 async function initializeAppLogic() {
     console.log("initializeAppLogic: Firebase is ready. Starting app logic.");
@@ -1875,7 +1961,8 @@ async function initializeAppLogic() {
     if (calculatorButtons) {
         calculatorButtons.addEventListener('click', (event) => {
             const target = event.target;
-            if (!target.classList.contains('calc-btn')) { return; }
+            // Ensure the clicked element is a calculator button and not ghosted
+            if (!target.classList.contains('calc-btn') || target.classList.contains('is-disabled-icon')) { return; }
             const value = target.dataset.value;
             const action = target.dataset.action;
             if (value) { appendNumber(value); }
@@ -1891,7 +1978,32 @@ async function initializeAppLogic() {
 
     function handleAction(action) {
         if (action === 'clear') { resetCalculator(); return; }
-        if (action === 'percentage') { if (currentCalculatorInput === '') return; currentCalculatorInput = (parseFloat(currentCalculatorInput) / 100).toString(); updateCalculatorDisplay(); return; }
+        if (action === 'percentage') { 
+            if (currentCalculatorInput === '' && previousCalculatorInput === '') return;
+            let val;
+            if (currentCalculatorInput !== '') {
+                val = parseFloat(currentCalculatorInput);
+            } else if (previousCalculatorInput !== '') {
+                val = parseFloat(previousCalculatorInput);
+            } else {
+                return; // Should not happen if previous checks pass
+            }
+
+            if (isNaN(val)) return;
+
+            if (operator && previousCalculatorInput !== '') {
+                // If there's a pending operation, calculate percentage of the previous number
+                const prevNum = parseFloat(previousCalculatorInput);
+                if (isNaN(prevNum)) return;
+                currentCalculatorInput = (prevNum * (val / 100)).toString();
+            } else {
+                // Otherwise, just divide the current input by 100
+                currentCalculatorInput = (val / 100).toString();
+            }
+            resultDisplayed = false; // A new calculation has started or modified
+            updateCalculatorDisplay();
+            return; 
+        }
         if (['add', 'subtract', 'multiply', 'divide'].includes(action)) {
             if (currentCalculatorInput === '' && previousCalculatorInput === '') return;
             if (currentCalculatorInput !== '') {
@@ -2024,10 +2136,18 @@ async function initializeAppLogic() {
         });
     }
 
+    // NEW: Export Watchlist Button Event Listener
+    if (exportWatchlistBtn) {
+        exportWatchlistBtn.addEventListener('click', () => {
+            exportWatchlistToCSV();
+            toggleAppSidebar(false); // Close sidebar after clicking export
+        });
+    }
+
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v132) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v135) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;

@@ -1,11 +1,11 @@
-/* File Version: v65 */
-/* Last Updated: 2025-07-01 (Calculator Layout & Logout Theme Fix) */
+/* File Version: v70 */
+/* Last Updated: 2025-07-01 (Export Button & Logout Button Final Fix) */
 
 :root {
     /* Light Theme (Default) */
     --background-color: #eef2f3;
     --text-color: #333;
-    --header-bg: #d9e2e4;
+    --header-bg: #d9e2f4;
     --card-bg: #ffffff;
     --border-color: #c9d2d4;
     --button-bg: #007bff;
@@ -51,9 +51,9 @@
     --icon-action-hover-color: #0056b3;
     --icon-danger-color: #dc3545; /* New variable for danger icons */
     --icon-danger-hover-color: #c82333;
-    --calc-num-btn-bg: #e0e0e0; /* New: Calculator number button background */
-    --calc-num-btn-text: #333; /* New: Calculator number button text */
-    --calc-num-btn-hover-bg: #d0d0d0; /* New: Calculator number button hover */
+    --calc-num-btn-bg: #f0f0f0; /* Default: Calculator number button background */
+    --calc-num-btn-text: #333; /* Default: Calculator number button text */
+    --calc-num-btn-hover-bg: #e0e0e0; /* Default: Calculator number button hover */
 }
 
 /* Dark Theme Variables */
@@ -994,25 +994,18 @@ h1#mainTitle {
 }
 
 
-.menu-button-item.danger-button {
-    background-color: var(--danger-button-bg); /* This will be applied if the class is present */
-    color: var(--button-text); /* Text color for danger button */
-}
-
-.menu-button-item.danger-button:hover {
-    background-color: var(--danger-button-hover-bg);
-}
-
-/* Ensure logout button uses theme variables for danger color */
-/* Logout button is now a span, so it uses .is-disabled-icon */
-#logoutBtn {
+/* Logout button styling (now a span) - FINAL FIX */
+#logoutBtn.menu-button-item {
     background-color: var(--danger-button-bg); /* Explicitly use danger-button-bg */
     color: var(--button-text); /* Explicitly use button-text */
     margin-top: auto; /* Push to the bottom of the sidebar */
+    border: none !important; /* Ensure no border, aggressive fix */
+    box-shadow: none !important; /* Ensure no box shadow, aggressive fix */
 }
-#logoutBtn:hover {
+#logoutBtn.menu-button-item:hover {
     background-color: var(--danger-button-hover-bg);
 }
+
 /* This is for native buttons */
 .menu-button-item:disabled {
     background-color: var(--secondary-button-bg); /* Use secondary for disabled danger */
@@ -1789,7 +1782,7 @@ table tbody tr:not(.selected):hover {
 
 .calculator-buttons {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, 1fr); /* 4 columns for numbers and operators */
     gap: 10px;
 }
 
@@ -1814,6 +1807,7 @@ table tbody tr:not(.selected):hover {
 .calc-btn.clear {
     background-color: var(--danger-button-bg);
     color: var(--button-text);
+    grid-column: span 2; /* C and % take 2 columns together */
 }
 .calc-btn.clear:hover {
     background-color: var(--danger-button-hover-bg);
@@ -1830,6 +1824,7 @@ table tbody tr:not(.selected):hover {
 .calc-btn.equals {
     background-color: var(--success-color); /* Use success color for equals */
     color: var(--button-text);
+    grid-column: span 2; /* Equals takes 2 columns */
 }
 .calc-btn.equals:hover {
     background-color: #218838; /* Darker green for hover */
@@ -1838,6 +1833,11 @@ table tbody tr:not(.selected):hover {
 .calc-btn.zero {
     grid-column: span 2;
 }
+
+/* Remove explicit grid-row/column for individual number and operator buttons.
+   They will now flow naturally based on HTML order and grid-template-columns. */
+/* The HTML order in index.html v73 is: C, %, ÷, 7, 8, 9, ×, 4, 5, 6, -, 1, 2, 3, +, 0, ., = */
+/* This ensures 3 numbers per row and operators on the right. */
 
 
 #scrollToTopBtn {
