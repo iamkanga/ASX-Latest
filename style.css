@@ -1,4 +1,4 @@
-/* File Version: v72 */
+/* File Version: v73 */
 /* Last Updated: 2025-07-01 (Layout & Button Fixes) */
 
 :root {
@@ -899,6 +899,7 @@ h1#mainTitle {
     font-size: 1em;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
     box-sizing: border-box; /* Include padding and border in element's total width and height */
+    height: 45px; /* Fixed height for consistency */
 }
 
 #shareSearchInput::placeholder {
@@ -1136,6 +1137,12 @@ h1#mainTitle {
     box-sizing: border-box;
 }
 
+.dropdowns-group { /* New container for watchlist and sort dropdowns */
+    display: flex;
+    gap: 15px; /* Gap between watchlist and sort */
+    flex-shrink: 0; /* Prevent shrinking on mobile horizontal scroll */
+}
+
 .search-input-container,
 .watchlist-group,
 .sort-group {
@@ -1163,7 +1170,7 @@ h1#mainTitle {
     background-position: right 12px top 50%;
     background-size: 12px auto;
     padding-right: 30px;
-    max-height: 45px; 
+    height: 45px; /* Fixed height for consistency */
     overflow-y: hidden; 
 }
 
@@ -2063,18 +2070,26 @@ table tbody tr:not(.selected):hover {
 
     /* Watchlist, Sort, and Search controls on Mobile */
     .watchlist-controls-row {
-        flex-wrap: nowrap; /* Force items onto one line */
-        overflow-x: auto; /* Enable horizontal scrolling */
-        justify-content: flex-start; /* Align items to the start */
-        -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+        flex-direction: column; /* Stack items vertically */
+        align-items: center; /* Center items horizontally */
         gap: 10px; /* Smaller gap for mobile */
         padding: 10px 15px; /* Consistent padding */
     }
 
+    .dropdowns-group { /* Group for watchlist and sort */
+        width: 100%; /* Take full width */
+        flex-wrap: nowrap; /* Keep dropdowns on one line */
+        overflow-x: auto; /* Enable horizontal scrolling for dropdowns */
+        justify-content: flex-start; /* Align dropdowns to the start */
+        -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+        gap: 10px; /* Smaller gap between dropdowns */
+    }
+
     .search-input-container {
-        width: 100%; /* Take full width within its flex item */
-        max-width: 250px; /* Limit width to keep other elements visible */
-        flex-shrink: 0; /* Prevent shrinking */
+        width: 100%; /* Take full width on its own line */
+        flex-grow: 0; /* Don't grow */
+        flex-shrink: 0; /* Don't shrink */
+        min-width: unset; /* Remove min-width inherited from desktop */
     }
     #shareSearchInput {
         padding-right: 40px;
@@ -2250,26 +2265,33 @@ table tbody tr:not(.selected):hover {
         width: 100%; 
         justify-content: center; 
         flex-direction: row; 
-        flex-wrap: wrap; /* Allow wrapping if screen is too narrow */
+        flex-wrap: nowrap; /* Prevent wrapping on desktop */
         gap: 20px; /* Larger gap for desktop */
         padding: 15px 0;
         border-top: 1px solid var(--border-color); 
         border-bottom: 1px solid var(--border-color);
     }
+    .dropdowns-group { /* Group for watchlist and sort */
+        flex-grow: 1; /* Allow it to grow */
+        max-width: 400px; /* Limit its max width */
+        gap: 20px; /* Keep gap between dropdowns */
+    }
     .search-input-container {
         width: auto; /* Allow content-based width */
-        max-width: 400px; /* Max width for desktop search */
-        flex-grow: 1; /* Allow it to grow */
+        flex-grow: 1; /* Allow it to grow, balancing with dropdowns */
+        max-width: 400px; /* Limit max width to match dropdowns group */
+        min-width: 200px; /* Ensure it's not too small */
     }
     .watchlist-group,
     .sort-group {
         width: auto; 
         justify-content: flex-start; 
         padding: 0;
+        flex-grow: 1; /* Allow individual dropdowns to grow within their group */
     }
     .dropdown-large {
-        min-width: 180px;
-        width: auto;
+        min-width: unset; /* Remove min-width for desktop */
+        width: 100%; /* Take full width of its flex item */
     }
 
     .app-sidebar {
