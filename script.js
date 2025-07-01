@@ -1,5 +1,5 @@
-// File Version: v143
-// Last Updated: 2025-07-02 (Button State Debugging)
+// File Version: v144
+// Last Updated: 2025-07-02 (Sidebar Closing Logic Fix)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -23,7 +23,7 @@ const LONG_PRESS_THRESHOLD = 500; // Time in ms for long press detection
 let touchStartX = 0;
 let touchStartY = 0;
 const TOUCH_MOVE_THRESHOLD = 10; // Pixels for touch movement to cancel long press
-const KANGA_EMAIL = 'iamkanga@gmail.com';
+const KANGA_EMAIL = 'iamkanga@gmail.0com';
 let currentCalculatorInput = '';
 let operator = null;
 let previousCalculatorInput = '';
@@ -2350,13 +2350,14 @@ async function initializeAppLogic() {
         // Menu buttons that should close the sidebar
         const menuButtons = appSidebar.querySelectorAll('.menu-button-item');
         menuButtons.forEach(button => {
-            // Check if it's a native button or a span/icon that acts like one
-            const isNativeButton = button.tagName === 'BUTTON';
-            // Explicitly mark buttons in HTML if they should close the menu, or assume all do
-            // For now, assuming all menu buttons should close the sidebar
             button.addEventListener('click', (event) => {
-                console.log(`[Sidebar Menu Item Click] Button '${event.currentTarget.textContent.trim()}' clicked. Closing sidebar.`);
-                toggleAppSidebar(false);
+                console.log(`[Sidebar Menu Item Click] Button '${event.currentTarget.textContent.trim()}' clicked.`);
+                // Check if the data-action-closes-menu attribute is explicitly set to "false"
+                const closesMenu = event.currentTarget.dataset.actionClosesMenu !== 'false';
+                console.log(`[Sidebar Menu Item Click] data-action-closes-menu: ${event.currentTarget.dataset.actionClosesMenu}, closesMenu: ${closesMenu}`);
+                if (closesMenu) {
+                    toggleAppSidebar(false);
+                }
             });
         });
     } else {
@@ -2374,7 +2375,7 @@ async function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v143) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v144) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
