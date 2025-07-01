@@ -1,5 +1,5 @@
-// File Version: v125
-// Last Updated: 2025-07-01 (Long Press/Right-Click Context Menu)
+// File Version: v126
+// Last Updated: 2025-07-01 (FIX: Context Menu Edit Share functionality)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -1602,8 +1602,9 @@ async function initializeAppLogic() {
     if (contextEditShareBtn) {
         contextEditShareBtn.addEventListener('click', () => {
             if (currentContextMenuShareId) {
-                hideContextMenu();
-                showEditFormForSelectedShare(currentContextMenuShareId);
+                const shareIdToEdit = currentContextMenuShareId; // Capture the ID before hiding the menu
+                hideContextMenu(); // Now hide the menu
+                showEditFormForSelectedShare(shareIdToEdit); // Use the captured ID
             }
         });
     }
@@ -1991,7 +1992,7 @@ async function initializeAppLogic() {
 
 // --- DOMContentLoaded Event Listener (Main entry point) ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v125) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v126) DOMContentLoaded fired."); // Updated version number
 
     // Check if Firebase objects are available from the module script in index.html
     // If they are, proceed with setting up the auth state listener.
