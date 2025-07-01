@@ -118,9 +118,10 @@
             <div class="menu-section logout-section">
                 <h3>Account</h3>
                 <div class="menu-buttons-group">
-                    <button id="logoutBtn" class="menu-button-item danger-button" data-action-closes-menu="true">
+                    <!-- Changed to span for standalone icon behavior -->
+                    <span id="logoutBtn" class="menu-button-item danger-button" data-action-closes-menu="true">
                         <i class="fas fa-sign-out-alt"></i> <span>Log Out</span>
-                    </button>
+                    </span>
                 </div>
             </div>
         </nav>
@@ -328,7 +329,7 @@
                 <input type="number" id="calcDividendAmount" step="0.001" placeholder="e.g., 1.250">
             </div>
             <div class="calc-input-group">
-                <label for="calcFrankingCredits">Franking Credits (%):</label>
+                <label for="frankingCredits">Franking Credits (%):</label>
                 <input type="number" id="calcFrankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 70 for 70%">
             </div>
             <p><strong>Unfranked Yield:</strong> <span id="calcUnfrankedYield">-</span></p>
@@ -474,10 +475,10 @@
         } : null;
 
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log("index.html (v70) script module loaded and DOMContentLoaded fired."); // Updated version number
+            console.log("index.html (v71) script module loaded and DOMContentLoaded fired."); // Updated version number
         }); 
     </script>
     <!-- Linking to your separate script.js file -->
-    <script src="script.js?v=130"></script> <!-- Updated to v130 -->
+    <script src="script.js?v=131"></script> <!-- Updated to v131 -->
 </body>
 </html>

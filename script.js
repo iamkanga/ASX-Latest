@@ -1,5 +1,5 @@
-// File Version: v131
-// Last Updated: 2025-07-01 (Standalone Icon Logic & Disabled States)
+// File Version: v132
+// Last Updated: 2025-07-01 (Ghosting Fixes & Comments Section Availability)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -125,7 +125,7 @@ const cancelManageWatchlistBtn = document.getElementById('cancelManageWatchlistB
 const shareContextMenu = document.getElementById('shareContextMenu');
 const contextEditShareBtn = document.getElementById('contextEditShareBtn');
 const contextDeleteShareBtn = document.getElementById('contextDeleteShareBtn');
-const logoutBtn = document.getElementById('logoutBtn');
+const logoutBtn = document.getElementById('logoutBtn'); // Now a span
 
 let sidebarOverlay = document.querySelector('.sidebar-overlay');
 if (!sidebarOverlay) {
@@ -195,7 +195,7 @@ function showCustomConfirm(message, onConfirm, onCancel = null) {
     }
     customDialogMessage.textContent = message;
     // Ensure these icons are always enabled in the confirm dialog
-    setIconDisabled(customDialogConfirmBtn, false);
+    setIconDisabled(customDialogConfirmBtn, false); // Explicitly enable the tick icon
     customDialogConfirmBtn.style.display = 'block';
     setIconDisabled(customDialogCancelBtn, false);
     customDialogCancelBtn.style.display = 'block';
@@ -241,7 +241,8 @@ function updateMainButtonsState(enable) {
     // editWatchlistBtn's disabled state is also dependent on userWatchlists.length, handled in loadUserWatchlistsAndSettings
     if (editWatchlistBtn) editWatchlistBtn.disabled = !enable || userWatchlists.length === 0; 
     if (addShareHeaderBtn) addShareHeaderBtn.disabled = !enable;
-    if (logoutBtn) logoutBtn.disabled = !enable; 
+    // Logout button is now a span, handle its disabled state with setIconDisabled
+    if (logoutBtn) setIconDisabled(logoutBtn, !enable); 
     if (themeToggleBtn) themeToggleBtn.disabled = !enable;
     if (colorThemeSelect) colorThemeSelect.disabled = !enable;
     if (revertToDefaultThemeBtn) revertToDefaultThemeBtn.disabled = !enable;
@@ -326,7 +327,7 @@ function clearForm() {
         if (input) { input.value = ''; }
     });
     commentsFormContainer.innerHTML = '';
-    addCommentSection();
+    addCommentSection(); // Always add one initial comment section
     selectedShareDocId = null;
     if (deleteShareBtn) {
         deleteShareBtn.classList.add('hidden'); // Hide delete icon when adding new share
@@ -421,13 +422,16 @@ function showShareDetails() {
         modalCommentsContainer.innerHTML = '<p style="text-align: center; color: var(--label-color);">No comments for this share.</p>';
     }
 
+    // Ensure external links are always enabled and visible if shareName exists
     if (modalMarketIndexLink && share.shareName) {
         const marketIndexUrl = `https://www.marketindex.com.au/asx/${share.shareName.toLowerCase()}`;
         modalMarketIndexLink.href = marketIndexUrl;
         modalMarketIndexLink.textContent = `View ${share.shareName.toUpperCase()} on MarketIndex.com.au`;
         modalMarketIndexLink.style.display = 'inline-flex';
+        setIconDisabled(modalMarketIndexLink, false); // Explicitly enable
     } else if (modalMarketIndexLink) {
         modalMarketIndexLink.style.display = 'none';
+        setIconDisabled(modalMarketIndexLink, true); // Explicitly disable if no shareName
     }
 
     if (modalFoolLink && share.shareName) {
@@ -435,8 +439,10 @@ function showShareDetails() {
         modalFoolLink.href = foolUrl;
         modalFoolLink.textContent = `View ${share.shareName.toUpperCase()} on Fool.com.au`;
         modalFoolLink.style.display = 'inline-flex';
+        setIconDisabled(modalFoolLink, false); // Explicitly enable
     } else if (modalFoolLink) {
         modalFoolLink.style.display = 'none';
+        setIconDisabled(modalFoolLink, true); // Explicitly disable if no shareName
     }
 
     if (modalCommSecLink && share.shareName) {
@@ -444,8 +450,10 @@ function showShareDetails() {
         modalCommSecLink.href = commSecUrl;
         modalCommSecLink.textContent = `View ${share.shareName.toUpperCase()} on CommSec.com.au`;
         modalCommSecLink.style.display = 'inline-flex';
+        setIconDisabled(modalCommSecLink, false); // Explicitly enable
     } else if (modalCommSecLink) {
         modalCommSecLink.style.display = 'none';
+        setIconDisabled(modalCommSecLink, true); // Explicitly disable if no shareName
     }
 
     if (commSecLoginMessage) {
@@ -1358,6 +1366,8 @@ async function initializeAppLogic() {
     });
 
     if (addCommentSectionBtn) {
+        // Ensure addCommentSectionBtn is never disabled by default
+        setIconDisabled(addCommentSectionBtn, false);
         addCommentSectionBtn.addEventListener('click', () => addCommentSection());
     }
 
@@ -2002,7 +2012,11 @@ async function initializeAppLogic() {
 
         const menuButtons = appSidebar.querySelectorAll('.menu-button-item');
         menuButtons.forEach(button => {
-            if (button.dataset.actionClosesMenu === 'true') { 
+            // Check if it's a native button or a span/icon that acts like one
+            const isNativeButton = button.tagName === 'BUTTON';
+            const closesMenu = button.dataset.actionClosesMenu === 'true';
+
+            if (closesMenu) { 
                 button.addEventListener('click', () => {
                     toggleAppSidebar(false);
                 });
@@ -2013,7 +2027,7 @@ async function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v131) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v132) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;

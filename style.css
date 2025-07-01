@@ -1,5 +1,5 @@
-/* File Version: v64 */
-/* Last Updated: 2025-07-01 (Standalone Icons & Sidebar Redesign) */
+/* File Version: v65 */
+/* Last Updated: 2025-07-01 (Calculator Layout & Logout Theme Fix) */
 
 :root {
     /* Light Theme (Default) */
@@ -51,6 +51,9 @@
     --icon-action-hover-color: #0056b3;
     --icon-danger-color: #dc3545; /* New variable for danger icons */
     --icon-danger-hover-color: #c82333;
+    --calc-num-btn-bg: #e0e0e0; /* New: Calculator number button background */
+    --calc-num-btn-text: #333; /* New: Calculator number button text */
+    --calc-num-btn-hover-bg: #d0d0d0; /* New: Calculator number button hover */
 }
 
 /* Dark Theme Variables */
@@ -102,6 +105,9 @@ body.dark-theme {
     --icon-action-hover-color: #2980b9;
     --icon-danger-color: #e74c3c; /* Dark theme danger icon color */
     --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #5a758e; /* Dark: Calculator number button background */
+    --calc-num-btn-text: #ecf0f1; /* Dark: Calculator number button text */
+    --calc-num-btn-hover-bg: #6c8095; /* Dark: Calculator number button hover */
 }
 
 /* Custom Themes */
@@ -134,6 +140,9 @@ body.theme-bold-1 { /* Ocean Blue */
     --icon-action-hover-color: #0096c7;
     --icon-danger-color: #e63946;
     --icon-danger-hover-color: #c02d38;
+    --calc-num-btn-bg: #007f8c;
+    --calc-num-btn-text: #e0f2f7;
+    --calc-num-btn-hover-bg: #0096c7;
 }
 
 body.theme-bold-2 { /* Forest Green */
@@ -164,6 +173,9 @@ body.theme-bold-2 { /* Forest Green */
     --icon-action-hover-color: #8ba84a;
     --icon-danger-color: #e74c3c;
     --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #5a855a;
+    --calc-num-btn-text: #e6ffe6;
+    --calc-num-btn-hover-bg: #6a9955;
 }
 
 body.theme-bold-3 { /* Sunset Orange */
@@ -194,6 +206,9 @@ body.theme-bold-3 { /* Sunset Orange */
     --icon-action-hover-color: #e0ac00;
     --icon-danger-color: #e63946;
     --icon-danger-hover-color: #c02d38;
+    --calc-num-btn-bg: #f7b98d;
+    --calc-num-btn-text: #3b2a20;
+    --calc-num-btn-hover-bg: #f4a261;
 }
 
 body.theme-bold-4 { /* Royal Purple */
@@ -224,6 +239,9 @@ body.theme-bold-4 { /* Royal Purple */
     --icon-action-hover-color: #a842ff;
     --icon-danger-color: #e74c3c;
     --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #9d4edd;
+    --calc-num-btn-text: #f0e6ff;
+    --calc-num-btn-hover-bg: #c77dff;
 }
 
 body.theme-bold-5 { /* Deep Red */
@@ -254,6 +272,9 @@ body.theme-bold-5 { /* Deep Red */
     --icon-action-hover-color: #c0392b;
     --icon-danger-color: #e74c3c;
     --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #c0392b;
+    --calc-num-btn-text: #ffe6e6;
+    --calc-num-btn-hover-bg: #e74c3c;
 }
 
 body.theme-bold-6 { /* Gold */
@@ -284,6 +305,9 @@ body.theme-bold-6 { /* Gold */
     --icon-action-hover-color: #fdd835;
     --icon-danger-color: #e74c3c;
     --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #ffd700;
+    --calc-num-btn-text: #3b301a;
+    --calc-num-btn-hover-bg: #ffeb3b;
 }
 
 body.theme-bold-7 { /* Emerald */
@@ -314,6 +338,9 @@ body.theme-bold-7 { /* Emerald */
     --icon-action-hover-color: #4caf50;
     --icon-danger-color: #e74c3c;
     --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #3cb371;
+    --calc-num-btn-text: #e6fff0;
+    --calc-num-btn-hover-bg: #66bb6a;
 }
 
 body.theme-bold-8 { /* Plum */
@@ -344,6 +371,9 @@ body.theme-bold-8 { /* Plum */
     --icon-action-hover-color: #c71585;
     --icon-danger-color: #e74c3c;
     --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #ba55d3;
+    --calc-num-btn-text: #ffe6ff;
+    --calc-num-btn-hover-bg: #da70d6;
 }
 
 body.theme-bold-9 { /* Aqua */
@@ -374,6 +404,9 @@ body.theme-bold-9 { /* Aqua */
     --icon-action-hover-color: #008080;
     --icon-danger-color: #e74c3c;
     --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #40e0d0;
+    --calc-num-btn-text: #e6ffff;
+    --calc-num-btn-hover-bg: #20b2aa;
 }
 
 body.theme-bold-10 { /* Ruby */
@@ -404,6 +437,9 @@ body.theme-bold-10 { /* Ruby */
     --icon-action-hover-color: #b22222;
     --icon-danger-color: #e74c3c;
     --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #cd5c5c;
+    --calc-num-btn-text: #ffe6f0;
+    --calc-num-btn-hover-bg: #dc143c;
 }
 
 
@@ -436,6 +472,9 @@ body.theme-subtle-1 { /* Subtle Sky */
     --icon-action-hover-color: #6cb3d4;
     --icon-danger-color: #e74c3c;
     --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #d0eaf5;
+    --calc-num-btn-text: #334455;
+    --calc-num-btn-hover-bg: #87ceeb;
 }
 
 body.theme-subtle-2 { /* Subtle Earth */
@@ -466,6 +505,9 @@ body.theme-subtle-2 { /* Subtle Earth */
     --icon-action-hover-color: #a3907e;
     --icon-danger-color: #e74c3c;
     --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #ede6df;
+    --calc-num-btn-text: #5a4a3a;
+    --calc-num-btn-hover-bg: #b8a28f;
 }
 
 body.theme-subtle-3 { /* Subtle Rose */
@@ -496,6 +538,9 @@ body.theme-subtle-3 { /* Subtle Rose */
     --icon-action-hover-color: #d4a2b0;
     --icon-danger-color: #e74c3c;
     --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #f2e6eb;
+    --calc-num-btn-text: #6a4a5a;
+    --calc-num-btn-hover-bg: #eeb8c6;
 }
 
 body.theme-subtle-4 { /* Subtle Lavender */
@@ -526,6 +571,9 @@ body.theme-subtle-4 { /* Subtle Lavender */
     --icon-action-hover-color: #b0a2d4;
     --icon-danger-color: #e74c3c;
     --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #ede6f2;
+    --calc-num-btn-text: #5a4a6a;
+    --calc-num-btn-hover-bg: #c6b8eb;
 }
 
 body.theme-subtle-5 { /* Subtle Mint */
@@ -556,6 +604,9 @@ body.theme-subtle-5 { /* Subtle Mint */
     --icon-action-hover-color: #a2d4b0;
     --icon-danger-color: #e74c3c;
     --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #e6f2eb;
+    --calc-num-btn-text: #4a6a5a;
+    --calc-num-btn-hover-bg: #b8eec6;
 }
 
 body.theme-subtle-6 { /* Subtle Sand */
@@ -586,6 +637,9 @@ body.theme-subtle-6 { /* Subtle Sand */
     --icon-action-hover-color: #d4a28f;
     --icon-danger-color: #e74c3c;
     --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #f2ebe6;
+    --calc-num-btn-text: #6a5a4a;
+    --calc-num-btn-hover-bg: #eeb8a2;
 }
 
 body.theme-subtle-7 { /* Subtle Graphite */
@@ -616,6 +670,9 @@ body.theme-subtle-7 { /* Subtle Graphite */
     --icon-action-hover-color: #a2a2a2;
     --icon-danger-color: #e74c3c;
     --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #ebebeb;
+    --calc-num-btn-text: #4a4a4a;
+    --calc-num-btn-hover-bg: #b8b8b8;
 }
 
 body.theme-subtle-8 { /* Subtle Peach */
@@ -646,6 +703,9 @@ body.theme-subtle-8 { /* Subtle Peach */
     --icon-action-hover-color: #d4a28f;
     --icon-danger-color: #e74c3c;
     --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #f2ebe6;
+    --calc-num-btn-text: #6a4a4a;
+    --calc-num-btn-hover-bg: #eeb8a2;
 }
 
 body.theme-subtle-9 { /* Subtle Teal */
@@ -676,6 +736,9 @@ body.theme-subtle-9 { /* Subtle Teal */
     --icon-action-hover-color: #a2d4b0;
     --icon-danger-color: #e74c3c;
     --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #e6f2eb;
+    --calc-num-btn-text: #4a6a6a;
+    --calc-num-btn-hover-bg: #b8eec6;
 }
 
 body.theme-subtle-10 { /* Subtle Stone */
@@ -706,6 +769,9 @@ body.theme-subtle-10 { /* Subtle Stone */
     --icon-action-hover-color: #a8a8a8;
     --icon-danger-color: #e74c3c;
     --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #f0f0f0;
+    --calc-num-btn-text: #5a5a5a;
+    --calc-num-btn-hover-bg: #c0c0c0;
 }
 
 
@@ -897,14 +963,6 @@ h1#mainTitle {
     transform: translateY(-1px);
 }
 
-.menu-button-item:disabled {
-    background-color: var(--menu-button-bg); /* Keep transparent */
-    cursor: not-allowed;
-    opacity: 0.5; /* Adjusted opacity for disabled buttons */
-    box-shadow: none;
-    transform: none;
-}
-
 /* Specific styling for icon-only menu items (e.g., calculators, theme, logout) */
 .menu-button-item.icon-only {
     justify-content: center; /* Center the icon */
@@ -946,6 +1004,7 @@ h1#mainTitle {
 }
 
 /* Ensure logout button uses theme variables for danger color */
+/* Logout button is now a span, so it uses .is-disabled-icon */
 #logoutBtn {
     background-color: var(--danger-button-bg); /* Explicitly use danger-button-bg */
     color: var(--button-text); /* Explicitly use button-text */
@@ -954,9 +1013,21 @@ h1#mainTitle {
 #logoutBtn:hover {
     background-color: var(--danger-button-hover-bg);
 }
-#logoutBtn:disabled {
+/* This is for native buttons */
+.menu-button-item:disabled {
     background-color: var(--secondary-button-bg); /* Use secondary for disabled danger */
-    opacity: 0.5;
+    cursor: not-allowed;
+    opacity: 0.5; /* Adjusted opacity for disabled buttons */
+    box-shadow: none;
+    transform: none;
+}
+/* This is for span/i elements that are "disabled" */
+.is-disabled-icon {
+    opacity: 0.5; /* Make it semi-transparent */
+    cursor: not-allowed; /* Change cursor */
+    box-shadow: none; /* Remove shadow */
+    transform: none; /* Remove hover transform */
+    pointer-events: none; /* Disable all pointer events */
 }
 
 
@@ -1623,7 +1694,7 @@ table tbody tr:not(.selected):hover {
     display: inline-flex; 
     align-items: center;
     gap: 8px; 
-    color: var(--button-bg); 
+    color: var(--link-color); /* Use link-color variable */
     text-decoration: none;
     font-weight: 600;
     margin-bottom: 10px;
@@ -1631,7 +1702,7 @@ table tbody tr:not(.selected):hover {
 }
 
 .external-link:hover {
-    color: var(--button-hover-bg);
+    color: var(--link-hover-color); /* Use link-hover-color variable */
     text-decoration: underline;
 }
 
@@ -1722,9 +1793,10 @@ table tbody tr:not(.selected):hover {
     gap: 10px;
 }
 
+/* Calculator button styling */
 .calc-btn {
-    background-color: var(--button-bg);
-    color: var(--button-text);
+    background-color: var(--calc-num-btn-bg); /* Default to number button background */
+    color: var(--calc-num-btn-text); /* Default to number button text */
     border: none;
     border-radius: 8px;
     padding: 15px;
@@ -1735,12 +1807,13 @@ table tbody tr:not(.selected):hover {
 }
 
 .calc-btn:hover {
-    background-color: var(--button-hover-bg);
+    background-color: var(--calc-num-btn-hover-bg); /* Default to number button hover */
     transform: translateY(-1px);
 }
 
 .calc-btn.clear {
     background-color: var(--danger-button-bg);
+    color: var(--button-text);
 }
 .calc-btn.clear:hover {
     background-color: var(--danger-button-hover-bg);
@@ -1748,16 +1821,18 @@ table tbody tr:not(.selected):hover {
 
 .calc-btn.operator {
     background-color: var(--secondary-button-bg);
+    color: var(--button-text);
 }
 .calc-btn.operator:hover {
     background-color: var(--secondary-button-hover-bg);
 }
 
 .calc-btn.equals {
-    background-color: #28a745;
+    background-color: var(--success-color); /* Use success color for equals */
+    color: var(--button-text);
 }
 .calc-btn.equals:hover {
-    background-color: #218838;
+    background-color: #218838; /* Darker green for hover */
 }
 
 .calc-btn.zero {
