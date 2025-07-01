@@ -1,5 +1,5 @@
-// File Version: v122
-// Last Updated: 2025-07-01 (Enabled Edit Watchlist button for single watchlist)
+// File Version: v123
+// Last Updated: 2025-07-01 (Streamlined Share Form Buttons - Delete Icon Logic)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -24,7 +24,6 @@ const DOUBLE_TAP_THRESHOLD = 300; // Max time between taps for double tap
 const DOUBLE_TAP_TIMEOUT = 250; // Timeout to register single tap vs potential double tap
 let touchStartX = 0;
 let touchStartY = 0;
-let touchMoved = false;
 const TOUCH_MOVE_THRESHOLD = 10;
 const KANGA_EMAIL = 'iamkanga@gmail.com';
 let currentCalculatorInput = '';
@@ -59,7 +58,8 @@ const formCloseButton = document.querySelector('.form-close-button');
 const formTitle = document.getElementById('formTitle');
 const saveShareBtn = document.getElementById('saveShareBtn');
 const cancelFormBtn = document.getElementById('cancelFormBtn');
-const deleteShareFromFormBtn = document.getElementById('deleteShareFromFormBtn');
+// const deleteShareFromFormBtn = document.getElementById('deleteShareFromFormBtn'); // Removed as it's no longer a button
+const deleteShareIcon = document.getElementById('deleteShareIcon'); // New reference for the delete icon
 const shareNameInput = document.getElementById('shareName');
 const currentPriceInput = document.getElementById('currentPrice');
 const targetPriceInput = document.getElementById('targetPrice');
@@ -311,6 +311,9 @@ function clearForm() {
     commentsFormContainer.innerHTML = '';
     addCommentSection(); // Add one empty comment section by default
     selectedShareDocId = null;
+    if (deleteShareIcon) { // Hide delete icon when adding new share
+        deleteShareIcon.classList.add('hidden');
+    }
     console.log("[Form] Form fields cleared and selectedShareDocId reset.");
 }
 
@@ -339,7 +342,9 @@ function showEditFormForSelectedShare() {
     if (shareToEdit.comments === undefined || shareToEdit.comments.length === 0) {
         addCommentSection();
     }
-    deleteShareFromFormBtn.style.display = 'inline-flex';
+    if (deleteShareIcon) { // Show delete icon when editing
+        deleteShareIcon.classList.remove('hidden');
+    }
     showModal(shareFormSection);
     shareNameInput.focus();
     console.log(`[Form] Opened edit form for share: ${shareToEdit.shareName} (ID: ${selectedShareDocId})`);
@@ -1345,7 +1350,8 @@ async function initializeAppLogic() {
         newShareBtn.addEventListener('click', () => {
             clearForm();
             formTitle.textContent = 'Add New Share';
-            deleteShareFromFormBtn.style.display = 'none';
+            // deleteShareFromFormBtn.style.display = 'none'; // Removed
+            if (deleteShareIcon) { deleteShareIcon.classList.add('hidden'); } // Hide delete icon
             showModal(shareFormSection);
             shareNameInput.focus();
             toggleAppSidebar(false); 
@@ -1356,7 +1362,8 @@ async function initializeAppLogic() {
         addShareHeaderBtn.addEventListener('click', () => {
             clearForm();
             formTitle.textContent = 'Add New Share';
-            deleteShareFromFormBtn.style.display = 'none';
+            // deleteShareFromFormBtn.style.display = 'none'; // Removed
+            if (deleteShareIcon) { deleteShareIcon.classList.add('hidden'); } // Hide delete icon
             showModal(shareFormSection);
             shareNameInput.focus();
         });
@@ -1433,8 +1440,9 @@ async function initializeAppLogic() {
         cancelFormBtn.addEventListener('click', () => { clearForm(); hideModal(shareFormSection); console.log("[Form] Form canceled."); });
     }
 
-    if (deleteShareFromFormBtn) {
-        deleteShareFromFormBtn.addEventListener('click', () => {
+    // Event listener for the new deleteShareIcon
+    if (deleteShareIcon) {
+        deleteShareIcon.addEventListener('click', () => {
             if (selectedShareDocId) {
                 showCustomConfirm("Are you sure you want to delete this share? This action cannot be undone.", async () => {
                     try {
@@ -1821,7 +1829,7 @@ async function initializeAppLogic() {
 
 // --- DOMContentLoaded Event Listener (Main entry point) ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v122) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v123) DOMContentLoaded fired."); // Updated version number
 
     // Check if Firebase objects are available from the module script in index.html
     // If they are, proceed with setting up the auth state listener.
