@@ -1,5 +1,5 @@
-// File Version: v132
-// Last Updated: 2025-07-01 (Ghosting Fixes & Comments Section Availability)
+// File Version: v133
+// Last Updated: 2025-07-01 (Ghosting Fixes & Button State Management)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -76,7 +76,7 @@ const modalEntryDate = document.getElementById('modalEntryDate');
 const modalEnteredPrice = document.getElementById('modalEnteredPrice');
 const modalTargetPrice = document.getElementById('modalTargetPrice');
 const modalDividendAmount = document.getElementById('modalDividendAmount');
-const modalFrankingCredits = document.getElementById('modalFrankingCredits');
+const modalFrankingCredits = document.getElementById('frankingCredits');
 const modalCommentsContainer = document.getElementById('modalCommentsContainer');
 const modalUnfrankedYieldSpan = document.getElementById('modalUnfrankedYield');
 const modalFrankedYieldSpan = document.getElementById('modalFrankedYield');
@@ -178,7 +178,9 @@ function showCustomAlert(message, duration = 1000) {
         return;
     }
     customDialogMessage.textContent = message;
+    setIconDisabled(customDialogConfirmBtn, true); // Hide and disable confirm for alert
     customDialogConfirmBtn.style.display = 'none';
+    setIconDisabled(customDialogCancelBtn, true); // Hide and disable cancel for alert
     customDialogCancelBtn.style.display = 'none';
     showModal(customDialogModal);
     if (autoDismissTimeout) { clearTimeout(autoDismissTimeout); }
@@ -197,7 +199,7 @@ function showCustomConfirm(message, onConfirm, onCancel = null) {
     // Ensure these icons are always enabled in the confirm dialog
     setIconDisabled(customDialogConfirmBtn, false); // Explicitly enable the tick icon
     customDialogConfirmBtn.style.display = 'block';
-    setIconDisabled(customDialogCancelBtn, false);
+    setIconDisabled(customDialogCancelBtn, false); // Explicitly enable the cross icon
     customDialogCancelBtn.style.display = 'block';
     showModal(customDialogModal);
     if (autoDismissTimeout) { clearTimeout(autoDismissTimeout); }
@@ -1875,7 +1877,8 @@ async function initializeAppLogic() {
     if (calculatorButtons) {
         calculatorButtons.addEventListener('click', (event) => {
             const target = event.target;
-            if (!target.classList.contains('calc-btn')) { return; }
+            // Ensure the clicked element is a calculator button and not ghosted
+            if (!target.classList.contains('calc-btn') || target.classList.contains('is-disabled-icon')) { return; }
             const value = target.dataset.value;
             const action = target.dataset.action;
             if (value) { appendNumber(value); }
@@ -2027,7 +2030,7 @@ async function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v132) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v133) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;

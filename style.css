@@ -1,5 +1,5 @@
-/* File Version: v65 */
-/* Last Updated: 2025-07-01 (Calculator Layout & Logout Theme Fix) */
+/* File Version: v66 */
+/* Last Updated: 2025-07-01 (Logout Theming & Calculator Button Colors) */
 
 :root {
     /* Light Theme (Default) */
@@ -51,9 +51,9 @@
     --icon-action-hover-color: #0056b3;
     --icon-danger-color: #dc3545; /* New variable for danger icons */
     --icon-danger-hover-color: #c82333;
-    --calc-num-btn-bg: #e0e0e0; /* New: Calculator number button background */
-    --calc-num-btn-text: #333; /* New: Calculator number button text */
-    --calc-num-btn-hover-bg: #d0d0d0; /* New: Calculator number button hover */
+    --calc-num-btn-bg: #f0f0f0; /* Default: Calculator number button background */
+    --calc-num-btn-text: #333; /* Default: Calculator number button text */
+    --calc-num-btn-hover-bg: #e0e0e0; /* Default: Calculator number button hover */
 }
 
 /* Dark Theme Variables */
@@ -994,25 +994,16 @@ h1#mainTitle {
 }
 
 
-.menu-button-item.danger-button {
-    background-color: var(--danger-button-bg); /* This will be applied if the class is present */
-    color: var(--button-text); /* Text color for danger button */
-}
-
-.menu-button-item.danger-button:hover {
-    background-color: var(--danger-button-hover-bg);
-}
-
-/* Ensure logout button uses theme variables for danger color */
-/* Logout button is now a span, so it uses .is-disabled-icon */
-#logoutBtn {
+/* Logout button styling (now a span) */
+#logoutBtn.menu-button-item {
     background-color: var(--danger-button-bg); /* Explicitly use danger-button-bg */
     color: var(--button-text); /* Explicitly use button-text */
     margin-top: auto; /* Push to the bottom of the sidebar */
 }
-#logoutBtn:hover {
+#logoutBtn.menu-button-item:hover {
     background-color: var(--danger-button-hover-bg);
 }
+
 /* This is for native buttons */
 .menu-button-item:disabled {
     background-color: var(--secondary-button-bg); /* Use secondary for disabled danger */
