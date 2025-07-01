@@ -1,5 +1,5 @@
-/* File Version: v54 */
-/* Last Updated: 2025-07-01 (Basic Light/Dark Theme Definitions) */
+/* File Version: v52 */
+/* Last Updated: 2025-06-28 (Modal Scrolling Fix) */
 
 :root {
     /* Light Theme (Default) - Adjusted for more vibrancy */
@@ -21,848 +21,1450 @@
     --asx-button-hover-bg: #d0d7d9;
     --asx-button-text: #333;
     --asx-button-active-bg: #007bff; /* Blue for active ASX button */
-    --asx-button-active-text: #fff; /* White text for active ASX button */
-    --success-color: #28a745;
-    --danger-color: #dc3545;
-    --warning-color: #ffc107;
-    --info-color: #17a2b8;
-    --link-color: #007bff;
-    --link-hover-color: #0056b3;
-    --sidebar-bg: #f8f9fa; /* Light background for sidebar */
-    --sidebar-text: #333;
+    --asx-button-active-text: #fff;
+    --danger-button-bg: #dc3545;
+    --danger-button-hover-bg: #c82333;
+    --secondary-button-bg: #6c757d;
+    --secondary-button-hover-bg: #545b62;
+    --google-auth-btn-bg: #dd4b39; /* Google red */
+    --google-auth-btn-hover-bg: #c23321;
+    --label-color: #555; /* For form labels / secondary text */
+    --shadow-color: rgba(0, 0, 0, 0.15); /* Slightly more visible shadows */
+    --sidebar-bg: #d9e2e4; /* Same as header bg for consistency */
     --sidebar-border: #c9d2d4;
-    --menu-button-bg: #e9ecef; /* Light grey for menu buttons */
-    --menu-button-hover-bg: #dee2e6;
-    --menu-button-active-bg: #007bff;
-    --menu-button-active-text: #fff;
-    --placeholder-text: #6c757d;
-    --ghosted-text: #888; /* For less prominent text */
+    --sidebar-text: #333;
+    --close-sidebar-btn-color: #666;
+    --sidebar-width: 280px; /* Define sidebar width as a variable */
+    --ghosted-text-color: #888; /* New variable for ghosted text */
 }
 
-/* Dark Theme Variables */
+/* Dark Theme */
 body.dark-theme {
-    --background-color: #2c3e50; /* Dark blue-grey */
-    --text-color: #ecf0f1; /* Light grey */
-    --header-bg: #34495e; /* Slightly darker header */
-    --card-bg: #3b526b; /* Darker cards/sections */
-    --border-color: #4a627a; /* Darker, more distinct borders */
-    --button-bg: #007bff; /* Keep primary button blue */
-    --button-text: #fff;
-    --button-hover-bg: #0056b3;
-    --input-bg: #4a627a; /* Darker input background */
-    --input-border: #6c8095; /* Lighter input borders */
-    --modal-bg: rgba(0, 0, 0, 0.75); /* Darker modal overlay */
-    --modal-content-bg: #34495e; /* Darker modal content */
-    --table-header-bg: #4a627a; /* Darker table header */
-    --table-row-hover-bg: #4a627a; /* Darker hover effect */
-    --asx-button-bg: #4a627a; /* Darker grey for ASX code buttons */
-    --asx-button-hover-bg: #5c758e;
-    --asx-button-text: #ecf0f1;
-    --asx-button-active-bg: #007bff;
+    --background-color: #1a1a2e; /* Deep purple/blue */
+    --text-color: #e0e0e0;
+    --header-bg: #272740; /* Slightly darker header for contrast */
+    --card-bg: #2e2e4a; /* Darker cards */
+    --border-color: #444;
+    --button-bg: #4a7dff; /* Brighter blue for buttons */
+    --button-hover-bg: #3a6cd9;
+    --input-bg: #3c3c5c;
+    --input-border: #555;
+    --modal-bg: rgba(0, 0, 0, 0.8);
+    --modal-content-bg: #2e2e4a;
+    --table-header-bg: #3a3a5a;
+    --table-row-hover-bg: #333350;
+    --asx-button-bg: #3a3a5a;
+    --asx-button-hover-bg: #4a4a6a;
+    --asx-button-text: #e0e0e0;
+    --asx-button-active-bg: #4a7dff;
     --asx-button-active-text: #fff;
-    --success-color: #2ecc71;
-    --danger-color: #e74c3c;
-    --warning-color: #f39c12;
-    --info-color: #3498db;
-    --link-color: #3498db;
-    --link-hover-color: #2980b9;
-    --sidebar-bg: #34495e; /* Dark background for sidebar */
-    --sidebar-text: #ecf0f1;
-    --sidebar-border: #4a627a;
-    --menu-button-bg: #4a627a; /* Darker grey for menu buttons */
-    --menu-button-hover-bg: #5c758e;
-    --menu-button-active-bg: #007bff;
-    --menu-button-active-text: #fff;
-    --placeholder-text: #bdc3c7;
-    --ghosted-text: #95a5a6;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --secondary-button-bg: #7f8c8d;
+    --secondary-button-hover-bg: #616e70;
+    --google-auth-btn-bg: #e74c3c; /* Darker red for Google in dark theme */
+    --google-auth-btn-hover-bg: #c0392b;
+    --label-color: #bbb;
+    --shadow-color: rgba(0, 0, 0, 0.4);
+    --sidebar-bg: #272740;
+    --sidebar-border: #444;
+    --sidebar-text: #e0e0e0;
+    --close-sidebar-btn-color: #bbb;
+    --ghosted-text-color: #a0a0a0; /* New variable for ghosted text in dark theme */
 }
+
+/* --- NEW THEMES --- */
+
+/* Bold Themes */
+body.theme-bold-1 { /* Ocean */
+    --background-color: #001f3f;
+    --text-color: #e0f2f7;
+    --header-bg: #003366;
+    --card-bg: #004080;
+    --border-color: #0050a0;
+    --button-bg: #007bff;
+    --button-hover-bg: #0056b3;
+    --input-bg: #002b5c;
+    --input-border: #004a99;
+    --modal-content-bg: #004080;
+    --table-header-bg: #003a75;
+    --table-row-hover-bg: #004e9e;
+    --asx-button-bg: #004080;
+    --asx-button-hover-bg: #0056b3;
+    --asx-button-active-bg: #007bff;
+    --label-color: #a0c0e0;
+    --sidebar-bg: #003366;
+    --sidebar-border: #0050a0;
+    --sidebar-text: #e0f2f7;
+}
+body.theme-bold-2 { /* Forest */
+    --background-color: #0a3d0a;
+    --text-color: #e6ffe6;
+    --header-bg: #1a521a;
+    --card-bg: #226622;
+    --border-color: #2b7a2b;
+    --button-bg: #3cb371;
+    --button-hover-bg: #2e8b57;
+    --input-bg: #1e4d1e;
+    --input-border: #2a6a2a;
+    --modal-content-bg: #226622;
+    --table-header-bg: #1a521a;
+    --table-row-hover-bg: #2e8b57;
+    --asx-button-bg: #226622;
+    --asx-button-hover-bg: #2e8b57;
+    --asx-button-active-bg: #3cb371;
+    --label-color: #a0d0a0;
+    --sidebar-bg: #1a521a;
+    --sidebar-border: #2b7a2b;
+    --sidebar-text: #e6ffe6;
+}
+body.theme-bold-3 { /* Sunset */
+    --background-color: #4a0e0e;
+    --text-color: #fff0e0;
+    --header-bg: #6b1a1a;
+    --card-bg: #8c2a2a;
+    --border-color: #a33a3a;
+    --button-bg: #e74c3c;
+    --button-hover-bg: #c0392b;
+    --input-bg: #5c1e1e;
+    --input-border: #7a2a2a;
+    --modal-content-bg: #8c2a2a;
+    --table-header-bg: #6b1a1a;
+    --table-row-hover-bg: #c0392b;
+    --asx-button-bg: #8c2a2a;
+    --asx-button-hover-bg: #c0392b;
+    --asx-button-active-bg: #e74c3c;
+    --label-color: #e0a0a0;
+    --sidebar-bg: #6b1a1a;
+    --sidebar-border: #a33a3a;
+    --sidebar-text: #fff0e0;
+}
+body.theme-bold-4 { /* Royal */
+    --background-color: #2a0a4a;
+    --text-color: #f0e0ff;
+    --header-bg: #3d1a6b;
+    --card-bg: #5c2a8c;
+    --border-color: #7a3aa3;
+    --button-bg: #8e44ad;
+    --button-hover-bg: #702a8c;
+    --input-bg: #3a1e5c;
+    --input-border: #5a2a7a;
+    --modal-content-bg: #5c2a8c;
+    --table-header-bg: #3d1a6b;
+    --table-row-hover-bg: #702a8c;
+    --asx-button-bg: #5c2a8c;
+    --asx-button-hover-bg: #702a8c;
+    --asx-button-active-bg: #8e44ad;
+    --label-color: #c0a0e0;
+    --sidebar-bg: #3d1a6b;
+    --sidebar-border: #7a3aa3;
+    --sidebar-text: #f0e0ff;
+}
+body.theme-bold-5 { /* Grape */
+    --background-color: #3f003f;
+    --text-color: #ffe0ff;
+    --header-bg: #660066;
+    --card-bg: #800080;
+    --border-color: #a000a0;
+    --button-bg: #cc00cc;
+    --button-hover-bg: #a000a0;
+    --input-bg: #5c005c;
+    --input-border: #990099;
+    --modal-content-bg: #800080;
+    --table-header-bg: #660066;
+    --table-row-hover-bg: #a000a0;
+    --asx-button-bg: #800080;
+    --asx-button-hover-bg: #a000a0;
+    --asx-button-active-bg: #cc00cc;
+    --label-color: #e0a0e0;
+    --sidebar-bg: #660066;
+    --sidebar-border: #a000a0;
+    --sidebar-text: #ffe0ff;
+}
+body.theme-bold-6 { /* Fire */
+    --background-color: #5c1a00;
+    --text-color: #fff5e0;
+    --header-bg: #8c2a00;
+    --card-bg: #b33600;
+    --border-color: #cc4400;
+    --button-bg: #ff6600;
+    --button-hover-bg: #cc5200;
+    --input-bg: #7a2a00;
+    --input-border: #a03600;
+    --modal-content-bg: #b33600;
+    --table-header-bg: #8c2a00;
+    --table-row-hover-bg: #cc5200;
+    --asx-button-bg: #b33600;
+    --asx-button-hover-bg: #cc5200;
+    --asx-button-active-bg: #ff6600;
+    --label-color: #ffe0a0;
+    --sidebar-bg: #8c2a00;
+    --sidebar-border: #cc4400;
+    --sidebar-text: #fff5e0;
+}
+body.theme-bold-7 { /* Emerald */
+    --background-color: #004d40;
+    --text-color: #e0fff0;
+    --header-bg: #00695c;
+    --card-bg: #00897b;
+    --border-color: #00a896;
+    --button-bg: #00c853;
+    --button-hover-bg: #009624;
+    --input-bg: #005c4f;
+    --input-border: #007a6e;
+    --modal-content-bg: #00897b;
+    --table-header-bg: #00695c;
+    --table-row-hover-bg: #009624;
+    --asx-button-bg: #00897b;
+    --asx-button-hover-bg: #009624;
+    --asx-button-active-bg: #00c853;
+    --label-color: #a0e0c0;
+    --sidebar-bg: #00695c;
+    --sidebar-border: #00a896;
+    --sidebar-text: #e0fff0;
+}
+body.theme-bold-8 { /* Plum */
+    --background-color: #330033;
+    --text-color: #f0e0f0;
+    --header-bg: #4d004d;
+    --card-bg: #660066;
+    --border-color: #800080;
+    --button-bg: #993399;
+    --button-hover-bg: #7f2a7f;
+    --input-bg: #400040;
+    --input-border: #600060;
+    --modal-content-bg: #660066;
+    --table-header-bg: #4d004d;
+    --table-row-hover-bg: #7f2a7f;
+    --asx-button-bg: #660066;
+    --asx-button-hover-bg: #7f2a7f;
+    --asx-button-active-bg: #993399;
+    --label-color: #c0a0c0;
+    --sidebar-bg: #4d004d;
+    --sidebar-border: #800080;
+    --sidebar-text: #f0e0f0;
+}
+body.theme-bold-9 { /* Aqua */
+    --background-color: #003333;
+    --text-color: #e0ffff;
+    --header-bg: #004d4d;
+    --card-bg: #006666;
+    --border-color: #008080;
+    --button-bg: #00cccc;
+    --button-hover-bg: #00a0a0;
+    --input-bg: #004040;
+    --input-border: #006060;
+    --modal-content-bg: #006666;
+    --table-header-bg: #004d4d;
+    --table-row-hover-bg: #00a0a0;
+    --asx-button-bg: #006666;
+    --asx-button-hover-bg: #00a0a0;
+    --asx-button-active-bg: #00cccc;
+    --label-color: #a0e0e0;
+    --sidebar-bg: #004d4d;
+    --sidebar-border: #008080;
+    --sidebar-text: #e0ffff;
+}
+body.theme-bold-10 { /* Ruby */
+    --background-color: #4d0026;
+    --text-color: #ffe0f0;
+    --header-bg: #660033;
+    --card-bg: #800040;
+    --border-color: #99004d;
+    --button-bg: #cc0066;
+    --button-hover-bg: #a00052;
+    --input-bg: #5c002e;
+    --input-border: #7a003d;
+    --modal-content-bg: #800040;
+    --table-header-bg: #660033;
+    --table-row-hover-bg: #a00052;
+    --asx-button-bg: #800040;
+    --asx-button-hover-bg: #a00052;
+    --asx-button-active-bg: #cc0066;
+    --label-color: #e0a0c0;
+    --sidebar-bg: #660033;
+    --sidebar-border: #99004d;
+    --sidebar-text: #ffe0f0;
+}
+
+/* Subtle Themes */
+body.theme-subtle-1 { /* Sky */
+    --background-color: #e0f2f7;
+    --text-color: #334e68;
+    --header-bg: #cce9f2;
+    --card-bg: #ffffff;
+    --border-color: #a0dceb;
+    --button-bg: #60a8c2;
+    --button-hover-bg: #4a8ca0;
+    --input-bg: #f5fafd;
+    --input-border: #b0d8e4;
+    --modal-content-bg: #ffffff;
+    --table-header-bg: #e0f2f7;
+    --table-row-hover-bg: #d0eef5;
+    --asx-button-bg: #e0f2f7;
+    --asx-button-hover-bg: #d0eef5;
+    --asx-button-active-bg: #60a8c2;
+    --asx-button-text: #334e68;
+    --asx-button-active-text: #fff;
+    --label-color: #6a8ba3;
+    --sidebar-bg: #cce9f2;
+    --sidebar-border: #a0dceb;
+    --sidebar-text: #334e68;
+}
+body.theme-subtle-2 { /* Earth */
+    --background-color: #f0f0e0;
+    --text-color: #5c4033;
+    --header-bg: #e0e0c0;
+    --card-bg: #ffffff;
+    --border-color: #d0d0b0;
+    --button-bg: #8b7355;
+    --button-hover-bg: #735c45;
+    --input-bg: #fffbf0;
+    --input-border: #c0c0a0;
+    --modal-content-bg: #ffffff;
+    --table-header-bg: #e0e0c0;
+    --table-row-hover-bg: #e8e8d8;
+    --asx-button-bg: #e0e0c0;
+    --asx-button-hover-bg: #e8e8d8;
+    --asx-button-active-bg: #8b7355;
+    --asx-button-text: #5c4033;
+    --asx-button-active-text: #fff;
+    --label-color: #8c7a6b;
+    --sidebar-bg: #e0e0c0;
+    --sidebar-border: #d0d0b0;
+    --sidebar-text: #5c4033;
+}
+body.theme-subtle-3 { /* Rose */
+    --background-color: #f7e9ed;
+    --text-color: #683340;
+    --header-bg: #f2dce0;
+    --card-bg: #ffffff;
+    --border-color: #ebc0c8;
+    --button-bg: #c2607a;
+    --button-hover-bg: #a04a60;
+    --input-bg: #fdf5f7;
+    --input-border: #e4b0b8;
+    --modal-content-bg: #ffffff;
+    --table-header-bg: #f2dce0;
+    --table-row-hover-bg: #f5d0d8;
+    --asx-button-bg: #f2dce0;
+    --asx-button-hover-bg: #f5d0d8;
+    --asx-button-active-bg: #c2607a;
+    --asx-button-text: #683340;
+    --asx-button-active-text: #fff;
+    --label-color: #a36a7b;
+    --sidebar-bg: #f2dce0;
+    --sidebar-border: #ebc0c8;
+    --sidebar-text: #683340;
+}
+body.theme-subtle-4 { /* Lavender */
+    --background-color: #f0e0f7;
+    --text-color: #403368;
+    --header-bg: #e0d0f2;
+    --card-bg: #ffffff;
+    --border-color: #ebc0f0;
+    --button-bg: #8c60c2;
+    --button-hover-bg: #734a9b;
+    --input-bg: #fdf5ff;
+    --input-border: #d8b0e4;
+    --modal-content-bg: #ffffff;
+    --table-header-bg: #e0d0f2;
+    --table-row-hover-bg: #e8d0f5;
+    --asx-button-bg: #e0d0f2;
+    --asx-button-hover-bg: #e8d0f5;
+    --asx-button-active-bg: #8c60c2;
+    --asx-button-text: #403368;
+    --asx-button-active-text: #fff;
+    --label-color: #7b6a9b;
+    --sidebar-bg: #e0d0f2;
+    --sidebar-border: #ebc0f0;
+    --sidebar-text: #403368;
+}
+body.theme-subtle-5 { /* Mint */
+    --background-color: #e0f7f0;
+    --text-color: #336840;
+    --header-bg: #d0f2e0;
+    --card-bg: #ffffff;
+    --border-color: #b0ebc0;
+    --button-bg: #60c27a;
+    --button-hover-bg: #4a9b60;
+    --input-bg: #f5fff7;
+    --input-border: #b8e4c0;
+    --modal-content-bg: #ffffff;
+    --table-header-bg: #d0f2e0;
+    --table-row-hover-bg: #d8f5e0;
+    --asx-button-bg: #d0f2e0;
+    --asx-button-hover-bg: #d8f5e0;
+    --asx-button-active-bg: #60c27a;
+    --asx-button-text: #336840;
+    --asx-button-active-text: #fff;
+    --label-color: #6a9b7b;
+    --sidebar-bg: #d0f2e0;
+    --sidebar-border: #b0ebc0;
+    --sidebar-text: #336840;
+}
+body.theme-subtle-6 { /* Sand */
+    --background-color: #f7f2e0;
+    --text-color: #685c33;
+    --header-bg: #f2e9d0;
+    --card-bg: #ffffff;
+    --border-color: #ebdfb0;
+    --button-bg: #c2a860;
+    --button-hover-bg: #9b8c4a;
+    --input-bg: #fffdf5;
+    --input-border: #e4dcb8;
+    --modal-content-bg: #ffffff;
+    --table-header-bg: #f2e9d0;
+    --table-row-hover-bg: #f5e8d0;
+    --asx-button-bg: #f2e9d0;
+    --asx-button-hover-bg: #f5e8d0;
+    --asx-button-active-bg: #c2a860;
+    --asx-button-text: #685c33;
+    --asx-button-active-text: #fff;
+    --label-color: #9b8c6a;
+    --sidebar-bg: #f2e9d0;
+    --sidebar-border: #ebdfb0;
+    --sidebar-text: #685c33;
+}
+body.theme-subtle-7 { /* Graphite */
+    --background-color: #e6e6e6;
+    --text-color: #404040;
+    --header-bg: #d0d0d0;
+    --card-bg: #ffffff;
+    --border-color: #b0b0b0;
+    --button-bg: #808080;
+    --button-hover-bg: #606060;
+    --input-bg: #f0f0f0;
+    --input-border: #c0c0c0;
+    --modal-content-bg: #ffffff;
+    --table-header-bg: #d0d0d0;
+    --table-row-hover-bg: #e0e0e0;
+    --asx-button-bg: #d0d0d0;
+    --asx-button-hover-bg: #e0e0e0;
+    --asx-button-active-bg: #808080;
+    --asx-button-text: #404040;
+    --asx-button-active-text: #fff;
+    --label-color: #707070;
+    --sidebar-bg: #d0d0d0;
+    --sidebar-border: #b0b0b0;
+    --sidebar-text: #404040;
+}
+body.theme-subtle-8 { /* Peach */
+    --background-color: #f7ede0;
+    --text-color: #684a33;
+    --header-bg: #f2e0d0;
+    --card-bg: #ffffff;
+    --border-color: #ebc8b0;
+    --button-bg: #c27a60;
+    --button-hover-bg: #9b604a;
+    --input-bg: #fdf7f5;
+    --input-border: #e4c0b8;
+    --modal-content-bg: #ffffff;
+    --table-header-bg: #f2e0d0;
+    --table-row-hover-bg: #f5d8d0;
+    --asx-button-bg: #f2e0d0;
+    --asx-button-hover-bg: #f5d8d0;
+    --asx-button-active-bg: #c27a60;
+    --asx-button-text: #684a33;
+    --asx-button-active-text: #fff;
+    --label-color: #9b7b6a;
+    --sidebar-bg: #f2e0d0;
+    --sidebar-border: #ebc8b0;
+    --sidebar-text: #684a33;
+}
+body.theme-subtle-9 { /* Teal */
+    --background-color: #e0f7f7;
+    --text-color: #336868;
+    --header-bg: #d0f2f2;
+    --card-bg: #ffffff;
+    --border-color: #b0ebeb;
+    --button-bg: #60c2c2;
+    --button-hover-bg: #4a9b9b;
+    --input-bg: #f5fdfd;
+    --input-border: #b8e4e4;
+    --modal-content-bg: #ffffff;
+    --table-header-bg: #d0f2f2;
+    --table-row-hover-bg: #d8f5f5;
+    --asx-button-bg: #d0f2f2;
+    --asx-button-hover-bg: #d8f5f5;
+    --asx-button-active-bg: #60c2c2;
+    --asx-button-text: #336868;
+    --asx-button-active-text: #fff;
+    --label-color: #6a9b9b;
+    --sidebar-bg: #d0f2f2;
+    --sidebar-border: #b0ebeb;
+    --sidebar-text: #336868;
+}
+body.theme-subtle-10 { /* Stone */
+    --background-color: #f0f0f0;
+    --text-color: #5c5c5c;
+    --header-bg: #e0e0e0;
+    --card-bg: #ffffff;
+    --border-color: #d0d0d0;
+    --button-bg: #8b8b8b;
+    --button-hover-bg: #737373;
+    --input-bg: #fcfcfc;
+    --input-border: #c0c0c0;
+    --modal-content-bg: #ffffff;
+    --table-header-bg: #e0e0e0;
+    --table-row-hover-bg: #e8e8e8;
+    --asx-button-bg: #e0e0e0;
+    --asx-button-hover-bg: #e8e8e8;
+    --asx-button-active-bg: #8b8b8b;
+    --asx-button-text: #5c5c5c;
+    --asx-button-active-text: #fff;
+    --label-color: #8c8c8c;
+    --sidebar-bg: #e0e0e0;
+    --sidebar-border: #d0d0d0;
+    --sidebar-text: #5c5c5c;
+}
+
 
 /* Base Styles */
+html, body {
+    /* Ensure no horizontal overflow that causes sliding */
+    overflow-x: hidden; 
+}
 body {
     font-family: 'Inter', sans-serif;
-    margin: 0;
-    padding: 0;
+    margin: 0; /* Ensure no default body margin */
+    padding: 0; /* Ensure no default body padding */
+    box-sizing: border-box;
     background-color: var(--background-color);
     color: var(--text-color);
-    transition: background-color 0.3s ease, color 0.3s ease;
+    /* Transition for properties that change when sidebar opens/closes */
+    transition: background-color 0.3s ease, color 0.3s ease, margin-left 0.3s ease, width 0.3s ease;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    min-height: 100vh; /* Ensure body takes full viewport height */
-    display: flex;
-    flex-direction: column;
 }
 
-/* Global Container */
+/* Class added to body when sidebar is open, to shift content */
+body.sidebar-active {
+    margin-left: var(--sidebar-width);
+    width: calc(100% - var(--sidebar-width));
+}
+
+/* Main content container. Will shift on desktop when sidebar opens */
 .container {
-    max-width: 1200px;
-    margin: 20px auto;
+    max-width: 1200px; /* Main content max width */
+    margin: 20px auto; /* Center main content */
     padding: 0 15px;
-    flex-grow: 1; /* Allow container to grow and push footer down */
+    position: relative;
+    /* Transition inherited from body.sidebar-active */
 }
 
 /* Header */
 header {
     background-color: var(--header-bg);
     padding: 15px 20px;
-    border-bottom: 1px solid var(--border-color);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    position: sticky;
-    top: 0;
-    z-index: 1000;
+    box-shadow: 0 2px 4px var(--shadow-color);
+    display: flex;
+    flex-direction: column; /* Stack rows vertically for desktop layout */
+    gap: 10px;
+    position: relative; /* For absolute positioning of hamburger menu */
+    height: auto; /* Allow height to adjust based on content */
 }
 
 .header-top-row {
     display: flex;
-    justify-content: space-between;
+    justify-content: center; /* Center the title by default */
     align-items: center;
-    margin-bottom: 10px;
+    gap: 15px;
+    position: relative;
+    /* Ensure no horizontal overflow */
+    width: 100%; 
+    box-sizing: border-box;
+    padding: 0 15px; /* Add some padding to prevent content from touching edges */
 }
 
 h1#mainTitle {
-    color: var(--text-color);
-    font-size: 1.8em;
     margin: 0;
-    text-align: center;
-    flex-grow: 1; /* Allow title to take available space */
+    font-size: 1.8em;
+    font-weight: 700;
+    color: var(--text-color);
+    text-align: center; /* Ensures title is centered within its flex item */
+    flex-grow: 1; /* Allows title to take available space */
 }
 
+/* New: Header "Add Share" Button */
 .header-action-btn {
     background: none;
     border: none;
     color: var(--text-color);
-    font-size: 1.5em;
+    font-size: 1.8em; /* Match hamburger size for consistency */
     cursor: pointer;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
     padding: 5px 10px;
-    border-radius: 8px;
-    transition: background-color 0.2s ease, color 0.2s ease;
-    display: flex; /* For icon alignment */
-    align-items: center;
-    justify-content: center;
+    z-index: 11;
+    display: block;
 }
+
+/* Swapped positions for header buttons */
+.header-action-btn-left { /* Now for Hamburger */
+    left: 0; /* Position to the far left */
+}
+
+.header-action-btn-right { /* Now for Add Share button */
+    right: 0; /* Position to the far right */
+}
+
 
 .header-action-btn:hover {
-    background-color: rgba(0, 0, 0, 0.1);
+    color: var(--button-hover-bg);
 }
 
-.header-action-btn-left {
-    margin-right: 10px; /* Space between hamburger and title */
-}
 
-.header-action-btn-right {
-    margin-left: 10px; /* Space between title and add button */
-}
-
-/* Sidebar / Mobile Menu */
-.app-sidebar {
-    position: fixed;
-    top: 0;
-    left: -280px; /* Hidden by default */
-    width: 270px; /* Slightly wider */
-    height: 100%;
-    background-color: var(--sidebar-bg);
-    border-right: 1px solid var(--sidebar-border);
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
-    transition: left 0.3s ease-in-out;
-    z-index: 2000; /* Above other content */
-    padding: 20px 0; /* Padding top/bottom */
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto; /* Enable scrolling for long menus */
-}
-
-.app-sidebar.open {
-    left: 0; /* Slide in */
-}
-
-.close-menu-btn {
+/* Hamburger/Sidebar Toggle Button */
+.hamburger-btn { /* This is now .header-action-btn-left implicitly */
     background: none;
     border: none;
     color: var(--text-color);
-    font-size: 1.8em; /* Larger X */
+    font-size: 1.8em; /* Larger icon for easy tapping */
     cursor: pointer;
-    align-self: flex-end; /* Align to top right */
-    margin-right: 15px;
-    margin-bottom: 10px;
+    /* Removed explicit positioning here as it's now handled by .header-action-btn-left */
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 5px 10px; /* Make it easier to tap */
+    z-index: 11; /* Above other elements in header */
+    display: block; /* Ensure it's always displayed */
+}
+
+.hamburger-btn:hover {
+    color: var(--button-hover-bg);
+}
+
+/* App Sidebar (Unified for Mobile & Desktop) */
+.app-sidebar {
+    position: fixed; /* Fixed to viewport */
+    top: 0;
+    left: calc(-1 * var(--sidebar-width)); /* Hidden off-screen to the left by default */
+    width: var(--sidebar-width); /* Use variable for width */
+    height: 100%;
+    background-color: var(--sidebar-bg);
+    box-shadow: 2px 0 5px var(--shadow-color);
+    transition: left 0.3s ease-in-out; /* Smooth slide-in/out */
+    z-index: 1000; /* High z-index to be on top of everything */
+    padding: 20px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto; /* Enable scrolling if content is long */
+    border-right: 1px solid var(--sidebar-border);
+}
+
+.app-sidebar.open {
+    left: 0; /* Slide in when .open class is added */
+}
+
+.close-menu-btn {
+    color: var(--close-sidebar-btn-color);
+    font-size: 2.5em; /* Large X icon */
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    cursor: pointer;
     padding: 5px;
-    border-radius: 8px;
-    transition: background-color 0.2s ease;
+    line-height: 1; /* Remove extra line height */
+    display: block; /* Ensure the close button is always visible in the sidebar */
+    background: none; /* Ensure no background */
+    border: none; /* Ensure no border */
+    font-family: sans-serif; /* Ensure a standard font for 'X' */
 }
 
 .close-menu-btn:hover {
-    background-color: rgba(0, 0, 0, 0.1);
+    color: var(--danger-button-bg);
 }
 
-.menu-section {
-    padding: 10px 20px;
-    border-bottom: 1px solid var(--sidebar-border);
-}
-
-.menu-section:last-child {
-    border-bottom: none;
-}
-
-.menu-section h3 {
-    color: var(--text-color);
-    font-size: 1.1em;
-    margin-top: 0;
+.app-sidebar h3 {
+    color: var(--sidebar-text);
+    margin-top: 20px;
     margin-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
     padding-bottom: 5px;
-    border-bottom: 1px dashed var(--sidebar-border);
+    font-size: 1.1em;
 }
 
 .menu-buttons-group {
     display: flex;
-    flex-direction: column;
+    flex-direction: column; /* Stack buttons vertically */
     gap: 10px; /* Space between buttons */
+    margin-bottom: 20px;
 }
 
-.menu-button-item {
+/* Ensure themeToggleBtn gets menu-button-item styling */
+#themeToggleBtn.menu-button-item {
+    background-color: var(--button-bg);
+    color: var(--button-text);
+    padding: 12px 15px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 600;
+    text-align: left;
     display: flex;
     align-items: center;
     gap: 10px;
-    width: 100%;
-    padding: 12px 15px;
-    background-color: var(--menu-button-bg);
-    color: var(--sidebar-text);
-    border: 1px solid var(--sidebar-border);
-    border-radius: 8px;
-    font-size: 1em;
-    cursor: pointer;
     transition: background-color 0.2s ease, transform 0.1s ease;
-    text-align: left;
+    width: 100%; /* Full width within the menu */
+    box-sizing: border-box;
+    justify-content: flex-start; /* Align text and icon to the left */
 }
 
-.menu-button-item:hover:not(:disabled) {
-    background-color: var(--menu-button-hover-bg);
+#themeToggleBtn.menu-button-item:hover {
+    background-color: var(--button-hover-bg);
     transform: translateY(-1px);
 }
 
-.menu-button-item:active:not(:disabled) {
-    transform: translateY(0);
+
+.menu-button-item { /* Class for all buttons inside the sidebar */
+    background-color: var(--button-bg);
+    color: var(--button-text);
+    padding: 12px 15px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 600;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    width: 100%; /* Full width within the menu */
+    box-sizing: border-box;
+    justify-content: flex-start; /* Align text and icon to the left */
+}
+
+.menu-button-item:hover {
+    background-color: var(--button-hover-bg);
+    transform: translateY(-1px);
 }
 
 .menu-button-item:disabled {
-    opacity: 0.6;
+    background-color: var(--secondary-button-bg);
     cursor: not-allowed;
+    opacity: 0.7;
 }
 
-.menu-button-item i {
-    font-size: 1.2em;
+/* Specific style for danger buttons in menu (like delete watchlist) */
+.menu-button-item.danger-button {
+    background-color: var(--danger-button-bg);
 }
 
-.menu-dropdown {
-    width: 100%;
-    padding: 10px 15px;
-    border: 1px solid var(--input-border);
-    border-radius: 8px;
-    background-color: var(--input-bg);
-    color: var(--text-color);
-    font-size: 1em;
-    appearance: none; /* Remove default dropdown arrow */
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 width%3D%22292.4%22 height%3D%22292.4%22 viewBox%3D%220 0 292.4 292.4%22%3E%3Cpath fill%3D%22%23333%22 d%3D%22M287 69.4a17.6 17.6 0 00-13-5.4H18.4a17.6 17.6 0 00-13 5.4A17.6 17.6 0 000 82.2c0 4.8 1.9 9.2 5.4 13l128 128c3.5 3.5 7.8 5.4 13 5.4s9.5-1.9 13-5.4l128-128c3.5-3.5 5.4-7.8 5.4-13 0-4.9-1.9-9.2-5.4-13z%22%2F%3E%3C%2Fsvg%3E');
-    background-repeat: no-repeat;
-    background-position: right 10px center;
-    background-size: 12px;
-    cursor: pointer;
+.menu-button-item.danger-button:hover {
+    background-color: var(--danger-button-hover-bg);
 }
 
+/* New Theme Selector Dropdown in Sidebar */
 .theme-select-label {
+    color: var(--sidebar-text);
     font-size: 0.9em;
-    color: var(--text-color);
     margin-bottom: 5px;
     display: block;
+    font-weight: 600;
 }
 
-/* Sidebar Overlay */
+.menu-dropdown { /* Apply dropdown styling to select within menu */
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 10px; /* Space between dropdown and next item */
+}
+
+/* Styling for the new Revert to Default Theme Button */
+#revertToDefaultThemeBtn {
+    /* Inherits .menu-button-item and .secondary-buttons styles */
+    /* Override or add specific styles here if needed */
+    justify-content: center; /* Center content (icons and text) */
+}
+
+#revertToDefaultThemeBtn .fas {
+    margin-right: 5px; /* Space between icons and text */
+}
+
+#revertToDefaultThemeBtn .fas + .fas {
+    margin-left: -5px; /* Overlap icons slightly for a combined look */
+    margin-right: 10px; /* Space after the second icon */
+}
+
+
+/* Overlay for sidebar when open */
 .sidebar-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1999; /* Below sidebar, above content */
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black for mobile, will be overridden for desktop */
+    z-index: 999; /* Below the sidebar, above content */
+    display: none; /* Hidden by default, shown by JS */
 }
 
 .sidebar-overlay.open {
-    opacity: 1;
-    visibility: visible;
-}
-
-/* Body class when sidebar is active on desktop */
-body.sidebar-active .container,
-body.sidebar-active footer,
-body.sidebar-active header:not(.app-sidebar) {
-    /* No transform needed for desktop, just ensure overlay doesn't block clicks */
+    display: block; /* Show when sidebar is open */
 }
 
 
 /* Watchlist and Sort Controls */
 .watchlist-controls-row {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: space-around;
-    gap: 15px;
-    padding: 15px 0;
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+    justify-content: center; /* CENTRALIZED ON MOBILE & DESKTOP */
+    align-items: center;
+    gap: 15px 25px; /* Vertical and horizontal gap */
+    padding: 10px 0;
     border-top: 1px solid var(--border-color);
     border-bottom: 1px solid var(--border-color);
-    margin-bottom: 15px;
+    /* Ensure no horizontal overflow */
+    width: 100%; 
+    box-sizing: border-box;
+    padding-left: 15px; /* Add some padding to prevent content from touching edges */
+    padding-right: 15px; /* Add some padding to prevent content from touching edges */
 }
 
-.watchlist-group, .sort-group {
-    flex: 1 1 45%; /* Allow items to grow and wrap */
+.watchlist-group,
+.sort-group {
     display: flex;
-    flex-direction: column;
     align-items: center;
+    gap: 8px;
 }
 
 .dropdown-large {
-    width: 100%;
     padding: 10px 15px;
     border: 1px solid var(--input-border);
     border-radius: 8px;
     background-color: var(--input-bg);
     color: var(--text-color);
     font-size: 1em;
-    appearance: none; /* Remove default dropdown arrow */
+    appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
-    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 width%3D%22292.4%22 height%3D%22292.4%22 viewBox%3D%220 0 292.4 292.4%22%3E%3Cpath fill%3D%22%23333%22 d%3D%22M287 69.4a17.6 17.6 0 00-13-5.4H18.4a17.6 17.6 0 00-13 5.4A17.6 17.6 0 000 82.2c0 4.8 1.9 9.2 5.4 13l128 128c3.5 3.5 7.8 5.4 13 5.4s9.5-1.9 13-5.4l128-128c3.5-3.5 5.4-7.8 5.4-13 0-4.9-1.9-9.2-5.4-13z%22%2F%3E%3C%2Fsvg%3E');
-    background-repeat: no-repeat;
-    background-position: right 10px center;
-    background-size: 12px;
     cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    min-width: 150px;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http://www.w3.org/2000/svg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236c757d%22%20d%3D%22M287%2069.9a14.7%2014.7%200%200%200-20.8%200L146.2%20189.9%2026.3%2069.9a14.7%2014.7%200%200%200-20.8%2020.8L135.8%20216.7a14.7%2014.7%200%200%200%2020.8%200L287%2090.7a14.7%2014.7%200%200%200%200-20.8z%22%2F%3E%3C%2Fsvg%3E'); /* Custom arrow */
+    background-repeat: no-repeat;
+    background-position: right 12px top 50%;
+    background-size: 12px auto;
+    padding-right: 30px;
+    max-height: 45px; /* Limit height to prevent scrollbar if only a few items */
+    overflow-y: hidden; /* Hide scrollbar if content fits */
 }
 
-.dropdown-large:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
+.dropdown-large option[value=""][disabled] {
+    color: var(--label-color);
+    font-weight: 400;
 }
+.dropdown-large option:not([value=""]) {
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+.dropdown-large:focus {
+    border-color: var(--button-bg);
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+    outline: none;
+}
+
 
 /* ASX Code Buttons Container */
 .asx-code-buttons-container {
     display: flex;
     flex-wrap: wrap;
+    justify-content: center; /* CENTRALIZED ON MOBILE & DESKTOP */
     gap: 8px;
-    padding: 10px 15px;
-    justify-content: center;
-    border-bottom: 1px solid var(--border-color);
-    margin-bottom: 15px;
-    max-height: 150px; /* Limit height */
-    overflow-y: auto; /* Enable scrolling if too many buttons */
-    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    padding: 10px 0;
+    /* Ensure no horizontal overflow */
+    width: 100%;
+    box-sizing: border-box;
+    padding-left: 15px; /* Match main container padding */
+    padding-right: 15px; /* Match main container padding */
 }
 
 .asx-code-btn {
     background-color: var(--asx-button-bg);
     color: var(--asx-button-text);
-    border: 1px solid var(--border-color);
-    padding: 8px 12px;
-    border-radius: 8px;
+    border: 1px solid var(--input-border);
+    border-radius: 20px;
+    padding: 8px 15px;
     cursor: pointer;
     font-size: 0.9em;
-    transition: background-color 0.2s ease, transform 0.1s ease;
-    white-space: nowrap; /* Prevent button text from wrapping */
+    font-weight: 600;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 .asx-code-btn:hover {
     background-color: var(--asx-button-hover-bg);
-    transform: translateY(-1px);
 }
 
-.asx-code-btn.active,
-.asx-code-btn:active {
+.asx-code-btn.active {
     background-color: var(--asx-button-active-bg);
     color: var(--asx-button-active-text);
-    transform: translateY(0);
+    border-color: var(--asx-button-active-bg);
 }
 
-/* Share List Section (Table and Mobile Cards) */
+
+/* Main Content / Table */
 .share-list-section {
     margin-top: 20px;
+    background-color: var(--card-bg);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px var(--shadow-color);
+    overflow: hidden;
+    /* Ensure no horizontal overflow */
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    border-radius: 12px; /* Rounded corners for the whole table */
-    overflow: hidden; /* Ensures rounded corners apply to content */
-    display: none; /* Hidden by default on mobile */
+    color: var(--text-color);
 }
 
 table th, table td {
     padding: 12px 15px;
     text-align: left;
     border-bottom: 1px solid var(--border-color);
-    color: var(--text-color);
+    font-size: 0.9em;
 }
 
 table th {
     background-color: var(--table-header-bg);
     font-weight: 600;
     color: var(--text-color);
-    white-space: nowrap; /* Prevent headers from wrapping */
+    white-space: nowrap;
 }
 
 table tbody tr {
-    background-color: var(--card-bg);
     transition: background-color 0.2s ease;
     cursor: pointer;
 }
 
-table tbody tr:hover {
-    background-color: var(--table-row-hover-bg);
-}
-
 table tbody tr.selected {
-    background-color: var(--info-color); /* Highlight selected row */
-    color: #fff; /* White text for selected row */
-}
-
-table tbody tr.selected td {
-    color: #fff; /* Ensure text color applies to cells */
-}
-
-/* Specific styling for dividend cell content */
-.dividend-yield-cell-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.9em;
-    padding: 2px 0;
-}
-
-.dividend-yield-cell-content .value {
+    background-color: var(--table-row-hover-bg);
     font-weight: 600;
 }
 
-/* Mobile Share Cards */
+table tbody tr:not(.selected):hover {
+    background-color: var(--table-row-hover-bg);
+}
+
+/* Mobile Cards (Hidden by default on desktop) */
 .mobile-share-cards {
-    display: flex;
+    display: none; /* Hidden by default */
     flex-direction: column;
     gap: 15px;
+    padding: 15px;
+    /* Ensure no horizontal shifting */
+    position: relative; /* Establish positioning context */
+    left: 0; /* Keep it fixed horizontally */
+    right: 0;
+    width: 100%; /* Ensure it takes full width */
+    box-sizing: border-box; /* Include padding in width */
 }
 
 .mobile-card {
     background-color: var(--card-bg);
     border: 1px solid var(--border-color);
-    border-radius: 12px;
+    border-radius: 8px;
     padding: 15px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-    transition: background-color 0.2s ease;
+    box-shadow: 0 2px 5px var(--shadow-color);
     cursor: pointer;
-}
-
-.mobile-card:hover {
-    background-color: var(--table-row-hover-bg);
+    transition: background-color 0.2s ease;
 }
 
 .mobile-card.selected {
-    background-color: var(--info-color);
-    color: #fff;
+    background-color: var(--table-row-hover-bg);
+    border-color: var(--button-bg);
+    font-weight: 600;
 }
 
-.mobile-card.selected p,
-.mobile-card.selected h3 {
-    color: #fff;
+.mobile-card:not(.selected):hover {
+    background-color: var(--table-row-hover-bg);
 }
 
 .mobile-card h3 {
     margin-top: 0;
     margin-bottom: 10px;
     color: var(--text-color);
-    font-size: 1.3em;
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 8px;
+    font-size: 1.2em;
 }
-.mobile-card.selected h3 {
-    border-bottom-color: rgba(255,255,255,0.5); /* Lighter border for selected card */
-}
-
 
 .mobile-card p {
     margin: 5px 0;
-    font-size: 0.95em;
+    font-size: 0.9em;
     color: var(--text-color);
 }
 
 .mobile-card p strong {
-    min-width: 110px; /* Align labels */
-    display: inline-block;
+    color: var(--label-color);
 }
 
-.mobile-card .card-comments {
-    margin-top: 10px;
-    font-style: italic;
-    color: var(--ghosted-text);
-}
-.mobile-card.selected .card-comments {
-    color: rgba(255,255,255,0.8);
-}
-
-
-/* Footer */
+/* Fixed Footer & Auth Button */
 .fixed-footer {
-    background-color: var(--header-bg);
-    padding: 10px 15px;
-    border-top: 1px solid var(--border-color);
-    text-align: center;
     position: sticky;
     bottom: 0;
+    left: 0;
     width: 100%;
-    z-index: 999;
-    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
+    background-color: var(--header-bg);
+    box-shadow: 0 -2px 4px var(--shadow-color);
+    padding: 10px 20px;
+    display: flex;
+    justify-content: center; /* Ensures horizontal centering for button */
+    align-items: center;
+    z-index: 500;
+    transition: margin-left 0.3s ease, width 0.3s ease; /* For sidebar shift */
 }
 
 .google-auth-btn {
-    background-color: var(--button-bg);
+    background-color: var(--google-auth-btn-bg);
     color: var(--button-text);
+    padding: 12px 25px;
     border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
+    border-radius: 25px;
     cursor: pointer;
-    font-size: 1em;
+    font-size: 1.1em;
+    font-weight: 600;
     transition: background-color 0.2s ease, transform 0.1s ease;
-    width: 100%;
-    max-width: 300px;
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 8px;
+    gap: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    /* Ensure it's centered */
+    margin: 0 auto; /* This should center it horizontally within its flex container */
 }
 
-.google-auth-btn:hover:not(:disabled) {
-    background-color: var(--button-hover-bg);
-    transform: translateY(-1px);
+.google-auth-btn:hover {
+    background-color: var(--google-auth-btn-hover-bg);
+    transform: translateY(-2px);
 }
 
 .google-auth-btn:disabled {
-    opacity: 0.6;
+    background-color: var(--secondary-button-bg);
     cursor: not-allowed;
+    opacity: 0.7;
 }
 
-/* Modals */
+
+/* Modals (General) */
 .modal {
-    display: none; /* Hidden by default */
-    position: fixed; /* Stay in place */
-    z-index: 3000; /* Sit on top */
+    display: none;
+    position: fixed;
+    z-index: 1000;
     left: 0;
     top: 0;
-    width: 100%; /* Full width */
-    height: 100%; /* Full height */
-    overflow: auto; /* Enable scroll if needed */
-    background-color: var(--modal-bg); /* Black w/ opacity */
-    justify-content: center; /* Center horizontally */
-    align-items: center; /* Center vertically */
-    padding: 20px; /* Padding around the modal content */
-    box-sizing: border-box; /* Include padding in width/height */
+    width: 100%;
+    height: 100%;
+    overflow: auto; /* Allow modal itself to scroll if content is too large for viewport */
+    background-color: var(--modal-bg);
+    padding-top: 60px; /* Space from top */
+    padding-bottom: 20px; /* Space from bottom for buttons */
+    box-sizing: border-box; /* Include padding in height calculation */
 }
 
 .modal-content {
     background-color: var(--modal-content-bg);
-    margin: auto;
+    margin: 5% auto;
     padding: 25px;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    width: 90%; /* Responsive width */
-    max-width: 500px; /* Max width for larger screens */
+    border-radius: 10px;
+    box-shadow: 0 5px 15px var(--shadow-color);
     position: relative;
+    max-width: 500px;
+    width: 90%;
     box-sizing: border-box;
-    max-height: 90vh; /* Limit height to prevent overflow on small screens */
+    color: var(--text-color);
+
+    /* Flexbox for internal layout: header + scrollable body + fixed footer buttons */
     display: flex;
     flex-direction: column;
+    max-height: 90vh; /* Set a max height for the modal content itself */
 }
 
-.add-share-modal-content {
-    max-width: 600px; /* Wider for share form */
-}
-
+/* NEW: Scrollable body within the modal content */
 .modal-body-scrollable {
-    flex-grow: 1; /* Allow content to take available space */
-    overflow-y: auto; /* Enable scrolling for modal content */
-    padding-right: 10px; /* Space for scrollbar */
-    margin-right: -10px; /* Compensate for padding to keep content centered */
+    flex-grow: 1; /* Allows this section to take up available space */
+    overflow-y: auto; /* Enable vertical scrolling for this specific area */
+    padding-right: 10px; /* Add some padding for scrollbar */
+    margin-right: -10px; /* Compensate for padding to avoid extra space */
+    box-sizing: border-box;
+    /* Ensure content inside doesn't overflow horizontally */
+    overflow-x: hidden; 
+}
+
+/* Removed add-share-modal-content specific max-height and padding-bottom */
+/* as it's now handled by .modal-content and .modal-body-scrollable */
+
+.modal-content h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    text-align: center;
+    color: var(--text-color);
+    font-size: 1.6em;
 }
 
 .close-button {
     color: var(--text-color);
     font-size: 2em;
-    font-weight: bold;
     position: absolute;
     top: 10px;
-    right: 15px;
+    right: 20px;
     cursor: pointer;
     transition: color 0.2s ease;
 }
 
 .close-button:hover,
 .close-button:focus {
-    color: var(--danger-color);
+    color: var(--danger-button-bg);
     text-decoration: none;
     cursor: pointer;
 }
 
-.modal-content h2 {
-    margin-top: 0;
-    color: var(--text-color);
-    font-size: 1.5em;
-    margin-bottom: 20px;
-    text-align: center;
+/* Ghosted text for messages */
+.ghosted-text {
+    color: var(--ghosted-text-color);
+    font-size: 0.85em;
+    opacity: 0.8;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    display: block; /* Ensure it takes its own line */
 }
 
+/* Specific styling for CommSec message */
+.commsec-message {
+    font-size: 0.75em; /* Smaller font size */
+    margin-top: 0; /* Reduce top margin */
+    margin-bottom: 0; /* Reduce bottom margin */
+    line-height: 1.2; /* Tighter line height */
+}
+
+
+/* Form Styling within Modals */
 .modal-content label {
     display: block;
     margin-bottom: 8px;
-    margin-top: 15px;
-    color: var(--text-color);
     font-weight: 600;
+    color: var(--label-color);
+    font-size: 0.95em;
 }
 
 .modal-content input[type="text"],
 .modal-content input[type="number"],
-.modal-content select,
 .modal-content textarea {
-    width: calc(100% - 22px); /* Account for padding and border */
+    width: calc(100% - 22px);
     padding: 10px;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
     border: 1px solid var(--input-border);
-    border-radius: 8px;
+    border-radius: 5px;
     background-color: var(--input-bg);
     color: var(--text-color);
     font-size: 1em;
-    transition: border-color 0.2s ease;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.modal-content input[type="text"]::placeholder,
-.modal-content input[type="number"]::placeholder,
-.modal-content textarea::placeholder {
-    color: var(--placeholder-text);
-}
-
-.modal-content input:focus,
-.modal-content select:focus,
+.modal-content input[type="text"]:focus,
+.modal-content input[type="number"]:focus,
 .modal-content textarea:focus {
     border-color: var(--button-bg);
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
     outline: none;
 }
 
-.form-action-buttons, .modal-action-buttons {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 20px;
-    flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
-}
-
-.modal-form-buttons {
-    justify-content: space-between; /* Space out save/cancel/delete */
-}
-
-.form-action-buttons button, .modal-action-buttons button {
-    padding: 10px 15px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 1em;
-    transition: background-color 0.2s ease, transform 0.1s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    white-space: nowrap;
-}
-
-/* Primary Button */
-#saveShareBtn, #saveWatchlistBtn, #saveWatchlistNameBtn {
-    background-color: var(--button-bg);
-    color: var(--button-text);
-}
-#saveShareBtn:hover, #saveWatchlistBtn:hover, #saveWatchlistNameBtn:hover {
-    background-color: var(--button-hover-bg);
-    transform: translateY(-1px);
-}
-
-/* Secondary Buttons */
-.secondary-buttons {
-    background-color: var(--menu-button-bg);
-    color: var(--sidebar-text);
-    border: 1px solid var(--sidebar-border);
-}
-.secondary-buttons:hover {
-    background-color: var(--menu-button-hover-bg);
-    transform: translateY(-1px);
-}
-
-/* Danger Button */
-.danger-button {
-    background-color: var(--danger-color);
-    color: #fff;
-}
-.danger-button:hover {
-    background-color: #c82333;
-    transform: translateY(-1px);
-}
-
 /* Comments Section in Form */
+.comments-form-container {
+    margin-top: 20px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 15px;
+}
+
 .comments-form-container h3 {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 20px;
+    margin-top: 0;
     margin-bottom: 15px;
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 5px;
+    font-size: 1.2em;
     color: var(--text-color);
+    border-bottom: none; /* Remove extra border */
+    padding-bottom: 0;
 }
 
+/* Styling for the Add Comment Section Button */
 .add-section-btn {
-    background-color: var(--success-color);
-    color: #fff;
+    background-color: var(--button-bg);
+    color: var(--button-text);
     border: none;
     border-radius: 50%;
     width: 30px;
     height: 30px;
     font-size: 1.5em;
-    line-height: 1;
     display: flex;
-    align-items: center;
     justify-content: center;
+    align-items: center;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    flex-shrink: 0; /* Prevent shrinking */
 }
+
 .add-section-btn:hover {
-    background-color: #218838;
+    background-color: var(--button-hover-bg);
+    transform: translateY(-1px);
 }
 
 .comment-section {
-    background-color: var(--background-color); /* Lighter background for comment sections */
     border: 1px solid var(--border-color);
     border-radius: 8px;
-    padding: 10px 15px;
+    padding: 15px;
     margin-bottom: 15px;
+    background-color: var(--card-bg);
+    position: relative;
 }
 
 .comment-section-header {
     display: flex;
+    justify-content: space-between;
     align-items: center;
     margin-bottom: 10px;
-    gap: 10px;
 }
 
-.comment-title-input {
+.comment-section-header .comment-title-input {
     flex-grow: 1;
+    margin-bottom: 0; /* Remove bottom margin from input */
+    margin-right: 10px;
     font-weight: 600;
-    border: 1px solid var(--input-border);
-    border-radius: 6px;
-    padding: 8px;
-    background-color: var(--input-bg);
-    color: var(--text-color);
 }
 
-.comment-delete-btn {
+.comment-section .comment-delete-btn {
     background: none;
     border: none;
-    color: var(--danger-color);
+    color: var(--danger-button-bg);
     font-size: 1.5em;
     cursor: pointer;
-    padding: 0 5px;
-}
-.comment-delete-btn:hover {
-    color: #c82333;
-}
-
-.comment-text-input {
-    width: calc(100% - 20px); /* Adjust for padding */
-    min-height: 80px;
-    resize: vertical;
-    border: 1px solid var(--input-border);
-    border-radius: 6px;
-    padding: 10px;
-    background-color: var(--input-bg);
-    color: var(--text-color);
-    font-size: 0.95em;
+    transition: color 0.2s ease;
+    line-height: 1;
+    padding: 0;
+    flex-shrink: 0; /* Prevent shrinking */
 }
 
-/* Share Detail Modal Specifics */
+.comment-section .comment-delete-btn:hover {
+    color: var(--danger-button-hover-bg);
+}
+
+/* Textarea in comments - apply scrollbar only if content overflows */
+.comment-section textarea {
+    min-height: 80px; /* Minimum height for usability */
+    max-height: 150px; /* Max height before scrollbar appears */
+    overflow-y: auto; /* Enable vertical scrollbar when content overflows */
+    resize: vertical; /* Allow vertical resizing */
+}
+
+
+/* Styling for buttons in the Add/Edit Share modal (form-action-buttons) */
+.form-action-buttons,
+.modal-action-buttons,
+.custom-dialog-buttons { /* Added custom-dialog-buttons here */
+    display: flex;
+    flex-wrap: nowrap; /* Force no wrapping on desktop */
+    justify-content: center; /* Center the group of buttons */
+    gap: 10px;
+    margin-top: 25px;
+    flex-shrink: 0; /* Prevent these button groups from shrinking */
+    padding-top: 15px; /* Add padding above buttons to separate from scrollable content */
+    border-top: 1px solid var(--border-color); /* Add a subtle separator line */
+}
+
+.form-action-buttons button,
+.modal-action-buttons button,
+.custom-dialog-buttons button { /* Added custom-dialog-buttons button */
+    flex-grow: 1;
+    max-width: 180px; /* Default max-width for desktop */
+    padding: 12px 18px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.form-action-buttons #saveShareBtn,
+.modal-action-buttons #editShareFromDetailBtn,
+.form-action-buttons #saveWatchlistBtn, /* Added saveWatchlistBtn */
+.form-action-buttons #saveWatchlistNameBtn, /* Added saveWatchlistNameBtn */
+.custom-dialog-buttons #customDialogConfirmBtn { /* Added customDialogConfirmBtn */
+    background-color: var(--button-bg);
+    color: var(--button-text);
+}
+
+.form-action-buttons #saveShareBtn:hover,
+.modal-action-buttons #editShareFromDetailBtn:hover,
+.form-action-buttons #saveWatchlistBtn:hover, /* Added saveWatchlistBtn */
+.form-action-buttons #saveWatchlistNameBtn:hover, /* Added saveWatchlistNameBtn */
+.custom-dialog-buttons #customDialogConfirmBtn:hover { /* Added customDialogConfirmBtn */
+    background-color: var(--button-hover-bg);
+    transform: translateY(-1px);
+}
+
+.form-action-buttons .secondary-buttons, /* Use the class for consistency */
+.modal-action-buttons .secondary-buttons,
+.custom-dialog-buttons .secondary-buttons { /* Use the class for consistency */
+    background-color: var(--secondary-button-bg);
+    color: var(--button-text);
+}
+
+.form-action-buttons .secondary-buttons:hover,
+.modal-action-buttons .secondary-buttons:hover,
+.custom-dialog-buttons .secondary-buttons:hover {
+    background-color: var(--secondary-button-hover-bg);
+    transform: translateY(-1px);
+}
+
+.form-action-buttons .danger-button,
+.modal-action-buttons .danger-button,
+.custom-dialog-buttons .danger-button {
+    background-color: var(--danger-button-bg);
+    color: var(--button-text);
+}
+
+.form-action-buttons .danger-button:hover,
+.modal-action-buttons .danger-button:hover,
+.custom-dialog-buttons .danger-button:hover {
+    background-color: var(--danger-button-hover-bg);
+    transform: translateY(-1px);
+}
+
+/* Share Details Modal Styling */
 .modal-comments-sections {
-    margin-top: 20px;
+    margin-top: 25px;
     border-top: 1px solid var(--border-color);
     padding-top: 15px;
 }
+
 .modal-comments-sections h3 {
     margin-top: 0;
     margin-bottom: 10px;
-    color: var(--text-color);
     font-size: 1.2em;
-}
-.modal-comment-item {
-    background-color: var(--background-color);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 10px 15px;
-    margin-bottom: 10px;
-}
-.modal-comment-item:last-child {
-    margin-bottom: 0;
-}
-.modal-comment-item strong {
-    display: block;
-    margin-bottom: 5px;
     color: var(--text-color);
-}
-.modal-comment-item p {
-    margin: 0;
-    font-size: 0.95em;
-    color: var(--text-color);
+    border-bottom: none; /* Remove extra border */
+    padding-bottom: 0;
 }
 
+.modal-comment-item {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
+}
+
+.modal-comment-item p {
+    margin: 0;
+    line-height: 1.5;
+}
+
+.modal-comment-item strong {
+    color: var(--label-color);
+    font-size: 0.95em;
+    display: block;
+    margin-bottom: 5px;
+}
+
+/* External Links Section in Share Details Modal */
 .external-links-section {
-    margin-top: 20px;
+    margin-top: 25px;
     border-top: 1px solid var(--border-color);
     padding-top: 15px;
 }
+
 .external-links-section h3 {
     margin-top: 0;
     margin-bottom: 10px;
-    color: var(--text-color);
     font-size: 1.2em;
+    color: var(--text-color);
+    border-bottom: none; /* Remove extra border */
+    padding-bottom: 0;
 }
+
 .external-link {
-    color: var(--link-color);
-    text-decoration: none;
-    display: flex;
+    display: inline-flex; /* Use flex to align icon and text */
     align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
+    gap: 8px; /* Space between icon and text */
+    color: var(--button-bg); /* Use primary button color for links */
+    text-decoration: none;
+    font-weight: 600;
+    margin-bottom: 10px;
     transition: color 0.2s ease;
 }
+
 .external-link:hover {
-    color: var(--link-hover-color);
+    color: var(--button-hover-bg);
     text-decoration: underline;
 }
-.ghosted-text {
-    color: var(--ghosted-text);
-    font-size: 0.85em;
-    text-align: center;
-    margin-top: 10px;
-}
-.commsec-message {
-    font-style: italic;
-    font-size: 0.75em;
-}
 
-/* Calculator Modals */
+/* Dividend Calculator Modal */
 .calculator-modal-content {
-    max-width: 350px;
-    padding: 20px;
+    /* Specific styles if needed */
+}
+.calc-input-group {
+    margin-bottom: 15px;
 }
 
+.calc-input-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--label-color);
+    font-size: 0.95em;
+}
+
+.calc-input-group input[type="number"],
+.calc-input-group select {
+    width: calc(100% - 22px);
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid var(--input-border);
+    border-radius: 5px;
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    font-size: 1em;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http://www.w3.org/2000/svg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236c757d%22%20d%3D%22M287%2069.9a14.7%2014.7%200%200%200-20.8%200L146.2%20189.9%2026.3%2069.9a14.7%2014.7%200%200%200-20.8%2020.8L135.8%20216.7a14.7%2014.7%200%200%200%2020.8%200L287%2090.7a14.7%2014.7%200%200%200%200-20.8z%22%2F%3E%3C%2Fsvg%3E'); /* Custom arrow */
+    background-repeat: no-repeat;
+    background-position: right 12px top 50%;
+    background-size: 12px auto;
+    padding-right: 30px;
+}
+
+.calc-input-group input[type="number"]:focus,
+.calc-input-group select:focus {
+    border-color: var(--button-bg);
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+    outline: none;
+}
+
+.calculator-modal-content hr {
+    border: none;
+    border-top: 1px solid var(--border-color);
+    margin: 20px 0;
+}
+
+/* Standard Calculator Styling */
 .calculator-display {
     background-color: var(--input-bg);
     border: 1px solid var(--input-border);
@@ -878,16 +1480,22 @@ table tbody tr.selected td {
 }
 
 .calculator-input {
-    font-size: 0.9em;
-    color: var(--ghosted-text);
+    font-size: 1.2em;
+    color: var(--label-color);
     min-height: 20px;
+    white-space: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .calculator-result {
-    font-size: 2em;
-    font-weight: bold;
+    font-size: 2.2em;
+    font-weight: 700;
     color: var(--text-color);
     min-height: 30px;
+    white-space: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .calculator-buttons {
@@ -897,183 +1505,380 @@ table tbody tr.selected td {
 }
 
 .calc-btn {
-    background-color: var(--menu-button-bg);
-    color: var(--sidebar-text);
-    border: 1px solid var(--sidebar-border);
-    padding: 15px;
+    background-color: var(--button-bg);
+    color: var(--button-text);
+    border: none;
     border-radius: 8px;
-    font-size: 1.2em;
+    padding: 15px;
+    font-size: 1.5em;
+    font-weight: 600;
     cursor: pointer;
     transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
 .calc-btn:hover {
-    background-color: var(--menu-button-hover-bg);
+    background-color: var(--button-hover-bg);
     transform: translateY(-1px);
 }
 
-.calc-btn.operator {
-    background-color: var(--info-color);
-    color: #fff;
-}
-.calc-btn.operator:hover {
-    background-color: #138496;
-}
-
 .calc-btn.clear {
-    background-color: var(--danger-color);
-    color: #fff;
+    background-color: var(--danger-button-bg);
 }
 .calc-btn.clear:hover {
-    background-color: #c82333;
+    background-color: var(--danger-button-hover-bg);
+}
+
+.calc-btn.operator {
+    background-color: var(--secondary-button-bg);
+}
+.calc-btn.operator:hover {
+    background-color: var(--secondary-button-hover-bg);
 }
 
 .calc-btn.equals {
-    background-color: var(--success-color);
-    color: #fff;
-    grid-column: span 2; /* Make equals button wider */
+    background-color: #28a745;
 }
 .calc-btn.equals:hover {
     background-color: #218838;
 }
 
 .calc-btn.zero {
-    grid-column: span 2; /* Make zero button wider */
+    grid-column: span 2;
 }
 
-.calc-input-group {
-    margin-bottom: 15px;
-}
-.calc-input-group label {
-    margin-bottom: 5px;
-    font-size: 0.95em;
-}
 
-/* Custom Dialog */
-.custom-dialog-buttons {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    margin-top: 20px;
-}
-.custom-dialog-buttons button {
-    padding: 10px 20px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 1em;
-    transition: background-color 0.2s ease;
-}
+/* Custom Dialog Modal */
+/* Removed custom-dialog-buttons specific styling here as it's now grouped above */
 
-/* Loading Indicator */
-.loading {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-    font-size: 1.2em;
-    color: var(--text-color);
-}
 
-/* Error Message */
-.error-message {
-    background-color: #ffe0e0;
-    color: #d32f2f;
-    border: 1px solid #d32f2f;
-    border-radius: 8px;
-    padding: 15px;
-    margin: 20px auto;
-    max-width: 600px;
-    text-align: center;
-}
-.error-message p {
-    margin: 5px 0;
-}
-.error-message strong {
-    color: #b71c1c;
-}
-
-/* Scroll-to-Top Button */
+/* Scroll to Top Button */
 #scrollToTopBtn {
-    display: none; /* Hidden by default */
     position: fixed;
     bottom: 20px;
     right: 20px;
+    z-index: 900;
     background-color: var(--button-bg);
-    color: white;
+    color: var(--button-text);
     border: none;
-    border-radius: 50%;
+    border-radius: 50%; /* Circle shape */
     width: 50px;
     height: 50px;
-    font-size: 1.5em;
+    font-size: 1.8em; /* Slightly larger for a thicker arrow look */
     cursor: pointer;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-    transition: opacity 0.3s ease, background-color 0.2s ease;
-    z-index: 999;
-    opacity: 0; /* Start hidden for fade-in */
-    align-items: center;
-    justify-content: center;
+    box-shadow: 0 4px 8px var(--shadow-color);
+    transition: background-color 0.3s ease, transform 0.2s ease, opacity 0.3s ease;
+    
+    /* Centering the icon */
+    display: flex; /* Make it a flex container */
+    justify-content: center; /* Center horizontally */
+    align-items: center; /* Center vertically */
+    padding: 0; /* Remove default padding */
 }
 
 #scrollToTopBtn:hover {
     background-color: var(--button-hover-bg);
+    transform: translateY(-2px);
+}
+/* Ensure the Font Awesome icon itself is solid (fas) for a thicker appearance */
+#scrollToTopBtn .fas {
+    font-weight: 900; /* Force solid weight for Font Awesome icons */
 }
 
-/* Media Queries for Responsiveness */
-@media (min-width: 768px) {
-    header {
-        padding: 20px 25px;
+
+/* Loading Indicator */
+.loading {
+    text-align: center;
+    padding: 20px;
+    font-size: 1.2em;
+    color: var(--label-color);
+}
+
+/* Error Message for Firebase Init */
+.error-message {
+    background-color: #ffe0e0;
+    color: #cc0000;
+    border: 1px solid #cc0000;
+    padding: 15px;
+    margin: 20px auto;
+    border-radius: 8px;
+    max-width: 600px;
+    text-align: center;
+}
+.dark-theme .error-message {
+    background-color: #5a1a1a;
+    color: #ffcccc;
+    border-color: #ffcccc;
+}
+.error-message p {
+    margin: 0 0 10px 0;
+}
+.error-message p:last-child {
+    margin-bottom: 0;
+}
+
+
+/* --- Responsive Design / Media Queries --- */
+
+/* Mobile devices (portrait and landscape) and smaller tablets */
+@media (max-width: 768px) {
+    h1#mainTitle {
+        font-size: 1.5em; /* Smaller title on mobile */
+        flex-grow: 1;
+        white-space: normal; /* Allow text to wrap */
+        overflow: visible; /* Prevent truncation */
+        text-overflow: clip; /* Prevent ellipsis */
+        text-align: center; /* Center title on mobile */
+        padding-left: 50px; /* Space for hamburger button */
+        padding-right: 50px; /* Space for new add share button */
+        box-sizing: border-box;
+        line-height: 1.3; /* Allow more space for two lines */
     }
 
     .header-top-row {
-        margin-bottom: 20px;
+        justify-content: space-between;
+        width: 100%;
+        /* Ensure no horizontal overflow */
+        padding-left: 15px; /* Match main container padding */
+        padding-right: 15px; /* Match main container padding */
+    }
+
+    /* Hamburger button on mobile - position left */
+    .hamburger-btn {
+        display: block; /* Always display */
+        position: absolute;
+        left: 0; /* Position to the far left */
+        top: 50%;
+        transform: translateY(-50%);
+        padding: 5px 10px;
+    }
+
+    /* New: Header "Add Share" Button on mobile - position right */
+    #addShareHeaderBtn {
+        display: block; /* Always display */
+        position: absolute;
+        right: 0; /* Position to the far right */
+        top: 50%;
+        transform: translateY(-50%);
+        padding: 5px 10px;
+    }
+
+    /* Sidebar specific for mobile - full screen takeover */
+    .app-sidebar {
+        left: calc(-1 * var(--sidebar-width)); /* Hidden by default */
+        width: 100%; /* Take full width of screen */
+        max-width: var(--sidebar-width); /* Limit max width on larger mobiles if needed */
+        padding-top: 70px; /* Space for header in overlay */
+    }
+    .app-sidebar.open {
+        left: 0; /* Slide in */
+    }
+    /* Show close button on mobile sidebar */
+    .app-sidebar .close-menu-btn {
+        display: block;
+        top: 10px;
+        right: 15px;
+        font-size: 2em; /* Slightly smaller for mobile */
+    }
+    /* Overlay for mobile when sidebar is open */
+    .sidebar-overlay.open {
+        display: block;
+        background-color: rgba(0, 0, 0, 0.5); /* Keep semi-transparent for mobile */
+        pointer-events: auto; /* Ensure it blocks clicks on mobile */
+    }
+
+    /* Watchlist and Sort Controls on Mobile: Ensure they are on the same line */
+    .watchlist-controls-row {
+        flex-wrap: nowrap; /* Prevent wrapping */
+        overflow-x: auto; /* Allow horizontal scroll if content overflows */
+        justify-content: flex-start; /* Align to start if it overflows */
+        -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    }
+    .watchlist-group,
+    .sort-group {
+        flex-shrink: 0; /* Prevent items from shrinking */
+    }
+    .dropdown-large {
+        min-width: 120px; /* Smaller min-width for mobile dropdowns */
+        padding: 8px 12px; /* Smaller padding */
+        font-size: 0.9em; /* Smaller font */
+        padding-right: 25px; /* Adjust padding for smaller arrow */
+        background-size: 10px auto; /* Smaller arrow */
+    }
+
+
+    /* Mobile Cards: Prevent horizontal sliding */
+    .mobile-share-cards {
+        display: flex;
+        /* Ensure no horizontal shifting */
+        position: relative; /* Establish positioning context */
+        left: 0; /* Keep it fixed horizontally */
+        right: 0;
+        width: 100%; /* Ensure it takes full width */
+        box-sizing: border-box; /* Include padding in width */
+    }
+    /* Hide table on mobile */
+    table {
+        display: none;
+    }
+
+    /* Modals wider on mobile */
+    .modal-content {
+        width: 95%;
+        margin: 20px auto;
+        padding: 20px;
+    }
+    
+    /* Align "Cancel" and "Save" buttons on the same line for mobile */
+    .form-action-buttons,
+    .modal-action-buttons,
+    .custom-dialog-buttons { /* Added custom-dialog-buttons here */
+        display: flex; /* Ensure flex is applied */
+        flex-direction: row; /* Keep buttons in a row */
+        flex-wrap: nowrap; /* Force no wrapping on mobile as requested */
+        justify-content: space-around; /* Distribute space evenly */
+        gap: 5px; /* Reduce gap to fit more buttons */
+    }
+    .form-action-buttons button,
+    .modal-action-buttons button,
+    .custom-dialog-buttons button { /* Added custom-dialog-buttons button */
+        width: auto; /* Allow buttons to size naturally */
+        flex-grow: 1; /* Allow buttons to grow and fill space */
+        min-width: unset; /* Remove min-width restriction */
+        max-width: unset; /* Remove max-width restriction */
+        padding: 12px 8px; /* Adjust padding for smaller buttons */
+        font-size: 0.9em; /* Slightly smaller font for tighter fit */
+    }
+    /* Specific adjustment for the delete button if it's alone on a line */
+    .form-action-buttons #deleteShareFromFormBtn,
+    .form-action-buttons #deleteWatchlistInModalBtn { /* Added for new delete button */
+        width: auto; /* Ensure it follows the new layout */
+        max-width: unset; /* Remove max-width restriction for mobile */
+    }
+    
+    .comments-form-container .add-section-btn {
+        width: 35px;
+        height: 35px;
+        font-size: 1.8em;
+    }
+
+    /* Ensure scroll-to-top button is shown on mobile when scrolled (JS will manage visibility based on scroll) */
+    #scrollToTopBtn {
+        /* Adjust positioning to avoid overlap/sliding */
+        right: 10px; /* Move slightly closer to the edge */
+        bottom: 10px; /* Move slightly closer to the bottom */
+        display: flex; /* Always display initially, JS controls opacity/final display */
+    }
+
+    /* Mobile Sign-In Button Centering */
+    .google-auth-btn {
+        margin: 0 auto; /* Explicitly center */
+        left: unset; /* Remove any conflicting left positioning */
+        right: unset; /* Remove any conflicting transforms */
+        transform: none; /* Remove any conflicting transforms */
+    }
+}
+
+/* Desktop (min-width: 769px) */
+@media (min-width: 769px) {
+    header {
+        flex-direction: column; /* Stack rows vertically for desktop layout */
+        justify-content: flex-start;
+        align-items: center; /* Center items horizontally */
+        flex-wrap: nowrap;
+        padding-bottom: 0;
+        gap: 10px; /* Space between header rows */
+        height: auto; /* Allow height to adjust based on content */
+    }
+
+    .header-top-row {
+        width: 100%; /* Take full width to allow centering of title */
+        margin-bottom: 0;
+        justify-content: center; /* Center the title */
+        flex-grow: 0; /* Don't grow */
+        height: auto; /* Allow height to adjust */
+        position: relative; /* For hamburger button absolute positioning */
     }
 
     h1#mainTitle {
         font-size: 2.2em;
+        text-align: center; /* Center title within its space */
+        order: 1; /* Place after hamburger button visually */
+        margin-left: 0; /* No margin needed from hamburger */
+        flex-grow: 1; /* Allow title to take available space */
+        padding-left: 0;
+        padding-right: 0;
+        line-height: 1; /* Single line */
+        white-space: nowrap; /* Prevent wrapping */
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
-    .header-action-btn {
-        font-size: 1.8em;
-    }
-
-    /* Desktop Sidebar */
-    .app-sidebar {
-        position: static; /* No longer fixed */
-        width: 250px; /* Fixed width for desktop */
-        height: auto; /* Content height */
-        box-shadow: none;
-        border-right: 1px solid var(--sidebar-border);
-        padding: 0;
-        flex-shrink: 0; /* Don't shrink */
-        order: -1; /* Place it before main content */
-        transition: none; /* No transition on desktop */
-        display: flex;
-        flex-direction: column;
-        overflow-y: visible; /* No scrollbar needed for fixed width */
-    }
-
-    .app-sidebar.open {
-        left: 0; /* Keep it open */
-    }
-
-    .close-menu-btn,
+    /* Hamburger button on desktop - now on the left */
     .hamburger-btn {
-        display: none; /* Hide hamburger and close button on desktop */
+        position: absolute; /* Position absolutely within header-top-row */
+        left: 0; /* Position to the far left */
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 2em; /* Slightly larger for desktop visual weight */
+        padding: 5px 10px;
+        height: auto; /* Let content determine height */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        order: 0; /* Place first in header-top-row */
     }
 
-    body {
-        flex-direction: row; /* Arrange header, sidebar, main, footer in a row */
+    /* New: Header "Add Share" Button on desktop - now on the right */
+    #addShareHeaderBtn {
+        display: block; /* Always display */
+        position: absolute;
+        right: 0; /* Position to the far right */
+        top: 50%;
+        transform: translateY(-50%);
+        padding: 5px 10px;
     }
 
-    main.container {
-        margin-top: 0;
-        margin-left: 20px; /* Space from sidebar */
-        padding: 0 15px;
-        max-width: calc(100% - 250px - 40px); /* Adjust max-width based on sidebar */
+    /* App Sidebar specific for desktop - initially hidden, slides in/out */
+    .app-sidebar {
+        left: calc(-1 * var(--sidebar-width)); /* Start hidden on desktop too */
+        width: var(--sidebar-width); /* Fixed width */
+        box-shadow: 2px 0 5px var(--shadow-color); /* Add shadow for desktop sidebar */
+        border-right: 1px solid var(--sidebar-border);
+        position: fixed;
+        top: 0;
+        height: 100%;
+        padding-top: calc(70px + 20px); /* Space for fixed header (70px) + padding */
+        z-index: 998; /* Lower z-index than modals, but above main content */
+        /* Enable transition on desktop for toggle effect */
+        transition: left 0.3s ease-in-out; 
+    }
+    /* Show close button on desktop sidebar */
+    .app-sidebar .close-menu-btn {
+        display: block;
+        top: 10px;
+        right: 15px;
+        font-size: 1.5em; /* Reduced size for desktop */
+    }
+    /* Overlay for desktop when sidebar is open */
+    .sidebar-overlay.open {
+        display: block;
+        background-color: rgba(0, 0, 0, 0.1); /* More ghosted for desktop */
+        pointer-events: none; /* Allow clicks to pass through to main content */
     }
 
-    /* Desktop layout for watchlist and sort controls */
+    /* Shift main content & footer to the right when sidebar is open on desktop */
+    body.sidebar-active main.container {
+        margin-left: var(--sidebar-width);
+        width: calc(100% - var(--sidebar-width));
+    }
+    body.sidebar-active footer.fixed-footer {
+        margin-left: var(--sidebar-width);
+        width: calc(100% - var(--sidebar-width));
+    }
+
+    /* Watchlist and Sort controls on Desktop: Ensure they are on the same line and centralized */
     .watchlist-controls-row {
+        width: 100%; /* Take full width to allow centering */
         justify-content: center; /* Center the group */
         flex-direction: row; /* Ensure they are in a row */
         flex-wrap: nowrap; /* Prevent wrapping on desktop */
@@ -1121,11 +1926,10 @@ table tbody tr.selected td {
         font-size: 2.5em;
     }
     .container {
-        max-width: 1400px; /* Even wider container */
-        margin: 20px auto;
+        padding: 0 20px;
     }
-    main.container {
-        max-width: calc(100% - 250px - 60px); /* Adjust max-width based on sidebar */
-        margin-left: 30px;
+    /* Adjust sidebar padding for larger header (if header height changes significantly) */
+    .app-sidebar {
+        /* Re-evaluate if header height changes. E.g., calc(HEADER_HEIGHT_ON_DESKTOP + 20px) */
     }
 }
