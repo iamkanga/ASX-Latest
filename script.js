@@ -1518,6 +1518,13 @@ async function initializeAppLogic() {
     // --- Manage Watchlist Modal (Edit/Delete) Functions ---
     if (editWatchlistBtn) {
         editWatchlistBtn.addEventListener('click', () => {
+            // Ensure currentWatchlistId and currentWatchlistName are up-to-date from the select dropdown
+            currentWatchlistId = watchlistSelect.value;
+            const selectedWatchlistObj = userWatchlists.find(w => w.id === currentWatchlistId);
+            currentWatchlistName = selectedWatchlistObj ? selectedWatchlistObj.name : '';
+
+            console.log(`[Edit Watchlist Button Click] currentWatchlistId: ${currentWatchlistId}, currentWatchlistName: ${currentWatchlistName}`);
+
             if (!currentWatchlistId) {
                 showCustomAlert("Please select a watchlist to edit.");
                 return;
