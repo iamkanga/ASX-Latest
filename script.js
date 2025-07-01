@@ -1,5 +1,5 @@
-// File Version: v121
-// Last Updated: 2025-07-01 (Implemented reset modal scroll position on open)
+// File Version: v122
+// Last Updated: 2025-07-01 (Enabled Edit Watchlist button for single watchlist)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -44,7 +44,7 @@ const CUSTOM_THEMES = [
     'subtle-1', 'subtle-2', 'subtle-3', 'subtle-4', 'subtle-5', 'subtle-6', 'subtle-7', 'subtle-8', 'subtle-9', 'subtle-10'
 ];
 let currentCustomThemeIndex = -1; // To track the current theme in the cycle
-let currentActiveTheme = 'system-default'; // Tracks the currently applied theme string (e.g., 'dark', 'bold-1', 'system-default')
+let currentActiveTheme = 'system-default'; // Tracks the currently applied theme string (e.g., 'dark', 'bold', 'subtle', 'system-default')
 
 
 // --- UI Element References (Declared globally for access by all functions) ---
@@ -219,7 +219,7 @@ function updateMainButtonsState(enable) {
     if (dividendCalcBtn) dividendCalcBtn.disabled = !enable;
     if (watchlistSelect) watchlistSelect.disabled = !enable; 
     if (addWatchlistBtn) addWatchlistBtn.disabled = !enable;
-    // Enable editWatchlistBtn if there's at least one watchlist
+    // Fix: Enable editWatchlistBtn if there's at least one watchlist
     if (editWatchlistBtn) editWatchlistBtn.disabled = !enable || userWatchlists.length === 0; 
     if (deleteWatchlistInModalBtn) deleteWatchlistInModalBtn.disabled = !enable || userWatchlists.length <= 1;
     if (addShareHeaderBtn) addShareHeaderBtn.disabled = !enable;
@@ -1523,7 +1523,8 @@ async function initializeAppLogic() {
                 return;
             }
             editWatchlistNameInput.value = currentWatchlistName;
-            deleteWatchlistInModalBtn.disabled = userWatchlists.length <= 1;
+            // The delete button in the modal should still be disabled if it's the last watchlist
+            deleteWatchlistInModalBtn.disabled = userWatchlists.length <= 1; 
             showModal(manageWatchlistModal);
             editWatchlistNameInput.focus();
             toggleAppSidebar(false);
@@ -1813,7 +1814,7 @@ async function initializeAppLogic() {
 
 // --- DOMContentLoaded Event Listener (Main entry point) ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v121) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v122) DOMContentLoaded fired."); // Updated version number
 
     // Check if Firebase objects are available from the module script in index.html
     // If they are, proceed with setting up the auth state listener.
