@@ -1,5 +1,5 @@
-// File Version: v128
-// Last Updated: 2025-07-01 (Log Out Button Logic)
+// File Version: v129
+// Last Updated: 2025-07-01 (Fixes for + button, ghosted buttons, and icon button prep)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -23,7 +23,7 @@ const LONG_PRESS_THRESHOLD = 500; // Time in ms for long press detection
 let touchStartX = 0;
 let touchStartY = 0;
 const TOUCH_MOVE_THRESHOLD = 10; // Pixels for touch movement to cancel long press
-const KANGA_EMAIL = 'iamkanga@gmail.000';
+const KANGA_EMAIL = 'iamkanga@gmail.com'; // CORRECTED: Reverted to .com
 let currentCalculatorInput = '';
 let operator = null;
 let previousCalculatorInput = '';
@@ -58,7 +58,7 @@ const formCloseButton = document.querySelector('.form-close-button');
 const formTitle = document.getElementById('formTitle');
 const saveShareBtn = document.getElementById('saveShareBtn');
 const cancelFormBtn = document.getElementById('cancelFormBtn');
-const deleteShareIcon = document.getElementById('deleteShareIcon'); // Reference for the delete icon
+const deleteShareBtn = document.getElementById('deleteShareBtn'); // CORRECTED: Reference for the delete button
 const shareNameInput = document.getElementById('shareName');
 const currentPriceInput = document.getElementById('currentPrice');
 const targetPriceInput = document.getElementById('targetPrice');
@@ -181,8 +181,11 @@ function showCustomConfirm(message, onConfirm, onCancel = null) {
         return;
     }
     customDialogMessage.textContent = message;
+    // Ensure these buttons are always enabled in the confirm dialog
+    customDialogConfirmBtn.disabled = false; // Explicitly enable
     customDialogConfirmBtn.textContent = 'Yes';
     customDialogConfirmBtn.style.display = 'block';
+    customDialogCancelBtn.disabled = false; // Explicitly enable
     customDialogCancelBtn.textContent = 'No';
     customDialogCancelBtn.style.display = 'block';
     showModal(customDialogModal);
@@ -218,16 +221,22 @@ function updateAuthButtonText(isSignedIn, userName = 'Sign In') {
 }
 
 function updateMainButtonsState(enable) {
+    // Main header/sidebar buttons
     if (newShareBtn) newShareBtn.disabled = !enable;
     if (standardCalcBtn) standardCalcBtn.disabled = !enable;
     if (dividendCalcBtn) dividendCalcBtn.disabled = !enable;
     if (watchlistSelect) watchlistSelect.disabled = !enable; 
     if (addWatchlistBtn) addWatchlistBtn.disabled = !enable;
-    // Fix: Enable editWatchlistBtn if there's at least one watchlist
     if (editWatchlistBtn) editWatchlistBtn.disabled = !enable || userWatchlists.length === 0; 
-    if (deleteWatchlistInModalBtn) deleteWatchlistInModalBtn.disabled = !enable || userWatchlists.length <= 1;
     if (addShareHeaderBtn) addShareHeaderBtn.disabled = !enable;
-    if (logoutBtn) logoutBtn.disabled = !enable; // NEW: Disable logout button if not authenticated
+    if (logoutBtn) logoutBtn.disabled = !enable; 
+
+    // Specific modal buttons that should *always* be enabled if their modal is open and they are functional
+    // Their disabled state is managed by their specific conditions, not by overall auth state.
+    // For example, saveShareBtn is enabled if shareName is present.
+    // We explicitly *don't* set their disabled state here to avoid unintended "ghosting".
+    // The visual "ghosting" will be handled by CSS if the button truly has the `disabled` attribute.
+    // If a button is functional but *looks* disabled, the issue is likely CSS opacity or an incorrect `disabled` attribute being set elsewhere.
 }
 
 function showModal(modalElement) {
@@ -316,8 +325,12 @@ function clearForm() {
     commentsFormContainer.innerHTML = '';
     addCommentSection(); // Add one empty comment section by default
     selectedShareDocId = null;
-    if (deleteShareIcon) { // Hide delete icon when adding new share
-        deleteShareIcon.classList.add('hidden');
+    if (deleteShareBtn) { // Hide delete button when adding new share
+        deleteShareBtn.classList.add('hidden');
+    }
+    // Ensure saveShareBtn is enabled when opening for a new share
+    if (saveShareBtn) {
+        saveShareBtn.disabled = false;
     }
     console.log("[Form] Form fields cleared and selectedShareDocId reset.");
 }
@@ -352,8 +365,12 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
     } else {
         addCommentSection(); // Add one empty comment section if none exist
     }
-    if (deleteShareIcon) { // Show delete icon when editing
-        deleteShareIcon.classList.remove('hidden');
+    if (deleteShareBtn) { // Show delete button when editing
+        deleteShareBtn.classList.remove('hidden');
+    }
+    // Ensure saveShareBtn is enabled when opening for edit
+    if (saveShareBtn) {
+        saveShareBtn.disabled = false;
     }
     showModal(shareFormSection);
     shareNameInput.focus();
@@ -440,6 +457,11 @@ function showShareDetails() {
         commSecLoginMessage.style.display = 'block'; 
     }
 
+    // Ensure editShareFromDetailBtn is enabled when showing details
+    if (editShareFromDetailBtn) {
+        editShareFromDetailBtn.disabled = false;
+    }
+
     showModal(shareDetailModal);
     console.log(`[Details] Displayed details for share: ${share.shareName} (ID: ${selectedShareDocId})`);
 }
@@ -469,7 +491,7 @@ function sortShares() {
             if (nameA === '' && nameB === '') return 0;
             if (nameA === '') return order === 'asc' ? 1 : -1;
             if (nameB === '') return order === 'asc' ? -1 : 1;
-            return order === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(a);
+            return order === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
         } else if (field === 'entryDate') {
             const dateA = new Date(valA);
             const dateB = new Date(valB);
@@ -1050,7 +1072,7 @@ async function loadUserWatchlistsAndSettings() {
 
     try {
         console.log("[User Settings] Fetching user watchlists and profile settings...");
-        const querySnapshot = await window.firestore.getDocs(watchlistsColRef);
+        const querySnapshot = await window.firestore.getDocs(query(watchlistsColRef)); // Added query()
         querySnapshot.forEach(doc => { userWatchlists.push({ id: doc.id, name: doc.data().name }); });
         console.log(`[User Settings] Found ${userWatchlists.length} existing watchlists.`);
 
@@ -1383,14 +1405,14 @@ async function initializeAppLogic() {
                     // Check if it's the last input in the main form, then focus on comments or save
                     if (index === formInputs.length - 1) {
                         // Check if the add comment button is visible and not disabled (e.g., if comments section is hidden)
-                        if (addCommentSectionBtn && addCommentSectionBtn.offsetParent !== null) { 
+                        if (addCommentSectionBtn && addCommentSectionBtn.offsetParent !== null && !addCommentSectionBtn.disabled) { 
                             addCommentSectionBtn.click(); // Simulate click to add new comment section
                             // After adding, focus on the new comment's title input
                             const newCommentTitleInput = commentsFormContainer.lastElementChild?.querySelector('.comment-title-input');
                             if (newCommentTitleInput) {
                                 newCommentTitleInput.focus();
                             }
-                        } else if (saveShareBtn) { 
+                        } else if (saveShareBtn && !saveShareBtn.disabled) { 
                             saveShareBtn.click(); // If no more comment sections can be added, try to save
                         }
                     } else {
@@ -1463,7 +1485,7 @@ async function initializeAppLogic() {
         });
     }
 
-    // NEW: Logout button event listener
+    // Logout button event listener
     if (logoutBtn) {
         logoutBtn.addEventListener('click', async () => {
             console.log("[Auth] Logout Button Clicked.");
@@ -1514,7 +1536,7 @@ async function initializeAppLogic() {
         newShareBtn.addEventListener('click', () => {
             clearForm();
             formTitle.textContent = 'Add New Share';
-            if (deleteShareIcon) { deleteShareIcon.classList.add('hidden'); } // Hide delete icon
+            if (deleteShareBtn) { deleteShareBtn.classList.add('hidden'); } // Hide delete button
             showModal(shareFormSection);
             shareNameInput.focus();
             toggleAppSidebar(false); 
@@ -1525,7 +1547,7 @@ async function initializeAppLogic() {
         addShareHeaderBtn.addEventListener('click', () => {
             clearForm();
             formTitle.textContent = 'Add New Share';
-            if (deleteShareIcon) { deleteShareIcon.classList.add('hidden'); } // Hide delete icon
+            if (deleteShareBtn) { deleteShareBtn.classList.add('hidden'); } // Hide delete button
             showModal(shareFormSection);
             shareNameInput.focus();
         });
@@ -1604,9 +1626,9 @@ async function initializeAppLogic() {
         cancelFormBtn.addEventListener('click', () => { clearForm(); hideModal(shareFormSection); console.log("[Form] Form canceled."); });
     }
 
-    // Event listener for the new deleteShareIcon
-    if (deleteShareIcon) {
-        deleteShareIcon.addEventListener('click', () => {
+    // Event listener for the new deleteShareBtn
+    if (deleteShareBtn) {
+        deleteShareBtn.addEventListener('click', () => {
             if (selectedShareDocId) {
                 showCustomConfirm("Are you sure you want to delete this share? This action cannot be undone.", async () => {
                     try {
@@ -2027,7 +2049,7 @@ async function initializeAppLogic() {
 
 // --- DOMContentLoaded Event Listener (Main entry point) ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v128) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v129) DOMContentLoaded fired."); // Updated version number
 
     // Check if Firebase objects are available from the module script in index.html
     // If they are, proceed with setting up the auth state listener.

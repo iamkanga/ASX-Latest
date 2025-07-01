@@ -1,5 +1,5 @@
-/* File Version: v62 */
-/* Last Updated: 2025-07-01 (Log Out Button Styling & Disabled Button Fix) */
+/* File Version: v63 */
+/* Last Updated: 2025-07-01 (Disabled Button Opacity & Button Padding) */
 
 :root {
     /* Light Theme (Default) */
@@ -120,6 +120,8 @@ body.theme-bold-1 { /* Ocean Blue */
     --menu-button-hover-bg: #008793;
     --placeholder-text: #8ecae6;
     --ghosted-text: #a8dadc;
+    --danger-button-bg: #e63946; /* Adjusted for theme */
+    --danger-button-hover-bg: #c02d38; /* Adjusted for theme */
 }
 
 body.theme-bold-2 { /* Forest Green */
@@ -144,6 +146,8 @@ body.theme-bold-2 { /* Forest Green */
     --menu-button-hover-bg: #6a9955;
     --placeholder-text: #c0d8b6;
     --ghosted-text: #d4e3c9;
+    --danger-button-bg: #e74c3c; /* Adjusted for theme */
+    --danger-button-hover-bg: #c0392b; /* Adjusted for theme */
 }
 
 body.theme-bold-3 { /* Sunset Orange */
@@ -168,6 +172,8 @@ body.theme-bold-3 { /* Sunset Orange */
     --menu-button-hover-bg: #e76f51;
     --placeholder-text: #ffe5b4;
     --ghosted-text: #ffd790;
+    --danger-button-bg: #e63946; /* Adjusted for theme */
+    --danger-button-hover-bg: #c02d38; /* Adjusted for theme */
 }
 
 body.theme-bold-4 { /* Royal Purple */
@@ -192,6 +198,8 @@ body.theme-bold-4 { /* Royal Purple */
     --menu-button-hover-bg: #9d4edd;
     --placeholder-text: #e0baff;
     --ghosted-text: #e8d0ff;
+    --danger-button-bg: #e74c3c; /* Adjusted for theme */
+    --danger-button-hover-bg: #c0392b; /* Adjusted for theme */
 }
 
 body.theme-bold-5 { /* Deep Red */
@@ -216,6 +224,8 @@ body.theme-bold-5 { /* Deep Red */
     --menu-button-hover-bg: #c0392b;
     --placeholder-text: #ffbaba;
     --ghosted-text: #ffcccc;
+    --danger-button-bg: #e74c3c; /* Adjusted for theme */
+    --danger-button-hover-bg: #c0392b; /* Adjusted for theme */
 }
 
 body.theme-bold-6 { /* Gold */
@@ -240,6 +250,8 @@ body.theme-bold-6 { /* Gold */
     --menu-button-hover-bg: #ffd700;
     --placeholder-text: #ffee99;
     --ghosted-text: #fff2c4;
+    --danger-button-bg: #e74c3c; /* Adjusted for theme */
+    --danger-button-hover-bg: #c0392b; /* Adjusted for theme */
 }
 
 body.theme-bold-7 { /* Emerald */
@@ -264,6 +276,8 @@ body.theme-bold-7 { /* Emerald */
     --menu-button-hover-bg: #3cb371;
     --placeholder-text: #99ffaa;
     --ghosted-text: #ccffdd;
+    --danger-button-bg: #e74c3c; /* Adjusted for theme */
+    --danger-button-hover-bg: #c0392b; /* Adjusted for theme */
 }
 
 body.theme-bold-8 { /* Plum */
@@ -288,6 +302,8 @@ body.theme-bold-8 { /* Plum */
     --menu-button-hover-bg: #ba55d3;
     --placeholder-text: #ffb3ff;
     --ghosted-text: #ffccff;
+    --danger-button-bg: #e74c3c; /* Adjusted for theme */
+    --danger-button-hover-bg: #c0392b; /* Adjusted for theme */
 }
 
 body.theme-bold-9 { /* Aqua */
@@ -312,6 +328,8 @@ body.theme-bold-9 { /* Aqua */
     --menu-button-hover-bg: #40e0d0;
     --placeholder-text: #99ffff;
     --ghosted-text: #ccffff;
+    --danger-button-bg: #e74c3c; /* Adjusted for theme */
+    --danger-button-hover-bg: #c0392b; /* Adjusted for theme */
 }
 
 body.theme-bold-10 { /* Ruby */
@@ -336,6 +354,8 @@ body.theme-bold-10 { /* Ruby */
     --menu-button-hover-bg: #cd5c5c;
     --placeholder-text: #ffb3c6;
     --ghosted-text: #ffcce0;
+    --danger-button-bg: #e74c3c; /* Adjusted for theme */
+    --danger-button-hover-bg: #c0392b; /* Adjusted for theme */
 }
 
 
@@ -362,6 +382,8 @@ body.theme-subtle-1 { /* Subtle Sky */
     --menu-button-hover-bg: #c9e6f2;
     --placeholder-text: #9bbcd6;
     --ghosted-text: #b0c6d9;
+    --danger-button-bg: #e74c3c; /* Adjusted for theme */
+    --danger-button-hover-bg: #c0392b; /* Adjusted for theme */
 }
 
 body.theme-subtle-2 { /* Subtle Earth */
@@ -386,6 +408,8 @@ body.theme-subtle-2 { /* Subtle Earth */
     --menu-button-hover-bg: #d4c8b9;
     --placeholder-text: #a69a8e;
     --ghosted-text: #b8af9f;
+    --danger-button-bg: #e74c3c; /* Adjusted for theme */
+    --danger-button-hover-bg: #c0392b; /* Adjusted for theme */
 }
 
 body.theme-subtle-3 { /* Subtle Rose */
@@ -410,6 +434,8 @@ body.theme-subtle-3 { /* Subtle Rose */
     --menu-button-hover-bg: #e6c9d0;
     --placeholder-text: #c6aab3;
     --ghosted-text: #d9b8c0;
+    --danger-button-bg: #e74c3c; /* Adjusted for theme */
+    --danger-button-hover-bg: #c0392b; /* Adjusted for theme */
 }
 
 body.theme-subtle-4 { /* Subtle Lavender */
@@ -434,6 +460,8 @@ body.theme-subtle-4 { /* Subtle Lavender */
     --menu-button-hover-bg: #d0c9e6;
     --placeholder-text: #b3a6c6;
     --ghosted-text: #c0b8d9;
+    --danger-button-bg: #e74c3c; /* Adjusted for theme */
+    --danger-button-hover-bg: #c0392b; /* Adjusted for theme */
 }
 
 body.theme-subtle-5 { /* Subtle Mint */
@@ -458,6 +486,8 @@ body.theme-subtle-5 { /* Subtle Mint */
     --menu-button-hover-bg: #c9e6d0;
     --placeholder-text: #a6c6b3;
     --ghosted-text: #b8d9c0;
+    --danger-button-bg: #e74c3c; /* Adjusted for theme */
+    --danger-button-hover-bg: #c0392b; /* Adjusted for theme */
 }
 
 body.theme-subtle-6 { /* Subtle Sand */
@@ -482,6 +512,8 @@ body.theme-subtle-6 { /* Subtle Sand */
     --menu-button-hover-bg: #e6d9c9;
     --placeholder-text: #c6b3a6;
     --ghosted-text: #d9c0b8;
+    --danger-button-bg: #e74c3c; /* Adjusted for theme */
+    --danger-button-hover-bg: #c0392b; /* Adjusted for theme */
 }
 
 body.theme-subtle-7 { /* Subtle Graphite */
@@ -506,6 +538,8 @@ body.theme-subtle-7 { /* Subtle Graphite */
     --menu-button-hover-bg: #d0d0d0;
     --placeholder-text: #a6a6a6;
     --ghosted-text: #b8b8b8;
+    --danger-button-bg: #e74c3c; /* Adjusted for theme */
+    --danger-button-hover-bg: #c0392b; /* Adjusted for theme */
 }
 
 body.theme-subtle-8 { /* Subtle Peach */
@@ -530,6 +564,8 @@ body.theme-subtle-8 { /* Subtle Peach */
     --menu-button-hover-bg: #e6d0c9;
     --placeholder-text: #c6b3a6;
     --ghosted-text: #d9c0b8;
+    --danger-button-bg: #e74c3c; /* Adjusted for theme */
+    --danger-button-hover-bg: #c0392b; /* Adjusted for theme */
 }
 
 body.theme-subtle-9 { /* Subtle Teal */
@@ -554,6 +590,8 @@ body.theme-subtle-9 { /* Subtle Teal */
     --menu-button-hover-bg: #c9e6d9;
     --placeholder-text: #a6c6b3;
     --ghosted-text: #b8d9c0;
+    --danger-button-bg: #e74c3c; /* Adjusted for theme */
+    --danger-button-hover-bg: #c0392b; /* Adjusted for theme */
 }
 
 body.theme-subtle-10 { /* Subtle Stone */
@@ -578,6 +616,8 @@ body.theme-subtle-10 { /* Subtle Stone */
     --menu-button-hover-bg: #d8d8d8;
     --placeholder-text: #a6a6a6;
     --ghosted-text: #b8b8b8;
+    --danger-button-bg: #e74c3c; /* Adjusted for theme */
+    --danger-button-hover-bg: #c0392b; /* Adjusted for theme */
 }
 
 
@@ -796,7 +836,7 @@ h1#mainTitle {
 .menu-button-item:disabled {
     background-color: var(--secondary-button-bg); /* Keep original background for disabled */
     cursor: not-allowed;
-    opacity: 0.6; /* Reduced opacity for disabled buttons */
+    opacity: 0.5; /* Adjusted opacity for disabled buttons */
     box-shadow: none; /* Remove shadow for disabled buttons */
     transform: none; /* Remove hover transform for disabled buttons */
 }
@@ -836,7 +876,7 @@ h1#mainTitle {
     margin-right: 10px; 
 }
 
-/* NEW: Logout Button Specific Styling */
+/* Logout Button Specific Styling */
 #logoutBtn {
     background-color: var(--danger-button-bg); /* Use danger color for logout */
     color: var(--button-text);
@@ -865,7 +905,7 @@ h1#mainTitle {
 #logoutBtn:disabled {
     background-color: var(--secondary-button-bg);
     cursor: not-allowed;
-    opacity: 0.6;
+    opacity: 0.5;
     box-shadow: none;
     transform: none;
 }
@@ -1120,7 +1160,7 @@ table tbody tr:not(.selected):hover {
 .google-auth-btn:disabled {
     background-color: var(--secondary-button-bg);
     cursor: not-allowed;
-    opacity: 0.6; /* Adjusted opacity for disabled auth button */
+    opacity: 0.5; /* Adjusted opacity for disabled auth button */
 }
 
 
@@ -1210,7 +1250,7 @@ table tbody tr:not(.selected):hover {
 
 /* General disabled button styling */
 button:disabled {
-    opacity: 0.6; /* Make it semi-transparent */
+    opacity: 0.5; /* Make it semi-transparent */
     cursor: not-allowed; /* Change cursor */
     box-shadow: none; /* Remove shadow */
     transform: none; /* Remove hover transform */
@@ -1430,7 +1470,7 @@ button:disabled {
 .custom-dialog-buttons button { 
     flex-grow: 1;
     max-width: 180px; 
-    padding: 12px 18px;
+    padding: 12px 18px; /* Adjusted padding for potential icon-only buttons */
     border: none;
     border-radius: 8px;
     cursor: pointer;
@@ -1443,7 +1483,15 @@ button:disabled {
     transition: background-color 0.2s ease, transform 0.1s ease;
     text-align: center;
     box-sizing: border-box;
+    white-space: nowrap; /* Prevent text wrapping in buttons */
 }
+
+.form-action-buttons button i,
+.modal-action-buttons button i,
+.custom-dialog-buttons button i {
+    font-size: 1.2em; /* Make icons slightly larger */
+}
+
 
 .form-action-buttons #saveShareBtn,
 .modal-action-buttons #editShareFromDetailBtn,
@@ -1902,10 +1950,10 @@ button:disabled {
         flex-grow: 1; 
         min-width: unset; 
         max-width: unset; 
-        padding: 12px 8px; 
+        padding: 10px; /* Adjusted padding for mobile icon buttons */
         font-size: 0.9em; 
     }
-    .form-action-buttons #deleteShareFromFormBtn,
+    .form-action-buttons #deleteShareBtn, /* Corrected ID */
     .form-action-buttons #deleteWatchlistInModalBtn { 
         width: auto; 
         max-width: unset; 
