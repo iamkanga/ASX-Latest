@@ -1,5 +1,5 @@
-/* File Version: v66 */
-/* Last Updated: 2025-07-01 (Logout Theming & Calculator Button Colors) */
+/* File Version: v67 */
+/* Last Updated: 2025-07-01 (Logout Button & Calculator Layout Fix) */
 
 :root {
     /* Light Theme (Default) */
@@ -999,6 +999,8 @@ h1#mainTitle {
     background-color: var(--danger-button-bg); /* Explicitly use danger-button-bg */
     color: var(--button-text); /* Explicitly use button-text */
     margin-top: auto; /* Push to the bottom of the sidebar */
+    border: none; /* Ensure no border */
+    box-shadow: none; /* Ensure no box shadow */
 }
 #logoutBtn.menu-button-item:hover {
     background-color: var(--danger-button-hover-bg);
@@ -1780,7 +1782,7 @@ table tbody tr:not(.selected):hover {
 
 .calculator-buttons {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, 1fr); /* 4 columns for numbers and operators */
     gap: 10px;
 }
 
@@ -1805,6 +1807,7 @@ table tbody tr:not(.selected):hover {
 .calc-btn.clear {
     background-color: var(--danger-button-bg);
     color: var(--button-text);
+    grid-column: span 2; /* C and % take 2 columns together */
 }
 .calc-btn.clear:hover {
     background-color: var(--danger-button-hover-bg);
@@ -1821,6 +1824,7 @@ table tbody tr:not(.selected):hover {
 .calc-btn.equals {
     background-color: var(--success-color); /* Use success color for equals */
     color: var(--button-text);
+    grid-column: span 2; /* Equals takes 2 columns */
 }
 .calc-btn.equals:hover {
     background-color: #218838; /* Darker green for hover */
@@ -1829,6 +1833,11 @@ table tbody tr:not(.selected):hover {
 .calc-btn.zero {
     grid-column: span 2;
 }
+
+/* Remove explicit grid-row/column for individual number and operator buttons.
+   They will now flow naturally based on HTML order and grid-template-columns. */
+/* The HTML order in index.html v73 is: C, %, ÷, 7, 8, 9, ×, 4, 5, 6, -, 1, 2, 3, +, 0, ., = */
+/* This ensures 3 numbers per row and operators on the right. */
 
 
 #scrollToTopBtn {
