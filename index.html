@@ -8,7 +8,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍆</text></svg>">
 
     <!-- Linking to your separate style.css file -->
-    <link rel="stylesheet" href="style.css?v=71"> <!-- Will be updated to v71 in next step -->
+    <link rel="stylesheet" href="style.css?v=72"> <!-- Will be updated to v72 in next step -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -27,127 +27,15 @@
             </button>
         </div>
 
-        <!-- Search Input Field - NEW -->
-        <div class="search-input-container">
-            <input type="text" id="shareSearchInput" placeholder="Search shares by code or comments..." class="text-input-large">
-            <i class="fas fa-search search-icon"></i>
-            <button id="clearSearchBtn" class="clear-search-btn"><i class="fas fa-times-circle"></i></button>
-        </div>
-
-        <!-- Mobile Menu / Desktop Sidebar Content -->
-        <nav id="appSidebar" class="app-sidebar">
-            <button id="closeMenuBtn" class="close-menu-btn">X</button>
-            
-            <div class="menu-section">
-                <h3>Share Actions</h3>
-                <div class="menu-buttons-group">
-                    <!-- Add New Share - Icon with Text -->
-                    <button id="newShareBtn" class="menu-button-item" data-action-closes-menu="true">
-                        <i class="fas fa-plus-circle"></i> <span>Add New Share</span>
-                    </button>
-                </div>
-            </div>
-
-            <div class="menu-section">
-                <h3>Watchlists</h3>
-                <div class="menu-buttons-group">
-                    <!-- Add Watchlist - Icon with Text -->
-                    <button id="addWatchlistBtn" class="menu-button-item" data-action-closes-menu="true">
-                        <i class="fas fa-list-ul"></i> <span>Add Watchlist</span>
-                    </button>
-                    <!-- Edit Current Watchlist - Icon with Text -->
-                    <button id="editWatchlistBtn" class="menu-button-item" data-action-closes-menu="true">
-                        <i class="fas fa-edit"></i> <span>Edit Current Watchlist</span>
-                    </button>
-                </div>
-            </div>
-
-            <div class="menu-section">
-                <h3>Calculators</h3>
-                <div class="menu-buttons-group">
-                    <!-- Standard Calculator - Icon with Text -->
-                    <button id="standardCalcBtn" class="menu-button-item" data-action-closes-menu="true">
-                        <i class="fas fa-calculator"></i> <span>Standard</span>
-                    </button>
-                    <!-- Dividend Calculator - Icon with Text -->
-                    <button id="dividendCalcBtn" class="menu-button-item" data-action-closes-menu="true">
-                        <i class="fas fa-money-bill-wave"></i> <span>Dividend</span>
-                    </button>
-                </div>
-            </div>
-
-            <div class="menu-section">
-                <h3>Data Actions</h3>
-                <div class="menu-buttons-group">
-                    <!-- Export Watchlist Button - NEW -->
-                    <button id="exportWatchlistBtn" class="menu-button-item" data-action-closes-menu="true">
-                        <i class="fas fa-file-export"></i> <span>Export Watchlist (CSV)</span>
-                    </button>
-                </div>
-            </div>
-
-            <div class="menu-section">
-                <h3>Theme</h3>
-                <div class="menu-buttons-group">
-                    <!-- Theme Toggle Button - Icon with Text -->
-                    <button id="themeToggleBtn" class="menu-button-item" data-action-closes-menu="false">
-                        <i class="fas fa-palette"></i> <span>Theme</span>
-                    </button>
-                    
-                    <!-- New Theme Selector Dropdown -->
-                    <label for="colorThemeSelect" class="theme-select-label">Choose Color Theme:</label>
-                    <select id="colorThemeSelect" class="dropdown-large menu-dropdown" data-action-closes-menu="false">
-                        <option value="none" selected>No Custom Theme</option>
-                        <optgroup label="Bold Themes">
-                            <option value="bold-1">Bold Ocean</option>
-                            <option value="bold-2">Bold Forest</option>
-                            <option value="bold-3">Bold Sunset</option>
-                            <option value="bold-4">Bold Royal</option>
-                            <option value="bold-5">Bold Grape</option>
-                            <option value="bold-6">Bold Fire</option>
-                            <option value="bold-7">Bold Emerald</option>
-                            <option value="bold-8">Bold Plum</option>
-                            <option value="bold-9">Bold Aqua</option>
-                            <option value="bold-10">Bold Ruby</option>
-                        </optgroup>
-                        <optgroup label="Subtle Themes">
-                            <option value="subtle-1">Subtle Sky</option>
-                            <option value="subtle-2">Subtle Earth</option>
-                            <option value="subtle-3">Subtle Rose</option>
-                            <option value="subtle-4">Subtle Lavender</option>
-                            <option value="subtle-5">Subtle Mint</option>
-                            <option value="subtle-6">Subtle Sand</option>
-                            <option value="subtle-7">Subtle Graphite</option>
-                            <option value="subtle-8">Subtle Peach</option>
-                            <option value="subtle-9">Subtle Teal</option>
-                            <option value="subtle-10">Subtle Stone</option>
-                        </optgroup>
-                    </select>
-
-                    <!-- Revert to Default Theme Button - Icon with Text -->
-                    <button id="revertToDefaultThemeBtn" class="menu-button-item secondary-buttons" data-action-closes-menu="false">
-                        <i class="fas fa-sun"></i><i class="fas fa-moon"></i> <span>Default Theme</span>
-                    </button>
-                </div>
-            </div>
-            
-            <!-- Logout Button Section - Icon with Text -->
-            <div class="menu-section logout-section">
-                <h3>Account</h3>
-                <div class="menu-buttons-group">
-                    <!-- Changed to span for standalone icon behavior -->
-                    <span id="logoutBtn" class="menu-button-item danger-button" data-action-closes-menu="true">
-                        <i class="fas fa-sign-out-alt"></i> <span>Log Out</span>
-                    </span>
-                </div>
-            </div>
-        </nav>
-
-        <!-- Sidebar overlay for desktop to handle clicks outside -->
-        <div id="sidebarOverlay" class="sidebar-overlay"></div>
-
-        <!-- Watchlist and Sort controls -->
+        <!-- Watchlist, Sort, and Search controls -->
         <div class="watchlist-controls-row">
+            <!-- Search Input Field - MOVED HERE -->
+            <div class="search-input-container">
+                <input type="text" id="shareSearchInput" placeholder="Search shares by code or comments..." class="text-input-large">
+                <i class="fas fa-search search-icon"></i>
+                <button id="clearSearchBtn" class="clear-search-btn"><i class="fas fa-times-circle"></i></button>
+            </div>
+
             <div class="watchlist-group">
                 <select id="watchlistSelect" class="dropdown-large">
                     <!-- Options populated by JS, including 'Watchlist' placeholder -->
@@ -501,10 +389,10 @@
         } : null;
 
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log("index.html (v75) script module loaded and DOMContentLoaded fired."); // Updated version number
+            console.log("index.html (v76) script module loaded and DOMContentLoaded fired."); // Updated version number
         }); 
     </script>
     <!-- Linking to your separate script.js file -->
-    <script src="script.js?v=136"></script> <!-- Will be updated to v136 in next step -->
+    <script src="script.js?v=137"></script> <!-- Will be updated to v137 in next step -->
 </body>
 </html>

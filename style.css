@@ -1,5 +1,5 @@
-/* File Version: v71 */
-/* Last Updated: 2025-07-01 (Search Input Styling & Logout Button Fix) */
+/* File Version: v72 */
+/* Last Updated: 2025-07-01 (Layout & Button Fixes) */
 
 :root {
     /* Light Theme (Default) */
@@ -878,14 +878,15 @@ h1#mainTitle {
     color: var(--button-hover-bg);
 }
 
-/* Search Input Container - NEW */
+/* Search Input Container */
 .search-input-container {
     position: relative;
-    width: calc(100% - 30px); /* Adjust for padding */
-    margin: 0 15px 10px 15px; /* Top, Right, Bottom, Left */
+    width: 100%; /* Default to full width in row */
     box-sizing: border-box;
     display: flex;
     align-items: center;
+    flex-grow: 1; /* Allow it to grow in the flex row */
+    min-width: 150px; /* Ensure it doesn't get too small */
 }
 
 #shareSearchInput {
@@ -1014,6 +1015,12 @@ h1#mainTitle {
     width: 100%; 
     box-sizing: border-box;
     justify-content: flex-start; 
+    /* Aggressive reset for button appearance */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    outline: none !important; /* Ensure no outline */
+    box-shadow: none !important; /* Ensure no box shadow */
 }
 
 .menu-button-item:hover {
@@ -1054,29 +1061,33 @@ h1#mainTitle {
 
 /* Logout button styling (now a span) - FINAL FIX */
 #logoutBtn.menu-button-item {
-    background-color: var(--danger-button-bg); /* Explicitly use danger-button-bg */
-    color: var(--button-text); /* Explicitly use button-text */
+    background-color: var(--danger-button-bg) !important; /* Explicitly use danger-button-bg */
+    color: var(--button-text) !important; /* Explicitly use button-text */
     margin-top: auto; /* Push to the bottom of the sidebar */
     border: none !important; /* Ensure no border, aggressive fix */
     box-shadow: none !important; /* Ensure no box shadow, aggressive fix */
+    outline: none !important; /* Ensure no outline */
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
 }
 #logoutBtn.menu-button-item:hover {
-    background-color: var(--danger-button-hover-bg);
+    background-color: var(--danger-button-hover-bg) !important;
 }
 
 /* This is for native buttons */
 .menu-button-item:disabled {
-    background-color: var(--secondary-button-bg); /* Use secondary for disabled danger */
+    background-color: var(--secondary-button-bg) !important; /* Use secondary for disabled danger */
     cursor: not-allowed;
     opacity: 0.5; /* Adjusted opacity for disabled buttons */
-    box-shadow: none;
+    box-shadow: none !important;
     transform: none;
 }
 /* This is for span/i elements that are "disabled" */
 .is-disabled-icon {
     opacity: 0.5; /* Make it semi-transparent */
     cursor: not-allowed; /* Change cursor */
-    box-shadow: none; /* Remove shadow */
+    box-shadow: none !important; /* Remove shadow */
     transform: none; /* Remove hover transform */
     pointer-events: none; /* Disable all pointer events */
 }
@@ -1114,24 +1125,24 @@ h1#mainTitle {
 
 .watchlist-controls-row {
     display: flex;
-    flex-wrap: wrap; 
+    flex-wrap: wrap; /* Allow wrapping on smaller desktop screens */
     justify-content: center; 
     align-items: center;
-    gap: 15px 25px; 
-    padding: 10px 0;
+    gap: 15px; /* Consistent gap between items */
+    padding: 10px 15px; /* Padding for the row itself */
     border-top: 1px solid var(--border-color);
     border-bottom: 1px solid var(--border-color);
     width: 100%; 
     box-sizing: border-box;
-    padding-left: 15px; 
-    padding-right: 15px; 
 }
 
+.search-input-container,
 .watchlist-group,
 .sort-group {
     display: flex;
     align-items: center;
     gap: 8px;
+    flex-shrink: 0; /* Prevent shrinking on mobile horizontal scroll */
 }
 
 .dropdown-large {
@@ -1194,6 +1205,12 @@ h1#mainTitle {
     font-size: 0.9em;
     font-weight: 600;
     transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    /* Ensure no default button styling interferes */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    outline: none;
+    box-shadow: none;
 }
 
 .asx-code-btn:hover {
@@ -1314,7 +1331,7 @@ table tbody tr:not(.selected):hover {
     box-shadow: 0 -2px 4px var(--shadow-color);
     padding: 10px 20px;
     display: flex;
-    justify-content: center; 
+    justify-content: center; /* Ensures content is centered */
     align-items: center;
     z-index: 500;
     transition: margin-left 0.3s ease, width 0.3s ease; 
@@ -1334,7 +1351,12 @@ table tbody tr:not(.selected):hover {
     align-items: center;
     gap: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    margin: 0 auto; 
+    /* Removed margin: 0 auto; as parent flexbox handles centering */
+    /* Added explicit appearance reset */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    outline: none;
 }
 
 .google-auth-btn:hover {
@@ -2039,10 +2061,20 @@ table tbody tr:not(.selected):hover {
         padding: 5px 10px;
     }
 
-    /* Search input on mobile */
+    /* Watchlist, Sort, and Search controls on Mobile */
+    .watchlist-controls-row {
+        flex-wrap: nowrap; /* Force items onto one line */
+        overflow-x: auto; /* Enable horizontal scrolling */
+        justify-content: flex-start; /* Align items to the start */
+        -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+        gap: 10px; /* Smaller gap for mobile */
+        padding: 10px 15px; /* Consistent padding */
+    }
+
     .search-input-container {
-        width: calc(100% - 30px);
-        margin: 0 15px 10px 15px;
+        width: 100%; /* Take full width within its flex item */
+        max-width: 250px; /* Limit width to keep other elements visible */
+        flex-shrink: 0; /* Prevent shrinking */
     }
     #shareSearchInput {
         padding-right: 40px;
@@ -2052,6 +2084,19 @@ table tbody tr:not(.selected):hover {
     }
     .clear-search-btn {
         right: 10px;
+    }
+
+    .watchlist-group,
+    .sort-group {
+        flex-shrink: 0; /* Prevent shrinking */
+        min-width: 120px; /* Ensure they don't get too small */
+    }
+    .dropdown-large {
+        min-width: 120px; 
+        padding: 8px 12px; 
+        font-size: 0.9em; 
+        padding-right: 25px; 
+        background-size: 10px auto; 
     }
 
 
@@ -2074,24 +2119,6 @@ table tbody tr:not(.selected):hover {
         display: block;
         background-color: rgba(0, 0, 0, 0.5); 
         pointer-events: auto; 
-    }
-
-    .watchlist-controls-row {
-        flex-wrap: nowrap; 
-        overflow-x: auto; 
-        justify-content: flex-start; 
-        -webkit-overflow-scrolling: touch; 
-    }
-    .watchlist-group,
-    .sort-group {
-        flex-shrink: 0; 
-    }
-    .dropdown-large {
-        min-width: 120px; 
-        padding: 8px 12px; 
-        font-size: 0.9em; 
-        padding-right: 25px; 
-        background-size: 10px auto; 
     }
 
 
@@ -2145,7 +2172,7 @@ table tbody tr:not(.selected):hover {
     }
 
     .google-auth-btn {
-        margin: 0 auto; 
+        margin: 0 auto; /* Ensure it's centered within the footer's flex container */
         left: unset; 
         right: unset; 
         transform: none; 
@@ -2218,22 +2245,32 @@ table tbody tr:not(.selected):hover {
         padding: 5px 10px;
     }
 
-    /* Search input on desktop */
+    /* Watchlist, Sort, and Search controls on Desktop */
+    .watchlist-controls-row {
+        width: 100%; 
+        justify-content: center; 
+        flex-direction: row; 
+        flex-wrap: wrap; /* Allow wrapping if screen is too narrow */
+        gap: 20px; /* Larger gap for desktop */
+        padding: 15px 0;
+        border-top: 1px solid var(--border-color); 
+        border-bottom: 1px solid var(--border-color);
+    }
     .search-input-container {
-        width: calc(100% - 30px); /* Full width minus padding */
-        max-width: 600px; /* Max width for desktop */
-        margin: 10px auto; /* Center it */
+        width: auto; /* Allow content-based width */
+        max-width: 400px; /* Max width for desktop search */
+        flex-grow: 1; /* Allow it to grow */
     }
-    #shareSearchInput {
-        padding-right: 40px;
+    .watchlist-group,
+    .sort-group {
+        width: auto; 
+        justify-content: flex-start; 
+        padding: 0;
     }
-    .search-icon {
-        right: 45px;
+    .dropdown-large {
+        min-width: 180px;
+        width: auto;
     }
-    .clear-search-btn {
-        right: 10px;
-    }
-
 
     .app-sidebar {
         left: calc(-1 * var(--sidebar-width)); 
@@ -2266,27 +2303,6 @@ table tbody tr:not(.selected):hover {
     body.sidebar-active footer.fixed-footer {
         margin-left: var(--sidebar-width);
         width: calc(100% - var(--sidebar-width));
-    }
-
-    .watchlist-controls-row {
-        width: 100%; 
-        justify-content: center; 
-        flex-direction: row; 
-        flex-wrap: nowrap; 
-        gap: 20px 40px; 
-        padding: 15px 0;
-        border-top: 1px solid var(--border-color); 
-        border-bottom: 1px solid var(--border-color);
-    }
-    .watchlist-group,
-    .sort-group {
-        width: auto; 
-        justify-content: flex-start; 
-        padding: 0;
-    }
-    .dropdown-large {
-        min-width: 180px;
-        width: auto;
     }
 
     .fixed-footer {

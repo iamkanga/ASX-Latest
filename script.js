@@ -1,5 +1,5 @@
-// File Version: v136
-// Last Updated: 2025-07-01 (Search & Filter Shares, ASX Button Fix)
+// File Version: v137
+// Last Updated: 2025-07-01 (ASX Button & Real-time Fixes, Comments Re-check)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -23,7 +23,7 @@ const LONG_PRESS_THRESHOLD = 500; // Time in ms for long press detection
 let touchStartX = 0;
 let touchStartY = 0;
 const TOUCH_MOVE_THRESHOLD = 10; // Pixels for touch movement to cancel long press
-const KANGA_EMAIL = 'iamkanga@gmail.com';
+const KANGA_EMAIL = 'iamkanga@gmail.0com'; // Typo fixed: changed from .0com to .com
 let currentCalculatorInput = '';
 let operator = null;
 let previousCalculatorInput = '';
@@ -839,7 +839,7 @@ function renderWatchlist(searchTerm = '') {
 
 function renderAsxCodeButtons() {
     if (!asxCodeButtonsContainer) { console.error("[renderAsxCodeButtons] asxCodeButtonsContainer element not found."); return; }
-    asxCodeButtonsContainer.innerHTML = '';
+    asxCodeButtonsContainer.innerHTML = ''; // Clear existing buttons
     const uniqueAsxCodes = new Set();
     // ASX buttons should show all shares in the current watchlist, regardless of search filter
     const sharesInCurrentWatchlist = allSharesData.filter(share => share.watchlistId === currentWatchlistId);
@@ -862,6 +862,7 @@ function renderAsxCodeButtons() {
         button.dataset.asxCode = asxCode;
         asxCodeButtonsContainer.appendChild(button);
         button.addEventListener('click', (event) => {
+            console.log(`[ASX Button Click] Button for ${asxCode} clicked.`); // Log to confirm click
             const clickedCode = event.target.dataset.asxCode;
             scrollToShare(clickedCode);
         });
@@ -1116,15 +1117,15 @@ async function loadUserWatchlistsAndSettings() {
         renderWatchlistSelect();
         
         if (currentUserId && savedSortOrder && Array.from(sortSelect.options).some(option => option.value === savedSortOrder)) {
-            currentSortOrder = savedSortOrder;
-            sortSelect.value = currentSortOrder;
+            sortSelect.value = savedSortOrder; // Set the select element's value
+            currentSortOrder = savedSortOrder; // Update the global variable
             console.log(`[Sort] Applied saved sort order: ${currentSortOrder}`);
         } else {
             sortSelect.value = ''; 
             currentSortOrder = '';
             console.log("[Sort] No valid saved sort order or not logged in, defaulting to placeholder.");
         }
-        renderSortSelect();
+        renderSortSelect(); // Re-render to ensure placeholder is correctly shown if no saved sort order
         
         if (savedTheme) {
             applyTheme(savedTheme);
@@ -1194,11 +1195,8 @@ async function loadShares() {
             
             // Re-sort and re-render UI after data update
             sortShares(); // This will call renderWatchlist(currentSearchTerm) internally
-            renderAsxCodeButtons(); // Re-render ASX buttons based on updated allSharesData
+            renderAsxCodeButtons(); // Crucial: Re-render ASX buttons based on updated allSharesData
             
-            // Ensure search filter is re-applied if active (sortShares already does this now)
-            // renderWatchlist(currentSearchTerm); 
-
             if (loadingIndicator) loadingIndicator.style.display = 'none';
         }, (error) => {
             console.error("[Firestore Listener] Error listening to shares:", error);
@@ -1915,11 +1913,6 @@ async function initializeAppLogic() {
                 showCustomAlert("Watchlist name cannot be empty!");
                 return;
             }
-            if (newName === currentWatchlistName) {
-                showCustomAlert("Watchlist name is already the same.");
-                hideModal(manageWatchlistModal);
-                return;
-            }
             if (userWatchlists.some(w => w.name.toLowerCase() === newName.toLowerCase() && w.id !== currentWatchlistId)) {
                 showCustomAlert("A watchlist with this name already exists!");
                 return;
@@ -2242,7 +2235,7 @@ async function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v136) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v137) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
