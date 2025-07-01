@@ -8,7 +8,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍆</text></svg>">
 
     <!-- Linking to your separate style.css file -->
-    <link rel="stylesheet" href="style.css?v=73"> <!-- Will be updated to v73 in next step -->
+    <link rel="stylesheet" href="style.css?v=64"> <!-- Updated CSS version -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -27,34 +27,126 @@
             </button>
         </div>
 
-        <!-- Watchlist, Sort, and Search controls -->
-        <div class="watchlist-controls-row">
-            <!-- Dropdowns Group (Watchlist and Sort) -->
-            <div class="dropdowns-group">
-                <div class="watchlist-group">
-                    <select id="watchlistSelect" class="dropdown-large">
-                        <!-- Options populated by JS, including 'Watchlist' placeholder -->
-                    </select>
+        <!-- Mobile Menu / Desktop Sidebar Content -->
+        <nav id="appSidebar" class="app-sidebar">
+            <button id="closeMenuBtn" class="close-menu-btn">X</button>
+            
+            <div class="menu-section">
+                <h3>Share Actions</h3>
+                <div class="menu-buttons-group">
+                    <!-- Add New Share - Icon with Text -->
+                    <button id="newShareBtn" class="menu-button-item" data-action-closes-menu="true">
+                        <i class="fas fa-plus-circle"></i> <span>Add New Share</span>
+                    </button>
                 </div>
+            </div>
 
-                <div class="sort-group">
-                    <select id="sortSelect" class="dropdown-large">
-                        <option value="" disabled selected>Sort</option> <!-- Explicit "Sort" placeholder -->
-                        <option value="entryDate-desc">Date Added (Newest)</option>
-                        <option value="entryDate-asc">Date Added (Oldest)</option>
-                        <option value="shareName-asc">Code (A-Z)</option>
-                        <option value="shareName-desc">Code (Z-A)</option>
-                        <option value="dividendAmount-desc">Dividend (High-Low)</option>
-                        <option value="dividendAmount-asc">Dividend (Low-High)</option>
+            <div class="menu-section">
+                <h3>Watchlists</h3>
+                <div class="menu-buttons-group">
+                    <!-- Add Watchlist - Icon with Text -->
+                    <button id="addWatchlistBtn" class="menu-button-item" data-action-closes-menu="true">
+                        <i class="fas fa-list-ul"></i> <span>Add Watchlist</span>
+                    </button>
+                    <!-- Edit Current Watchlist - Icon with Text -->
+                    <button id="editWatchlistBtn" class="menu-button-item" data-action-closes-menu="true">
+                        <i class="fas fa-edit"></i> <span>Edit Current Watchlist</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="menu-section">
+                <h3>Calculators</h3>
+                <div class="menu-buttons-group">
+                    <!-- Standard Calculator - Icon with Text -->
+                    <button id="standardCalcBtn" class="menu-button-item" data-action-closes-menu="true">
+                        <i class="fas fa-calculator"></i> <span>Standard</span>
+                    </button>
+                    <!-- Dividend Calculator - Icon with Text -->
+                    <button id="dividendCalcBtn" class="menu-button-item" data-action-closes-menu="true">
+                        <i class="fas fa-money-bill-wave"></i> <span>Dividend</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="menu-section">
+                <h3>Theme</h3>
+                <div class="menu-buttons-group">
+                    <!-- Theme Toggle Button - Icon with Text -->
+                    <button id="themeToggleBtn" class="menu-button-item" data-action-closes-menu="false">
+                        <i class="fas fa-palette"></i> <span>Theme</span>
+                    </button>
+                    
+                    <!-- New Theme Selector Dropdown -->
+                    <label for="colorThemeSelect" class="theme-select-label">Choose Color Theme:</label>
+                    <select id="colorThemeSelect" class="dropdown-large menu-dropdown" data-action-closes-menu="false">
+                        <option value="none" selected>No Custom Theme</option>
+                        <optgroup label="Bold Themes">
+                            <option value="bold-1">Bold Ocean</option>
+                            <option value="bold-2">Bold Forest</option>
+                            <option value="bold-3">Bold Sunset</option>
+                            <option value="bold-4">Bold Royal</option>
+                            <option value="bold-5">Bold Grape</option>
+                            <option value="bold-6">Bold Fire</option>
+                            <option value="bold-7">Bold Emerald</option>
+                            <option value="bold-8">Bold Plum</option>
+                            <option value="bold-9">Bold Aqua</option>
+                            <option value="bold-10">Bold Ruby</option>
+                        </optgroup>
+                        <optgroup label="Subtle Themes">
+                            <option value="subtle-1">Subtle Sky</option>
+                            <option value="subtle-2">Subtle Earth</option>
+                            <option value="subtle-3">Subtle Rose</option>
+                            <option value="subtle-4">Subtle Lavender</option>
+                            <option value="subtle-5">Subtle Mint</option>
+                            <option value="subtle-6">Subtle Sand</option>
+                            <option value="subtle-7">Subtle Graphite</option>
+                            <option value="subtle-8">Subtle Peach</option>
+                            <option value="subtle-9">Subtle Teal</option>
+                            <option value="subtle-10">Subtle Stone</option>
+                        </optgroup>
                     </select>
+
+                    <!-- Revert to Default Theme Button - Icon with Text -->
+                    <button id="revertToDefaultThemeBtn" class="menu-button-item secondary-buttons" data-action-closes-menu="false">
+                        <i class="fas fa-sun"></i><i class="fas fa-moon"></i> <span>Default Theme</span>
+                    </button>
                 </div>
             </div>
             
-            <!-- Search Input Field - MOVED HERE -->
-            <div class="search-input-container">
-                <input type="text" id="shareSearchInput" placeholder="Search shares by code or comments..." class="text-input-large">
-                <i class="fas fa-search search-icon"></i>
-                <button id="clearSearchBtn" class="clear-search-btn"><i class="fas fa-times-circle"></i></button>
+            <!-- Logout Button Section - Icon with Text -->
+            <div class="menu-section logout-section">
+                <h3>Account</h3>
+                <div class="menu-buttons-group">
+                    <!-- Changed to span for standalone icon behavior -->
+                    <span id="logoutBtn" class="menu-button-item danger-button" data-action-closes-menu="true">
+                        <i class="fas fa-sign-out-alt"></i> <span>Log Out</span>
+                    </span>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Sidebar overlay for desktop to handle clicks outside -->
+        <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+        <!-- Watchlist and Sort controls -->
+        <div class="watchlist-controls-row">
+            <div class="watchlist-group">
+                <select id="watchlistSelect" class="dropdown-large">
+                    <!-- Options populated by JS, including 'Watchlist' placeholder -->
+                </select>
+            </div>
+
+            <div class="sort-group">
+                <select id="sortSelect" class="dropdown-large">
+                    <option value="" disabled selected>Sort</option> <!-- Explicit "Sort" placeholder -->
+                    <option value="entryDate-desc">Date Added (Newest)</option>
+                    <option value="entryDate-asc">Date Added (Oldest)</option>
+                    <option value="shareName-asc">Code (A-Z)</option>
+                    <option value="shareName-desc">Code (Z-A)</option>
+                    <option value="dividendAmount-desc">Dividend (High-Low)</option>
+                    <option value="dividendAmount-asc">Dividend (Low-High)</option>
+                </select>
             </div>
         </div>
         
@@ -268,30 +360,21 @@
                 <div id="calculatorResult" class="calculator-result">0</div>
             </div>
             <div class="calculator-buttons">
-                <!-- Row 1: C, %, ÷ -->
                 <button class="calc-btn clear" data-action="clear">C</button>
                 <button class="calc-btn operator" data-action="percentage">%</button>
                 <button class="calc-btn operator" data-action="divide">÷</button>
-                
-                <!-- Row 2: 7, 8, 9, × -->
                 <button class="calc-btn" data-value="7">7</button>
                 <button class="calc-btn" data-value="8">8</button>
                 <button class="calc-btn" data-value="9">9</button>
                 <button class="calc-btn operator" data-action="multiply">×</button>
-                
-                <!-- Row 3: 4, 5, 6, - -->
                 <button class="calc-btn" data-value="4">4</button>
                 <button class="calc-btn" data-value="5">5</button>
                 <button class="calc-btn" data-value="6">6</button>
                 <button class="calc-btn operator" data-action="subtract">-</button>
-                
-                <!-- Row 4: 1, 2, 3, + -->
                 <button class="calc-btn" data-value="1">1</button>
                 <button class="calc-btn" data-value="2">2</button>
                 <button class="calc-btn" data-value="3">3</button>
                 <button class="calc-btn operator" data-action="add">+</button>
-                
-                <!-- Row 5: 0 (span 2), ., = (span 1) -->
                 <button class="calc-btn zero" data-value="0">0</button>
                 <button class="calc-btn" data-value=".">.</button>
                 <button class="calc-btn equals" data-action="calculate">=</button>
@@ -392,10 +475,10 @@
         } : null;
 
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log("index.html (v77) script module loaded and DOMContentLoaded fired."); // Updated version number
+            console.log("index.html (v71) script module loaded and DOMContentLoaded fired."); // Updated version number
         }); 
     </script>
     <!-- Linking to your separate script.js file -->
-    <script src="script.js?v=138"></script> <!-- Will be updated to v138 in next step -->
+    <script src="script.js?v=131"></script> <!-- Updated to v131 -->
 </body>
 </html>
