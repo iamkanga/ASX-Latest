@@ -1,5 +1,5 @@
-/* File Version: v70 */
-/* Last Updated: 2025-07-01 (Export Button & Logout Button Final Fix) */
+/* File Version: v71 */
+/* Last Updated: 2025-07-01 (Search Input Styling & Logout Button Fix) */
 
 :root {
     /* Light Theme (Default) */
@@ -877,6 +877,64 @@ h1#mainTitle {
 .hamburger-btn:hover {
     color: var(--button-hover-bg);
 }
+
+/* Search Input Container - NEW */
+.search-input-container {
+    position: relative;
+    width: calc(100% - 30px); /* Adjust for padding */
+    margin: 0 15px 10px 15px; /* Top, Right, Bottom, Left */
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+}
+
+#shareSearchInput {
+    width: 100%;
+    padding: 10px 40px 10px 15px; /* Left for text, right for icons */
+    border: 1px solid var(--input-border);
+    border-radius: 8px;
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    font-size: 1em;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    box-sizing: border-box; /* Include padding and border in element's total width and height */
+}
+
+#shareSearchInput::placeholder {
+    color: var(--placeholder-text);
+    opacity: 1; /* Firefox default is lower */
+}
+
+#shareSearchInput:focus {
+    border-color: var(--button-bg);
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+    outline: none;
+}
+
+.search-icon {
+    position: absolute;
+    right: 45px; /* Position to the left of the clear button */
+    color: var(--placeholder-text);
+    font-size: 1em;
+}
+
+.clear-search-btn {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+    color: var(--ghosted-text);
+    font-size: 1.2em;
+    cursor: pointer;
+    padding: 5px;
+    transition: color 0.2s ease;
+    display: none; /* Hidden by default, shown when input has text */
+}
+
+.clear-search-btn:hover {
+    color: var(--danger-button-bg);
+}
+
 
 .app-sidebar {
     position: fixed; 
@@ -1981,6 +2039,22 @@ table tbody tr:not(.selected):hover {
         padding: 5px 10px;
     }
 
+    /* Search input on mobile */
+    .search-input-container {
+        width: calc(100% - 30px);
+        margin: 0 15px 10px 15px;
+    }
+    #shareSearchInput {
+        padding-right: 40px;
+    }
+    .search-icon {
+        right: 45px;
+    }
+    .clear-search-btn {
+        right: 10px;
+    }
+
+
     .app-sidebar {
         left: calc(-1 * var(--sidebar-width)); 
         width: 100%; 
@@ -2143,6 +2217,23 @@ table tbody tr:not(.selected):hover {
         transform: translateY(-50%);
         padding: 5px 10px;
     }
+
+    /* Search input on desktop */
+    .search-input-container {
+        width: calc(100% - 30px); /* Full width minus padding */
+        max-width: 600px; /* Max width for desktop */
+        margin: 10px auto; /* Center it */
+    }
+    #shareSearchInput {
+        padding-right: 40px;
+    }
+    .search-icon {
+        right: 45px;
+    }
+    .clear-search-btn {
+        right: 10px;
+    }
+
 
     .app-sidebar {
         left: calc(-1 * var(--sidebar-width)); 
