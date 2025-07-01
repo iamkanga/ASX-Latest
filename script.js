@@ -1,5 +1,5 @@
-// File Version: v139
-// Last Updated: 2025-07-01 (Hamburger Menu Fixes & Debugging)
+// File Version: v140
+// Last Updated: 2025-07-01 (Hamburger & Sort Debugging)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -263,6 +263,9 @@ function updateMainButtonsState(enable) {
     if (revertToDefaultThemeBtn) revertToDefaultThemeBtn.disabled = !enable;
     if (shareSearchInput) shareSearchInput.disabled = !enable; // NEW: Disable search input
     if (clearSearchBtn) setIconDisabled(clearSearchBtn, !enable); // NEW: Disable clear search button
+    if (sortSelect) sortSelect.disabled = !enable; // Ensure sort select is disabled if not enabled
+    console.log(`[UI State] Sort Select Disabled: ${sortSelect ? sortSelect.disabled : 'N/A'}`);
+
 
     // Note: Modal action icons (e.g., saveShareBtn, deleteShareBtn) are handled separately
     // by setIconDisabled based on their specific conditions (e.g., input validity).
@@ -595,12 +598,12 @@ function renderWatchlistSelect() {
          watchlistSelect.value = '';
     }
     watchlistSelect.disabled = false;
-    console.log("[UI Update] Watchlist select rendered.");
+    console.log("[UI Update] Watchlist select rendered. Watchlist select disabled: ", watchlistSelect.disabled);
 }
 
 function renderSortSelect() {
     if (!sortSelect) { console.error("[renderSortSelect] sortSelect element not found."); return; }
-    sortSelect.innerHTML = '<option value="" disabled selected>Sort</option>';
+    sortSelect.innerHTML = '<option value="" disabled selected>Sort by</option>'; // Changed placeholder text to "Sort by"
 
     const options = [
         { value: "entryDate-desc", text: "Date Added (Newest)" },
@@ -625,7 +628,7 @@ function renderSortSelect() {
         currentSortOrder = '';
         console.log("[Sort] No valid saved sort order or not logged in, defaulting to placeholder.");
     }
-    console.log("[UI Update] Sort select rendered.");
+    console.log("[UI Update] Sort select rendered. Sort select disabled: ", sortSelect.disabled);
 }
 
 function addShareToTable(share) {
@@ -2288,14 +2291,19 @@ async function initializeAppLogic() {
 
     // Hamburger Menu and Sidebar Interactions
     if (hamburgerBtn && appSidebar && closeMenuBtn && sidebarOverlay) {
-        console.log("[Sidebar Setup] Initializing sidebar event listeners.");
+        console.log("[Sidebar Setup] Initializing sidebar event listeners. Elements found:", {
+            hamburgerBtn: !!hamburgerBtn,
+            appSidebar: !!appSidebar,
+            closeMenuBtn: !!closeMenuBtn,
+            sidebarOverlay: !!sidebarOverlay
+        });
         hamburgerBtn.addEventListener('click', (event) => {
-            console.log("[UI] Hamburger button clicked. Event:", event);
+            console.log("[UI] Hamburger button CLICKED. Event:", event);
             event.stopPropagation(); // Prevent this click from immediately closing the sidebar via global listener
             toggleAppSidebar();
         });
         closeMenuBtn.addEventListener('click', () => {
-            console.log("[UI] Close Menu button clicked.");
+            console.log("[UI] Close Menu button CLICKED.");
             toggleAppSidebar(false);
         });
         
@@ -2380,7 +2388,7 @@ async function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v139) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v140) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
