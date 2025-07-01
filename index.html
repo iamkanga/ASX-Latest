@@ -8,7 +8,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍆</text></svg>">
 
     <!-- Linking to your separate style.css file -->
-    <link rel="stylesheet" href="style.css?v=52"> <!-- Updated CSS version for new styles -->
+    <link rel="stylesheet" href="style.css?v=60"> <!-- Updated CSS version -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -175,31 +175,40 @@
     <!-- Share Form Modal -->
     <div id="shareFormSection" class="modal">
         <div class="modal-content add-share-modal-content">
-            <span class="close-button form-close-button">&times;</span>
-            <h2 id="formTitle">Add New Share</h2>
-            <label for="shareName">Code:</label> <!-- Removed ASX -->
-            <input type="text" id="shareName" placeholder="e.g., BHP" required>
-
-            <label for="currentPrice">Entered Price ($):</label> <!-- Changed label to Entered Price -->
-            <input type="number" id="currentPrice" step="0.01" placeholder="e.g., 25.50">
-
-            <label for="targetPrice">Target Price ($):</label>
-            <input type="number" id="targetPrice" step="0.01" placeholder="e.g., 30.00">
-
-            <label for="dividendAmount">Dividend Amount (per share, annual $):</label>
-            <input type="number" id="dividendAmount" step="0.001" placeholder="e.g., 1.250">
-
-            <label for="frankingCredits">Franking Credits (%):</label>
-            <input type="number" id="frankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 70 for 70%">
-
-            <div id="commentsFormContainer" class="comments-form-container">
-                <h3>Comments <button type="button" id="addCommentSectionBtn" class="add-section-btn">+</button></h3>
-                <!-- Comment sections will be dynamically added here by JS -->
+            <!-- Header with close button and title -->
+            <div class="modal-header-with-icon">
+                <span class="close-button form-close-button">&times;</span>
+                <h2 id="formTitle">Add New Share</h2>
+                <!-- Delete icon moved to sticky footer -->
             </div>
+            
+            <!-- Scrollable content area for the form inputs and comments -->
+            <div class="modal-body-scrollable">
+                <label for="shareName">Code:</label>
+                <input type="text" id="shareName" placeholder="e.g., BHP" required>
 
-            <!-- Buttons for Add/Edit Share Modal - will be styled to be on one line -->
-            <div class="form-action-buttons modal-form-buttons">
-                <button type="button" id="deleteShareFromFormBtn" class="danger-button"><i class="fas fa-trash-alt"></i> Delete Share</button>
+                <label for="currentPrice">Entered Price ($):</label>
+                <input type="number" id="currentPrice" step="0.01" placeholder="e.g., 25.50">
+
+                <label for="targetPrice">Target Price ($):</label>
+                <input type="number" id="targetPrice" step="0.01" placeholder="e.g., 30.00">
+
+                <label for="dividendAmount">Dividend Amount (per share, annual $):</label>
+                <input type="number" id="dividendAmount" step="0.001" placeholder="e.g., 1.250">
+
+                <label for="frankingCredits">Franking Credits (%):</label>
+                <input type="number" id="frankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 70 for 70%">
+
+                <div id="commentsFormContainer" class="comments-form-container">
+                    <h3>Comments <button type="button" id="addCommentSectionBtn" class="add-section-btn">+</button></h3>
+                    <!-- Comment sections will be dynamically added here by JS -->
+                </div>
+            </div>
+            <!-- END Scrollable content area -->
+
+            <!-- Sticky footer for action buttons and delete icon -->
+            <div class="form-action-buttons modal-form-buttons sticky-footer">
+                <span id="deleteShareIcon" class="delete-icon-btn"><i class="fas fa-trash-alt"></i></span>
                 <button type="button" id="cancelFormBtn" class="secondary-buttons"><i class="fas fa-times-circle"></i> Cancel</button>
                 <button type="submit" id="saveShareBtn"><i class="fas fa-save"></i> Save Share</button>
             </div>
@@ -350,6 +359,12 @@
         </div>
     </div>
 
+    <!-- Context Menu for Share Actions (Long Press / Right Click) -->
+    <div id="shareContextMenu" class="context-menu">
+        <button id="contextEditShareBtn" class="context-menu-item"><i class="fas fa-edit"></i> Edit Share</button>
+        <button id="contextDeleteShareBtn" class="context-menu-item danger-button"><i class="fas fa-trash-alt"></i> Delete Share</button>
+    </div>
+
     <!-- Firebase and main script loading -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -424,10 +439,10 @@
         } : null;
 
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log("index.html (v59) script module loaded and DOMContentLoaded fired."); // Updated version number
+            console.log("index.html (v66) script module loaded and DOMContentLoaded fired."); // Updated version number
         }); 
     </script>
     <!-- Linking to your separate script.js file -->
-    <script src="script.js?v=117"></script>
+    <script src="script.js?v=125"></script> <!-- Updated to v125 -->
 </body>
 </html>

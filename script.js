@@ -1,5 +1,5 @@
-// File Version: v117
-// Last Updated: 2025-06-30 (Fixed ghosted buttons on refresh)
+// File Version: v126
+// Last Updated: 2025-07-01 (FIX: Context Menu Edit Share functionality)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -19,13 +19,10 @@ let lastTapTime = 0;
 let tapTimeout;
 let selectedElementForTap = null;
 let longPressTimer;
-const LONG_PRESS_THRESHOLD = 400; // Increased sensitivity for long press
-const DOUBLE_TAP_THRESHOLD = 300; // Max time between taps for double tap
-const DOUBLE_TAP_TIMEOUT = 250; // Timeout to register single tap vs potential double tap
+const LONG_PRESS_THRESHOLD = 500; // Time in ms for long press detection
 let touchStartX = 0;
 let touchStartY = 0;
-let touchMoved = false;
-const TOUCH_MOVE_THRESHOLD = 10;
+const TOUCH_MOVE_THRESHOLD = 10; // Pixels for touch movement to cancel long press
 const KANGA_EMAIL = 'iamkanga@gmail.com';
 let currentCalculatorInput = '';
 let operator = null;
@@ -36,6 +33,9 @@ const DEFAULT_WATCHLIST_ID_SUFFIX = 'default';
 let userWatchlists = [];
 let currentWatchlistId = null;
 let currentWatchlistName = '';
+let currentSortOrder = 'entryDate-desc'; // Default sort order, now a global variable
+let contextMenuOpen = false; // To track if the custom context menu is open
+let currentContextMenuShareId = null; // Stores the ID of the share that opened the context menu
 
 // Theme related variables
 const CUSTOM_THEMES = [
@@ -43,6 +43,8 @@ const CUSTOM_THEMES = [
     'subtle-1', 'subtle-2', 'subtle-3', 'subtle-4', 'subtle-5', 'subtle-6', 'subtle-7', 'subtle-8', 'subtle-9', 'subtle-10'
 ];
 let currentCustomThemeIndex = -1; // To track the current theme in the cycle
+let currentActiveTheme = 'system-default'; // Tracks the currently applied theme string (e.g., 'dark', 'bold', 'subtle', 'system-default')
+
 
 // --- UI Element References (Declared globally for access by all functions) ---
 const mainTitle = document.getElementById('mainTitle');
@@ -56,7 +58,7 @@ const formCloseButton = document.querySelector('.form-close-button');
 const formTitle = document.getElementById('formTitle');
 const saveShareBtn = document.getElementById('saveShareBtn');
 const cancelFormBtn = document.getElementById('cancelFormBtn');
-const deleteShareFromFormBtn = document.getElementById('deleteShareFromFormBtn');
+const deleteShareIcon = document.getElementById('deleteShareIcon'); // Reference for the delete icon
 const shareNameInput = document.getElementById('shareName');
 const currentPriceInput = document.getElementById('currentPrice');
 const targetPriceInput = document.getElementById('targetPrice');
@@ -120,6 +122,9 @@ const editWatchlistNameInput = document.getElementById('editWatchlistName');
 const saveWatchlistNameBtn = document.getElementById('saveWatchlistNameBtn');
 const deleteWatchlistInModalBtn = document.getElementById('deleteWatchlistInModalBtn');
 const cancelManageWatchlistBtn = document.getElementById('cancelManageWatchlistBtn');
+const shareContextMenu = document.getElementById('shareContextMenu'); // New: Context menu element
+const contextEditShareBtn = document.getElementById('contextEditShareBtn'); // New: Context menu edit button
+const contextDeleteShareBtn = document.getElementById('contextDeleteShareBtn'); // New: Context menu delete button
 
 // Ensure sidebarOverlay is correctly referenced or created if not already in HTML
 let sidebarOverlay = document.querySelector('.sidebar-overlay');
@@ -148,6 +153,7 @@ function closeModals() {
     resetCalculator(); // Reset calculator state when closing calculator modal
     deselectCurrentShare(); // Always deselect share when any modal is closed
     if (autoDismissTimeout) { clearTimeout(autoDismissTimeout); autoDismissTimeout = null; }
+    hideContextMenu(); // Ensure context menu is closed when any modal is closed
 }
 
 // Custom Dialog (Alert/Confirm) Functions
@@ -216,7 +222,8 @@ function updateMainButtonsState(enable) {
     if (dividendCalcBtn) dividendCalcBtn.disabled = !enable;
     if (watchlistSelect) watchlistSelect.disabled = !enable; 
     if (addWatchlistBtn) addWatchlistBtn.disabled = !enable;
-    if (editWatchlistBtn) editWatchlistBtn.disabled = !enable || userWatchlists.length <= 1; 
+    // Fix: Enable editWatchlistBtn if there's at least one watchlist
+    if (editWatchlistBtn) editWatchlistBtn.disabled = !enable || userWatchlists.length === 0; 
     if (deleteWatchlistInModalBtn) deleteWatchlistInModalBtn.disabled = !enable || userWatchlists.length <= 1;
     if (addShareHeaderBtn) addShareHeaderBtn.disabled = !enable;
 }
@@ -224,7 +231,12 @@ function updateMainButtonsState(enable) {
 function showModal(modalElement) {
     if (modalElement) {
         modalElement.style.setProperty('display', 'flex', 'important');
-        modalElement.scrollTop = 0;
+        modalElement.scrollTop = 0; // Reset scroll position to top
+        // Also reset scroll for any internal scrollable content
+        const scrollableContent = modalElement.querySelector('.modal-body-scrollable');
+        if (scrollableContent) {
+            scrollableContent.scrollTop = 0;
+        }
     }
 }
 
@@ -239,7 +251,7 @@ function clearWatchlistUI() {
     if (watchlistSelect) watchlistSelect.innerHTML = '';
     userWatchlists = [];
     renderWatchlistSelect();
-    renderSortSelect();
+    renderSortSelect(); // This is called here
     console.log("[UI] Watchlist UI cleared.");
 }
 
@@ -302,20 +314,29 @@ function clearForm() {
     commentsFormContainer.innerHTML = '';
     addCommentSection(); // Add one empty comment section by default
     selectedShareDocId = null;
+    if (deleteShareIcon) { // Hide delete icon when adding new share
+        deleteShareIcon.classList.add('hidden');
+    }
     console.log("[Form] Form fields cleared and selectedShareDocId reset.");
 }
 
 // Function to show the edit form with selected share's data
-function showEditFormForSelectedShare() {
-    if (!selectedShareDocId) {
+function showEditFormForSelectedShare(shareIdToEdit = null) {
+    // Use the provided shareIdToEdit or fall back to globally selectedShareDocId
+    const targetShareId = shareIdToEdit || selectedShareDocId;
+
+    if (!targetShareId) {
         showCustomAlert("Please select a share to edit.");
         return;
     }
-    const shareToEdit = allSharesData.find(share => share.id === selectedShareDocId);
+    const shareToEdit = allSharesData.find(share => share.id === targetShareId);
     if (!shareToEdit) {
         showCustomAlert("Selected share not found.");
         return;
     }
+    // Ensure the global selectedShareDocId is set to the one being edited
+    selectedShareDocId = targetShareId; 
+
     formTitle.textContent = 'Edit Share';
     shareNameInput.value = shareToEdit.shareName || '';
     currentPriceInput.value = Number(shareToEdit.currentPrice) !== null && !isNaN(Number(shareToEdit.currentPrice)) ? Number(shareToEdit.currentPrice).toFixed(2) : '';
@@ -330,7 +351,9 @@ function showEditFormForSelectedShare() {
     if (shareToEdit.comments === undefined || shareToEdit.comments.length === 0) {
         addCommentSection();
     }
-    deleteShareFromFormBtn.style.display = 'inline-flex';
+    if (deleteShareIcon) { // Show delete icon when editing
+        deleteShareIcon.classList.remove('hidden');
+    }
     showModal(shareFormSection);
     shareNameInput.focus();
     console.log(`[Form] Opened edit form for share: ${shareToEdit.shareName} (ID: ${selectedShareDocId})`);
@@ -422,7 +445,7 @@ function showShareDetails() {
 
 // Watchlist Sorting Logic
 function sortShares() {
-    const sortValue = sortSelect.value;
+    const sortValue = currentSortOrder; // Use currentSortOrder global variable
     if (!sortValue || sortValue === '') {
         console.log("[Sort] Sort placeholder selected, no explicit sorting applied.");
         renderWatchlist();
@@ -506,26 +529,33 @@ function renderWatchlistSelect() {
 // Render options in the sort by dropdown
 function renderSortSelect() {
     if (!sortSelect) { console.error("[renderSortSelect] sortSelect element not found."); return; }
-    const firstOption = sortSelect.options[0];
-    if (firstOption && firstOption.value === '') {
-        firstOption.textContent = 'Sort';
-        firstOption.disabled = true;
-        firstOption.selected = true;
+    // Always reset to placeholder first
+    sortSelect.innerHTML = '<option value="" disabled selected>Sort</option>';
+
+    // Re-add other options
+    const options = [
+        { value: "entryDate-desc", text: "Date Added (Newest)" },
+        { value: "entryDate-asc", text: "Date Added (Oldest)" },
+        { value: "shareName-asc", text: "Code (A-Z)" },
+        { value: "shareName-desc", text: "Code (Z-A)" },
+        { value: "dividendAmount-desc", text: "Dividend (High-Low)" },
+        { value: "dividendAmount-asc", text: "Dividend (Low-High)" }
+    ];
+    options.forEach(opt => {
+        const optionElement = document.createElement('option');
+        optionElement.value = opt.value;
+        optionElement.textContent = opt.text;
+        sortSelect.appendChild(optionElement);
+    });
+
+    // Apply saved sort preference if user is logged in and preference exists
+    if (currentUserId && currentSortOrder && Array.from(sortSelect.options).some(option => option.value === currentSortOrder)) {
+        sortSelect.value = currentSortOrder;
+        console.log(`[Sort] Applied saved sort order: ${currentSortOrder}`);
     } else {
-        const placeholderOption = document.createElement('option');
-        placeholderOption.value = '';
-        placeholderOption.textContent = 'Sort';
-        placeholderOption.disabled = true;
-        placeholderOption.selected = true;
-        sortSelect.insertBefore(placeholderOption, sortSelect.firstChild);
-    }
-    // Load saved sort preference
-    const savedSortOrder = localStorage.getItem('sortOrder');
-    if (savedSortOrder && Array.from(sortSelect.options).some(option => option.value === savedSortOrder)) {
-        sortSelect.value = savedSortOrder;
-        console.log(`[Sort] Loaded saved sort order: ${savedSortOrder}`);
-    } else {
-        sortSelect.value = ''; // Reset to placeholder if no saved or invalid
+        sortSelect.value = ''; 
+        currentSortOrder = ''; // Ensure global variable is reset too
+        console.log("[Sort] No valid saved sort order or not logged in, defaulting to placeholder.");
     }
 }
 
@@ -534,18 +564,60 @@ function addShareToTable(share) {
     if (!shareTableBody) { console.error("[addShareToTable] shareTableBody element not found."); return; }
     const row = shareTableBody.insertRow();
     row.dataset.docId = share.id;
+    
+    // Single Click (View Details)
     row.addEventListener('click', (event) => { 
-        selectShare(share.id); 
-        if (window.innerWidth > 768 && !event.target.closest('button')) {
-            showShareDetails();
-        }
-    });
-    row.addEventListener('dblclick', (event) => { 
-        if (window.innerWidth <= 768) {
+        // Only trigger details if not a long press or right click event that just happened
+        if (!contextMenuOpen) { // Prevent click from opening details right after context menu
             selectShare(share.id); 
-            showShareDetails(); 
+            if (window.innerWidth > 768 && !event.target.closest('button')) {
+                showShareDetails();
+            }
         }
     });
+
+    // Right-Click (Context Menu)
+    row.addEventListener('contextmenu', (event) => {
+        event.preventDefault(); // Prevent default browser context menu
+        selectShare(share.id); // Select the share first
+        showContextMenu(event, share.id);
+    });
+
+    // Touch Events for Long Press (Context Menu)
+    let touchStartTime;
+    row.addEventListener('touchstart', (event) => {
+        if (event.touches.length === 1) {
+            touchStartTime = new Date().getTime();
+            touchStartX = event.touches[0].clientX;
+            touchStartY = event.touches[0].clientY;
+            longPressTimer = setTimeout(() => {
+                // If long press detected, prevent default to avoid scrolling/zooming
+                event.preventDefault(); 
+                selectShare(share.id);
+                showContextMenu(event, share.id);
+            }, LONG_PRESS_THRESHOLD);
+        }
+    });
+
+    row.addEventListener('touchmove', (event) => {
+        if (longPressTimer) {
+            const currentX = event.touches[0].clientX;
+            const currentY = event.touches[0].clientY;
+            const distance = Math.sqrt(Math.pow(currentX - touchStartX, 2) + Math.pow(currentY - touchStartY, 2));
+            if (distance > TOUCH_MOVE_THRESHOLD) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+        }
+    });
+
+    row.addEventListener('touchend', () => {
+        if (longPressTimer) {
+            clearTimeout(longPressTimer);
+            longPressTimer = null;
+        }
+    });
+
 
     const displayShareName = (share.shareName && String(share.shareName).trim() !== '') ? share.shareName : '(No Code)';
     row.insertCell().textContent = displayShareName;
@@ -628,32 +700,56 @@ function addShareToMobileCards(share) {
     `;
     mobileShareCardsContainer.appendChild(card);
 
+    // Single Click (View Details)
     card.addEventListener('click', function(e) {
-        const currentTime = new Date().getTime();
-        const tapLength = currentTime - lastTapTime;
-        const docId = e.currentTarget.dataset.docId;
-
-        if (tapLength < DOUBLE_TAP_THRESHOLD && tapLength > 0 && selectedElementForTap === e.currentTarget) {
-            clearTimeout(tapTimeout);
-            lastTapTime = 0;
-            selectedElementForTap = null;
+        // Only trigger details if not a long press or right click event that just happened
+        if (!contextMenuOpen) { // Prevent click from opening details right after context menu
+            const docId = e.currentTarget.dataset.docId;
             selectShare(docId);
             showShareDetails();
-            e.preventDefault();
-        } else {
-            lastTapTime = currentTime;
-            selectedElementForTap = e.currentTarget;
-            tapTimeout = setTimeout(() => {
-                if (selectedElementForTap) {
-                    selectShare(docId);
-                    selectedElementForTap = null;
-                }
-            }, DOUBLE_TAP_TIMEOUT);
         }
     });
 
-    card.addEventListener('contextmenu', function(e) {
-        e.preventDefault();
+    // Right-Click (Context Menu)
+    card.addEventListener('contextmenu', (event) => {
+        event.preventDefault(); // Prevent default browser context menu
+        selectShare(share.id); // Select the share first
+        showContextMenu(event, share.id);
+    });
+
+    // Touch Events for Long Press (Context Menu)
+    let touchStartTime;
+    card.addEventListener('touchstart', (event) => {
+        if (event.touches.length === 1) {
+            touchStartTime = new Date().getTime();
+            touchStartX = event.touches[0].clientX;
+            touchStartY = event.touches[0].clientY;
+            longPressTimer = setTimeout(() => {
+                // If long press detected, prevent default to avoid scrolling/zooming
+                event.preventDefault(); 
+                selectShare(share.id);
+                showContextMenu(event, share.id);
+            }, LONG_PRESS_THRESHOLD);
+        }
+    });
+
+    card.addEventListener('touchmove', (event) => {
+        if (longPressTimer) {
+            const currentX = event.touches[0].clientX;
+            const currentY = event.touches[0].clientY;
+            const distance = Math.sqrt(Math.pow(currentX - touchStartX, 2) + Math.pow(currentY - touchStartY, 2));
+            if (distance > TOUCH_MOVE_THRESHOLD) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+        }
+    });
+
+    card.addEventListener('touchend', () => {
+        if (longPressTimer) {
+            clearTimeout(longPressTimer);
+            longPressTimer = null;
+        }
     });
 
     console.log(`[Render] Added share ${displayShareName} to mobile cards.`);
@@ -821,79 +917,79 @@ function resetCalculator() {
 }
 
 // Theme Toggling Logic
-function applyTheme(themeName) {
+/**
+ * Applies a given theme to the body and saves the preference to Firestore.
+ * @param {string} themeName - The name of the theme to apply (e.g., 'light', 'dark', 'bold-1', 'system-default').
+ */
+async function applyTheme(themeName) {
     const body = document.body;
-    // Remove all existing theme classes (both 'dark-theme' and 'theme-X')
-    body.className = body.className.split(' ').filter(c => !c.startsWith('theme-') && c !== 'dark-theme').join(' ');
+    // Remove all existing theme classes (e.g., 'dark-theme', 'theme-X', 'bold-X-theme', 'subtle-X-theme')
+    body.className = body.className.split(' ').filter(c => !c.endsWith('-theme') && !c.startsWith('theme-')).join(' ');
 
-    if (themeName && themeName !== 'none') {
-        body.classList.add(`theme-${themeName}`);
-        localStorage.setItem('selectedTheme', themeName);
-        localStorage.removeItem('theme'); // Clear default light/dark preference if custom theme is selected
-        console.log(`[Theme] Applied custom theme: ${themeName}`);
+    currentActiveTheme = themeName; // Update global tracker
+
+    if (themeName === 'system-default') {
+        // Revert to system default (light/dark based on OS preference)
+        body.removeAttribute('data-theme');
+        localStorage.removeItem('selectedTheme'); // Clear custom theme from local storage
+        localStorage.removeItem('theme'); // Clear light/dark preference from local storage
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (systemPrefersDark) {
+            body.classList.add('dark-theme');
+        }
+        console.log("[Theme] Reverted to system default theme.");
+        currentCustomThemeIndex = -1; // Reset index for cycling
+    } else if (themeName === 'light' || themeName === 'dark') {
+        // Apply explicit light/dark theme
+        body.removeAttribute('data-theme'); // Ensure no custom theme data attribute
+        localStorage.removeItem('selectedTheme'); // Clear any custom theme
+        localStorage.setItem('theme', themeName); // Save explicit light/dark preference
+        if (themeName === 'dark') {
+            body.classList.add('dark-theme');
+        }
+        console.log(`[Theme] Applied explicit default theme: ${themeName}`);
+        currentCustomThemeIndex = -1; // Reset index for cycling
     } else {
-        localStorage.removeItem('selectedTheme'); // Clear custom theme preference
-        // Revert to system default or last saved default light/dark
-        applyDefaultLightDarkTheme();
+        // Apply a custom theme (e.g., 'bold-1', 'subtle-5')
+        body.classList.add('theme-' + themeName); // Add specific theme class, e.g., 'theme-bold-1'
+        body.setAttribute('data-theme', themeName); // Set data-theme attribute for reference
+        localStorage.setItem('selectedTheme', themeName); // Save custom theme to local storage
+        localStorage.removeItem('theme'); // Clear light/dark preference if custom theme is selected
+        console.log(`[Theme] Applied custom theme: ${themeName}`);
+        currentCustomThemeIndex = CUSTOM_THEMES.indexOf(themeName); // Update index for cycling
+    }
+    
+    // Save theme preference to Firestore if user is logged in
+    if (currentUserId && db && window.firestore) {
+        const userProfileDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/profile/settings`);
+        try {
+            await window.firestore.setDoc(userProfileDocRef, { lastTheme: themeName }, { merge: true });
+            console.log(`[Theme] Saved theme preference to Firestore: ${themeName}`);
+        } catch (error) {
+            console.error("[Theme] Error saving theme preference to Firestore:", error);
+        }
     }
     updateThemeToggleAndSelector();
 }
 
-function applyDefaultLightDarkTheme() {
-    const body = document.body;
-    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const savedDefaultTheme = localStorage.getItem('theme'); // 'light' or 'dark'
-
-    // Ensure all custom theme classes are removed
-    body.className = body.className.split(' ').filter(c => !c.startsWith('theme-') && c !== 'dark-theme').join(' ');
-
-    if (savedDefaultTheme) {
-        if (savedDefaultTheme === 'dark') {
-            body.classList.add('dark-theme');
-        } else {
-            body.classList.remove('dark-theme');
-        }
-        console.log(`[Theme] Reverted to saved default theme: ${savedDefaultTheme}`);
-    } else {
-        if (systemPrefersDark) {
-            body.classList.add('dark-theme');
-        } else {
-            document.body.classList.remove('dark-theme');
-        }
-        localStorage.setItem('theme', systemPrefersDark ? 'dark' : 'light');
-        console.log(`[Theme] Reverted to system default theme: ${systemPrefersDark ? 'dark' : 'light'}`);
-    }
-    // When reverting to default, ensure custom theme is not selected in dropdown
-    if (colorThemeSelect) {
-        colorThemeSelect.value = 'none';
-    }
-    currentCustomThemeIndex = -1; // Reset index
-}
-
-
 function updateThemeToggleAndSelector() {
-    const currentCustomTheme = localStorage.getItem('selectedTheme');
-    const currentDefaultTheme = localStorage.getItem('theme'); // 'light' or 'dark'
-
-    // Update theme toggle button icon
-    if (themeToggleBtn) {
-        // The "Toggle Theme" button always uses the palette icon now.
-        // Its text doesn't need to change based on light/dark.
-        themeToggleBtn.innerHTML = '<i class="fas fa-palette"></i> Toggle Theme';
-    }
-
     // Update theme selector dropdown
     if (colorThemeSelect) {
-        if (currentCustomTheme) {
-            colorThemeSelect.value = currentCustomTheme;
-            // Update currentCustomThemeIndex to match the selected theme
-            currentCustomThemeIndex = CUSTOM_THEMES.indexOf(currentCustomTheme);
+        if (currentActiveTheme.startsWith('bold-') || currentActiveTheme.startsWith('subtle-')) {
+            colorThemeSelect.value = currentActiveTheme;
         } else {
             colorThemeSelect.value = 'none'; // Select "No Custom Theme"
-            currentCustomThemeIndex = -1; // Reset index if no custom theme
         }
     }
+
+    // Update currentCustomThemeIndex to match the currently applied theme
+    if (currentActiveTheme.startsWith('bold-') || currentActiveTheme.startsWith('subtle-')) {
+        currentCustomThemeIndex = CUSTOM_THEMES.indexOf(currentActiveTheme);
+    } else {
+        currentCustomThemeIndex = -1; // Not a custom theme, reset index
+    }
 }
+
 
 // Watchlist ID generation
 function getDefaultWatchlistId(userId) {
@@ -917,23 +1013,28 @@ async function saveLastSelectedWatchlistId(watchlistId) {
 
 // Save the last selected sort order to user's profile
 async function saveSortOrderPreference(sortOrder) {
+    console.log(`[Sort Debug] Attempting to save sort order: ${sortOrder}`);
+    console.log(`[Sort Debug] db: ${db ? 'Available' : 'Not Available'}`);
+    console.log(`[Sort Debug] currentUserId: ${currentUserId}`);
+    console.log(`[Sort Debug] window.firestore: ${window.firestore ? 'Available' : 'Not Available'}`);
+
     if (!db || !currentUserId || !window.firestore) {
-        console.warn("[Sort] Cannot save sort order preference: DB, User ID, or Firestore functions not available.");
+        console.warn("[Sort] Cannot save sort order preference: DB, User ID, or Firestore functions not available. Skipping save.");
         return;
     }
     const userProfileDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/profile/settings`);
     try {
-        await window.firestore.setDoc(userProfileDocRef, { sortOrder: sortOrder }, { merge: true });
+        await window.firestore.setDoc(userProfileDocRef, { lastSortOrder: sortOrder }, { merge: true });
         console.log(`[Sort] Saved sort order preference: ${sortOrder}`);
     } catch (error) {
         console.error("[Sort] Error saving sort order preference:", error);
     }
 }
 
-// Load watchlists from Firestore and set the current one
-async function loadUserWatchlists() {
+// Load watchlists and user settings (including theme) from Firestore and set the current one
+async function loadUserWatchlistsAndSettings() {
     if (!db || !currentUserId) {
-        console.warn("[Watchlist] Firestore DB or User ID not available for loading watchlists.");
+        console.warn("[User Settings] Firestore DB or User ID not available for loading settings.");
         return;
     }
     userWatchlists = [];
@@ -941,33 +1042,36 @@ async function loadUserWatchlists() {
     const userProfileDocRef = window.firestore ? window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/profile/settings`) : null;
 
     if (!watchlistsColRef || !userProfileDocRef) {
-        console.error("[Watchlist] Firestore collection or doc reference is null. Cannot load watchlists.");
-        showCustomAlert("Firestore services not fully initialized. Cannot load watchlists.");
+        console.error("[User Settings] Firestore collection or doc reference is null. Cannot load settings.");
+        showCustomAlert("Firestore services not fully initialized. Cannot load user settings.");
         return;
     }
 
     try {
-        console.log("[Watchlist] Fetching user watchlists...");
+        console.log("[User Settings] Fetching user watchlists and profile settings...");
         const querySnapshot = await window.firestore.getDocs(watchlistsColRef);
         querySnapshot.forEach(doc => { userWatchlists.push({ id: doc.id, name: doc.data().name }); });
-        console.log(`[Watchlist] Found ${userWatchlists.length} existing watchlists.`);
+        console.log(`[User Settings] Found ${userWatchlists.length} existing watchlists.`);
 
         if (userWatchlists.length === 0) {
             const defaultWatchlistRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/watchlists/${getDefaultWatchlistId(currentUserId)}`);
             await window.firestore.setDoc(defaultWatchlistRef, { name: DEFAULT_WATCHLIST_NAME, createdAt: new Date().toISOString() });
             userWatchlists.push({ id: getDefaultWatchlistId(currentUserId), name: DEFAULT_WATCHLIST_NAME });
-            console.log("[Watchlist] Created default watchlist.");
+            console.log("[User Settings] Created default watchlist.");
         }
         userWatchlists.sort((a, b) => a.name.localeCompare(b.name));
 
         const userProfileSnap = await window.firestore.getDoc(userProfileDocRef);
         let lastSelectedWatchlistId = null;
         let savedSortOrder = null;
+        let savedTheme = null; 
         if (userProfileSnap.exists()) {
             lastSelectedWatchlistId = userProfileSnap.data().lastSelectedWatchlistId;
-            savedSortOrder = userProfileSnap.data().sortOrder;
-            console.log(`[Watchlist] Found last selected watchlist in profile: ${lastSelectedWatchlistId}`);
-            console.log(`[Sort] Found saved sort order in profile: ${savedSortOrder}`);
+            savedSortOrder = userProfileSnap.data().lastSortOrder;
+            savedTheme = userProfileSnap.data().lastTheme;
+            console.log(`[User Settings] Found last selected watchlist in profile: ${lastSelectedWatchlistId}`);
+            console.log(`[User Settings] Found saved sort order in profile: ${savedSortOrder}`);
+            console.log(`[User Settings] Found saved theme in profile: ${savedTheme}`);
         }
 
         let targetWatchlist = null;
@@ -978,19 +1082,48 @@ async function loadUserWatchlists() {
         if (targetWatchlist) {
             currentWatchlistId = targetWatchlist.id;
             currentWatchlistName = targetWatchlist.name;
-            console.log(`[Watchlist] Setting current watchlist to: '${currentWatchlistName}' (ID: ${currentWatchlistId})`);
+            console.log(`[User Settings] Setting current watchlist to: '${currentWatchlistName}' (ID: ${currentWatchlistId})`);
         } else {
             currentWatchlistId = null;
             currentWatchlistName = 'No Watchlist Selected';
-            console.log("[Watchlist] No watchlists available. Current watchlist set to null.");
+            console.log("[User Settings] No watchlists available. Current watchlist set to null.");
         }
 
         renderWatchlistSelect();
-        renderSortSelect(); // Render with loaded sort preference
-        if (savedSortOrder && sortSelect.value !== savedSortOrder) {
-            sortSelect.value = savedSortOrder; // Ensure dropdown reflects saved value
+        
+        // Apply saved sort order
+        if (currentUserId && savedSortOrder && Array.from(sortSelect.options).some(option => option.value === savedSortOrder)) {
+            currentSortOrder = savedSortOrder;
+            sortSelect.value = currentSortOrder;
+            console.log(`[Sort] Applied saved sort order: ${currentSortOrder}`);
+        } else {
+            sortSelect.value = ''; 
+            currentSortOrder = ''; // Ensure global variable is reset too
+            console.log("[Sort] No valid saved sort order or not logged in, defaulting to placeholder.");
         }
-        updateMainButtonsState(true);
+        renderSortSelect(); // Render with loaded sort preference
+        
+        // Apply theme
+        if (savedTheme) {
+            applyTheme(savedTheme);
+        } else {
+            // If no saved theme, check local storage for old preferences
+            const localStorageSelectedTheme = localStorage.getItem('selectedTheme');
+            const localStorageTheme = localStorage.getItem('theme');
+
+            if (localStorageSelectedTheme) {
+                applyTheme(localStorageSelectedTheme);
+            } else if (localStorageTheme) {
+                applyTheme(localStorageTheme); // 'light' or 'dark'
+            } else {
+                applyTheme('system-default'); // Fallback to system default
+            }
+        }
+        updateThemeToggleAndSelector(); // Ensure UI reflects the applied theme
+
+        // Moved from initializeAppLogic to here, after userWatchlists is populated
+        // This ensures the button state is correctly set based on the number of watchlists
+        updateMainButtonsState(true); 
 
         const migratedSomething = await migrateOldSharesToWatchlist();
         if (!migratedSomething) {
@@ -999,8 +1132,8 @@ async function loadUserWatchlists() {
         }
 
     } catch (error) {
-        console.error("[Watchlist] Error loading user watchlists:", error);
-        showCustomAlert("Error loading watchlists: " + error.message);
+        console.error("[User Settings] Error loading user watchlists and settings:", error);
+        showCustomAlert("Error loading user settings: " + error.message);
     } finally {
         if (loadingIndicator) loadingIndicator.style.display = 'none';
     }
@@ -1132,6 +1265,56 @@ async function migrateOldSharesToWatchlist() {
     }
 }
 
+// --- Context Menu Functions ---
+function showContextMenu(event, shareId) {
+    if (!shareContextMenu) return;
+    
+    // Set the share ID for context menu actions
+    currentContextMenuShareId = shareId;
+    
+    // Position the context menu
+    let x = event.clientX;
+    let y = event.clientY;
+
+    // For touch events, use the touch coordinates
+    if (event.touches && event.touches.length > 0) {
+        x = event.touches[0].clientX;
+        y = event.touches[0].clientY;
+    }
+
+    // Adjust position to keep menu within viewport
+    const menuWidth = shareContextMenu.offsetWidth;
+    const menuHeight = shareContextMenu.offsetHeight;
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    if (x + menuWidth > viewportWidth) {
+        x = viewportWidth - menuWidth - 10; // 10px padding from right edge
+    }
+    if (y + menuHeight > viewportHeight) {
+        y = viewportHeight - menuHeight - 10; // 10px padding from bottom edge
+    }
+    // Ensure menu doesn't go off left/top edge
+    if (x < 10) x = 10;
+    if (y < 10) y = 10;
+
+    shareContextMenu.style.left = `${x}px`;
+    shareContextMenu.style.top = `${y}px`;
+    shareContextMenu.style.display = 'block';
+    contextMenuOpen = true;
+    console.log(`[Context Menu] Opened for share ID: ${shareId} at (${x}, ${y})`);
+}
+
+function hideContextMenu() {
+    if (shareContextMenu) {
+        shareContextMenu.style.display = 'none';
+        contextMenuOpen = false;
+        currentContextMenuShareId = null;
+        deselectCurrentShare(); // Deselect the share when context menu is closed
+        console.log("[Context Menu] Hidden.");
+    }
+}
+
 // --- TOGGLE SIDEBAR FUNCTION (MOVED TO GLOBAL SCOPE) ---
 function toggleAppSidebar(forceState = null) {
     const isDesktop = window.innerWidth > 768;
@@ -1170,29 +1353,19 @@ async function initializeAppLogic() {
     if (manageWatchlistModal) manageWatchlistModal.style.setProperty('display', 'none', 'important');
     if (customDialogModal) customDialogModal.style.setProperty('display', 'none', 'important');
     if (calculatorModal) calculatorModal.style.setProperty('display', 'none', 'important');
+    if (shareContextMenu) shareContextMenu.style.setProperty('display', 'none', 'important'); // Hide context menu initially
     
-    // Removed: Buttons will be enabled based on auth state, not here directly
-    // Removed: updateMainButtonsState(false); // This line caused the buttons to be disabled prematurely
     renderWatchlistSelect(); // Render initial empty watchlist select
     
-    // Apply theme on initial load
-    const savedCustomTheme = localStorage.getItem('selectedTheme');
-    if (savedCustomTheme) {
-        applyTheme(savedCustomTheme);
-    } else {
-        applyDefaultLightDarkTheme();
-    }
-    updateThemeToggleAndSelector();
-
-    // --- PWA Service Worker Registration ---
+    // PWA Service Worker Registration
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./service-worker.js', { scope: './' }) 
                 .then(registration => {
-                    console.log('Service Worker (v46) from script.js: Registered with scope:', registration.scope); 
+                    console.log('Service Worker (v47) from script.js: Registered with scope:', registration.scope); 
                 })
                 .catch(error => {
-                    console.error('Service Worker (v46) from script.js: Registration failed:', error);
+                    console.error('Service Worker (v47) from script.js: Registration failed:', error);
                 });
         });
     }
@@ -1225,13 +1398,19 @@ async function initializeAppLogic() {
     // --- Event Listeners for Modal Close Buttons ---
     document.querySelectorAll('.close-button').forEach(button => { button.addEventListener('click', closeModals); });
 
-    // --- Event Listener for Clicking Outside Modals ---
+    // --- Event Listener for Clicking Outside Modals and Context Menu ---
     window.addEventListener('click', (event) => {
+        // Close modals if clicked outside
         if (event.target === shareDetailModal || event.target === dividendCalculatorModal ||
             event.target === shareFormSection || event.target === customDialogModal ||
             event.target === calculatorModal || event.target === addWatchlistModal ||
             event.target === manageWatchlistModal) {
             closeModals();
+        }
+
+        // Hide context menu if clicked outside
+        if (contextMenuOpen && shareContextMenu && !shareContextMenu.contains(event.target)) {
+            hideContextMenu();
         }
     });
 
@@ -1290,10 +1469,10 @@ async function initializeAppLogic() {
 
     // --- Event Listener for Sort Dropdown ---
     if (sortSelect) {
-        sortSelect.addEventListener('change', () => {
+        sortSelect.addEventListener('change', async () => { // Made async to allow await
+            currentSortOrder = sortSelect.value; // Update global variable
             sortShares();
-            // In v115, saveSortOrderPreference was not yet implemented here.
-            // It was added in v123. So, no save here for this reversion.
+            await saveSortOrderPreference(currentSortOrder); // Save the preference to Firestore
         });
     }
 
@@ -1302,7 +1481,7 @@ async function initializeAppLogic() {
         newShareBtn.addEventListener('click', () => {
             clearForm();
             formTitle.textContent = 'Add New Share';
-            deleteShareFromFormBtn.style.display = 'none';
+            if (deleteShareIcon) { deleteShareIcon.classList.add('hidden'); } // Hide delete icon
             showModal(shareFormSection);
             shareNameInput.focus();
             toggleAppSidebar(false); 
@@ -1313,7 +1492,7 @@ async function initializeAppLogic() {
         addShareHeaderBtn.addEventListener('click', () => {
             clearForm();
             formTitle.textContent = 'Add New Share';
-            deleteShareFromFormBtn.style.display = 'none';
+            if (deleteShareIcon) { deleteShareIcon.classList.add('hidden'); } // Hide delete icon
             showModal(shareFormSection);
             shareNameInput.focus();
         });
@@ -1390,8 +1569,9 @@ async function initializeAppLogic() {
         cancelFormBtn.addEventListener('click', () => { clearForm(); hideModal(shareFormSection); console.log("[Form] Form canceled."); });
     }
 
-    if (deleteShareFromFormBtn) {
-        deleteShareFromFormBtn.addEventListener('click', () => {
+    // Event listener for the new deleteShareIcon
+    if (deleteShareIcon) {
+        deleteShareIcon.addEventListener('click', () => {
             if (selectedShareDocId) {
                 showCustomConfirm("Are you sure you want to delete this share? This action cannot be undone.", async () => {
                     try {
@@ -1414,7 +1594,41 @@ async function initializeAppLogic() {
     if (editShareFromDetailBtn) {
         editShareFromDetailBtn.addEventListener('click', () => {
             hideModal(shareDetailModal);
-            showEditFormForSelectedShare();
+            showEditFormForSelectedShare(); // No need to pass ID, as selectedShareDocId is already set
+        });
+    }
+
+    // --- Context Menu Button Event Listeners ---
+    if (contextEditShareBtn) {
+        contextEditShareBtn.addEventListener('click', () => {
+            if (currentContextMenuShareId) {
+                const shareIdToEdit = currentContextMenuShareId; // Capture the ID before hiding the menu
+                hideContextMenu(); // Now hide the menu
+                showEditFormForSelectedShare(shareIdToEdit); // Use the captured ID
+            }
+        });
+    }
+
+    if (contextDeleteShareBtn) {
+        contextDeleteShareBtn.addEventListener('click', () => {
+            if (currentContextMenuShareId) {
+                const shareToDeleteId = currentContextMenuShareId; // Capture ID before hiding menu
+                hideContextMenu();
+                showCustomConfirm("Are you sure you want to delete this share? This action cannot be undone.", async () => {
+                    try {
+                        const shareDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, shareToDeleteId);
+                        await window.firestore.deleteDoc(shareDocRef);
+                        showCustomAlert("Share deleted successfully!", 1500);
+                        console.log(`[Firestore] Share (ID: ${shareToDeleteId}) deleted.`);
+                        await loadShares();
+                    } catch (error) {
+                        console.error("[Firestore] Error deleting share:", error);
+                        showCustomAlert("Error deleting share: " + error.message);
+                    }
+                });
+            } else {
+                showCustomAlert("No share selected for deletion from context menu.");
+            }
         });
     }
 
@@ -1454,7 +1668,7 @@ async function initializeAppLogic() {
                 currentWatchlistId = newWatchlistRef.id;
                 currentWatchlistName = watchlistName;
                 await saveLastSelectedWatchlistId(currentWatchlistId);
-                await loadUserWatchlists();
+                await loadUserWatchlistsAndSettings(); // Changed to loadUserWatchlistsAndSettings
                 await loadShares();
 
             } catch (error) {
@@ -1475,12 +1689,20 @@ async function initializeAppLogic() {
     // --- Manage Watchlist Modal (Edit/Delete) Functions ---
     if (editWatchlistBtn) {
         editWatchlistBtn.addEventListener('click', () => {
+            // Ensure currentWatchlistId and currentWatchlistName are up-to-date from the select dropdown
+            currentWatchlistId = watchlistSelect.value;
+            const selectedWatchlistObj = userWatchlists.find(w => w.id === currentWatchlistId);
+            currentWatchlistName = selectedWatchlistObj ? selectedWatchlistObj.name : '';
+
+            console.log(`[Edit Watchlist Button Click] currentWatchlistId: ${currentWatchlistId}, currentWatchlistName: ${currentWatchlistName}`);
+
             if (!currentWatchlistId) {
                 showCustomAlert("Please select a watchlist to edit.");
                 return;
             }
             editWatchlistNameInput.value = currentWatchlistName;
-            deleteWatchlistInModalBtn.disabled = userWatchlists.length <= 1;
+            // The delete button in the modal should still be disabled if it's the last watchlist
+            deleteWatchlistInModalBtn.disabled = userWatchlists.length <= 1; 
             showModal(manageWatchlistModal);
             editWatchlistNameInput.focus();
             toggleAppSidebar(false);
@@ -1511,7 +1733,7 @@ async function initializeAppLogic() {
                 console.log(`[Firestore] Watchlist (ID: ${currentWatchlistId}) renamed to '${newName}'.`);
                 hideModal(manageWatchlistModal);
                 currentWatchlistName = newName;
-                await loadUserWatchlists();
+                await loadUserWatchlistsAndSettings(); // Changed to loadUserWatchlistsAndSettings
                 await loadShares();
             } catch (error) {
                 console.error("[Firestore] Error renaming watchlist:", error);
@@ -1548,7 +1770,7 @@ async function initializeAppLogic() {
                     showCustomAlert(`Watchlist '${watchlistToDeleteName}' and its shares deleted successfully!`, 2000);
                     closeModals();
 
-                    await loadUserWatchlists();
+                    await loadUserWatchlistsAndSettings(); // Changed to loadUserWatchlistsAndSettings
                     await loadShares();
                 } catch (error) {
                     console.error("[Firestore] Error deleting watchlist:", error);
@@ -1649,40 +1871,48 @@ async function initializeAppLogic() {
 
     if (themeToggleBtn) {
         themeToggleBtn.addEventListener('click', () => {
-            // Determine the next custom theme
-            currentCustomThemeIndex = (currentCustomThemeIndex + 1) % CUSTOM_THEMES.length;
-            const nextTheme = CUSTOM_THEMES[currentCustomThemeIndex];
-            applyTheme(nextTheme);
-            console.log(`[Theme] Cycled to next custom theme: ${nextTheme}`);
+            // Cycle through custom themes first
+            currentCustomThemeIndex = (currentCustomThemeIndex + 1);
+            if (currentCustomThemeIndex >= CUSTOM_THEMES.length) {
+                currentCustomThemeIndex = -1; // Reset to -1 to indicate no custom theme
+                applyTheme('system-default'); // Revert to system default (light/dark)
+            } else {
+                const nextTheme = CUSTOM_THEMES[currentCustomThemeIndex];
+                applyTheme(nextTheme);
+            }
+            console.log(`[Theme] Cycled to next theme. Current index: ${currentCustomThemeIndex}`);
         });
     }
 
     if (colorThemeSelect) {
         colorThemeSelect.addEventListener('change', (event) => {
             const selectedTheme = event.target.value;
-            applyTheme(selectedTheme);
+            if (selectedTheme === 'none') {
+                applyTheme('system-default');
+            } else {
+                applyTheme(selectedTheme);
+            }
         });
     }
 
     if (revertToDefaultThemeBtn) {
         revertToDefaultThemeBtn.addEventListener('click', (event) => {
             event.preventDefault();
-            applyTheme('none'); // This will trigger applyDefaultLightDarkTheme
+            applyTheme('system-default'); // This will trigger applyDefaultLightDarkTheme
             console.log("[Theme] Reverted to default light/dark theme via button.");
         });
     }
 
     // Listen for system theme changes (if no explicit saved theme is set)
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
-        if (!localStorage.getItem('selectedTheme') && !localStorage.getItem('theme')) {
+        // Only react to system changes if we are currently in 'system-default' mode
+        if (currentActiveTheme === 'system-default') {
             if (event.matches) {
                 document.body.classList.add('dark-theme');
-                localStorage.setItem('theme', 'dark');
             } else {
                 document.body.classList.remove('dark-theme');
-                localStorage.setItem('theme', 'light');
             }
-            console.log("[Theme] System theme preference changed and applied.");
+            console.log("[Theme] System theme preference changed and applied (system-default mode).");
             updateThemeToggleAndSelector();
         }
     });
@@ -1762,7 +1992,7 @@ async function initializeAppLogic() {
 
 // --- DOMContentLoaded Event Listener (Main entry point) ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v117) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v126) DOMContentLoaded fired."); // Updated version number
 
     // Check if Firebase objects are available from the module script in index.html
     // If they are, proceed with setting up the auth state listener.
@@ -1785,7 +2015,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     mainTitle.textContent = "My Share Watchlist";
                 }
                 updateMainButtonsState(true);
-                await loadUserWatchlists(); // Load watchlists only after user is authenticated
+                await loadUserWatchlistsAndSettings(); // Load watchlists and settings only after user is authenticated
             } else {
                 currentUserId = null;
                 updateAuthButtonText(false);
@@ -1793,8 +2023,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log("[AuthState] User signed out.");
                 updateMainButtonsState(false);
                 clearShareList();
-                clearWatchlistUI();
+                clearWatchlistUI(); // This will call renderSortSelect and correctly set the placeholder
                 if (loadingIndicator) loadingIndicator.style.display = 'none';
+                // When signed out, revert to system default theme
+                applyTheme('system-default');
             }
             // This ensures initializeAppLogic runs only once after the initial auth state is determined
             // It's crucial that this runs *after* the user state is known, as many UI elements depend on it.
@@ -1816,5 +2048,7 @@ document.addEventListener('DOMContentLoaded', function() {
         updateAuthButtonText(false);
         updateMainButtonsState(false);
         if (loadingIndicator) loadingIndicator.style.display = 'none';
+        // If Firebase fails to initialize, ensure theme is system default
+        applyTheme('system-default');
     }
 }); // End DOMContentLoaded
