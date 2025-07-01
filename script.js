@@ -1,5 +1,5 @@
-// File Version: v120
-// Last Updated: 2025-07-01 (Implemented custom theme functionality and persistence)
+// File Version: v121
+// Last Updated: 2025-07-01 (Implemented reset modal scroll position on open)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -228,7 +228,12 @@ function updateMainButtonsState(enable) {
 function showModal(modalElement) {
     if (modalElement) {
         modalElement.style.setProperty('display', 'flex', 'important');
-        modalElement.scrollTop = 0;
+        modalElement.scrollTop = 0; // Reset scroll position to top
+        // Also reset scroll for any internal scrollable content
+        const scrollableContent = modalElement.querySelector('.modal-body-scrollable');
+        if (scrollableContent) {
+            scrollableContent.scrollTop = 0;
+        }
     }
 }
 
@@ -534,7 +539,6 @@ function renderSortSelect() {
         sortSelect.value = currentSortOrder;
         console.log(`[Sort] Applied saved sort order: ${currentSortOrder}`);
     } else {
-        // If not logged in or no saved preference, ensure placeholder is selected
         sortSelect.value = ''; 
         currentSortOrder = ''; // Ensure global variable is reset too
         console.log("[Sort] No valid saved sort order or not logged in, defaulting to placeholder.");
@@ -1809,7 +1813,7 @@ async function initializeAppLogic() {
 
 // --- DOMContentLoaded Event Listener (Main entry point) ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v120) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v121) DOMContentLoaded fired."); // Updated version number
 
     // Check if Firebase objects are available from the module script in index.html
     // If they are, proceed with setting up the auth state listener.
