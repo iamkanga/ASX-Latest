@@ -1,5 +1,5 @@
-// File Version: v142
-// Last Updated: 2025-07-02 (ASX Buttons & Watchlist Click Fixes - No Search)
+// File Version: v143
+// Last Updated: 2025-07-02 (Button State Debugging)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -151,7 +151,11 @@ const formInputs = [
  * @param {boolean} isDisabled True to disable, false to enable.
  */
 function setIconDisabled(element, isDisabled) {
-    if (!element) return;
+    if (!element) {
+        console.warn(`[setIconDisabled] Element is null or undefined. Cannot set disabled state.`);
+        return;
+    }
+    console.log(`[setIconDisabled] Setting ${element.id || element.className} to isDisabled: ${isDisabled}`);
     if (isDisabled) {
         element.classList.add('is-disabled-icon');
     } else {
@@ -372,10 +376,11 @@ function clearForm() {
     selectedShareDocId = null;
     if (deleteShareBtn) {
         deleteShareBtn.classList.add('hidden'); // Hide delete icon when adding new share
+        console.log("[clearForm] deleteShareBtn hidden.");
     }
     // Initially disable save button until share name is entered
     setIconDisabled(saveShareBtn, true);
-    console.log("[Form] Form fields cleared and selectedShareDocId reset.");
+    console.log("[Form] Form fields cleared and selectedShareDocId reset. saveShareBtn disabled.");
 }
 
 function showEditFormForSelectedShare(shareIdToEdit = null) {
@@ -409,9 +414,12 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
     }
     if (deleteShareBtn) {
         deleteShareBtn.classList.remove('hidden'); // Show delete icon when editing
+        setIconDisabled(deleteShareBtn, false); // Ensure it's enabled when shown
+        console.log("[showEditFormForSelectedShare] deleteShareBtn shown and enabled.");
     }
     // Enable save button when opening for edit, as shareName should already be present
     setIconDisabled(saveShareBtn, false);
+    console.log("[showEditFormForSelectedShare] saveShareBtn enabled.");
     showModal(shareFormSection);
     shareNameInput.focus();
     console.log(`[Form] Opened edit form for share: ${shareToEdit.shareName} (ID: ${selectedShareDocId})`);
@@ -1558,7 +1566,11 @@ async function initializeAppLogic() {
 
     // Share Name Input to uppercase
     if (shareNameInput) {
-        shareNameInput.addEventListener('input', function() { this.value = this.value.toUpperCase(); });
+        shareNameInput.addEventListener('input', function() { 
+            this.value = this.value.toUpperCase(); 
+            console.log(`[shareNameInput] Input changed. Value: '${this.value.trim()}', saveShareBtn disabled: ${this.value.trim() === ''}`);
+            setIconDisabled(saveShareBtn, this.value.trim() === '');
+        });
     }
 
     // Form input navigation with Enter key
@@ -1705,7 +1717,7 @@ async function initializeAppLogic() {
             console.log("[UI] New Share button (sidebar) clicked.");
             clearForm();
             formTitle.textContent = 'Add New Share';
-            if (deleteShareBtn) { deleteShareBtn.classList.add('hidden'); }
+            if (deleteShareBtn) { deleteShareBtn.classList.add('hidden'); } // Ensure it's hidden for new share
             showModal(shareFormSection);
             shareNameInput.focus();
             toggleAppSidebar(false); 
@@ -1718,7 +1730,7 @@ async function initializeAppLogic() {
             console.log("[UI] Add Share button (header) clicked.");
             clearForm();
             formTitle.textContent = 'Add New Share';
-            if (deleteShareBtn) { deleteShareBtn.classList.add('hidden'); }
+            if (deleteShareBtn) { deleteShareBtn.classList.add('hidden'); } // Ensure it's hidden for new share
             showModal(shareFormSection);
             shareNameInput.focus();
         });
@@ -1727,7 +1739,9 @@ async function initializeAppLogic() {
     // Event listener for shareNameInput to toggle saveShareBtn
     if (shareNameInput && saveShareBtn) {
         shareNameInput.addEventListener('input', () => {
-            setIconDisabled(saveShareBtn, shareNameInput.value.trim() === '');
+            const isDisabled = shareNameInput.value.trim() === '';
+            console.log(`[shareNameInput Listener] shareNameInput.value.trim(): '${shareNameInput.value.trim()}', isDisabled: ${isDisabled}`);
+            setIconDisabled(saveShareBtn, isDisabled);
         });
     }
 
@@ -1738,6 +1752,7 @@ async function initializeAppLogic() {
             // Ensure button is not disabled before proceeding
             if (saveShareBtn.classList.contains('is-disabled-icon')) {
                 showCustomAlert("Please enter a share code.");
+                console.warn("[Save Share] Save button was disabled, preventing action.");
                 return;
             }
 
@@ -1821,6 +1836,7 @@ async function initializeAppLogic() {
             console.log("[Share Form] Delete Share button clicked.");
             // Ensure button is not disabled before proceeding
             if (deleteShareBtn.classList.contains('is-disabled-icon')) {
+                console.warn("[Delete Share] Delete button was disabled, preventing action.");
                 return; // Do nothing if visually disabled
             }
             if (selectedShareDocId) {
@@ -1847,6 +1863,7 @@ async function initializeAppLogic() {
             console.log("[Share Details] Edit Share button clicked.");
             // Ensure button is not disabled before proceeding
             if (editShareFromDetailBtn.classList.contains('is-disabled-icon')) {
+                console.warn("[Edit Share From Detail] Edit button was disabled, preventing action.");
                 return; // Do nothing if visually disabled
             }
             hideModal(shareDetailModal);
@@ -1900,6 +1917,7 @@ async function initializeAppLogic() {
             console.log("[UI] Add Watchlist button clicked.");
             if (newWatchlistNameInput) newWatchlistNameInput.value = '';
             setIconDisabled(saveWatchlistBtn, true); // Disable save button initially
+            console.log("[Add Watchlist] saveWatchlistBtn disabled initially.");
             showModal(addWatchlistModal);
             newWatchlistNameInput.focus();
             toggleAppSidebar(false);
@@ -1909,7 +1927,9 @@ async function initializeAppLogic() {
     // Event listener for newWatchlistNameInput to toggle saveWatchlistBtn
     if (newWatchlistNameInput && saveWatchlistBtn) {
         newWatchlistNameInput.addEventListener('input', () => {
-            setIconDisabled(saveWatchlistBtn, newWatchlistNameInput.value.trim() === '');
+            const isDisabled = newWatchlistNameInput.value.trim() === '';
+            console.log(`[newWatchlistNameInput Listener] newWatchlistNameInput.value.trim(): '${newWatchlistNameInput.value.trim()}', isDisabled: ${isDisabled}`);
+            setIconDisabled(saveWatchlistBtn, isDisabled);
         });
     }
 
@@ -1920,6 +1940,7 @@ async function initializeAppLogic() {
             // Ensure button is not disabled before proceeding
             if (saveWatchlistBtn.classList.contains('is-disabled-icon')) {
                 showCustomAlert("Please enter a watchlist name.");
+                console.warn("[Save Watchlist] Save button was disabled, preventing action.");
                 return;
             }
 
@@ -1980,8 +2001,11 @@ async function initializeAppLogic() {
             }
             editWatchlistNameInput.value = currentWatchlistName;
             // The delete icon in the modal should still be disabled if it's the last watchlist
-            setIconDisabled(deleteWatchlistInModalBtn, userWatchlists.length <= 1); 
+            const isDisabledDelete = userWatchlists.length <= 1;
+            setIconDisabled(deleteWatchlistInModalBtn, isDisabledDelete); 
+            console.log(`[Edit Watchlist] deleteWatchlistInModalBtn disabled: ${isDisabledDelete}`);
             setIconDisabled(saveWatchlistNameBtn, false); // Enable save button initially
+            console.log("[Edit Watchlist] saveWatchlistNameBtn enabled initially.");
             showModal(manageWatchlistModal);
             editWatchlistNameInput.focus();
             toggleAppSidebar(false);
@@ -1991,7 +2015,9 @@ async function initializeAppLogic() {
     // Event listener for editWatchlistNameInput to toggle saveWatchlistNameBtn
     if (editWatchlistNameInput && saveWatchlistNameBtn) {
         editWatchlistNameInput.addEventListener('input', () => {
-            setIconDisabled(saveWatchlistNameBtn, editWatchlistNameInput.value.trim() === '');
+            const isDisabled = editWatchlistNameInput.value.trim() === '';
+            console.log(`[editWatchlistNameInput Listener] editWatchlistNameInput.value.trim(): '${editWatchlistNameInput.value.trim()}', isDisabled: ${isDisabled}`);
+            setIconDisabled(saveWatchlistNameBtn, isDisabled);
         });
     }
 
@@ -2002,6 +2028,7 @@ async function initializeAppLogic() {
             // Ensure button is not disabled before proceeding
             if (saveWatchlistNameBtn.classList.contains('is-disabled-icon')) {
                 showCustomAlert("Watchlist name cannot be empty.");
+                console.warn("[Save Watchlist Name] Save button was disabled, preventing action.");
                 return;
             }
 
@@ -2036,6 +2063,7 @@ async function initializeAppLogic() {
             console.log("[Manage Watchlist Form] Delete Watchlist button clicked.");
             // Ensure button is not disabled before proceeding
             if (deleteWatchlistInModalBtn.classList.contains('is-disabled-icon')) {
+                console.warn("[Delete Watchlist In Modal] Delete button was disabled, preventing action.");
                 return; // Do nothing if visually disabled
             }
             if (!currentWatchlistId || userWatchlists.length <= 1) {
@@ -2346,7 +2374,7 @@ async function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v142) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v143) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
