@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Share Tracker</title> <!-- Removed ASX from title -->
+    <title>Share Tracker</title>
     <!-- Favicon: Eggplant emoji -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍆</text></svg>">
 
     <!-- Linking to your separate style.css file -->
-    <link rel="stylesheet" href="style.css?v=60"> <!-- Updated CSS version -->
+    <link rel="stylesheet" href="style.css?v=61"> <!-- Updated CSS version -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -117,9 +117,8 @@
                     <option value="" disabled selected>Sort</option> <!-- Explicit "Sort" placeholder -->
                     <option value="entryDate-desc">Date Added (Newest)</option>
                     <option value="entryDate-asc">Date Added (Oldest)</option>
-                    <option value="shareName-asc">Code (A-Z)</option> <!-- Removed ASX -->
-                    <option value="shareName-desc">Code (Z-A)</option> <!-- Removed ASX -->
-                    <!-- Removed Current Price sorting options as per new display -->
+                    <option value="shareName-asc">Code (A-Z)</option>
+                    <option value="shareName-desc">Code (Z-A)</option>
                     <option value="dividendAmount-desc">Dividend (High-Low)</option>
                     <option value="dividendAmount-asc">Dividend (Low-High)</option>
                 </select>
@@ -146,8 +145,8 @@
                 <table id="shareTable">
                     <thead>
                         <tr>
-                            <th>Code</th> <!-- Removed ASX -->
-                            <th>Entered Price</th> <!-- Renamed from Current Price -->
+                            <th>Code</th>
+                            <th>Entered Price</th>
                             <th>Target Price</th>
                             <th>Dividends</th>
                             <th>Comments</th>
@@ -179,7 +178,6 @@
             <div class="modal-header-with-icon">
                 <span class="close-button form-close-button">&times;</span>
                 <h2 id="formTitle">Add New Share</h2>
-                <!-- Delete icon moved to sticky footer -->
             </div>
             
             <!-- Scrollable content area for the form inputs and comments -->
@@ -199,9 +197,10 @@
                 <label for="frankingCredits">Franking Credits (%):</label>
                 <input type="number" id="frankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 70 for 70%">
 
+                <!-- Comments section container -->
                 <div id="commentsFormContainer" class="comments-form-container">
                     <h3>Comments <button type="button" id="addCommentSectionBtn" class="add-section-btn">+</button></h3>
-                    <!-- Comment sections will be dynamically added here by JS -->
+                    <!-- Initial comment section will be added here by JS -->
                 </div>
             </div>
             <!-- END Scrollable content area -->
@@ -287,15 +286,15 @@
             <span class="close-button calc-close-button">&times;</span>
             <h2>Dividend Calculator</h2>
             <div class="calc-input-group">
-                <label for="calcCurrentPrice">Share Price ($):</label> <!-- Reordered and renamed -->
+                <label for="calcCurrentPrice">Share Price ($):</label>
                 <input type="number" id="calcCurrentPrice" step="0.01" placeholder="e.g., 25.50">
             </div>
             <div class="calc-input-group">
-                <label for="calcDividendAmount">Dividend Amount (per share, annual $):</label> <!-- Reordered -->
+                <label for="calcDividendAmount">Dividend Amount (per share, annual $):</label>
                 <input type="number" id="calcDividendAmount" step="0.001" placeholder="e.g., 1.250">
             </div>
             <div class="calc-input-group">
-                <label for="calcFrankingCredits">Franking Credits (%):</label> <!-- Reordered -->
+                <label for="calcFrankingCredits">Franking Credits (%):</label>
                 <input type="number" id="calcFrankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 70 for 70%">
             </div>
             <p><strong>Unfranked Yield:</strong> <span id="calcUnfrankedYield">-</span></p>
@@ -426,7 +425,7 @@
             where: where,
             getDocs: getDocs,
             deleteField: FieldValue.delete,
-            writeBatch: writeBatch // Exposed writeBatch
+            writeBatch: writeBatch
         } : null;
         
         window.authFunctions = firebaseInitialized ? {
@@ -439,10 +438,10 @@
         } : null;
 
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log("index.html (v66) script module loaded and DOMContentLoaded fired."); // Updated version number
+            console.log("index.html (v67) script module loaded and DOMContentLoaded fired."); // Updated version number
         }); 
     </script>
     <!-- Linking to your separate script.js file -->
-    <script src="script.js?v=125"></script> <!-- Updated to v125 -->
+    <script src="script.js?v=127"></script> <!-- Updated to v127 -->
 </body>
 </html>

@@ -1,5 +1,5 @@
-// File Version: v126
-// Last Updated: 2025-07-01 (FIX: Context Menu Edit Share functionality)
+// File Version: v127
+// Last Updated: 2025-07-01 (Multiple Comment Sections functionality)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -344,12 +344,11 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
     dividendAmountInput.value = Number(shareToEdit.dividendAmount) !== null && !isNaN(Number(shareToEdit.dividendAmount)) ? Number(shareToEdit.dividendAmount).toFixed(3) : '';
     frankingCreditsInput.value = Number(shareToEdit.frankingCredits) !== null && !isNaN(Number(shareToEdit.frankingCredits)) ? Number(shareToEdit.frankingCredits).toFixed(1) : '';
     
-    commentsFormContainer.innerHTML = '';
-    if (shareToEdit.comments && Array.isArray(shareToEdit.comments)) {
+    commentsFormContainer.innerHTML = ''; // Clear existing comment sections
+    if (shareToEdit.comments && Array.isArray(shareToEdit.comments) && shareToEdit.comments.length > 0) {
         shareToEdit.comments.forEach(comment => addCommentSection(comment.title, comment.text));
-    }
-    if (shareToEdit.comments === undefined || shareToEdit.comments.length === 0) {
-        addCommentSection();
+    } else {
+        addCommentSection(); // Add one empty comment section if none exist
     }
     if (deleteShareIcon) { // Show delete icon when editing
         deleteShareIcon.classList.remove('hidden');
@@ -1379,10 +1378,19 @@ async function initializeAppLogic() {
             input.addEventListener('keydown', function(event) {
                 if (event.key === 'Enter') {
                     event.preventDefault();
+                    // Check if it's the last input in the main form, then focus on comments or save
                     if (index === formInputs.length - 1) {
-                        if (addCommentSectionBtn && addCommentSectionBtn.offsetParent !== null) { // Check if visible
-                            addCommentSectionBtn.click();
-                        } else if (saveShareBtn) { saveShareBtn.click(); }
+                        // Check if the add comment button is visible and not disabled (e.g., if comments section is hidden)
+                        if (addCommentSectionBtn && addCommentSectionBtn.offsetParent !== null) { 
+                            addCommentSectionBtn.click(); // Simulate click to add new comment section
+                            // After adding, focus on the new comment's title input
+                            const newCommentTitleInput = commentsFormContainer.lastElementChild?.querySelector('.comment-title-input');
+                            if (newCommentTitleInput) {
+                                newCommentTitleInput.focus();
+                            }
+                        } else if (saveShareBtn) { 
+                            saveShareBtn.click(); // If no more comment sections can be added, try to save
+                        }
                     } else {
                         if (formInputs[index + 1]) formInputs[index + 1].focus();
                     }
@@ -1510,8 +1518,10 @@ async function initializeAppLogic() {
 
             const comments = [];
             commentsFormContainer.querySelectorAll('.comment-section').forEach(section => {
-                const title = section.querySelector('.comment-title-input').value.trim();
-                const text = section.querySelector('.comment-text-input').value.trim();
+                const titleInput = section.querySelector('.comment-title-input');
+                const textInput = section.querySelector('.comment-text-input');
+                const title = titleInput ? titleInput.value.trim() : '';
+                const text = textInput ? textInput.value.trim() : '';
                 if (title || text) { // Only save if there's content
                     comments.push({ title: title, text: text });
                 }
@@ -1992,7 +2002,7 @@ async function initializeAppLogic() {
 
 // --- DOMContentLoaded Event Listener (Main entry point) ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v126) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v127) DOMContentLoaded fired."); // Updated version number
 
     // Check if Firebase objects are available from the module script in index.html
     // If they are, proceed with setting up the auth state listener.

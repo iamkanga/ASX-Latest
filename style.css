@@ -1,5 +1,5 @@
-/* File Version: v60 */
-/* Last Updated: 2025-07-01 (Long Press/Right-Click Context Menu Styling) */
+/* File Version: v61 */
+/* Last Updated: 2025-07-01 (Multiple Comment Sections Styling) */
 
 :root {
     /* Light Theme (Default) */
@@ -1265,6 +1265,7 @@ button:disabled {
     outline: none;
 }
 
+/* Styles for the new comments section container */
 .comments-form-container {
     margin-top: 20px;
     border-top: 1px solid var(--border-color);
@@ -1304,11 +1305,12 @@ button:disabled {
     transform: translateY(-1px);
 }
 
+/* Styles for individual comment sections */
 .comment-section {
     border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 15px;
-    margin-bottom: 15px;
+    margin-bottom: 15px; /* Space between multiple comment sections */
     background-color: var(--card-bg);
     position: relative;
 }
@@ -1322,9 +1324,12 @@ button:disabled {
 
 .comment-section-header .comment-title-input {
     flex-grow: 1;
-    margin-bottom: 0; 
-    margin-right: 10px;
+    margin-bottom: 0; /* Remove default margin from input */
+    margin-right: 10px; /* Space between title input and delete button */
     font-weight: 600;
+    /* Ensure title input doesn't take full width and wrap */
+    width: auto; 
+    min-width: 0;
 }
 
 .comment-section .comment-delete-btn {
@@ -1336,11 +1341,18 @@ button:disabled {
     transition: color 0.2s ease;
     line-height: 1;
     padding: 0;
-    flex-shrink: 0; 
+    flex-shrink: 0; /* Prevent button from shrinking */
+    width: 30px; /* Make clickable area consistent */
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%; /* Make it round */
 }
 
 .comment-section .comment-delete-btn:hover {
     color: var(--danger-button-hover-bg);
+    transform: scale(1.1);
 }
 
 .comment-section textarea {
