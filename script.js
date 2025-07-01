@@ -1,5 +1,5 @@
-// File Version: v127
-// Last Updated: 2025-07-01 (Multiple Comment Sections functionality)
+// File Version: v128
+// Last Updated: 2025-07-01 (Log Out Button Logic)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -23,7 +23,7 @@ const LONG_PRESS_THRESHOLD = 500; // Time in ms for long press detection
 let touchStartX = 0;
 let touchStartY = 0;
 const TOUCH_MOVE_THRESHOLD = 10; // Pixels for touch movement to cancel long press
-const KANGA_EMAIL = 'iamkanga@gmail.com';
+const KANGA_EMAIL = 'iamkanga@gmail.000';
 let currentCalculatorInput = '';
 let operator = null;
 let previousCalculatorInput = '';
@@ -125,6 +125,7 @@ const cancelManageWatchlistBtn = document.getElementById('cancelManageWatchlistB
 const shareContextMenu = document.getElementById('shareContextMenu'); // New: Context menu element
 const contextEditShareBtn = document.getElementById('contextEditShareBtn'); // New: Context menu edit button
 const contextDeleteShareBtn = document.getElementById('contextDeleteShareBtn'); // New: Context menu delete button
+const logoutBtn = document.getElementById('logoutBtn'); // NEW: Logout button reference
 
 // Ensure sidebarOverlay is correctly referenced or created if not already in HTML
 let sidebarOverlay = document.querySelector('.sidebar-overlay');
@@ -226,6 +227,7 @@ function updateMainButtonsState(enable) {
     if (editWatchlistBtn) editWatchlistBtn.disabled = !enable || userWatchlists.length === 0; 
     if (deleteWatchlistInModalBtn) deleteWatchlistInModalBtn.disabled = !enable || userWatchlists.length <= 1;
     if (addShareHeaderBtn) addShareHeaderBtn.disabled = !enable;
+    if (logoutBtn) logoutBtn.disabled = !enable; // NEW: Disable logout button if not authenticated
 }
 
 function showModal(modalElement) {
@@ -467,7 +469,7 @@ function sortShares() {
             if (nameA === '' && nameB === '') return 0;
             if (nameA === '') return order === 'asc' ? 1 : -1;
             if (nameB === '') return order === 'asc' ? -1 : 1;
-            return order === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+            return order === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(a);
         } else if (field === 'entryDate') {
             const dateA = new Date(valA);
             const dateB = new Date(valB);
@@ -1461,6 +1463,29 @@ async function initializeAppLogic() {
         });
     }
 
+    // NEW: Logout button event listener
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', async () => {
+            console.log("[Auth] Logout Button Clicked.");
+            const currentAuth = window.firebaseAuth;
+            if (!currentAuth || !window.authFunctions) {
+                console.warn("[Auth] Auth service not ready or functions not loaded. Cannot process logout.");
+                showCustomAlert("Authentication service not ready. Please try again in a moment.");
+                return;
+            }
+            showCustomConfirm("Are you sure you want to log out?", async () => {
+                try {
+                    await window.authFunctions.signOut(currentAuth);
+                    console.log("[Auth] User successfully logged out.");
+                    toggleAppSidebar(false); // Close sidebar after logout
+                } catch (error) {
+                    console.error("[Auth] Logout failed:", error);
+                    showCustomAlert("Logout failed: " + error.message);
+                }
+            });
+        });
+    }
+
     // --- Event Listener for Watchlist Dropdown ---
     if (watchlistSelect) {
         watchlistSelect.addEventListener('change', async () => {
@@ -2002,7 +2027,7 @@ async function initializeAppLogic() {
 
 // --- DOMContentLoaded Event Listener (Main entry point) ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v127) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v128) DOMContentLoaded fired."); // Updated version number
 
     // Check if Firebase objects are available from the module script in index.html
     // If they are, proceed with setting up the auth state listener.

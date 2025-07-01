@@ -1,5 +1,5 @@
-/* File Version: v61 */
-/* Last Updated: 2025-07-01 (Multiple Comment Sections Styling) */
+/* File Version: v62 */
+/* Last Updated: 2025-07-01 (Log Out Button Styling & Disabled Button Fix) */
 
 :root {
     /* Light Theme (Default) */
@@ -734,11 +734,14 @@ h1#mainTitle {
     font-size: 1.1em;
 }
 
+.menu-section {
+    margin-bottom: 20px;
+}
+
 .menu-buttons-group {
     display: flex;
     flex-direction: column; 
     gap: 10px; 
-    margin-bottom: 20px;
 }
 
 #themeToggleBtn.menu-button-item {
@@ -791,9 +794,11 @@ h1#mainTitle {
 }
 
 .menu-button-item:disabled {
-    background-color: var(--secondary-button-bg);
+    background-color: var(--secondary-button-bg); /* Keep original background for disabled */
     cursor: not-allowed;
-    opacity: 0.5; /* Changed opacity for disabled buttons */
+    opacity: 0.6; /* Reduced opacity for disabled buttons */
+    box-shadow: none; /* Remove shadow for disabled buttons */
+    transform: none; /* Remove hover transform for disabled buttons */
 }
 
 .menu-button-item.danger-button {
@@ -829,6 +834,40 @@ h1#mainTitle {
 #revertToDefaultThemeBtn .fas + .fas {
     margin-left: -5px; 
     margin-right: 10px; 
+}
+
+/* NEW: Logout Button Specific Styling */
+#logoutBtn {
+    background-color: var(--danger-button-bg); /* Use danger color for logout */
+    color: var(--button-text);
+    padding: 12px 15px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 600;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    width: 100%; 
+    box-sizing: border-box;
+    justify-content: flex-start; 
+    margin-top: auto; /* Push to the bottom of the sidebar */
+}
+
+#logoutBtn:hover {
+    background-color: var(--danger-button-hover-bg);
+    transform: translateY(-1px);
+}
+
+#logoutBtn:disabled {
+    background-color: var(--secondary-button-bg);
+    cursor: not-allowed;
+    opacity: 0.6;
+    box-shadow: none;
+    transform: none;
 }
 
 
@@ -1081,7 +1120,7 @@ table tbody tr:not(.selected):hover {
 .google-auth-btn:disabled {
     background-color: var(--secondary-button-bg);
     cursor: not-allowed;
-    opacity: 0.7;
+    opacity: 0.6; /* Adjusted opacity for disabled auth button */
 }
 
 
@@ -1171,7 +1210,7 @@ table tbody tr:not(.selected):hover {
 
 /* General disabled button styling */
 button:disabled {
-    opacity: 0.5; /* Make it semi-transparent */
+    opacity: 0.6; /* Make it semi-transparent */
     cursor: not-allowed; /* Change cursor */
     box-shadow: none; /* Remove shadow */
     transform: none; /* Remove hover transform */
@@ -1354,14 +1393,6 @@ button:disabled {
     color: var(--danger-button-hover-bg);
     transform: scale(1.1);
 }
-
-.comment-section textarea {
-    min-height: 80px; 
-    max-height: 150px; 
-    overflow-y: auto; 
-    resize: vertical; 
-}
-
 
 .form-action-buttons,
 .modal-action-buttons,
