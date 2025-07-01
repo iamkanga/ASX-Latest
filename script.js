@@ -1,5 +1,5 @@
-// File Version: v124
-// Last Updated: 2025-07-01 (Sticky Share Form Footer - JS updates for delete icon visibility)
+// File Version: v125
+// Last Updated: 2025-07-01 (Long Press/Right-Click Context Menu)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -19,12 +19,10 @@ let lastTapTime = 0;
 let tapTimeout;
 let selectedElementForTap = null;
 let longPressTimer;
-const LONG_PRESS_THRESHOLD = 400; // Increased sensitivity for long press
-const DOUBLE_TAP_THRESHOLD = 300; // Max time between taps for double tap
-const DOUBLE_TAP_TIMEOUT = 250; // Timeout to register single tap vs potential double tap
+const LONG_PRESS_THRESHOLD = 500; // Time in ms for long press detection
 let touchStartX = 0;
 let touchStartY = 0;
-const TOUCH_MOVE_THRESHOLD = 10;
+const TOUCH_MOVE_THRESHOLD = 10; // Pixels for touch movement to cancel long press
 const KANGA_EMAIL = 'iamkanga@gmail.com';
 let currentCalculatorInput = '';
 let operator = null;
@@ -36,6 +34,8 @@ let userWatchlists = [];
 let currentWatchlistId = null;
 let currentWatchlistName = '';
 let currentSortOrder = 'entryDate-desc'; // Default sort order, now a global variable
+let contextMenuOpen = false; // To track if the custom context menu is open
+let currentContextMenuShareId = null; // Stores the ID of the share that opened the context menu
 
 // Theme related variables
 const CUSTOM_THEMES = [
@@ -122,6 +122,9 @@ const editWatchlistNameInput = document.getElementById('editWatchlistName');
 const saveWatchlistNameBtn = document.getElementById('saveWatchlistNameBtn');
 const deleteWatchlistInModalBtn = document.getElementById('deleteWatchlistInModalBtn');
 const cancelManageWatchlistBtn = document.getElementById('cancelManageWatchlistBtn');
+const shareContextMenu = document.getElementById('shareContextMenu'); // New: Context menu element
+const contextEditShareBtn = document.getElementById('contextEditShareBtn'); // New: Context menu edit button
+const contextDeleteShareBtn = document.getElementById('contextDeleteShareBtn'); // New: Context menu delete button
 
 // Ensure sidebarOverlay is correctly referenced or created if not already in HTML
 let sidebarOverlay = document.querySelector('.sidebar-overlay');
@@ -150,6 +153,7 @@ function closeModals() {
     resetCalculator(); // Reset calculator state when closing calculator modal
     deselectCurrentShare(); // Always deselect share when any modal is closed
     if (autoDismissTimeout) { clearTimeout(autoDismissTimeout); autoDismissTimeout = null; }
+    hideContextMenu(); // Ensure context menu is closed when any modal is closed
 }
 
 // Custom Dialog (Alert/Confirm) Functions
@@ -317,16 +321,22 @@ function clearForm() {
 }
 
 // Function to show the edit form with selected share's data
-function showEditFormForSelectedShare() {
-    if (!selectedShareDocId) {
+function showEditFormForSelectedShare(shareIdToEdit = null) {
+    // Use the provided shareIdToEdit or fall back to globally selectedShareDocId
+    const targetShareId = shareIdToEdit || selectedShareDocId;
+
+    if (!targetShareId) {
         showCustomAlert("Please select a share to edit.");
         return;
     }
-    const shareToEdit = allSharesData.find(share => share.id === selectedShareDocId);
+    const shareToEdit = allSharesData.find(share => share.id === targetShareId);
     if (!shareToEdit) {
         showCustomAlert("Selected share not found.");
         return;
     }
+    // Ensure the global selectedShareDocId is set to the one being edited
+    selectedShareDocId = targetShareId; 
+
     formTitle.textContent = 'Edit Share';
     shareNameInput.value = shareToEdit.shareName || '';
     currentPriceInput.value = Number(shareToEdit.currentPrice) !== null && !isNaN(Number(shareToEdit.currentPrice)) ? Number(shareToEdit.currentPrice).toFixed(2) : '';
@@ -554,18 +564,60 @@ function addShareToTable(share) {
     if (!shareTableBody) { console.error("[addShareToTable] shareTableBody element not found."); return; }
     const row = shareTableBody.insertRow();
     row.dataset.docId = share.id;
+    
+    // Single Click (View Details)
     row.addEventListener('click', (event) => { 
-        selectShare(share.id); 
-        if (window.innerWidth > 768 && !event.target.closest('button')) {
-            showShareDetails();
-        }
-    });
-    row.addEventListener('dblclick', (event) => { 
-        if (window.innerWidth <= 768) {
+        // Only trigger details if not a long press or right click event that just happened
+        if (!contextMenuOpen) { // Prevent click from opening details right after context menu
             selectShare(share.id); 
-            showShareDetails(); 
+            if (window.innerWidth > 768 && !event.target.closest('button')) {
+                showShareDetails();
+            }
         }
     });
+
+    // Right-Click (Context Menu)
+    row.addEventListener('contextmenu', (event) => {
+        event.preventDefault(); // Prevent default browser context menu
+        selectShare(share.id); // Select the share first
+        showContextMenu(event, share.id);
+    });
+
+    // Touch Events for Long Press (Context Menu)
+    let touchStartTime;
+    row.addEventListener('touchstart', (event) => {
+        if (event.touches.length === 1) {
+            touchStartTime = new Date().getTime();
+            touchStartX = event.touches[0].clientX;
+            touchStartY = event.touches[0].clientY;
+            longPressTimer = setTimeout(() => {
+                // If long press detected, prevent default to avoid scrolling/zooming
+                event.preventDefault(); 
+                selectShare(share.id);
+                showContextMenu(event, share.id);
+            }, LONG_PRESS_THRESHOLD);
+        }
+    });
+
+    row.addEventListener('touchmove', (event) => {
+        if (longPressTimer) {
+            const currentX = event.touches[0].clientX;
+            const currentY = event.touches[0].clientY;
+            const distance = Math.sqrt(Math.pow(currentX - touchStartX, 2) + Math.pow(currentY - touchStartY, 2));
+            if (distance > TOUCH_MOVE_THRESHOLD) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+        }
+    });
+
+    row.addEventListener('touchend', () => {
+        if (longPressTimer) {
+            clearTimeout(longPressTimer);
+            longPressTimer = null;
+        }
+    });
+
 
     const displayShareName = (share.shareName && String(share.shareName).trim() !== '') ? share.shareName : '(No Code)';
     row.insertCell().textContent = displayShareName;
@@ -648,32 +700,56 @@ function addShareToMobileCards(share) {
     `;
     mobileShareCardsContainer.appendChild(card);
 
+    // Single Click (View Details)
     card.addEventListener('click', function(e) {
-        const currentTime = new Date().getTime();
-        const tapLength = currentTime - lastTapTime;
-        const docId = e.currentTarget.dataset.docId;
-
-        if (tapLength < DOUBLE_TAP_THRESHOLD && tapLength > 0 && selectedElementForTap === e.currentTarget) {
-            clearTimeout(tapTimeout);
-            lastTapTime = 0;
-            selectedElementForTap = null;
+        // Only trigger details if not a long press or right click event that just happened
+        if (!contextMenuOpen) { // Prevent click from opening details right after context menu
+            const docId = e.currentTarget.dataset.docId;
             selectShare(docId);
             showShareDetails();
-            e.preventDefault();
-        } else {
-            lastTapTime = currentTime;
-            selectedElementForTap = e.currentTarget;
-            tapTimeout = setTimeout(() => {
-                if (selectedElementForTap) {
-                    selectShare(docId);
-                    selectedElementForTap = null;
-                }
-            }, DOUBLE_TAP_TIMEOUT);
         }
     });
 
-    card.addEventListener('contextmenu', function(e) {
-        e.preventDefault();
+    // Right-Click (Context Menu)
+    card.addEventListener('contextmenu', (event) => {
+        event.preventDefault(); // Prevent default browser context menu
+        selectShare(share.id); // Select the share first
+        showContextMenu(event, share.id);
+    });
+
+    // Touch Events for Long Press (Context Menu)
+    let touchStartTime;
+    card.addEventListener('touchstart', (event) => {
+        if (event.touches.length === 1) {
+            touchStartTime = new Date().getTime();
+            touchStartX = event.touches[0].clientX;
+            touchStartY = event.touches[0].clientY;
+            longPressTimer = setTimeout(() => {
+                // If long press detected, prevent default to avoid scrolling/zooming
+                event.preventDefault(); 
+                selectShare(share.id);
+                showContextMenu(event, share.id);
+            }, LONG_PRESS_THRESHOLD);
+        }
+    });
+
+    card.addEventListener('touchmove', (event) => {
+        if (longPressTimer) {
+            const currentX = event.touches[0].clientX;
+            const currentY = event.touches[0].clientY;
+            const distance = Math.sqrt(Math.pow(currentX - touchStartX, 2) + Math.pow(currentY - touchStartY, 2));
+            if (distance > TOUCH_MOVE_THRESHOLD) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+        }
+    });
+
+    card.addEventListener('touchend', () => {
+        if (longPressTimer) {
+            clearTimeout(longPressTimer);
+            longPressTimer = null;
+        }
     });
 
     console.log(`[Render] Added share ${displayShareName} to mobile cards.`);
@@ -1189,6 +1265,55 @@ async function migrateOldSharesToWatchlist() {
     }
 }
 
+// --- Context Menu Functions ---
+function showContextMenu(event, shareId) {
+    if (!shareContextMenu) return;
+    
+    // Set the share ID for context menu actions
+    currentContextMenuShareId = shareId;
+    
+    // Position the context menu
+    let x = event.clientX;
+    let y = event.clientY;
+
+    // For touch events, use the touch coordinates
+    if (event.touches && event.touches.length > 0) {
+        x = event.touches[0].clientX;
+        y = event.touches[0].clientY;
+    }
+
+    // Adjust position to keep menu within viewport
+    const menuWidth = shareContextMenu.offsetWidth;
+    const menuHeight = shareContextMenu.offsetHeight;
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    if (x + menuWidth > viewportWidth) {
+        x = viewportWidth - menuWidth - 10; // 10px padding from right edge
+    }
+    if (y + menuHeight > viewportHeight) {
+        y = viewportHeight - menuHeight - 10; // 10px padding from bottom edge
+    }
+    // Ensure menu doesn't go off left/top edge
+    if (x < 10) x = 10;
+    if (y < 10) y = 10;
+
+    shareContextMenu.style.left = `${x}px`;
+    shareContextMenu.style.top = `${y}px`;
+    shareContextMenu.style.display = 'block';
+    contextMenuOpen = true;
+    console.log(`[Context Menu] Opened for share ID: ${shareId} at (${x}, ${y})`);
+}
+
+function hideContextMenu() {
+    if (shareContextMenu) {
+        shareContextMenu.style.display = 'none';
+        contextMenuOpen = false;
+        currentContextMenuShareId = null;
+        deselectCurrentShare(); // Deselect the share when context menu is closed
+        console.log("[Context Menu] Hidden.");
+    }
+}
 
 // --- TOGGLE SIDEBAR FUNCTION (MOVED TO GLOBAL SCOPE) ---
 function toggleAppSidebar(forceState = null) {
@@ -1228,6 +1353,7 @@ async function initializeAppLogic() {
     if (manageWatchlistModal) manageWatchlistModal.style.setProperty('display', 'none', 'important');
     if (customDialogModal) customDialogModal.style.setProperty('display', 'none', 'important');
     if (calculatorModal) calculatorModal.style.setProperty('display', 'none', 'important');
+    if (shareContextMenu) shareContextMenu.style.setProperty('display', 'none', 'important'); // Hide context menu initially
     
     renderWatchlistSelect(); // Render initial empty watchlist select
     
@@ -1272,13 +1398,19 @@ async function initializeAppLogic() {
     // --- Event Listeners for Modal Close Buttons ---
     document.querySelectorAll('.close-button').forEach(button => { button.addEventListener('click', closeModals); });
 
-    // --- Event Listener for Clicking Outside Modals ---
+    // --- Event Listener for Clicking Outside Modals and Context Menu ---
     window.addEventListener('click', (event) => {
+        // Close modals if clicked outside
         if (event.target === shareDetailModal || event.target === dividendCalculatorModal ||
             event.target === shareFormSection || event.target === customDialogModal ||
             event.target === calculatorModal || event.target === addWatchlistModal ||
             event.target === manageWatchlistModal) {
             closeModals();
+        }
+
+        // Hide context menu if clicked outside
+        if (contextMenuOpen && shareContextMenu && !shareContextMenu.contains(event.target)) {
+            hideContextMenu();
         }
     });
 
@@ -1462,7 +1594,40 @@ async function initializeAppLogic() {
     if (editShareFromDetailBtn) {
         editShareFromDetailBtn.addEventListener('click', () => {
             hideModal(shareDetailModal);
-            showEditFormForSelectedShare();
+            showEditFormForSelectedShare(); // No need to pass ID, as selectedShareDocId is already set
+        });
+    }
+
+    // --- Context Menu Button Event Listeners ---
+    if (contextEditShareBtn) {
+        contextEditShareBtn.addEventListener('click', () => {
+            if (currentContextMenuShareId) {
+                hideContextMenu();
+                showEditFormForSelectedShare(currentContextMenuShareId);
+            }
+        });
+    }
+
+    if (contextDeleteShareBtn) {
+        contextDeleteShareBtn.addEventListener('click', () => {
+            if (currentContextMenuShareId) {
+                const shareToDeleteId = currentContextMenuShareId; // Capture ID before hiding menu
+                hideContextMenu();
+                showCustomConfirm("Are you sure you want to delete this share? This action cannot be undone.", async () => {
+                    try {
+                        const shareDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, shareToDeleteId);
+                        await window.firestore.deleteDoc(shareDocRef);
+                        showCustomAlert("Share deleted successfully!", 1500);
+                        console.log(`[Firestore] Share (ID: ${shareToDeleteId}) deleted.`);
+                        await loadShares();
+                    } catch (error) {
+                        console.error("[Firestore] Error deleting share:", error);
+                        showCustomAlert("Error deleting share: " + error.message);
+                    }
+                });
+            } else {
+                showCustomAlert("No share selected for deletion from context menu.");
+            }
         });
     }
 
@@ -1826,7 +1991,7 @@ async function initializeAppLogic() {
 
 // --- DOMContentLoaded Event Listener (Main entry point) ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v124) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v125) DOMContentLoaded fired."); // Updated version number
 
     // Check if Firebase objects are available from the module script in index.html
     // If they are, proceed with setting up the auth state listener.

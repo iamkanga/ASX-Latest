@@ -1,5 +1,5 @@
-/* File Version: v59 */
-/* Last Updated: 2025-07-01 (Sticky Share Form Footer Styling) */
+/* File Version: v60 */
+/* Last Updated: 2025-07-01 (Long Press/Right-Click Context Menu Styling) */
 
 :root {
     /* Light Theme (Default) */
@@ -793,7 +793,7 @@ h1#mainTitle {
 .menu-button-item:disabled {
     background-color: var(--secondary-button-bg);
     cursor: not-allowed;
-    opacity: 0.7;
+    opacity: 0.5; /* Changed opacity for disabled buttons */
 }
 
 .menu-button-item.danger-button {
@@ -1364,7 +1364,7 @@ button:disabled {
     border-top: 1px solid var(--border-color); 
 }
 
-/* NEW: Styles for sticky footer in modals */
+/* Styles for sticky footer in modals */
 .modal-content .sticky-footer {
     position: sticky;
     bottom: -25px; /* Adjust to align with modal content bottom padding */
@@ -1376,6 +1376,9 @@ button:disabled {
     box-shadow: 0 -2px 8px var(--shadow-color);
     z-index: 10; /* Ensure it's above scrolling content */
     margin-top: 0; /* Remove default margin-top */
+    display: flex; /* Ensure flex layout for buttons */
+    justify-content: space-between; /* Space out items */
+    align-items: center; /* Vertically align */
 }
 
 
@@ -1701,6 +1704,47 @@ button:disabled {
     margin-bottom: 0;
 }
 
+/* Context Menu Styles */
+.context-menu {
+    display: none; /* Hidden by default */
+    position: fixed;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px var(--shadow-color);
+    z-index: 1001; /* Above modals */
+    padding: 8px 0;
+    min-width: 150px;
+}
+
+.context-menu-item {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    padding: 10px 15px;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    font-size: 0.95em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background-color 0.2s ease;
+}
+
+.context-menu-item:hover {
+    background-color: var(--table-row-hover-bg);
+}
+
+.context-menu-item.danger-button {
+    color: var(--danger-color);
+}
+
+.context-menu-item.danger-button:hover {
+    background-color: var(--danger-button-bg);
+    color: var(--button-text); /* Text color changes to white on hover for danger button */
+}
+
 
 @media (max-width: 768px) {
     h1#mainTitle {
@@ -1842,6 +1886,15 @@ button:disabled {
         right: unset; 
         transform: none; 
     }
+
+    /* Context menu on mobile should be centered or near the tap */
+    .context-menu {
+        max-width: 200px; /* Constrain width on mobile */
+        left: 50%;
+        transform: translateX(-50%);
+        top: auto !important; /* Override JS positioning for vertical centering */
+        bottom: 20px; /* Position above the footer on mobile */
+    }
 }
 
 @media (min-width: 769px) {
@@ -1969,6 +2022,14 @@ button:disabled {
 
     #scrollToTopBtn {
         display: none; 
+    }
+
+    /* Context menu on desktop should follow mouse */
+    .context-menu {
+        top: var(--mouse-y, 0);
+        left: var(--mouse-x, 0);
+        transform: none; /* Remove mobile centering */
+        bottom: auto; /* Reset mobile positioning */
     }
 }
 
