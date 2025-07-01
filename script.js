@@ -1,5 +1,5 @@
-// File Version: v123
-// Last Updated: 2025-07-01 (Streamlined Share Form Buttons - Delete Icon Logic)
+// File Version: v124
+// Last Updated: 2025-07-01 (Sticky Share Form Footer - JS updates for delete icon visibility)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -58,8 +58,7 @@ const formCloseButton = document.querySelector('.form-close-button');
 const formTitle = document.getElementById('formTitle');
 const saveShareBtn = document.getElementById('saveShareBtn');
 const cancelFormBtn = document.getElementById('cancelFormBtn');
-// const deleteShareFromFormBtn = document.getElementById('deleteShareFromFormBtn'); // Removed as it's no longer a button
-const deleteShareIcon = document.getElementById('deleteShareIcon'); // New reference for the delete icon
+const deleteShareIcon = document.getElementById('deleteShareIcon'); // Reference for the delete icon
 const shareNameInput = document.getElementById('shareName');
 const currentPriceInput = document.getElementById('currentPrice');
 const targetPriceInput = document.getElementById('targetPrice');
@@ -1350,7 +1349,6 @@ async function initializeAppLogic() {
         newShareBtn.addEventListener('click', () => {
             clearForm();
             formTitle.textContent = 'Add New Share';
-            // deleteShareFromFormBtn.style.display = 'none'; // Removed
             if (deleteShareIcon) { deleteShareIcon.classList.add('hidden'); } // Hide delete icon
             showModal(shareFormSection);
             shareNameInput.focus();
@@ -1362,7 +1360,6 @@ async function initializeAppLogic() {
         addShareHeaderBtn.addEventListener('click', () => {
             clearForm();
             formTitle.textContent = 'Add New Share';
-            // deleteShareFromFormBtn.style.display = 'none'; // Removed
             if (deleteShareIcon) { deleteShareIcon.classList.add('hidden'); } // Hide delete icon
             showModal(shareFormSection);
             shareNameInput.focus();
@@ -1829,7 +1826,7 @@ async function initializeAppLogic() {
 
 // --- DOMContentLoaded Event Listener (Main entry point) ---
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v123) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v124) DOMContentLoaded fired."); // Updated version number
 
     // Check if Firebase objects are available from the module script in index.html
     // If they are, proceed with setting up the auth state listener.
