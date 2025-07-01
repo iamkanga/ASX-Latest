@@ -1,5 +1,5 @@
-// File Version: v138
-// Last Updated: 2025-07-01 (Critical Click/Tap Fixes & Debugging)
+// File Version: v139
+// Last Updated: 2025-07-01 (Hamburger Menu Fixes & Debugging)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -1418,26 +1418,28 @@ function hideContextMenu() {
 }
 
 function toggleAppSidebar(forceState = null) {
-    console.log(`[Sidebar] Toggling sidebar. Current state: ${appSidebar.classList.contains('open') ? 'open' : 'closed'}, Force state: ${forceState}`);
+    console.log(`[Sidebar] toggleAppSidebar called. Current open state: ${appSidebar.classList.contains('open')}, Force state: ${forceState}`);
     const isDesktop = window.innerWidth > 768;
     const isOpen = appSidebar.classList.contains('open');
 
     if (forceState === true || (forceState === null && !isOpen)) {
+        // Open sidebar
         appSidebar.classList.add('open');
         sidebarOverlay.classList.add('open');
         if (isDesktop) {
             document.body.classList.add('sidebar-active');
             sidebarOverlay.style.pointerEvents = 'none'; // Clicks pass through overlay on desktop
         } else {
-            document.body.classList.remove('sidebar-active');
+            document.body.classList.remove('sidebar-active'); // Ensure body doesn't shift on mobile
             sidebarOverlay.style.pointerEvents = 'auto'; // Clicks close overlay on mobile
         }
         console.log("[Sidebar] Sidebar opened.");
     } else if (forceState === false || (forceState === null && isOpen)) {
+        // Close sidebar
         appSidebar.classList.remove('open');
         sidebarOverlay.classList.remove('open');
-        document.body.classList.remove('sidebar-active');
-        sidebarOverlay.style.pointerEvents = 'none';
+        document.body.classList.remove('sidebar-active'); // Remove class that shifts main content
+        sidebarOverlay.style.pointerEvents = 'none'; // Reset pointer events
         console.log("[Sidebar] Sidebar closed.");
     }
 }
@@ -2286,8 +2288,9 @@ async function initializeAppLogic() {
 
     // Hamburger Menu and Sidebar Interactions
     if (hamburgerBtn && appSidebar && closeMenuBtn && sidebarOverlay) {
+        console.log("[Sidebar Setup] Initializing sidebar event listeners.");
         hamburgerBtn.addEventListener('click', (event) => {
-            console.log("[UI] Hamburger button clicked.");
+            console.log("[UI] Hamburger button clicked. Event:", event);
             event.stopPropagation(); // Prevent this click from immediately closing the sidebar via global listener
             toggleAppSidebar();
         });
@@ -2335,11 +2338,13 @@ async function initializeAppLogic() {
             const isNativeButton = button.tagName === 'BUTTON';
             // Explicitly mark buttons in HTML if they should close the menu, or assume all do
             // For now, assuming all menu buttons should close the sidebar
-            button.addEventListener('click', () => {
-                console.log(`[Sidebar Menu Item Click] Button '${button.textContent.trim()}' clicked. Closing sidebar.`);
+            button.addEventListener('click', (event) => {
+                console.log(`[Sidebar Menu Item Click] Button '${event.currentTarget.textContent.trim()}' clicked. Closing sidebar.`);
                 toggleAppSidebar(false);
             });
         });
+    } else {
+        console.warn("[Sidebar Setup] Missing one or more sidebar elements (hamburgerBtn, appSidebar, closeMenuBtn, sidebarOverlay). Sidebar functionality might be impaired.");
     }
 
     // Export Watchlist Button Event Listener
@@ -2375,7 +2380,7 @@ async function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v138) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v139) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;

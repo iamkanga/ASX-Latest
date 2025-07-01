@@ -1,4 +1,4 @@
-/* File Version: v73 */
+/* File Version: v74 */
 /* Last Updated: 2025-07-01 (Layout & Button Fixes) */
 
 :root {
@@ -1141,6 +1141,7 @@ h1#mainTitle {
     display: flex;
     gap: 15px; /* Gap between watchlist and sort */
     flex-shrink: 0; /* Prevent shrinking on mobile horizontal scroll */
+    width: 100%; /* Default to full width for mobile, adjusted for desktop */
 }
 
 .search-input-container,
@@ -2080,9 +2081,17 @@ table tbody tr:not(.selected):hover {
         width: 100%; /* Take full width */
         flex-wrap: nowrap; /* Keep dropdowns on one line */
         overflow-x: auto; /* Enable horizontal scrolling for dropdowns */
-        justify-content: flex-start; /* Align dropdowns to the start */
+        justify-content: space-between; /* Distribute space between dropdowns */
         -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
         gap: 10px; /* Smaller gap between dropdowns */
+    }
+
+    .watchlist-group,
+    .sort-group {
+        flex-basis: calc(50% - 5px); /* Each takes 50% minus half the gap */
+        max-width: calc(50% - 5px); /* Ensure they don't grow beyond 50% */
+        min-width: unset; /* Remove min-width inherited from desktop */
+        width: 100%; /* Take full width of its flex-basis */
     }
 
     .search-input-container {
@@ -2101,13 +2110,9 @@ table tbody tr:not(.selected):hover {
         right: 10px;
     }
 
-    .watchlist-group,
-    .sort-group {
-        flex-shrink: 0; /* Prevent shrinking */
-        min-width: 120px; /* Ensure they don't get too small */
-    }
     .dropdown-large {
-        min-width: 120px; 
+        min-width: unset; /* Remove min-width */
+        width: 100%; /* Take full width of its parent flex item */
         padding: 8px 12px; 
         font-size: 0.9em; 
         padding-right: 25px; 
@@ -2273,25 +2278,24 @@ table tbody tr:not(.selected):hover {
     }
     .dropdowns-group { /* Group for watchlist and sort */
         flex-grow: 1; /* Allow it to grow */
+        display: flex; /* Make it a flex container */
+        gap: 20px; /* Gap between dropdowns */
         max-width: 400px; /* Limit its max width */
-        gap: 20px; /* Keep gap between dropdowns */
     }
     .search-input-container {
-        width: auto; /* Allow content-based width */
         flex-grow: 1; /* Allow it to grow, balancing with dropdowns */
         max-width: 400px; /* Limit max width to match dropdowns group */
         min-width: 200px; /* Ensure it's not too small */
     }
     .watchlist-group,
     .sort-group {
-        width: auto; 
-        justify-content: flex-start; 
-        padding: 0;
         flex-grow: 1; /* Allow individual dropdowns to grow within their group */
+        min-width: unset; /* Remove min-width for desktop */
+        width: 100%; /* Take full width of its flex item */
     }
     .dropdown-large {
         min-width: unset; /* Remove min-width for desktop */
-        width: 100%; /* Take full width of its flex item */
+        width: 100%; /* Take full width of its parent flex item */
     }
 
     .app-sidebar {
