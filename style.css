@@ -1,5 +1,5 @@
-/* File Version: v70 */
-/* Last Updated: 2025-07-01 (Export Button & Logout Button Final Fix) */
+/* File Version: v80 */
+/* Last Updated: 2025-07-02 (Header Layout & Modal Button Fixes - No Search) */
 
 :root {
     /* Light Theme (Default) */
@@ -13,6 +13,7 @@
     --button-hover-bg: #0056b3;
     --input-bg: #fff;
     --input-border: #b0b8bb;
+    --input-placeholder-color: #6c757d; /* Added for consistency */
     --modal-bg: rgba(0, 0, 0, 0.6);
     --modal-content-bg: #fff;
     --table-header-bg: #e6e9eb;
@@ -68,6 +69,7 @@ body.dark-theme {
     --button-hover-bg: #0056b3;
     --input-bg: #4a627a;
     --input-border: #6c8095;
+    --input-placeholder-color: #bdc3c7; /* Added for consistency */
     --modal-bg: rgba(0, 0, 0, 0.75);
     --modal-content-bg: #34495e;
     --table-header-bg: #4a627a;
@@ -122,6 +124,7 @@ body.theme-bold-1 { /* Ocean Blue */
     --button-hover-bg: #0096c7;
     --input-bg: #0a475a;
     --input-border: #008793;
+    --input-placeholder-color: #8ecae6;
     --modal-content-bg: #0a475a;
     --table-header-bg: #005f73;
     --table-row-hover-bg: #008793;
@@ -155,6 +158,7 @@ body.theme-bold-2 { /* Forest Green */
     --button-hover-bg: #8ba84a;
     --input-bg: #4a754a;
     --input-border: #6a9955;
+    --input-placeholder-color: #c0d8b6;
     --modal-content-bg: #4a754a;
     --table-header-bg: #386641;
     --table-row-hover-bg: #6a9955;
@@ -188,6 +192,7 @@ body.theme-bold-3 { /* Sunset Orange */
     --button-hover-bg: #e0ac00;
     --input-bg: #f4a261;
     --input-border: #e76f51;
+    --input-placeholder-color: #ffe5b4;
     --modal-content-bg: #f4a261;
     --table-header-bg: #e63946;
     --table-row-hover-bg: #e76f51;
@@ -205,7 +210,7 @@ body.theme-bold-3 { /* Sunset Orange */
     --icon-action-color: #ffc300;
     --icon-action-hover-color: #e0ac00;
     --icon-danger-color: #e63946;
-    --icon-danger-hover-color: #c02d38;
+    --icon-danger-hover-color: #c0392b;
     --calc-num-btn-bg: #f7b98d;
     --calc-num-btn-text: #3b2a20;
     --calc-num-btn-hover-bg: #f4a261;
@@ -221,6 +226,7 @@ body.theme-bold-4 { /* Royal Purple */
     --button-hover-bg: #a842ff;
     --input-bg: #7b2cbf;
     --input-border: #9d4edd;
+    --input-placeholder-color: #e0baff;
     --modal-content-bg: #7b2cbf;
     --table-header-bg: #5a189a;
     --table-row-hover-bg: #9d4edd;
@@ -254,6 +260,7 @@ body.theme-bold-5 { /* Deep Red */
     --button-hover-bg: #c0392b;
     --input-bg: #a02020;
     --input-border: #c0392b;
+    --input-placeholder-color: #ffbaba;
     --modal-content-bg: #a02020;
     --table-header-bg: #8b0000;
     --table-row-hover-bg: #c0392b;
@@ -287,6 +294,7 @@ body.theme-bold-6 { /* Gold */
     --button-hover-bg: #fdd835;
     --input-bg: #daa520;
     --input-border: #ffd700;
+    --input-placeholder-color: #ffee99;
     --modal-content-bg: #daa520;
     --table-header-bg: #b8860b;
     --table-row-hover-bg: #ffd700;
@@ -320,6 +328,7 @@ body.theme-bold-7 { /* Emerald */
     --button-hover-bg: #4caf50;
     --input-bg: #228b22;
     --input-border: #3cb371;
+    --input-placeholder-color: #99ffaa;
     --modal-content-bg: #228b22;
     --table-header-bg: #006400;
     --table-row-hover-bg: #3cb371;
@@ -1074,6 +1083,9 @@ h1#mainTitle {
     display: flex;
     align-items: center;
     gap: 8px;
+    /* On desktop, they will share space evenly */
+    flex-basis: calc(50% - 12.5px); /* Two items, 25px gap */
+    max-width: calc(50% - 12.5px);
 }
 
 .dropdown-large {
@@ -1096,6 +1108,7 @@ h1#mainTitle {
     padding-right: 30px;
     max-height: 45px; 
     overflow-y: hidden; 
+    width: 100%; /* Ensure it fills its flex-basis */
 }
 
 .dropdown-large option[value=""][disabled] {
@@ -2003,17 +2016,18 @@ table tbody tr:not(.selected):hover {
     }
 
     .watchlist-controls-row {
-        flex-wrap: nowrap; 
-        overflow-x: auto; 
-        justify-content: flex-start; 
-        -webkit-overflow-scrolling: touch; 
+        flex-wrap: wrap; /* Allow wrapping on mobile for the two items */
+        justify-content: center; 
+        gap: 15px 25px; /* Adjust gap for mobile */
     }
     .watchlist-group,
     .sort-group {
+        flex-basis: calc(50% - 12.5px); /* Each takes roughly half with gap */
+        max-width: calc(50% - 12.5px);
         flex-shrink: 0; 
     }
     .dropdown-large {
-        min-width: 120px; 
+        min-width: unset; /* Remove min-width for mobile */
         padding: 8px 12px; 
         font-size: 0.9em; 
         padding-right: 25px; 
@@ -2045,13 +2059,13 @@ table tbody tr:not(.selected):hover {
         display: flex; 
         flex-direction: row; 
         flex-wrap: nowrap; 
-        justify-content: space-around; 
+        justify-content: space-around; /* Distribute space evenly */
         gap: 5px; 
     }
     /* Adjusted styling for modal action icons on mobile */
     .modal-action-icon { 
         width: auto; 
-        flex-grow: 1; 
+        flex-grow: 1; /* Allow them to grow to fill space */
         min-width: unset; 
         max-width: unset; 
         padding: 8px; /* Slightly smaller padding for mobile */
@@ -2189,13 +2203,15 @@ table tbody tr:not(.selected):hover {
     }
     .watchlist-group,
     .sort-group {
-        width: auto; 
+        width: auto; /* Allow content to dictate width */
         justify-content: flex-start; 
         padding: 0;
+        flex-basis: auto; /* Reset flex-basis for desktop */
+        max-width: unset; /* Reset max-width for desktop */
     }
     .dropdown-large {
-        min-width: 180px;
-        width: auto;
+        min-width: 180px; /* Restore min-width for desktop */
+        width: auto; /* Allow content to dictate width */
     }
 
     .fixed-footer {
