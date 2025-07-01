@@ -1,5 +1,5 @@
-/* File Version: v68 */
-/* Last Updated: 2025-07-01 (Logout Button Styling Fix) */
+/* File Version: v70 */
+/* Last Updated: 2025-07-01 (Export Button & Logout Button Final Fix) */
 
 :root {
     /* Light Theme (Default) */
@@ -994,13 +994,13 @@ h1#mainTitle {
 }
 
 
-/* Logout button styling (now a span) */
+/* Logout button styling (now a span) - FINAL FIX */
 #logoutBtn.menu-button-item {
     background-color: var(--danger-button-bg); /* Explicitly use danger-button-bg */
     color: var(--button-text); /* Explicitly use button-text */
     margin-top: auto; /* Push to the bottom of the sidebar */
-    border: none !important; /* Ensure no border */
-    box-shadow: none !important; /* Ensure no box shadow */
+    border: none !important; /* Ensure no border, aggressive fix */
+    box-shadow: none !important; /* Ensure no box shadow, aggressive fix */
 }
 #logoutBtn.menu-button-item:hover {
     background-color: var(--danger-button-hover-bg);
