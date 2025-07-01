@@ -1,5 +1,5 @@
-// File Version: v130
-// Last Updated: 2025-07-01 (Firestore Query Fix)
+// File Version: v131
+// Last Updated: 2025-07-01 (Standalone Icon Logic & Disabled States)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -65,7 +65,7 @@ const targetPriceInput = document.getElementById('targetPrice');
 const dividendAmountInput = document.getElementById('dividendAmount');
 const frankingCreditsInput = document.getElementById('frankingCredits');
 const commentsFormContainer = document.getElementById('commentsFormContainer');
-const addCommentSectionBtn = document.getElementById('addCommentSectionBtn');
+const addCommentSectionBtn = document.getElementById('addCommentSectionBtn'); // Now a span
 const shareTableBody = document.querySelector('#shareTable tbody');
 const mobileShareCardsContainer = document.getElementById('mobileShareCards');
 const loadingIndicator = document.getElementById('loadingIndicator');
@@ -80,7 +80,7 @@ const modalFrankingCredits = document.getElementById('modalFrankingCredits');
 const modalCommentsContainer = document.getElementById('modalCommentsContainer');
 const modalUnfrankedYieldSpan = document.getElementById('modalUnfrankedYield');
 const modalFrankedYieldSpan = document.getElementById('modalFrankedYield');
-const editShareFromDetailBtn = document.getElementById('editShareFromDetailBtn');
+const editShareFromDetailBtn = document.getElementById('editShareFromDetailBtn'); // Now a span
 const modalMarketIndexLink = document.getElementById('modalMarketIndexLink');
 const modalFoolLink = document.getElementById('modalFoolLink');
 const modalCommSecLink = document.getElementById('modalCommSecLink');
@@ -97,8 +97,8 @@ const calcEstimatedDividend = document.getElementById('calcEstimatedDividend');
 const sortSelect = document.getElementById('sortSelect');
 const customDialogModal = document.getElementById('customDialogModal');
 const customDialogMessage = document.getElementById('customDialogMessage');
-const customDialogConfirmBtn = document.getElementById('customDialogConfirmBtn');
-const customDialogCancelBtn = document.getElementById('customDialogCancelBtn');
+const customDialogConfirmBtn = document.getElementById('customDialogConfirmBtn'); // Now a span
+const customDialogCancelBtn = document.getElementById('customDialogCancelBtn'); // Now a span
 const calculatorModal = document.getElementById('calculatorModal');
 const calculatorInput = document.getElementById('calculatorInput');
 const calculatorResult = document.getElementById('calculatorResult');
@@ -115,13 +115,13 @@ const addWatchlistBtn = document.getElementById('addWatchlistBtn');
 const editWatchlistBtn = document.getElementById('editWatchlistBtn');
 const addWatchlistModal = document.getElementById('addWatchlistModal');
 const newWatchlistNameInput = document.getElementById('newWatchlistName');
-const saveWatchlistBtn = document.getElementById('saveWatchlistBtn');
-const cancelAddWatchlistBtn = document.getElementById('cancelAddWatchlistBtn');
+const saveWatchlistBtn = document.getElementById('saveWatchlistBtn'); // Now a span
+const cancelAddWatchlistBtn = document.getElementById('cancelAddWatchlistBtn'); // Now a span
 const manageWatchlistModal = document.getElementById('manageWatchlistModal');
 const editWatchlistNameInput = document.getElementById('editWatchlistName');
-const saveWatchlistNameBtn = document.getElementById('saveWatchlistNameBtn');
-const deleteWatchlistInModalBtn = document.getElementById('deleteWatchlistInModalBtn');
-const cancelManageWatchlistBtn = document.getElementById('cancelManageWatchlistBtn');
+const saveWatchlistNameBtn = document.getElementById('saveWatchlistNameBtn'); // Now a span
+const deleteWatchlistInModalBtn = document.getElementById('deleteWatchlistInModalBtn'); // Now a span
+const cancelManageWatchlistBtn = document.getElementById('cancelManageWatchlistBtn'); // Now a span
 const shareContextMenu = document.getElementById('shareContextMenu');
 const contextEditShareBtn = document.getElementById('contextEditShareBtn');
 const contextDeleteShareBtn = document.getElementById('contextDeleteShareBtn');
@@ -141,6 +141,21 @@ const formInputs = [
 
 
 // --- GLOBAL HELPER FUNCTIONS (MOVED OUTSIDE DOMContentLoaded for accessibility) ---
+
+/**
+ * Helper function to apply/remove a disabled visual state to non-button elements (like spans/icons).
+ * This adds/removes the 'is-disabled-icon' class, which CSS then styles.
+ * @param {HTMLElement} element The element to disable/enable.
+ * @param {boolean} isDisabled True to disable, false to enable.
+ */
+function setIconDisabled(element, isDisabled) {
+    if (!element) return;
+    if (isDisabled) {
+        element.classList.add('is-disabled-icon');
+    } else {
+        element.classList.remove('is-disabled-icon');
+    }
+}
 
 // Centralized Modal Closing Function
 function closeModals() {
@@ -179,11 +194,10 @@ function showCustomConfirm(message, onConfirm, onCancel = null) {
         return;
     }
     customDialogMessage.textContent = message;
-    customDialogConfirmBtn.disabled = false; // Explicitly enable
-    customDialogConfirmBtn.textContent = 'Yes';
+    // Ensure these icons are always enabled in the confirm dialog
+    setIconDisabled(customDialogConfirmBtn, false);
     customDialogConfirmBtn.style.display = 'block';
-    customDialogCancelBtn.disabled = false; // Explicitly enable
-    customDialogCancelBtn.textContent = 'No';
+    setIconDisabled(customDialogCancelBtn, false);
     customDialogCancelBtn.style.display = 'block';
     showModal(customDialogModal);
     if (autoDismissTimeout) { clearTimeout(autoDismissTimeout); }
@@ -218,14 +232,22 @@ function updateAuthButtonText(isSignedIn, userName = 'Sign In') {
 }
 
 function updateMainButtonsState(enable) {
+    // Sidebar buttons (native buttons, use .disabled)
     if (newShareBtn) newShareBtn.disabled = !enable;
     if (standardCalcBtn) standardCalcBtn.disabled = !enable;
     if (dividendCalcBtn) dividendCalcBtn.disabled = !enable;
     if (watchlistSelect) watchlistSelect.disabled = !enable; 
     if (addWatchlistBtn) addWatchlistBtn.disabled = !enable;
+    // editWatchlistBtn's disabled state is also dependent on userWatchlists.length, handled in loadUserWatchlistsAndSettings
     if (editWatchlistBtn) editWatchlistBtn.disabled = !enable || userWatchlists.length === 0; 
     if (addShareHeaderBtn) addShareHeaderBtn.disabled = !enable;
     if (logoutBtn) logoutBtn.disabled = !enable; 
+    if (themeToggleBtn) themeToggleBtn.disabled = !enable;
+    if (colorThemeSelect) colorThemeSelect.disabled = !enable;
+    if (revertToDefaultThemeBtn) revertToDefaultThemeBtn.disabled = !enable;
+
+    // Note: Modal action icons (e.g., saveShareBtn, deleteShareBtn) are handled separately
+    // by setIconDisabled based on their specific conditions (e.g., input validity).
 }
 
 function showModal(modalElement) {
@@ -307,11 +329,10 @@ function clearForm() {
     addCommentSection();
     selectedShareDocId = null;
     if (deleteShareBtn) {
-        deleteShareBtn.classList.add('hidden');
+        deleteShareBtn.classList.add('hidden'); // Hide delete icon when adding new share
     }
-    if (saveShareBtn) {
-        saveShareBtn.disabled = false;
-    }
+    // Initially disable save button until share name is entered
+    setIconDisabled(saveShareBtn, true);
     console.log("[Form] Form fields cleared and selectedShareDocId reset.");
 }
 
@@ -343,11 +364,10 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
         addCommentSection();
     }
     if (deleteShareBtn) {
-        deleteShareBtn.classList.remove('hidden');
+        deleteShareBtn.classList.remove('hidden'); // Show delete icon when editing
     }
-    if (saveShareBtn) {
-        saveShareBtn.disabled = false;
-    }
+    // Enable save button when opening for edit, as shareName should already be present
+    setIconDisabled(saveShareBtn, false);
     showModal(shareFormSection);
     shareNameInput.focus();
     console.log(`[Form] Opened edit form for share: ${shareToEdit.shareName} (ID: ${selectedShareDocId})`);
@@ -432,9 +452,8 @@ function showShareDetails() {
         commSecLoginMessage.style.display = 'block'; 
     }
 
-    if (editShareFromDetailBtn) {
-        editShareFromDetailBtn.disabled = false;
-    }
+    // Ensure editShareFromDetailBtn is enabled when showing details
+    setIconDisabled(editShareFromDetailBtn, false);
 
     showModal(shareDetailModal);
     console.log(`[Details] Displayed details for share: ${share.shareName} (ID: ${selectedShareDocId})`);
@@ -1008,7 +1027,6 @@ async function loadUserWatchlistsAndSettings() {
 
     try {
         console.log("[User Settings] Fetching user watchlists and profile settings...");
-        // CORRECTED: Use window.firestore.query
         const querySnapshot = await window.firestore.getDocs(window.firestore.query(watchlistsColRef));
         querySnapshot.forEach(doc => { userWatchlists.push({ id: doc.id, name: doc.data().name }); });
         console.log(`[User Settings] Found ${userWatchlists.length} existing watchlists.`);
@@ -1104,7 +1122,6 @@ async function loadShares() {
     allSharesData = [];
     try {
         const sharesCol = window.firestore.collection(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`);
-        // CORRECTED: Use window.firestore.query
         const q = window.firestore.query( sharesCol, window.firestore.where("watchlistId", "==", currentWatchlistId) );
         console.log(`[Shares] Attempting to load shares for watchlist ID: ${currentWatchlistId} (Name: ${currentWatchlistName})`);
         const querySnapshot = await window.firestore.getDocs(q);
@@ -1130,7 +1147,6 @@ async function migrateOldSharesToWatchlist() {
         return false;
     }
     const sharesCol = window.firestore.collection(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`);
-    // CORRECTED: Use window.firestore.query
     const q = window.firestore.query(sharesCol);
     let sharesToUpdate = [];
     let anyMigrationPerformed = false;
@@ -1323,13 +1339,14 @@ async function initializeAppLogic() {
                 if (event.key === 'Enter') {
                     event.preventDefault();
                     if (index === formInputs.length - 1) {
-                        if (addCommentSectionBtn && addCommentSectionBtn.offsetParent !== null && !addCommentSectionBtn.disabled) { 
+                        // Check for 'is-disabled-icon' class instead of 'disabled' attribute
+                        if (addCommentSectionBtn && addCommentSectionBtn.offsetParent !== null && !addCommentSectionBtn.classList.contains('is-disabled-icon')) { 
                             addCommentSectionBtn.click();
                             const newCommentTitleInput = commentsFormContainer.lastElementChild?.querySelector('.comment-title-input');
                             if (newCommentTitleInput) {
                                 newCommentTitleInput.focus();
                             }
-                        } else if (saveShareBtn && !saveShareBtn.disabled) { 
+                        } else if (saveShareBtn && !saveShareBtn.classList.contains('is-disabled-icon')) { 
                             saveShareBtn.click();
                         }
                     } else {
@@ -1461,8 +1478,21 @@ async function initializeAppLogic() {
         });
     }
 
+    // Event listener for shareNameInput to toggle saveShareBtn
+    if (shareNameInput && saveShareBtn) {
+        shareNameInput.addEventListener('input', () => {
+            setIconDisabled(saveShareBtn, shareNameInput.value.trim() === '');
+        });
+    }
+
     if (saveShareBtn) {
         saveShareBtn.addEventListener('click', async () => {
+            // Ensure button is not disabled before proceeding
+            if (saveShareBtn.classList.contains('is-disabled-icon')) {
+                showCustomAlert("Please enter a share code.");
+                return;
+            }
+
             const shareName = shareNameInput.value.trim().toUpperCase();
             if (!shareName) { showCustomAlert("Code is required!"); return; }
 
@@ -1536,6 +1566,10 @@ async function initializeAppLogic() {
 
     if (deleteShareBtn) {
         deleteShareBtn.addEventListener('click', () => {
+            // Ensure button is not disabled before proceeding
+            if (deleteShareBtn.classList.contains('is-disabled-icon')) {
+                return; // Do nothing if visually disabled
+            }
             if (selectedShareDocId) {
                 showCustomConfirm("Are you sure you want to delete this share? This action cannot be undone.", async () => {
                     try {
@@ -1556,6 +1590,10 @@ async function initializeAppLogic() {
 
     if (editShareFromDetailBtn) {
         editShareFromDetailBtn.addEventListener('click', () => {
+            // Ensure button is not disabled before proceeding
+            if (editShareFromDetailBtn.classList.contains('is-disabled-icon')) {
+                return; // Do nothing if visually disabled
+            }
             hideModal(shareDetailModal);
             showEditFormForSelectedShare();
         });
@@ -1597,14 +1635,28 @@ async function initializeAppLogic() {
     if (addWatchlistBtn) {
         addWatchlistBtn.addEventListener('click', () => {
             if (newWatchlistNameInput) newWatchlistNameInput.value = '';
+            setIconDisabled(saveWatchlistBtn, true); // Disable save button initially
             showModal(addWatchlistModal);
             newWatchlistNameInput.focus();
             toggleAppSidebar(false);
         });
     }
 
+    // Event listener for newWatchlistNameInput to toggle saveWatchlistBtn
+    if (newWatchlistNameInput && saveWatchlistBtn) {
+        newWatchlistNameInput.addEventListener('input', () => {
+            setIconDisabled(saveWatchlistBtn, newWatchlistNameInput.value.trim() === '');
+        });
+    }
+
     if (saveWatchlistBtn) {
         saveWatchlistBtn.addEventListener('click', async () => {
+            // Ensure button is not disabled before proceeding
+            if (saveWatchlistBtn.classList.contains('is-disabled-icon')) {
+                showCustomAlert("Please enter a watchlist name.");
+                return;
+            }
+
             const watchlistName = newWatchlistNameInput.value.trim();
             if (!watchlistName) {
                 showCustomAlert("Watchlist name is required!");
@@ -1660,15 +1712,30 @@ async function initializeAppLogic() {
                 return;
             }
             editWatchlistNameInput.value = currentWatchlistName;
-            deleteWatchlistInModalBtn.disabled = userWatchlists.length <= 1; 
+            // The delete icon in the modal should still be disabled if it's the last watchlist
+            setIconDisabled(deleteWatchlistInModalBtn, userWatchlists.length <= 1); 
+            setIconDisabled(saveWatchlistNameBtn, false); // Enable save button initially
             showModal(manageWatchlistModal);
             editWatchlistNameInput.focus();
             toggleAppSidebar(false);
         });
     }
 
+    // Event listener for editWatchlistNameInput to toggle saveWatchlistNameBtn
+    if (editWatchlistNameInput && saveWatchlistNameBtn) {
+        editWatchlistNameInput.addEventListener('input', () => {
+            setIconDisabled(saveWatchlistNameBtn, editWatchlistNameInput.value.trim() === '');
+        });
+    }
+
     if (saveWatchlistNameBtn) {
         saveWatchlistNameBtn.addEventListener('click', async () => {
+            // Ensure button is not disabled before proceeding
+            if (saveWatchlistNameBtn.classList.contains('is-disabled-icon')) {
+                showCustomAlert("Watchlist name cannot be empty.");
+                return;
+            }
+
             const newName = editWatchlistNameInput.value.trim();
             if (!newName) {
                 showCustomAlert("Watchlist name cannot be empty!");
@@ -1702,6 +1769,10 @@ async function initializeAppLogic() {
 
     if (deleteWatchlistInModalBtn) {
         deleteWatchlistInModalBtn.addEventListener('click', () => {
+            // Ensure button is not disabled before proceeding
+            if (deleteWatchlistInModalBtn.classList.contains('is-disabled-icon')) {
+                return; // Do nothing if visually disabled
+            }
             if (!currentWatchlistId || userWatchlists.length <= 1) {
                 showCustomAlert("Cannot delete the last watchlist. Please create another watchlist first.");
                 return;
@@ -1710,7 +1781,6 @@ async function initializeAppLogic() {
             showCustomConfirm(`Are you sure you want to delete the watchlist '${watchlistToDeleteName}'? ALL SHARES IN THIS WATCHLIST WILL BE PERMANENTLY DELETED. This action cannot be undone.`, async () => {
                 try {
                     const sharesColRef = window.firestore.collection(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`);
-                    // CORRECTED: Use window.firestore.query
                     const q = window.firestore.query(sharesColRef, window.firestore.where("watchlistId", "==", currentWatchlistId));
                     const querySnapshot = await window.firestore.getDocs(q);
 
@@ -1943,7 +2013,7 @@ async function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v130) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v131) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
