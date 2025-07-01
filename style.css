@@ -1,11 +1,11 @@
-/* File Version: v67 */
-/* Last Updated: 2025-07-01 (Logout Button & Calculator Layout Fix) */
+/* File Version: v68 */
+/* Last Updated: 2025-07-01 (Logout Button Styling Fix) */
 
 :root {
     /* Light Theme (Default) */
     --background-color: #eef2f3;
     --text-color: #333;
-    --header-bg: #d9e2e4;
+    --header-bg: #d9e2f4;
     --card-bg: #ffffff;
     --border-color: #c9d2d4;
     --button-bg: #007bff;
@@ -999,8 +999,8 @@ h1#mainTitle {
     background-color: var(--danger-button-bg); /* Explicitly use danger-button-bg */
     color: var(--button-text); /* Explicitly use button-text */
     margin-top: auto; /* Push to the bottom of the sidebar */
-    border: none; /* Ensure no border */
-    box-shadow: none; /* Ensure no box shadow */
+    border: none !important; /* Ensure no border */
+    box-shadow: none !important; /* Ensure no box shadow */
 }
 #logoutBtn.menu-button-item:hover {
     background-color: var(--danger-button-hover-bg);
