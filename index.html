@@ -8,7 +8,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍆</text></svg>">
 
     <!-- Linking to your separate style.css file -->
-    <link rel="stylesheet" href="style.css?v=82"> <!-- Still v82 -->
+    <link rel="stylesheet" href="style.css?v=80"> <!-- Updated to v80 -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -128,8 +128,8 @@
             <div class="menu-section logout-section">
                 <h3>Account</h3>
                 <div class="menu-buttons-group">
-                    <!-- Changed to icon-only for standalone icon behavior -->
-                    <span id="logoutBtn" class="menu-button-item icon-only" data-action-closes-menu="true">
+                    <!-- Changed to span for standalone icon behavior -->
+                    <span id="logoutBtn" class="menu-button-item danger-button" data-action-closes-menu="true">
                         <i class="fas fa-sign-out-alt"></i> <span>Log Out</span>
                     </span>
                 </div>
@@ -143,8 +143,6 @@
         <div class="watchlist-controls-row">
             <div class="watchlist-group">
                 <select id="watchlistSelect" class="dropdown-large">
-                    <!-- Added "All Watchlists" option -->
-                    <option value="all_shares_option">All Watchlists</option>
                     <!-- Options populated by JS, including 'Watchlist' placeholder -->
                 </select>
             </div>
@@ -236,6 +234,7 @@
 
                 <!-- Comments section container -->
                 <div id="commentsFormContainer" class="comments-form-container">
+                    <!-- ADDED PLUS ICON HERE (NOT A BUTTON) -->
                     <h3>Comments <span id="addCommentSectionBtn" class="add-section-icon"><i class="fas fa-plus"></i></span></h3>
                     <!-- Initial comment section will be added here by JS -->
                 </div>
@@ -425,7 +424,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, FieldValue, deleteField, writeBatch, collectionGroup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; // Added collectionGroup
+        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, FieldValue, deleteField, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; // Added writeBatch
 
         // YOUR FIREBASE CONFIGURATION - THIS HAS BEEN INSERTED BASED ON YOUR PROVIDED DETAILS
         const firebaseConfig = {
@@ -482,8 +481,7 @@
             where: where,
             getDocs: getDocs,
             deleteField: FieldValue.delete,
-            writeBatch: writeBatch,
-            collectionGroup: collectionGroup // Added collectionGroup
+            writeBatch: writeBatch
         } : null;
         
         window.authFunctions = firebaseInitialized ? {
@@ -496,10 +494,10 @@
         } : null;
 
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log("index.html (v82) script module loaded and DOMContentLoaded fired."); // Updated version number
+            console.log("index.html (v76) script module loaded and DOMContentLoaded fired."); // Updated version number
         }); 
     </script>
     <!-- Linking to your separate script.js file -->
-    <script src="script.js?v=146"></script> <!-- Still v146 -->
+    <script src="script.js?v=143"></script> <!-- Updated to v143 -->
 </body>
 </html>
