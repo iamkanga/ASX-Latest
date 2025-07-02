@@ -1,4 +1,4 @@
-/* File Version: v83 */
+/* File Version: v82 */
 /* Last Updated: 2025-07-02 (Minor version bump for consistency with All Watchlists feature) */
 
 :root {
@@ -710,7 +710,7 @@ body.theme-subtle-8 { /* Subtle Beige */
     --asx-button-bg: #e8e0d5;
     --asx-button-hover-bg: #d9d0c4;
     --asx-button-active-bg: #c9ac89;
-    --sidebar-bg: #fcfaf8;
+    --sidebar-bg: #fcf8fa;
     --sidebar-border: #e0d5c9;
     --menu-button-bg: transparent;
     --menu-button-hover-bg: #f2f0e8;
