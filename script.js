@@ -1,5 +1,5 @@
-// File Version: v148
-// Last Updated: 2025-07-02 (News Link and Save Icon Clarity)
+// File Version: v149
+// Last Updated: 2025-07-02 (Fix for Saved Sort Order Scoping)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -45,6 +45,9 @@ const CUSTOM_THEMES = [
 ];
 let currentCustomThemeIndex = -1; // To track the current theme in the cycle
 let currentActiveTheme = 'system-default'; // Tracks the currently applied theme string (e.g., 'dark', 'bold', 'subtle', 'system-default')
+let savedSortOrder = null; // GLOBAL: Stores the sort order loaded from user settings
+let savedTheme = null; // GLOBAL: Stores the theme loaded from user settings
+
 
 let unsubscribeShares = null; // Holds the unsubscribe function for the Firestore shares listener
 
@@ -737,13 +740,13 @@ function renderSortSelect() {
         sortSelect.appendChild(optionElement);
     });
 
+    // Use the global currentSortOrder, which should have been set by loadUserWatchlistsAndSettings
     if (currentUserId && currentSortOrder && Array.from(sortSelect.options).some(option => option.value === currentSortOrder)) {
         sortSelect.value = currentSortOrder; // Set the select element's value
-        currentSortOrder = savedSortOrder; // Update the global variable
         console.log(`[Sort] Applied saved sort order: ${currentSortOrder}`);
     } else {
         sortSelect.value = ''; 
-        currentSortOrder = '';
+        currentSortOrder = ''; // Ensure global variable is reset if no valid option
         console.log("[Sort] No valid saved sort order or not logged in, defaulting to placeholder.");
     }
     console.log("[UI Update] Sort select rendered. Sort select disabled: ", sortSelect.disabled);
@@ -1045,7 +1048,7 @@ function renderAsxCodeButtons() {
     const uniqueAsxCodes = new Set();
     
     let sharesForButtons = [];
-    if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID)) {
+    if (currentSelectedWatchlistIds.includes(ALL_SHAres_ID)) {
         sharesForButtons = [...allSharesData]; // Use all shares if "Show All Shares" is active
     } else {
         sharesForButtons = allSharesData.filter(share => currentSelectedWatchlistIds.includes(share.watchlistId));
@@ -1302,22 +1305,23 @@ async function loadUserWatchlistsAndSettings() {
         userWatchlists.sort((a, b) => a.name.localeCompare(b.name));
 
         const userProfileSnap = await window.firestore.getDoc(userProfileDocRef);
-        let lastSelectedWatchlistIds = null;
-        let savedSortOrder = null;
-        let savedTheme = null; 
+        // Assign to global variables
+        savedSortOrder = null; // Reset before assigning
+        savedTheme = null; // Reset before assigning
+
         if (userProfileSnap.exists()) {
-            lastSelectedWatchlistIds = userProfileSnap.data().lastSelectedWatchlistIds;
             savedSortOrder = userProfileSnap.data().lastSortOrder;
             savedTheme = userProfileSnap.data().lastTheme;
-            console.log(`[User Settings] Found last selected watchlists in profile: ${lastSelectedWatchlistIds}`);
+            currentSelectedWatchlistIds = userProfileSnap.data().lastSelectedWatchlistIds; // Keep this local to the if block, then filter
+            console.log(`[User Settings] Found last selected watchlists in profile: ${currentSelectedWatchlistIds}`);
             console.log(`[User Settings] Found saved sort order in profile: ${savedSortOrder}`);
             console.log(`[User Settings] Found saved theme in profile: ${savedTheme}`);
         }
 
         // Set currentSelectedWatchlistIds based on saved preferences or default
-        if (lastSelectedWatchlistIds && Array.isArray(lastSelectedWatchlistIds) && lastSelectedWatchlistIds.length > 0) {
+        if (currentSelectedWatchlistIds && Array.isArray(currentSelectedWatchlistIds) && currentSelectedWatchlistIds.length > 0) {
             // Filter out any IDs that no longer exist in userWatchlists (except ALL_SHARES_ID)
-            currentSelectedWatchlistIds = lastSelectedWatchlistIds.filter(id => 
+            currentSelectedWatchlistIds = currentSelectedWatchlistIds.filter(id => 
                 id === ALL_SHARES_ID || userWatchlists.some(wl => wl.id === id)
             );
             // If "Show All Shares" was selected, ensure it's still valid (i.e., there are watchlists)
@@ -1336,17 +1340,19 @@ async function loadUserWatchlistsAndSettings() {
 
         renderWatchlistSelect(); // Re-render the watchlist select dropdown
         
+        // Use the global savedSortOrder here
         if (currentUserId && savedSortOrder && Array.from(sortSelect.options).some(option => option.value === savedSortOrder)) {
             sortSelect.value = savedSortOrder; // Set the select element's value
             currentSortOrder = savedSortOrder; // Update the global variable
             console.log(`[Sort] Applied saved sort order: ${currentSortOrder}`);
         } else {
             sortSelect.value = ''; 
-            currentSortOrder = '';
+            currentSortOrder = ''; // Ensure global variable is reset if no valid option
             console.log("[Sort] No valid saved sort order or not logged in, defaulting to placeholder.");
         }
         renderSortSelect(); // Re-render to ensure placeholder is correctly shown if no saved sort order
         
+        // Use the global savedTheme here
         if (savedTheme) {
             applyTheme(savedTheme);
         } else {
@@ -2627,7 +2633,7 @@ async function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v148) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v149) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
