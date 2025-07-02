@@ -1,5 +1,5 @@
-// File Version: v149
-// Last Updated: 2025-07-02 (Fix for Saved Sort Order Scoping)
+// File Version: v150
+// Last Updated: 2025-07-02 (Fix ALL_SHARES_ID Typo)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -1048,7 +1048,8 @@ function renderAsxCodeButtons() {
     const uniqueAsxCodes = new Set();
     
     let sharesForButtons = [];
-    if (currentSelectedWatchlistIds.includes(ALL_SHAres_ID)) {
+    // Fix: Corrected typo from ALL_SHAres_ID to ALL_SHARES_ID
+    if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID)) { 
         sharesForButtons = [...allSharesData]; // Use all shares if "Show All Shares" is active
     } else {
         sharesForButtons = allSharesData.filter(share => currentSelectedWatchlistIds.includes(share.watchlistId));
@@ -2633,7 +2634,7 @@ async function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v149) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v150) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
