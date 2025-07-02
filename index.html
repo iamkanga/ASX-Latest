@@ -8,7 +8,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍆</text></svg>">
 
     <!-- Linking to your separate style.css file -->
-    <link rel="stylesheet" href="style.css?v=80"> <!-- Updated to v80 -->
+    <link rel="stylesheet" href="style.css?v=81"> <!-- Updated to v81 -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -285,6 +285,8 @@
             <!-- END NEW: Scrollable content for share details modal -->
 
             <div class="modal-action-buttons">
+                <!-- Delete Share icon - ADDED THIS BUTTON -->
+                <span id="deleteShareFromDetailBtn" class="modal-action-icon danger" title="Delete Share"><i class="fas fa-trash-alt"></i></span>
                 <!-- Edit Share icon - NOW STANDALONE ICON -->
                 <span id="editShareFromDetailBtn" class="modal-action-icon" title="Edit Share"><i class="fas fa-edit"></i></span>
             </div>
@@ -494,10 +496,10 @@
         } : null;
 
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log("index.html (v76) script module loaded and DOMContentLoaded fired."); // Updated version number
+            console.log("index.html (v79) script module loaded and DOMContentLoaded fired."); // Updated version number
         }); 
     </script>
     <!-- Linking to your separate script.js file -->
-    <script src="script.js?v=143"></script> <!-- Updated to v143 -->
+    <script src="script.js?v=147"></script> <!-- Updated to v147 -->
 </body>
 </html>
