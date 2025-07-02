@@ -1,5 +1,5 @@
-/* File Version: v84 */
-/* Last Updated: 2025-07-02 (Comment Section Display Fix) */
+/* File Version: v85 */
+/* Last Updated: 2025-07-02 (Aggressive Comment Section Display Fix) */
 
 :root {
     /* Light Theme (Default) */
@@ -1492,7 +1492,8 @@ table tbody tr:not(.selected):hover {
     margin-top: 20px;
     border-top: 1px solid var(--border-color);
     padding-top: 15px;
-    display: block; /* ENSURE VISIBILITY */
+    display: block !important; /* AGGRESSIVE FIX: ENSURE VISIBILITY */
+    background-color: rgba(255, 0, 0, 0.1); /* DEBUG: Light red background */
 }
 
 .comments-form-container h3 {
@@ -1513,7 +1514,7 @@ table tbody tr:not(.selected):hover {
     border: none;
     color: var(--icon-action-color); /* Use action icon color */
     font-size: 1.5em;
-    display: inline-flex; /* ENSURE VISIBILITY */
+    display: inline-flex !important; /* AGGRESSIVE FIX: ENSURE VISIBILITY */
     justify-content: center;
     align-items: center;
     cursor: pointer;
@@ -1523,6 +1524,7 @@ table tbody tr:not(.selected):hover {
     height: 30px;
     border-radius: 50%; /* Make it round */
     padding: 0; /* No padding for the icon itself */
+    background-color: rgba(0, 255, 0, 0.1); /* DEBUG: Light green background */
 }
 
 .add-section-icon:hover {
@@ -1539,7 +1541,8 @@ table tbody tr:not(.selected):hover {
     margin-bottom: 15px; /* Space between multiple comment sections */
     background-color: var(--card-bg);
     position: relative;
-    display: block; /* ENSURE VISIBILITY */
+    display: block !important; /* AGGRESSIVE FIX: ENSURE VISIBILITY */
+    background-color: rgba(0, 0, 255, 0.1); /* DEBUG: Light blue background */
 }
 
 .comment-section-header {
