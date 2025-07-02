@@ -8,7 +8,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍆</text></svg>">
 
     <!-- Linking to your separate style.css file -->
-    <link rel="stylesheet" href="style.css?v=83"> <!-- Updated to v83 -->
+    <link rel="stylesheet" href="style.css?v=80"> <!-- Updated to v80 -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -44,10 +44,6 @@
             <div class="menu-section">
                 <h3>Watchlists</h3>
                 <div class="menu-buttons-group">
-                    <!-- Select Watchlists Button (replaces header dropdown) -->
-                    <button id="selectWatchlistsBtn" class="menu-button-item" data-action-closes-menu="true">
-                        <i class="fas fa-list-alt"></i> <span>Select Watchlists</span>
-                    </button>
                     <!-- Add Watchlist - Icon with Text -->
                     <button id="addWatchlistBtn" class="menu-button-item" data-action-closes-menu="true">
                         <i class="fas fa-list-ul"></i> <span>Add Watchlist</span>
@@ -144,8 +140,13 @@
         <div id="sidebarOverlay" class="sidebar-overlay"></div>
 
         <!-- Watchlist and Sort controls -->
-        <!-- WATCHLIST SELECT DROPDOWN REMOVED FROM HERE -->
         <div class="watchlist-controls-row">
+            <div class="watchlist-group">
+                <select id="watchlistSelect" class="dropdown-large">
+                    <!-- Options populated by JS, including 'Watchlist' placeholder -->
+                </select>
+            </div>
+
             <div class="sort-group">
                 <select id="sortSelect" class="dropdown-large">
                     <option value="" disabled selected>Sort by</option> <!-- Explicit "Sort by" placeholder -->
@@ -275,8 +276,6 @@
 
                 <div class="external-links-section">
                     <h3>External Links</h3>
-                    <!-- New News Link -->
-                    <p><a id="modalNewsLink" href="#" target="_blank" class="external-link"><i class="fas fa-newspaper"></i> View News</a></p>
                     <p><a id="modalMarketIndexLink" href="#" target="_blank" class="external-link"><i class="fas fa-external-link-alt"></i> View on MarketIndex.com.au</a></p>
                     <p><a id="modalFoolLink" href="#" target="_blank" class="external-link"><i class="fas fa-external-link-alt"></i> View on Fool.com.au</a></p>
                     <p><a id="modalCommSecLink" href="#" target="_blank" class="external-link"><i class="fas fa-external-link-alt"></i> View on CommSec.com.au</a></p>
@@ -285,10 +284,8 @@
             </div>
             <!-- END NEW: Scrollable content for share details modal -->
 
-            <div class="modal-action-buttons share-detail-modal-action-buttons">
-                <!-- Delete Share icon - NEWLY ADDED -->
-                <span id="deleteShareFromDetailBtn" class="modal-action-icon danger" title="Delete Share"><i class="fas fa-trash-alt"></i></span>
-                <!-- Edit Share icon -->
+            <div class="modal-action-buttons">
+                <!-- Edit Share icon - NOW STANDALONE ICON -->
                 <span id="editShareFromDetailBtn" class="modal-action-icon" title="Edit Share"><i class="fas fa-edit"></i></span>
             </div>
         </div>
@@ -302,9 +299,9 @@
             <label for="newWatchlistName">Watchlist Name:</label>
             <input type="text" id="newWatchlistName" placeholder="e.g., Tech Stocks" required>
             <div class="form-action-buttons">
-                <!-- Cancel Add Watchlist icon -->
+                <!-- Cancel Add Watchlist icon - NOW STANDALONE ICON -->
                 <span id="cancelAddWatchlistBtn" class="modal-action-icon secondary" title="Cancel"><i class="fas fa-times-circle"></i></span>
-                <!-- Save Watchlist icon -->
+                <!-- Save Watchlist icon - NOW STANDALONE ICON -->
                 <span id="saveWatchlistBtn" class="modal-action-icon" title="Save Watchlist"><i class="fas fa-save"></i></span>
             </div>
         </div>
@@ -318,26 +315,12 @@
             <label for="editWatchlistName">Watchlist Name:</label>
             <input type="text" id="editWatchlistName" required>
             <div class="form-action-buttons">
-                <!-- Delete Watchlist icon -->
+                <!-- Delete Watchlist icon - NOW STANDALONE ICON -->
                 <span id="deleteWatchlistInModalBtn" class="modal-action-icon danger" title="Delete Watchlist"><i class="fas fa-trash-alt"></i></span>
-                <!-- Cancel Manage Watchlist icon -->
+                <!-- Cancel Manage Watchlist icon - NOW STANDALONE ICON -->
                 <span id="cancelManageWatchlistBtn" class="modal-action-icon secondary" title="Cancel"><i class="fas fa-times-circle"></i></span>
-                <!-- Save Watchlist Name icon -->
+                <!-- Save Watchlist Name icon - NOW STANDALONE ICON -->
                 <span id="saveWatchlistNameBtn" class="modal-action-icon" title="Save Name"><i class="fas fa-save"></i></span>
-            </div>
-        </div>
-    </div>
-
-    <!-- NEW: Select Watchlists Modal (Multi-select) -->
-    <div id="selectWatchlistsModal" class="modal">
-        <div class="modal-content select-watchlists-modal-content">
-            <span class="close-button">&times;</span>
-            <h2>Select Watchlists</h2>
-            <div id="watchlistCheckboxesContainer" class="watchlist-checkboxes-container">
-                <!-- Checkboxes will be dynamically populated here by JS -->
-            </div>
-            <div class="form-action-buttons">
-                <span id="applyWatchlistSelectionBtn" class="modal-action-icon" title="Apply Selection"><i class="fas fa-check-circle"></i></span>
             </div>
         </div>
     </div>
@@ -511,10 +494,10 @@
         } : null;
 
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log("index.html (v79) script module loaded and DOMContentLoaded fired."); // Updated version number
+            console.log("index.html (v76) script module loaded and DOMContentLoaded fired."); // Updated version number
         }); 
     </script>
     <!-- Linking to your separate script.js file -->
-    <script src="script.js?v=147"></script> <!-- Updated to v147 -->
+    <script src="script.js?v=143"></script> <!-- Updated to v143 -->
 </body>
 </html>
