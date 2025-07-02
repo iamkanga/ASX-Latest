@@ -1,5 +1,5 @@
-/* File Version: v81 */
-/* Last Updated: 2025-07-02 (Multi-Select Watchlist Modal Styles) */
+/* File Version: v82 */
+/* Last Updated: 2025-07-02 (Layout & Modal Button Alignment) */
 
 :root {
     /* Light Theme (Default) */
@@ -908,7 +908,7 @@ header {
 /* Watchlist and Sort Controls */
 .watchlist-controls-row {
     display: flex;
-    justify-content: flex-end; /* Align to the right */
+    justify-content: center; /* Centered horizontally */
     align-items: center;
     gap: 15px;
     padding: 10px 0;
@@ -966,7 +966,7 @@ body.dark-theme .dropdown-large {
     flex-wrap: wrap;
     gap: 8px;
     padding: 10px 0;
-    justify-content: center;
+    justify-content: center; /* Centered horizontally */
     border-bottom: 1px solid var(--border-color);
     margin-bottom: 10px;
     transition: border-color 0.3s ease;
@@ -1340,7 +1340,8 @@ table tbody tr.selected {
 }
 
 /* Modal Action Buttons (Footer of Modals) */
-.form-action-buttons {
+.form-action-buttons,
+.modal-action-buttons { /* Apply to all modal action button containers */
     display: flex;
     justify-content: flex-end; /* Align icons to the right */
     gap: 15px;
@@ -1475,13 +1476,15 @@ table tbody tr.selected {
     font-size: 1em;
 }
 
-.ghosted-text {
-    color: var(--ghosted-text);
-    font-style: italic;
-    font-size: 0.85em;
-    text-align: center;
-    margin-top: 10px;
+/* Specific styling for the CommSec message */
+.commsec-message {
+    font-size: 0.75em; /* Much smaller */
+    text-align: left; /* Aligned to the left */
+    margin-top: 5px; /* Closer to the link */
+    margin-bottom: 0; /* Remove extra bottom margin */
+    padding-left: 28px; /* Align with link text (icon width + gap) */
 }
+
 
 /* Dividend Calculator Specifics */
 #dividendCalculatorModal .modal-content {
@@ -2077,7 +2080,7 @@ table tbody tr.selected {
 
     .watchlist-controls-row {
         width: 100%; /* Take full width */
-        justify-content: flex-end; /* Align to the right */
+        justify-content: center; /* Centered horizontally */
         flex-direction: row; /* Ensure row layout */
         flex-wrap: nowrap;
         gap: 20px 40px; /* More space between groups */

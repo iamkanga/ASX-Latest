@@ -1,5 +1,5 @@
-// File Version: v145
-// Last Updated: 2025-07-02 (Multi-Select Watchlist, News Links, No Confirmations)
+// File Version: v146
+// Last Updated: 2025-07-02 (Fixed Sidebar, 'Show All Shares' Logic, Delete in Details)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -83,6 +83,7 @@ const modalCommentsContainer = document.getElementById('modalCommentsContainer')
 const modalUnfrankedYieldSpan = document.getElementById('modalUnfrankedYield');
 const modalFrankedYieldSpan = document.getElementById('modalFrankedYield');
 const editShareFromDetailBtn = document.getElementById('editShareFromDetailBtn'); // Now a span
+const deleteShareFromDetailBtn = document.getElementById('deleteShareFromDetailBtn'); // NEW: Delete button in share details modal
 const modalNewsLink = document.getElementById('modalNewsLink'); // New News Link
 const modalMarketIndexLink = document.getElementById('modalMarketIndexLink');
 const modalFoolLink = document.getElementById('modalFoolLink');
@@ -516,8 +517,9 @@ function showShareDetails() {
         commSecLoginMessage.style.display = 'block'; 
     }
 
-    // Ensure editShareFromDetailBtn is enabled when showing details
+    // Ensure editShareFromDetailBtn and deleteShareFromDetailBtn are enabled when showing details
     setIconDisabled(editShareFromDetailBtn, false);
+    setIconDisabled(deleteShareFromDetailBtn, false); // NEW: Enable delete button in details modal
 
     showModal(shareDetailModal);
     console.log(`[Details] Displayed details for share: ${share.shareName} (ID: ${selectedShareDocId})`);
@@ -581,6 +583,7 @@ function renderWatchlistSelectionModal() {
     // Add "Show All Shares" option
     const allSharesDiv = document.createElement('div');
     allSharesDiv.className = 'watchlist-checkbox-item';
+    allSharesDiv.id = 'all_shares_option_parent'; // Add an ID to the parent div for easier targeting
     allSharesDiv.innerHTML = `
         <input type="checkbox" id="${ALL_SHARES_ID}" value="${ALL_SHARES_ID}">
         <label for="${ALL_SHARES_ID}">Show All Shares</label>
@@ -607,19 +610,20 @@ function renderWatchlistSelectionModal() {
         }
     });
 
-    // Set initial state for "Show All Shares" checkbox
+    // Set initial state for "Show All Shares" checkbox and individual checkboxes based on currentSelectedWatchlistIds
     if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID)) {
         allSharesCheckbox.checked = true;
-        // Disable individual checkboxes if "Show All Shares" is checked
+        // Check all individual checkboxes and ensure they are enabled
         watchlistCheckboxesContainer.querySelectorAll('.watchlist-checkbox-item:not(#all_shares_option_parent) input[type="checkbox"]').forEach(cb => {
-            cb.disabled = true;
-            cb.closest('.watchlist-checkbox-item').classList.add('is-disabled-checkbox');
+            cb.checked = true; // Check them
+            cb.disabled = false; // Ensure enabled
+            cb.closest('.watchlist-checkbox-item').classList.remove('is-disabled-checkbox'); // Remove disabled visual
         });
     } else {
-        // Ensure "Show All Shares" is not checked and individual ones are enabled
+        // Ensure "Show All Shares" is not checked and all individual ones are enabled
         allSharesCheckbox.checked = false;
         watchlistCheckboxesContainer.querySelectorAll('.watchlist-checkbox-item').forEach(div => {
-            if (div.id !== ALL_SHARES_ID) { // Use ID or a specific class for the "All Shares" parent div
+            if (div.id !== 'all_shares_option_parent') { // Target individual watchlist items
                 div.querySelector('input[type="checkbox"]').disabled = false;
                 div.classList.remove('is-disabled-checkbox');
             }
@@ -633,38 +637,32 @@ function handleAllSharesCheckboxChange(event) {
     const individualWatchlistCheckboxes = watchlistCheckboxesContainer.querySelectorAll('.watchlist-checkbox-item:not(#all_shares_option_parent) input[type="checkbox"]');
     
     individualWatchlistCheckboxes.forEach(checkbox => {
-        checkbox.checked = false; // Uncheck all individual watchlists
-        checkbox.disabled = isChecked; // Disable if "Show All Shares" is checked
-        if (isChecked) {
-            checkbox.closest('.watchlist-checkbox-item').classList.add('is-disabled-checkbox');
-        } else {
-            checkbox.closest('.watchlist-checkbox-item').classList.remove('is-disabled-checkbox');
-        }
+        checkbox.checked = isChecked; // Check/uncheck all individual watchlists
+        checkbox.disabled = false; // Ensure they are always enabled
+        checkbox.closest('.watchlist-checkbox-item').classList.remove('is-disabled-checkbox'); // Remove disabled visual
     });
-    console.log(`[Watchlist Selection] "Show All Shares" toggled to: ${isChecked}`);
+    console.log(`[Watchlist Selection] "Show All Shares" toggled to: ${isChecked}. Individual watchlists set to ${isChecked ? 'checked' : 'unchecked'} and enabled.`);
 }
 
 function handleIndividualWatchlistCheckboxChange(event) {
     const allSharesCheckbox = watchlistCheckboxesContainer.querySelector(`#${ALL_SHARES_ID}`);
-    if (event.target.checked) {
-        // If an individual watchlist is checked, uncheck and disable "Show All Shares"
+    
+    if (!event.target.checked) {
+        // If an individual watchlist is unchecked, then "Show All Shares" must also be unchecked.
         if (allSharesCheckbox.checked) {
             allSharesCheckbox.checked = false;
-            // Re-enable individual checkboxes if "Show All Shares" was just unchecked
-            watchlistCheckboxesContainer.querySelectorAll('.watchlist-checkbox-item:not(#all_shares_option_parent) input[type="checkbox"]').forEach(cb => {
-                cb.disabled = false;
-                cb.closest('.watchlist-checkbox-item').classList.remove('is-disabled-checkbox');
-            });
+            console.log("[Watchlist Selection] Individual watchlist unchecked, unchecking 'Show All Shares'.");
         }
     } else {
-        // If an individual watchlist is unchecked, and no others are checked, re-enable "Show All Shares"
-        const anyOtherIndividualChecked = Array.from(watchlistCheckboxesContainer.querySelectorAll('.watchlist-checkbox-item:not(#all_shares_option_parent) input[type="checkbox"]')).some(cb => cb.checked);
-        if (!anyOtherIndividualChecked) {
-            allSharesCheckbox.disabled = false;
-            allSharesCheckbox.closest('.watchlist-checkbox-item').classList.remove('is-disabled-checkbox');
+        // If an individual watchlist is checked, check if all others are also checked.
+        // If all are checked, then "Show All Shares" should be checked.
+        const allIndividualChecked = Array.from(watchlistCheckboxesContainer.querySelectorAll('.watchlist-checkbox-item:not(#all_shares_option_parent) input[type="checkbox"]')).every(cb => cb.checked);
+        if (allIndividualChecked) {
+            allSharesCheckbox.checked = true;
+            console.log("[Watchlist Selection] All individual watchlists are now checked, checking 'Show All Shares'.");
         }
     }
-    console.log(`[Watchlist Selection] Individual watchlist toggled. All Shares checkbox disabled: ${allSharesCheckbox.disabled}`);
+    // Individual checkboxes should always remain enabled, so no changes to their disabled state here.
 }
 
 
@@ -935,8 +933,10 @@ function renderWatchlist() {
         });
         if (selectedNames.length === 1) {
             mainTitle.textContent = selectedNames[0];
-        } else {
+        } else if (selectedNames.length > 1) {
             mainTitle.textContent = "Multiple Watchlists Selected";
+        } else {
+            mainTitle.textContent = "No Watchlists Selected"; // Should ideally not happen if logic is correct
         }
         console.log(`[Render] Displaying shares from watchlists: ${selectedNames.join(', ')}`);
     } else {
@@ -1256,9 +1256,12 @@ async function loadUserWatchlistsAndSettings() {
             currentSelectedWatchlistIds = lastSelectedWatchlistIds.filter(id => 
                 id === ALL_SHARES_ID || userWatchlists.some(wl => wl.id === id)
             );
-            if (currentSelectedWatchlistIds.length === 0 && !lastSelectedWatchlistIds.includes(ALL_SHARES_ID)) {
-                // If saved IDs are all invalid and "All Shares" wasn't selected, default to the first watchlist
-                currentSelectedWatchlistIds = [userWatchlists[0].id];
+            // If "Show All Shares" was selected, ensure it's still valid (i.e., there are watchlists)
+            if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID) && userWatchlists.length === 0) {
+                 currentSelectedWatchlistIds = []; // Cannot show all if there are none
+            }
+            if (currentSelectedWatchlistIds.length === 0) { // If after filtering, nothing is selected
+                currentSelectedWatchlistIds = [userWatchlists[0].id]; // Default to the first watchlist
                 console.warn("[User Settings] Saved watchlist IDs were invalid or empty, defaulting to first watchlist.");
             }
         } else {
@@ -1400,7 +1403,7 @@ async function migrateOldSharesToWatchlist() {
     let sharesToUpdate = [];
     let anyMigrationPerformed = false;
     try {
-        console.log("[Migration] Checking for old shares to migrate/update schema and data types...");
+        console.log("[Migration] Checking for old shares to migrate/update schema and data types.");
         // Use getDocs for one-time fetch for migration, not onSnapshot
         const querySnapshot = await window.firestore.getDocs(q);
         querySnapshot.forEach(doc => {
@@ -1991,6 +1994,31 @@ async function initializeAppLogic() {
         });
     }
 
+    // NEW: Delete Share From Detail Button
+    if (deleteShareFromDetailBtn) {
+        deleteShareFromDetailBtn.addEventListener('click', async () => {
+            console.log("[Share Details] Delete Share button clicked (No Confirmation).");
+            // Ensure button is not disabled before proceeding
+            if (deleteShareFromDetailBtn.classList.contains('is-disabled-icon')) {
+                console.warn("[Delete Share From Detail] Delete button was disabled, preventing action.");
+                return; // Do nothing if visually disabled
+            }
+            if (selectedShareDocId) {
+                try {
+                    const shareDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, selectedShareDocId);
+                    await window.firestore.deleteDoc(shareDocRef);
+                    showCustomAlert("Share deleted successfully!", 1500);
+                    console.log(`[Firestore] Share (ID: ${selectedShareDocId}) deleted.`);
+                    closeModals();
+                    // No explicit loadShares() here, the onSnapshot listener will handle the UI refresh.
+                } catch (error) {
+                    console.error("[Firestore] Error deleting share:", error);
+                    showCustomAlert("Error deleting share: " + error.message);
+                }
+            } else { showCustomAlert("No share selected for deletion."); }
+        });
+    }
+
     // Context Menu Edit Share Button
     if (contextEditShareBtn) {
         contextEditShareBtn.addEventListener('click', () => {
@@ -2560,7 +2588,7 @@ async function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v145) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v146) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
