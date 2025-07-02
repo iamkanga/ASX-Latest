@@ -32,8 +32,8 @@
     --sidebar-bg: #f8f9fa;
     --sidebar-text: #333;
     --sidebar-border: #c9d2d4;
-    --menu-button-bg: #e9ecef; /* Subtle background for menu items */
-    --menu-button-hover-bg: #dee2e6; /* Darker hover for menu items */
+    --menu-button-bg: transparent; /* Changed for standalone look */
+    --menu-button-hover-bg: #e9ecef; /* Lighter hover for standalone */
     --menu-button-active-bg: #007bff;
     --menu-button-active-text: #fff;
     --placeholder-text: #6c757d;
@@ -88,8 +88,8 @@ body.dark-theme {
     --sidebar-bg: #34495e;
     --sidebar-text: #ecf0f1;
     --sidebar-border: #4a627a;
-    --menu-button-bg: #4a627a; /* Subtle background for menu items */
-    --menu-button-hover-bg: #5c758e; /* Darker hover for menu items */
+    --menu-button-bg: transparent; /* Changed for standalone look */
+    --menu-button-hover-bg: #4a627a; /* Lighter hover for standalone */
     --menu-button-active-bg: #007bff;
     --menu-button-active-text: #fff;
     --placeholder-text: #bdc3c7;
@@ -133,9 +133,8 @@ body.theme-bold-1 { /* Ocean Blue */
     --asx-button-active-bg: #00b4d8;
     --sidebar-bg: #0a475a;
     --sidebar-border: #008793;
-    --menu-button-bg: #005f73;
-    --menu-button-hover-bg: #008793;
-    --menu-button-active-bg: #00b4d8;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #0a475a;
     --placeholder-text: #8ecae6;
     --ghosted-text: #a8dadc;
     --danger-button-bg: #e63946;
@@ -168,9 +167,8 @@ body.theme-bold-2 { /* Forest Green */
     --asx-button-active-bg: #a7c957;
     --sidebar-bg: #4a754a;
     --sidebar-border: #6a9955;
-    --menu-button-bg: #386641;
-    --menu-button-hover-bg: #6a9955;
-    --menu-button-active-bg: #a7c957;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #4a754a;
     --placeholder-text: #c0d8b6;
     --ghosted-text: #d4e3c9;
     --danger-button-bg: #e74c3c;
@@ -203,9 +201,8 @@ body.theme-bold-3 { /* Sunset Orange */
     --asx-button-active-bg: #ffc300;
     --sidebar-bg: #f4a261;
     --sidebar-border: #e76f51;
-    --menu-button-bg: #e63946;
-    --menu-button-hover-bg: #e76f51;
-    --menu-button-active-bg: #ffc300;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #f4a261;
     --placeholder-text: #ffe5b4;
     --ghosted-text: #ffd790;
     --danger-button-bg: #e63946;
@@ -213,7 +210,7 @@ body.theme-bold-3 { /* Sunset Orange */
     --icon-action-color: #ffc300;
     --icon-action-hover-color: #e0ac00;
     --icon-danger-color: #e63946;
-    --icon-danger-hover-color: #c02d38;
+    --icon-danger-hover-color: #c0392b;
     --calc-num-btn-bg: #f7b98d;
     --calc-num-btn-text: #3b2a20;
     --calc-num-btn-hover-bg: #f4a261;
@@ -238,9 +235,8 @@ body.theme-bold-4 { /* Royal Purple */
     --asx-button-active-bg: #c77dff;
     --sidebar-bg: #7b2cbf;
     --sidebar-border: #9d4edd;
-    --menu-button-bg: #5a189a;
-    --menu-button-hover-bg: #9d4edd;
-    --menu-button-active-bg: #c77dff;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #7b2cbf;
     --placeholder-text: #e0baff;
     --ghosted-text: #e8d0ff;
     --danger-button-bg: #e74c3c;
@@ -273,9 +269,8 @@ body.theme-bold-5 { /* Deep Red */
     --asx-button-active-bg: #e74c3c;
     --sidebar-bg: #a02020;
     --sidebar-border: #c0392b;
-    --menu-button-bg: #8b0000;
-    --menu-button-hover-bg: #c0392b;
-    --menu-button-active-bg: #e74c3c;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #a02020;
     --placeholder-text: #ffbaba;
     --ghosted-text: #ffcccc;
     --danger-button-bg: #e74c3c;
@@ -308,9 +303,8 @@ body.theme-bold-6 { /* Gold */
     --asx-button-active-bg: #ffeb3b;
     --sidebar-bg: #daa520;
     --sidebar-border: #ffd700;
-    --menu-button-bg: #b8860b;
-    --menu-button-hover-bg: #ffd700;
-    --menu-button-active-bg: #ffeb3b;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #daa520;
     --placeholder-text: #ffee99;
     --ghosted-text: #fff2c4;
     --danger-button-bg: #e74c3c;
@@ -343,9 +337,8 @@ body.theme-bold-7 { /* Emerald */
     --asx-button-active-bg: #66bb6a;
     --sidebar-bg: #228b22;
     --sidebar-border: #3cb371;
-    --menu-button-bg: #006400;
-    --menu-button-hover-bg: #3cb371;
-    --menu-button-active-bg: #66bb6a;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #228b22;
     --placeholder-text: #99ffaa;
     --ghosted-text: #ccffdd;
     --danger-button-bg: #e74c3c;
@@ -377,9 +370,8 @@ body.theme-bold-8 { /* Plum */
     --asx-button-active-bg: #da70d6;
     --sidebar-bg: #9932cc;
     --sidebar-border: #ba55d3;
-    --menu-button-bg: #800080;
-    --menu-button-hover-bg: #ba55d3;
-    --menu-button-active-bg: #da70d6;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #9932cc;
     --placeholder-text: #ffb3ff;
     --ghosted-text: #ffccff;
     --danger-button-bg: #e74c3c;
@@ -411,9 +403,8 @@ body.theme-bold-9 { /* Aqua */
     --asx-button-active-bg: #20b2aa;
     --sidebar-bg: #00ced1;
     --sidebar-border: #40e0d0;
-    --menu-button-bg: #008b8b;
-    --menu-button-hover-bg: #40e0d0;
-    --menu-button-active-bg: #20b2aa;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #00ced1;
     --placeholder-text: #99ffff;
     --ghosted-text: #ccffff;
     --danger-button-bg: #e74c3c;
@@ -445,9 +436,8 @@ body.theme-bold-10 { /* Ruby */
     --asx-button-active-bg: #dc143c;
     --sidebar-bg: #a52a2a;
     --sidebar-border: #cd5c5c;
-    --menu-button-bg: #8b0000;
-    --menu-button-hover-bg: #cd5c5c;
-    --menu-button-active-bg: #dc143c;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #a52a2a;
     --placeholder-text: #ffb3c6;
     --ghosted-text: #ffcce0;
     --danger-button-bg: #e74c3c;
@@ -481,9 +471,8 @@ body.theme-subtle-1 { /* Subtle Sky */
     --asx-button-active-bg: #87ceeb;
     --sidebar-bg: #f8fcff;
     --sidebar-border: #c9e6f2;
-    --menu-button-bg: #e0f2f7;
-    --menu-button-hover-bg: #c9e6f2;
-    --menu-button-active-bg: #87ceeb;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #eaf7fc;
     --placeholder-text: #9bbcd6;
     --ghosted-text: #b0c6d9;
     --danger-button-bg: #e74c3c;
@@ -515,9 +504,8 @@ body.theme-subtle-2 { /* Subtle Earth */
     --asx-button-active-bg: #b8a28f;
     --sidebar-bg: #fcfaf7;
     --sidebar-border: #d4c8b9;
-    --menu-button-bg: #e0d8cc;
-    --menu-button-hover-bg: #d4c8b9;
-    --menu-button-active-bg: #b8a28f;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #f2ede7;
     --placeholder-text: #a69a8e;
     --ghosted-text: #b8af9f;
     --danger-button-bg: #e74c3c;
@@ -549,9 +537,8 @@ body.theme-subtle-3 { /* Subtle Rose */
     --asx-button-active-bg: #eeb8c6;
     --sidebar-bg: #fffbfd;
     --sidebar-border: #e6c9d0;
-    --menu-button-bg: #f7e0e6;
-    --menu-button-hover-bg: #e6c9d0;
-    --menu-button-active-bg: #eeb8c6;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #f7eff2;
     --placeholder-text: #c6aab3;
     --ghosted-text: #d9b8c0;
     --danger-button-bg: #e74c3c;
@@ -583,9 +570,8 @@ body.theme-subtle-4 { /* Subtle Lavender */
     --asx-button-active-bg: #c6b8eb;
     --sidebar-bg: #fbf8ff;
     --sidebar-border: #d0c9e6;
-    --menu-button-bg: #e6e0f7;
-    --menu-button-hover-bg: #d0c9e6;
-    --menu-button-active-bg: #c6b8eb;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #f2eff7;
     --placeholder-text: #b3a6c6;
     --ghosted-text: #c0b8d9;
     --danger-button-bg: #e74c3c;
@@ -611,15 +597,14 @@ body.theme-subtle-5 { /* Subtle Mint */
     --input-border: #b9d9be;
     --modal-content-bg: #ffffff;
     --table-header-bg: #e6f2eb;
-    --table-row-hover-bg: #f7eff2;
+    --table-row-hover-bg: #eff7f2;
     --asx-button-bg: #e6f2eb;
-    --asx-button-hover-bg: #e0f7e6;
+    --asx-button-hover-bg: #c9e6d0;
     --asx-button-active-bg: #b8eec6;
-    --sidebar-bg: #fbfefc;
+    --sidebar-bg: #f8fffb;
     --sidebar-border: #c9e6d0;
-    --menu-button-bg: #e0f7e6;
-    --menu-button-hover-bg: #c9e6d0;
-    --menu-button-active-bg: #b8eec6;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #eff7f2;
     --placeholder-text: #a6c6b3;
     --ghosted-text: #b8d9c0;
     --danger-button-bg: #e74c3c;
@@ -633,368 +618,1637 @@ body.theme-subtle-5 { /* Subtle Mint */
     --calc-num-btn-hover-bg: #b8eec6;
 }
 
+body.theme-subtle-6 { /* Subtle Sand */
+    --background-color: #fffaf0;
+    --text-color: #6a5a4a;
+    --header-bg: #f7e6d0;
+    --card-bg: #ffffff;
+    --border-color: #e6d9c9;
+    --button-bg: #eeb8a2;
+    --button-hover-bg: #d4a28f;
+    --input-bg: #ffffff;
+    --input-border: #d9beaf;
+    --modal-content-bg: #ffffff;
+    --table-header-bg: #f2ebe6;
+    --table-row-hover-bg: #f7f2ef;
+    --asx-button-bg: #f2ebe6;
+    --asx-button-hover-bg: #e6d9c9;
+    --asx-button-active-bg: #eeb8a2;
+    --sidebar-bg: #fffefb;
+    --sidebar-border: #e6d9c9;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #f7f2ef;
+    --placeholder-text: #c6b3a6;
+    --ghosted-text: #d9c0b8;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #eeb8a2;
+    --icon-action-hover-color: #d4a28f;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #f2ebe6;
+    --calc-num-btn-text: #6a5a4a;
+    --calc-num-btn-hover-bg: #eeb8a2;
+}
+
+body.theme-subtle-7 { /* Subtle Graphite */
+    --background-color: #f5f5f5;
+    --text-color: #4a4a4a;
+    --header-bg: #e0e0e0;
+    --card-bg: #ffffff;
+    --border-color: #d0d0d0;
+    --button-bg: #b8b8b8;
+    --button-hover-bg: #a2a2a2;
+    --input-bg: #ffffff;
+    --input-border: #c9c9c9;
+    --modal-content-bg: #ffffff;
+    --table-header-bg: #ebebeb;
+    --table-row-hover-bg: #f0f0f0;
+    --asx-button-bg: #ebebeb;
+    --asx-button-hover-bg: #d0d0d0;
+    --asx-button-active-bg: #b8b8b8;
+    --sidebar-bg: #fafafa;
+    --sidebar-border: #d0d0d0;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #f0f0f0;
+    --placeholder-text: #a6a6a6;
+    --ghosted-text: #b8b8b8;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #b8b8b8;
+    --icon-action-hover-color: #a2a2a2;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #ebebeb;
+    --calc-num-btn-text: #4a4a4a;
+    --calc-num-btn-hover-bg: #b8b8b8;
+}
+
+body.theme-subtle-8 { /* Subtle Peach */
+    --background-color: #fff5f0;
+    --text-color: #6a4a4a;
+    --header-bg: #f7e6e0;
+    --card-bg: #ffffff;
+    --border-color: #e6d0c9;
+    --button-bg: #eeb8a2;
+    --button-hover-bg: #d4a28f;
+    --input-bg: #ffffff;
+    --input-border: #d9beaf;
+    --modal-content-bg: #ffffff;
+    --table-header-bg: #f2ebe6;
+    --table-row-hover-bg: #f7f2ef;
+    --asx-button-bg: #f2ebe6;
+    --asx-button-hover-bg: #e6d0c9;
+    --asx-button-active-bg: #eeb8a2;
+    --sidebar-bg: #fffbf8;
+    --sidebar-border: #e6d0c9;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #f7f2ef;
+    --placeholder-text: #c6b3a6;
+    --ghosted-text: #d9c0b8;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #eeb8a2;
+    --icon-action-hover-color: #d4a28f;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #f2ebe6;
+    --calc-num-btn-text: #6a4a4a;
+    --calc-num-btn-hover-bg: #eeb8a2;
+}
+
+body.theme-subtle-9 { /* Subtle Teal */
+    --background-color: #f0fff8;
+    --text-color: #4a6a6a;
+    --header-bg: #e0f7f2;
+    --card-bg: #ffffff;
+    --border-color: #c9e6d9;
+    --button-bg: #b8eec6;
+    --button-hover-bg: #a2d4b0;
+    --input-bg: #ffffff;
+    --input-border: #b9d9c0;
+    --modal-content-bg: #ffffff;
+    --table-header-bg: #e6f2eb;
+    --table-row-hover-bg: #eff7f2;
+    --asx-button-bg: #e6f2eb;
+    --asx-button-hover-bg: #c9e6d9;
+    --asx-button-active-bg: #b8eec6;
+    --sidebar-bg: #f8fffb;
+    --sidebar-border: #c9e6d9;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #eff7f2;
+    --placeholder-text: #a6c6b3;
+    --ghosted-text: #b8d9c0;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #b8eec6;
+    --icon-action-hover-color: #a2d4b0;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #e6f2eb;
+    --calc-num-btn-text: #4a6a6a;
+    --calc-num-btn-hover-bg: #b8eec6;
+}
+
+body.theme-subtle-10 { /* Subtle Stone */
+    --background-color: #f8f8f8;
+    --text-color: #5a5a5a;
+    --header-bg: #e8e8e8;
+    --card-bg: #ffffff;
+    --border-color: #d8d8d8;
+    --button-bg: #c0c0c0;
+    --button-hover-bg: #a8a8a8;
+    --input-bg: #ffffff;
+    --input-border: #b8b8b8;
+    --modal-content-bg: #ffffff;
+    --table-header-bg: #f0f0f0;
+    --table-row-hover-bg: #f5f5f5;
+    --asx-button-bg: #f0f0f0;
+    --asx-button-hover-bg: #d8d8d8;
+    --asx-button-active-bg: #c0c0c0;
+    --sidebar-bg: #fcfcfc;
+    --sidebar-border: #d8d8d8;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #f5f5f5;
+    --placeholder-text: #a6a6a6;
+    --ghosted-text: #b8b8b8;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #c0c0c0;
+    --icon-action-hover-color: #a8a8a8;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #f0f0f0;
+    --calc-num-btn-text: #5a5a5a;
+    --calc-num-btn-hover-bg: #c0c0c0;
+}
+
+
 /* Base Styles */
+html, body {
+    overflow-x: hidden; 
+}
 body {
     font-family: 'Inter', sans-serif;
-    margin: 0;
-    padding: 0;
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box;
     background-color: var(--background-color);
     color: var(--text-color);
-    line-height: 1.6;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    transition: background-color 0.3s ease, color 0.3s ease;
+    transition: background-color 0.3s ease, color 0.3s ease, margin-left 0.3s ease, width 0.3s ease;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
-h1, h2, h3, h4, h5, h6 {
-    color: var(--text-color);
-    margin-top: 0;
-    margin-bottom: 0.5em;
-    line-height: 1.2;
+body.sidebar-active {
+    margin-left: var(--sidebar-width);
+    width: calc(100% - var(--sidebar-width));
 }
 
-a {
-    color: var(--link-color);
-    text-decoration: none;
+.container {
+    max-width: 1200px; 
+    margin: 20px auto; 
+    padding: 0 15px;
+    position: relative;
 }
 
-a:hover {
-    text-decoration: underline;
-    color: var(--link-hover-color);
-}
-
-button, input[type="submit"], .button {
-    background-color: var(--button-bg);
-    color: var(--button-text);
-    border: none;
-    padding: 10px 15px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1em;
-    transition: background-color 0.3s ease;
-    text-align: center;
-    white-space: nowrap; /* Prevent text wrapping */
-    display: inline-block; /* Ensure padding and width work as expected */
-}
-
-button:hover, input[type="submit"]:hover, .button:hover {
-    background-color: var(--button-hover-bg);
-}
-
-.danger-button {
-    background-color: var(--danger-button-bg);
-}
-
-.danger-button:hover {
-    background-color: var(--danger-button-hover-bg);
-}
-
-.secondary-button {
-    background-color: var(--secondary-button-bg);
-    color: var(--button-text); /* Still white text */
-}
-
-.secondary-button:hover {
-    background-color: var(--secondary-button-hover-bg);
-}
-
-/* Form Elements */
-input[type="text"],
-input[type="number"],
-input[type="email"],
-input[type="password"],
-textarea,
-select {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 15px;
-    border: 1px solid var(--input-border);
-    border-radius: 4px;
-    box-sizing: border-box; /* Ensures padding doesn't add to the width */
-    background-color: var(--input-bg);
-    color: var(--text-color);
-    transition: border-color 0.3s ease;
-}
-
-input::placeholder,
-textarea::placeholder {
-    color: var(--input-placeholder-color);
-}
-
-input:focus,
-textarea:focus,
-select:focus {
-    border-color: var(--link-color); /* Highlight on focus */
-    outline: none;
-}
-
-label {
-    display: block;
-    margin-bottom: 5px;
-    color: var(--label-color);
-    font-weight: 600;
-}
-
-/* Header */
 header {
     background-color: var(--header-bg);
     padding: 15px 20px;
     box-shadow: 0 2px 4px var(--shadow-color);
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    position: sticky; /* Make header sticky */
-    top: 0; /* Stick to the top */
-    z-index: 1000; /* Ensure it's above other content */
-    width: 100%; /* Full width */
-    box-sizing: border-box; /* Include padding in width */
+    flex-direction: column; 
+    gap: 10px;
+    position: relative; 
+    height: auto; 
 }
 
 .header-top-row {
     display: flex;
-    justify-content: space-between;
+    justify-content: center; 
     align-items: center;
-    width: 100%;
-    max-width: 1200px; /* Limit width of header content */
+    gap: 15px;
+    position: relative;
+    width: 100%; 
+    box-sizing: border-box;
+    padding: 0 15px; 
 }
 
-.header-title-container {
-    flex-grow: 1; /* Allow title to take available space */
-    text-align: center; /* Center the title */
-    margin-left: 20px; /* Space from hamburger button */
-    margin-right: 20px; /* Space from theme switcher */
-    display: flex; /* Use flex to center h1 if needed */
-    justify-content: center;
-    align-items: center;
-}
-
-header h1 {
+h1#mainTitle {
+    margin: 0;
     font-size: 1.8em;
-    color: var(--text-color); /* Use text-color for consistency */
-    margin: 0; /* Remove default h1 margin */
-    white-space: nowrap; /* Prevent title from wrapping */
-    overflow: hidden; /* Hide overflow if it's too long */
-    text-overflow: ellipsis; /* Add ellipsis for long titles */
+    font-weight: 700;
+    color: var(--text-color);
+    text-align: center; 
+    flex-grow: 1; 
 }
 
-.header-action-btn-left {
-    margin-right: auto; /* Pushes other items to the right */
-}
-
-.header-action-btn-right {
-    margin-left: auto; /* Pushes other items to the left */
-}
-
-/* Hamburger/Sidebar Toggle Button */
-.hamburger-btn {
-    background: none; /* Remove background */
-    border: none; /* Remove border */
-    padding: 0; /* Remove padding around the icon */
-    font-size: 1.5em; /* Adjust icon size if needed */
-    color: var(--text-color); /* Inherit text color or set a specific color */
+.header-action-btn {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    font-size: 1.8em; 
     cursor: pointer;
-    /* Ensure the icon is centered if it has a specific size container */
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 5px 10px;
+    z-index: 11;
+    display: block;
+}
+
+.header-action-btn:hover {
+    color: var(--button-hover-bg);
+}
+
+.header-action-btn-left { 
+    left: 0; 
+}
+
+.header-action-btn-right { 
+    right: 0; 
+}
+
+
+.hamburger-btn { 
+    background: none;
+    border: none;
+    color: var(--text-color);
+    font-size: 1.8em; 
+    cursor: pointer;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 5px 10px; 
+    z-index: 11; 
+    display: block; 
 }
 
 .hamburger-btn:hover {
-    color: var(--link-hover-color); /* Example hover effect for the icon */
-    background: none; /* Ensure no background on hover */
+    color: var(--button-hover-bg);
 }
 
-/* Sidebar */
-.sidebar {
+.app-sidebar {
+    position: fixed; 
+    top: 0;
+    left: calc(-1 * var(--sidebar-width)); 
+    width: var(--sidebar-width); 
     height: 100%;
-    width: 0; /* Collapsed by default */
-    position: fixed;
-    z-index: 1001; /* Above header */
-    top: 0;
-    left: 0;
     background-color: var(--sidebar-bg);
-    overflow-x: hidden;
-    transition: 0.5s; /* Smooth transition for opening/closing */
-    padding-top: 60px; /* Space from top */
-    border-right: 1px solid var(--sidebar-border);
     box-shadow: 2px 0 5px var(--shadow-color);
-    display: flex;
-    flex-direction: column;
-}
-
-.sidebar-header {
-    padding: 15px 25px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid var(--sidebar-border);
-    position: absolute; /* Position within sidebar */
-    top: 0;
-    left: 0;
-    width: 100%;
-    box-sizing: border-box;
-    background-color: var(--sidebar-bg); /* Match sidebar background */
-    z-index: 1; /* Ensure header content is above menu items initially */
-}
-
-.sidebar-header h2 {
-    color: var(--sidebar-text);
-    margin: 0;
-    font-size: 1.5em;
-    flex-grow: 1; /* Allow title to take space */
-}
-
-.close-sidebar-btn {
-    font-size: 2em;
-    color: var(--close-sidebar-btn-color);
-    background: none;
-    border: none;
-    cursor: pointer;
-    margin-left: 10px; /* Space from title */
-    padding: 0; /* Remove padding */
-    line-height: 1; /* Adjust vertical alignment */
-}
-
-.close-sidebar-btn:hover {
-    color: var(--link-hover-color); /* Example hover color */
-}
-
-.sidebar-content {
+    transition: left 0.3s ease-in-out; 
+    z-index: 1000; 
     padding: 20px;
-    flex-grow: 1; /* Allow content to fill available space */
-    overflow-y: auto; /* Enable scrolling for content */
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
+    overflow-y: auto; 
+    border-right: 1px solid var(--sidebar-border);
 }
 
-.sidebar-menu {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    flex-grow: 1; /* Allow menu to take available space */
+.app-sidebar.open {
+    left: 0; 
 }
 
-.sidebar-menu li {
-    margin-bottom: 10px;
-}
-
-.sidebar-menu a, .sidebar-menu button {
-    padding: 12px 15px;
-    text-decoration: none;
-    font-size: 1.1em;
-    color: var(--sidebar-text);
-    display: block;
-    transition: 0.3s;
-    border-radius: 5px;
-    text-align: left; /* Align text to the left */
-    width: 100%; /* Make button take full width */
-    box-sizing: border-box; /* Include padding in width */
-    background-color: var(--menu-button-bg); /* Use variable for background */
-    border: none; /* Ensure no border */
+.close-menu-btn {
+    color: var(--close-sidebar-btn-color);
+    font-size: 2.5em; 
+    position: absolute;
+    top: 10px;
+    right: 15px;
     cursor: pointer;
+    padding: 5px;
+    line-height: 1; 
+    display: block; 
+    background: none; 
+    border: none; 
+    font-family: sans-serif; 
 }
 
-.sidebar-menu a:hover, .sidebar-menu button:hover {
-    background-color: var(--menu-button-hover-bg); /* Use variable for hover */
-    color: var(--sidebar-text); /* Keep text color same or change as desired */
+.close-menu-btn:hover {
+    color: var(--danger-button-bg);
 }
 
-.sidebar-menu a.active, .sidebar-menu button.active {
-    background-color: var(--menu-button-active-bg);
-    color: var(--menu-button-active-text);
+.app-sidebar h3 {
+    color: var(--sidebar-text);
+    margin-top: 20px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 5px;
+    font-size: 1.1em;
+}
+
+.menu-section {
+    margin-bottom: 20px;
+}
+
+.menu-buttons-group {
+    display: flex;
+    flex-direction: column; 
+    gap: 10px; 
+}
+
+/* Redesigned menu-button-item for standalone icon/text look */
+.menu-button-item { 
+    background-color: var(--menu-button-bg); /* Transparent by default */
+    color: var(--sidebar-text); /* Use sidebar text color */
+    padding: 10px 15px; /* Reduced padding */
+    border: none; /* No border */
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 400; /* Lighter font weight */
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    width: 100%; 
+    box-sizing: border-box;
+    justify-content: flex-start; 
+}
+
+.menu-button-item:hover {
+    background-color: var(--menu-button-hover-bg); /* Light hover effect */
+    transform: translateY(-1px);
+}
+
+/* Specific styling for icon-only menu items (e.g., calculators, theme, logout) */
+.menu-button-item.icon-only {
+    justify-content: center; /* Center the icon */
+    padding: 10px; /* Smaller padding for icon-only */
+    width: auto; /* Allow sizing based on content */
+    align-self: flex-start; /* Align to start of flex container */
+    min-width: 40px; /* Ensure a minimum clickable area */
+    max-width: 60px; /* Prevent it from becoming too wide */
+}
+
+.menu-button-item.icon-only i {
+    font-size: 1.5em; /* Larger icon for icon-only buttons */
+    margin: 0; /* Remove gap if only icon */
+}
+
+.menu-button-item.icon-only span {
+    display: none; /* Hide text for icon-only */
+}
+
+/* Special case for revert to default theme button with two icons */
+#revertToDefaultThemeBtn.menu-button-item.icon-only {
+    display: flex;
+    gap: 0; /* No gap between two icons */
+    justify-content: center;
+}
+#revertToDefaultThemeBtn.menu-button-item.icon-only i {
+    font-size: 1.5em;
+    margin: 0 2px; /* Small margin between icons */
+}
+
+
+/* Logout button styling (now a span) - FINAL FIX */
+#logoutBtn.menu-button-item {
+    background-color: var(--danger-button-bg); /* Explicitly use danger-button-bg */
+    color: var(--button-text); /* Explicitly use button-text */
+    margin-top: auto; /* Push to the bottom of the sidebar */
+    border: none !important; /* Ensure no border, aggressive fix */
+    box-shadow: none !important; /* Ensure no box shadow, aggressive fix */
+}
+#logoutBtn.menu-button-item:hover {
+    background-color: var(--danger-button-hover-bg);
+}
+
+/* This is for native buttons */
+.menu-button-item:disabled {
+    background-color: var(--secondary-button-bg); /* Use secondary for disabled danger */
+    cursor: not-allowed;
+    opacity: 0.5; /* Adjusted opacity for disabled buttons */
+    box-shadow: none;
+    transform: none;
+}
+/* This is for span/i elements that are "disabled" */
+.is-disabled-icon {
+    opacity: 0.5; /* Make it semi-transparent */
+    cursor: not-allowed; /* Change cursor */
+    box-shadow: none; /* Remove shadow */
+    transform: none; /* Remove hover transform */
+    pointer-events: none; /* Disable all pointer events */
+}
+
+
+.theme-select-label {
+    color: var(--sidebar-text);
+    font-size: 0.9em;
+    margin-bottom: 5px;
+    display: block;
     font-weight: 600;
 }
 
-.sidebar-menu a i, .sidebar-menu button i {
-    margin-right: 10px;
-    width: 20px; /* Fixed width for icons to align text */
-    text-align: center;
-}
-
-.sidebar-bottom-controls {
-    border-top: 1px solid var(--sidebar-border);
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.sidebar-bottom-controls .theme-switcher,
-.sidebar-bottom-controls .app-version {
-    color: var(--sidebar-text);
-    text-align: center;
-    font-size: 0.9em;
-}
-
-.sidebar-bottom-controls .app-version {
-    color: var(--ghosted-text);
-}
-
-/* Main Content Area */
-main {
-    flex-grow: 1; /* Allow main content to take available space */
-    padding: 20px;
-    max-width: 1200px;
-    margin: 20px auto 0; /* Add margin-top for spacing below header */
-    width: calc(100% - 40px); /* Adjust for padding */
+.menu-dropdown { 
+    width: 100%;
     box-sizing: border-box;
-    transition: margin-left 0.5s ease, width 0.5s ease;
+    margin-bottom: 10px; 
 }
 
-/* Cards (for holding content) */
-.card {
-    background-color: var(--card-bg);
-    border-radius: 8px;
-    box-shadow: 0 4px 8px var(--shadow-color);
-    padding: 20px;
-    margin-bottom: 20px;
-    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); 
+    z-index: 999; 
+    display: none; 
 }
 
-.card h2 {
-    color: var(--text-color);
-    margin-bottom: 15px;
-    font-size: 1.5em;
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 10px;
+.sidebar-overlay.open {
+    display: block; 
 }
 
-/* Section for Share List */
-.share-list-section {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
 
 .watchlist-controls-row {
     display: flex;
-    flex-direction: column;
-    gap: 15px;
-    padding: 15px 0;
+    flex-wrap: wrap; 
+    justify-content: center; 
+    align-items: center;
+    gap: 15px 25px; 
+    padding: 10px 0;
+    border-top: 1px solid var(--border-color);
     border-bottom: 1px solid var(--border-color);
-    align-items: flex-start;
+    width: 100%; 
+    box-sizing: border-box;
+    padding-left: 15px; 
+    padding-right: 15px; 
 }
 
 .watchlist-group,
 .sort-group {
     display: flex;
-    flex-direction: column;
-    width: 100%;
-    gap: 5px;
-    padding: 0 10px;
-    box-sizing: border-box;
-    flex-basis: 48%; /* For small screens, take up most of the width */
-    max-width: 100%; /* Ensure it doesn't exceed parent */
-}
-
-.watchlist-group label,
-.sort-group label {
-    margin-bottom: 0; /* Remove default label margin */
-    font-size: 0.9em;
-    color: var(--ghosted-text);
+    align-items: center;
+    gap: 8px;
+    /* On desktop, they will share space evenly */
+    flex-basis: calc(50% - 12.5px); /* Two items, 25px gap */
+    max-width: calc(50% - 12.5px);
 }
 
 .dropdown-large {
+    padding: 10px 15px;
+    border: 1px solid var(--input-border);
+    border-radius: 8px;
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    font-size: 1em;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    min-width: 150px;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http://www.w3.org/2000/svg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236c757d%22%20d%3D%22M287%2069.9a14.7%2014.7%200%200%200-20.8%200L146.2%20189.9%2026.3%2069.9a14.7%2014.7%200%200%200-20.8%2020.8L135.8%20216.7a14.7%2014.7%200%200%200%2020.8%200L287%2090.7a14.7%2014.7%200%200%200%200-20.8z%22%2F%3E%3C%2Fsvg%3E'); 
+    background-repeat: no-repeat;
+    background-position: right 12px top 50%;
+    background-size: 12px auto;
+    padding-right: 30px;
+    max-height: 45px; 
+    overflow-y: hidden; 
+    width: 100%; /* Ensure it fills its flex-basis */
+}
+
+.dropdown-large option[value=""][disabled] {
+    color: var(--label-color);
+    font-weight: 400;
+}
+.dropdown-large option:not([value=""]) {
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+.dropdown-large:focus {
+    border-color: var(--button-bg);
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+    outline: none;
+}
+
+
+.asx-code-buttons-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center; 
+    gap: 8px;
+    padding: 10px 0;
     width: 100%;
+    box-sizing: border-box;
+    padding-left: 15px; 
+    padding-right: 15px; 
+}
+
+.asx-code-btn {
+    background-color: var(--asx-button-bg);
+    color: var(--asx-button-text);
+    border: 1px solid var(--input-border);
+    border-radius: 20px;
+    padding: 8px 15px;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 600;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.asx-code-btn:hover {
+    background-color: var(--asx-button-hover-bg);
+}
+
+.asx-code-btn.active {
+    background-color: var(--asx-button-active-bg);
+    color: var(--asx-button-active-text);
+    border-color: var(--asx-button-active-bg);
+}
+
+
+.share-list-section {
+    margin-top: 20px;
+    background-color: var(--card-bg);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px var(--shadow-color);
+    overflow: hidden;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    color: var(--text-color);
+}
+
+table th, table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.9em;
+}
+
+table th {
+    background-color: var(--table-header-bg);
+    font-weight: 600;
+    color: var(--text-color);
+    white-space: nowrap;
+}
+
+table tbody tr {
+    transition: background-color 0.2s ease;
+    cursor: pointer;
+}
+
+table tbody tr.selected {
+    background-color: var(--table-row-hover-bg);
+    font-weight: 600;
+}
+
+table tbody tr:not(.selected):hover {
+    background-color: var(--table-row-hover-bg);
+}
+
+.mobile-share-cards {
+    display: none; 
+    flex-direction: column;
+    gap: 15px;
+    padding: 15px;
+    position: relative; 
+    left: 0; 
+    right: 0;
+    width: 100%; 
+    box-sizing: border-box; 
+}
+
+.mobile-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 5px var(--shadow-color);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.mobile-card.selected {
+    background-color: var(--table-row-hover-bg);
+    border-color: var(--button-bg);
+    font-weight: 600;
+}
+
+.mobile-card:not(.selected):hover {
+    background-color: var(--table-row-hover-bg);
+}
+
+.mobile-card h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: var(--text-color);
+    font-size: 1.2em;
+}
+
+.mobile-card p {
+    margin: 5px 0;
+    font-size: 0.9em;
+    color: var(--text-color);
+}
+
+.mobile-card p strong {
+    color: var(--label-color);
+}
+
+.fixed-footer {
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: var(--header-bg);
+    box-shadow: 0 -2px 4px var(--shadow-color);
+    padding: 10px 20px;
+    display: flex;
+    justify-content: center; 
+    align-items: center;
+    z-index: 500;
+    transition: margin-left 0.3s ease, width 0.3s ease; 
+}
+
+.google-auth-btn {
+    background-color: var(--google-auth-btn-bg);
+    color: var(--button-text);
+    padding: 12px 25px;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 1.1em;
+    font-weight: 600;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    margin: 0 auto; 
+}
+
+.google-auth-btn:hover {
+    background-color: var(--google-auth-btn-hover-bg);
+    transform: translateY(-2px);
+}
+
+.google-auth-btn:disabled {
+    background-color: var(--secondary-button-bg);
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto; 
+    background-color: var(--modal-bg);
+    padding-top: 60px; 
+    padding-bottom: 20px; 
+    box-sizing: border-box; 
+}
+
+.modal-content {
+    background-color: var(--modal-content-bg);
+    margin: 5% auto;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px var(--shadow-color);
+    position: relative;
+    max-width: 500px;
+    width: 90%;
+    box-sizing: border-box;
+    color: var(--text-color);
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh; 
+}
+
+/* Styles for modal header with icon */
+.modal-header-with-icon {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    position: relative;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header-with-icon .close-button {
+    position: static;
+    order: 3;
+    transform: none;
+    font-size: 2em;
+    margin-left: auto;
+}
+
+.modal-header-with-icon h2 {
+    margin: 0;
+    flex-grow: 1;
+    text-align: center;
+    order: 2;
+    font-size: 1.6em;
+}
+
+.delete-icon-btn {
+    background: none;
+    border: none;
+    color: var(--icon-danger-color); /* Use new icon variable */
+    font-size: 1.5em;
+    cursor: pointer;
+    padding: 5px;
+    transition: color 0.2s ease, transform 0.1s ease;
+    order: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+}
+
+.delete-icon-btn:hover {
+    color: var(--icon-danger-hover-color); /* Use new icon variable */
+    transform: scale(1.1);
+}
+
+.delete-icon-btn.hidden {
+    display: none;
+}
+
+/* General disabled styling for ALL clickable elements (buttons, icons) */
+[disabled], .is-disabled-icon {
+    opacity: 0.5; /* Make it semi-transparent */
+    cursor: not-allowed; /* Change cursor */
+    box-shadow: none; /* Remove shadow */
+    transform: none; /* Remove hover transform */
+    pointer-events: none; /* Disable all pointer events */
+}
+
+
+.modal-body-scrollable {
+    flex-grow: 1; 
+    overflow-y: auto; 
+    padding-right: 10px; 
+    margin-right: -10px; 
+    box-sizing: border-box;
+    overflow-x: hidden; 
+}
+
+.add-share-modal-content .modal-body-scrollable {
+    padding-bottom: 20px;
+}
+
+
+.modal-content h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    text-align: center;
+    color: var(--text-color);
+    font-size: 1.6em;
+}
+
+.close-button {
+    color: var(--text-color);
+    font-size: 2em;
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: var(--danger-button-bg);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.ghosted-text {
+    color: var(--ghosted-text);
+    font-size: 0.85em;
+    opacity: 0.8;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    display: block; 
+}
+
+.commsec-message {
+    font-size: 0.75em; 
+    margin-top: 0; 
+    margin-bottom: 0; 
+    line-height: 1.2; 
+}
+
+
+.modal-content label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--label-color);
+    font-size: 0.95em;
+}
+
+.modal-content input[type="text"],
+.modal-content input[type="number"],
+.modal-content textarea {
+    width: calc(100% - 22px);
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid var(--input-border);
+    border-radius: 5px;
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    font-size: 1em;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.modal-content input[type="text"]:focus,
+.modal-content input[type="number"]:focus,
+.modal-content textarea:focus {
+    border-color: var(--button-bg);
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+    outline: none;
+}
+
+/* Styles for the new comments section container */
+.comments-form-container {
+    margin-top: 20px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 15px;
+}
+
+.comments-form-container h3 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.2em;
+    color: var(--text-color);
+    border-bottom: none; 
+    padding-bottom: 0;
+}
+
+/* Add section icon button (e.g., for comments) */
+.add-section-icon {
+    background: none;
+    border: none;
+    color: var(--icon-action-color); /* Use action icon color */
+    font-size: 1.5em;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: color 0.2s ease, transform 0.1s ease;
+    flex-shrink: 0; 
+    width: 30px; /* Make clickable area consistent */
+    height: 30px;
+    border-radius: 50%; /* Make it round */
+    padding: 0; /* No padding for the icon itself */
+}
+
+.add-section-icon:hover {
+    color: var(--icon-action-hover-color);
+    transform: translateY(-1px);
+}
+
+
+/* Styles for individual comment sections */
+.comment-section {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px; /* Space between multiple comment sections */
+    background-color: var(--card-bg);
+    position: relative;
+}
+
+.comment-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.comment-section-header .comment-title-input {
+    flex-grow: 1;
+    margin-bottom: 0;
+    margin-right: 10px;
+    font-weight: 600;
+    width: auto; 
+    min-width: 0;
+}
+
+.comment-section .comment-delete-btn {
+    background: none;
+    border: none;
+    color: var(--icon-danger-color); /* Use danger icon color */
+    font-size: 1.5em;
+    cursor: pointer;
+    transition: color 0.2s ease;
+    line-height: 1;
+    padding: 0;
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.comment-section .comment-delete-btn:hover {
+    color: var(--icon-danger-hover-color);
+    transform: scale(1.1);
+}
+
+.form-action-buttons,
+.modal-action-buttons,
+.custom-dialog-buttons { 
+    display: flex;
+    flex-wrap: nowrap; 
+    justify-content: center; 
+    gap: 10px;
+    margin-top: 25px;
+    flex-shrink: 0; 
+    padding-top: 15px; 
+    border-top: 1px solid var(--border-color); 
+}
+
+/* Styles for sticky footer in modals */
+.modal-content .sticky-footer {
+    position: sticky;
+    bottom: -25px;
+    left: -25px;
+    right: -25px;
+    padding: 25px;
+    background-color: var(--modal-content-bg);
+    border-top: 1px solid var(--border-color);
+    box-shadow: 0 -2px 8px var(--shadow-color);
+    z-index: 10;
+    margin-top: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Base style for modal action icons (now span/i elements) */
+.modal-action-icon {
+    background: none;
+    border: none;
+    padding: 8px; /* Padding for clickable area */
+    border-radius: 8px; /* Slightly rounded corners */
+    cursor: pointer;
+    font-size: 1.5em; /* Larger icon size */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.1s ease;
+    flex-grow: 1; /* Allow them to grow within the flex container */
+    max-width: 60px; /* Max width for icon-only */
+    color: var(--icon-action-color); /* Default action color */
+}
+
+.modal-action-icon:hover {
+    background-color: var(--menu-button-hover-bg); /* Use a subtle hover background */
+    color: var(--icon-action-hover-color);
+    transform: translateY(-1px);
+}
+
+/* Specific colors for danger and secondary modal icons */
+.modal-action-icon.danger {
+    color: var(--icon-danger-color);
+}
+.modal-action-icon.danger:hover {
+    color: var(--icon-danger-hover-color);
+    background-color: var(--menu-button-hover-bg); /* Maintain subtle hover background */
+}
+.modal-action-icon.secondary {
+    color: var(--secondary-button-bg); /* Use secondary color for secondary icons */
+}
+.modal-action-icon.secondary:hover {
+    color: var(--secondary-button-hover-bg);
+    background-color: var(--menu-button-hover-bg);
+}
+
+
+.modal-comments-sections {
+    margin-top: 25px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 15px;
+}
+
+.modal-comments-sections h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 1.2em;
+    color: var(--text-color);
+    border-bottom: none; 
+    padding-bottom: 0;
+}
+
+.modal-comment-item {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
+}
+
+.modal-comment-item p {
+    margin: 0;
+    line-height: 1.5;
+}
+
+.modal-comment-item strong {
+    color: var(--label-color);
+    font-size: 0.95em;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.external-links-section {
+    margin-top: 25px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 15px;
+}
+
+.external-links-section h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 1.2em;
+    color: var(--text-color);
+    border-bottom: none; 
+    padding-bottom: 0;
+}
+
+.external-link {
+    display: inline-flex; 
+    align-items: center;
+    gap: 8px; 
+    color: var(--link-color); /* Use link-color variable */
+    text-decoration: none;
+    font-weight: 600;
+    margin-bottom: 10px;
+    transition: color 0.2s ease;
+}
+
+.external-link:hover {
+    color: var(--link-hover-color); /* Use link-hover-color variable */
+    text-decoration: underline;
+}
+
+.calculator-modal-content {
+}
+.calc-input-group {
+    margin-bottom: 15px;
+}
+
+.calc-input-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--label-color);
+    font-size: 0.95em;
+}
+
+.calc-input-group input[type="number"],
+.calc-input-group select {
+    width: calc(100% - 22px);
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid var(--input-border);
+    border-radius: 5px;
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    font-size: 1em;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http://www.w3.org/2000/svg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236c757d%22%20d%3D%22M287%2069.9a14.7%2014.7%200%200%200-20.8%200L146.2%20189.9%2026.3%2069.9a14.7%2014.7%200%200%200-20.8%2020.8L135.8%20216.7a14.7%2014.7%200%200%200%2020.8%200L287%2090.7a14.7%2014.7%200%200%200%200-20.8z%22%2F%3E%3C%2Fsvg%3E'); 
+    background-repeat: no-repeat;
+    background-position: right 12px top 50%;
+    background-size: 12px auto;
+    padding-right: 30px;
+}
+
+.calc-input-group input[type="number"]:focus,
+.calc-input-group select:focus {
+    border-color: var(--button-bg);
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+    outline: none;
+}
+
+.calculator-modal-content hr {
+    border: none;
+    border-top: 1px solid var(--border-color);
+    margin: 20px 0;
+}
+
+.calculator-display {
+    background-color: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    text-align: right;
+    min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    overflow: hidden;
+}
+
+.calculator-input {
+    font-size: 1.2em;
+    color: var(--label-color);
+    min-height: 20px;
+    white-space: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.calculator-result {
+    font-size: 2.2em;
+    font-weight: 700;
+    color: var(--text-color);
+    min-height: 30px;
+    white-space: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.calculator-buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4 columns for numbers and operators */
+    gap: 10px;
+}
+
+/* Calculator button styling */
+.calc-btn {
+    background-color: var(--calc-num-btn-bg); /* Default to number button background */
+    color: var(--calc-num-btn-text); /* Default to number button text */
+    border: none;
+    border-radius: 8px;
+    padding: 15px;
+    font-size: 1.5em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.calc-btn:hover {
+    background-color: var(--calc-num-btn-hover-bg); /* Default to number button hover */
+    transform: translateY(-1px);
+}
+
+.calc-btn.clear {
+    background-color: var(--danger-button-bg);
+    color: var(--button-text);
+    grid-column: span 2; /* C and % take 2 columns together */
+}
+.calc-btn.clear:hover {
+    background-color: var(--danger-button-hover-bg);
+}
+
+.calc-btn.operator {
+    background-color: var(--secondary-button-bg);
+    color: var(--button-text);
+}
+.calc-btn.operator:hover {
+    background-color: var(--secondary-button-hover-bg);
+}
+
+.calc-btn.equals {
+    background-color: var(--success-color); /* Use success color for equals */
+    color: var(--button-text);
+    grid-column: span 2; /* Equals takes 2 columns */
+}
+.calc-btn.equals:hover {
+    background-color: #218838; /* Darker green for hover */
+}
+
+.calc-btn.zero {
+    grid-column: span 2;
+}
+
+/* Remove explicit grid-row/column for individual number and operator buttons.
+   They will now flow naturally based on HTML order and grid-template-columns. */
+/* The HTML order in index.html v73 is: C, %, ÷, 7, 8, 9, ×, 4, 5, 6, -, 1, 2, 3, +, 0, ., = */
+/* This ensures 3 numbers per row and operators on the right. */
+
+
+#scrollToTopBtn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 900;
+    background-color: var(--button-bg);
+    color: var(--button-text);
+    border: none;
+    border-radius: 50%; 
+    width: 50px;
+    height: 50px;
+    font-size: 1.8em; 
+    cursor: pointer;
+    box-shadow: 0 4px 8px var(--shadow-color);
+    transition: background-color 0.3s ease, transform 0.2s ease, opacity 0.3s ease;
+    
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    padding: 0; 
+}
+
+#scrollToTopBtn:hover {
+    background-color: var(--button-hover-bg);
+    transform: translateY(-2px);
+}
+#scrollToTopBtn .fas {
+    font-weight: 900; 
+}
+
+
+.loading {
+    text-align: center;
+    padding: 20px;
+    font-size: 1.2em;
+    color: var(--label-color);
+}
+
+.error-message {
+    background-color: #ffe0e0;
+    color: #cc0000;
+    border: 1px solid #cc0000;
+    padding: 15px;
+    margin: 20px auto;
+    border-radius: 8px;
+    max-width: 600px;
+    text-align: center;
+}
+.dark-theme .error-message {
+    background-color: #5a1a1a;
+    color: #ffcccc;
+    border-color: #ffcccc;
+}
+.error-message p {
+    margin: 0 0 10px 0;
+}
+.error-message p:last-child {
+    margin-bottom: 0;
+}
+
+/* Context Menu Styles */
+.context-menu {
+    display: none; /* Hidden by default */
+    position: fixed;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px var(--shadow-color);
+    z-index: 1001; /* Above modals */
+    padding: 8px 0;
+    min-width: 150px;
+}
+
+.context-menu-item {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    padding: 10px 15px;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    font-size: 0.95em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background-color 0.2s ease;
+}
+
+.context-menu-item:hover {
+    background-color: var(--table-row-hover-bg);
+}
+
+.context-menu-item.danger-button {
+    color: var(--icon-danger-color); /* Use icon danger color */
+}
+
+.context-menu-item.danger-button:hover {
+    background-color: var(--danger-button-bg); /* Use full button background for hover */
+    color: var(--button-text); /* Text color changes to white on hover for danger button */
+}
+
+
+@media (max-width: 768px) {
+    h1#mainTitle {
+        font-size: 1.5em; 
+        flex-grow: 1;
+        white-space: normal; 
+        overflow: visible; 
+        text-overflow: clip; 
+        text-align: center; 
+        padding-left: 50px; 
+        padding-right: 50px; 
+        box-sizing: border-box;
+        line-height: 1.3; 
+    }
+
+    .header-top-row {
+        justify-content: space-between;
+        width: 100%;
+        padding-left: 15px; 
+        padding-right: 15px; 
+    }
+
+    .hamburger-btn {
+        display: block; 
+        position: absolute;
+        left: 0; 
+        top: 50%;
+        transform: translateY(-50%);
+        padding: 5px 10px;
+    }
+
+    #addShareHeaderBtn {
+        display: block; 
+        position: absolute;
+        right: 0; 
+        top: 50%;
+        transform: translateY(-50%);
+        padding: 5px 10px;
+    }
+
+    .app-sidebar {
+        left: calc(-1 * var(--sidebar-width)); 
+        width: 100%; 
+        max-width: var(--sidebar-width); 
+        padding-top: 70px; 
+    }
+    .app-sidebar.open {
+        left: 0; 
+    }
+    .app-sidebar .close-menu-btn {
+        display: block;
+        top: 10px;
+        right: 15px;
+        font-size: 2em; 
+    }
+    .sidebar-overlay.open {
+        display: block;
+        background-color: rgba(0, 0, 0, 0.5); 
+        pointer-events: auto; 
+    }
+
+    .watchlist-controls-row {
+        flex-wrap: wrap; /* Allow wrapping on mobile for the two items */
+        justify-content: center; 
+        gap: 15px 25px; /* Adjust gap for mobile */
+    }
+    .watchlist-group,
+    .sort-group {
+        flex-basis: calc(50% - 12.5px); /* Each takes roughly half with gap */
+        max-width: calc(50% - 12.5px);
+        flex-shrink: 0; 
+    }
+    .dropdown-large {
+        min-width: unset; /* Remove min-width for mobile */
+        padding: 8px 12px; 
+        font-size: 0.9em; 
+        padding-right: 25px; 
+        background-size: 10px auto; 
+    }
+
+
+    .mobile-share-cards {
+        display: flex;
+        position: relative; 
+        left: 0; 
+        right: 0;
+        width: 100%; 
+        box-sizing: border-box; 
+    }
+    table {
+        display: none;
+    }
+
+    .modal-content {
+        width: 95%;
+        margin: 20px auto;
+        padding: 20px;
+    }
+    
+    .form-action-buttons,
+    .modal-action-buttons,
+    .custom-dialog-buttons { 
+        display: flex; 
+        flex-direction: row; 
+        flex-wrap: nowrap; 
+        justify-content: space-around; /* Distribute space evenly */
+        gap: 5px; 
+    }
+    /* Adjusted styling for modal action icons on mobile */
+    .modal-action-icon { 
+        width: auto; 
+        flex-grow: 1; /* Allow them to grow to fill space */
+        min-width: unset; 
+        max-width: unset; 
+        padding: 8px; /* Slightly smaller padding for mobile */
+        font-size: 1.3em; /* Slightly smaller font size for mobile icons */
+    }
+    
+    .comments-form-container .add-section-icon { /* Changed from .add-section-btn */
+        width: 35px;
+        height: 35px;
+        font-size: 1.8em;
+    }
+
+    #scrollToTopBtn {
+        right: 10px; 
+        bottom: 10px; 
+        display: flex; 
+    }
+
+    .google-auth-btn {
+        margin: 0 auto; 
+        left: unset; 
+        right: unset; 
+        transform: none; 
+    }
+
+    /* Context menu on mobile should be centered or near the tap */
+    .context-menu {
+        max-width: 200px; /* Constrain width on mobile */
+        left: 50%;
+        transform: translateX(-50%);
+        top: auto !important; /* Override JS positioning for vertical centering */
+        bottom: 20px; /* Position above the footer on mobile */
+    }
+}
+
+@media (min-width: 769px) {
+    header {
+        flex-direction: column; 
+        justify-content: flex-start;
+        align-items: center; 
+        flex-wrap: nowrap;
+        padding-bottom: 0;
+        gap: 10px; 
+        height: auto; 
+    }
+
+    .header-top-row {
+        width: 100%; 
+        margin-bottom: 0;
+        justify-content: center; 
+        flex-grow: 0; 
+        height: auto; 
+        position: relative; 
+    }
+
+    h1#mainTitle {
+        font-size: 2.2em;
+        text-align: center; 
+        order: 1; 
+        margin-left: 0; 
+        flex-grow: 1; 
+        padding-left: 0;
+        padding-right: 0;
+        line-height: 1; 
+        white-space: nowrap; 
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .hamburger-btn {
+        position: absolute; 
+        left: 0; 
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 2em; 
+        padding: 5px 10px;
+        height: auto; 
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        order: 0; 
+    }
+
+    #addShareHeaderBtn {
+        display: block; 
+        position: absolute;
+        right: 0; 
+        top: 50%;
+        transform: translateY(-50%);
+        padding: 5px 10px;
+    }
+
+    .app-sidebar {
+        left: calc(-1 * var(--sidebar-width)); 
+        width: var(--sidebar-width); 
+        box-shadow: 2px 0 5px var(--shadow-color); 
+        border-right: 1px solid var(--sidebar-border);
+        position: fixed;
+        top: 0;
+        height: 100%;
+        padding-top: calc(70px + 20px); 
+        z-index: 998; 
+        transition: left 0.3s ease-in-out; 
+    }
+    .app-sidebar .close-menu-btn {
+        display: block;
+        top: 10px;
+        right: 15px;
+        font-size: 1.5em; 
+    }
+    .sidebar-overlay.open {
+        display: block;
+        background-color: rgba(0, 0, 0, 0.1); 
+        pointer-events: none; 
+    }
+
+    body.sidebar-active main.container {
+        margin-left: var(--sidebar-width);
+        width: calc(100% - var(--sidebar-width));
+    }
+    body.sidebar-active footer.fixed-footer {
+        margin-left: var(--sidebar-width);
+        width: calc(100% - var(--sidebar-width));
+    }
+
+    .watchlist-controls-row {
+        width: 100%; 
+        justify-content: center; 
+        flex-direction: row; 
+        flex-wrap: nowrap; 
+        gap: 20px 40px; 
+        padding: 15px 0;
+        border-top: 1px solid var(--border-color); 
+        border-bottom: 1px solid var(--border-color);
+    }
+    .watchlist-group,
+    .sort-group {
+        width: auto; /* Allow content to dictate width */
+        justify-content: flex-start; 
+        padding: 0;
+        flex-basis: auto; /* Reset flex-basis for desktop */
+        max-width: unset; /* Reset max-width for desktop */
+    }
+    .dropdown-large {
+        min-width: 180px; /* Restore min-width for desktop */
+        width: auto; /* Allow content to dictate width */
+    }
+
+    .fixed-footer {
+        padding: 15px 20px;
+    }
+
+    table {
+        display: table;
+    }
+
+    .mobile-share-cards {
+        display: none;
+    }
+
+    #scrollToTopBtn {
+        display: none; 
+    }
+
+    /* Context menu on desktop should follow mouse */
+    .context-menu {
+        top: var(--mouse-y, 0);
+        left: var(--mouse-x, 0);
+        transform: none;
+        bottom: auto;
+    }
+}
+
+@media (min-width: 1024px) {
+    header {
+        padding: 20px 30px;
+    }
+    h1#mainTitle {
+        font-size: 2.5em;
+    }
+    .container {
+        padding: 0 20px;
+    }
+    .app-sidebar {
+    }
 }
