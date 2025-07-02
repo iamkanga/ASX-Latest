@@ -1,5 +1,5 @@
-// File Version: v147
-// Last Updated: 2025-07-02 (Kanga Email Fix and Delete Button Logic)
+// File Version: v148
+// Last Updated: 2025-07-02 (News Link and Save Icon Clarity)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -36,6 +36,7 @@ const ALL_SHARES_ID = 'all_shares_option'; // Special ID for the "Show All Share
 let currentSortOrder = 'entryDate-desc'; // Default sort order, now a global variable
 let contextMenuOpen = false; // To track if the custom context menu is open
 let currentContextMenuShareId = null; // Stores the ID of the share that opened the context menu
+let originalShareData = null; // Stores the original share data when editing for dirty state check
 
 // Theme related variables
 const CUSTOM_THEMES = [
@@ -84,7 +85,7 @@ const modalUnfrankedYieldSpan = document.getElementById('modalUnfrankedYield');
 const modalFrankedYieldSpan = document.getElementById('modalFrankedYield');
 const editShareFromDetailBtn = document.getElementById('editShareFromDetailBtn'); // Now a span
 const deleteShareFromDetailBtn = document.getElementById('deleteShareFromDetailBtn'); // NEW: Delete button in share details modal
-// const modalNewsLink = document.getElementById('modalNewsLink'); // New News Link - removed as per previous instruction
+const modalNewsLink = document.getElementById('modalNewsLink'); // RE-ADDED: News Link
 const modalMarketIndexLink = document.getElementById('modalMarketIndexLink');
 const modalFoolLink = document.getElementById('modalFoolLink');
 const modalCommSecLink = document.getElementById('modalCommSecLink');
@@ -349,9 +350,17 @@ function addCommentSection(title = '', text = '') {
         <textarea class="comment-text-input" placeholder="Your comments here...">${text}</textarea>
     `;
     commentsFormContainer.appendChild(commentSectionDiv);
+    
+    // Add event listeners for dirty state check
+    const commentTitleInput = commentSectionDiv.querySelector('.comment-title-input');
+    const commentTextInput = commentSectionDiv.querySelector('.comment-text-input');
+    if (commentTitleInput) commentTitleInput.addEventListener('input', checkFormDirtyState);
+    if (commentTextInput) commentTextInput.addEventListener('input', checkFormDirtyState);
+
     commentSectionDiv.querySelector('.comment-delete-btn').addEventListener('click', (event) => {
         console.log("[Comments] Delete comment button clicked.");
         event.target.closest('.comment-section').remove();
+        checkFormDirtyState(); // Check dirty state after deleting a comment
     });
     console.log("[Comments] Added new comment section.");
 }
@@ -365,11 +374,12 @@ function clearForm() {
         addCommentSection(); // Always add one initial comment section
     }
     selectedShareDocId = null;
+    originalShareData = null; // Reset original data when clearing form for new share
     if (deleteShareBtn) {
         deleteShareBtn.classList.add('hidden'); // Hide delete icon when adding new share
         console.log("[clearForm] deleteShareBtn hidden.");
     }
-    // Initially disable save button until share name is entered
+    // Initially disable save button until share name is entered and form is dirty
     setIconDisabled(saveShareBtn, true);
     console.log("[Form] Form fields cleared and selectedShareDocId reset. saveShareBtn disabled.");
 }
@@ -408,13 +418,113 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
         setIconDisabled(deleteShareBtn, false); // Ensure it's enabled when shown
         console.log("[showEditFormForSelectedShare] deleteShareBtn shown and enabled.");
     }
-    // Enable save button when opening for edit, as shareName should already be present
-    setIconDisabled(saveShareBtn, false);
-    console.log("[showEditFormForSelectedShare] saveShareBtn enabled.");
+    
+    // Store original data for dirty state check
+    originalShareData = getCurrentFormData();
+    // Initially disable save button, it will be enabled if form is dirty
+    setIconDisabled(saveShareBtn, true); 
+    console.log("[showEditFormForSelectedShare] saveShareBtn initially disabled for dirty check.");
+    
     showModal(shareFormSection);
     shareNameInput.focus();
     console.log(`[Form] Opened edit form for share: ${shareToEdit.shareName} (ID: ${selectedShareDocId})`);
 }
+
+/**
+ * Gathers all current data from the share form inputs.
+ * @returns {object} An object representing the current state of the form.
+ */
+function getCurrentFormData() {
+    const comments = [];
+    if (commentsFormContainer) {
+        commentsFormContainer.querySelectorAll('.comment-section').forEach(section => {
+            const titleInput = section.querySelector('.comment-title-input');
+            const textInput = section.querySelector('.comment-text-input');
+            const title = titleInput ? titleInput.value.trim() : '';
+            const text = textInput ? textInput.value.trim() : '';
+            comments.push({ title: title, text: text });
+        });
+    }
+
+    return {
+        shareName: shareNameInput.value.trim().toUpperCase(),
+        currentPrice: parseFloat(currentPriceInput.value),
+        targetPrice: parseFloat(targetPriceInput.value),
+        dividendAmount: parseFloat(dividendAmountInput.value),
+        frankingCredits: parseFloat(frankingCreditsInput.value),
+        comments: comments
+    };
+}
+
+/**
+ * Compares two share data objects (original vs. current form data) to check for equality.
+ * Handles null/NaN for numbers and deep comparison for comments array.
+ * @param {object} data1
+ * @param {object} data2
+ * @returns {boolean} True if data is identical, false otherwise.
+ */
+function areShareDataEqual(data1, data2) {
+    if (!data1 || !data2) return false; // One is null/undefined, so not equal
+
+    // Compare simple fields
+    const fields = ['shareName', 'currentPrice', 'targetPrice', 'dividendAmount', 'frankingCredits'];
+    for (const field of fields) {
+        let val1 = data1[field];
+        let val2 = data2[field];
+
+        // Handle NaN and null/undefined for numeric fields
+        if (typeof val1 === 'number' && isNaN(val1)) val1 = null;
+        if (typeof val2 === 'number' && isNaN(val2)) val2 = null;
+
+        if (val1 !== val2) {
+            // console.log(`[Dirty Check] Field '${field}' differs: '${val1}' vs '${val2}'`);
+            return false;
+        }
+    }
+
+    // Deep compare comments array
+    if (data1.comments.length !== data2.comments.length) {
+        // console.log("[Dirty Check] Comments length differs.");
+        return false;
+    }
+    for (let i = 0; i < data1.comments.length; i++) {
+        const comment1 = data1.comments[i];
+        const comment2 = data2.comments[i];
+        if (comment1.title !== comment2.title || comment1.text !== comment2.text) {
+            // console.log(`[Dirty Check] Comment ${i} differs.`);
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Checks the current state of the form against the original data (if editing)
+ * and the share name validity, then enables/disables the save button accordingly.
+ */
+function checkFormDirtyState() {
+    const currentData = getCurrentFormData();
+    const isShareNameValid = currentData.shareName.trim() !== '';
+
+    if (!isShareNameValid) {
+        setIconDisabled(saveShareBtn, true); // Always disable if share name is empty
+        // console.log("[Dirty Check] Save button disabled: Share name is empty.");
+        return;
+    }
+
+    if (selectedShareDocId && originalShareData) {
+        // Editing an existing share
+        const isDirty = !areShareDataEqual(originalShareData, currentData);
+        setIconDisabled(saveShareBtn, !isDirty);
+        // console.log(`[Dirty Check] Editing existing share. Is dirty: ${isDirty}. Save button disabled: ${!isDirty}`);
+    } else {
+        // Adding a new share (only depends on share name validity)
+        setIconDisabled(saveShareBtn, !isShareNameValid);
+        // console.log(`[Dirty Check] Adding new share. Share name valid: ${isShareNameValid}. Save button disabled: ${!isShareNameValid}`);
+    }
+}
+
 
 function showShareDetails() {
     if (!selectedShareDocId) {
@@ -464,6 +574,18 @@ function showShareDetails() {
         } else {
             modalCommentsContainer.innerHTML = '<p style="text-align: center; color: var(--label-color);">No comments for this share.</p>';
         }
+    }
+
+    // NEW: Google News Link
+    if (modalNewsLink && share.shareName) {
+        const newsUrl = `https://news.google.com/search?q=${encodeURIComponent(share.shareName)}%20ASX&hl=en-AU&gl=AU&ceid=AU%3Aen`;
+        modalNewsLink.href = newsUrl;
+        modalNewsLink.textContent = `View ${share.shareName.toUpperCase()} News`;
+        modalNewsLink.style.display = 'inline-flex';
+        setIconDisabled(modalNewsLink, false);
+    } else if (modalNewsLink) {
+        modalNewsLink.style.display = 'none';
+        setIconDisabled(modalNewsLink, true);
     }
 
     // Market Index Link
@@ -617,6 +739,7 @@ function renderSortSelect() {
 
     if (currentUserId && currentSortOrder && Array.from(sortSelect.options).some(option => option.value === currentSortOrder)) {
         sortSelect.value = currentSortOrder; // Set the select element's value
+        currentSortOrder = savedSortOrder; // Update the global variable
         console.log(`[Sort] Applied saved sort order: ${currentSortOrder}`);
     } else {
         sortSelect.value = ''; 
@@ -1283,7 +1406,7 @@ async function loadShares() {
         // So, currentSelectedWatchlistIds will usually contain only one ID, or be empty/contain ALL_SHARES_ID
         // if that was a saved preference from a multi-select UI.
         // We'll prioritize the single selected watchlist from the dropdown if available,
-        // otherwise fall back to the first watchlist in userWatchlists, or all shares if ALL_SHARES_ID is present.
+        // otherwise fall back to the first watchlist in userWatchlists, or all if ALL_SHARES_ID is present.
 
         let effectiveWatchlistId = null;
         if (watchlistSelect && watchlistSelect.value && watchlistSelect.value !== "") {
@@ -1663,10 +1786,18 @@ async function initializeAppLogic() {
     if (shareNameInput) {
         shareNameInput.addEventListener('input', function() { 
             this.value = this.value.toUpperCase(); 
-            // console.log(`[shareNameInput] Input changed. Value: '${this.value.trim()}', saveShareBtn disabled: ${this.value.trim() === ''}`);
-            setIconDisabled(saveShareBtn, this.value.trim() === '');
+            checkFormDirtyState(); // Check dirty state on input
         });
     }
+
+    // Add event listeners to all form inputs for dirty state checking
+    formInputs.forEach(input => {
+        if (input) {
+            input.addEventListener('input', checkFormDirtyState);
+            input.addEventListener('change', checkFormDirtyState); // For number inputs, etc.
+        }
+    });
+
 
     // Form input navigation with Enter key
     formInputs.forEach((input, index) => {
@@ -1697,7 +1828,10 @@ async function initializeAppLogic() {
     if (addCommentSectionBtn) {
         // Ensure addCommentSectionBtn is never disabled by default
         setIconDisabled(addCommentSectionBtn, false);
-        addCommentSectionBtn.addEventListener('click', () => addCommentSection());
+        addCommentSectionBtn.addEventListener('click', () => {
+            addCommentSection();
+            checkFormDirtyState(); // Check dirty state after adding a comment section
+        });
     }
 
     // Close buttons for modals
@@ -1826,9 +1960,8 @@ async function initializeAppLogic() {
     // Event listener for shareNameInput to toggle saveShareBtn
     if (shareNameInput && saveShareBtn) {
         shareNameInput.addEventListener('input', () => {
-            const isDisabled = shareNameInput.value.trim() === '';
-            // console.log(`[shareNameInput Listener] shareNameInput.value.trim(): '${shareNameInput.value.trim()}', isDisabled: ${isDisabled}`);
-            setIconDisabled(saveShareBtn, isDisabled);
+            // This listener now just triggers the comprehensive dirty state check
+            checkFormDirtyState(); 
         });
     }
 
@@ -1838,7 +1971,7 @@ async function initializeAppLogic() {
             console.log("[Share Form] Save Share button clicked.");
             // Ensure button is not disabled before proceeding
             if (saveShareBtn.classList.contains('is-disabled-icon')) {
-                showCustomAlert("Please enter a share code.");
+                showCustomAlert("Please enter a share code and make changes to save.");
                 console.warn("[Save Share] Save button was disabled, preventing action.");
                 return;
             }
@@ -2494,7 +2627,7 @@ async function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v147) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v148) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
