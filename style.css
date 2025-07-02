@@ -1,5 +1,5 @@
-/* File Version: v80 */
-/* Last Updated: 2025-07-02 (Header Layout & Modal Button Fixes - No Search) */
+/* File Version: v81 */
+/* Last Updated: 2025-07-02 (Logout Button Icon-Only Style) */
 
 :root {
     /* Light Theme (Default) */
@@ -210,7 +210,7 @@ body.theme-bold-3 { /* Sunset Orange */
     --icon-action-color: #ffc300;
     --icon-action-hover-color: #e0ac00;
     --icon-danger-color: #e63946;
-    --icon-danger-hover-color: #c0392b;
+    --icon-danger-hover-color: #c02d38;
     --calc-num-btn-bg: #f7b98d;
     --calc-num-btn-text: #3b2a20;
     --calc-num-btn-hover-bg: #f4a261;
@@ -1003,17 +1003,19 @@ h1#mainTitle {
 }
 
 
-/* Logout button styling (now a span) - FINAL FIX */
+/* Logout button styling (now a span) - MODIFIED FOR ICON-ONLY LOOK WITH TEXT */
 #logoutBtn.menu-button-item {
-    background-color: var(--danger-button-bg); /* Explicitly use danger-button-bg */
-    color: var(--button-text); /* Explicitly use button-text */
+    background-color: transparent; /* Make background transparent */
+    color: var(--icon-danger-color); /* Use danger color for icon and text */
     margin-top: auto; /* Push to the bottom of the sidebar */
     border: none !important; /* Ensure no border, aggressive fix */
     box-shadow: none !important; /* Ensure no box shadow, aggressive fix */
 }
 #logoutBtn.menu-button-item:hover {
-    background-color: var(--danger-button-hover-bg);
+    background-color: var(--menu-button-hover-bg); /* Subtle hover background */
+    color: var(--icon-danger-hover-color); /* Darker danger color on hover */
 }
+
 
 /* This is for native buttons */
 .menu-button-item:disabled {
@@ -2002,12 +2004,6 @@ table tbody tr:not(.selected):hover {
     }
     .app-sidebar.open {
         left: 0; 
-    }
-    .app-sidebar .close-menu-btn {
-        display: block;
-        top: 10px;
-        right: 15px;
-        font-size: 2em; 
     }
     .sidebar-overlay.open {
         display: block;
