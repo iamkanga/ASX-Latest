@@ -1,5 +1,5 @@
-/* File Version: v82 */
-/* Last Updated: 2025-07-02 (Layout & Modal Button Alignment) */
+/* File Version: v83 */
+/* Last Updated: 2025-07-02 (Layout & Modal Button Alignment Fixes) */
 
 :root {
     /* Light Theme (Default) */
@@ -82,7 +82,6 @@ body.dark-theme {
     --context-menu-bg: #3a3a3a;
     --context-menu-border: #666;
     --context-menu-item-hover-bg: #4a4a4a;
-    --context-menu-shadow: rgba(0, 0, 0, 0.5);
 }
 
 /* Custom Themes */
@@ -1045,7 +1044,8 @@ table tbody tr.selected {
 /* Specific cell styling for dividends */
 .dividend-yield-cell-content {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column; /* Stack dividend/yields vertically */
+    align-items: flex-start; /* Align text to the left within the cell */
     font-size: 0.9em;
     padding: 2px 0;
 }
@@ -1483,6 +1483,7 @@ table tbody tr.selected {
     margin-top: 5px; /* Closer to the link */
     margin-bottom: 0; /* Remove extra bottom margin */
     padding-left: 28px; /* Align with link text (icon width + gap) */
+    color: var(--ghosted-text); /* Ensure it's ghosted */
 }
 
 

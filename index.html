@@ -8,7 +8,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍆</text></svg>">
 
     <!-- Linking to your separate style.css file -->
-    <link rel="stylesheet" href="style.css?v=81"> <!-- Updated to v81 -->
+    <link rel="stylesheet" href="style.css?v=83"> <!-- Updated to v83 -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -285,8 +285,10 @@
             </div>
             <!-- END NEW: Scrollable content for share details modal -->
 
-            <div class="modal-action-buttons">
-                <!-- Edit Share icon - NOW STANDALONE ICON -->
+            <div class="modal-action-buttons share-detail-modal-action-buttons">
+                <!-- Delete Share icon - NEWLY ADDED -->
+                <span id="deleteShareFromDetailBtn" class="modal-action-icon danger" title="Delete Share"><i class="fas fa-trash-alt"></i></span>
+                <!-- Edit Share icon -->
                 <span id="editShareFromDetailBtn" class="modal-action-icon" title="Edit Share"><i class="fas fa-edit"></i></span>
             </div>
         </div>
@@ -300,9 +302,9 @@
             <label for="newWatchlistName">Watchlist Name:</label>
             <input type="text" id="newWatchlistName" placeholder="e.g., Tech Stocks" required>
             <div class="form-action-buttons">
-                <!-- Cancel Add Watchlist icon - NOW STANDALONE ICON -->
+                <!-- Cancel Add Watchlist icon -->
                 <span id="cancelAddWatchlistBtn" class="modal-action-icon secondary" title="Cancel"><i class="fas fa-times-circle"></i></span>
-                <!-- Save Watchlist icon - NOW STANDALONE ICON -->
+                <!-- Save Watchlist icon -->
                 <span id="saveWatchlistBtn" class="modal-action-icon" title="Save Watchlist"><i class="fas fa-save"></i></span>
             </div>
         </div>
@@ -316,11 +318,11 @@
             <label for="editWatchlistName">Watchlist Name:</label>
             <input type="text" id="editWatchlistName" required>
             <div class="form-action-buttons">
-                <!-- Delete Watchlist icon - NOW STANDALONE ICON -->
+                <!-- Delete Watchlist icon -->
                 <span id="deleteWatchlistInModalBtn" class="modal-action-icon danger" title="Delete Watchlist"><i class="fas fa-trash-alt"></i></span>
-                <!-- Cancel Manage Watchlist icon - NOW STANDALONE ICON -->
+                <!-- Cancel Manage Watchlist icon -->
                 <span id="cancelManageWatchlistBtn" class="modal-action-icon secondary" title="Cancel"><i class="fas fa-times-circle"></i></span>
-                <!-- Save Watchlist Name icon - NOW STANDALONE ICON -->
+                <!-- Save Watchlist Name icon -->
                 <span id="saveWatchlistNameBtn" class="modal-action-icon" title="Save Name"><i class="fas fa-save"></i></span>
             </div>
         </div>
@@ -509,10 +511,10 @@
         } : null;
 
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log("index.html (v77) script module loaded and DOMContentLoaded fired."); // Updated version number
+            console.log("index.html (v79) script module loaded and DOMContentLoaded fired."); // Updated version number
         }); 
     </script>
     <!-- Linking to your separate script.js file -->
-    <script src="script.js?v=145"></script> <!-- Updated to v145 -->
+    <script src="script.js?v=147"></script> <!-- Updated to v147 -->
 </body>
 </html>

@@ -1,5 +1,5 @@
-// File Version: v146
-// Last Updated: 2025-07-02 (Fixed Sidebar, 'Show All Shares' Logic, Delete in Details)
+// File Version: v147
+// Last Updated: 2025-07-02 (Sidebar, Watchlist Logic, Title & Delete Button Fixes)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -1545,9 +1545,11 @@ function toggleAppSidebar(forceState = null) {
         if (isDesktop) {
             document.body.classList.add('sidebar-active');
             sidebarOverlay.style.pointerEvents = 'none'; // Clicks pass through overlay on desktop
+            console.log("[Sidebar] Desktop: Sidebar opened, body shifted, overlay pointer-events: none.");
         } else {
             document.body.classList.remove('sidebar-active'); // Ensure body doesn't shift on mobile
             sidebarOverlay.style.pointerEvents = 'auto'; // Clicks close overlay on mobile
+            console.log("[Sidebar] Mobile: Sidebar opened, body NOT shifted, overlay pointer-events: auto.");
         }
         console.log("[Sidebar] Sidebar opened.");
     } else if (forceState === false || (forceState === null && isOpen)) {
@@ -2588,7 +2590,7 @@ async function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v146) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v147) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
@@ -2601,10 +2603,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 currentUserId = user.uid;
                 updateAuthButtonText(true, user.email || user.displayName);
                 console.log("[AuthState] User signed in:", user.uid);
+                console.log("[AuthState] User email:", user.email); // Log user email for debugging title
                 if (user.email && user.email.toLowerCase() === KANGA_EMAIL) {
                     mainTitle.textContent = "Kanga's Share Watchlist";
+                    console.log("[AuthState] Main title set to Kanga's Share Watchlist.");
                 } else {
                     mainTitle.textContent = "My Share Watchlist";
+                    console.log("[AuthState] Main title set to My Share Watchlist.");
                 }
                 updateMainButtonsState(true);
                 await loadUserWatchlistsAndSettings(); // This will set currentSelectedWatchlistIds and then call loadShares()
