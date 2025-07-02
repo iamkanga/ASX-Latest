@@ -32,8 +32,8 @@
     --sidebar-bg: #f8f9fa;
     --sidebar-text: #333;
     --sidebar-border: #c9d2d4;
-    --menu-button-bg: transparent; /* Changed for standalone look */
-    --menu-button-hover-bg: #e9ecef; /* Lighter hover for standalone */
+    --menu-button-bg: #e9ecef; /* Subtle background for menu items */
+    --menu-button-hover-bg: #dee2e6; /* Darker hover for menu items */
     --menu-button-active-bg: #007bff;
     --menu-button-active-text: #fff;
     --placeholder-text: #6c757d;
@@ -88,8 +88,8 @@ body.dark-theme {
     --sidebar-bg: #34495e;
     --sidebar-text: #ecf0f1;
     --sidebar-border: #4a627a;
-    --menu-button-bg: transparent; /* Changed for standalone look */
-    --menu-button-hover-bg: #4a627a; /* Lighter hover for standalone */
+    --menu-button-bg: #4a627a; /* Subtle background for menu items */
+    --menu-button-hover-bg: #5c758e; /* Darker hover for menu items */
     --menu-button-active-bg: #007bff;
     --menu-button-active-text: #fff;
     --placeholder-text: #bdc3c7;
@@ -133,8 +133,9 @@ body.theme-bold-1 { /* Ocean Blue */
     --asx-button-active-bg: #00b4d8;
     --sidebar-bg: #0a475a;
     --sidebar-border: #008793;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #0a475a;
+    --menu-button-bg: #005f73;
+    --menu-button-hover-bg: #008793;
+    --menu-button-active-bg: #00b4d8;
     --placeholder-text: #8ecae6;
     --ghosted-text: #a8dadc;
     --danger-button-bg: #e63946;
@@ -167,8 +168,9 @@ body.theme-bold-2 { /* Forest Green */
     --asx-button-active-bg: #a7c957;
     --sidebar-bg: #4a754a;
     --sidebar-border: #6a9955;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #4a754a;
+    --menu-button-bg: #386641;
+    --menu-button-hover-bg: #6a9955;
+    --menu-button-active-bg: #a7c957;
     --placeholder-text: #c0d8b6;
     --ghosted-text: #d4e3c9;
     --danger-button-bg: #e74c3c;
@@ -201,8 +203,9 @@ body.theme-bold-3 { /* Sunset Orange */
     --asx-button-active-bg: #ffc300;
     --sidebar-bg: #f4a261;
     --sidebar-border: #e76f51;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #f4a261;
+    --menu-button-bg: #e63946;
+    --menu-button-hover-bg: #e76f51;
+    --menu-button-active-bg: #ffc300;
     --placeholder-text: #ffe5b4;
     --ghosted-text: #ffd790;
     --danger-button-bg: #e63946;
@@ -210,7 +213,7 @@ body.theme-bold-3 { /* Sunset Orange */
     --icon-action-color: #ffc300;
     --icon-action-hover-color: #e0ac00;
     --icon-danger-color: #e63946;
-    --icon-danger-hover-color: #c0392b;
+    --icon-danger-hover-color: #c02d38;
     --calc-num-btn-bg: #f7b98d;
     --calc-num-btn-text: #3b2a20;
     --calc-num-btn-hover-bg: #f4a261;
@@ -235,8 +238,9 @@ body.theme-bold-4 { /* Royal Purple */
     --asx-button-active-bg: #c77dff;
     --sidebar-bg: #7b2cbf;
     --sidebar-border: #9d4edd;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #7b2cbf;
+    --menu-button-bg: #5a189a;
+    --menu-button-hover-bg: #9d4edd;
+    --menu-button-active-bg: #c77dff;
     --placeholder-text: #e0baff;
     --ghosted-text: #e8d0ff;
     --danger-button-bg: #e74c3c;
@@ -269,8 +273,9 @@ body.theme-bold-5 { /* Deep Red */
     --asx-button-active-bg: #e74c3c;
     --sidebar-bg: #a02020;
     --sidebar-border: #c0392b;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #a02020;
+    --menu-button-bg: #8b0000;
+    --menu-button-hover-bg: #c0392b;
+    --menu-button-active-bg: #e74c3c;
     --placeholder-text: #ffbaba;
     --ghosted-text: #ffcccc;
     --danger-button-bg: #e74c3c;
@@ -303,8 +308,9 @@ body.theme-bold-6 { /* Gold */
     --asx-button-active-bg: #ffeb3b;
     --sidebar-bg: #daa520;
     --sidebar-border: #ffd700;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #daa520;
+    --menu-button-bg: #b8860b;
+    --menu-button-hover-bg: #ffd700;
+    --menu-button-active-bg: #ffeb3b;
     --placeholder-text: #ffee99;
     --ghosted-text: #fff2c4;
     --danger-button-bg: #e74c3c;
@@ -337,8 +343,9 @@ body.theme-bold-7 { /* Emerald */
     --asx-button-active-bg: #66bb6a;
     --sidebar-bg: #228b22;
     --sidebar-border: #3cb371;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #228b22;
+    --menu-button-bg: #006400;
+    --menu-button-hover-bg: #3cb371;
+    --menu-button-active-bg: #66bb6a;
     --placeholder-text: #99ffaa;
     --ghosted-text: #ccffdd;
     --danger-button-bg: #e74c3c;
@@ -370,8 +377,9 @@ body.theme-bold-8 { /* Plum */
     --asx-button-active-bg: #da70d6;
     --sidebar-bg: #9932cc;
     --sidebar-border: #ba55d3;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #9932cc;
+    --menu-button-bg: #800080;
+    --menu-button-hover-bg: #ba55d3;
+    --menu-button-active-bg: #da70d6;
     --placeholder-text: #ffb3ff;
     --ghosted-text: #ffccff;
     --danger-button-bg: #e74c3c;
@@ -403,8 +411,9 @@ body.theme-bold-9 { /* Aqua */
     --asx-button-active-bg: #20b2aa;
     --sidebar-bg: #00ced1;
     --sidebar-border: #40e0d0;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #00ced1;
+    --menu-button-bg: #008b8b;
+    --menu-button-hover-bg: #40e0d0;
+    --menu-button-active-bg: #20b2aa;
     --placeholder-text: #99ffff;
     --ghosted-text: #ccffff;
     --danger-button-bg: #e74c3c;
@@ -436,8 +445,9 @@ body.theme-bold-10 { /* Ruby */
     --asx-button-active-bg: #dc143c;
     --sidebar-bg: #a52a2a;
     --sidebar-border: #cd5c5c;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #a52a2a;
+    --menu-button-bg: #8b0000;
+    --menu-button-hover-bg: #cd5c5c;
+    --menu-button-active-bg: #dc143c;
     --placeholder-text: #ffb3c6;
     --ghosted-text: #ffcce0;
     --danger-button-bg: #e74c3c;
@@ -471,8 +481,9 @@ body.theme-subtle-1 { /* Subtle Sky */
     --asx-button-active-bg: #87ceeb;
     --sidebar-bg: #f8fcff;
     --sidebar-border: #c9e6f2;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #eaf7fc;
+    --menu-button-bg: #e0f2f7;
+    --menu-button-hover-bg: #c9e6f2;
+    --menu-button-active-bg: #87ceeb;
     --placeholder-text: #9bbcd6;
     --ghosted-text: #b0c6d9;
     --danger-button-bg: #e74c3c;
@@ -504,8 +515,9 @@ body.theme-subtle-2 { /* Subtle Earth */
     --asx-button-active-bg: #b8a28f;
     --sidebar-bg: #fcfaf7;
     --sidebar-border: #d4c8b9;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #f2ede7;
+    --menu-button-bg: #e0d8cc;
+    --menu-button-hover-bg: #d4c8b9;
+    --menu-button-active-bg: #b8a28f;
     --placeholder-text: #a69a8e;
     --ghosted-text: #b8af9f;
     --danger-button-bg: #e74c3c;
@@ -537,8 +549,9 @@ body.theme-subtle-3 { /* Subtle Rose */
     --asx-button-active-bg: #eeb8c6;
     --sidebar-bg: #fffbfd;
     --sidebar-border: #e6c9d0;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #f7eff2;
+    --menu-button-bg: #f7e0e6;
+    --menu-button-hover-bg: #e6c9d0;
+    --menu-button-active-bg: #eeb8c6;
     --placeholder-text: #c6aab3;
     --ghosted-text: #d9b8c0;
     --danger-button-bg: #e74c3c;
@@ -570,8 +583,9 @@ body.theme-subtle-4 { /* Subtle Lavender */
     --asx-button-active-bg: #c6b8eb;
     --sidebar-bg: #fbf8ff;
     --sidebar-border: #d0c9e6;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #f2eff7;
+    --menu-button-bg: #e6e0f7;
+    --menu-button-hover-bg: #d0c9e6;
+    --menu-button-active-bg: #c6b8eb;
     --placeholder-text: #b3a6c6;
     --ghosted-text: #c0b8d9;
     --danger-button-bg: #e74c3c;
@@ -603,8 +617,9 @@ body.theme-subtle-5 { /* Subtle Mint */
     --asx-button-active-bg: #b8eec6;
     --sidebar-bg: #fbfefc;
     --sidebar-border: #c9e6d0;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #f7eff2;
+    --menu-button-bg: #e0f7e6;
+    --menu-button-hover-bg: #c9e6d0;
+    --menu-button-active-bg: #b8eec6;
     --placeholder-text: #a6c6b3;
     --ghosted-text: #b8d9c0;
     --danger-button-bg: #e74c3c;
@@ -894,33 +909,6 @@ header h1 {
 .sidebar-menu a i, .sidebar-menu button i {
     margin-right: 10px;
     width: 20px; /* Fixed width for icons to align text */
-    text-align: center;
-}
-
-/* Log out button specific styling to remove frame */
-#logoutBtn {
-    background: none !important; /* Ensure no background */
-    border: none !important;     /* Ensure no border */
-    padding: 0;                  /* Remove padding */
-    border-radius: 0;            /* Remove border-radius */
-    display: flex;               /* Use flex to align icon and text */
-    align-items: center;         /* Vertically center icon and text */
-    justify-content: flex-start; /* Align to the left */
-    width: auto;                 /* Allow content to define width */
-    font-size: 1.1em;            /* Keep consistent with other menu items */
-    color: var(--danger-color) !important; /* Keep the danger color for logout */
-}
-
-#logoutBtn:hover {
-    background: none !important; /* Ensure no background on hover */
-    text-decoration: underline;  /* Add underline on hover for link-like behavior */
-    color: var(--danger-button-hover-bg) !important; /* Adjust hover color if needed */
-}
-
-/* Adjust icon spacing for logout button if needed */
-#logoutBtn i {
-    margin-right: 10px;
-    width: 20px; /* Fixed width for icons to align text, consistent with other menu items */
     text-align: center;
 }
 
