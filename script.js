@@ -1,5 +1,5 @@
-// File Version: v160
-// Last Updated: 2025-07-03 (IIFE Wrap, Firebase Ready Flag & Deferred Subscriptions)
+// File Version: v161
+// Last Updated: 2025-07-03 (Direct window.firestoreFunctions Access to fix serverTimestamp issue)
 
 // Wrap the entire script in an IIFE to create a private scope for its variables.
 // This prevents "Identifier 'autoDismissTimeout' has already been declared" errors
@@ -11,34 +11,9 @@
 // via window.firestoreDb, window.firebaseAuth, window.getFirebaseAppId(), etc.,
 // from the <script type="module"> block in index.html.
 
-// Global Firebase instances and functions (will be populated on DOMContentLoaded)
+// Global Firebase instances (will be populated on DOMContentLoaded)
 let db;
 let auth;
-
-// Firestore functions (will be populated from window.firestoreFunctions)
-let collection;
-let doc;
-let getDoc;
-let addDoc;
-let setDoc;
-let updateDoc;
-let deleteDoc;
-let onSnapshot;
-let query;
-let where;
-let getDocs;
-let serverTimestamp; // Correctly assigned as a function
-let deleteField;     // Correctly assigned as a function
-let writeBatch;
-
-// Auth functions (will be populated from window.authFunctions)
-let GoogleAuthProviderInstance;
-let signInAnonymously;
-let signInWithCustomToken;
-let signInWithPopup;
-let signOut;
-let onAuthStateChanged;
-
 
 // --- GLOBAL VARIABLES (Accessible throughout the script) ---
 let currentUserId = null;
@@ -68,9 +43,6 @@ let unsubscribeShares = null; // Holds the unsubscribe function for the shares l
 let unsubscribeWatchlists = null; // Holds the unsubscribe function for the watchlists listener
 let currentSortOrder = 'entryDate-desc'; // Default sort order
 let currentWatchlistName = ''; // Tracks the currently displayed watchlist name
-
-// NEW: Flag to ensure Firebase functions are ready before subscriptions
-let firebaseFunctionsReady = false;
 
 
 // --- DOM ELEMENT REFERENCES ---
@@ -412,37 +384,14 @@ async function subscribeToWatchlists() {
 
     const userPath = getUserDataPath();
     // Detailed check for missing Firebase objects/functions
-    if (!userPath) {
-        console.warn("Watchlists subscription skipped: userPath is null.");
-        return;
-    }
-    if (!db) {
-        console.warn("Watchlists subscription skipped: db is null.");
-        return;
-    }
-    if (!collection) {
-        console.warn("Watchlists subscription skipped: collection function is null.");
-        return;
-    }
-    if (!doc) {
-        console.warn("Watchlists subscription skipped: doc function is null.");
-        return;
-    }
-    if (!setDoc) {
-        console.warn("Watchlists subscription skipped: setDoc function is null.");
-        return;
-    }
-    if (!onSnapshot) {
-        console.warn("Watchlists subscription skipped: onSnapshot function is null.");
-        return;
-    }
-    if (!serverTimestamp) {
-        console.warn("Watchlists subscription skipped: serverTimestamp function is null.");
+    // Now directly accessing window.firestoreFunctions
+    if (!userPath || !db || !window.firestoreFunctions || !window.firestoreFunctions.collection || !window.firestoreFunctions.doc || !window.firestoreFunctions.setDoc || !window.firestoreFunctions.onSnapshot || !window.firestoreFunctions.serverTimestamp) {
+        console.warn("Watchlists subscription skipped: Firestore functions not fully available.");
         return;
     }
 
-    const watchlistsColRef = collection(db, userPath, 'watchlists');
-    unsubscribeWatchlists = onSnapshot(watchlistsColRef, (snapshot) => {
+    const watchlistsColRef = window.firestoreFunctions.collection(db, userPath, 'watchlists');
+    unsubscribeWatchlists = window.firestoreFunctions.onSnapshot(watchlistsColRef, (snapshot) => {
         userWatchlists = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
@@ -451,8 +400,8 @@ async function subscribeToWatchlists() {
         const defaultWatchlistExists = userWatchlists.some(wl => wl.id === DEFAULT_WATCHLIST_ID_SUFFIX);
         if (!defaultWatchlistExists) {
             // Add default watchlist if it doesn't exist
-            const defaultWatchlistRef = doc(watchlistsColRef, DEFAULT_WATCHLIST_ID_SUFFIX);
-            setDoc(defaultWatchlistRef, { name: DEFAULT_WATCHLIST_NAME, createdAt: serverTimestamp() }, { merge: true })
+            const defaultWatchlistRef = window.firestoreFunctions.doc(watchlistsColRef, DEFAULT_WATCHLIST_ID_SUFFIX);
+            window.firestoreFunctions.setDoc(defaultWatchlistRef, { name: DEFAULT_WATCHLIST_NAME, createdAt: window.firestoreFunctions.serverTimestamp() }, { merge: true })
                 .then(() => {
                     console.log("Default watchlist created/ensured.");
                 })
@@ -555,44 +504,24 @@ async function subscribeToShares() {
     }
 
     const userPath = getUserDataPath();
-    // Detailed check for missing Firebase objects/functions
-    if (!userPath) {
-        console.warn("Shares subscription skipped: userPath is null.");
-        return;
-    }
-    if (!db) {
-        console.warn("Shares subscription skipped: db is null.");
-        return;
-    }
-    if (!collection) {
-        console.warn("Shares subscription skipped: collection function is null.");
-        return;
-    }
-    if (!query) {
-        console.warn("Shares subscription skipped: query function is null.");
-        return;
-    }
-    if (!where) {
-        console.warn("Shares subscription skipped: where function is null.");
-        return;
-    }
-    if (!onSnapshot) {
-        console.warn("Shares subscription skipped: onSnapshot function is null.");
+    // Now directly accessing window.firestoreFunctions
+    if (!userPath || !db || !window.firestoreFunctions || !window.firestoreFunctions.collection || !window.firestoreFunctions.query || !window.firestoreFunctions.where || !window.firestoreFunctions.onSnapshot) {
+        console.warn("Shares subscription skipped: Firestore functions not fully available.");
         return;
     }
 
     if (loadingIndicator) loadingIndicator.style.display = 'block'; // Show loading indicator
 
     let q;
-    const sharesCollectionRef = collection(db, userPath, 'shares');
+    const sharesCollectionRef = window.firestoreFunctions.collection(db, userPath, 'shares');
 
     if (currentSelectedWatchlistIds.includes("ALL_SHARES_ID")) {
         // Query all shares for the user
-        q = query(sharesCollectionRef);
+        q = window.firestoreFunctions.query(sharesCollectionRef);
         console.log("[Firestore Query] Fetching all shares.");
     } else if (currentSelectedWatchlistIds.length > 0) {
         // Query shares belonging to the selected watchlists
-        q = query(sharesCollectionRef, where('watchlists', 'array-contains-any', currentSelectedWatchlistIds));
+        q = window.firestoreFunctions.query(sharesCollectionRef, window.firestoreFunctions.where('watchlists', 'array-contains-any', currentSelectedWatchlistIds));
         console.log("[Firestore Query] Fetching shares for watchlists:", currentSelectedWatchlistIds);
     } else {
         // No watchlists selected, show empty list
@@ -603,7 +532,7 @@ async function subscribeToShares() {
         return;
     }
 
-    unsubscribeShares = onSnapshot(q, (snapshot) => {
+    unsubscribeShares = window.firestoreFunctions.onSnapshot(q, (snapshot) => {
         allSharesData = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
@@ -825,7 +754,7 @@ async function saveShare() {
         return;
     }
     // Ensure all necessary Firestore functions are available
-    if (!db || !collection || !doc || !addDoc || !updateDoc || !serverTimestamp) {
+    if (!db || !window.firestoreFunctions || !window.firestoreFunctions.collection || !window.firestoreFunctions.doc || !window.firestoreFunctions.addDoc || !window.firestoreFunctions.updateDoc || !window.firestoreFunctions.serverTimestamp) {
         showCustomDialog("Firestore is not fully initialized. Please try again later.");
         console.error("Firestore functions missing for saveShare.");
         return;
@@ -917,18 +846,18 @@ async function saveShare() {
         if (loadingIndicator) loadingIndicator.style.display = 'block';
         const userPath = getUserDataPath();
         if (!userPath) return;
-        const sharesCollectionRef = collection(db, userPath, 'shares');
+        const sharesCollectionRef = window.firestoreFunctions.collection(db, userPath, 'shares');
 
         if (selectedShareDocId) {
             // Update existing share
-            const shareDocRef = doc(sharesCollectionRef, selectedShareDocId);
-            await updateDoc(shareDocRef, shareData);
+            const shareDocRef = window.firestoreFunctions.doc(sharesCollectionRef, selectedShareDocId);
+            await window.firestoreFunctions.updateDoc(shareDocRef, shareData);
             showCustomDialog("Share updated successfully!");
             console.log("Share updated:", selectedShareDocId, shareData);
         } else {
             // Add new share
-            shareData.entryDate = serverTimestamp(); // Set entry date only for new shares
-            const docRef = await addDoc(sharesCollectionRef, shareData);
+            shareData.entryDate = window.firestoreFunctions.serverTimestamp(); // Set entry date only for new shares
+            const docRef = await window.firestoreFunctions.addDoc(sharesCollectionRef, shareData);
             showCustomDialog("Share added successfully!");
             console.log("Share added with ID:", docRef.id, shareData);
         }
@@ -951,7 +880,7 @@ async function deleteShare(shareId) {
         return;
     }
     // Ensure all necessary Firestore functions are available
-    if (!db || !collection || !doc || !deleteDoc) {
+    if (!db || !window.firestoreFunctions || !window.firestoreFunctions.collection || !window.firestoreFunctions.doc || !window.firestoreFunctions.deleteDoc) {
         showCustomDialog("Firestore is not fully initialized. Please try again later.");
         console.error("Firestore functions missing for deleteShare.");
         return;
@@ -966,8 +895,8 @@ async function deleteShare(shareId) {
         if (loadingIndicator) loadingIndicator.style.display = 'block';
         const userPath = getUserDataPath();
         if (!userPath) return;
-        const shareDocRef = doc(collection(db, userPath, 'shares'), shareId);
-        await deleteDoc(shareDocRef);
+        const shareDocRef = window.firestoreFunctions.doc(window.firestoreFunctions.collection(db, userPath, 'shares'), shareId);
+        await window.firestoreFunctions.deleteDoc(shareDocRef);
         showCustomDialog("Share deleted successfully!");
         console.log("Share deleted:", shareId);
         hideModal(shareFormSection); // Close the form if open
@@ -1042,7 +971,7 @@ async function addWatchlist() {
         return;
     }
     // Ensure all necessary Firestore functions are available
-    if (!db || !collection || !addDoc || !serverTimestamp) {
+    if (!db || !window.firestoreFunctions || !window.firestoreFunctions.collection || !window.firestoreFunctions.addDoc || !window.firestoreFunctions.serverTimestamp) {
         showCustomDialog("Firestore is not fully initialized. Please try again later.");
         console.error("Firestore functions missing for addWatchlist.");
         return;
@@ -1070,9 +999,9 @@ async function addWatchlist() {
         if (loadingIndicator) loadingIndicator.style.display = 'block';
         const userPath = getUserDataPath();
         if (!userPath) return;
-        await addDoc(collection(db, userPath, 'watchlists'), {
+        await window.firestoreFunctions.addDoc(window.firestoreFunctions.collection(db, userPath, 'watchlists'), {
             name: watchlistName,
-            createdAt: serverTimestamp()
+            createdAt: window.firestoreFunctions.serverTimestamp()
         });
         showCustomDialog("Watchlist added successfully!");
         newWatchlistNameInput.value = ''; // Clear input
@@ -1130,7 +1059,7 @@ async function saveWatchlistName() {
         return;
     }
     // Ensure all necessary Firestore functions are available
-    if (!db || !collection || !doc || !updateDoc) {
+    if (!db || !window.firestoreFunctions || !window.firestoreFunctions.collection || !window.firestoreFunctions.doc || !window.firestoreFunctions.updateDoc) {
         showCustomDialog("Firestore is not fully initialized. Please try again later.");
         console.error("Firestore functions missing for saveWatchlistName.");
         return;
@@ -1164,8 +1093,8 @@ async function saveWatchlistName() {
         if (loadingIndicator) loadingIndicator.style.display = 'block';
         const userPath = getUserDataPath();
         if (!userPath) return;
-        const watchlistDocRef = doc(collection(db, userPath, 'watchlists'), selectedWatchlistId);
-        await updateDoc(watchlistDocRef, { name: newName });
+        const watchlistDocRef = window.firestoreFunctions.doc(window.firestoreFunctions.collection(db, userPath, 'watchlists'), selectedWatchlistId);
+        await window.firestoreFunctions.updateDoc(watchlistDocRef, { name: newName });
         showCustomDialog("Watchlist name updated successfully!");
         hideModal(manageWatchlistModal);
     } catch (error) {
@@ -1185,7 +1114,7 @@ async function deleteWatchlist() {
         return;
     }
     // Ensure all necessary Firestore functions are available
-    if (!db || !collection || !doc || !deleteDoc || !query || !where || !getDocs || !serverTimestamp || !writeBatch) {
+    if (!db || !window.firestoreFunctions || !window.firestoreFunctions.collection || !window.firestoreFunctions.doc || !window.firestoreFunctions.deleteDoc || !window.firestoreFunctions.query || !window.firestoreFunctions.where || !window.firestoreFunctions.getDocs || !window.firestoreFunctions.serverTimestamp || !window.firestoreFunctions.writeBatch) {
         showCustomDialog("Firestore is not fully initialized. Please try again later.");
         console.error("Firestore functions missing for deleteWatchlist.");
         return;
@@ -1209,16 +1138,16 @@ async function deleteWatchlist() {
         const userPath = getUserDataPath();
         if (!userPath) return;
         
-        const batch = writeBatch(db);
+        const batch = window.firestoreFunctions.writeBatch(db);
 
         // 1. Delete the watchlist document itself
-        const watchlistDocRef = doc(collection(db, userPath, 'watchlists'), selectedWatchlistId);
+        const watchlistDocRef = window.firestoreFunctions.doc(window.firestoreFunctions.collection(db, userPath, 'watchlists'), selectedWatchlistId);
         batch.delete(watchlistDocRef);
 
         // 2. Remove this watchlist from any shares that belong to it
-        const sharesCollectionRef = collection(db, userPath, 'shares');
-        const q = query(sharesCollectionRef, where('watchlists', 'array-contains', selectedWatchlistId));
-        const querySnapshot = await getDocs(q);
+        const sharesCollectionRef = window.firestoreFunctions.collection(db, userPath, 'shares');
+        const q = window.firestoreFunctions.query(sharesCollectionRef, window.firestoreFunctions.where('watchlists', 'array-contains', selectedWatchlistId));
+        const querySnapshot = await window.firestoreFunctions.getDocs(q);
 
         querySnapshot.forEach(shareDoc => {
             const currentWatchlists = shareDoc.data().watchlists || [];
@@ -1229,7 +1158,7 @@ async function deleteWatchlist() {
                 updatedWatchlists.push(DEFAULT_WATCHLIST_ID_SUFFIX);
             }
 
-            const shareRef = doc(sharesCollectionRef, shareDoc.id);
+            const shareRef = window.firestoreFunctions.doc(sharesCollectionRef, shareDoc.id);
             batch.update(shareRef, { watchlists: updatedWatchlists });
         });
 
@@ -1311,19 +1240,16 @@ function handleAuthStateChanged(user) {
         updateMainButtonsState(true);
         if (mainTitle) mainTitle.textContent = "Loading Watchlists...";
         
-        // Defer subscriptions slightly to ensure all Firebase functions are fully assigned
-        // This helps prevent race conditions where onAuthStateChanged fires too quickly.
-        requestAnimationFrame(() => {
-            if (firebaseFunctionsReady) {
-                console.log("[Auth State] Firebase functions ready. Initiating subscriptions.");
-                console.log("[Auth State] serverTimestamp is:", serverTimestamp); // Log its state
-                subscribeToWatchlists();
-                subscribeToShares();
-            } else {
-                console.error("[Auth State] Firebase functions NOT ready after requestAnimationFrame. Subscriptions failed.");
-                showCustomDialog("Error: Failed to load data. Please refresh the page.");
-            }
-        });
+        // Directly check window.firestoreFunctions for serverTimestamp
+        if (window.firestoreFunctions && window.firestoreFunctions.serverTimestamp) {
+            console.log("[Auth State] window.firestoreFunctions.serverTimestamp is:", window.firestoreFunctions.serverTimestamp); // Log its state
+            subscribeToWatchlists();
+            subscribeToShares();
+        } else {
+            // This fallback should ideally not be hit if index.html loads correctly
+            console.error("[Auth State] window.firestoreFunctions.serverTimestamp NOT available. Subscriptions failed.");
+            showCustomDialog("Error: Failed to load data. Please refresh the page.");
+        }
         
         populateThemeSelect(); // Load and apply theme
         console.log("Auth State: User signed in:", user.uid);
@@ -1526,7 +1452,7 @@ async function saveResearchedShareToWatchlist() {
         return;
     }
     // Ensure all necessary Firestore functions are available
-    if (!db || !collection || !doc || !addDoc || !updateDoc || !query || !where || !getDocs || !serverTimestamp) {
+    if (!db || !window.firestoreFunctions || !window.firestoreFunctions.collection || !window.firestoreFunctions.doc || !window.firestoreFunctions.addDoc || !window.firestoreFunctions.updateDoc || !window.firestoreFunctions.query || !window.firestoreFunctions.where || !window.firestoreFunctions.getDocs || !window.firestoreFunctions.serverTimestamp) {
         showCustomDialog("Firestore is not fully initialized. Please try again later.");
         console.error("Firestore functions missing for saveResearchedShareToWatchlist.");
         return;
@@ -1585,29 +1511,29 @@ async function saveResearchedShareToWatchlist() {
         frankingCredits: frankingCredits,
         comments: comments,
         watchlists: [selectedWatchlistId], // Link to the single selected watchlist
-        entryDate: serverTimestamp() // New entry
+        entryDate: window.firestoreFunctions.serverTimestamp() // New entry
     };
 
     try {
         if (loadingIndicator) loadingIndicator.style.display = 'block';
         const userPath = getUserDataPath();
         if (!userPath) return;
-        const sharesCollectionRef = collection(db, userPath, 'shares');
+        const sharesCollectionRef = window.firestoreFunctions.collection(db, userPath, 'shares');
 
         // Check if a share with this code already exists in the selected watchlist
-        const existingShareQuery = query(
+        const existingShareQuery = window.firestoreFunctions.query(
             sharesCollectionRef,
-            where('shareName', '==', shareName),
-            where('watchlists', 'array-contains', selectedWatchlistId)
+            window.firestoreFunctions.where('shareName', '==', shareName),
+            window.firestoreFunctions.where('watchlists', 'array-contains', selectedWatchlistId)
         );
-        const existingShareSnapshot = await getDocs(existingShareQuery);
+        const existingShareSnapshot = await window.firestoreFunctions.getDocs(existingShareQuery);
 
         if (!existingShareSnapshot.empty) {
             const existingShareDoc = existingShareSnapshot.docs[0];
             const confirmUpdate = await showCustomDialog(`Share "${shareName}" already exists in "${researchWatchlistSelect.options[researchWatchlistSelect.selectedIndex].textContent}". Do you want to update it?`, true);
             if (confirmUpdate) {
                 // Update existing share
-                await updateDoc(existingShareDoc.ref, shareData);
+                await window.firestoreFunctions.updateDoc(existingShareDoc.ref, shareData);
                 showCustomDialog("Share updated successfully in selected watchlist!");
             } else {
                 showCustomDialog("Save operation cancelled.");
@@ -1615,7 +1541,7 @@ async function saveResearchedShareToWatchlist() {
             }
         } else {
             // Add new share
-            await addDoc(sharesCollectionRef, shareData);
+            await window.firestoreFunctions.addDoc(sharesCollectionRef, shareData);
             showCustomDialog("Share added to watchlist successfully!");
         }
 
@@ -2075,44 +2001,20 @@ function initializeAppLogic() {
 
 // --- DOMContentLoaded and Firebase Availability Check ---
 document.addEventListener('DOMContentLoaded', async function() {
-    console.log("script.js (v160) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v161) DOMContentLoaded fired."); // Updated version number
 
     // Check if Firebase objects are available from index.html's module script
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestoreFunctions && window.authFunctions) {
-        // Assign global Firebase instances and functions to local variables
-        // This MUST happen synchronously and completely before any auth listeners are set up
+        // Assign global Firebase instances to local variables
         db = window.firestoreDb;
         auth = window.firebaseAuth;
         currentAppId = window.getFirebaseAppId();
 
-        collection = window.firestoreFunctions.collection;
-        doc = window.firestoreFunctions.doc;
-        getDoc = window.firestoreFunctions.getDoc;
-        addDoc = window.firestoreFunctions.addDoc;
-        setDoc = window.firestoreFunctions.setDoc;
-        updateDoc = window.firestoreFunctions.updateDoc;
-        deleteDoc = window.firestoreFunctions.deleteDoc;
-        onSnapshot = window.firestoreFunctions.onSnapshot;
-        query = window.firestoreFunctions.query;
-        where = window.firestoreFunctions.where;
-        getDocs = window.firestoreFunctions.getDocs;
-        serverTimestamp = window.firestoreFunctions.serverTimestamp;
-        deleteField = window.firestoreFunctions.deleteField;
-        writeBatch = window.firestoreFunctions.writeBatch;
-
-        GoogleAuthProviderInstance = window.authFunctions.GoogleAuthProviderInstance;
-        signInAnonymously = window.authFunctions.signInAnonymously;
-        signInWithCustomToken = window.authFunctions.signInWithCustomToken;
-        signInWithPopup = window.authFunctions.signInWithPopup;
-        signOut = window.authFunctions.signOut;
-        onAuthStateChanged = window.authFunctions.onAuthStateChanged;
-
-        // Set this flag to true AFTER all assignments
-        firebaseFunctionsReady = true; 
-
-        // Set up the Auth State Observer FIRST, after all global Firebase vars are assigned.
-        if (auth && onAuthStateChanged) {
-            onAuthStateChanged(auth, handleAuthStateChanged);
+        // Set up the Auth State Observer FIRST, after global Firebase instances are assigned.
+        // We no longer need to check firebaseFunctionsReady here because we're directly
+        // accessing window.firestoreFunctions in the subscription calls.
+        if (auth && window.authFunctions.onAuthStateChanged) {
+            window.authFunctions.onAuthStateChanged(auth, handleAuthStateChanged);
         } else {
             console.error("Firebase Auth not available. Cannot set up auth state listener.");
             handleAuthStateChanged(null); // Treat as logged out
@@ -2124,12 +2026,12 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (!auth.currentUser) { 
             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                 try {
-                    await signInWithCustomToken(auth, __initial_auth_token);
+                    await window.authFunctions.signInWithCustomToken(auth, __initial_auth_token);
                     console.log("[Auth] Signed in with custom token.");
                 } catch (error) {
                     console.error("[Auth] Error signing in with custom token:", error);
                     try {
-                        await signInAnonymously(auth);
+                        await window.authFunctions.signInAnonymously(auth);
                         console.log("[Auth] Signed in anonymously as fallback.");
                     } catch (anonError) {
                         console.error("[Auth] Error signing in anonymously:", anonError);
@@ -2138,7 +2040,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 }
             } else {
                 try {
-                    await signInAnonymously(auth);
+                    await window.authFunctions.signInAnonymously(auth);
                     console.log("[Auth] Signed in anonymously (no custom token provided).");
                 } catch (anonError) {
                     console.error("[Auth] Error signing in anonymously:", anonError);
