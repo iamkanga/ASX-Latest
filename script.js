@@ -1,5 +1,5 @@
-// File Version: v156
-// Last Updated: 2025-07-03 (Firebase Initialization Order Fix)
+// File Version: v157
+// Last Updated: 2025-07-03 (Firebase Variable Initialization Order & Detailed Logging)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -207,7 +207,7 @@ function hideModal(modalElement) {
 function showCustomDialog(message, isConfirm = false) {
     return new Promise((resolve) => {
         if (!customDialogModal || !customDialogMessage || !customDialogConfirmBtn || !customDialogCancelBtn) {
-            console.error("Custom dialog elements not found.");
+            console.error("Custom dialog elements not found. Falling back to native alert/confirm.");
             // Fallback to native alert if dialog elements are missing
             if (isConfirm) {
                 resolve(confirm(message));
@@ -403,9 +403,33 @@ async function subscribeToWatchlists() {
     }
 
     const userPath = getUserDataPath();
-    // Ensure all necessary Firestore functions are available
-    if (!userPath || !db || !collection || !doc || !setDoc || !onSnapshot || !serverTimestamp) {
-        console.warn("Firestore or user path/functions not ready for watchlists subscription.");
+    // Detailed check for missing Firebase objects/functions
+    if (!userPath) {
+        console.warn("Watchlists subscription skipped: userPath is null.");
+        return;
+    }
+    if (!db) {
+        console.warn("Watchlists subscription skipped: db is null.");
+        return;
+    }
+    if (!collection) {
+        console.warn("Watchlists subscription skipped: collection function is null.");
+        return;
+    }
+    if (!doc) {
+        console.warn("Watchlists subscription skipped: doc function is null.");
+        return;
+    }
+    if (!setDoc) {
+        console.warn("Watchlists subscription skipped: setDoc function is null.");
+        return;
+    }
+    if (!onSnapshot) {
+        console.warn("Watchlists subscription skipped: onSnapshot function is null.");
+        return;
+    }
+    if (!serverTimestamp) {
+        console.warn("Watchlists subscription skipped: serverTimestamp function is null.");
         return;
     }
 
@@ -523,9 +547,29 @@ async function subscribeToShares() {
     }
 
     const userPath = getUserDataPath();
-    // Ensure all necessary Firestore functions are available
-    if (!userPath || !db || !collection || !query || !where || !onSnapshot) {
-        console.warn("Firestore or user path/functions not ready for shares subscription.");
+    // Detailed check for missing Firebase objects/functions
+    if (!userPath) {
+        console.warn("Shares subscription skipped: userPath is null.");
+        return;
+    }
+    if (!db) {
+        console.warn("Shares subscription skipped: db is null.");
+        return;
+    }
+    if (!collection) {
+        console.warn("Shares subscription skipped: collection function is null.");
+        return;
+    }
+    if (!query) {
+        console.warn("Shares subscription skipped: query function is null.");
+        return;
+    }
+    if (!where) {
+        console.warn("Shares subscription skipped: where function is null.");
+        return;
+    }
+    if (!onSnapshot) {
+        console.warn("Shares subscription skipped: onSnapshot function is null.");
         return;
     }
 
@@ -2007,16 +2051,16 @@ function initializeAppLogic() {
 
 // --- DOMContentLoaded and Firebase Availability Check ---
 document.addEventListener('DOMContentLoaded', async function() {
-    console.log("script.js (v156) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v157) DOMContentLoaded fired."); // Updated version number
 
     // Check if Firebase objects are available from index.html's module script
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestoreFunctions && window.authFunctions) {
         // Assign global Firebase instances and functions to local variables
+        // This MUST happen synchronously and completely before any auth listeners are set up
         db = window.firestoreDb;
         auth = window.firebaseAuth;
         currentAppId = window.getFirebaseAppId();
 
-        // Assign Firestore functions from the global window.firestoreFunctions object
         collection = window.firestoreFunctions.collection;
         doc = window.firestoreFunctions.doc;
         getDoc = window.firestoreFunctions.getDoc;
@@ -2028,11 +2072,10 @@ document.addEventListener('DOMContentLoaded', async function() {
         query = window.firestoreFunctions.query;
         where = window.firestoreFunctions.where;
         getDocs = window.firestoreFunctions.getDocs;
-        serverTimestamp = window.firestoreFunctions.serverTimestamp; // Corrected assignment
-        deleteField = window.firestoreFunctions.deleteField;         // Corrected assignment
+        serverTimestamp = window.firestoreFunctions.serverTimestamp;
+        deleteField = window.firestoreFunctions.deleteField;
         writeBatch = window.firestoreFunctions.writeBatch;
 
-        // Assign Auth functions from the global window.authFunctions object
         GoogleAuthProviderInstance = window.authFunctions.GoogleAuthProviderInstance;
         signInAnonymously = window.authFunctions.signInAnonymously;
         signInWithCustomToken = window.authFunctions.signInWithCustomToken;
@@ -2051,7 +2094,8 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         // Attempt initial sign-in if not already authenticated (e.g., first load)
         // This will trigger the onAuthStateChanged listener.
-        if (!auth.currentUser) { // Only attempt if no user is currently signed in
+        // We only attempt this if there's no current user, to avoid redundant sign-ins.
+        if (!auth.currentUser) { 
             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                 try {
                     await signInWithCustomToken(auth, __initial_auth_token);
