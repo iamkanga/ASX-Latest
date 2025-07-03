@@ -516,9 +516,10 @@
 
     <!-- Firebase and main script loading -->
     <script type="module">
+        // Import FieldValue as a named import, and serverTimestamp directly
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, query, where, getDocs, FieldValue, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; 
+        import { getFirestore, collection, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, query, where, getDocs, FieldValue, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; 
 
         // YOUR FIREBASE CONFIGURATION - THIS HAS BEEN INSERTED BASED ON YOUR PROVIDED DETAILS
         const firebaseConfig = {
@@ -581,8 +582,9 @@
             query: query,
             where: where,
             getDocs: getDocs,
-            serverTimestamp: FieldValue.serverTimestamp, // Explicitly expose serverTimestamp
-            deleteField: FieldValue.delete, // Explicitly expose deleteField
+            // Use the directly imported serverTimestamp
+            serverTimestamp: serverTimestamp, 
+            deleteField: FieldValue.delete, 
             writeBatch: writeBatch
         } : null;
         
@@ -604,10 +606,10 @@
         }
 
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log("index.html (v95) script module loaded and DOMContentLoaded fired."); // Updated version number
+            console.log("index.html (v97) script module loaded and DOMContentLoaded fired."); // Updated version number
         }); 
     </script>
     <!-- Linking to your separate script.js file -->
-    <script src="script.js?v=165"></script> <!-- Updated to v165 -->
+    <script src="script.js?v=167"></script> <!-- Updated to v167 -->
 </body>
 </html>

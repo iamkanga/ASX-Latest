@@ -1,5 +1,5 @@
-// File Version: v165
-// Last Updated: 2025-07-03 (Corrected Waiting and Diagnostic Logs)
+// File Version: v167
+// Last Updated: 2025-07-03 (Updated version number for direct serverTimestamp import)
 
 // Wrap the entire script in an IIFE to create a private scope for its variables.
 // This prevents "Identifier 'autoDismissTimeout' has already been declared" errors
@@ -384,8 +384,8 @@ async function subscribeToWatchlists() {
 
     const userPath = getUserDataPath();
     // Now directly accessing window.firestoreFunctions
-    if (!userPath || !db || !window.firestoreFunctions || !window.firestoreFunctions.collection || !window.firestoreFunctions.doc || !window.firestoreFunctions.setDoc || !window.firestoreFunctions.onSnapshot || !window.firestoreFunctions.serverTimestamp) {
-        console.warn("Watchlists subscription skipped: Firestore functions not fully available.");
+    if (!userPath || !db || !window.firestoreFunctions || !window.firestoreFunctions.collection || !window.firestoreFunctions.doc || !window.firestoreFunctions.setDoc || !window.firestoreFunctions.onSnapshot || typeof window.firestoreFunctions.serverTimestamp !== 'function') {
+        console.warn("Watchlists subscription skipped: Firestore functions not fully available or serverTimestamp is not a function.");
         return;
     }
 
@@ -753,8 +753,8 @@ async function saveShare() {
         return;
     }
     // Ensure all necessary Firestore functions are available
-    if (!db || !window.firestoreFunctions || !window.firestoreFunctions.collection || !window.firestoreFunctions.doc || !window.firestoreFunctions.addDoc || !window.firestoreFunctions.updateDoc || !window.firestoreFunctions.serverTimestamp) {
-        showCustomDialog("Firestore is not fully initialized. Please try again later.");
+    if (!db || !window.firestoreFunctions || !window.firestoreFunctions.collection || !window.firestoreFunctions.doc || !window.firestoreFunctions.addDoc || !window.firestoreFunctions.updateDoc || typeof window.firestoreFunctions.serverTimestamp !== 'function') {
+        showCustomDialog("Firestore is not fully initialized or serverTimestamp is not a function. Please try again later.");
         console.error("Firestore functions missing for saveShare.");
         return;
     }
@@ -970,8 +970,8 @@ async function addWatchlist() {
         return;
     }
     // Ensure all necessary Firestore functions are available
-    if (!db || !window.firestoreFunctions || !window.firestoreFunctions.collection || !window.firestoreFunctions.addDoc || !window.firestoreFunctions.serverTimestamp) {
-        showCustomDialog("Firestore is not fully initialized. Please try again later.");
+    if (!db || !window.firestoreFunctions || !window.firestoreFunctions.collection || !window.firestoreFunctions.addDoc || typeof window.firestoreFunctions.serverTimestamp !== 'function') {
+        showCustomDialog("Firestore is not fully initialized or serverTimestamp is not a function. Please try again later.");
         console.error("Firestore functions missing for addWatchlist.");
         return;
     }
@@ -1113,8 +1113,8 @@ async function deleteWatchlist() {
         return;
     }
     // Ensure all necessary Firestore functions are available
-    if (!db || !window.firestoreFunctions || !window.firestoreFunctions.collection || !window.firestoreFunctions.doc || !window.firestoreFunctions.deleteDoc || !window.firestoreFunctions.query || !window.firestoreFunctions.where || !window.firestoreFunctions.getDocs || !window.firestoreFunctions.serverTimestamp || !window.firestoreFunctions.writeBatch) {
-        showCustomDialog("Firestore is not fully initialized. Please try again later.");
+    if (!db || !window.firestoreFunctions || !window.firestoreFunctions.collection || !window.firestoreFunctions.doc || !window.firestoreFunctions.deleteDoc || !window.firestoreFunctions.query || !window.firestoreFunctions.where || !window.firestoreFunctions.getDocs || typeof window.firestoreFunctions.serverTimestamp !== 'function' || !window.firestoreFunctions.writeBatch) {
+        showCustomDialog("Firestore is not fully initialized or serverTimestamp is not a function. Please try again later.");
         console.error("Firestore functions missing for deleteWatchlist.");
         return;
     }
@@ -1454,8 +1454,8 @@ async function saveResearchedShareToWatchlist() {
         return;
     }
     // Ensure all necessary Firestore functions are available
-    if (!db || !window.firestoreFunctions || !window.firestoreFunctions.collection || !window.firestoreFunctions.doc || !window.firestoreFunctions.addDoc || !window.firestoreFunctions.updateDoc || !window.firestoreFunctions.query || !window.firestoreFunctions.where || !window.firestoreFunctions.getDocs || !window.firestoreFunctions.serverTimestamp) {
-        showCustomDialog("Firestore is not fully initialized. Please try again later.");
+    if (!db || !window.firestoreFunctions || !window.firestoreFunctions.collection || !window.firestoreFunctions.doc || !window.firestoreFunctions.addDoc || !window.firestoreFunctions.updateDoc || !window.firestoreFunctions.query || !window.firestoreFunctions.where || !window.firestoreFunctions.getDocs || typeof window.firestoreFunctions.serverTimestamp !== 'function') {
+        showCustomDialog("Firestore is not fully initialized or serverTimestamp is not a function. Please try again later.");
         console.error("Firestore functions missing for saveResearchedShareToWatchlist.");
         return;
     }
@@ -2003,7 +2003,7 @@ function initializeAppLogic() {
 
 // --- DOMContentLoaded and Firebase Availability Check ---
 document.addEventListener('DOMContentLoaded', async function() {
-    console.log("script.js (v165) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v167) DOMContentLoaded fired."); // Updated version number
 
     // Assign global Firebase instances to local variables
     // These are expected to be set by index.html's module script
