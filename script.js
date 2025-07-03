@@ -1,5 +1,5 @@
-// File Version: v158
-// Last Updated: 2025-07-03 (IIFE Wrap for Global Scope Protection & Firebase Initialization Order Fix)
+// File Version: v159
+// Last Updated: 2025-07-03 (IIFE Wrap, Firebase Ready Flag & Deferred Subscriptions)
 
 // Wrap the entire script in an IIFE to create a private scope for its variables.
 // This prevents "Identifier 'autoDismissTimeout' has already been declared" errors
@@ -46,7 +46,7 @@ let currentAppId;
 let selectedShareDocId = null;
 let allSharesData = []; // This will now be kept in sync by the onSnapshot listener
 let currentDialogCallback = null;
-let autoDismissTimeout = null; // This variable specifically caused the re-declaration error
+let autoDismissTimeout = null;
 let lastTapTime = 0;
 let tapTimeout;
 let selectedElementForTap = null;
@@ -68,6 +68,9 @@ let unsubscribeShares = null; // Holds the unsubscribe function for the shares l
 let unsubscribeWatchlists = null; // Holds the unsubscribe function for the watchlists listener
 let currentSortOrder = 'entryDate-desc'; // Default sort order
 let currentWatchlistName = ''; // Tracks the currently displayed watchlist name
+
+// NEW: Flag to ensure Firebase functions are ready before subscriptions
+let firebaseFunctionsReady = false;
 
 
 // --- DOM ELEMENT REFERENCES ---
@@ -1307,8 +1310,26 @@ function handleAuthStateChanged(user) {
         if (logoutBtn) logoutBtn.classList.remove('is-disabled-icon'); // Enable logout button
         updateMainButtonsState(true);
         if (mainTitle) mainTitle.textContent = "Loading Watchlists...";
-        subscribeToWatchlists(); // Start listening to watchlists
-        subscribeToShares(); // Start listening to shares
+        
+        // Only subscribe if Firebase functions are ready
+        if (firebaseFunctionsReady) {
+            subscribeToWatchlists();
+            subscribeToShares();
+        } else {
+            // If not ready, wait a bit and try again (simple retry mechanism)
+            // This is a fallback for extremely fast auth state changes before DOMContentLoaded finishes
+            console.warn("Firebase functions not yet ready, deferring subscriptions.");
+            setTimeout(() => {
+                if (firebaseFunctionsReady) {
+                    subscribeToWatchlists();
+                    subscribeToShares();
+                } else {
+                    console.error("Firebase functions still not ready after deferral. Subscriptions failed.");
+                    showCustomDialog("Error: Failed to load data. Please refresh the page.");
+                }
+            }, 100); // Wait 100ms
+        }
+        
         populateThemeSelect(); // Load and apply theme
         console.log("Auth State: User signed in:", user.uid);
     } else {
@@ -1767,7 +1788,7 @@ async function exportWatchlistToCSV() {
                 `"${share.enteredPrice || ''}"`,
                 `"${share.targetPrice || ''}"`,
                 `"${share.dividendAmount || ''}"`,
-                `"${frankingCredits || ''}"`, // Use frankingCredits directly from the variable
+                `"${share.frankingCredits || ''}"`, // Use frankingCredits directly from the variable
                 `"${unfrankedYield || ''}"`,
                 `"${frankedYield || ''}"`,
                 `"${commentsString.replace(/"/g, '""')}"` // Escape double quotes for CSV
@@ -1825,9 +1846,12 @@ function initializeAppLogic() {
         if (sidebarOverlay) sidebarOverlay.classList.remove('open');
     });
 
-    if (sidebarOverlay) sidebarOverlay.addEventListener('click', () => {
-        if (appSidebar) appSidebar.classList.remove('open');
-        if (sidebarOverlay) sidebarOverlay.classList.remove('open');
+    if (sidebarOverlay) sidebarOverlay.addEventListener('click', (event) => {
+        // Only close if clicking directly on the overlay, not its children
+        if (event.target === sidebarOverlay) {
+            if (appSidebar) appSidebar.classList.remove('open');
+            if (sidebarOverlay) sidebarOverlay.classList.remove('open');
+        }
     });
 
     // Close modals when clicking outside content
@@ -2056,7 +2080,7 @@ function initializeAppLogic() {
 
 // --- DOMContentLoaded and Firebase Availability Check ---
 document.addEventListener('DOMContentLoaded', async function() {
-    console.log("script.js (v158) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v159) DOMContentLoaded fired."); // Updated version number
 
     // Check if Firebase objects are available from index.html's module script
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestoreFunctions && window.authFunctions) {
@@ -2088,6 +2112,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         signOut = window.authFunctions.signOut;
         onAuthStateChanged = window.authFunctions.onAuthStateChanged;
 
+        // Set this flag to true AFTER all assignments
+        firebaseFunctionsReady = true; 
 
         // Set up the Auth State Observer FIRST, after all global Firebase vars are assigned.
         if (auth && onAuthStateChanged) {
