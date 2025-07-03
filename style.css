@@ -1,5 +1,5 @@
-/* File Version: v84 */
-/* Last Updated: 2025-07-03 (Added Share Research Styles) */
+/* File Version: v81 */
+/* Last Updated: 2025-07-02 (Logout Button Icon-Only Style) */
 
 :root {
     /* Light Theme (Default) */
@@ -809,7 +809,7 @@ body.sidebar-active {
     max-width: 1200px; 
     margin: 20px auto; 
     padding: 0 15px;
-    position: relative; 
+    position: relative;
 }
 
 header {
@@ -1048,61 +1048,6 @@ h1#mainTitle {
     box-sizing: border-box;
     margin-bottom: 10px; 
 }
-
-/* New styles for Share Research Input Group in sidebar */
-.share-research-input-group {
-    display: flex;
-    gap: 5px;
-    margin-bottom: 10px;
-}
-
-.share-research-input-group .sidebar-input {
-    flex-grow: 1;
-    padding: 8px 12px;
-    border: 1px solid var(--input-border);
-    border-radius: 8px;
-    background-color: var(--input-bg);
-    color: var(--text-color);
-    font-size: 0.9em;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.share-research-input-group .sidebar-input::placeholder {
-    color: var(--input-placeholder-color);
-}
-
-.share-research-input-group .sidebar-input:focus {
-    border-color: var(--button-bg);
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-    outline: none;
-}
-
-.share-research-btn {
-    background-color: var(--button-bg);
-    color: var(--button-text);
-    border: none;
-    border-radius: 8px;
-    padding: 8px 12px;
-    cursor: pointer;
-    font-size: 0.9em;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.2s ease, transform 0.1s ease;
-}
-
-.share-research-btn:hover {
-    background-color: var(--button-hover-bg);
-    transform: translateY(-1px);
-}
-
-.share-research-btn:disabled {
-    background-color: var(--secondary-button-bg);
-    cursor: not-allowed;
-    opacity: 0.5;
-    transform: none;
-}
-
 
 .sidebar-overlay {
     position: fixed;
@@ -1783,10 +1728,8 @@ table tbody tr:not(.selected):hover {
     font-size: 0.95em;
 }
 
-.calc-input-group input[type="text"], /* Added for research modal */
 .calc-input-group input[type="number"],
-.calc-input-group select,
-.calc-input-group textarea { /* Added for research modal */
+.calc-input-group select {
     width: calc(100% - 22px);
     padding: 10px;
     margin-bottom: 15px;
@@ -1806,10 +1749,8 @@ table tbody tr:not(.selected):hover {
     padding-right: 30px;
 }
 
-.calc-input-group input[type="text"]:focus, /* Added for research modal */
 .calc-input-group input[type="number"]:focus,
-.calc-input-group select:focus,
-.calc-input-group textarea:focus { /* Added for research modal */
+.calc-input-group select:focus {
     border-color: var(--button-bg);
     box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
     outline: none;
@@ -2307,4 +2248,3 @@ table tbody tr:not(.selected):hover {
     .app-sidebar {
     }
 }
-

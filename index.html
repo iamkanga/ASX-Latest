@@ -8,7 +8,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍆</text></svg>">
 
     <!-- Linking to your separate style.css file -->
-    <link rel="stylesheet" href="style.css?v=83"> <!-- Updated to v83 -->
+    <link rel="stylesheet" href="style.css?v=82"> <!-- Updated to v82 -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -65,16 +65,6 @@
                     <!-- Dividend Calculator - Icon with Text -->
                     <button id="dividendCalcBtn" class="menu-button-item" data-action-closes-menu="true">
                         <i class="fas fa-money-bill-wave"></i> <span>Dividend</span>
-                    </button>
-                </div>
-            </div>
-
-            <div class="menu-section">
-                <h3>Share Research</h3>
-                <div class="share-research-input-group">
-                    <input type="text" id="shareResearchInput" placeholder="Enter ASX Code" class="sidebar-input">
-                    <button id="shareResearchBtn" class="share-research-btn">
-                        <i class="fas fa-search"></i>
                     </button>
                 </div>
             </div>
@@ -434,84 +424,11 @@
         <button id="contextDeleteShareBtn" class="context-menu-item danger-button"><i class="fas fa-trash-alt"></i> Delete Share</button>
     </div>
 
-    <!-- NEW: Share Research Modal -->
-    <div id="shareResearchModal" class="modal">
-        <div class="modal-content add-share-modal-content">
-            <div class="modal-header-with-icon">
-                <span class="close-button">&times;</span>
-                <h2>Research Share: <span id="researchShareCodeDisplay"></span></h2>
-            </div>
-            <div class="modal-body-scrollable">
-                <div class="external-links-section">
-                    <h3>External Links</h3>
-                    <p><a id="researchNewsLink" href="#" target="_blank" class="external-link"><i class="fas fa-external-link-alt"></i> View News</a></p>
-                    <p><a id="researchMarketIndexLink" href="#" target="_blank" class="external-link"><i class="fas fa-external-link-alt"></i> View on MarketIndex.com.au</a></p>
-                    <p><a id="researchFoolLink" href="#" target="_blank" class="external-link"><i class="fas fa-external-link-alt"></i> View on Fool.com.au</a></p>
-                    <p><a id="researchCommSecLink" href="#" target="_blank" class="external-link"><i class="fas fa-external-link-alt"></i> View on CommSec.com.au</a></p>
-                    <p id="researchCommSecLoginMessage" class="ghosted-text commsec-message">Requires single CommSec login per session</p>
-                </div>
-
-                <div class="calculator-section">
-                    <h3>Dividend Calculator</h3>
-                    <div class="calc-input-group">
-                        <label for="researchCalcCurrentPrice">Share Price ($):</label>
-                        <input type="number" id="researchCalcCurrentPrice" step="0.01" placeholder="e.g., 25.50">
-                    </div>
-                    <div class="calc-input-group">
-                        <label for="researchCalcDividendAmount">Dividend Amount (per share, annual $):</label>
-                        <input type="number" id="researchCalcDividendAmount" step="0.001" placeholder="e.g., 1.250">
-                    </div>
-                    <div class="calc-input-group">
-                        <label for="researchFrankingCredits">Franking Credits (%):</label>
-                        <input type="number" id="researchFrankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 70 for 70%">
-                    </div>
-                    <p><strong>Unfranked Yield:</strong> <span id="researchCalcUnfrankedYield">-</span></p>
-                    <p><strong>Franked Yield:</strong> <span id="researchCalcFrankedYield">-</span></p>
-                    <hr>
-                    <div class="calc-input-group">
-                        <label for="researchInvestmentValueSelect">Investment Value:</label>
-                        <select id="researchInvestmentValueSelect">
-                            <option value="1000">$1,000</option>
-                            <option value="5000">$5,000</option>
-                            <option value="10000" selected>$10,000</option>
-                            <option value="25000">$25,000</option>
-                            <option value="50000">$50,000</option>
-                            <option value="100000">$100,000</option>
-                        </select>
-                    </div>
-                    <p><strong>Estimated Annual Dividend:</strong> <span id="researchCalcEstimatedDividend">-</span></p>
-                </div>
-
-                <div class="save-to-watchlist-section">
-                    <h3>Save to Watchlist</h3>
-                    <div class="calc-input-group">
-                        <label for="researchWatchlistSelect">Select Watchlist:</label>
-                        <select id="researchWatchlistSelect" class="dropdown-large">
-                            <!-- Options populated by JS -->
-                        </select>
-                    </div>
-                    <div class="calc-input-group">
-                        <label for="researchTargetPrice">Target Price ($):</label>
-                        <input type="number" id="researchTargetPrice" step="0.01" placeholder="e.g., 30.00">
-                    </div>
-                    <div class="calc-input-group">
-                        <label for="researchComments">Comments:</label>
-                        <textarea id="researchComments" placeholder="Add any research notes or comments here..."></textarea>
-                    </div>
-                </div>
-            </div>
-            <div class="form-action-buttons modal-form-buttons sticky-footer">
-                <span id="cancelResearchBtn" class="modal-action-icon secondary" title="Cancel"><i class="fas fa-times-circle"></i></span>
-                <span id="saveResearchShareBtn" class="modal-action-icon" title="Save Researched Share"><i class="fas fa-save"></i></span>
-            </div>
-        </div>
-    </div>
-
     <!-- Firebase and main script loading -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, FieldValue, deleteField, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; // Added serverTimestamp and writeBatch
+        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, FieldValue, deleteField, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; // Added writeBatch
 
         // YOUR FIREBASE CONFIGURATION - THIS HAS BEEN INSERTED BASED ON YOUR PROVIDED DETAILS
         const firebaseConfig = {
@@ -555,7 +472,7 @@
         window.firestoreDb = firebaseInitialized ? db : null;
         window.firebaseAuth = firebaseInitialized ? auth : null;
         window.getFirebaseAppId = () => currentAppId;
-        window.firestoreFunctions = firebaseInitialized ? { // Renamed to firestoreFunctions for clarity
+        window.firestore = firebaseInitialized ? {
             collection: collection,
             doc: doc,
             getDoc: getDoc,
@@ -568,8 +485,7 @@
             where: where,
             getDocs: getDocs,
             deleteField: FieldValue.delete,
-            writeBatch: writeBatch,
-            serverTimestamp: serverTimestamp // Added serverTimestamp
+            writeBatch: writeBatch
         } : null;
         
         window.authFunctions = firebaseInitialized ? {
@@ -581,16 +497,11 @@
             onAuthStateChanged: onAuthStateChanged
         } : null;
 
-        // NEW: Global flag to indicate Firebase globals are ready for script.js
-        window.firebaseGlobalsReady = firebaseInitialized;
-        console.log("index.html: window.firebaseGlobalsReady set to", window.firebaseGlobalsReady);
-        console.log("index.html: typeof window.firestoreFunctions.serverTimestamp at init:", typeof window.firestoreFunctions.serverTimestamp);
-
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log("index.html (v83) script module loaded and DOMContentLoaded fired."); // Updated version number
+            console.log("index.html (v82) script module loaded and DOMContentLoaded fired."); // Updated version number
         }); 
     </script>
     <!-- Linking to your separate script.js file -->
-    <script src="script.js?v=151"></script> <!-- Updated to v151 -->
+    <script src="script.js?v=150"></script> <!-- Updated to v150 -->
 </body>
 </html>
