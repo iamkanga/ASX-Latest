@@ -1,5 +1,5 @@
-// File Version: v168
-// Last Updated: 2025-07-03 (Ensure correct watchlist selection on load)
+// File Version: v151
+// Last Updated: 2025-07-03 (Added Share Research Logic)
 
 // Wrap the entire script in an IIFE to create a private scope for its variables.
 // This prevents "Identifier 'autoDismissTimeout' has already been declared" errors
@@ -117,7 +117,7 @@ const calculatorButtons = document.querySelector('#calculatorModal .calculator-b
 const dividendCalculatorModal = document.getElementById('dividendCalculatorModal');
 const calcCurrentPriceInput = document.getElementById('calcCurrentPrice');
 const calcDividendAmountInput = document.getElementById('calcDividendAmount');
-const calcFrankingCreditsInput = document.getElementById('frankingCredits'); // This ID is reused, careful!
+const calcFrankingCreditsInput = document.getElementById('calcFrankingCredits'); // This ID is reused, careful!
 const calcUnfrankedYieldSpan = document.getElementById('calcUnfrankedYield');
 const calcFrankedYieldSpan = document.getElementById('calcFrankedYield');
 const investmentValueSelect = document.getElementById('investmentValueSelect');
@@ -1230,8 +1230,8 @@ function updateMainButtonsState(enable) {
         watchlistSelect,
         sortSelect,
         exportWatchlistBtn,
-        shareResearchBtn,
-        shareResearchInput
+        shareResearchBtn, // Added for new feature
+        shareResearchInput // Added for new feature
     ];
     buttons.forEach(btn => {
         if (btn) { // Check if element exists before trying to access properties
@@ -1914,10 +1914,10 @@ function initializeAppLogic() {
         // Reset fields when opening standalone dividend calculator
         if (calcCurrentPriceInput) calcCurrentPriceInput.value = '';
         if (calcDividendAmountInput) calcDividendAmountInput.value = '';
-        // Note: frankingCreditsInput is shared, ensure correct one is targeted if there are multiple
+        // Note: calcFrankingCreditsInput is shared, ensure correct one is targeted if there are multiple
         // For standalone dividend calculator, we should use the one inside that modal if it had its own.
         // Assuming calcFrankingCreditsInput is the one inside dividendCalculatorModal from HTML
-        const dividendModalFrankingInput = document.querySelector('#dividendCalculatorModal #frankingCredits');
+        const dividendModalFrankingInput = document.querySelector('#dividendCalculatorModal #calcFrankingCredits');
         if (dividendModalFrankingInput) dividendModalFrankingInput.value = ''; 
 
         if (calcUnfrankedYieldSpan) calcUnfrankedYieldSpan.textContent = '-';
@@ -1928,7 +1928,7 @@ function initializeAppLogic() {
     });
     // Event listeners for dividend calculator inputs
     // Ensure elements exist before adding listeners
-    const dividendModalFrankingInput = document.querySelector('#dividendCalculatorModal #frankingCredits'); // Get the specific input for this modal
+    const dividendModalFrankingInput = document.querySelector('#dividendCalculatorModal #calcFrankingCredits'); // Get the specific input for this modal
     const dividendCalcInputs = [calcCurrentPriceInput, calcDividendAmountInput, dividendModalFrankingInput, investmentValueSelect];
     dividendCalcInputs.forEach(input => {
         if (input) {
@@ -2021,7 +2021,7 @@ function initializeAppLogic() {
 
 // --- DOMContentLoaded and Firebase Availability Check ---
 document.addEventListener('DOMContentLoaded', async function() {
-    console.log("script.js (v168) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v151) DOMContentLoaded fired."); // Updated version number
 
     // Assign global Firebase instances to local variables
     // These are expected to be set by index.html's module script
