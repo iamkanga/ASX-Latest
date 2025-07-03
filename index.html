@@ -539,6 +539,9 @@
         let dbInstance;   
         let firebaseInitialized = false;
 
+        // NEW: Global flag to indicate when Firebase objects are fully ready on window
+        window.firebaseGlobalsReady = false;
+
         if (firebaseConfig && firebaseConfig.apiKey && firebaseConfig.projectId) {
             try {
                 firebaseApp = initializeApp(firebaseConfig);
@@ -593,11 +596,17 @@
             onAuthStateChanged: onAuthStateChanged
         } : null;
 
+        // Set the flag ONLY after all window assignments are made
+        if (firebaseInitialized) {
+            window.firebaseGlobalsReady = true;
+            console.log("index.html: window.firebaseGlobalsReady set to true.");
+        }
+
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log("index.html (v91) script module loaded and DOMContentLoaded fired."); // Updated version number
+            console.log("index.html (v92) script module loaded and DOMContentLoaded fired."); // Updated version number
         }); 
     </script>
     <!-- Linking to your separate script.js file -->
-    <script src="script.js?v=161"></script> <!-- Updated to v161 -->
+    <script src="script.js?v=162"></script> <!-- Updated to v162 -->
 </body>
 </html>

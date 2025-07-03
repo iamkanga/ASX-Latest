@@ -1,5 +1,5 @@
-// File Version: v161
-// Last Updated: 2025-07-03 (Direct window.firestoreFunctions Access to fix serverTimestamp issue)
+// File Version: v162
+// Last Updated: 2025-07-03 (Waiting for Firebase Globals Ready Flag)
 
 // Wrap the entire script in an IIFE to create a private scope for its variables.
 // This prevents "Identifier 'autoDismissTimeout' has already been declared" errors
@@ -1240,16 +1240,24 @@ function handleAuthStateChanged(user) {
         updateMainButtonsState(true);
         if (mainTitle) mainTitle.textContent = "Loading Watchlists...";
         
-        // Directly check window.firestoreFunctions for serverTimestamp
-        if (window.firestoreFunctions && window.firestoreFunctions.serverTimestamp) {
-            console.log("[Auth State] window.firestoreFunctions.serverTimestamp is:", window.firestoreFunctions.serverTimestamp); // Log its state
-            subscribeToWatchlists();
-            subscribeToShares();
-        } else {
-            // This fallback should ideally not be hit if index.html loads correctly
-            console.error("[Auth State] window.firestoreFunctions.serverTimestamp NOT available. Subscriptions failed.");
-            showCustomDialog("Error: Failed to load data. Please refresh the page.");
-        }
+        // Use a loop with requestAnimationFrame to wait for window.firebaseGlobalsReady
+        let attempts = 0;
+        const maxAttempts = 20; // Max 20 frames, approx 333ms at 60fps
+        const waitForFirebaseGlobals = () => {
+            if (window.firebaseGlobalsReady && window.firestoreFunctions && window.firestoreFunctions.serverTimestamp) {
+                console.log("[Auth State] window.firebaseGlobalsReady is TRUE. Initiating subscriptions.");
+                console.log("[Auth State] window.firestoreFunctions.serverTimestamp is:", window.firestoreFunctions.serverTimestamp); // Log its state
+                subscribeToWatchlists();
+                subscribeToShares();
+            } else if (attempts < maxAttempts) {
+                attempts++;
+                requestAnimationFrame(waitForFirebaseGlobals);
+            } else {
+                console.error("[Auth State] Max attempts reached. window.firebaseGlobalsReady or serverTimestamp NOT available. Subscriptions failed.");
+                showCustomDialog("Error: Failed to load data. Please refresh the page.");
+            }
+        };
+        requestAnimationFrame(waitForFirebaseGlobals);
         
         populateThemeSelect(); // Load and apply theme
         console.log("Auth State: User signed in:", user.uid);
@@ -2001,76 +2009,81 @@ function initializeAppLogic() {
 
 // --- DOMContentLoaded and Firebase Availability Check ---
 document.addEventListener('DOMContentLoaded', async function() {
-    console.log("script.js (v161) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v162) DOMContentLoaded fired."); // Updated version number
 
-    // Check if Firebase objects are available from index.html's module script
-    if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestoreFunctions && window.authFunctions) {
-        // Assign global Firebase instances to local variables
-        db = window.firestoreDb;
-        auth = window.firebaseAuth;
-        currentAppId = window.getFirebaseAppId();
+    // Assign global Firebase instances to local variables
+    // These are expected to be set by index.html's module script
+    db = window.firestoreDb;
+    auth = window.firebaseAuth;
+    currentAppId = window.getFirebaseAppId();
 
-        // Set up the Auth State Observer FIRST, after global Firebase instances are assigned.
-        // We no longer need to check firebaseFunctionsReady here because we're directly
-        // accessing window.firestoreFunctions in the subscription calls.
-        if (auth && window.authFunctions.onAuthStateChanged) {
-            window.authFunctions.onAuthStateChanged(auth, handleAuthStateChanged);
-        } else {
-            console.error("Firebase Auth not available. Cannot set up auth state listener.");
-            handleAuthStateChanged(null); // Treat as logged out
-        }
-
-        // Attempt initial sign-in if not already authenticated (e.g., first load)
-        // This will trigger the onAuthStateChanged listener.
-        // We only attempt this if there's no current user, to avoid redundant sign-ins.
-        if (!auth.currentUser) { 
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                try {
-                    await window.authFunctions.signInWithCustomToken(auth, __initial_auth_token);
-                    console.log("[Auth] Signed in with custom token.");
-                } catch (error) {
-                    console.error("[Auth] Error signing in with custom token:", error);
-                    try {
-                        await window.authFunctions.signInAnonymously(auth);
-                        console.log("[Auth] Signed in anonymously as fallback.");
-                    } catch (anonError) {
-                        console.error("[Auth] Error signing in anonymously:", anonError);
-                        showCustomDialog("Authentication failed. Please refresh the page.");
-                    }
-                }
+    // Function to wait for Firebase globals and then proceed
+    const waitForFirebaseGlobalsAndInit = (attempts = 0) => {
+        const maxAttempts = 50; // Max attempts, roughly 50 * 16ms = 800ms
+        if (window.firebaseGlobalsReady && window.firestoreFunctions && window.authFunctions) {
+            console.log("[script.js Init] window.firebaseGlobalsReady is TRUE. Proceeding with Firebase setup.");
+            
+            // Set up the Auth State Observer
+            if (auth && window.authFunctions.onAuthStateChanged) {
+                window.authFunctions.onAuthStateChanged(auth, handleAuthStateChanged);
             } else {
-                try {
-                    await window.authFunctions.signInAnonymously(auth);
-                    console.log("[Auth] Signed in anonymously (no custom token provided).");
-                } catch (anonError) {
-                    console.error("[Auth] Error signing in anonymously:", anonError);
-                    showCustomDialog("Authentication failed. Please refresh the page.");
+                console.error("Firebase Auth not available. Cannot set up auth state listener.");
+                handleAuthStateChanged(null); // Treat as logged out
+            }
+
+            // Attempt initial sign-in if not already authenticated (e.g., first load)
+            if (!auth.currentUser) { 
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    window.authFunctions.signInWithCustomToken(auth, __initial_auth_token)
+                        .then(() => console.log("[Auth] Signed in with custom token."))
+                        .catch(error => {
+                            console.error("[Auth] Error signing in with custom token:", error);
+                            window.authFunctions.signInAnonymously(auth)
+                                .then(() => console.log("[Auth] Signed in anonymously as fallback."))
+                                .catch(anonError => {
+                                    console.error("[Auth] Error signing in anonymously:", anonError);
+                                    showCustomDialog("Authentication failed. Please refresh the page.");
+                                });
+                        });
+                } else {
+                    window.authFunctions.signInAnonymously(auth)
+                        .then(() => console.log("[Auth] Signed in anonymously (no custom token provided)."))
+                        .catch(anonError => {
+                            console.error("[Auth] Error signing in anonymously:", anonError);
+                            showCustomDialog("Authentication failed. Please refresh the page.");
+                        });
                 }
             }
-        }
-        
-        // Initialize other app logic (event listeners for buttons, etc.)
-        // This should be called AFTER auth setup, but only once.
-        if (!window._appLogicInitialized) {
-            initializeAppLogic();
-            window._appLogicInitialized = true;
-        }
-        
-        if (googleAuthBtn) {
-            googleAuthBtn.disabled = false;
-            console.log("[Auth] Google Auth button enabled on DOMContentLoaded.");
-        }
+            
+            // Initialize other app logic (event listeners for buttons, etc.)
+            if (!window._appLogicInitialized) {
+                initializeAppLogic();
+                window._appLogicInitialized = true;
+            }
+            
+            if (googleAuthBtn) {
+                googleAuthBtn.disabled = false;
+                console.log("[Auth] Google Auth button enabled on DOMContentLoaded.");
+            }
 
-    } else {
-        console.error("[Firebase] Firebase objects (db, auth, appId, firestoreFunctions, authFunctions) are not available on DOMContentLoaded. Firebase initialization likely failed in index.html.");
-        const errorDiv = document.getElementById('firebaseInitError');
-        if (errorDiv) {
-            errorDiv.style.display = 'block';
+        } else if (attempts < maxAttempts) {
+            // If not ready, try again on the next animation frame
+            requestAnimationFrame(() => waitForFirebaseGlobalsAndInit(attempts + 1));
+        } else {
+            console.error("[script.js Init] Max attempts reached. Firebase globals not available. Application will not function.");
+            const errorDiv = document.getElementById('firebaseInitError');
+            if (errorDiv) {
+                errorDiv.style.display = 'block';
+            }
+            updateMainButtonsState(false);
+            if (loadingIndicator) loadingIndicator.style.display = 'none';
+            applyTheme('system-default');
+            showCustomDialog("Application failed to initialize Firebase. Please ensure your Firebase configuration is correct and try refreshing.");
         }
-        updateMainButtonsState(false);
-        if (loadingIndicator) loadingIndicator.style.display = 'none';
-        applyTheme('system-default');
-    }
+    };
+
+    // Start waiting for Firebase globals
+    waitForFirebaseGlobalsAndInit();
 });
 
 })(); // End of IIFE
