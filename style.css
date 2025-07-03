@@ -1,5 +1,5 @@
-/* File Version: v81 */
-/* Last Updated: 2025-07-02 (Logout Button Icon-Only Style) */
+/* File Version: v88 */
+/* Last Updated: 2025-07-03 (Sidebar Search Layout Fix) */
 
 :root {
     /* Light Theme (Default) */
@@ -362,6 +362,7 @@ body.theme-bold-8 { /* Plum */
     --button-hover-bg: #c71585;
     --input-bg: #9932cc;
     --input-border: #ba55d3;
+    --input-placeholder-color: #ffb3ff;
     --modal-content-bg: #9932cc;
     --table-header-bg: #800080;
     --table-row-hover-bg: #ba55d3;
@@ -1064,6 +1065,57 @@ h1#mainTitle {
     display: block; 
 }
 
+/* Sidebar Search Group */
+.sidebar-search-group {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+    width: 100%; /* Ensure it takes full width of its parent */
+    box-sizing: border-box;
+}
+
+.sidebar-input {
+    flex-grow: 1; /* Allow input to take available space */
+    padding: 10px;
+    border: 1px solid var(--input-border);
+    border-radius: 8px;
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    font-size: 0.95em;
+    box-sizing: border-box;
+    min-width: 0; /* Allow it to shrink */
+}
+
+.sidebar-input::placeholder {
+    color: var(--input-placeholder-color);
+}
+
+.sidebar-input:focus {
+    outline: none;
+    border-color: var(--button-bg);
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.sidebar-search-btn {
+    background-color: var(--button-bg);
+    color: var(--button-text);
+    border: none;
+    border-radius: 8px;
+    padding: 10px 15px;
+    cursor: pointer;
+    font-size: 1em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    flex-shrink: 0; /* Prevent button from shrinking */
+}
+
+.sidebar-search-btn:hover {
+    background-color: var(--button-hover-bg);
+    transform: translateY(-1px);
+}
+
 
 .watchlist-controls-row {
     display: flex;
@@ -1491,6 +1543,7 @@ table tbody tr:not(.selected):hover {
     margin-top: 20px;
     border-top: 1px solid var(--border-color);
     padding-top: 15px;
+    display: block !important; /* AGGRESSIVE FIX: ENSURE VISIBILITY */
 }
 
 .comments-form-container h3 {
@@ -1511,7 +1564,7 @@ table tbody tr:not(.selected):hover {
     border: none;
     color: var(--icon-action-color); /* Use action icon color */
     font-size: 1.5em;
-    display: flex;
+    display: inline-flex !important; /* AGGRESSIVE FIX: ENSURE VISIBILITY */
     justify-content: center;
     align-items: center;
     cursor: pointer;
@@ -1537,6 +1590,7 @@ table tbody tr:not(.selected):hover {
     margin-bottom: 15px; /* Space between multiple comment sections */
     background-color: var(--card-bg);
     position: relative;
+    display: block !important; /* AGGRESSIVE FIX: ENSURE VISIBILITY */
 }
 
 .comment-section-header {
@@ -1553,6 +1607,12 @@ table tbody tr:not(.selected):hover {
     font-weight: 600;
     width: auto; 
     min-width: 0;
+}
+
+.comment-section .comment-text-input {
+    width: calc(100% - 22px); /* Adjust for padding/border */
+    min-height: 80px; /* Give some default height */
+    resize: vertical; /* Allow vertical resizing */
 }
 
 .comment-section .comment-delete-btn {
@@ -1643,7 +1703,7 @@ table tbody tr:not(.selected):hover {
     color: var(--secondary-button-bg); /* Use secondary color for secondary icons */
 }
 .modal-action-icon.secondary:hover {
-    color: var(--secondary-button-hover-bg);
+    color: var(--secondary-button-hover-color);
     background-color: var(--menu-button-hover-bg);
 }
 
@@ -1954,6 +2014,65 @@ table tbody tr:not(.selected):hover {
 .context-menu-item.danger-button:hover {
     background-color: var(--danger-button-bg); /* Use full button background for hover */
     color: var(--button-text); /* Text color changes to white on hover for danger button */
+}
+
+/* Share Research Modal Specific Styles */
+.share-research-modal-content {
+    max-width: 600px; /* Wider modal for content */
+}
+
+.share-research-modal-content .modal-body-scrollable {
+    padding-bottom: 20px; /* Ensure space above sticky footer */
+}
+
+.dividend-calculator-section,
+.save-to-watchlist-section {
+    margin-top: 25px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 15px;
+}
+
+.dividend-calculator-section h3,
+.save-to-watchlist-section h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.2em;
+    color: var(--text-color);
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+/* Ensure inputs and selects within research modal are styled correctly */
+.share-research-modal-content input[type="text"],
+.share-research-modal-content input[type="number"],
+.share-research-modal-content textarea,
+.share-research-modal-content select {
+    width: calc(100% - 22px); /* Account for padding and border */
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid var(--input-border);
+    border-radius: 5px;
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    font-size: 1em;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    box-sizing: border-box;
+}
+
+.share-research-modal-content select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http://www.w3.org/2000/svg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236c757d%22%20d%3D%22M287%2069.9a14.7%2014.7%200%200%200-20.8%200L146.2%20189.9%2026.3%2069.9a14.7%2014.7%200%200%200-20.8%2020.8L135.8%20216.7a14.7%2014.7%200%200%200%2020.8%200L287%2090.7a14.7%2014.7%200%200%200%200-20.8z%22%2F%3E%3C%2Fsvg%3E'); 
+    background-repeat: no-repeat;
+    background-position: right 12px top 50%;
+    background-size: 12px auto;
+    padding-right: 30px;
+}
+
+.share-research-modal-content input::placeholder,
+.share-research-modal-content textarea::placeholder {
+    color: var(--input-placeholder-color);
 }
 
 
