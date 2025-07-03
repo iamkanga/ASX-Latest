@@ -8,7 +8,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍆</text></svg>">
 
     <!-- Linking to your separate style.css file -->
-    <link rel="stylesheet" href="style.css?v=89">
+    <link rel="stylesheet" href="style.css?v=83"> <!-- Updated to v83 -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -56,19 +56,6 @@
             </div>
 
             <div class="menu-section">
-                <h3>Research</h3>
-                <div class="menu-buttons-group">
-                    <!-- New Search Input and Button -->
-                    <div class="sidebar-search-group">
-                        <input type="text" id="shareResearchInput" placeholder="Search Share Code" class="sidebar-input">
-                        <button id="shareResearchBtn" class="sidebar-search-btn">
-                            <i class="fas fa-search"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="menu-section">
                 <h3>Calculators</h3>
                 <div class="menu-buttons-group">
                     <!-- Standard Calculator - Icon with Text -->
@@ -78,6 +65,16 @@
                     <!-- Dividend Calculator - Icon with Text -->
                     <button id="dividendCalcBtn" class="menu-button-item" data-action-closes-menu="true">
                         <i class="fas fa-money-bill-wave"></i> <span>Dividend</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="menu-section">
+                <h3>Share Research</h3>
+                <div class="share-research-input-group">
+                    <input type="text" id="shareResearchInput" placeholder="Enter ASX Code" class="sidebar-input">
+                    <button id="shareResearchBtn" class="share-research-btn">
+                        <i class="fas fa-search"></i>
                     </button>
                 </div>
             </div>
@@ -93,11 +90,11 @@
             </div>
 
             <div class="menu-section">
-                <h3>Theme</h3>
+                <h3>Theme</h3> <!-- CHANGED: Title from "Theme Toggle" back to "Theme" -->
                 <div class="menu-buttons-group">
                     <!-- Theme Toggle Button - Icon with Text -->
                     <button id="themeToggleBtn" class="menu-button-item" data-action-closes-menu="false">
-                        <i class="fas fa-palette"></i> <span>Theme Toggle</span>
+                        <i class="fas fa-palette"></i> <span>Theme Toggle</span> <!-- CHANGED: Button text to "Theme Toggle" -->
                     </button>
                     
                     <!-- New Theme Selector Dropdown -->
@@ -212,7 +209,6 @@
     </main>
 
     <footer class="fixed-footer">
-        <span id="userIdDisplay" class="user-id-display">Not Signed In</span>
         <button id="googleAuthBtn" class="google-auth-btn">Sign In</button>
     </footer>
 
@@ -358,7 +354,7 @@
             </div>
             <div class="calc-input-group">
                 <label for="frankingCredits">Franking Credits (%):</label>
-                <input type="number" id="frankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 70 for 70%">
+                <input type="number" id="calcFrankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 70 for 70%">
             </div>
             <p><strong>Unfranked Yield:</strong> <span id="calcUnfrankedYield">-</span></p>
             <p><strong>Franked Yield:</strong> <span id="calcFrankedYield">-</span></p>
@@ -419,14 +415,33 @@
         </div>
     </div>
 
-    <!-- Share Research Modal (NEW) -->
+    <!-- Custom Dialog Modal for Alerts/Confirms -->
+    <div id="customDialogModal" class="modal">
+        <div class="modal-content">
+            <p id="customDialogMessage"></p>
+            <div class="custom-dialog-buttons">
+                <!-- Yes/Confirm Icon - NOW STANDALONE ICON -->
+                <span id="customDialogConfirmBtn" class="modal-action-icon" title="Yes"><i class="fas fa-check-circle"></i></span>
+                <!-- No/Cancel Icon - NOW STANDALONE ICON -->
+                <span id="customDialogCancelBtn" class="modal-action-icon danger" title="No"><i class="fas fa-times-circle"></i></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Context Menu for Share Actions (Long Press / Right Click) -->
+    <div id="shareContextMenu" class="context-menu">
+        <button id="contextEditShareBtn" class="context-menu-item"><i class="fas fa-edit"></i> Edit Share</button>
+        <button id="contextDeleteShareBtn" class="context-menu-item danger-button"><i class="fas fa-trash-alt"></i> Delete Share</button>
+    </div>
+
+    <!-- NEW: Share Research Modal -->
     <div id="shareResearchModal" class="modal">
-        <div class="modal-content share-research-modal-content">
-            <span class="close-button research-close-button">&times;</span>
-            <h2 id="researchModalTitle">Share Research: <span id="researchShareCodeDisplay"></span></h2>
-            
+        <div class="modal-content add-share-modal-content">
+            <div class="modal-header-with-icon">
+                <span class="close-button">&times;</span>
+                <h2>Research Share: <span id="researchShareCodeDisplay"></span></h2>
+            </div>
             <div class="modal-body-scrollable">
-                <!-- External Links Section -->
                 <div class="external-links-section">
                     <h3>External Links</h3>
                     <p><a id="researchNewsLink" href="#" target="_blank" class="external-link"><i class="fas fa-external-link-alt"></i> View News</a></p>
@@ -436,8 +451,7 @@
                     <p id="researchCommSecLoginMessage" class="ghosted-text commsec-message">Requires single CommSec login per session</p>
                 </div>
 
-                <!-- Dividend Calculator Section (reused/adapted) -->
-                <div class="dividend-calculator-section">
+                <div class="calculator-section">
                     <h3>Dividend Calculator</h3>
                     <div class="calc-input-group">
                         <label for="researchCalcCurrentPrice">Share Price ($):</label>
@@ -468,59 +482,36 @@
                     <p><strong>Estimated Annual Dividend:</strong> <span id="researchCalcEstimatedDividend">-</span></p>
                 </div>
 
-                <!-- Save to Watchlist Section -->
                 <div class="save-to-watchlist-section">
                     <h3>Save to Watchlist</h3>
                     <div class="calc-input-group">
                         <label for="researchWatchlistSelect">Select Watchlist:</label>
                         <select id="researchWatchlistSelect" class="dropdown-large">
-                            <!-- Watchlist options will be populated by JS -->
+                            <!-- Options populated by JS -->
                         </select>
                     </div>
                     <div class="calc-input-group">
                         <label for="researchTargetPrice">Target Price ($):</label>
-                        <input type="number" id="researchTargetPrice" step="0.01" placeholder="Optional Target Price">
+                        <input type="number" id="researchTargetPrice" step="0.01" placeholder="e.g., 30.00">
                     </div>
                     <div class="calc-input-group">
                         <label for="researchComments">Comments:</label>
-                        <textarea id="researchComments" placeholder="Add research notes here..."></textarea>
+                        <textarea id="researchComments" placeholder="Add any research notes or comments here..."></textarea>
                     </div>
                 </div>
             </div>
-
             <div class="form-action-buttons modal-form-buttons sticky-footer">
                 <span id="cancelResearchBtn" class="modal-action-icon secondary" title="Cancel"><i class="fas fa-times-circle"></i></span>
-                <span id="saveResearchShareBtn" class="modal-action-icon" title="Save to Watchlist"><i class="fas fa-save"></i></span>
+                <span id="saveResearchShareBtn" class="modal-action-icon" title="Save Researched Share"><i class="fas fa-save"></i></span>
             </div>
         </div>
-    </div>
-
-
-    <!-- Custom Dialog Modal for Alerts/Confirms -->
-    <div id="customDialogModal" class="modal">
-        <div class="modal-content">
-            <p id="customDialogMessage"></p>
-            <div class="custom-dialog-buttons">
-                <!-- Yes/Confirm Icon - NOW STANDALONE ICON -->
-                <span id="customDialogConfirmBtn" class="modal-action-icon" title="Yes"><i class="fas fa-check-circle"></i></span>
-                <!-- No/Cancel Icon - NOW STANDALONE ICON -->
-                <span id="customDialogCancelBtn" class="modal-action-icon danger" title="No"><i class="fas fa-times-circle"></i></span>
-            </div>
-        </div>
-    </div>
-
-    <!-- Context Menu for Share Actions (Long Press / Right Click) -->
-    <div id="shareContextMenu" class="context-menu">
-        <button id="contextEditShareBtn" class="context-menu-item"><i class="fas fa-edit"></i> Edit Share</button>
-        <button id="contextDeleteShareBtn" class="context-menu-item danger-button"><i class="fas fa-trash-alt"></i> Delete Share</button>
     </div>
 
     <!-- Firebase and main script loading -->
     <script type="module">
-        // Import FieldValue as a named import, and serverTimestamp directly
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, query, where, getDocs, FieldValue, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; 
+        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, FieldValue, deleteField, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; // Added serverTimestamp and writeBatch
 
         // YOUR FIREBASE CONFIGURATION - THIS HAS BEEN INSERTED BASED ON YOUR PROVIDED DETAILS
         const firebaseConfig = {
@@ -537,18 +528,15 @@
         const currentAppId = firebaseConfig.projectId || 'default-app-id';
 
         let firebaseApp;
-        let authInstance; 
-        let dbInstance;   
+        let auth;
+        let db;
         let firebaseInitialized = false;
-
-        // NEW: Global flag to indicate when Firebase objects are fully ready on window
-        window.firebaseGlobalsReady = false;
 
         if (firebaseConfig && firebaseConfig.apiKey && firebaseConfig.projectId) {
             try {
                 firebaseApp = initializeApp(firebaseConfig);
-                authInstance = getAuth(firebaseApp);
-                dbInstance = getFirestore(firebaseApp);
+                auth = getAuth(firebaseApp);
+                db = getFirestore(firebaseApp);
                 firebaseInitialized = true;
                 console.log("Firebase: Initialized successfully with config.");
             } catch (error) {
@@ -564,14 +552,10 @@
             firebaseInitialized = false;
         }
 
-        // Expose the actual db and auth instances globally
-        window.firestoreDb = firebaseInitialized ? dbInstance : null;
-        window.firebaseAuth = firebaseInitialized ? authInstance : null;
+        window.firestoreDb = firebaseInitialized ? db : null;
+        window.firebaseAuth = firebaseInitialized ? auth : null;
         window.getFirebaseAppId = () => currentAppId;
-
-        // Expose all necessary Firestore functions directly as global properties
-        // This is a more direct way to make them available to script.js
-        window.firestoreFunctions = firebaseInitialized ? {
+        window.firestoreFunctions = firebaseInitialized ? { // Renamed to firestoreFunctions for clarity
             collection: collection,
             doc: doc,
             getDoc: getDoc,
@@ -583,13 +567,11 @@
             query: query,
             where: where,
             getDocs: getDocs,
-            // Use the directly imported serverTimestamp
-            serverTimestamp: serverTimestamp, 
-            deleteField: FieldValue.delete, 
-            writeBatch: writeBatch
+            deleteField: FieldValue.delete,
+            writeBatch: writeBatch,
+            serverTimestamp: serverTimestamp // Added serverTimestamp
         } : null;
         
-        // Expose Auth-related functions
         window.authFunctions = firebaseInitialized ? {
             GoogleAuthProviderInstance: new GoogleAuthProvider(),
             signInAnonymously: signInAnonymously,
@@ -599,18 +581,16 @@
             onAuthStateChanged: onAuthStateChanged
         } : null;
 
-        // Set the flag ONLY after all window assignments are made
-        if (firebaseInitialized) {
-            window.firebaseGlobalsReady = true;
-            console.log("index.html: window.firebaseGlobalsReady set to true.");
-            console.log("index.html: typeof window.firestoreFunctions.serverTimestamp at init:", typeof window.firestoreFunctions.serverTimestamp);
-        }
+        // NEW: Global flag to indicate Firebase globals are ready for script.js
+        window.firebaseGlobalsReady = firebaseInitialized;
+        console.log("index.html: window.firebaseGlobalsReady set to", window.firebaseGlobalsReady);
+        console.log("index.html: typeof window.firestoreFunctions.serverTimestamp at init:", typeof window.firestoreFunctions.serverTimestamp);
 
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log("index.html (v98) script module loaded and DOMContentLoaded fired."); // Updated version number
+            console.log("index.html (v83) script module loaded and DOMContentLoaded fired."); // Updated version number
         }); 
     </script>
     <!-- Linking to your separate script.js file -->
-    <script src="script.js?v=168"></script> <!-- Updated to v168 -->
+    <script src="script.js?v=151"></script> <!-- Updated to v151 -->
 </body>
 </html>
