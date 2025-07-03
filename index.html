@@ -600,13 +600,14 @@
         if (firebaseInitialized) {
             window.firebaseGlobalsReady = true;
             console.log("index.html: window.firebaseGlobalsReady set to true.");
+            console.log("index.html: typeof window.firestoreFunctions.serverTimestamp at init:", typeof window.firestoreFunctions.serverTimestamp);
         }
 
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log("index.html (v94) script module loaded and DOMContentLoaded fired."); // Updated version number
+            console.log("index.html (v95) script module loaded and DOMContentLoaded fired."); // Updated version number
         }); 
     </script>
     <!-- Linking to your separate script.js file -->
-    <script src="script.js?v=164"></script> <!-- Updated to v164 -->
+    <script src="script.js?v=165"></script> <!-- Updated to v165 -->
 </body>
 </html>

@@ -1,5 +1,5 @@
-// File Version: v164
-// Last Updated: 2025-07-03 (Corrected Waiting for Firebase Globals Flag)
+// File Version: v165
+// Last Updated: 2025-07-03 (Corrected Waiting and Diagnostic Logs)
 
 // Wrap the entire script in an IIFE to create a private scope for its variables.
 // This prevents "Identifier 'autoDismissTimeout' has already been declared" errors
@@ -1240,8 +1240,11 @@ function handleAuthStateChanged(user) {
         if (mainTitle) mainTitle.textContent = "Loading Watchlists...";
         
         // Directly call subscriptions here. The outer DOMContentLoaded wait ensures Firebase is ready.
-        if (window.firestoreFunctions && window.firestoreFunctions.serverTimestamp) {
-            console.log("[Auth State] window.firestoreFunctions.serverTimestamp is:", window.firestoreFunctions.serverTimestamp); // Log its state
+        console.log("[Auth State] window.firestoreFunctions:", window.firestoreFunctions);
+        console.log("[Auth State] typeof window.firestoreFunctions.serverTimestamp:", typeof window.firestoreFunctions.serverTimestamp);
+
+        if (window.firestoreFunctions && typeof window.firestoreFunctions.serverTimestamp === 'function') {
+            console.log("[Auth State] Firebase functions are available. Initiating subscriptions.");
             subscribeToWatchlists();
             subscribeToShares();
         } else {
@@ -2000,7 +2003,7 @@ function initializeAppLogic() {
 
 // --- DOMContentLoaded and Firebase Availability Check ---
 document.addEventListener('DOMContentLoaded', async function() {
-    console.log("script.js (v164) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v165) DOMContentLoaded fired."); // Updated version number
 
     // Assign global Firebase instances to local variables
     // These are expected to be set by index.html's module script
