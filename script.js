@@ -1,5 +1,5 @@
-// File Version: v155
-// Last Updated: 2025-07-03 (Firebase FieldValue & DOM Element Fixes)
+// File Version: v156
+// Last Updated: 2025-07-03 (Firebase Initialization Order Fix)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -62,6 +62,7 @@ let currentSelectedWatchlistIds = []; // Stores IDs of currently selected watchl
 let unsubscribeShares = null; // Holds the unsubscribe function for the shares listener
 let unsubscribeWatchlists = null; // Holds the unsubscribe function for the watchlists listener
 let currentSortOrder = 'entryDate-desc'; // Default sort order
+let currentWatchlistName = ''; // Tracks the currently displayed watchlist name
 
 
 // --- DOM ELEMENT REFERENCES ---
@@ -387,7 +388,7 @@ function getUserDataPath() {
         console.error("User ID is not available. Cannot construct Firestore path.");
         return null;
     }
-    const appId = window.getFirebaseAppId();
+    const appId = currentAppId; // Use the globally assigned currentAppId
     // For private user data, use /artifacts/{appId}/users/{userId}/{collectionName}
     return `artifacts/${appId}/users/${currentUserId}`;
 }
@@ -1669,50 +1670,99 @@ function handleTouchEnd() {
 }
 
 
+/**
+ * Exports the current shares in the selected watchlist to a CSV file.
+ */
+async function exportWatchlistToCSV() {
+    if (!currentUserId) {
+        showCustomDialog("You must be signed in to export data.");
+        return;
+    }
+
+    if (allSharesData.length === 0) {
+        showCustomDialog("No shares to export in the current view.");
+        return;
+    }
+
+    const confirmExport = await showCustomDialog("Export current shares to CSV?", true);
+    if (!confirmExport) {
+        return;
+    }
+
+    try {
+        if (loadingIndicator) loadingIndicator.style.display = 'block';
+
+        // Define CSV headers
+        const headers = [
+            "Share Code", "Entry Date", "Entered Price", "Target Price",
+            "Dividend Amount", "Franking Credits (%)", "Unfranked Yield (%)",
+            "Franked Yield (%)", "Comments"
+        ];
+
+        // Map share data to CSV rows
+        const csvRows = allSharesData.map(share => {
+            const { unfrankedYield, frankedYield } = calculateYields(
+                parseFloat(share.enteredPrice),
+                parseFloat(share.dividendAmount),
+                parseFloat(share.frankingCredits)
+            );
+
+            // Flatten comments into a single string, handling multiple comments
+            const commentsString = share.comments && share.comments.length > 0
+                ? share.comments.map(c => `${c.title}: ${c.text}`).join('; ')
+                : '';
+
+            return [
+                `"${share.shareName.toUpperCase()}"`,
+                `"${formatDate(share.entryDate ? share.entryDate.seconds : null)}"`,
+                `"${share.enteredPrice || ''}"`,
+                `"${share.targetPrice || ''}"`,
+                `"${share.dividendAmount || ''}"`,
+                `"${share.frankingCredits || ''}"`,
+                `"${unfrankedYield || ''}"`,
+                `"${frankedYield || ''}"`,
+                `"${commentsString.replace(/"/g, '""')}"` // Escape double quotes for CSV
+            ].join(',');
+        });
+
+        // Combine headers and rows
+        const csvContent = [
+            headers.join(','),
+            ...csvRows
+        ].join('\n');
+
+        // Create a Blob and download it
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        const fileName = currentWatchlistName === "All Shares" ? "all_shares_export.csv" : `${currentWatchlistName.toLowerCase().replace(/\s/g, '_')}_export.csv`;
+        link.setAttribute('download', fileName);
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        showCustomDialog("Watchlist exported successfully!");
+
+    } catch (error) {
+        console.error("Error exporting watchlist:", error);
+        showCustomDialog("Error exporting watchlist. Please try again.");
+    } finally {
+        if (loadingIndicator) loadingIndicator.style.display = 'none';
+    }
+}
+
+
 // --- INITIALIZATION ---
 
 /**
- * Initializes the application logic once Firebase is ready.
+ * Initializes the application logic (event listeners, etc.).
+ * This function should NOT set up the onAuthStateChanged listener,
+ * as that is handled in the DOMContentLoaded block.
  */
 function initializeAppLogic() {
-    // Assign global Firebase instances and functions to local variables
-    db = window.firestoreDb;
-    auth = window.firebaseAuth;
-    currentAppId = window.getFirebaseAppId();
-
-    // Assign Firestore functions from the global window.firestoreFunctions object
-    collection = window.firestoreFunctions.collection;
-    doc = window.firestoreFunctions.doc;
-    getDoc = window.firestoreFunctions.getDoc;
-    addDoc = window.firestoreFunctions.addDoc;
-    setDoc = window.firestoreFunctions.setDoc;
-    updateDoc = window.firestoreFunctions.updateDoc;
-    deleteDoc = window.firestoreFunctions.deleteDoc;
-    onSnapshot = window.firestoreFunctions.onSnapshot;
-    query = window.firestoreFunctions.query;
-    where = window.firestoreFunctions.where;
-    getDocs = window.firestoreFunctions.getDocs;
-    serverTimestamp = window.firestoreFunctions.serverTimestamp; // Corrected assignment
-    deleteField = window.firestoreFunctions.deleteField;         // Corrected assignment
-    writeBatch = window.firestoreFunctions.writeBatch;
-
-    // Assign Auth functions from the global window.authFunctions object
-    GoogleAuthProviderInstance = window.authFunctions.GoogleAuthProviderInstance;
-    signInAnonymously = window.authFunctions.signInAnonymously;
-    signInWithCustomToken = window.authFunctions.signInWithCustomToken;
-    signInWithPopup = window.authFunctions.signInWithPopup;
-    signOut = window.authFunctions.signOut;
-    onAuthStateChanged = window.authFunctions.onAuthStateChanged;
-
-
-    // Attach Auth State Observer
-    if (auth && onAuthStateChanged) { // Check for auth and the onAuthStateChanged function
-        onAuthStateChanged(auth, handleAuthStateChanged);
-    } else {
-        console.error("Firebase Auth not available. Cannot set up auth state listener.");
-        handleAuthStateChanged(null); // Treat as logged out
-    }
-
     // --- EVENT LISTENERS ---
 
     // Sidebar and Modals
@@ -1850,7 +1900,12 @@ function initializeAppLogic() {
         // Reset fields when opening standalone dividend calculator
         if (calcCurrentPriceInput) calcCurrentPriceInput.value = '';
         if (calcDividendAmountInput) calcDividendAmountInput.value = '';
-        if (frankingCreditsInput) frankingCreditsInput.value = ''; // This is the input in the main form
+        // Note: frankingCreditsInput is shared, ensure correct one is targeted if there are multiple
+        // For standalone dividend calculator, we should use the one inside that modal if it had its own.
+        // Assuming calcFrankingCreditsInput is the one inside dividendCalculatorModal from HTML
+        const dividendModalFrankingInput = document.querySelector('#dividendCalculatorModal #frankingCredits');
+        if (dividendModalFrankingInput) dividendModalFrankingInput.value = ''; 
+
         if (calcUnfrankedYieldSpan) calcUnfrankedYieldSpan.textContent = '-';
         if (calcFrankedYieldSpan) calcFrankedYieldSpan.textContent = '-';
         if (investmentValueSelect) investmentValueSelect.value = '10000';
@@ -1859,12 +1914,13 @@ function initializeAppLogic() {
     });
     // Event listeners for dividend calculator inputs
     // Ensure elements exist before adding listeners
-    const dividendCalcInputs = [calcCurrentPriceInput, calcDividendAmountInput, frankingCreditsInput, investmentValueSelect];
+    const dividendModalFrankingInput = document.querySelector('#dividendCalculatorModal #frankingCredits'); // Get the specific input for this modal
+    const dividendCalcInputs = [calcCurrentPriceInput, calcDividendAmountInput, dividendModalFrankingInput, investmentValueSelect];
     dividendCalcInputs.forEach(input => {
         if (input) {
             input.addEventListener('input', () => {
                 calculateDividendYieldsAndEstimatedDividend(
-                    calcCurrentPriceInput, calcDividendAmountInput, frankingCreditsInput,
+                    calcCurrentPriceInput, calcDividendAmountInput, dividendModalFrankingInput, // Use specific input
                     calcUnfrankedYieldSpan, calcFrankedYieldSpan,
                     investmentValueSelect, calcEstimatedDividendSpan
                 );
@@ -1895,7 +1951,7 @@ function initializeAppLogic() {
     // Ensure elements exist before adding listeners
     const researchCalcInputs = [researchCalcCurrentPrice, researchCalcDividendAmount, researchFrankingCredits, researchInvestmentValueSelect];
     researchCalcInputs.forEach(input => {
-        if (input) { // THIS IS THE LINE 1767 THAT WAS CAUSING THE ERROR
+        if (input) {
             input.addEventListener('input', calculateResearchDividendYields);
         }
     });
@@ -1949,94 +2005,9 @@ function initializeAppLogic() {
     updateMainButtonsState(false);
 }
 
-/**
- * Exports the current shares in the selected watchlist to a CSV file.
- */
-async function exportWatchlistToCSV() {
-    if (!currentUserId) {
-        showCustomDialog("You must be signed in to export data.");
-        return;
-    }
-
-    if (allSharesData.length === 0) {
-        showCustomDialog("No shares to export in the current view.");
-        return;
-    }
-
-    const confirmExport = await showCustomDialog("Export current shares to CSV?", true);
-    if (!confirmExport) {
-        return;
-    }
-
-    try {
-        if (loadingIndicator) loadingIndicator.style.display = 'block';
-
-        // Define CSV headers
-        const headers = [
-            "Share Code", "Entry Date", "Entered Price", "Target Price",
-            "Dividend Amount", "Franking Credits (%)", "Unfranked Yield (%)",
-            "Franked Yield (%)", "Comments"
-        ];
-
-        // Map share data to CSV rows
-        const csvRows = allSharesData.map(share => {
-            const { unfrankedYield, frankedYield } = calculateYields(
-                parseFloat(share.enteredPrice),
-                parseFloat(share.dividendAmount),
-                parseFloat(share.frankingCredits)
-            );
-
-            // Flatten comments into a single string, handling multiple comments
-            const commentsString = share.comments && share.comments.length > 0
-                ? share.comments.map(c => `${c.title}: ${c.text}`).join('; ')
-                : '';
-
-            return [
-                `"${share.shareName.toUpperCase()}"`,
-                `"${formatDate(share.entryDate ? share.entryDate.seconds : null)}"`,
-                `"${share.enteredPrice || ''}"`,
-                `"${share.targetPrice || ''}"`,
-                `"${share.dividendAmount || ''}"`,
-                `"${share.frankingCredits || ''}"`,
-                `"${unfrankedYield || ''}"`,
-                `"${frankedYield || ''}"`,
-                `"${commentsString.replace(/"/g, '""')}"` // Escape double quotes for CSV
-            ].join(',');
-        });
-
-        // Combine headers and rows
-        const csvContent = [
-            headers.join(','),
-            ...csvRows
-        ].join('\n');
-
-        // Create a Blob and download it
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.setAttribute('href', url);
-        const fileName = currentWatchlistName === "All Shares" ? "all_shares_export.csv" : `${currentWatchlistName.toLowerCase().replace(/\s/g, '_')}_export.csv`;
-        link.setAttribute('download', fileName);
-        link.style.display = 'none';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-
-        showCustomDialog("Watchlist exported successfully!");
-
-    } catch (error) {
-        console.error("Error exporting watchlist:", error);
-        showCustomDialog("Error exporting watchlist. Please try again.");
-    } finally {
-        if (loadingIndicator) loadingIndicator.style.display = 'none';
-    }
-}
-
-
 // --- DOMContentLoaded and Firebase Availability Check ---
 document.addEventListener('DOMContentLoaded', async function() {
-    console.log("script.js (v155) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v156) DOMContentLoaded fired."); // Updated version number
 
     // Check if Firebase objects are available from index.html's module script
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestoreFunctions && window.authFunctions) {
@@ -2070,19 +2041,23 @@ document.addEventListener('DOMContentLoaded', async function() {
         onAuthStateChanged = window.authFunctions.onAuthStateChanged;
 
 
-        // Initial authentication check and setup
-        // This ensures the app logic initializes only after Firebase auth state is determined
-        // and prevents duplicate initialization if onAuthStateChanged fires multiple times.
-        if (!window._appLogicInitialized) {
-            // Attempt to sign in anonymously if no custom token is provided
-            // This is crucial for the very first load in the Canvas environment
+        // Set up the Auth State Observer FIRST, after all global Firebase vars are assigned.
+        if (auth && onAuthStateChanged) {
+            onAuthStateChanged(auth, handleAuthStateChanged);
+        } else {
+            console.error("Firebase Auth not available. Cannot set up auth state listener.");
+            handleAuthStateChanged(null); // Treat as logged out
+        }
+
+        // Attempt initial sign-in if not already authenticated (e.g., first load)
+        // This will trigger the onAuthStateChanged listener.
+        if (!auth.currentUser) { // Only attempt if no user is currently signed in
             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                 try {
                     await signInWithCustomToken(auth, __initial_auth_token);
                     console.log("[Auth] Signed in with custom token.");
                 } catch (error) {
                     console.error("[Auth] Error signing in with custom token:", error);
-                    // Fallback to anonymous if custom token fails
                     try {
                         await signInAnonymously(auth);
                         console.log("[Auth] Signed in anonymously as fallback.");
@@ -2100,9 +2075,12 @@ document.addEventListener('DOMContentLoaded', async function() {
                     showCustomDialog("Authentication failed. Please refresh the page.");
                 }
             }
-            // The onAuthStateChanged listener will then trigger handleAuthStateChanged
-            // once the auth state is confirmed.
-            initializeAppLogic(); // Call this directly after initial auth attempt
+        }
+        
+        // Initialize other app logic (event listeners for buttons, etc.)
+        // This should be called AFTER auth setup, but only once.
+        if (!window._appLogicInitialized) {
+            initializeAppLogic();
             window._appLogicInitialized = true;
         }
         
