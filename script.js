@@ -1,5 +1,10 @@
-// File Version: v157
-// Last Updated: 2025-07-03 (Firebase Variable Initialization Order & Detailed Logging)
+// File Version: v158
+// Last Updated: 2025-07-03 (IIFE Wrap for Global Scope Protection & Firebase Initialization Order Fix)
+
+// Wrap the entire script in an IIFE to create a private scope for its variables.
+// This prevents "Identifier 'autoDismissTimeout' has already been declared" errors
+// if the script is somehow loaded multiple times in the global scope.
+(function() {
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -41,7 +46,7 @@ let currentAppId;
 let selectedShareDocId = null;
 let allSharesData = []; // This will now be kept in sync by the onSnapshot listener
 let currentDialogCallback = null;
-let autoDismissTimeout = null;
+let autoDismissTimeout = null; // This variable specifically caused the re-declaration error
 let lastTapTime = 0;
 let tapTimeout;
 let selectedElementForTap = null;
@@ -1762,7 +1767,7 @@ async function exportWatchlistToCSV() {
                 `"${share.enteredPrice || ''}"`,
                 `"${share.targetPrice || ''}"`,
                 `"${share.dividendAmount || ''}"`,
-                `"${share.frankingCredits || ''}"`,
+                `"${frankingCredits || ''}"`, // Use frankingCredits directly from the variable
                 `"${unfrankedYield || ''}"`,
                 `"${frankedYield || ''}"`,
                 `"${commentsString.replace(/"/g, '""')}"` // Escape double quotes for CSV
@@ -2051,7 +2056,7 @@ function initializeAppLogic() {
 
 // --- DOMContentLoaded and Firebase Availability Check ---
 document.addEventListener('DOMContentLoaded', async function() {
-    console.log("script.js (v157) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v158) DOMContentLoaded fired."); // Updated version number
 
     // Check if Firebase objects are available from index.html's module script
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestoreFunctions && window.authFunctions) {
@@ -2144,3 +2149,5 @@ document.addEventListener('DOMContentLoaded', async function() {
         applyTheme('system-default');
     }
 });
+
+})(); // End of IIFE
