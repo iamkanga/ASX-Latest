@@ -1,5 +1,5 @@
-// File Version: v167
-// Last Updated: 2025-07-03 (Updated version number for direct serverTimestamp import)
+// File Version: v168
+// Last Updated: 2025-07-03 (Ensure correct watchlist selection on load)
 
 // Wrap the entire script in an IIFE to create a private scope for its variables.
 // This prevents "Identifier 'autoDismissTimeout' has already been declared" errors
@@ -411,6 +411,22 @@ async function subscribeToWatchlists() {
         populateWatchlistSelects(); // Update all watchlist dropdowns
         updateMainTitle(); // Update main title to show current watchlist
         console.log("[Firestore] Watchlists updated:", userWatchlists);
+
+        // After watchlists are updated, ensure the correct shares are subscribed to
+        // This is crucial to trigger share loading after watchlists are ready.
+        if (currentSelectedWatchlistIds.length === 0 || !watchlistSelect.value || watchlistSelect.value === "ALL_SHARES_ID") {
+            // If no specific watchlist was selected or "All Shares" is the default,
+            // ensure the "All Shares" option is selected in the UI and trigger share subscription.
+            if (watchlistSelect) {
+                watchlistSelect.value = "ALL_SHARES_ID";
+            }
+            currentSelectedWatchlistIds = ["ALL_SHARES_ID"];
+            subscribeToShares();
+        } else {
+            // If a specific watchlist was already selected, re-subscribe to its shares
+            subscribeToShares();
+        }
+
     }, (error) => {
         console.error("Error listening to watchlists:", error);
         showCustomDialog("Error loading watchlists. Please try again later.");
@@ -513,6 +529,8 @@ async function subscribeToShares() {
 
     let q;
     const sharesCollectionRef = window.firestoreFunctions.collection(db, userPath, 'shares');
+
+    console.log("[Firestore Query] Current selected watchlist IDs for shares:", currentSelectedWatchlistIds); // Diagnostic log
 
     if (currentSelectedWatchlistIds.includes("ALL_SHARES_ID")) {
         // Query all shares for the user
@@ -1246,7 +1264,7 @@ function handleAuthStateChanged(user) {
         if (window.firestoreFunctions && typeof window.firestoreFunctions.serverTimestamp === 'function') {
             console.log("[Auth State] Firebase functions are available. Initiating subscriptions.");
             subscribeToWatchlists();
-            subscribeToShares();
+            // subscribeToShares() is now called within subscribeToWatchlists after watchlists are loaded
         } else {
             // This fallback should ideally not be hit if index.html and the DOMContentLoaded wait work correctly
             console.error("[Auth State] Firebase functions not available after auth state change. Subscriptions failed.");
@@ -2003,7 +2021,7 @@ function initializeAppLogic() {
 
 // --- DOMContentLoaded and Firebase Availability Check ---
 document.addEventListener('DOMContentLoaded', async function() {
-    console.log("script.js (v167) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v168) DOMContentLoaded fired."); // Updated version number
 
     // Assign global Firebase instances to local variables
     // These are expected to be set by index.html's module script
