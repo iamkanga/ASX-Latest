@@ -8,7 +8,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍆</text></svg>">
 
     <!-- Linking to your separate style.css file -->
-    <link rel="stylesheet" href="style.css?v=89">
+    <link rel="stylesheet" href="style.css?v=82"> <!-- Updated to v82 -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -56,19 +56,6 @@
             </div>
 
             <div class="menu-section">
-                <h3>Research</h3>
-                <div class="menu-buttons-group">
-                    <!-- New Search Input and Button -->
-                    <div class="sidebar-search-group">
-                        <input type="text" id="shareResearchInput" placeholder="Search Share Code" class="sidebar-input">
-                        <button id="shareResearchBtn" class="sidebar-search-btn">
-                            <i class="fas fa-search"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="menu-section">
                 <h3>Calculators</h3>
                 <div class="menu-buttons-group">
                     <!-- Standard Calculator - Icon with Text -->
@@ -93,11 +80,11 @@
             </div>
 
             <div class="menu-section">
-                <h3>Theme</h3>
+                <h3>Theme</h3> <!-- CHANGED: Title from "Theme Toggle" back to "Theme" -->
                 <div class="menu-buttons-group">
                     <!-- Theme Toggle Button - Icon with Text -->
                     <button id="themeToggleBtn" class="menu-button-item" data-action-closes-menu="false">
-                        <i class="fas fa-palette"></i> <span>Theme Toggle</span>
+                        <i class="fas fa-palette"></i> <span>Theme Toggle</span> <!-- CHANGED: Button text to "Theme Toggle" -->
                     </button>
                     
                     <!-- New Theme Selector Dropdown -->
@@ -212,7 +199,6 @@
     </main>
 
     <footer class="fixed-footer">
-        <span id="userIdDisplay" class="user-id-display">Not Signed In</span>
         <button id="googleAuthBtn" class="google-auth-btn">Sign In</button>
     </footer>
 
@@ -358,7 +344,7 @@
             </div>
             <div class="calc-input-group">
                 <label for="frankingCredits">Franking Credits (%):</label>
-                <input type="number" id="frankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 70 for 70%">
+                <input type="number" id="calcFrankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 70 for 70%">
             </div>
             <p><strong>Unfranked Yield:</strong> <span id="calcUnfrankedYield">-</span></p>
             <p><strong>Franked Yield:</strong> <span id="calcFrankedYield">-</span></p>
@@ -419,83 +405,6 @@
         </div>
     </div>
 
-    <!-- Share Research Modal (NEW) -->
-    <div id="shareResearchModal" class="modal">
-        <div class="modal-content share-research-modal-content">
-            <span class="close-button research-close-button">&times;</span>
-            <h2 id="researchModalTitle">Share Research: <span id="researchShareCodeDisplay"></span></h2>
-            
-            <div class="modal-body-scrollable">
-                <!-- External Links Section -->
-                <div class="external-links-section">
-                    <h3>External Links</h3>
-                    <p><a id="researchNewsLink" href="#" target="_blank" class="external-link"><i class="fas fa-external-link-alt"></i> View News</a></p>
-                    <p><a id="researchMarketIndexLink" href="#" target="_blank" class="external-link"><i class="fas fa-external-link-alt"></i> View on MarketIndex.com.au</a></p>
-                    <p><a id="researchFoolLink" href="#" target="_blank" class="external-link"><i class="fas fa-external-link-alt"></i> View on Fool.com.au</a></p>
-                    <p><a id="researchCommSecLink" href="#" target="_blank" class="external-link"><i class="fas fa-external-link-alt"></i> View on CommSec.com.au</a></p>
-                    <p id="researchCommSecLoginMessage" class="ghosted-text commsec-message">Requires single CommSec login per session</p>
-                </div>
-
-                <!-- Dividend Calculator Section (reused/adapted) -->
-                <div class="dividend-calculator-section">
-                    <h3>Dividend Calculator</h3>
-                    <div class="calc-input-group">
-                        <label for="researchCalcCurrentPrice">Share Price ($):</label>
-                        <input type="number" id="researchCalcCurrentPrice" step="0.01" placeholder="e.g., 25.50">
-                    </div>
-                    <div class="calc-input-group">
-                        <label for="researchCalcDividendAmount">Dividend Amount (per share, annual $):</label>
-                        <input type="number" id="researchCalcDividendAmount" step="0.001" placeholder="e.g., 1.250">
-                    </div>
-                    <div class="calc-input-group">
-                        <label for="researchFrankingCredits">Franking Credits (%):</label>
-                        <input type="number" id="researchFrankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 70 for 70%">
-                    </div>
-                    <p><strong>Unfranked Yield:</strong> <span id="researchCalcUnfrankedYield">-</span></p>
-                    <p><strong>Franked Yield:</strong> <span id="researchCalcFrankedYield">-</span></p>
-                    <hr>
-                    <div class="calc-input-group">
-                        <label for="researchInvestmentValueSelect">Investment Value:</label>
-                        <select id="researchInvestmentValueSelect">
-                            <option value="1000">$1,000</option>
-                            <option value="5000">$5,000</option>
-                            <option value="10000" selected>$10,000</option>
-                            <option value="25000">$25,000</option>
-                            <option value="50000">$50,000</option>
-                            <option value="100000">$100,000</option>
-                        </select>
-                    </div>
-                    <p><strong>Estimated Annual Dividend:</strong> <span id="researchCalcEstimatedDividend">-</span></p>
-                </div>
-
-                <!-- Save to Watchlist Section -->
-                <div class="save-to-watchlist-section">
-                    <h3>Save to Watchlist</h3>
-                    <div class="calc-input-group">
-                        <label for="researchWatchlistSelect">Select Watchlist:</label>
-                        <select id="researchWatchlistSelect" class="dropdown-large">
-                            <!-- Watchlist options will be populated by JS -->
-                        </select>
-                    </div>
-                    <div class="calc-input-group">
-                        <label for="researchTargetPrice">Target Price ($):</label>
-                        <input type="number" id="researchTargetPrice" step="0.01" placeholder="Optional Target Price">
-                    </div>
-                    <div class="calc-input-group">
-                        <label for="researchComments">Comments:</label>
-                        <textarea id="researchComments" placeholder="Add research notes here..."></textarea>
-                    </div>
-                </div>
-            </div>
-
-            <div class="form-action-buttons modal-form-buttons sticky-footer">
-                <span id="cancelResearchBtn" class="modal-action-icon secondary" title="Cancel"><i class="fas fa-times-circle"></i></span>
-                <span id="saveResearchShareBtn" class="modal-action-icon" title="Save to Watchlist"><i class="fas fa-save"></i></span>
-            </div>
-        </div>
-    </div>
-
-
     <!-- Custom Dialog Modal for Alerts/Confirms -->
     <div id="customDialogModal" class="modal">
         <div class="modal-content">
@@ -517,10 +426,9 @@
 
     <!-- Firebase and main script loading -->
     <script type="module">
-        // Import FieldValue as a named import, and serverTimestamp directly
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, query, where, getDocs, FieldValue, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; 
+        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, FieldValue, deleteField, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; // Added writeBatch
 
         // YOUR FIREBASE CONFIGURATION - THIS HAS BEEN INSERTED BASED ON YOUR PROVIDED DETAILS
         const firebaseConfig = {
@@ -537,18 +445,15 @@
         const currentAppId = firebaseConfig.projectId || 'default-app-id';
 
         let firebaseApp;
-        let authInstance; 
-        let dbInstance;   
+        let auth;
+        let db;
         let firebaseInitialized = false;
-
-        // NEW: Global flag to indicate when Firebase objects are fully ready on window
-        window.firebaseGlobalsReady = false;
 
         if (firebaseConfig && firebaseConfig.apiKey && firebaseConfig.projectId) {
             try {
                 firebaseApp = initializeApp(firebaseConfig);
-                authInstance = getAuth(firebaseApp);
-                dbInstance = getFirestore(firebaseApp);
+                auth = getAuth(firebaseApp);
+                db = getFirestore(firebaseApp);
                 firebaseInitialized = true;
                 console.log("Firebase: Initialized successfully with config.");
             } catch (error) {
@@ -564,14 +469,10 @@
             firebaseInitialized = false;
         }
 
-        // Expose the actual db and auth instances globally
-        window.firestoreDb = firebaseInitialized ? dbInstance : null;
-        window.firebaseAuth = firebaseInitialized ? authInstance : null;
+        window.firestoreDb = firebaseInitialized ? db : null;
+        window.firebaseAuth = firebaseInitialized ? auth : null;
         window.getFirebaseAppId = () => currentAppId;
-
-        // Expose all necessary Firestore functions directly as global properties
-        // This is a more direct way to make them available to script.js
-        window.firestoreFunctions = firebaseInitialized ? {
+        window.firestore = firebaseInitialized ? {
             collection: collection,
             doc: doc,
             getDoc: getDoc,
@@ -583,13 +484,10 @@
             query: query,
             where: where,
             getDocs: getDocs,
-            // Use the directly imported serverTimestamp
-            serverTimestamp: serverTimestamp, 
-            deleteField: FieldValue.delete, 
+            deleteField: FieldValue.delete,
             writeBatch: writeBatch
         } : null;
         
-        // Expose Auth-related functions
         window.authFunctions = firebaseInitialized ? {
             GoogleAuthProviderInstance: new GoogleAuthProvider(),
             signInAnonymously: signInAnonymously,
@@ -599,18 +497,11 @@
             onAuthStateChanged: onAuthStateChanged
         } : null;
 
-        // Set the flag ONLY after all window assignments are made
-        if (firebaseInitialized) {
-            window.firebaseGlobalsReady = true;
-            console.log("index.html: window.firebaseGlobalsReady set to true.");
-            console.log("index.html: typeof window.firestoreFunctions.serverTimestamp at init:", typeof window.firestoreFunctions.serverTimestamp);
-        }
-
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log("index.html (v98) script module loaded and DOMContentLoaded fired."); // Updated version number
+            console.log("index.html (v82) script module loaded and DOMContentLoaded fired."); // Updated version number
         }); 
     </script>
     <!-- Linking to your separate script.js file -->
-    <script src="script.js?v=168"></script> <!-- Updated to v168 -->
+    <script src="script.js?v=150"></script> <!-- Updated to v150 -->
 </body>
 </html>
