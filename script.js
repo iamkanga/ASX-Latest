@@ -1,5 +1,5 @@
-// File Version: v152
-// Last Updated: 2025-07-03 (Basic Share Research Logging - Fixed Syntax Error)
+// File Version: v153
+// Last Updated: 2025-07-03 (Basic Share Research Logging & Version Sync)
 
 // Wrap the entire script in an IIFE to create a private scope for its variables.
 // This prevents "Identifier 'autoDismissTimeout' has already been declared" errors
@@ -1719,7 +1719,7 @@ function initializeAppLogic() {
         if (calcDividendAmountInput) calcDividendAmountInput.value = '';
         // Note: calcFrankingCreditsInput is shared, ensure correct one is targeted if there are multiple
         // For standalone dividend calculator, we should use the one inside that modal if it had its own.
-        const dividendModalFrankingInput = document.querySelector('#dividendCalculatorModal #calcFrankingCredits');
+        const dividendModalFrankingInput = document.querySelector('#dividendCalculatorModal #frankingCredits'); // Corrected ID usage
         if (dividendModalFrankingInput) dividendModalFrankingInput.value = ''; 
 
         if (calcUnfrankedYieldSpan) calcUnfrankedYieldSpan.textContent = '-';
@@ -1730,7 +1730,7 @@ function initializeAppLogic() {
     });
     // Event listeners for dividend calculator inputs
     // Ensure elements exist before adding listeners
-    const dividendModalFrankingInput = document.querySelector('#dividendCalculatorModal #calcFrankingCredits'); // Get the specific input for this modal
+    const dividendModalFrankingInput = document.querySelector('#dividendCalculatorModal #frankingCredits'); // Corrected ID usage
     const dividendCalcInputs = [calcCurrentPriceInput, calcDividendAmountInput, dividendModalFrankingInput, investmentValueSelect];
     dividendCalcInputs.forEach(input => {
         if (input) {
@@ -1806,7 +1806,7 @@ function initializeAppLogic() {
 
 // --- DOMContentLoaded and Firebase Availability Check ---
 document.addEventListener('DOMContentLoaded', async function() {
-    console.log("script.js (v152) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v153) DOMContentLoaded fired."); // Updated version number
 
     // Assign global Firebase instances to local variables
     // These are expected to be set by index.html's module script
