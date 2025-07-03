@@ -1,5 +1,5 @@
-/* File Version: v84 */
-/* Last Updated: 2025-07-03 (Added Share Research Styles) */
+/* File Version: v83 */
+/* Last Updated: 2025-07-03 (Added Share Research Input Styles) */
 
 :root {
     /* Light Theme (Default) */
@@ -86,7 +86,6 @@ body.dark-theme {
     --link-color: #3498db;
     --link-hover-color: #2980b9;
     --sidebar-bg: #34495e;
-    --sidebar-text: #ecf0f1;
     --sidebar-border: #4a627a;
     --menu-button-bg: transparent; /* Changed for standalone look */
     --menu-button-hover-bg: #4a627a; /* Lighter hover for standalone */
