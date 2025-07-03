@@ -1,8 +1,8 @@
-// File Version: v59
+// File Version: v61
 // Last Updated: 2025-07-03 (Updated precache for new file versions and improved cache busting)
 
 // Increment the cache name to force the browser to re-install this new service worker.
-const CACHE_NAME = 'asx-tracker-v59'; 
+const CACHE_NAME = 'asx-tracker-v61'; 
 
 // Precache all essential application assets, including local files.
 const CACHED_ASSETS = [
@@ -18,28 +18,28 @@ const CACHED_ASSETS = [
 ];
 
 self.addEventListener('install', (event) => {
-    console.log('Service Worker v59: Installing...'); // Updated log for version
+    console.log('Service Worker v61: Installing...'); // Updated log for version
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then((cache) => {
-                console.log('Service Worker v59: Cache opened'); // Updated log
+                console.log('Service Worker v61: Cache opened'); // Updated log
                 return cache.addAll(CACHED_ASSETS);
             })
             .then(() => self.skipWaiting()) // Activate new service worker immediately
             .catch((error) => {
-                console.error('Service Worker v59: Cache addAll failed:', error); // Updated log
+                console.error('Service Worker v61: Cache addAll failed:', error); // Updated log
             })
     );
 });
 
 self.addEventListener('activate', (event) => {
-    console.log('Service Worker v59: Activating...'); // Updated log for version
+    console.log('Service Worker v61: Activating...'); // Updated log for version
     event.waitUntil(
         caches.keys().then((cacheNames) => {
             return Promise.all(
                 cacheNames.map((cacheName) => {
                     if (cacheName !== CACHE_NAME) {
-                        console.log('Service Worker v59: Deleting old cache:', cacheName); // Updated log
+                        console.log('Service Worker v61: Deleting old cache:', cacheName); // Updated log
                         return caches.delete(cacheName);
                     }
                     return null;
@@ -56,12 +56,12 @@ self.addEventListener('fetch', (event) => {
             caches.match(event.request).then(cachedResponse => {
                 // If a cached response is found, return it
                 if (cachedResponse) {
-                    // console.log(`Service Worker v59: Serving from cache: ${event.request.url}`); // Updated log
+                    // console.log(`Service Worker v61: Serving from cache: ${event.request.url}`); // Updated log
                     return cachedResponse;
                 }
 
                 // Otherwise, fetch from the network
-                // console.log(`Service Worker v59: Fetching from network: ${event.request.url}`); // Updated log
+                // console.log(`Service Worker v61: Fetching from network: ${event.request.url}`); // Updated log
                 const fetchPromise = fetch(event.request).then(networkResponse => {
                     // Check if we received a valid response
                     if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
@@ -75,7 +75,7 @@ self.addEventListener('fetch', (event) => {
                     }
                     return networkResponse;
                 }).catch(error => {
-                    console.error(`Service Worker v59: Network fetch failed for ${event.request.url}.`, error); // Updated log
+                    console.error(`Service Worker v61: Network fetch failed for ${event.request.url}.`, error); // Updated log
                     // If network fails, try to return a cached response as a fallback
                     return caches.match(event.request); // Try to get from cache again if network failed
                 });
@@ -84,7 +84,7 @@ self.addEventListener('fetch', (event) => {
                 return cachedResponse || fetchPromise;
 
             }).catch(error => {
-                console.error(`Service Worker v59: Cache match failed for ${event.request.url}.`, error); // Updated log
+                console.error(`Service Worker v61: Cache match failed for ${event.request.url}.`, error); // Updated log
                 // Fallback in case both cache match and network fetch fail
                 return fetch(event.request); // Try network one more time if cache fails
             })
@@ -99,6 +99,6 @@ self.addEventListener('fetch', (event) => {
 self.addEventListener('message', (event) => {
     if (event.data && event.data.type === 'SKIP_WAITING') {
         self.skipWaiting();
-        console.log('Service Worker v59: Skip waiting message received, new SW activated.'); // Updated log
+        console.log('Service Worker v61: Skip waiting message received, new SW activated.'); // Updated log
     }
 });

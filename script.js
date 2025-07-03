@@ -1,5 +1,5 @@
-// File Version: v162
-// Last Updated: 2025-07-03 (Waiting for Firebase Globals Ready Flag)
+// File Version: v164
+// Last Updated: 2025-07-03 (Corrected Waiting for Firebase Globals Flag)
 
 // Wrap the entire script in an IIFE to create a private scope for its variables.
 // This prevents "Identifier 'autoDismissTimeout' has already been declared" errors
@@ -383,7 +383,6 @@ async function subscribeToWatchlists() {
     }
 
     const userPath = getUserDataPath();
-    // Detailed check for missing Firebase objects/functions
     // Now directly accessing window.firestoreFunctions
     if (!userPath || !db || !window.firestoreFunctions || !window.firestoreFunctions.collection || !window.firestoreFunctions.doc || !window.firestoreFunctions.setDoc || !window.firestoreFunctions.onSnapshot || !window.firestoreFunctions.serverTimestamp) {
         console.warn("Watchlists subscription skipped: Firestore functions not fully available.");
@@ -1240,24 +1239,16 @@ function handleAuthStateChanged(user) {
         updateMainButtonsState(true);
         if (mainTitle) mainTitle.textContent = "Loading Watchlists...";
         
-        // Use a loop with requestAnimationFrame to wait for window.firebaseGlobalsReady
-        let attempts = 0;
-        const maxAttempts = 20; // Max 20 frames, approx 333ms at 60fps
-        const waitForFirebaseGlobals = () => {
-            if (window.firebaseGlobalsReady && window.firestoreFunctions && window.firestoreFunctions.serverTimestamp) {
-                console.log("[Auth State] window.firebaseGlobalsReady is TRUE. Initiating subscriptions.");
-                console.log("[Auth State] window.firestoreFunctions.serverTimestamp is:", window.firestoreFunctions.serverTimestamp); // Log its state
-                subscribeToWatchlists();
-                subscribeToShares();
-            } else if (attempts < maxAttempts) {
-                attempts++;
-                requestAnimationFrame(waitForFirebaseGlobals);
-            } else {
-                console.error("[Auth State] Max attempts reached. window.firebaseGlobalsReady or serverTimestamp NOT available. Subscriptions failed.");
-                showCustomDialog("Error: Failed to load data. Please refresh the page.");
-            }
-        };
-        requestAnimationFrame(waitForFirebaseGlobals);
+        // Directly call subscriptions here. The outer DOMContentLoaded wait ensures Firebase is ready.
+        if (window.firestoreFunctions && window.firestoreFunctions.serverTimestamp) {
+            console.log("[Auth State] window.firestoreFunctions.serverTimestamp is:", window.firestoreFunctions.serverTimestamp); // Log its state
+            subscribeToWatchlists();
+            subscribeToShares();
+        } else {
+            // This fallback should ideally not be hit if index.html and the DOMContentLoaded wait work correctly
+            console.error("[Auth State] Firebase functions not available after auth state change. Subscriptions failed.");
+            showCustomDialog("Error: Failed to load data. Please refresh the page.");
+        }
         
         populateThemeSelect(); // Load and apply theme
         console.log("Auth State: User signed in:", user.uid);
@@ -2009,7 +2000,7 @@ function initializeAppLogic() {
 
 // --- DOMContentLoaded and Firebase Availability Check ---
 document.addEventListener('DOMContentLoaded', async function() {
-    console.log("script.js (v162) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v164) DOMContentLoaded fired."); // Updated version number
 
     // Assign global Firebase instances to local variables
     // These are expected to be set by index.html's module script
@@ -2032,6 +2023,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             }
 
             // Attempt initial sign-in if not already authenticated (e.g., first load)
+            // This will trigger the onAuthStateChanged listener.
+            // We only attempt this if there's no current user, to avoid redundant sign-ins.
             if (!auth.currentUser) { 
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     window.authFunctions.signInWithCustomToken(auth, __initial_auth_token)
