@@ -1,4 +1,4 @@
-// File Version: v159
+// File Version: v160
 // Last Updated: 2025-07-03 (IIFE Wrap, Firebase Ready Flag & Deferred Subscriptions)
 
 // Wrap the entire script in an IIFE to create a private scope for its variables.
@@ -1311,24 +1311,19 @@ function handleAuthStateChanged(user) {
         updateMainButtonsState(true);
         if (mainTitle) mainTitle.textContent = "Loading Watchlists...";
         
-        // Only subscribe if Firebase functions are ready
-        if (firebaseFunctionsReady) {
-            subscribeToWatchlists();
-            subscribeToShares();
-        } else {
-            // If not ready, wait a bit and try again (simple retry mechanism)
-            // This is a fallback for extremely fast auth state changes before DOMContentLoaded finishes
-            console.warn("Firebase functions not yet ready, deferring subscriptions.");
-            setTimeout(() => {
-                if (firebaseFunctionsReady) {
-                    subscribeToWatchlists();
-                    subscribeToShares();
-                } else {
-                    console.error("Firebase functions still not ready after deferral. Subscriptions failed.");
-                    showCustomDialog("Error: Failed to load data. Please refresh the page.");
-                }
-            }, 100); // Wait 100ms
-        }
+        // Defer subscriptions slightly to ensure all Firebase functions are fully assigned
+        // This helps prevent race conditions where onAuthStateChanged fires too quickly.
+        requestAnimationFrame(() => {
+            if (firebaseFunctionsReady) {
+                console.log("[Auth State] Firebase functions ready. Initiating subscriptions.");
+                console.log("[Auth State] serverTimestamp is:", serverTimestamp); // Log its state
+                subscribeToWatchlists();
+                subscribeToShares();
+            } else {
+                console.error("[Auth State] Firebase functions NOT ready after requestAnimationFrame. Subscriptions failed.");
+                showCustomDialog("Error: Failed to load data. Please refresh the page.");
+            }
+        });
         
         populateThemeSelect(); // Load and apply theme
         console.log("Auth State: User signed in:", user.uid);
@@ -2080,7 +2075,7 @@ function initializeAppLogic() {
 
 // --- DOMContentLoaded and Firebase Availability Check ---
 document.addEventListener('DOMContentLoaded', async function() {
-    console.log("script.js (v159) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v160) DOMContentLoaded fired."); // Updated version number
 
     // Check if Firebase objects are available from index.html's module script
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestoreFunctions && window.authFunctions) {
