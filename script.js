@@ -1,20 +1,20 @@
-// File Version: v158
-// Last Updated: 2025-07-05 (Custom Dialog Close Button Fix)
+// File Version: v159
+// Last Updated: 2025-07-05 (Complete File)
 
 // --- AGGRESSIVE IDEMPOTENCY CHECK ---
 // This prevents the script from running its main logic more than once,
 // which can happen due to aggressive caching or environment quirks.
 if (window._scriptInitializedOnce) {
-    console.warn("script.js (v158): Script already initialized. Skipping re-execution.");
+    console.warn("script.js (v159): Script already initialized. Skipping re-execution.");
     throw new Error("Script already initialized."); // Throw an error to stop execution forcefully
 }
 window._scriptInitializedOnce = true;
-console.log("script.js (v158) loaded and starting initialization.");
+console.log("script.js (v159) loaded and starting initialization.");
 
 
 // --- SERVICE WORKER REGISTRATION (Moved to top-level for immediate registration) ---
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/service-worker.js?v=49') // UPDATED: Service Worker version to v49
+    navigator.serviceWorker.register('/service-worker.js?v=50') // UPDATED: Service Worker version to v50
         .then(registration => {
             console.log('Service Worker registered! Scope:', registration.scope);
             registration.addEventListener('updatefound', () => {
@@ -1761,7 +1761,7 @@ function handleEditWatchlistClick() {
  */
 async function handleSaveWatchlistName() {
     // Re-get elements here as they are used globally
-    const saveWatchlistNameBtn = document.getElementById('saveWatchlistNameBtn');
+    const saveWatchlistNameBtn = document.getElementById('saveWatchlistName');
     const editWatchlistNameInput = document.getElementById('editWatchlistName');
 
     const watchlistId = saveWatchlistNameBtn ? saveWatchlistNameBtn.dataset.watchlistId : null;
