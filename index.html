@@ -506,15 +506,16 @@
         console.log("index.html: window.firebaseGlobalsReady set to", window.firebaseGlobalsReady);
         console.log("index.html: typeof window.firestoreFunctions.serverTimestamp at init:", typeof window.firestoreFunctions.serverTimestamp);
 
-        // Dispatch a custom event when Firebase globals are ready and DOM is loaded
+        // Dispatch a custom event when Firebase globals are ready and DOM is loaded.
+        // This ensures script.js starts only when everything is ready.
         document.addEventListener('DOMContentLoaded', () => {
             if (firebaseInitialized) {
                 document.dispatchEvent(new CustomEvent('firebaseGlobalsAndDOMReady'));
             }
-            console.log("index.html (v91) script module loaded and DOMContentLoaded fired."); // Updated version number
+            console.log("index.html (v93) script module loaded and DOMContentLoaded fired."); // Updated version number
         }); 
     </script>
     <!-- Linking to your separate script.js file -->
-    <script src="script.js?v=157" type="module"></script> <!-- MODIFIED: Updated to v156 -->
+    <script src="script.js?v=158" type="module"></script> <!-- UPDATED: script.js version to v158 -->
 </body>
 </html>

@@ -1,20 +1,20 @@
-// File Version: v157
-// Last Updated: 2025-07-05 (Robust DOM Element Initialization)
+// File Version: v158
+// Last Updated: 2025-07-05 (Custom Dialog Close Button Fix)
 
 // --- AGGRESSIVE IDEMPOTENCY CHECK ---
 // This prevents the script from running its main logic more than once,
 // which can happen due to aggressive caching or environment quirks.
 if (window._scriptInitializedOnce) {
-    console.warn("script.js (v157): Script already initialized. Skipping re-execution.");
+    console.warn("script.js (v158): Script already initialized. Skipping re-execution.");
     throw new Error("Script already initialized."); // Throw an error to stop execution forcefully
 }
 window._scriptInitializedOnce = true;
-console.log("script.js (v157) loaded and starting initialization.");
+console.log("script.js (v158) loaded and starting initialization.");
 
 
 // --- SERVICE WORKER REGISTRATION (Moved to top-level for immediate registration) ---
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/service-worker.js?v=48') // UPDATED: Service Worker version
+    navigator.serviceWorker.register('/service-worker.js?v=49') // UPDATED: Service Worker version to v49
         .then(registration => {
             console.log('Service Worker registered! Scope:', registration.scope);
             registration.addEventListener('updatefound', () => {
@@ -1418,7 +1418,7 @@ async function saveShare(docId, shareData) {
  * @param {string} docId - The ID of the document to delete.
  */
 async function deleteShare(docId) {
-    // Re-get elements here as they are used globally
+    // Re-get element here as it's used globally
     const loadingIndicator = document.getElementById('loadingIndicator');
     const shareFormModal = document.getElementById('shareFormSection');
     const shareDetailModal = document.getElementById('shareDetailModal');
@@ -1458,7 +1458,7 @@ async function deleteShare(docId) {
  * @param {string} watchlistName - The name of the new watchlist.
  */
 async function addWatchlist(watchlistName) {
-    // Re-get elements here as they are used globally
+    // Re-get element here as it's used globally
     const loadingIndicator = document.getElementById('loadingIndicator');
     const addWatchlistModal = document.getElementById('addWatchlistModal');
     const newWatchlistNameInput = document.getElementById('newWatchlistName');
@@ -2187,9 +2187,7 @@ function initializeAppLogic() {
         { element: calcDividendAmountInput, event: 'input', handler: updateDividendCalculatorResults, name: 'calcDividendAmountInput' },
         { element: calcFrankingCreditsInput, event: 'input', handler: updateDividendCalculatorResults, name: 'calcFrankingCreditsInput' },
         { element: investmentValueSelect, event: 'change', handler: updateDividendCalculatorResults, name: 'investmentValueSelect' },
-        { element: customDialogModal?.querySelector('.close-button'), event: 'click', handler: () => {
-            if (currentDialogCallback) { currentDialogCallback({ target: { id: 'customDialogCancelBtn' } }); }
-        }, name: 'customDialogModalCloseBtn' },
+        // Removed customDialogModalCloseBtn as it does not exist in HTML for this modal.
         { element: addWatchlistBtn, event: 'click', handler: handleAddWatchlistClick, name: 'addWatchlistBtn' },
         { element: addWatchlistModal?.querySelector('.close-button'), event: 'click', handler: () => closeModal(addWatchlistModal), name: 'addWatchlistModalCloseBtn' },
         { element: saveWatchlistBtn, event: 'click', handler: handleSaveNewWatchlist, name: 'saveWatchlistBtn' },
