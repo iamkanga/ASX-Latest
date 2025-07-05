@@ -1248,7 +1248,6 @@ function renderFilteredShares(sharesToRender) {
     }
 }
 
-
 /**
  * Clears all rows from the share table body and mobile cards.
  */
@@ -1264,669 +1263,406 @@ function clearWatchlistUI() {
     document.querySelectorAll('.selected').forEach(el => el.classList.remove('selected'));
 }
 
-
-// --- MODAL & DIALOG FUNCTIONS ---
-
 /**
- * Opens a given modal element.
- * @param {HTMLElement} modalElement - The modal DOM element to open.
+ * Populates the share form modal with data for editing, or clears it for a new share.
+ * @param {Object|null} share - The share object to edit, or null for a new share.
  */
-function openModal(modalElement) {
-    if (modalElement) {
-        modalElement.style.display = 'flex'; // Use flex to center
-        // Add a class to the body to prevent scrolling
-        document.body.style.overflow = 'hidden';
-        console.log(`[Modal] Opened: ${modalElement.id}`);
-    }
-}
+function populateShareForm(share = null) {
+    // Assign DOM elements inside this function as well, as a fallback/safety,
+    // though they should be assigned in initializeAppLogic.
+    const shareFormTitle = document.getElementById('formTitle');
+    const shareNameInput = document.getElementById('shareName');
+    const currentPriceInput = document.getElementById('currentPrice');
+    const targetPriceInput = document.getElementById('targetPrice');
+    const dividendAmountInput = document.getElementById('dividendAmount');
+    const frankingCreditsInput = document.getElementById('frankingCredits');
+    const commentsFormContainer = document.getElementById('commentsFormContainer');
+    const deleteShareBtn = document.getElementById('deleteShareBtn');
 
-/**
- * Closes a given modal element.
- * @param {HTMLElement} modalElement - The modal DOM element to close.
- */
-function closeModal(modalElement) {
-    if (modalElement) {
-        modalElement.style.display = 'none';
-        // Remove the class from the body to re-enable scrolling
-        document.body.style.overflow = '';
-        console.log(`[Modal] Closed: ${modalElement.id}`);
-        // Clear selected share ID if the share detail/form modal is closed
-        if (modalElement === shareDetailModal || modalElement === shareFormModal) {
-            selectedShareDocId = null;
-            clearWatchlistUI(); // Clear any highlighted rows/cards
-        }
-    }
-}
-
-/**
- * Displays a custom dialog message to the user.
- * @param {string} message - The message to display.
- * @param {string} type - 'Success', 'Error', 'Confirm', 'Info'. Affects behavior (auto-dismiss, buttons).
- * @param {number|null} [autoDismissTime=null] - Time in ms to auto-dismiss for 'Success'/'Info'.
- * @returns {Promise<boolean>} - Resolves with true for 'Confirm' if confirmed, false if cancelled.
- */
-function showCustomDialog(message, type = 'Info', autoDismissTime = null, isError = false) {
-    return new Promise((resolve) => {
-        if (!customDialogModal || !customDialogMessage || !customDialogConfirmBtn || !customDialogCancelBtn) {
-            console.error("[Dialog] Custom dialog elements not found. Falling back to alert/confirm.");
-            if (type === 'Confirm') {
-                resolve(confirm(message));
-            } else {
-                alert(message);
-                resolve(false); // For non-confirm, just resolve false
-            }
-            return;
-        }
-
-        customDialogMessage.textContent = message;
-
-        // Clear any previous auto-dismiss timeout
-        if (autoDismissTimeout) {
-            clearTimeout(autoDismissTimeout);
-            autoDismissTimeout = null;
-        }
-
-        // Reset button visibility and event listeners
-        customDialogConfirmBtn.style.display = 'inline-flex'; // Always show confirm for now
-        customDialogCancelBtn.style.display = 'inline-flex'; // Always show cancel for now
-        customDialogConfirmBtn.classList.remove('hidden');
-        customDialogCancelBtn.classList.remove('hidden');
-
-        customDialogConfirmBtn.removeEventListener('click', currentDialogCallback);
-        customDialogCancelBtn.removeEventListener('click', currentDialogCallback);
-
-        // Define callback based on type
-        if (type === 'Confirm') {
-            currentDialogCallback = (event) => {
-                closeModal(customDialogModal);
-                resolve(event.target.id === 'customDialogConfirmBtn');
-            };
-            customDialogConfirmBtn.addEventListener('click', currentDialogCallback);
-            customDialogCancelBtn.addEventListener('click', currentDialogCallback);
-        } else {
-            // For 'Success', 'Error', 'Info'
-            customDialogCancelBtn.classList.add('hidden'); // Hide cancel button
-            if (type === 'Success' || !isError) { // Auto-dismiss for success and non-error info
-                customDialogConfirmBtn.classList.remove('danger'); // Ensure not red
-                currentDialogCallback = () => {
-                    closeModal(customDialogModal);
-                    resolve(true); // Resolve true as it's an acknowledgement
-                };
-                customDialogConfirmBtn.addEventListener('click', currentDialogCallback);
-                if (autoDismissTime) {
-                    autoDismissTimeout = setTimeout(currentDialogCallback, autoDismissTime);
-                }
-            } else { // It's an 'Error'
-                customDialogConfirmBtn.classList.add('danger'); // Make button red for errors
-                currentDialogCallback = () => {
-                    closeModal(customDialogModal);
-                    resolve(false); // Resolve false for errors, indicating a problem
-                };
-                customDialogConfirmBtn.addEventListener('click', currentDialogCallback);
-            }
-        }
-        openModal(customDialogModal);
-    });
-}
-
-// --- UTILITY FUNCTIONS ---
-
-/**
- * Formats a number as currency (e.g., $25.50).
- * @param {number} value - The numeric value.
- * @returns {string} Formatted currency string.
- */
-function formatCurrency(value) {
-    const num = parseFloat(value);
-    if (isNaN(num)) return 'N/A';
-    return num.toLocaleString('en-AU', { style: 'currency', currency: 'AUD' });
-}
-
-/**
- * Formats a number as a percentage (e.g., 5.25%).
- * @param {number} value - The numeric value.
- * @returns {string} Formatted percentage string.
- */
-function formatPercentage(value) {
-    const num = parseFloat(value);
-    if (isNaN(num)) return 'N/A';
-    return (num * 100).toFixed(2) + '%';
-}
-
-/**
- * Formats a Firestore Timestamp object or Date object into a readable date string.
- * @param {Object} timestamp - Firestore Timestamp object or Date object.
- * @returns {string} Formatted date string.
- */
-function formatDate(timestamp) {
-    if (!timestamp) return 'N/A';
-    let date;
-    if (typeof timestamp.toDate === 'function') {
-        // It's a Firestore Timestamp
-        date = timestamp.toDate();
-    } else if (timestamp instanceof Date) {
-        // It's a JavaScript Date object
-        date = timestamp;
-    } else {
-        // Try to parse if it's a string or number (less reliable)
-        date = new Date(timestamp);
-    }
-
-    if (isNaN(date.getTime())) return 'Invalid Date'; // Check if date is valid
-
-    return date.toLocaleDateString('en-AU', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-    });
-}
-
-/**
- * Calculates the unfranked dividend yield.
- * @param {number} currentPrice - The current share price.
- * @param {number} dividendAmount - The annual dividend amount per share.
- * @returns {number} The unfranked yield as a decimal.
- */
-function calculateUnfrankedYield(currentPrice, dividendAmount) {
-    const price = parseFloat(currentPrice);
-    const dividend = parseFloat(dividendAmount);
-    if (isNaN(price) || isNaN(dividend) || price <= 0) return 0;
-    return (dividend / price);
-}
-
-/**
- * Calculates the franked dividend yield, considering franking credits.
- * @param {number} currentPrice - The current share price.
- * @param {number} dividendAmount - The annual dividend amount per share.
- * @param {number} frankingCredits - The percentage of franking credits (e.g., 70 for 70%).
- * @returns {number} The franked yield as a decimal.
- */
-function calculateFrankedYield(currentPrice, dividendAmount, frankingCredits) {
-    const unfranked = calculateUnfrankedYield(currentPrice, dividendAmount);
-    const franking = parseFloat(frankingCredits) / 100; // Convert percentage to decimal
-    if (isNaN(franking) || franking < 0 || franking > 1) return unfranked; // If invalid franking, return unfranked
-    const taxRate = 0.30; // Assuming 30% company tax rate for franking calculation
-    const grossedUpDividend = unfranked * (1 + (franking * (taxRate / (1 - taxRate))));
-    return grossedUpDividend;
-}
-
-/**
- * Escapes HTML characters in a string to prevent XSS.
- * @param {string} str - The string to escape.
- * @returns {string} The escaped string.
- */
-function escapeHTML(str) {
-    const div = document.createElement('div');
-    div.appendChild(document.createTextNode(str));
-    return div.innerHTML;
-}
-
-/**
- * Applies the selected theme to the body.
- * @param {string} themeName - The name of the theme (e.g., 'dark-theme', 'bold-1', 'system-default').
- */
-function applyTheme(themeName) {
-    const body = document.body;
-    // Remove all existing theme classes
-    body.className = ''; // Resets all classes
-    body.classList.add('system-default'); // Always start with system-default as a base
-
-    if (themeName === 'dark-theme') {
-        body.classList.add('dark-theme');
-        localStorage.setItem('theme', 'dark-theme');
-        if (themeToggleBtn) themeToggleBtn.querySelector('span').textContent = 'Light Theme';
-    } else if (themeName.startsWith('bold-') || themeName.startsWith('subtle-')) {
-        body.classList.add(themeName);
-        localStorage.setItem('theme', themeName);
-        if (themeToggleBtn) themeToggleBtn.querySelector('span').textContent = 'Toggle Theme'; // Generic text
-    } else {
-        // 'system-default' or any other invalid theme
-        localStorage.removeItem('theme'); // Clear stored theme
-        if (themeToggleBtn) themeToggleBtn.querySelector('span').textContent = 'Dark Theme';
-    }
-    console.log("[Theme] Applied theme:", themeName);
-    // Update the dropdown to reflect the current theme
-    if (colorThemeSelect) {
-        colorThemeSelect.value = themeName.replace('dark-theme', 'none'); // 'dark-theme' maps to 'none' in dropdown for simplicity
-    }
-}
-
-/**
- * Toggles between light and dark theme.
- */
-function toggleTheme() {
-    const currentTheme = localStorage.getItem('theme');
-    if (document.body.classList.contains('dark-theme')) {
-        applyTheme('system-default'); // Revert to system default (light)
-    } else {
-        applyTheme('dark-theme'); // Apply dark theme
-    }
-    // Reset dropdown to "No Custom Theme" if toggling light/dark via button
-    if (colorThemeSelect) {
-        colorThemeSelect.value = 'none';
-    }
-}
-
-/**
- * Exports the current shares data to a CSV file.
- */
-function exportSharesToCsv() {
-    if (allSharesData.length === 0) {
-        showCustomDialog("No shares to export.", "Info", 2000);
+    if (!shareFormTitle || !shareNameInput || !currentPriceInput || !targetPriceInput || !dividendAmountInput || !frankingCreditsInput || !commentsFormContainer || !deleteShareBtn) {
+        console.error("[UI] Share form elements not found in populateShareForm.");
         return;
     }
 
-    const headers = [
-        "Code", "Entered Price", "Target Price", "Dividend Amount",
-        "Franking Credits (%)", "Unfranked Yield (%)", "Franked Yield (%)",
-        "Entry Date", "Comments"
-    ];
+    selectedShareDocId = share ? share.id : null; // Set the global selected ID
 
-    const csvRows = [];
-    csvRows.push(headers.join(',')); // Add headers as the first row
-
-    allSharesData.forEach(share => {
-        const unfrankedYield = calculateUnfrankedYield(share.currentPrice, share.dividendAmount) * 100;
-        const frankedYield = calculateFrankedYield(share.currentPrice, share.dividendAmount, share.frankingCredits) * 100;
-
-        const commentsText = (share.comments || []).map(c => {
-            // Escape double quotes within title/text and wrap in double quotes
-            const title = (c.title || '').replace(/"/g, '""');
-            const text = (c.text || '').replace(/"/g, '""');
-            return `"${title}: ${text}"`;
-        }).join('; '); // Join multiple comments with a semicolon and space
-
-        const row = [
-            `"${(share.shareName || '').replace(/"/g, '""')}"`, // Escape quotes and wrap in quotes
-            share.currentPrice || '',
-            share.targetPrice || '',
-            share.dividendAmount || '',
-            share.frankingCredits || '',
-            unfrankedYield.toFixed(2),
-            frankedYield.toFixed(2),
-            share.entryDate ? formatDate(share.entryDate) : '',
-            `"${commentsText}"`
-        ];
-        csvRows.push(row.join(','));
-    });
-
-    const csvString = csvRows.join('\n');
-    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'share_watchlist.csv');
-    document.body.appendChild(link); // Required for Firefox
-    link.click();
-    document.body.removeChild(link); // Clean up
-    showCustomDialog("Watchlist exported to CSV!", "Success", 2000);
-    console.log("[Export] Shares exported to CSV.");
-}
-
-
-// --- EVENT HANDLERS ---
-
-/**
- * Handles clicks on a share row or mobile card to open the detail modal.
- * @param {string} shareId - The ID of the clicked share.
- */
-function handleShareRowClick(shareId) {
-    const share = allSharesData.find(s => s.id === shareId);
     if (share) {
-        displayShareDetails(share);
+        shareFormTitle.textContent = 'Edit Share';
+        shareNameInput.value = share.shareName || '';
+        currentPriceInput.value = share.currentPrice || '';
+        targetPriceInput.value = share.targetPrice || '';
+        dividendAmountInput.value = share.dividendAmount || '';
+        frankingCreditsInput.value = share.frankingCredits || '';
+        deleteShareBtn.classList.remove('hidden'); // Show delete button for existing shares
+        renderCommentsForm(share.comments || []); // Populate comments
     } else {
-        console.error("Share not found for ID:", shareId);
-        showCustomDialog("Share details not found.", "Error", null, true);
+        shareFormTitle.textContent = 'Add New Share';
+        shareNameInput.value = '';
+        currentPriceInput.value = '';
+        targetPriceInput.value = '';
+        dividendAmountInput.value = '';
+        frankingCreditsInput.value = '';
+        deleteShareBtn.classList.add('hidden'); // Hide delete button for new shares
+        renderCommentsForm([]); // Start with one empty comment section for new shares
     }
 }
 
 /**
- * Handles the click of the "Add Share" button in the header.
+ * Renders the comments section in the share form.
+ * @param {Array} comments - An array of comment objects {title, text}.
  */
-function handleAddShareHeaderClick() {
-    populateShareForm(null); // Open form for new share
-    openModal(shareFormModal);
-}
+function renderCommentsForm(comments) {
+    const commentsFormContainer = document.getElementById('commentsFormContainer');
+    const addCommentSectionBtn = document.getElementById('addCommentSectionBtn');
 
-/**
- * Handles the click of the "New Share" button in the sidebar.
- */
-function handleNewShareClick() {
-    populateShareForm(null); // Open form for new share
-    openModal(shareFormModal);
-}
-
-/**
- * Handles saving a share from the form.
- */
-async function handleSaveShare() {
-    const shareName = shareNameInput.value.trim();
-    const currentPrice = parseFloat(currentPriceInput.value);
-    const targetPrice = parseFloat(targetPriceInput.value);
-    const dividendAmount = parseFloat(dividendAmountInput.value);
-    const frankingCredits = parseFloat(frankingCreditsInput.value);
-    const comments = getCommentsFromForm();
-
-    if (!shareName) {
-        showCustomDialog("Share Code is required.", "Input Error", null, true);
+    if (!commentsFormContainer || !addCommentSectionBtn) {
+        console.error("[UI] Comments form container or add button not found in renderCommentsForm.");
         return;
     }
 
-    const shareData = {
-        shareName: shareName,
-        currentPrice: isNaN(currentPrice) ? null : currentPrice,
-        targetPrice: isNaN(targetPrice) ? null : targetPrice,
-        dividendAmount: isNaN(dividendAmount) ? null : dividendAmount,
-        frankingCredits: isNaN(frankingCredits) ? null : frankingCredits,
-        comments: comments,
-        // When editing, preserve existing watchlistIds. When adding, it will be handled by saveShare.
-        watchlistIds: selectedShareDocId ? allSharesData.find(s => s.id === selectedShareDocId)?.watchlistIds : []
-    };
+    commentsFormContainer.querySelectorAll('.comment-section').forEach(section => section.remove()); // Clear existing
+    const addCommentButton = commentsFormContainer.querySelector('#addCommentSectionBtn'); // Get the plus icon
+    if (addCommentButton) {
+        addCommentButton.closest('h3').insertAdjacentHTML('afterend', '<div id="commentsContainerPlaceholder"></div>'); // Insert a placeholder div
+    } else {
+        commentsFormContainer.innerHTML += '<div id="commentsContainerPlaceholder"></div>'; // Fallback if h3 not found
+    }
+    const placeholder = commentsFormContainer.querySelector('#commentsContainerPlaceholder');
 
-    await saveShare(selectedShareDocId, shareData);
+    if (comments.length === 0) {
+        comments.push({ title: '', text: '' }); // Add one empty comment section if none exist
+    }
+
+    comments.forEach((comment, index) => {
+        const commentSection = document.createElement('div');
+        commentSection.classList.add('comment-section');
+        commentSection.innerHTML = `
+            <div class="comment-section-header">
+                <input type="text" class="comment-title-input" placeholder="Comment Title" value="${escapeHTML(comment.title || '')}">
+                <span class="comment-delete-btn" data-index="${index}"><i class="fas fa-times-circle"></i></span>
+            </div>
+            <textarea class="comment-text-input" placeholder="Your comment...">${escapeHTML(comment.text || '')}</textarea>
+        `;
+        placeholder.appendChild(commentSection);
+    });
+
+    // Add event listeners for delete buttons
+    commentsFormContainer.querySelectorAll('.comment-delete-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const sectionToRemove = e.target.closest('.comment-section');
+            if (sectionToRemove) {
+                sectionToRemove.remove();
+            }
+        });
+    });
 }
 
 /**
- * Handles opening the add watchlist modal.
+ * Gathers comment data from the form.
+ * @returns {Array} An array of comment objects {title, text}.
  */
-function handleAddWatchlistClick() {
-    newWatchlistNameInput.value = ''; // Clear input
-    openModal(addWatchlistModal);
+function getCommentsFromForm() {
+    const commentsFormContainer = document.getElementById('commentsFormContainer');
+    if (!commentsFormContainer) {
+        console.error("[UI] Comments form container not found in getCommentsFromForm.");
+        return [];
+    }
+    const comments = [];
+    commentsFormContainer.querySelectorAll('.comment-section').forEach(section => {
+        const titleInput = section.querySelector('.comment-title-input');
+        const textInput = section.querySelector('.comment-text-input');
+        if (titleInput && textInput) {
+            const title = titleInput.value.trim();
+            const text = textInput.value.trim();
+            if (title || text) { // Only add if either title or text is present
+                comments.push({ title, text });
+            }
+        }
+    });
+    return comments;
 }
 
 /**
- * Handles saving a new watchlist.
+ * Displays share details in the modal.
+ * @param {Object} share - The share object to display.
  */
-async function handleSaveNewWatchlist() {
-    const watchlistName = newWatchlistNameInput.value.trim();
-    await addWatchlist(watchlistName);
-}
+function displayShareDetails(share) {
+    // Assign DOM elements here for safety, similar to populateShareForm
+    const modalShareName = document.getElementById('modalShareName');
+    const modalEntryDate = document.getElementById('modalEntryDate');
+    const modalEnteredPrice = document.getElementById('modalEnteredPrice');
+    const modalTargetPrice = document.getElementById('modalTargetPrice');
+    const modalDividendAmount = document.getElementById('modalDividendAmount');
+    const modalFrankingCredits = document.getElementById('modalFrankingCredits');
+    const modalUnfrankedYield = document.getElementById('modalUnfrankedYield');
+    const modalFrankedYield = document.getElementById('modalFrankedYield');
+    const modalMarketIndexLink = document.getElementById('modalMarketIndexLink');
+    const modalFoolLink = document.getElementById('modalFoolLink');
+    const modalCommSecLink = document.getElementById('modalCommSecLink');
+    const modalNewsLink = document.getElementById('modalNewsLink');
+    const modalCommentsContainer = document.getElementById('modalCommentsContainer');
 
-/**
- * Handles opening the manage watchlist modal for the currently selected watchlist.
- */
-function handleEditWatchlistClick() {
-    const selectedWatchlistId = watchlistSelect.value;
-    if (!selectedWatchlistId || selectedWatchlistId === ALL_SHARES_ID) {
-        showCustomDialog("Please select a specific watchlist to edit.", "Info", 2000);
+    if (!modalShareName || !modalEntryDate || !modalEnteredPrice || !modalTargetPrice || !modalDividendAmount || !modalFrankingCredits || !modalUnfrankedYield || !modalFrankedYield || !modalMarketIndexLink || !modalFoolLink || !modalCommSecLink || !modalNewsLink || !modalCommentsContainer) {
+        console.error("[UI] Share detail modal elements not found in displayShareDetails.");
         return;
     }
-    populateManageWatchlistModal(selectedWatchlistId);
+
+    selectedShareDocId = share.id; // Set the global selected ID
+
+    // Highlight the selected row/card
+    clearWatchlistUI();
+    const selectedRow = document.querySelector(`#shareTable tbody tr[data-share-id="${share.id}"]`);
+    if (selectedRow) selectedRow.classList.add('selected');
+    const selectedCard = document.querySelector(`#mobileShareCards .mobile-card[data-share-id="${share.id}"]`);
+    if (selectedCard) selectedCard.classList.add('selected');
+
+    modalShareName.textContent = share.shareName || 'N/A';
+    modalEntryDate.textContent = share.entryDate ? formatDate(share.entryDate) : 'N/A';
+    modalEnteredPrice.textContent = formatCurrency(share.currentPrice);
+    modalTargetPrice.textContent = formatCurrency(share.targetPrice);
+    modalDividendAmount.textContent = formatCurrency(share.dividendAmount);
+    modalFrankingCredits.textContent = formatPercentage(share.frankingCredits);
+
+    const unfrankedYield = calculateUnfrankedYield(share.currentPrice, share.dividendAmount);
+    const frankedYield = calculateFrankedYield(share.currentPrice, share.dividendAmount, share.frankingCredits);
+    modalUnfrankedYield.textContent = formatPercentage(unfrankedYield);
+    modalFrankedYield.textContent = formatPercentage(frankedYield);
+
+    // Set external links
+    const encodedShareName = encodeURIComponent(share.shareName);
+    modalNewsLink.href = `https://www.google.com/search?q=${encodedShareName}+ASX+news`;
+    modalMarketIndexLink.href = `https://www.marketindex.com.au/asx/${encodedShareName}`;
+    modalFoolLink.href = `https://www.fool.com.au/quote/${encodedShareName}`;
+    modalCommSecLink.href = `https://www.commsec.com.au/market-insights/company/${encodedShareName}`;
+
+    // Display comments
+    modalCommentsContainer.innerHTML = ''; // Clear previous comments
+    if (share.comments && share.comments.length > 0) {
+        share.comments.forEach(comment => {
+            const commentItem = document.createElement('div');
+            commentItem.classList.add('modal-comment-item');
+            commentItem.innerHTML = `
+                <strong>${escapeHTML(comment.title || 'No Title')}</strong>
+                <p>${escapeHTML(comment.text || 'No content.')}</p>
+            `;
+            modalCommentsContainer.appendChild(commentItem);
+        });
+    } else {
+        modalCommentsContainer.innerHTML = '<p class="ghosted-text">No comments for this share.</p>';
+    }
+
+    openModal(document.getElementById('shareDetailModal'));
 }
 
 /**
- * Handles saving changes to an existing watchlist name.
+ * Populates the dividend calculator modal with share data if available.
+ * @param {Object|null} share - The share object to pre-fill, or null to clear.
  */
-async function handleSaveWatchlistName() {
-    const watchlistId = saveWatchlistNameBtn.dataset.watchlistId;
-    const newName = editWatchlistNameInput.value.trim();
-    if (watchlistId) {
-        await updateWatchlistName(watchlistId, newName);
+function populateDividendCalculator(share = null) {
+    const calcCurrentPriceInput = document.getElementById('calcCurrentPrice');
+    const calcDividendAmountInput = document.getElementById('calcDividendAmount');
+    const calcFrankingCreditsInput = document.getElementById('frankingCredits');
+
+    if (!calcCurrentPriceInput || !calcDividendAmountInput || !calcFrankingCreditsInput) {
+        console.error("[UI] Dividend calculator input elements not found in populateDividendCalculator.");
+        return;
+    }
+
+    if (share) {
+        calcCurrentPriceInput.value = share.currentPrice || '';
+        calcDividendAmountInput.value = share.dividendAmount || '';
+        calcFrankingCreditsInput.value = share.frankingCredits || '';
     } else {
-        console.error("No watchlist ID found for saving name.");
-        showCustomDialog("Error: No watchlist selected for update.", "Error", null, true);
+        calcCurrentPriceInput.value = '';
+        calcDividendAmountInput.value = '';
+        calcFrankingCreditsInput.value = '';
+    }
+    updateDividendCalculatorResults(); // Calculate initial results
+}
+
+/**
+ * Populates the manage watchlist modal with the selected watchlist's data.
+ * @param {string} watchlistId - The ID of the watchlist to manage.
+ */
+function populateManageWatchlistModal(watchlistId) {
+    const editWatchlistNameInput = document.getElementById('editWatchlistName');
+    const saveWatchlistNameBtn = document.getElementById('saveWatchlistNameBtn');
+    const deleteWatchlistInModalBtn = document.getElementById('deleteWatchlistInModalBtn');
+
+    const watchlist = userWatchlists.find(wl => wl.id === watchlistId);
+    if (watchlist) {
+        editWatchlistNameInput.value = watchlist.name;
+        // Disable editing and deleting for the default watchlist
+        const isDefault = (watchlist.name === DEFAULT_WATCHLIST_NAME);
+        editWatchlistNameInput.disabled = isDefault;
+        saveWatchlistNameBtn.classList.toggle('is-disabled-icon', isDefault);
+        deleteWatchlistInModalBtn.classList.toggle('is-disabled-icon', isDefault);
+        deleteWatchlistInModalBtn.dataset.watchlistId = watchlistId; // Store ID for deletion
+        saveWatchlistNameBtn.dataset.watchlistId = watchlistId; // Store ID for saving
+        openModal(document.getElementById('manageWatchlistModal'));
+    } else {
+        console.error("Watchlist not found for editing:", watchlistId);
+        showCustomDialog("Watchlist not found.", "Error", null, true);
     }
 }
 
 /**
- * Handles deleting a watchlist from the manage modal.
+ * Generates and displays ASX code buttons based on the current shares data.
  */
-async function handleDeleteWatchlistInModal() {
-    const watchlistId = deleteWatchlistInModalBtn.dataset.watchlistId;
-    if (watchlistId) {
-        await deleteWatchlist(watchlistId);
+function generateAsxCodeButtons() {
+    const asxCodeButtonsContainer = document.getElementById('asxCodeButtonsContainer');
+    if (!asxCodeButtonsContainer) {
+        console.error("[UI] ASX code buttons container not found in generateAsxCodeButtons.");
+        return;
+    }
+
+    asxCodeButtonsContainer.innerHTML = ''; // Clear existing buttons
+
+    // Get unique ASX codes from all shares
+    const uniqueAsxCodes = [...new Set(allSharesData.map(share => share.shareName).filter(name => name))].sort();
+
+    // Add an "ALL" button
+    const allButton = document.createElement('button');
+    allButton.classList.add('asx-code-button');
+    allButton.textContent = 'ALL';
+    allButton.dataset.asxCode = 'ALL';
+    allButton.addEventListener('click', () => filterSharesByAsxCode('ALL'));
+    asxCodeButtonsContainer.appendChild(allButton);
+
+    uniqueAsxCodes.forEach(code => {
+        const button = document.createElement('button');
+        button.classList.add('asx-code-button');
+        button.textContent = code;
+        button.dataset.asxCode = code;
+        button.addEventListener('click', () => filterSharesByAsxCode(code));
+        asxCodeButtonsContainer.appendChild(button);
+    });
+
+    // Ensure the 'ALL' button is active by default or the last selected one
+    const activeAsxCode = asxCodeButtonsContainer.dataset.activeAsxCode || 'ALL';
+    const currentActiveButton = asxCodeButtonsContainer.querySelector(`.asx-code-button[data-asx-code="${activeAsxCode}"]`);
+    if (currentActiveButton) {
+        currentActiveButton.classList.add('active');
     } else {
-        console.error("No watchlist ID found for deletion.");
-        showCustomDialog("Error: No watchlist selected for deletion.", "Error", null, true);
+        // Fallback to 'ALL' if the previously active code no longer exists
+        allButton.classList.add('active');
+        asxCodeButtonsContainer.dataset.activeAsxCode = 'ALL';
     }
 }
 
-
 /**
- * Handles changes to the watchlist select dropdown.
+ * Filters the displayed shares by the given ASX code.
+ * @param {string} asxCode - The ASX code to filter by, or 'ALL'.
  */
-function handleWatchlistSelectChange() {
-    const selectedId = watchlistSelect.value;
-    if (selectedId === ALL_SHARES_ID) {
-        currentSelectedWatchlistIds = [ALL_SHARES_ID];
-        mainTitle.textContent = "All Shares";
-    } else {
-        currentSelectedWatchlistIds = [selectedId];
-        const selectedWatchlist = userWatchlists.find(wl => wl.id === selectedId);
-        mainTitle.textContent = selectedWatchlist ? selectedWatchlist.name : "Share Watchlist";
+function filterSharesByAsxCode(asxCode) {
+    const asxCodeButtonsContainer = document.getElementById('asxCodeButtonsContainer');
+    if (!asxCodeButtonsContainer) {
+        console.error("[UI] ASX code buttons container not found in filterSharesByAsxCode.");
+        return;
     }
-    console.log("[UI] Watchlist selection changed to:", currentSelectedWatchlistIds);
-    listenForShares(); // Re-fetch shares based on new selection
-    generateAsxCodeButtons(); // Re-generate ASX buttons for the new set of shares
+
+    // Update active button state
+    asxCodeButtonsContainer.querySelectorAll('.asx-code-button').forEach(button => {
+        button.classList.remove('active');
+    });
+    const clickedButton = asxCodeButtonsContainer.querySelector(`.asx-code-button[data-asx-code="${asxCode}"]`);
+    if (clickedButton) {
+        clickedButton.classList.add('active');
+        asxCodeButtonsContainer.dataset.activeAsxCode = asxCode; // Store active code
+    }
+
+    // Filter and re-render
+    const filteredShares = asxCode === 'ALL' ? allSharesData :
+        allSharesData.filter(share => share.shareName === asxCode);
+
+    renderFilteredShares(filteredShares);
 }
 
 /**
- * Handles changes to the sort select dropdown.
+ * Renders a filtered subset of shares into the table and mobile cards.
+ * This is used by the ASX code buttons.
+ * @param {Array} sharesToRender - The array of share objects to display.
  */
-function handleSortSelectChange() {
-    currentSortOrder = sortSelect.value;
-    console.log("[UI] Sort order changed to:", currentSortOrder);
-    renderShares(); // Re-render shares with the new sort order
-}
+function renderFilteredShares(sharesToRender) {
+    clearShareList(); // Clear existing UI before rendering
 
-/**
- * Handles clicks on the standard calculator buttons.
- * @param {Event} event - The click event.
- */
-function handleCalculatorButtonClick(event) {
-    const button = event.target.closest('.calc-btn');
-    if (!button) return;
+    // Sort the data based on currentSortOrder
+    const [sortBy, sortDirection] = currentSortOrder.split('-');
+    const sortedShares = [...sharesToRender].sort((a, b) => {
+        let valA, valB;
 
-    const value = button.dataset.value;
-    const action = button.dataset.action;
-
-    if (value) {
-        // Number or decimal point
-        if (resultDisplayed && action !== '.') { // If a result is displayed, start a new calculation unless it's a decimal
-            currentCalculatorInput = value;
-            resultDisplayed = false;
+        if (sortBy === 'shareName') {
+            valA = a.shareName ? a.shareName.toLowerCase() : '' ;
+            valB = b.shareName ? b.shareName.toLowerCase() : '' ;
+        } else if (sortBy === 'dividendAmount') {
+            valA = parseFloat(a.dividendAmount || 0);
+            valB = parseFloat(b.dividendAmount || 0);
+        } else if (sortBy === 'entryDate') {
+            valA = a.entryDate ? a.entryDate.toMillis() : 0;
+            valB = b.entryDate ? b.entryDate.toMillis() : 0;
         } else {
-            if (value === '.' && currentCalculatorInput.includes('.')) return; // Prevent multiple decimals
-            currentCalculatorInput += value;
+            return 0; // No sorting
         }
-    } else if (action) {
-        if (action === 'clear') {
-            currentCalculatorInput = '';
-            operator = null;
-            previousCalculatorInput = '';
-            resultDisplayed = false;
-        } else if (action === 'percentage') {
-            if (currentCalculatorInput) {
-                currentCalculatorInput = (parseFloat(currentCalculatorInput) / 100).toString();
-            }
-        } else if (action === 'calculate') {
-            if (operator && previousCalculatorInput && currentCalculatorInput) {
-                try {
-                    let result;
-                    const prev = parseFloat(previousCalculatorInput);
-                    const curr = parseFloat(currentCalculatorInput);
-                    switch (operator) {
-                        case 'add':
-                            result = prev + curr;
-                            break;
-                        case 'subtract':
-                            result = prev - curr;
-                            break;
-                        case 'multiply':
-                            result = prev * curr;
-                            break;
-                        case 'divide':
-                            result = curr !== 0 ? prev / curr : 'Error';
-                            break;
-                        default:
-                            result = 'Error';
-                    }
-                    currentCalculatorInput = result.toString();
-                    previousCalculatorInput = '';
-                    operator = null;
-                    resultDisplayed = true;
-                } catch (e) {
-                    currentCalculatorInput = 'Error';
-                    previousCalculatorInput = '';
-                    operator = null;
-                    resultDisplayed = true;
-                }
-            }
-        } else { // Operator (+, -, ×, ÷)
-            if (currentCalculatorInput) {
-                if (previousCalculatorInput && operator) {
-                    // Chain operations: calculate previous result first
-                    const calculateEvent = { target: { closest: () => ({ dataset: { action: 'calculate' } }) } };
-                    handleCalculatorButtonClick(calculateEvent);
-                    previousCalculatorInput = calculatorDisplayResult.textContent; // Use the calculated result as new previous
-                } else {
-                    previousCalculatorInput = currentCalculatorInput;
-                }
-                currentCalculatorInput = '';
-                operator = action;
-                resultDisplayed = false;
-            } else if (previousCalculatorInput && !currentCalculatorInput) {
-                // If only previous input exists, just change the operator
-                operator = action;
-            }
-        }
+
+        if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+        if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+        return 0;
+    });
+
+    if (sortedShares.length === 0) {
+        const shareTableBody = document.querySelector('#shareTable tbody');
+        const mobileShareCardsContainer = document.getElementById('mobileShareCards');
+        if (shareTableBody) shareTableBody.innerHTML = '<tr><td colspan="5" class="no-shares-message">No shares matching this filter.</td></tr>';
+        if (mobileShareCardsContainer) mobileShareCardsContainer.innerHTML = '<div class="mobile-card no-shares-message">No shares matching this filter.</div>';
+        return;
     }
-    updateCalculatorDisplay();
-}
 
-/**
- * Updates the display of the standard calculator.
- */
-function updateCalculatorDisplay() {
-    if (calculatorDisplayInput) {
-        let inputStr = previousCalculatorInput;
-        if (operator) {
-            inputStr += ` ${getOperatorSymbol(operator)} `;
-        }
-        inputStr += currentCalculatorInput;
-        calculatorDisplayInput.textContent = inputStr || '0';
-    }
-    if (calculatorDisplayResult) {
-        // Show current input if no result displayed, otherwise show result
-        calculatorDisplayResult.textContent = resultDisplayed ? currentCalculatorInput : (currentCalculatorInput || '0');
-    }
-}
+    sortedShares.forEach(share => {
+        const unfrankedYield = calculateUnfrankedYield(share.currentPrice, share.dividendAmount);
+        const frankedYield = calculateFrankedYield(share.currentPrice, share.dividendAmount, share.frankingCredits);
 
-/**
- * Gets the symbol for a given operator action.
- * @param {string} action - The operator action (e.g., 'add').
- * @returns {string} The corresponding symbol (e.g., '+').
- */
-function getOperatorSymbol(action) {
-    switch (action) {
-        case 'add': return '+';
-        case 'subtract': return '-';
-        case 'multiply': return '×';
-        case 'divide': return '÷';
-        default: return '';
-    }
-}
+        // Render for table (desktop)
+        const row = shareTableBody.insertRow();
+        row.dataset.shareId = share.id; // Store share ID on the row
+        row.innerHTML = `
+            <td>${share.shareName || 'N/A'}</td>
+            <td>${formatCurrency(share.currentPrice)}</td>
+            <td>${formatCurrency(share.targetPrice)}</td>
+            <td>${formatCurrency(share.dividendAmount)} (${formatPercentage(unfrankedYield)} Unfranked, ${formatPercentage(frankedYield)} Franked)</td>
+            <td>${share.comments && share.comments.length > 0 ? share.comments.length + ' comments' : 'No comments'}</td>
+        `;
+        row.addEventListener('click', () => handleShareRowClick(share.id));
+        row.addEventListener('contextmenu', (e) => handleContextMenu(e, share.id));
+        row.addEventListener('touchstart', (e) => handleTouchStart(e, share.id));
+        row.addEventListener('touchmove', handleTouchMove);
+        row.addEventListener('touchend', handleTouchEnd);
 
-/**
- * Updates the results in the dividend calculator based on current inputs.
- */
-function updateDividendCalculatorResults() {
-    const price = parseFloat(calcCurrentPriceInput.value);
-    const dividend = parseFloat(calcDividendAmountInput.value);
-    const franking = parseFloat(calcFrankingCreditsInput.value);
-    const investmentValue = parseFloat(investmentValueSelect.value);
 
-    const unfrankedYield = calculateUnfrankedYield(price, dividend);
-    const frankedYield = calculateFrankedYield(price, dividend, franking);
-    const estimatedDividend = (investmentValue / price) * dividend;
+        // Render for mobile cards
+        const mobileCard = document.createElement('div');
+        mobileCard.classList.add('mobile-card');
+        mobileCard.dataset.shareId = share.id; // Store share ID on the card
+        mobileCard.innerHTML = `
+            <h3>${share.shareName || 'N/A'}</h3>
+            <p><strong>Entered Price:</strong> ${formatCurrency(share.currentPrice)}</p>
+            <p><strong>Target Price:</strong> ${formatCurrency(share.targetPrice)}</p>
+            <p><strong>Dividends:</strong> ${formatCurrency(share.dividendAmount)} (${formatPercentage(unfrankedYield)} Unfranked, ${formatPercentage(frankedYield)} Franked)</p>
+            <p><strong>Comments:</strong> ${share.comments && share.comments.length > 0 ? share.comments.length + ' comments' : 'No comments'}</p>
+        `;
+        mobileCard.addEventListener('click', () => handleShareRowClick(share.id));
+        mobileCard.addEventListener('contextmenu', (e) => handleContextMenu(e, share.id));
+        mobileCard.addEventListener('touchstart', (e) => handleTouchStart(e, share.id));
+        mobileCard.addEventListener('touchmove', handleTouchMove);
+        mobileCard.addEventListener('touchend', handleTouchEnd);
+        mobileShareCardsContainer.appendChild(mobileCard);
+    });
 
-    calcUnfrankedYieldSpan.textContent = formatPercentage(unfrankedYield);
-    calcFrankedYieldSpan.textContent = formatPercentage(frankedYield);
-    calcEstimatedDividendSpan.textContent = isNaN(estimatedDividend) || !isFinite(estimatedDividend) ? 'N/A' : formatCurrency(estimatedDividend);
-}
-
-/**
- * Handles the context menu display for right-click/long-press.
- * @param {Event} e - The event object.
- * @param {string} shareId - The ID of the share.
- */
-function handleContextMenu(e, shareId) {
-    e.preventDefault(); // Prevent default browser context menu
-    selectedShareDocId = shareId; // Set the globally selected share ID
-
-    // Position the custom context menu
-    shareContextMenu.style.left = `${e.clientX}px`;
-    shareContextMenu.style.top = `${e.clientY}px`;
-    shareContextMenu.style.display = 'block';
-
-    // Hide the menu if clicked anywhere else
-    const hideMenu = () => {
-        shareContextMenu.style.display = 'none';
-        document.removeEventListener('click', hideMenu);
-        document.removeEventListener('contextmenu', hideMenu); // Also hide if another right-click occurs
-    };
-    document.addEventListener('click', hideMenu);
-    document.addEventListener('contextmenu', hideMenu); // In case another right-click is outside
-}
-
-/**
- * Handles touch start for long press detection.
- * @param {Event} e - The touchstart event.
- * @param {string} shareId - The ID of the share.
- */
-function handleTouchStart(e, shareId) {
-    if (e.touches.length === 1) {
-        selectedElementForTap = e.currentTarget; // Store the element being touched
-        touchStartX = e.touches[0].clientX;
-        touchStartY = e.touches[0].clientY;
-
-        longPressTimer = setTimeout(() => {
-            // Simulate right-click event at the touch position
-            const touch = e.touches[0];
-            const simulatedEvent = new MouseEvent('contextmenu', {
-                bubbles: true,
-                cancelable: true,
-                clientX: touch.clientX,
-                clientY: touch.clientY
-            });
-            e.currentTarget.dispatchEvent(simulatedEvent);
-            longPressTimer = null; // Clear the timer once triggered
-            e.preventDefault(); // Prevent default touch behavior (e.g., scrolling)
-        }, LONG_PRESS_THRESHOLD);
-    }
-}
-
-/**
- * Handles touch move to cancel long press if significant movement occurs.
- * @param {Event} e - The touchmove event.
- */
-function handleTouchMove(e) {
-    if (longPressTimer) {
-        const touch = e.touches[0];
-        const deltaX = Math.abs(touch.clientX - touchStartX);
-        const deltaY = Math.abs(touch.clientY - touchStartY);
-        if (deltaX > TOUCH_MOVE_THRESHOLD || deltaY > TOUCH_MOVE_THRESHOLD) {
-            clearTimeout(longPressTimer);
-            longPressTimer = null;
-        }
-    }
-}
-
-/**
- * Handles touch end to trigger click or clear long press timer.
- * @param {Event} e - The touchend event.
- */
-function handleTouchEnd(e) {
-    if (longPressTimer) {
-        clearTimeout(longPressTimer);
-        longPressTimer = null;
-        // If long press didn't trigger, it's a tap.
-        // Prevent default double-tap zoom on some browsers
-        const now = new Date().getTime();
-        if (now - lastTapTime < 300) { // Double tap
-            e.preventDefault();
-        }
-        lastTapTime = now;
+    // Highlight the selected row/card if one exists
+    if (selectedShareDocId) {
+        const selectedRow = shareTableBody.querySelector(`tr[data-share-id="${selectedShareDocId}"]`);
+        if (selectedRow) selectedRow.classList.add('selected');
+        const selectedCard = mobileShareCardsContainer.querySelector(`.mobile-card[data-share-id="${selectedShareDocId}"]`);
+        if (selectedCard) selectedCard.classList.add('selected');
     }
 }
 
@@ -2210,7 +1946,7 @@ function initializeAppLogic() {
             if (user) {
                 currentUserId = user.uid;
                 console.log("[Auth] User is signed in:", user.uid);
-                updateAuthButtonText(true, user.email || user.displayName);
+                updateAuthButtonText(true); // Pass true for signed in
                 // Listen for watchlists first, which will then trigger listenForShares
                 listenForWatchlists();
                 generateAsxCodeButtons(); // Generate buttons based on initial data
@@ -2257,7 +1993,8 @@ function initializeAppLogic() {
 // Listen for the custom event dispatched by index.html when Firebase globals are ready AND DOM is loaded.
 document.addEventListener('firebaseGlobalsAndDOMReady', () => {
     console.log("script.js: 'firebaseGlobalsAndDOMReady' event received.");
-    if (!window._appLogicInitialized) { // Ensure it's only initialized once
+    // Only initialize app logic if it hasn't been initialized by the event listener already
+    if (!window._appLogicInitialized) {
         if (initializeFirebaseGlobals()) {
             initializeAppLogic();
         }
