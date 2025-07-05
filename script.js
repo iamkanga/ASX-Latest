@@ -1,5 +1,38 @@
-// File Version: v154
-// Last Updated: 2025-07-05 (Firebase Initialization Fix - Removed redundant DOMContentLoaded)
+// File Version: v155
+// Last Updated: 2025-07-05 (Enhanced Initialization Robustness)
+
+// --- AGGRESSIVE IDEMPOTENCY CHECK ---
+// This prevents the script from running its main logic more than once,
+// which can happen due to aggressive caching or environment quirks.
+if (window._scriptInitializedOnce) {
+    console.warn("script.js (v155): Script already initialized. Skipping re-execution.");
+    // Exit immediately if the script has already run its main setup.
+    // This is a last-resort defense against 'already declared' errors.
+    throw new Error("Script already initialized."); // Throw an error to stop execution forcefully
+}
+window._scriptInitializedOnce = true;
+console.log("script.js (v155) loaded and starting initialization.");
+
+
+// --- SERVICE WORKER REGISTRATION (Moved to top-level for immediate registration) ---
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/service-worker.js?v=48') // UPDATED: Service Worker version
+        .then(registration => {
+            console.log('Service Worker registered! Scope:', registration.scope);
+            registration.addEventListener('updatefound', () => {
+                const newWorker = registration.installing;
+                newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        showCustomDialog('New content is available! Please refresh to update.', 'Info', null, true);
+                    }
+                });
+            });
+        })
+        .catch(error => {
+            console.error('Service Worker registration failed:', error);
+        });
+}
+
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -906,368 +939,6 @@ function clearWatchlistUI() {
  * @param {Object|null} share - The share object to edit, or null for a new share.
  */
 function populateShareForm(share = null) {
-    if (!shareFormTitle || !shareNameInput || !currentPriceInput || !targetPriceInput || !dividendAmountInput || !frankingCreditsInput || !commentsFormContainer || !deleteShareBtn) {
-        console.error("[UI] Share form elements not found.");
-        return;
-    }
-
-    selectedShareDocId = share ? share.id : null; // Set the global selected ID
-
-    if (share) {
-        shareFormTitle.textContent = 'Edit Share';
-        shareNameInput.value = share.shareName || '';
-        currentPriceInput.value = share.currentPrice || '';
-        targetPriceInput.value = share.targetPrice || '';
-        dividendAmountInput.value = share.dividendAmount || '';
-        frankingCreditsInput.value = share.frankingCredits || '';
-        deleteShareBtn.classList.remove('hidden'); // Show delete button for existing shares
-        renderCommentsForm(share.comments || []); // Populate comments
-    } else {
-        shareFormTitle.textContent = 'Add New Share';
-        shareNameInput.value = '';
-        currentPriceInput.value = '';
-        targetPriceInput.value = '';
-        dividendAmountInput.value = '';
-        frankingCreditsInput.value = '';
-        deleteShareBtn.classList.add('hidden'); // Hide delete button for new shares
-        renderCommentsForm([]); // Start with one empty comment section for new shares
-    }
-}
-
-/**
- * Renders the comments section in the share form.
- * @param {Array} comments - An array of comment objects {title, text}.
- */
-function renderCommentsForm(comments) {
-    commentsFormContainer.querySelectorAll('.comment-section').forEach(section => section.remove()); // Clear existing
-    const addCommentButton = commentsFormContainer.querySelector('#addCommentSectionBtn'); // Get the plus icon
-    if (addCommentButton) {
-        addCommentButton.closest('h3').insertAdjacentHTML('afterend', '<div id="commentsContainerPlaceholder"></div>'); // Insert a placeholder div
-    } else {
-        commentsFormContainer.innerHTML += '<div id="commentsContainerPlaceholder"></div>'; // Fallback if h3 not found
-    }
-    const placeholder = commentsFormContainer.querySelector('#commentsContainerPlaceholder');
-
-    if (comments.length === 0) {
-        comments.push({ title: '', text: '' }); // Add one empty comment section if none exist
-    }
-
-    comments.forEach((comment, index) => {
-        const commentSection = document.createElement('div');
-        commentSection.classList.add('comment-section');
-        commentSection.innerHTML = `
-            <div class="comment-section-header">
-                <input type="text" class="comment-title-input" placeholder="Comment Title" value="${escapeHTML(comment.title || '')}">
-                <span class="comment-delete-btn" data-index="${index}"><i class="fas fa-times-circle"></i></span>
-            </div>
-            <textarea class="comment-text-input" placeholder="Your comment...">${escapeHTML(comment.text || '')}</textarea>
-        `;
-        placeholder.appendChild(commentSection);
-    });
-
-    // Add event listeners for delete buttons
-    commentsFormContainer.querySelectorAll('.comment-delete-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const sectionToRemove = e.target.closest('.comment-section');
-            if (sectionToRemove) {
-                sectionToRemove.remove();
-            }
-        });
-    });
-}
-
-/**
- * Gathers comment data from the form.
- * @returns {Array} An array of comment objects {title, text}.
- */
-function getCommentsFromForm() {
-    const comments = [];
-    commentsFormContainer.querySelectorAll('.comment-section').forEach(section => {
-        const titleInput = section.querySelector('.comment-title-input');
-        const textInput = section.querySelector('.comment-text-input');
-        if (titleInput && textInput) {
-            const title = titleInput.value.trim();
-            const text = textInput.value.trim();
-            if (title || text) { // Only add if either title or text is present
-                comments.push({ title, text });
-            }
-        }
-    });
-    return comments;
-}
-
-/**
- * Displays share details in the modal.
- * @param {Object} share - The share object to display.
- */
-function displayShareDetails(share) {
-    if (!modalShareName || !modalEntryDate || !modalEnteredPrice || !modalTargetPrice || !modalDividendAmount || !modalFrankingCredits || !modalUnfrankedYield || !modalFrankedYield || !modalMarketIndexLink || !modalFoolLink || !modalCommSecLink || !modalNewsLink || !modalCommentsContainer) {
-        console.error("[UI] Share detail modal elements not found.");
-        return;
-    }
-
-    selectedShareDocId = share.id; // Set the global selected ID
-
-    // Highlight the selected row/card
-    clearWatchlistUI();
-    const selectedRow = shareTableBody.querySelector(`tr[data-share-id="${share.id}"]`);
-    if (selectedRow) selectedRow.classList.add('selected');
-    const selectedCard = mobileShareCardsContainer.querySelector(`.mobile-card[data-share-id="${share.id}"]`);
-    if (selectedCard) selectedCard.classList.add('selected');
-
-    modalShareName.textContent = share.shareName || 'N/A';
-    modalEntryDate.textContent = share.entryDate ? formatDate(share.entryDate) : 'N/A';
-    modalEnteredPrice.textContent = formatCurrency(share.currentPrice);
-    modalTargetPrice.textContent = formatCurrency(share.targetPrice);
-    modalDividendAmount.textContent = formatCurrency(share.dividendAmount);
-    modalFrankingCredits.textContent = formatPercentage(share.frankingCredits);
-
-    const unfrankedYield = calculateUnfrankedYield(share.currentPrice, share.dividendAmount);
-    const frankedYield = calculateFrankedYield(share.currentPrice, share.dividendAmount, share.frankingCredits);
-    modalUnfrankedYield.textContent = formatPercentage(unfrankedYield);
-    modalFrankedYield.textContent = formatPercentage(frankedYield);
-
-    // Set external links
-    const encodedShareName = encodeURIComponent(share.shareName);
-    modalNewsLink.href = `https://www.google.com/search?q=${encodedShareName}+ASX+news`;
-    modalMarketIndexLink.href = `https://www.marketindex.com.au/asx/${encodedShareName}`;
-    modalFoolLink.href = `https://www.fool.com.au/quote/${encodedShareName}`;
-    modalCommSecLink.href = `https://www.commsec.com.au/market-insights/company/${encodedShareName}`;
-
-    // Display comments
-    modalCommentsContainer.innerHTML = ''; // Clear previous comments
-    if (share.comments && share.comments.length > 0) {
-        share.comments.forEach(comment => {
-            const commentItem = document.createElement('div');
-            commentItem.classList.add('modal-comment-item');
-            commentItem.innerHTML = `
-                <strong>${escapeHTML(comment.title || 'No Title')}</strong>
-                <p>${escapeHTML(comment.text || 'No content.')}</p>
-            `;
-            modalCommentsContainer.appendChild(commentItem);
-        });
-    } else {
-        modalCommentsContainer.innerHTML = '<p class="ghosted-text">No comments for this share.</p>';
-    }
-
-    openModal(shareDetailModal);
-}
-
-/**
- * Populates the dividend calculator modal with share data if available.
- * @param {Object|null} share - The share object to pre-fill, or null to clear.
- */
-function populateDividendCalculator(share = null) {
-    if (!calcCurrentPriceInput || !calcDividendAmountInput || !calcFrankingCreditsInput) {
-        console.error("[UI] Dividend calculator input elements not found.");
-        return;
-    }
-
-    if (share) {
-        calcCurrentPriceInput.value = share.currentPrice || '';
-        calcDividendAmountInput.value = share.dividendAmount || '';
-        calcFrankingCreditsInput.value = share.frankingCredits || '';
-    } else {
-        calcCurrentPriceInput.value = '';
-        calcDividendAmountInput.value = '';
-        calcFrankingCreditsInput.value = '';
-    }
-    updateDividendCalculatorResults(); // Calculate initial results
-}
-
-/**
- * Populates the manage watchlist modal with the selected watchlist's data.
- * @param {string} watchlistId - The ID of the watchlist to manage.
- */
-function populateManageWatchlistModal(watchlistId) {
-    const watchlist = userWatchlists.find(wl => wl.id === watchlistId);
-    if (watchlist) {
-        editWatchlistNameInput.value = watchlist.name;
-        // Disable editing and deleting for the default watchlist
-        const isDefault = (watchlist.name === DEFAULT_WATCHLIST_NAME);
-        editWatchlistNameInput.disabled = isDefault;
-        saveWatchlistNameBtn.classList.toggle('is-disabled-icon', isDefault);
-        deleteWatchlistInModalBtn.classList.toggle('is-disabled-icon', isDefault);
-        deleteWatchlistInModalBtn.dataset.watchlistId = watchlistId; // Store ID for deletion
-        saveWatchlistNameBtn.dataset.watchlistId = watchlistId; // Store ID for saving
-        openModal(manageWatchlistModal);
-    } else {
-        console.error("Watchlist not found for editing:", watchlistId);
-        showCustomDialog("Watchlist not found.", "Error", null, true);
-    }
-}
-
-/**
- * Generates and displays ASX code buttons based on the current shares data.
- */
-function generateAsxCodeButtons() {
-    if (!asxCodeButtonsContainer) {
-        console.error("[UI] ASX code buttons container not found.");
-        return;
-    }
-
-    asxCodeButtonsContainer.innerHTML = ''; // Clear existing buttons
-
-    // Get unique ASX codes from all shares
-    const uniqueAsxCodes = [...new Set(allSharesData.map(share => share.shareName).filter(name => name))].sort();
-
-    // Add an "ALL" button
-    const allButton = document.createElement('button');
-    allButton.classList.add('asx-code-button');
-    allButton.textContent = 'ALL';
-    allButton.dataset.asxCode = 'ALL';
-    allButton.addEventListener('click', () => filterSharesByAsxCode('ALL'));
-    asxCodeButtonsContainer.appendChild(allButton);
-
-    uniqueAsxCodes.forEach(code => {
-        const button = document.createElement('button');
-        button.classList.add('asx-code-button');
-        button.textContent = code;
-        button.dataset.asxCode = code;
-        button.addEventListener('click', () => filterSharesByAsxCode(code));
-        asxCodeButtonsContainer.appendChild(button);
-    });
-
-    // Ensure the 'ALL' button is active by default or the last selected one
-    const activeAsxCode = asxCodeButtonsContainer.dataset.activeAsxCode || 'ALL';
-    const currentActiveButton = asxCodeButtonsContainer.querySelector(`.asx-code-button[data-asx-code="${activeAsxCode}"]`);
-    if (currentActiveButton) {
-        currentActiveButton.classList.add('active');
-    } else {
-        // Fallback to 'ALL' if the previously active code no longer exists
-        allButton.classList.add('active');
-        asxCodeButtonsContainer.dataset.activeAsxCode = 'ALL';
-    }
-}
-
-/**
- * Filters the displayed shares by the given ASX code.
- * @param {string} asxCode - The ASX code to filter by, or 'ALL'.
- */
-function filterSharesByAsxCode(asxCode) {
-    // Update active button state
-    asxCodeButtonsContainer.querySelectorAll('.asx-code-button').forEach(button => {
-        button.classList.remove('active');
-    });
-    const clickedButton = asxCodeButtonsContainer.querySelector(`.asx-code-button[data-asx-code="${asxCode}"]`);
-    if (clickedButton) {
-        clickedButton.classList.add('active');
-        asxCodeButtonsContainer.dataset.activeAsxCode = asxCode; // Store active code
-    }
-
-    // Filter and re-render
-    const filteredShares = asxCode === 'ALL' ? allSharesData :
-        allSharesData.filter(share => share.shareName === asxCode);
-
-    renderFilteredShares(filteredShares);
-}
-
-/**
- * Renders a filtered subset of shares into the table and mobile cards.
- * This is used by the ASX code buttons.
- * @param {Array} sharesToRender - The array of share objects to display.
- */
-function renderFilteredShares(sharesToRender) {
-    clearShareList(); // Clear existing UI before rendering
-
-    // Sort the data based on currentSortOrder
-    const [sortBy, sortDirection] = currentSortOrder.split('-');
-    const sortedShares = [...sharesToRender].sort((a, b) => {
-        let valA, valB;
-
-        if (sortBy === 'shareName') {
-            valA = a.shareName ? a.shareName.toLowerCase() : '' ;
-            valB = b.shareName ? b.shareName.toLowerCase() : '' ;
-        } else if (sortBy === 'dividendAmount') {
-            valA = parseFloat(a.dividendAmount || 0);
-            valB = parseFloat(b.dividendAmount || 0);
-        } else if (sortBy === 'entryDate') {
-            valA = a.entryDate ? a.entryDate.toMillis() : 0;
-            valB = b.entryDate ? b.entryDate.toMillis() : 0;
-        } else {
-            return 0; // No sorting
-        }
-
-        if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
-        if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
-        return 0;
-    });
-
-    if (sortedShares.length === 0) {
-        shareTableBody.innerHTML = '<tr><td colspan="5" class="no-shares-message">No shares matching this filter.</td></tr>';
-        mobileShareCardsContainer.innerHTML = '<div class="mobile-card no-shares-message">No shares matching this filter.</div>';
-        return;
-    }
-
-    sortedShares.forEach(share => {
-        const unfrankedYield = calculateUnfrankedYield(share.currentPrice, share.dividendAmount);
-        const frankedYield = calculateFrankedYield(share.currentPrice, share.dividendAmount, share.frankingCredits);
-
-        // Render for table (desktop)
-        const row = shareTableBody.insertRow();
-        row.dataset.shareId = share.id; // Store share ID on the row
-        row.innerHTML = `
-            <td>${share.shareName || 'N/A'}</td>
-            <td>${formatCurrency(share.currentPrice)}</td>
-            <td>${formatCurrency(share.targetPrice)}</td>
-            <td>${formatCurrency(share.dividendAmount)} (${formatPercentage(unfrankedYield)} Unfranked, ${formatPercentage(frankedYield)} Franked)</td>
-            <td>${share.comments && share.comments.length > 0 ? share.comments.length + ' comments' : 'No comments'}</td>
-        `;
-        row.addEventListener('click', () => handleShareRowClick(share.id));
-        row.addEventListener('contextmenu', (e) => handleContextMenu(e, share.id));
-        row.addEventListener('touchstart', (e) => handleTouchStart(e, share.id));
-        row.addEventListener('touchmove', handleTouchMove);
-        row.addEventListener('touchend', handleTouchEnd);
-
-
-        // Render for mobile cards
-        const mobileCard = document.createElement('div');
-        mobileCard.classList.add('mobile-card');
-        mobileCard.dataset.shareId = share.id; // Store share ID on the card
-        mobileCard.innerHTML = `
-            <h3>${share.shareName || 'N/A'}</h3>
-            <p><strong>Entered Price:</strong> ${formatCurrency(share.currentPrice)}</p>
-            <p><strong>Target Price:</strong> ${formatCurrency(share.targetPrice)}</p>
-            <p><strong>Dividends:</strong> ${formatCurrency(share.dividendAmount)} (${formatPercentage(unfrankedYield)} Unfranked, ${formatPercentage(frankedYield)} Franked)</p>
-            <p><strong>Comments:</strong> ${share.comments && share.comments.length > 0 ? share.comments.length + ' comments' : 'No comments'}</p>
-        `;
-        mobileCard.addEventListener('click', () => handleShareRowClick(share.id));
-        mobileCard.addEventListener('contextmenu', (e) => handleContextMenu(e, share.id));
-        mobileCard.addEventListener('touchstart', (e) => handleTouchStart(e, share.id));
-        mobileCard.addEventListener('touchmove', handleTouchMove);
-        mobileCard.addEventListener('touchend', handleTouchEnd);
-        mobileShareCardsContainer.appendChild(mobileCard);
-    });
-
-    // Highlight the selected row/card if one exists
-    if (selectedShareDocId) {
-        const selectedRow = shareTableBody.querySelector(`tr[data-share-id="${selectedShareDocId}"]`);
-        if (selectedRow) selectedRow.classList.add('selected');
-        const selectedCard = mobileShareCardsContainer.querySelector(`.mobile-card[data-share-id="${selectedShareDocId}"]`);
-        if (selectedCard) selectedCard.classList.add('selected');
-    }
-}
-
-/**
- * Clears all rows from the share table body and mobile cards.
- */
-function clearShareList() {
-    if (shareTableBody) shareTableBody.innerHTML = '';
-    if (mobileShareCardsContainer) mobileShareCardsContainer.innerHTML = '';
-}
-
-/**
- * Clears any selected state from share table rows and mobile cards.
- */
-function clearWatchlistUI() {
-    document.querySelectorAll('.selected').forEach(el => el.classList.remove('selected'));
-}
-
-/**
- * Populates the share form modal with data for editing, or clears it for a new share.
- * @param {Object|null} share - The share object to edit, or null for a new share.
- */
-function populateShareForm(share = null) {
     // Assign DOM elements inside this function as well, as a fallback/safety,
     // though they should be assigned in initializeAppLogic.
     const shareFormTitle = document.getElementById('formTitle');
@@ -1764,28 +1435,6 @@ function initializeAppLogic() {
     mainTitle = document.getElementById('mainTitle');
 
 
-    // --- SERVICE WORKER REGISTRATION ---
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => { // Use 'load' to ensure all resources are loaded before SW registration
-            navigator.serviceWorker.register('/service-worker.js?v=48') // UPDATED: Service Worker version
-                .then(registration => {
-                    console.log('Service Worker registered! Scope:', registration.scope);
-                    registration.addEventListener('updatefound', () => {
-                        const newWorker = registration.installing;
-                        newWorker.addEventListener('statechange', () => {
-                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                showCustomDialog('New content is available! Please refresh to update.', 'Info', null, true);
-                            }
-                        });
-                    });
-                })
-                .catch(error => {
-                    console.error('Service Worker registration failed:', error);
-                });
-        });
-    }
-
-
     // --- EVENT LISTENERS ---
     if (hamburgerBtn) {
         hamburgerBtn.addEventListener('click', () => appSidebar.classList.add('open'));
@@ -2000,5 +1649,3 @@ document.addEventListener('firebaseGlobalsAndDOMReady', () => {
         }
     }
 });
-
-console.log("script.js (v154) loaded.");
