@@ -14,7 +14,7 @@ console.log("script.js (v159) loaded and starting initialization.");
 
 // --- SERVICE WORKER REGISTRATION (Moved to top-level for immediate registration) ---
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/service-worker.js?v=50') // UPDATED: Service Worker version to v50
+    navigator.serviceWorker.register('/service-worker.js?v=51') // UPDATED: Service Worker version to v51
         .then(registration => {
             console.log('Service Worker registered! Scope:', registration.scope);
             registration.addEventListener('updatefound', () => {
@@ -1761,7 +1761,7 @@ function handleEditWatchlistClick() {
  */
 async function handleSaveWatchlistName() {
     // Re-get elements here as they are used globally
-    const saveWatchlistNameBtn = document.getElementById('saveWatchlistName');
+    const saveWatchlistNameBtn = document.getElementById('saveWatchlistNameBtn');
     const editWatchlistNameInput = document.getElementById('editWatchlistName');
 
     const watchlistId = saveWatchlistNameBtn ? saveWatchlistNameBtn.dataset.watchlistId : null;
