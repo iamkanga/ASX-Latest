@@ -1,20 +1,20 @@
-// File Version: v164
-// Last Updated: 2025-07-06 (Refined Authentication Flow)
+// File Version: v165
+// Last Updated: 2025-07-06 (Refined Authentication Flow to prevent anonymous re-auth loop)
 
 // --- AGGRESSIVE IDEMPOTENCY CHECK ---
 // This prevents the script from running its main logic more than once,
 // which can happen due to aggressive caching or environment quirks.
 if (window._scriptInitializedOnce) {
-    console.warn("script.js (v164): Script already initialized. Skipping re-execution.");
+    console.warn("script.js (v165): Script already initialized. Skipping re-execution.");
     throw new Error("Script already initialized."); // Throw an error to stop execution forcefully
 }
 window._scriptInitializedOnce = true;
-console.log("script.js (v164) loaded and starting initialization.");
+console.log("script.js (v165) loaded and starting initialization.");
 
 
 // --- SERVICE WORKER REGISTRATION (Moved to top-level for immediate registration) ---
 if ('serviceWorker' in navigator) {
-    // UPDATED: Service Worker registration path for project page deployment
+    // Service Worker registration path for project page deployment
     navigator.serviceWorker.register('/ASX-Latest/service-worker.js?v=54') // Service Worker version remains v54
         .then(registration => {
             console.log('Service Worker registered! Scope:', registration.scope);
@@ -72,7 +72,8 @@ const ALL_SHARES_ID = 'ALL_SHARES'; // Typo fix: ALL_SHARES_ID
 // Flag to ensure app logic is initialized only once
 window._appLogicInitialized = false;
 // NEW: Flag to track if initial anonymous authentication has been attempted
-let initialAuthAttempted = false;
+// This flag ensures anonymous sign-in is only triggered once at the very start if no user is found.
+let initialAnonymousAuthTriggered = false;
 
 // --- FIREBASE GLOBALS ACCESS (from index.html module script) ---
 // These are accessed directly from the window object.
@@ -1144,6 +1145,10 @@ async function handleSignOut() {
         await authFunctions.signOut(auth);
         // onAuthStateChanged listener will handle UI updates
         console.log("[Auth] User signed out.");
+        // After explicit sign-out, ensure initialAnonymousAuthTriggered is reset
+        // so that if the user *then* explicitly clicks "Sign In" (expecting Google),
+        // it doesn't immediately fall back to anonymous.
+        initialAnonymousAuthTriggered = false; 
     } catch (error) {
         console.error("Error during sign out:", error);
         showCustomDialog("Failed to sign out. Please try again.", "Sign-Out Error", null, true);
@@ -1152,34 +1157,34 @@ async function handleSignOut() {
 
 /**
  * Authenticates the user anonymously or with a custom token if available.
- * This is crucial for Firestore security rules to work. This function should
- * only be called once on initial app load if no user is found.
+ * This function should only be called once on initial app load if no user is found.
  */
 async function authenticateUserAnonymously() {
     if (!authFunctions || !auth) {
-        console.error("[Auth] Firebase Auth object or functions not available for authentication.");
+        console.error("[Auth] Firebase Auth object or functions not available for anonymous authentication.");
         return;
     }
 
-    if (initialAuthAttempted) {
-        console.log("[Auth] Initial anonymous authentication already attempted. Skipping.");
+    if (initialAnonymousAuthTriggered) {
+        console.log("[Auth] Initial anonymous authentication already triggered. Skipping.");
         return;
     }
-    initialAuthAttempted = true; // Set flag to prevent re-attempting
 
-    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-        try {
+    initialAnonymousAuthTriggered = true; // Set flag immediately to prevent re-triggering
+
+    try {
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
             await authFunctions.signInWithCustomToken(auth, __initial_auth_token);
             console.log("[Auth] Signed in with custom token.");
-        } catch (error) {
-            console.error("[Auth] Error signing in with custom token:", error);
-            // Fallback to anonymous sign-in if custom token fails
+        } else {
             await authFunctions.signInAnonymously(auth);
-            console.log("[Auth] Signed in anonymously as fallback.");
+            console.log("[Auth] Signed in anonymously (no custom token provided).");
         }
-    } else {
-        await authFunctions.signInAnonymously(auth);
-        console.log("[Auth] Signed in anonymously (no custom token provided).");
+    } catch (error) {
+        console.error("[Auth] Error during anonymous sign-in attempt:", error);
+        // If anonymous sign-in fails, allow re-attempt
+        initialAnonymousAuthTriggered = false; 
+        showCustomDialog("Failed to establish anonymous session. Please try again.", "Error", null, true);
     }
 }
 
@@ -2259,15 +2264,15 @@ function initializeAppLogic() {
     if (authFunctions && auth) {
         authFunctions.onAuthStateChanged(auth, async (user) => {
             if (user) {
+                // User is signed in (Google or Anonymous)
                 currentUserId = user.uid;
                 console.log("[Auth] User is signed in:", user.uid);
-                updateAuthButtonText(true); // Pass true for signed in
-                updateMainButtonsState(true); // Enable main buttons
-                // Listen for watchlists first, which will then trigger listenForShares
+                updateAuthButtonText(true); // Shows "Sign Out"
+                updateMainButtonsState(true); // Enables UI
                 listenForWatchlists();
-                generateAsxCodeButtons(); // Generate buttons based on initial data
+                generateAsxCodeButtons();
             } else {
-                // User is signed out or no user is found on initial load
+                // User is signed out or no user found
                 currentUserId = null;
                 console.log("[Auth] No user is signed in.");
                 updateAuthButtonText(false);
@@ -2286,13 +2291,24 @@ function initializeAppLogic() {
                     unsubscribeWatchlists = null;
                     console.log("[Firestore Listener] Unsubscribed from watchlists listener on logout.");
                 }
-                // Only attempt anonymous sign-in if it hasn't been attempted yet
-                // This prevents it from overriding a Google sign-in if the state briefly goes null
-                if (!initialAuthAttempted) {
+
+                // IMPORTANT: Only attempt anonymous sign-in if no user is currently authenticated
+                // AND it hasn't been triggered already on initial load.
+                // This prevents the loop after explicit logout.
+                if (!auth.currentUser && !initialAnonymousAuthTriggered) {
                     await authenticateUserAnonymously();
                 }
             }
         });
+
+        // NEW: Trigger initial anonymous authentication immediately after setting up the listener.
+        // This ensures an anonymous session is established if no user is cached or logged in
+        // when the app first loads. The onAuthStateChanged listener will then pick up this user.
+        // This is the *only* place where anonymous sign-in should be proactively attempted.
+        if (!auth.currentUser && !initialAnonymousAuthTriggered) {
+            authenticateUserAnonymously();
+        }
+
     } else {
         console.error("[Firebase] Auth object or functions not available. Cannot set up auth state listener.");
         updateAuthButtonText(false);
