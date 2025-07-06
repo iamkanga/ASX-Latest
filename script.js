@@ -2233,7 +2233,7 @@ async function initializeAppLogic() { // MARKED ASYNC
 // Listen for the custom event dispatched by index.html when Firebase globals are ready AND DOM is loaded.
 document.addEventListener('firebaseGlobalsAndDOMReady', () => {
     console.log("script.js: 'firebaseGlobalsAndDOMReady' event received.");
-    // Only initialize app logic if it hasn't been initialized by the event listener already
+    // Only  initialize app logic if it hasn't been initialized by the event listener already
     if (!window._appLogicInitialized) {
         if (initializeFirebaseGlobals()) {
             initializeAppLogic();
