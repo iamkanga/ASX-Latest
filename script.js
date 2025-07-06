@@ -1,15 +1,15 @@
-// File Version: v168
-// Last Updated: 2025-07-06 (Cache busting update to resolve SyntaxError)
+// File Version: v169
+// Last Updated: 2025-07-06 (Enhanced Auth Logging)
 
 // --- AGGRESSIVE IDEMPOTENCY CHECK ---
 // This prevents the script from running its main logic more than once,
 // which can happen due to aggressive caching or environment quirks.
 if (window._scriptInitializedOnce) {
-    console.warn("script.js (v168): Script already initialized. Skipping re-execution.");
+    console.warn("script.js (v169): Script already initialized. Skipping re-execution.");
     throw new Error("Script already initialized."); // Throw an error to stop execution forcefully
 }
 window._scriptInitializedOnce = true;
-console.log("script.js (v168) loaded and starting initialization.");
+console.log("script.js (v169) loaded and starting initialization.");
 
 
 // --- SERVICE WORKER REGISTRATION (Moved to top-level for immediate registration) ---
@@ -1107,10 +1107,10 @@ async function handleSignIn() {
         if (loadingIndicator) loadingIndicator.style.display = 'block';
         if (googleAuthBtn) googleAuthBtn.disabled = true; // Disable button during sign-in
 
-        const provider = authFunctions.GoogleAuthProviderInstance;
-        await authFunctions.signInWithPopup(auth, provider);
-        // onAuthStateChanged listener will handle UI updates
-        console.log("[Auth] Google Sign-In initiated.");
+        console.log("[Auth] Attempting Google Sign-In via popup...");
+        const result = await authFunctions.signInWithPopup(auth, authFunctions.GoogleAuthProviderInstance);
+        console.log("[Auth] Google Sign-In popup closed. User:", result.user.uid, "Provider:", result.credential.providerId);
+        // The onAuthStateChanged listener will handle UI updates
     } catch (error) {
         console.error("Error during Google Sign-In:", error);
         let errorMessage = "Failed to sign in with Google. Please try again.";
@@ -1139,11 +1139,10 @@ async function handleSignOut() {
         return;
     }
     try {
+        console.log("[Auth] Attempting user sign out...");
         await authFunctions.signOut(auth);
         // onAuthStateChanged listener will handle UI updates
-        console.log("[Auth] User signed out.");
-        // After explicit sign-out, ensure the app is in a clean, signed-out state.
-        // No automatic anonymous re-authentication here.
+        console.log("[Auth] User signed out successfully.");
     } catch (error) {
         console.error("Error during sign out:", error);
         showCustomDialog("Failed to sign out. Please try again.", "Sign-Out Error", null, true);
@@ -1164,6 +1163,7 @@ async function authenticateUserAnonymously() {
     // Only attempt if a custom token is provided by the environment
     if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
         try {
+            console.log("[Auth] Attempting sign-in with custom token...");
             await authFunctions.signInWithCustomToken(auth, __initial_auth_token);
             console.log("[Auth] Signed in with custom token.");
         } catch (error) {
@@ -2254,10 +2254,11 @@ async function initializeAppLogic() { // MARKED ASYNC
     // This listener will fire when the auth state changes (sign-in, sign-out, initial load)
     if (authFunctions && auth) {
         authFunctions.onAuthStateChanged(auth, async (user) => {
+            console.log("[Auth State Change] onAuthStateChanged fired. User object:", user ? user.uid : "null");
             if (user) {
                 // User is signed in (Google or Anonymous from custom token)
                 currentUserId = user.uid;
-                console.log("[Auth] User is signed in:", user.uid);
+                console.log("[Auth] User is signed in:", user.uid, "Provider:", user.providerData[0]?.providerId || "N/A");
                 updateAuthButtonText(true); // Shows "Sign Out"
                 updateMainButtonsState(true); // Enables UI
                 listenForWatchlists();
@@ -2294,7 +2295,10 @@ async function initializeAppLogic() { // MARKED ASYNC
         // If no user is currently authenticated (either from a previous session or __initial_auth_token),
         // the app will start in a signed-out state, awaiting user action (Google Sign-In).
         if (!auth.currentUser) {
+            console.log("[Auth Init] No current user found. Attempting environment-provided authentication.");
             await authenticateUserAnonymously();
+        } else {
+            console.log("[Auth Init] User already present on initial load:", auth.currentUser.uid);
         }
 
     } else {
