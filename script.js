@@ -1,21 +1,21 @@
-// File Version: v163
-// Last Updated: 2025-07-06 (Corrected Paths for Project Page Deployment)
+// File Version: v164
+// Last Updated: 2025-07-06 (Refined Authentication Flow)
 
 // --- AGGRESSIVE IDEMPOTENCY CHECK ---
 // This prevents the script from running its main logic more than once,
 // which can happen due to aggressive caching or environment quirks.
 if (window._scriptInitializedOnce) {
-    console.warn("script.js (v163): Script already initialized. Skipping re-execution.");
+    console.warn("script.js (v164): Script already initialized. Skipping re-execution.");
     throw new Error("Script already initialized."); // Throw an error to stop execution forcefully
 }
 window._scriptInitializedOnce = true;
-console.log("script.js (v163) loaded and starting initialization.");
+console.log("script.js (v164) loaded and starting initialization.");
 
 
 // --- SERVICE WORKER REGISTRATION (Moved to top-level for immediate registration) ---
 if ('serviceWorker' in navigator) {
     // UPDATED: Service Worker registration path for project page deployment
-    navigator.serviceWorker.register('/ASX-Latest/service-worker.js?v=54') // UPDATED: Service Worker version to v54
+    navigator.serviceWorker.register('/ASX-Latest/service-worker.js?v=54') // Service Worker version remains v54
         .then(registration => {
             console.log('Service Worker registered! Scope:', registration.scope);
             registration.addEventListener('updatefound', () => {
@@ -71,6 +71,8 @@ const ALL_SHARES_ID = 'ALL_SHARES'; // Typo fix: ALL_SHARES_ID
 
 // Flag to ensure app logic is initialized only once
 window._appLogicInitialized = false;
+// NEW: Flag to track if initial anonymous authentication has been attempted
+let initialAuthAttempted = false;
 
 // --- FIREBASE GLOBALS ACCESS (from index.html module script) ---
 // These are accessed directly from the window object.
@@ -793,7 +795,7 @@ function populateDividendCalculator(share = null) {
     // Re-get elements here as they are used globally
     const calcCurrentPriceInput = document.getElementById('calcCurrentPrice');
     const calcDividendAmountInput = document.getElementById('calcDividendAmount');
-    const calcFrankingCreditsInput = document.getElementById('calcFrankingCredits'); // Corrected ID
+    const calcFrankingCreditsInput = document.getElementById('calcFrankingCredits');
 
     if (!calcCurrentPriceInput || !calcDividendAmountInput || !calcFrankingCreditsInput) {
         console.error("[UI] Dividend calculator input elements not found in populateDividendCalculator.");
@@ -1150,13 +1152,20 @@ async function handleSignOut() {
 
 /**
  * Authenticates the user anonymously or with a custom token if available.
- * This is crucial for Firestore security rules to work.
+ * This is crucial for Firestore security rules to work. This function should
+ * only be called once on initial app load if no user is found.
  */
-async function authenticateUser() {
+async function authenticateUserAnonymously() {
     if (!authFunctions || !auth) {
         console.error("[Auth] Firebase Auth object or functions not available for authentication.");
         return;
     }
+
+    if (initialAuthAttempted) {
+        console.log("[Auth] Initial anonymous authentication already attempted. Skipping.");
+        return;
+    }
+    initialAuthAttempted = true; // Set flag to prevent re-attempting
 
     if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
         try {
@@ -2113,7 +2122,7 @@ function initializeAppLogic() {
     const dividendCalculatorModal = document.getElementById('dividendCalculatorModal');
     const calcCurrentPriceInput = document.getElementById('calcCurrentPrice');
     const calcDividendAmountInput = document.getElementById('calcDividendAmount');
-    const calcFrankingCreditsInput = document.getElementById('calcFrankingCredits'); // Corrected ID
+    const calcFrankingCreditsInput = document.getElementById('calcFrankingCredits');
     const calcUnfrankedYieldSpan = document.getElementById('calcUnfrankedYield');
     const calcFrankedYieldSpan = document.getElementById('calcFrankedYield');
     const investmentValueSelect = document.getElementById('investmentValueSelect');
@@ -2253,12 +2262,14 @@ function initializeAppLogic() {
                 currentUserId = user.uid;
                 console.log("[Auth] User is signed in:", user.uid);
                 updateAuthButtonText(true); // Pass true for signed in
+                updateMainButtonsState(true); // Enable main buttons
                 // Listen for watchlists first, which will then trigger listenForShares
                 listenForWatchlists();
                 generateAsxCodeButtons(); // Generate buttons based on initial data
             } else {
+                // User is signed out or no user is found on initial load
                 currentUserId = null;
-                console.log("[Auth] No user is signed in. Attempting anonymous sign-in.");
+                console.log("[Auth] No user is signed in.");
                 updateAuthButtonText(false);
                 updateMainButtonsState(false);
                 clearShareList();
@@ -2275,7 +2286,11 @@ function initializeAppLogic() {
                     unsubscribeWatchlists = null;
                     console.log("[Firestore Listener] Unsubscribed from watchlists listener on logout.");
                 }
-                await authenticateUser(); // Attempt anonymous sign-in
+                // Only attempt anonymous sign-in if it hasn't been attempted yet
+                // This prevents it from overriding a Google sign-in if the state briefly goes null
+                if (!initialAuthAttempted) {
+                    await authenticateUserAnonymously();
+                }
             }
         });
     } else {
