@@ -2301,7 +2301,7 @@ function initializeAppLogic() {
             }
         });
 
-        // NEW: Trigger initial anonymous authentication immediately after setting up the listener.
+        // NEW:  Trigger initial anonymous authentication immediately after setting up the listener.
         // This ensures an anonymous session is established if no user is cached or logged in
         // when the app first  loads. The onAuthStateChanged listener will then pick up this user.
         // This is the *only* place where anonymous sign-in should be proactively attempted.
