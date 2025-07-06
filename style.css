@@ -1,5 +1,5 @@
-/* File Version: v81 */
-/* Last Updated: 2025-07-02 (Logout Button Icon-Only Style) */
+/* File Version: v90 */
+/* Last Updated: 2025-07-06 (Version Increment for Cache Busting) */
 
 :root {
     /* Light Theme (Default) */
@@ -809,7 +809,7 @@ body.sidebar-active {
     max-width: 1200px; 
     margin: 20px auto; 
     padding: 0 15px;
-    position: relative;
+    position: relative; 
 }
 
 header {
