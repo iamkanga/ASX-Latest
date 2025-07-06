@@ -2,7 +2,7 @@
     "name": "Kangas Share Watchlist",
     "short_name": "Kangas Watchlist",
     "description": "Your personal share watchlist application.",
-    "start_url": "/ASX-Latest/",  <!-- UPDATED: Correct start_url for GitHub Pages project -->
+    "start_url": "/ASX-Latest/",
     "display": "standalone",
     "background_color": "#f4f7f6",
     "theme_color": "#28a745",
