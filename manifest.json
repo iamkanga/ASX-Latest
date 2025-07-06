@@ -2,7 +2,7 @@
     "name": "Kangas Share Watchlist",
     "short_name": "Kangas Watchlist",
     "description": "Your personal share watchlist application.",
-    "start_url": "/ASX-Latest/",
+    "start_url": "./",
     "display": "standalone",
     "background_color": "#f4f7f6",
     "theme_color": "#28a745",
