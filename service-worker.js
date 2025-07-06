@@ -4,7 +4,7 @@
 // Increment the cache name to force the browser to re-install this new service worker.
 const CACHE_NAME = 'asx-tracker-v47'; 
 
-// Precache all essential application assets, including local files.
+// Precache all essential application  assets, including local files.
 const CACHED_ASSETS = [
     './', // Caches the root (index.html)
     './index.html',

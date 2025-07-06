@@ -1,7 +1,8 @@
 // File Version: v150
 // Last Updated: 2025-07-02 (Fix ALL_SHARES_ID Typo)
 
-// This script interacts with Firebase Firestore for data storage.
+
+// This  script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
 // via window.firestoreDb, window.firebaseAuth, window.getFirebaseAppId(), etc.,
 // from the <script type="module"> block in index.html.
