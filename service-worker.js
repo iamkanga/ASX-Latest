@@ -1,17 +1,17 @@
-// File Version: v51
-// Last Updated: 2025-07-05 (Cache Version Increment for PWA Refresh)
-// This is an additional comment to ensure the file hash changes for deployment.
+// File Version: v53
+// Last Updated: 2025-07-05 (Corrected Paths for Project Page Deployment)
 
 // Increment the cache name to force the browser to re-install this new service worker.
-const CACHE_NAME = 'asx-tracker-v51'; 
+const CACHE_NAME = 'asx-tracker-v53'; 
 
 // Precache all essential application assets, including local files.
+// UPDATED: Paths for project page deployment
 const CACHED_ASSETS = [
-    './', // Caches the root (index.html)
-    './index.html',
-    './script.js',
-    './style.css',
-    './manifest.json', // Cache the manifest file
+    '/ASX-Latest/', // Caches the root of the project page
+    '/ASX-Latest/index.html',
+    '/ASX-Latest/script.js',
+    '/ASX-Latest/style.css',
+    '/ASX-Latest/manifest.json', // Cache the manifest file
     'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap',
     'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css',
     'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js',
@@ -20,27 +20,27 @@ const CACHED_ASSETS = [
 ];
 
 self.addEventListener('install', (event) => {
-    console.log('Service Worker v51: Installing...'); // Updated log for version
+    console.log('Service Worker v53: Installing...'); // Updated log for version
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then((cache) => {
-                console.log('Service Worker v51: Cache opened'); // Updated log
+                console.log('Service Worker v53: Cache opened'); // Updated log
                 return cache.addAll(CACHED_ASSETS);
             })
             .catch(error => {
-                console.error('Service Worker v51: Failed to cache essential assets during install:', error); // Log specific error
+                console.error('Service Worker v53: Failed to cache essential assets during install:', error); // Log specific error
             })
     );
 });
 
 self.addEventListener('activate', (event) => {
-    console.log('Service Worker v51: Activating...'); // Updated log
+    console.log('Service Worker v53: Activating...'); // Updated log
     event.waitUntil(
         caches.keys().then((cacheNames) => {
             return Promise.all(
                 cacheNames.map((cacheName) => {
                     if (cacheName !== CACHE_NAME) {
-                        console.log('Service Worker v51: Deleting old cache:', cacheName); // Updated log
+                        console.log('Service Worker v53: Deleting old cache:', cacheName); // Updated log
                         return caches.delete(cacheName);
                     }
                 })
@@ -48,7 +48,7 @@ self.addEventListener('activate', (event) => {
         })
     );
     self.clients.claim(); // Immediately take control of clients
-    console.log('Service Worker v51: Activated and claimed clients.'); // Updated log
+    console.log('Service Worker v53: Activated and claimed clients.'); // Updated log
 });
 
 self.addEventListener('fetch', (event) => {
@@ -77,7 +77,7 @@ self.addEventListener('fetch', (event) => {
                     });
                     return networkResponse;
                 }).catch(error => {
-                    console.error(`Service Worker v51: Network fetch failed for ${event.request.url}.`, error); // Updated log
+                    console.error(`Service Worker v53: Network fetch failed for ${event.request.url}.`, error); // Updated log
                     // If network fails, try to return a cached response as a fallback
                     return caches.match(event.request); // Try to get from cache again if network failed
                 });
@@ -86,7 +86,7 @@ self.addEventListener('fetch', (event) => {
                 return cachedResponse || fetchPromise;
 
             }).catch(error => {
-                console.error(`Service Worker v51: Cache match failed for ${event.request.url}.`, error); // Updated log
+                console.error(`Service Worker v53: Cache match failed for ${event.request.url}.`, error); // Updated log
                 // Fallback in case both cache match and network fetch fail
                 return fetch(event.request); // Try network one more time if cache fails
             })
@@ -101,6 +101,6 @@ self.addEventListener('fetch', (event) => {
 self.addEventListener('message', (event) => {
     if (event.data && event.data.type === 'SKIP_WAITING') {
         self.skipWaiting();
-        console.log('Service Worker v51: Skip waiting message received, new SW activated.'); // Updated log
+        console.log('Service Worker v53: Skip waiting message received, new SW activated.'); // Updated log
     }
 });

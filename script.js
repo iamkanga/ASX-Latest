@@ -1,20 +1,21 @@
-// File Version: v159
-// Last Updated: 2025-07-05 (Complete File)
+// File Version: v161
+// Last Updated: 2025-07-05 (Corrected Paths for Project Page Deployment)
 
 // --- AGGRESSIVE IDEMPOTENCY CHECK ---
 // This prevents the script from running its main logic more than once,
 // which can happen due to aggressive caching or environment quirks.
 if (window._scriptInitializedOnce) {
-    console.warn("script.js (v159): Script already initialized. Skipping re-execution.");
+    console.warn("script.js (v161): Script already initialized. Skipping re-execution.");
     throw new Error("Script already initialized."); // Throw an error to stop execution forcefully
 }
 window._scriptInitializedOnce = true;
-console.log("script.js (v159) loaded and starting initialization.");
+console.log("script.js (v161) loaded and starting initialization.");
 
 
 // --- SERVICE WORKER REGISTRATION (Moved to top-level for immediate registration) ---
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/service-worker.js?v=51') // UPDATED: Service Worker version to v51
+    // UPDATED: Service Worker registration path for project page deployment
+    navigator.serviceWorker.register('/ASX-Latest/service-worker.js?v=53') // UPDATED: Service Worker version to v53
         .then(registration => {
             console.log('Service Worker registered! Scope:', registration.scope);
             registration.addEventListener('updatefound', () => {
