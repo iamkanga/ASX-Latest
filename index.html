@@ -12,6 +12,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- PWA: Link to your manifest.json file -->
+    <link rel="manifest" href="manifest.json">
 </head>
 <body>
     <header>
@@ -499,6 +501,15 @@
 
         document.addEventListener('DOMContentLoaded', async function() {
             console.log("index.html (v82) script module loaded and DOMContentLoaded fired."); // Updated version number
+            // PWA: Register service worker
+            if ('serviceWorker' in navigator) {
+                try {
+                    const registration = await navigator.serviceWorker.register('service-worker.js');
+                    console.log('Service Worker registered with scope:', registration.scope);
+                } catch (error) {
+                    console.error('Service Worker registration failed:', error);
+                }
+            }
         }); 
     </script>
     <!-- Linking to your separate script.js file -->
