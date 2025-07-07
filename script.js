@@ -1,5 +1,5 @@
-// File Version: v155 (Added appId logging for Firestore paths)
-// Last Updated: 2025-07-07 (Added console log to verify Firebase Project ID in use)
+// File Version: v156 (Enhanced appId logging for Firebase project ID debugging)
+// Last Updated: 2025-07-07 (Added detailed console logs to diagnose Firebase Project ID source)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -10,7 +10,7 @@
 let db;
 let auth = null;
 let currentUserId = null;
-let currentAppId;
+let currentAppId; // This will store the resolved appId
 let selectedShareDocId = null;
 let allSharesData = []; // This will now be kept in sync by the onSnapshot listener
 let currentDialogCallback = null;
@@ -114,7 +114,7 @@ const saveWatchlistNameBtn = document.getElementById('saveWatchlistNameBtn');
 const dividendCalculatorModal = document.getElementById('dividendCalculatorModal');
 const dividendCalcCloseBtn = dividendCalculatorModal ? dividendCalculatorModal.querySelector('.calc-close-button') : null;
 const calcCurrentPriceInput = document.getElementById('calcCurrentPrice');
-const calcDividendAmountInput = document.getElementById('calcDividendAmount');
+const calcDividendAmountInput = document = document.getElementById('calcDividendAmount');
 const calcFrankingCreditsInput = document.getElementById('calcFrankingCredits');
 const calcUnfrankedYieldSpan = document.getElementById('calcUnfrankedYield');
 const calcFrankedYieldSpan = document.getElementById('calcFrankedYield');
@@ -488,9 +488,33 @@ function applyTheme(themeName) {
  * @returns {string} The document path string for the user's root.
  */
 function getUserRootDocPath(userId) {
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-    console.log("[Firestore Path] Using appId:", appId); // Added log for appId
-    return `artifacts/${appId}/users/${userId}`;
+    // Log the raw __app_id provided by the environment
+    console.log("[DEBUG] Raw __app_id:", typeof __app_id !== 'undefined' ? __app_id : 'undefined (not provided by environment)');
+
+    // Attempt to get projectId from the Firebase config exposed by index.html
+    let projectIdFromConfig = 'undefined';
+    if (window.firebaseApp && window.firebaseApp.options && window.firebaseApp.options.projectId) {
+        projectIdFromConfig = window.firebaseApp.options.projectId;
+    }
+    console.log("[DEBUG] projectId from Firebase config (window.firebaseApp.options.projectId):", projectIdFromConfig);
+
+    // Determine the appId to use
+    let appIdToUse;
+    if (typeof __app_id !== 'undefined' && __app_id !== null && __app_id !== '') {
+        appIdToUse = __app_id;
+        console.log("[Firestore Path] Using __app_id (from environment variable):", appIdToUse);
+    } else if (projectIdFromConfig !== 'undefined') {
+        appIdToUse = projectIdFromConfig;
+        console.log("[Firestore Path] Using projectId (from Firebase config object):", appIdToUse);
+    } else {
+        appIdToUse = 'default-app-id';
+        console.log("[Firestore Path] Falling back to default-app-id (neither __app_id nor projectId found):", appIdToUse);
+    }
+
+    // Store the resolved appId in a global variable for general use if needed elsewhere
+    currentAppId = appIdToUse;
+
+    return `artifacts/${appIdToUse}/users/${userId}`;
 }
 
 /**
@@ -2196,12 +2220,16 @@ function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v155) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v156) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
         auth = window.firebaseAuth;
-        currentAppId = window.getFirebaseAppId();
+        // currentAppId is now set within getUserRootDocPath, which is called by loadUserWatchlistsAndSettings
+        // We still need to ensure window.getFirebaseAppId() is available for the initial setup.
+        // The actual appId used for Firestore paths will be determined by getUserRootDocPath.
+        currentAppId = window.getFirebaseAppId(); // This will still get the value from index.html's getFirebaseAppId
+
         console.log("[Firebase Ready] DB, Auth, and AppId assigned from window. Setting up auth state listener.");
         
         window.authFunctions.onAuthStateChanged(auth, async (user) => {
@@ -2218,7 +2246,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.log("[AuthState] Main title set to My Share Watchlist.");
                 }
                 updateMainButtonsState(true);
-                await loadUserWatchlistsAndSettings(); // This will set currentSelectedWatchlistIds and then call loadShares()
+                await loadUserWatchlistsAndSettings(); // This will trigger getUserRootDocPath and its logging
             } else {
                 currentUserId = null;
                 updateAuthButtonText(false);
