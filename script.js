@@ -1,4 +1,4 @@
-// File Version: v157 (Fixed watchlist.watchlist.shares typo, fixed add watchlist ID generation)
+// File Version: v158 (Added Add/Remove from Watchlist feature, fixed KANGA_EMAIL typo)
 // Last Updated: 2025-07-07
 
 // This script interacts with Firebase Firestore for data storage.
@@ -23,7 +23,7 @@ const LONG_PRESS_THRESHOLD = 500; // Time in ms for long press detection
 let touchStartX = 0;
 let touchStartY = 0;
 const TOUCH_MOVE_THRESHOLD = 10; // Pixels for touch movement to cancel long press
-const KANGA_EMAIL = 'iamkanga@gmail.0com'; // CORRECTED EMAIL ADDRESS
+const KANGA_EMAIL = 'iamkanga@gmail.com'; // CORRECTED EMAIL ADDRESS
 let currentCalculatorInput = '';
 let operator = null;
 let previousCalculatorInput = '';
@@ -94,6 +94,7 @@ const commSecLoginMessage = document.getElementById('commSecLoginMessage');
 const modalCommentsContainer = document.getElementById('modalCommentsContainer');
 const deleteShareFromDetailBtn = document.getElementById('deleteShareFromDetailBtn');
 const editShareFromDetailBtn = document.getElementById('editShareFromDetailBtn');
+const addToWatchlistBtn = document.getElementById('addToWatchlistBtn'); // NEW
 
 // Add Watchlist Modal Elements
 const addWatchlistModal = document.getElementById('addWatchlistModal');
@@ -109,6 +110,15 @@ const editWatchlistNameInput = document.getElementById('editWatchlistName');
 const deleteWatchlistInModalBtn = document.getElementById('deleteWatchlistInModalBtn');
 const cancelManageWatchlistBtn = document.getElementById('cancelManageWatchlistBtn');
 const saveWatchlistNameBtn = document.getElementById('saveWatchlistNameBtn');
+
+// NEW: Add/Remove from Watchlist Modal Elements
+const addToWatchlistModal = document.getElementById('addToWatchlistModal');
+const addToWatchlistCloseBtn = document.getElementById('addToWatchlistCloseBtn');
+const shareNameForWatchlistModal = document.getElementById('shareNameForWatchlistModal');
+const watchlistCheckboxesContainer = document.getElementById('watchlistCheckboxesContainer');
+const cancelAddToWatchlistBtn = document.getElementById('cancelAddToWatchlistBtn');
+const saveAddToWatchlistBtn = document.getElementById('saveAddToWatchlistBtn');
+let currentShareIdForWatchlistManagement = null; // To store the share ID being managed
 
 // Dividend Calculator Modal Elements
 const dividendCalculatorModal = document.getElementById('dividendCalculatorModal');
@@ -138,6 +148,7 @@ const customDialogCancelBtn = document.getElementById('customDialogCancelBtn');
 const shareContextMenu = document.getElementById('shareContextMenu');
 const contextEditShareBtn = document.getElementById('contextEditShareBtn');
 const contextDeleteShareBtn = document.getElementById('contextDeleteShareBtn');
+const contextAddToWatchlistBtn = document.getElementById('contextAddToWatchlistBtn'); // NEW
 
 // --- CONSTANTS ---
 const ALL_SHARES_ID = 'all_shares';
@@ -872,10 +883,11 @@ function setupSharesListener() {
         if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID)) {
             filteredShares = sharesFromFirestore; // Show all shares
         } else {
-            // Corrected: watchlist.shares[share.id] instead of watchlist.watchlist.shares[share.id]
+            // Get shares that belong to any of the selected watchlists
             filteredShares = sharesFromFirestore.filter(share =>
                 currentSelectedWatchlistIds.some(watchlistId => {
                     const watchlist = userWatchlists.find(wl => wl.id === watchlistId);
+                    // Corrected: watchlist.shares[share.id] instead of watchlist.watchlist.shares[share.id]
                     return watchlist && watchlist.shares && watchlist.shares[share.id];
                 })
             );
@@ -929,7 +941,7 @@ async function addWatchlist(watchlistName) {
     loadingIndicator.style.display = 'block';
     try {
         // Corrected: Generate a unique ID using doc() on a dummy collection reference
-        const newWatchlistId = window.firestore.doc(window.firestore.collection(db, 'dummy_collection')).id; 
+        const newWatchlistId = window.firestore.doc(window.firestore.collection(db, 'dummy_collection_for_id_gen')).id; 
         const newWatchlist = {
             id: newWatchlistId,
             name: watchlistName,
@@ -1062,10 +1074,10 @@ async function toggleShareInWatchlist(shareId, watchlistId, add) {
 
             if (add) {
                 userWatchlists[watchlistIndex].shares[shareId] = true; // Mark presence
-                showToastMessage(`Share added to "${userWatchlists[watchlistIndex].name}"`, 1500);
+                // showToastMessage(`Share added to "${userWatchlists[watchlistIndex].name}"`, 1500); // Only show toast after modal save
             } else {
                 delete userWatchlists[watchlistIndex].shares[shareId];
-                showToastMessage(`Share removed from "${userWatchlists[watchlistIndex].name}"`, 1500);
+                // showToastMessage(`Share removed from "${userWatchlists[watchlistIndex].name}"`, 1500); // Only show toast after modal save
             }
             await saveUserSettings(); // Save updated watchlists array
             // No need to reload shares here, as the onSnapshot listener will handle it.
@@ -1211,7 +1223,7 @@ function renderShareList() {
             <h3>${share.shareName || 'N/A'}</h3>
             <p><strong>Entered Price:</strong> ${formatCurrency(share.currentPrice)}</p>
             <p><strong>Target Price:</strong> ${formatCurrency(share.targetPrice)}</p>
-            <p><strong>Dividends:</strong> ${formatCurrency(yields.unfrankedYield, 2)})</p>
+            <p><strong>Dividends:</strong> ${formatCurrency(share.dividendAmount)} (${formatPercentage(yields.unfrankedYield, 2)})</p>
             <p><strong>Comments:</strong> ${share.comments && share.comments.length > 0 ? share.comments[0].text : 'No comments'}</p>
         `;
         card.addEventListener('click', (event) => handleShareClick(event, share.id));
@@ -1519,6 +1531,10 @@ function showShareDetails(shareId) {
         populateShareFormForEdit(share.id);
     };
     deleteShareFromDetailBtn.onclick = () => deleteShare(share.id);
+    addToWatchlistBtn.onclick = () => { // NEW: Add to watchlist button handler
+        hideModal(shareDetailModal);
+        showAddToWatchlistModal(share.id);
+    };
 
     showModal(shareDetailModal);
     console.log(`[Details] Displaying details for share: ${shareId}`);
@@ -1565,6 +1581,89 @@ function updateSaveWatchlistNameButtonState() {
         const isInputEmpty = editWatchlistNameInput.value.trim() === '';
         // Enable if input is NOT empty, disable if empty
         saveWatchlistNameBtn.classList.toggle('is-disabled-icon', isInputEmpty);
+    }
+}
+
+/**
+ * Populates and displays the "Add/Remove from Watchlist" modal.
+ * @param {string} shareId - The ID of the share to manage watchlists for.
+ */
+function showAddToWatchlistModal(shareId) {
+    currentShareIdForWatchlistManagement = shareId;
+    const share = allSharesData.find(s => s.id === shareId);
+    if (!share) {
+        showCustomDialog("Share not found for watchlist management.");
+        return;
+    }
+
+    shareNameForWatchlistModal.textContent = share.shareName;
+    watchlistCheckboxesContainer.innerHTML = ''; // Clear existing checkboxes
+
+    userWatchlists.forEach(watchlist => {
+        if (watchlist.id === ALL_SHARES_ID) return; // Skip "All Shares" option
+
+        const checkboxId = `watchlist-${watchlist.id}`;
+        const isChecked = watchlist.shares && watchlist.shares[shareId];
+
+        const div = document.createElement('div');
+        div.className = 'watchlist-checkbox-item';
+        div.innerHTML = `
+            <input type="checkbox" id="${checkboxId}" value="${watchlist.id}" ${isChecked ? 'checked' : ''}>
+            <label for="${checkboxId}">${watchlist.name}</label>
+        `;
+        watchlistCheckboxesContainer.appendChild(div);
+    });
+
+    showModal(addToWatchlistModal);
+    console.log(`[Watchlist Management] Showing modal for share: ${shareId}`);
+}
+
+/**
+ * Handles saving changes from the "Add/Remove from Watchlist" modal.
+ */
+async function handleAddToWatchlistSave() {
+    if (!currentShareIdForWatchlistManagement) {
+        console.error("[Watchlist Management] No share ID selected for saving.");
+        return;
+    }
+
+    loadingIndicator.style.display = 'block';
+    try {
+        const checkboxes = watchlistCheckboxesContainer.querySelectorAll('input[type="checkbox"]');
+        let changesMade = false;
+
+        for (const checkbox of checkboxes) {
+            const watchlistId = checkbox.value;
+            const isChecked = checkbox.checked;
+
+            const watchlist = userWatchlists.find(wl => wl.id === watchlistId);
+            if (watchlist) {
+                const wasInWatchlist = watchlist.shares && watchlist.shares[currentShareIdForWatchlistManagement];
+
+                if (isChecked && !wasInWatchlist) {
+                    // Add share to watchlist
+                    await toggleShareInWatchlist(currentShareIdForWatchlistManagement, watchlistId, true);
+                    changesMade = true;
+                } else if (!isChecked && wasInWatchlist) {
+                    // Remove share from watchlist
+                    await toggleShareInWatchlist(currentShareIdForWatchlistManagement, watchlistId, false);
+                    changesMade = true;
+                }
+            }
+        }
+
+        if (changesMade) {
+            showToastMessage("Watchlist assignments updated!", 2000);
+        } else {
+            showToastMessage("No changes made to watchlists.", 2000);
+        }
+        hideModal(addToWatchlistModal);
+    } catch (error) {
+        console.error("[Watchlist Management] Error saving watchlist changes:", error);
+        showCustomDialog("Error saving watchlist changes. Please try again.");
+    } finally {
+        loadingIndicator.style.display = 'none';
+        currentShareIdForWatchlistManagement = null; // Clear the stored share ID
     }
 }
 
@@ -1636,6 +1735,10 @@ function handleContextMenu(event, shareId) {
     contextDeleteShareBtn.onclick = () => {
         hideContextMenu();
         deleteShare(shareId);
+    };
+    contextAddToWatchlistBtn.onclick = () => { // NEW: Context menu add to watchlist
+        hideContextMenu();
+        showAddToWatchlistModal(shareId);
     };
 
     console.log(`[Context Menu] Displayed for share: ${shareId}`);
@@ -1960,6 +2063,14 @@ function initializeAppLogic() {
     if (shareDetailCloseBtn) {
         shareDetailCloseBtn.addEventListener('click', () => { hideModal(shareDetailModal); console.log("[UI] Share detail close button clicked."); });
     }
+    // NEW: Add to Watchlist button in Share Detail Modal
+    if (addToWatchlistBtn) {
+        addToWatchlistBtn.addEventListener('click', () => {
+            console.log("[UI] Add to Watchlist button clicked (from Share Detail).");
+            showAddToWatchlistModal(selectedShareDocId); // Use the currently selected share ID
+        });
+    }
+
 
     // Add Watchlist Modal Buttons
     if (addWatchlistBtn) {
@@ -2011,6 +2122,20 @@ function initializeAppLogic() {
     // NEW: Add input listener for editWatchlistNameInput to enable/disable save button
     if (editWatchlistNameInput) {
         editWatchlistNameInput.addEventListener('input', updateSaveWatchlistNameButtonState);
+    }
+
+    // NEW: Add/Remove from Watchlist Modal Buttons
+    if (addToWatchlistCloseBtn) {
+        addToWatchlistCloseBtn.addEventListener('click', () => { hideModal(addToWatchlistModal); console.log("[UI] Add/Remove from Watchlist close button clicked."); });
+    }
+    if (cancelAddToWatchlistBtn) {
+        cancelAddToWatchlistBtn.addEventListener('click', () => { hideModal(addToWatchlistModal); console.log("[UI] Add/Remove from Watchlist cancel button clicked."); });
+    }
+    if (saveAddToWatchlistBtn) {
+        saveAddToWatchlistBtn.addEventListener('click', () => {
+            console.log("[UI] Save Add/Remove from Watchlist button clicked.");
+            handleAddToWatchlistSave();
+        });
     }
 
 
@@ -2154,7 +2279,7 @@ function initializeAppLogic() {
                     scrollToTopBtn.style.display = 'flex';
                     scrollToTopBtn.style.opacity = '1';
                 } else {
-                    scrollToTopBtn.style.opacity = '0';
+                    scrollToToPBtn.style.opacity = '0';
                     setTimeout(() => {
                         scrollToTopBtn.style.display = 'none';
                     }, 300);
@@ -2235,7 +2360,7 @@ function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v157) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v158) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
