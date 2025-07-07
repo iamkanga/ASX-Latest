@@ -1,4 +1,4 @@
-// File Version: v155 (Added migration logic for old watchlists, ensures 'shares' property)
+// File Version: v156 (Fixed watchlist edit save button enable, confirmed sidebar add share)
 // Last Updated: 2025-07-07
 
 // This script interacts with Firebase Firestore for data storage.
@@ -876,7 +876,7 @@ function setupSharesListener() {
             filteredShares = sharesFromFirestore.filter(share =>
                 currentSelectedWatchlistIds.some(watchlistId => {
                     const watchlist = userWatchlists.find(wl => wl.id === watchlistId);
-                    return watchlist && watchlist.shares && watchlist.shares[share.id];
+                    return watchlist && watchlist.shares && watchlist.watchlist.shares[share.id]; // Corrected: watchlist.shares[share.id]
                 })
             );
         }
@@ -1546,12 +1546,26 @@ function populateManageWatchlistModal(watchlistId) {
         }
     }
 
+    // Set initial state of save button based on current input value
+    updateSaveWatchlistNameButtonState();
+
     // Set up event listeners for the specific watchlist
     saveWatchlistNameBtn.onclick = () => updateWatchlistName(watchlistId, editWatchlistNameInput.value);
     deleteWatchlistInModalBtn.onclick = () => deleteWatchlist(watchlistId);
 
     showModal(manageWatchlistModal);
     console.log(`[Watchlist] Populated manage watchlist modal for: ${watchlistId}`);
+}
+
+/**
+ * Updates the enabled state of the saveWatchlistNameBtn based on the input field's value.
+ */
+function updateSaveWatchlistNameButtonState() {
+    if (saveWatchlistNameBtn && editWatchlistNameInput) {
+        const isInputEmpty = editWatchlistNameInput.value.trim() === '';
+        // Enable if input is NOT empty, disable if empty
+        saveWatchlistNameBtn.classList.toggle('is-disabled-icon', isInputEmpty);
+    }
 }
 
 
@@ -1994,6 +2008,12 @@ function initializeAppLogic() {
         });
     }
 
+    // NEW: Add input listener for editWatchlistNameInput to enable/disable save button
+    if (editWatchlistNameInput) {
+        editWatchlistNameInput.addEventListener('input', updateSaveWatchlistNameButtonState);
+    }
+
+
     // Watchlist Select Change
     if (watchlistSelect) {
         watchlistSelect.addEventListener('change', async (event) => {
@@ -2194,7 +2214,7 @@ function initializeAppLogic() {
                 console.log(`[Sidebar Menu Item Click] Button '${event.currentTarget.textContent.trim()}' clicked.`);
                 // Check if the data-action-closes-menu attribute is explicitly set to "false"
                 const closesMenu = event.currentTarget.dataset.actionClosesMenu !== 'false';
-                // console.log(`[Sidebar Menu Item Click] data-action-closes-menu: ${event.currentTarget.dataset.actionClosesMenu}, closesMenu: ${closesMenu}`);
+                // console.log(`[Sidebar Menu Item Click] data-action-closes-menu: ${event.currentTarget.dataset.actionCloses-menu}, closesMenu: ${closesMenu}`);
                 if (closesMenu) {
                     toggleAppSidebar(false);
                 }
@@ -2215,7 +2235,7 @@ function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v155) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v156) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
