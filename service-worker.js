@@ -26,11 +26,11 @@ self.addEventListener('install', (event) => {
                 return cache.addAll(CACHED_ASSETS);
             })
             .then(() => {
-                console.log('Service Worker v47: All assets precached'); // Updated log
-                return self.skipWaiting(); // Forces the waiting service worker to become active
+                console.log('Service Worker v47: All assets added to cache. Calling skipWaiting.'); // Updated log
+                return self.skipWaiting(); // Force the new service worker to activate immediately
             })
-            .catch((error) => {
-                console.error('Service Worker v47: Precache failed:', error); // Updated log
+            .catch(error => {
+                console.error('Service Worker v47: Installation failed:', error); // Updated log
             })
     );
 });
@@ -42,15 +42,12 @@ self.addEventListener('activate', (event) => {
             return Promise.all(
                 cacheNames.map((cacheName) => {
                     if (cacheName !== CACHE_NAME) {
-                        console.log('Service Worker v47: Deleting old cache:', cacheName); // Updated log
+                        console.log(`Service Worker v47: Deleting old cache: ${cacheName}`); // Updated log
                         return caches.delete(cacheName);
                     }
                     return null;
                 })
-            );
-        }).then(() => {
-            console.log('Service Worker v47: Activated and old caches cleared.'); // Updated log
-            return clients.claim(); // Immediately takes control of existing pages
+            ).then(() => self.clients.claim()); // Take control of clients immediately
         })
     );
 });
@@ -60,20 +57,10 @@ self.addEventListener('fetch', (event) => {
     if (event.request.method === 'GET') {
         event.respondWith(
             caches.match(event.request).then((cachedResponse) => {
-                // Return cached response if found
-                if (cachedResponse) {
-                    // console.log(`Service Worker v47: Serving from cache: ${event.request.url}`); // Updated log
-                    return cachedResponse;
-                }
-
-                // If not in cache, fetch from network
-                // console.log(`Service Worker v47: Fetching from network: ${event.request.url}`); // Updated log
                 const fetchPromise = fetch(event.request).then((networkResponse) => {
-                    // Check if we received a valid response
-                    if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
-                        // IMPORTANT: Clone the response. A response is a stream
-                        // and can only be consumed once. We must consume the response
-                        // here to put it in cache and also return the response to the browser.
+                    // Cache successful responses for future use
+                    // Do not cache opaque responses (e.g., from third-party CDNs that don't allow CORS)
+                    if (networkResponse.ok && networkResponse.type === 'basic' || networkResponse.type === 'cors') {
                         const responseToCache = networkResponse.clone();
                         caches.open(CACHE_NAME).then((cache) => {
                             cache.put(event.request, responseToCache);
