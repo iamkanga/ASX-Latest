@@ -1,4 +1,4 @@
-// File Version: v156 (Fixed watchlist edit save button enable, confirmed sidebar add share)
+// File Version: v157 (Fixed watchlist.watchlist.shares typo, fixed add watchlist ID generation)
 // Last Updated: 2025-07-07
 
 // This script interacts with Firebase Firestore for data storage.
@@ -23,7 +23,7 @@ const LONG_PRESS_THRESHOLD = 500; // Time in ms for long press detection
 let touchStartX = 0;
 let touchStartY = 0;
 const TOUCH_MOVE_THRESHOLD = 10; // Pixels for touch movement to cancel long press
-const KANGA_EMAIL = 'iamkanga@gmail.com'; // CORRECTED EMAIL ADDRESS
+const KANGA_EMAIL = 'iamkanga@gmail.0com'; // CORRECTED EMAIL ADDRESS
 let currentCalculatorInput = '';
 let operator = null;
 let previousCalculatorInput = '';
@@ -872,11 +872,11 @@ function setupSharesListener() {
         if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID)) {
             filteredShares = sharesFromFirestore; // Show all shares
         } else {
-            // Get shares that belong to any of the selected watchlists
+            // Corrected: watchlist.shares[share.id] instead of watchlist.watchlist.shares[share.id]
             filteredShares = sharesFromFirestore.filter(share =>
                 currentSelectedWatchlistIds.some(watchlistId => {
                     const watchlist = userWatchlists.find(wl => wl.id === watchlistId);
-                    return watchlist && watchlist.shares && watchlist.watchlist.shares[share.id]; // Corrected: watchlist.shares[share.id]
+                    return watchlist && watchlist.shares && watchlist.shares[share.id];
                 })
             );
         }
@@ -928,8 +928,8 @@ async function addWatchlist(watchlistName) {
 
     loadingIndicator.style.display = 'block';
     try {
-        // Generate a unique ID for the new watchlist
-        const newWatchlistId = window.firestore.collection(db, getUserRootDocPath(currentUserId), 'temp_collection').doc().id; 
+        // Corrected: Generate a unique ID using doc() on a dummy collection reference
+        const newWatchlistId = window.firestore.doc(window.firestore.collection(db, 'dummy_collection')).id; 
         const newWatchlist = {
             id: newWatchlistId,
             name: watchlistName,
@@ -1007,7 +1007,8 @@ async function deleteWatchlist(watchlistId) {
 
     if (watchlistId === DEFAULT_WATCHLIST_ID_SUFFIX) {
         showCustomDialog("The default watchlist cannot be deleted.");
-        return;
+        console.log("[Firestore] Attempted to delete default watchlist. Action blocked.");
+        return; // Prevent deletion of default watchlist
     }
 
     const confirm = await showCustomDialog("Are you sure you want to delete this watchlist? Shares within it will NOT be deleted, but will be unassigned from this watchlist.", true);
@@ -1052,7 +1053,6 @@ async function toggleShareInWatchlist(shareId, watchlistId, add) {
 
     loadingIndicator.style.display = 'block';
     try {
-        const userSettingsDocRef = getUserSettingsDocRef(currentUserId);
         const watchlistIndex = userWatchlists.findIndex(wl => wl.id === watchlistId);
 
         if (watchlistIndex > -1) {
@@ -1211,7 +1211,7 @@ function renderShareList() {
             <h3>${share.shareName || 'N/A'}</h3>
             <p><strong>Entered Price:</strong> ${formatCurrency(share.currentPrice)}</p>
             <p><strong>Target Price:</strong> ${formatCurrency(share.targetPrice)}</p>
-            <p><strong>Dividends:</strong> ${formatCurrency(share.dividendAmount)} (${formatPercentage(yields.unfrankedYield, 2)})</p>
+            <p><strong>Dividends:</strong> ${formatCurrency(yields.unfrankedYield, 2)})</p>
             <p><strong>Comments:</strong> ${share.comments && share.comments.length > 0 ? share.comments[0].text : 'No comments'}</p>
         `;
         card.addEventListener('click', (event) => handleShareClick(event, share.id));
@@ -2214,7 +2214,7 @@ function initializeAppLogic() {
                 console.log(`[Sidebar Menu Item Click] Button '${event.currentTarget.textContent.trim()}' clicked.`);
                 // Check if the data-action-closes-menu attribute is explicitly set to "false"
                 const closesMenu = event.currentTarget.dataset.actionClosesMenu !== 'false';
-                // console.log(`[Sidebar Menu Item Click] data-action-closes-menu: ${event.currentTarget.dataset.actionCloses-menu}, closesMenu: ${closesMenu}`);
+                // console.log(`[Sidebar Menu Item Click] data-action-closes-menu: ${event.currentTarget.dataset.actionClosesMenu}, closesMenu: ${closesMenu}`);
                 if (closesMenu) {
                     toggleAppSidebar(false);
                 }
@@ -2235,7 +2235,7 @@ function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v156) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v157) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
