@@ -1,5 +1,5 @@
-// File Version: v153 (Fixed Service Worker registration path for GitHub Pages project sites)
-// Last Updated: 2025-07-07 (Updated Service Worker registration path to include repository name)
+// File Version: v154 (Fixed new shares not displaying due to watchlist association)
+// Last Updated: 2025-07-07 (Ensured new shares are added to the active watchlist's shares list)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -631,7 +631,8 @@ async function loadUserWatchlistsAndSettings() {
                 // If no watchlists, create a default one
                 const defaultWatchlist = {
                     id: DEFAULT_WATCHLIST_ID_SUFFIX,
-                    name: DEFAULT_WATCHLIST_NAME
+                    name: DEFAULT_WATCHLIST_NAME,
+                    shares: {} // Ensure shares object is initialized
                 };
                 userWatchlists.push(defaultWatchlist);
                 console.log("[Firestore] Created default watchlist.");
@@ -651,7 +652,8 @@ async function loadUserWatchlistsAndSettings() {
             // Create default watchlist and settings
             const defaultWatchlist = {
                 id: DEFAULT_WATCHLIST_ID_SUFFIX,
-                name: DEFAULT_WATCHLIST_NAME
+                name: DEFAULT_WATCHLIST_NAME,
+                shares: {} // Ensure shares object is initialized
             };
             userWatchlists = [defaultWatchlist];
             currentSelectedWatchlistIds = [DEFAULT_WATCHLIST_ID_SUFFIX];
@@ -716,14 +718,32 @@ async function saveShare(shareData, docId = null) {
         let shareDocRef;
 
         if (docId) {
-            shareDocRef = getUserShareDocRef(currentUserId, docId); // Get doc ref for existing share
+            // Update existing share
+            shareDocRef = getUserShareDocRef(currentUserId, docId);
             await window.firestore.setDoc(shareDocRef, shareData, { merge: true });
             console.log(`[Firestore] Share updated with ID: ${docId}`);
             showToastMessage("Share updated successfully!", 2000);
         } else {
+            // Add new share
             shareDocRef = await window.firestore.addDoc(shareCollectionRef, shareData);
             console.log(`[Firestore] New share added with ID: ${shareDocRef.id}`);
             showToastMessage("Share added successfully!", 2000);
+
+            // --- NEW LOGIC: Associate new share with the currently selected watchlist ---
+            const activeWatchlistId = currentSelectedWatchlistIds[0];
+            const activeWatchlist = userWatchlists.find(wl => wl.id === activeWatchlistId);
+
+            if (activeWatchlist) {
+                if (!activeWatchlist.shares) {
+                    activeWatchlist.shares = {};
+                }
+                activeWatchlist.shares[shareDocRef.id] = true; // Mark presence of the new share
+                await saveUserSettings(); // Persist the updated watchlists array
+                console.log(`[Firestore] New share ${shareDocRef.id} added to watchlist ${activeWatchlistId}.`);
+            } else {
+                console.warn(`[Firestore] Could not find active watchlist ${activeWatchlistId} to add new share to.`);
+            }
+            // --- END NEW LOGIC ---
         }
         hideModal(shareFormSection);
     } catch (error) {
@@ -885,7 +905,7 @@ async function addWatchlist(watchlistName) {
     try {
         const userSettingsDocRef = getUserSettingsDocRef(currentUserId);
         const newWatchlist = {
-            id: window.firestore.collection(db, getUserRootDocPath(currentUserId), 'watchlists').doc().id, // Generate a unique ID
+            id: window.firestore.collection(db, getUserRootDocPath(currentUserId), 'watchlists').doc().id, // Generate a unique ID (even if not stored as separate doc)
             name: watchlistName,
             shares: {} // Initialize with an empty shares object
         };
@@ -1247,7 +1267,7 @@ function updateAsxCodeButtons() {
         // Remove active from all others
         asxCodeButtonsContainer.querySelectorAll('.asx-code-btn').forEach(btn => btn.classList.remove('active'));
         allButton.classList.add('active');
-        renderShareList(); // Re-render to show all shares
+        filterSharesByAsxCode('ALL'); // Explicitly filter by 'ALL'
         console.log("[ASX Buttons] 'All' button clicked.");
     });
 
@@ -2175,7 +2195,7 @@ function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v153) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v154) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
