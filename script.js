@@ -1590,6 +1590,7 @@ function showContextMenu(event, shareId) {
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
 
+
     if (x + menuWidth > viewportWidth) {
         x = viewportWidth - menuWidth - 10;
     }
@@ -2613,7 +2614,7 @@ async function initializeAppLogic() {
                 console.log(`[Sidebar Menu Item Click] Button '${event.currentTarget.textContent.trim()}' clicked.`);
                 // Check if the data-action-closes-menu attribute is explicitly set to "false"
                 const closesMenu = event.currentTarget.dataset.actionClosesMenu !== 'false';
-                // console.log(`[Sidebar Menu Item Click] data-action-closes-menu: ${event.currentTarget.dataset.actionClosesMenu}, closesMenu: ${closesMenu}`);
+                // console.log(`[Sidebar Menu Item Click] data-action-closes-menu: ${event.currentTarget.dataset.actionCloses-menu}, closesMenu: ${closesMenu}`);
                 if (closesMenu) {
                     toggleAppSidebar(false);
                 }
