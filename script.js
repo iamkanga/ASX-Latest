@@ -1,5 +1,5 @@
-// File Version: v154 (Fixed share-to-watchlist association, removed appId debugging logs)
-// Last Updated: 2025-07-07 (Restored to stable version, removed temporary debugging logs)
+// File Version: v155 (Added migration logic for old watchlists, ensures 'shares' property)
+// Last Updated: 2025-07-07
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -490,7 +490,6 @@ function applyTheme(themeName) {
 function getUserRootDocPath(userId) {
     // currentAppId is set by window.getFirebaseAppId() in the DOMContentLoaded listener
     // which gets it from the firebaseConfig.projectId embedded in index.html.
-    // This function no longer needs to determine appId itself.
     return `artifacts/${currentAppId}/users/${userId}`;
 }
 
@@ -526,15 +525,15 @@ function getUserSettingsDocRef(userId) {
 }
 
 /**
- * Gets the document reference for a specific watchlist under a user.
- * Path: `artifacts/{appId}/users/{userId}/watchlists/{watchlistId}`
+ * Gets the collection reference for the *old* watchlist structure.
+ * Path: `artifacts/{appId}/users/{userId}/watchlists`
  * @param {string} userId - The user's ID.
- * @param {string} watchlistId - The watchlist's ID.
- * @returns {DocumentReference} The Firestore DocumentReference for the watchlist.
+ * @returns {CollectionReference} The Firestore CollectionReference for old watchlists.
  */
-function getUserWatchlistDocRef(userId, watchlistId) {
-    return window.firestore.doc(db, getUserRootDocPath(userId), 'watchlists', watchlistId);
+function getOldWatchlistsCollectionRef(userId) {
+    return window.firestore.collection(db, getUserRootDocPath(userId), 'watchlists');
 }
+
 
 // --- FIREBASE AUTHENTICATION ---
 
@@ -608,7 +607,7 @@ async function handleLogout() {
 // --- FIRESTORE DATA OPERATIONS ---
 
 /**
- * Loads user-specific watchlists and settings from Firestore.
+ * Loads user-specific watchlists and settings from Firestore, including migration logic.
  * This function is called after the user is authenticated.
  */
 async function loadUserWatchlistsAndSettings() {
@@ -620,57 +619,81 @@ async function loadUserWatchlistsAndSettings() {
     console.log("[Firestore] Loading user watchlists and settings...");
 
     const userSettingsDocRef = getUserSettingsDocRef(currentUserId);
+    const oldWatchlistsCollectionRef = getOldWatchlistsCollectionRef(currentUserId);
+
+    let settingsFromFirestore = null;
+    let oldWatchlistsFromFirestore = [];
 
     try {
-        const docSnap = await window.firestore.getDoc(userSettingsDocRef);
-        if (docSnap.exists()) {
-            const settings = docSnap.data();
-            console.log("[Firestore] User settings loaded:", settings);
-
-            // Load watchlists
-            userWatchlists = settings.watchlists || [];
-            if (userWatchlists.length === 0) {
-                // If no watchlists, create a default one
-                const defaultWatchlist = {
-                    id: DEFAULT_WATCHLIST_ID_SUFFIX,
-                    name: DEFAULT_WATCHLIST_NAME,
-                    shares: {} // Ensure shares object is initialized
-                };
-                userWatchlists.push(defaultWatchlist);
-                console.log("[Firestore] Created default watchlist.");
-                // Save the default watchlist to Firestore
-                await window.firestore.setDoc(userSettingsDocRef, { watchlists: userWatchlists }, { merge: true });
-            }
-
-            // Set current selected watchlist(s)
-            currentSelectedWatchlistIds = settings.currentSelectedWatchlistIds || [DEFAULT_WATCHLIST_ID_SUFFIX];
-
-            // Apply theme setting
-            const savedTheme = settings.theme || 'system-default';
-            applyTheme(savedTheme);
-
+        // 1. Try to load current settings (which should contain the primary watchlists array)
+        const settingsDocSnap = await window.firestore.getDoc(userSettingsDocRef);
+        if (settingsDocSnap.exists()) {
+            settingsFromFirestore = settingsDocSnap.data();
+            console.log("[Firestore] User settings loaded from main_settings:", settingsFromFirestore);
+            userWatchlists = settingsFromFirestore.watchlists || [];
         } else {
-            console.log("[Firestore] No user settings found, creating default watchlist and settings.");
-            // Create default watchlist and settings
-            const defaultWatchlist = {
+            console.log("[Firestore] No user settings found in main_settings.");
+            userWatchlists = [];
+        }
+
+        // 2. Try to load watchlists from the old separate 'watchlists' collection
+        const oldWatchlistsQuerySnapshot = await window.firestore.getDocs(oldWatchlistsCollectionRef);
+        oldWatchlistsQuerySnapshot.forEach(doc => {
+            const oldWatchlist = { id: doc.id, ...doc.data() };
+            // Ensure old watchlists have the 'shares' property for compatibility
+            if (!oldWatchlist.shares) {
+                oldWatchlist.shares = {};
+            }
+            oldWatchlistsFromFirestore.push(oldWatchlist);
+        });
+        console.log(`[Firestore] Found ${oldWatchlistsFromFirestore.length} watchlists in old collection.`);
+
+        // 3. Merge and deduplicate watchlists
+        let combinedWatchlists = [...userWatchlists]; // Start with watchlists from main_settings
+
+        oldWatchlistsFromFirestore.forEach(oldWl => {
+            // Check if a watchlist with the same ID already exists in combinedWatchlists
+            const exists = combinedWatchlists.some(currentWl => currentWl.id === oldWl.id);
+            if (!exists) {
+                combinedWatchlists.push(oldWl); // Add if it's a new ID
+            } else {
+                // If ID exists, merge properties, prioritizing existing (e.g., if 'shares' was added later)
+                const existingWl = combinedWatchlists.find(currentWl => currentWl.id === oldWl.id);
+                Object.assign(existingWl, oldWl); // Merge old data into existing
+                if (!existingWl.shares) { // Ensure shares object is present after merge
+                    existingWl.shares = {};
+                }
+            }
+        });
+
+        // Ensure default watchlist exists and is correctly structured
+        const defaultWlExists = combinedWatchlists.some(wl => wl.id === DEFAULT_WATCHLIST_ID_SUFFIX);
+        if (!defaultWlExists) {
+            combinedWatchlists.unshift({ // Add to the beginning
                 id: DEFAULT_WATCHLIST_ID_SUFFIX,
                 name: DEFAULT_WATCHLIST_NAME,
-                shares: {} // Ensure shares object is initialized
-            };
-            userWatchlists = [defaultWatchlist];
-            currentSelectedWatchlistIds = [DEFAULT_WATCHLIST_ID_SUFFIX];
-            currentActiveTheme = 'system-default'; // Ensure default theme is set
-            applyTheme('system-default'); // Apply it immediately
-
-            await window.firestore.setDoc(userSettingsDocRef, {
-                watchlists: userWatchlists,
-                currentSelectedWatchlistIds: currentSelectedWatchlistIds,
-                theme: currentActiveTheme
+                shares: {}
             });
-            console.log("[Firestore] Default settings and watchlist saved.");
+            console.log("[Firestore] Ensured default watchlist exists.");
         }
+
+        userWatchlists = combinedWatchlists; // Update the global array
+
+        // 4. Update currentSelectedWatchlistIds and theme based on settings or defaults
+        currentSelectedWatchlistIds = settingsFromFirestore?.currentSelectedWatchlistIds || [ALL_SHARES_ID];
+        const savedTheme = settingsFromFirestore?.theme || 'system-default';
+        applyTheme(savedTheme);
+
+        // 5. Save the combined watchlists back to main_settings (MIGRATION STEP)
+        await window.firestore.setDoc(userSettingsDocRef, {
+            watchlists: userWatchlists,
+            currentSelectedWatchlistIds: currentSelectedWatchlistIds,
+            theme: currentActiveTheme
+        }, { merge: true });
+        console.log("[Firestore] Watchlists and settings (including old data migration) saved to main_settings.");
+
         populateWatchlistDropdown();
-        await loadShares(); // Load shares after watchlists and settings are loaded
+        await loadShares(); // Load shares after watchlists are fully processed
     } catch (error) {
         console.error("[Firestore] Error loading user watchlists and settings:", error);
         showCustomDialog("Error loading your data. Please try refreshing the page.");
@@ -905,18 +928,20 @@ async function addWatchlist(watchlistName) {
 
     loadingIndicator.style.display = 'block';
     try {
-        const userSettingsDocRef = getUserSettingsDocRef(currentUserId);
+        // Generate a unique ID for the new watchlist
+        const newWatchlistId = window.firestore.collection(db, getUserRootDocPath(currentUserId), 'temp_collection').doc().id; 
         const newWatchlist = {
-            id: window.firestore.collection(db, getUserRootDocPath(currentUserId), 'watchlists').doc().id, // Generate a unique ID (even if not stored as separate doc)
+            id: newWatchlistId,
             name: watchlistName,
             shares: {} // Initialize with an empty shares object
         };
         userWatchlists.push(newWatchlist);
-        await saveUserSettings(); // Save updated watchlists array
+        await saveUserSettings(); // Save updated watchlists array (which now includes the new one)
+        
         populateWatchlistDropdown();
         watchlistSelect.value = newWatchlist.id; // Select the newly added watchlist
         currentSelectedWatchlistIds = [newWatchlist.id]; // Make it the only selected one
-        await saveUserSettings(); // Save updated selected watchlist
+        await saveUserSettings(); // Save updated selected watchlist preference
         loadShares(); // Reload shares for the new watchlist
         hideModal(addWatchlistModal);
         showToastMessage(`Watchlist "${watchlistName}" added!`, 2000);
@@ -1219,7 +1244,15 @@ function populateWatchlistDropdown() {
     watchlistSelect.appendChild(allSharesOption);
 
     // Add user-defined watchlists
-    userWatchlists.forEach(watchlist => {
+    // Sort watchlists alphabetically by name, but keep 'My Watchlist (Default)' first
+    const sortedUserWatchlists = [...userWatchlists].sort((a, b) => {
+        if (a.id === DEFAULT_WATCHLIST_ID_SUFFIX) return -1;
+        if (b.id === DEFAULT_WATCHLIST_ID_SUFFIX) return 1;
+        return a.name.localeCompare(b.name);
+    });
+
+
+    sortedUserWatchlists.forEach(watchlist => {
         const option = document.createElement('option');
         option.value = watchlist.id;
         option.textContent = watchlist.name;
@@ -2154,21 +2187,6 @@ function initializeAppLogic() {
             }
         });
 
-        window.addEventListener('resize', () => {
-            console.log("[Window Resize] Resizing window. Closing sidebar if open.");
-            const isDesktop = window.innerWidth > 768;
-            if (appSidebar.classList.contains('open')) {
-                toggleAppSidebar(false); // Close sidebar on resize for consistency
-            }
-            if (scrollToTopBtn) {
-                if (window.innerWidth > 768) {
-                    scrollToTopBtn.style.display = 'none';
-                } else {
-                    window.dispatchEvent(new Event('scroll')); // Re-evaluate visibility on mobile
-                }
-            }
-        });
-
         // Menu buttons that should close the sidebar
         const menuButtons = appSidebar.querySelectorAll('.menu-button-item');
         menuButtons.forEach(button => {
@@ -2197,7 +2215,7 @@ function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v154) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v155) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
@@ -2219,7 +2237,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.log("[AuthState] Main title set to My Share Watchlist.");
                 }
                 updateMainButtonsState(true);
-                await loadUserWatchlistsAndSettings(); // This will trigger getUserRootDocPath and its logging
+                await loadUserWatchlistsAndSettings(); // This will trigger the new migration logic
             } else {
                 currentUserId = null;
                 updateAuthButtonText(false);
