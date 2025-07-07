@@ -1,5 +1,5 @@
-// File Version: v151 (Updated for PWA service worker registration)
-// Last Updated: 2025-07-07 (Added Service Worker Registration)
+// File Version: v153 (Fixed Service Worker registration path for GitHub Pages project sites)
+// Last Updated: 2025-07-07 (Updated Service Worker registration path to include repository name)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -224,13 +224,10 @@ function calculateYields(dividendAmount, currentPrice, frankingCredits) {
         unfrankedYield = (dividendAmount / currentPrice) * 100;
 
         // Franked yield calculation for Australian shares
-        // Gross-up factor for 30% company tax rate (1 - 0.30) = 0.70
-        // (Dividend / Price) * (1 + (frankingCredits / 70)) * 100
         const taxRateFactor = 0.30; // Australian company tax rate
         const grossUpFactor = 1 / (1 - taxRateFactor); // Approx 1.42857
         const frankingFactor = frankingCredits / 100;
 
-        frankedYield = (dividendAmount / currentPrice) * (1 + (fringCredits / (1 - taxRateFactor))) * 100;
         frankedYield = (dividendAmount / currentPrice) * (1 + (frankingFactor * grossUpFactor)) * 100;
     }
     return { unfrankedYield, frankedYield };
@@ -482,6 +479,61 @@ function applyTheme(themeName) {
     updateThemeToggleAndSelector(); // Update UI elements to reflect new theme
 }
 
+// --- FIRESTORE PATH HELPERS ---
+
+/**
+ * Gets the document reference for a specific user's root data.
+ * Path: `artifacts/{appId}/users/{userId}`
+ * @param {string} userId - The user's ID.
+ * @returns {string} The document path string for the user's root.
+ */
+function getUserRootDocPath(userId) {
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    return `artifacts/${appId}/users/${userId}`;
+}
+
+/**
+ * Gets the collection reference for shares under a specific user.
+ * Path: `artifacts/{appId}/users/{userId}/shares`
+ * @param {string} userId - The user's ID.
+ * @returns {CollectionReference} The Firestore CollectionReference for shares.
+ */
+function getUserSharesCollectionRef(userId) {
+    return window.firestore.collection(db, getUserRootDocPath(userId), 'shares');
+}
+
+/**
+ * Gets the document reference for a specific share under a user.
+ * Path: `artifacts/{appId}/users/{userId}/shares/{shareId}`
+ * @param {string} userId - The user's ID.
+ * @param {string} shareId - The share's ID.
+ * @returns {DocumentReference} The Firestore DocumentReference for the share.
+ */
+function getUserShareDocRef(userId, shareId) {
+    return window.firestore.doc(db, getUserRootDocPath(userId), 'shares', shareId);
+}
+
+/**
+ * Gets the document reference for user settings.
+ * Path: `artifacts/{appId}/users/{userId}/user_settings/main_settings`
+ * @param {string} userId - The user's ID.
+ * @returns {DocumentReference} The Firestore DocumentReference for user settings.
+ */
+function getUserSettingsDocRef(userId) {
+    return window.firestore.doc(db, getUserRootDocPath(userId), 'user_settings', 'main_settings');
+}
+
+/**
+ * Gets the document reference for a specific watchlist under a user.
+ * Path: `artifacts/{appId}/users/{userId}/watchlists/{watchlistId}`
+ * @param {string} userId - The user's ID.
+ * @param {string} watchlistId - The watchlist's ID.
+ * @returns {DocumentReference} The Firestore DocumentReference for the watchlist.
+ */
+function getUserWatchlistDocRef(userId, watchlistId) {
+    return window.firestore.doc(db, getUserRootDocPath(userId), 'watchlists', watchlistId);
+}
+
 // --- FIREBASE AUTHENTICATION ---
 
 /**
@@ -554,20 +606,6 @@ async function handleLogout() {
 // --- FIRESTORE DATA OPERATIONS ---
 
 /**
- * Gets the base path for a user's data in Firestore.
- * @param {string} userId - The user's ID.
- * @param {boolean} isPublic - True for public data, false for private.
- * @returns {string} The Firestore collection path.
- */
-function getUserBasePath(userId, isPublic = false) {
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-    if (isPublic) {
-        return `artifacts/${appId}/public/data`;
-    }
-    return `artifacts/${appId}/users/${userId}`;
-}
-
-/**
  * Loads user-specific watchlists and settings from Firestore.
  * This function is called after the user is authenticated.
  */
@@ -579,7 +617,7 @@ async function loadUserWatchlistsAndSettings() {
     loadingIndicator.style.display = 'block';
     console.log("[Firestore] Loading user watchlists and settings...");
 
-    const userSettingsDocRef = window.firestore.doc(db, getUserBasePath(currentUserId), 'settings');
+    const userSettingsDocRef = getUserSettingsDocRef(currentUserId);
 
     try {
         const docSnap = await window.firestore.getDoc(userSettingsDocRef);
@@ -646,7 +684,7 @@ async function saveUserSettings() {
         return;
     }
     console.log("[Firestore] Saving user settings...");
-    const userSettingsDocRef = window.firestore.doc(db, getUserBasePath(currentUserId), 'settings');
+    const userSettingsDocRef = getUserSettingsDocRef(currentUserId);
 
     try {
         await window.firestore.setDoc(userSettingsDocRef, {
@@ -674,11 +712,11 @@ async function saveShare(shareData, docId = null) {
 
     loadingIndicator.style.display = 'block';
     try {
-        const shareCollectionRef = window.firestore.collection(db, `${getUserBasePath(currentUserId)}/shares`);
+        const shareCollectionRef = getUserSharesCollectionRef(currentUserId);
         let shareDocRef;
 
         if (docId) {
-            shareDocRef = window.firestore.doc(shareCollectionRef, docId);
+            shareDocRef = getUserShareDocRef(currentUserId, docId); // Get doc ref for existing share
             await window.firestore.setDoc(shareDocRef, shareData, { merge: true });
             console.log(`[Firestore] Share updated with ID: ${docId}`);
             showToastMessage("Share updated successfully!", 2000);
@@ -714,21 +752,33 @@ async function deleteShare(docId) {
 
     loadingIndicator.style.display = 'block';
     try {
-        const shareDocRef = window.firestore.doc(db, `${getUserBasePath(currentUserId)}/shares`, docId);
+        const shareDocRef = getUserShareDocRef(currentUserId, docId);
 
         // Remove share from all watchlists it belongs to
         const batch = window.firestore.writeBatch(db);
-        for (const watchlist of userWatchlists) {
-            if (watchlist.shares && watchlist.shares[docId]) {
-                const watchlistDocRef = window.firestore.doc(db, `${getUserBasePath(currentUserId)}/watchlists`, watchlist.id);
-                batch.update(watchlistDocRef, {
-                    [`shares.${docId}`]: window.firestore.deleteField()
-                });
-            }
+        const userSettingsDocRef = getUserSettingsDocRef(currentUserId); // Get settings doc ref
+        const settingsSnap = await window.firestore.getDoc(userSettingsDocRef);
+        if (settingsSnap.exists()) {
+            const settings = settingsSnap.data();
+            const currentWatchlists = settings.watchlists || [];
+            currentWatchlists.forEach(watchlist => {
+                if (watchlist.shares && watchlist.shares[docId]) {
+                    // Update the shares map within the watchlist object in the user settings document
+                    // This requires updating the entire watchlists array or using a more complex field path
+                    // For simplicity and to avoid deep nesting issues, we'll update the array in memory
+                    // and then save the whole array back.
+                    delete watchlist.shares[docId];
+                }
+            });
+            // Update the entire watchlists array in the settings document
+            batch.update(userSettingsDocRef, { watchlists: currentWatchlists });
         }
+        
+        // Delete the share document itself
+        batch.delete(shareDocRef);
+        
         await batch.commit();
 
-        await window.firestore.deleteDoc(shareDocRef);
         console.log(`[Firestore] Share deleted with ID: ${docId}`);
         showToastMessage("Share deleted successfully!", 2000);
         hideModal(shareDetailModal); // Hide detail modal if open
@@ -762,7 +812,7 @@ function setupSharesListener() {
     loadingIndicator.style.display = 'block';
     console.log(`[Firestore Listener] Setting up shares listener for watchlists: ${currentSelectedWatchlistIds.join(', ')}`);
 
-    const sharesCollectionRef = window.firestore.collection(db, `${getUserBasePath(currentUserId)}/shares`);
+    const sharesCollectionRef = getUserSharesCollectionRef(currentUserId);
     const q = window.firestore.query(sharesCollectionRef);
 
     unsubscribeShares = window.firestore.onSnapshot(q, (querySnapshot) => {
@@ -833,9 +883,9 @@ async function addWatchlist(watchlistName) {
 
     loadingIndicator.style.display = 'block';
     try {
-        const userSettingsDocRef = window.firestore.doc(db, getUserBasePath(currentUserId), 'settings');
+        const userSettingsDocRef = getUserSettingsDocRef(currentUserId);
         const newWatchlist = {
-            id: window.firestore.collection(db, 'temp').doc().id, // Generate a unique ID
+            id: window.firestore.collection(db, getUserRootDocPath(currentUserId), 'watchlists').doc().id, // Generate a unique ID
             name: watchlistName,
             shares: {} // Initialize with an empty shares object
         };
@@ -955,7 +1005,7 @@ async function toggleShareInWatchlist(shareId, watchlistId, add) {
 
     loadingIndicator.style.display = 'block';
     try {
-        const userSettingsDocRef = window.firestore.doc(db, getUserBasePath(currentUserId), 'settings');
+        const userSettingsDocRef = getUserSettingsDocRef(currentUserId);
         const watchlistIndex = userWatchlists.findIndex(wl => wl.id === watchlistId);
 
         if (watchlistIndex > -1) {
@@ -1692,9 +1742,9 @@ function handleCalculatorButtonClick(event) {
                         case 'multiply':
                             interimResult = num1 * num2;
                             break;
-                        case 'divide':
-                            interimResult = num2 !== 0 ? num1 / num2 : 'Error';
-                            break;
+                            case 'divide':
+                                interimResult = num2 !== 0 ? num1 / num2 : 'Error';
+                                break;
                     }
                     previousCalculatorInput = interimResult.toString();
                 } else {
@@ -2125,7 +2175,7 @@ function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v151) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v153) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
