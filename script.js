@@ -1,5 +1,5 @@
-// File Version: v154 (Fixed new shares not displaying due to watchlist association)
-// Last Updated: 2025-07-07 (Ensured new shares are added to the active watchlist's shares list)
+// File Version: v155 (Added appId logging for Firestore paths)
+// Last Updated: 2025-07-07 (Added console log to verify Firebase Project ID in use)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -489,6 +489,7 @@ function applyTheme(themeName) {
  */
 function getUserRootDocPath(userId) {
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    console.log("[Firestore Path] Using appId:", appId); // Added log for appId
     return `artifacts/${appId}/users/${userId}`;
 }
 
@@ -2195,7 +2196,7 @@ function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v154) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v155) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
