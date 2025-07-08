@@ -1,5 +1,5 @@
-/* File Version: v85 */
-/* Last Updated: 2025-07-08 (Sign-in button centering fix, Google Sign In text alignment, Comments box visibility check) */
+/* File Version: v86 */
+/* Last Updated: 2025-07-08 (Google Sign-in button styling, centering, and comments box visibility) */
 
 :root {
     /* Light Theme (Default) */
@@ -737,7 +737,7 @@ body.theme-subtle-6 { /* Subtle Sand */
     --icon-danger-color: #e74c3c;
     --icon-danger-hover-color: #c0392b;
     --calc-num-btn-bg: #f2ebe6;
-    --calc-num-btn-text: #6a5a4a;
+    --calc-num-btn-text: #6a4a4a;
     --calc-num-btn-hover-bg: #eeb8a2;
 }
 
