@@ -1,5 +1,5 @@
-/* File Version: v84 */
-/* Last Updated: 2025-07-08 (Fixed comments display, calculator percentage, bold theme text color) */
+/* File Version: v85 */
+/* Last Updated: 2025-07-08 (Fixed bold theme text color, comments display, calculator percentage) */
 
 :root {
     /* Light Theme (Default) */
@@ -2109,8 +2109,6 @@ table tbody tr:not(.selected):hover {
         position: relative; 
         left: 0; 
         right: 0;
-        width: 100%; 
-        box-sizing: border-box; 
     }
     table {
         display: none;

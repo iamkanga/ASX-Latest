@@ -8,7 +8,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍆</text></svg>">
 
     <!-- Linking to your separate style.css file -->
-    <link rel="stylesheet" href="style.css?v=84"> <!-- Updated to v84 -->
+    <link rel="stylesheet" href="style.css?v=85"> <!-- Updated to v85 -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -234,11 +234,12 @@
                 <label for="frankingCredits">Franking Credits (%):</label>
                 <input type="number" id="frankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 70 for 70%">
 
-                <!-- Comments section container -->
-                <div id="commentsFormContainer" class="comments-form-container">
-                    <!-- ADDED PLUS ICON HERE (NOT A BUTTON) -->
+                <!-- Comments section wrapper - MOVED H3 OUTSIDE commentsFormContainer -->
+                <div class="comments-section-wrapper">
                     <h3>Comments <span id="addCommentSectionBtn" class="add-section-icon"><i class="fas fa-plus"></i></span></h3>
-                    <!-- Initial comment section will be added here by JS -->
+                    <div id="commentsFormContainer" class="comments-form-container">
+                        <!-- Comment sections will be dynamically added here by JS -->
+                    </div>
                 </div>
             </div>
             <!-- END Scrollable content area -->
@@ -501,10 +502,10 @@
         } : null;
 
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log("index.html (v84) script module loaded and DOMContentLoaded fired."); // Updated version number
+            console.log("index.html (v85) script module loaded and DOMContentLoaded fired."); // Updated version number
         }); 
     </script>
     <!-- Linking to your separate script.js file -->
-    <script src="script.js?v=153"></script> <!-- Updated to v153 -->
+    <script src="script.js?v=154"></script> <!-- Updated to v154 -->
 </body>
 </html>
