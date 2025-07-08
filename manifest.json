@@ -1,36 +1,21 @@
 {
-  "name": "ASX Share Watchlist",
-  "short_name": "ASX Watchlist",
-  "description": "Track your ASX shares and dividends.",
-  "start_url": "/ASX-Latest/index.html",
-  "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#3b82f6",
-  "icons": [
-    {
-      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTEyIDJMMiA3bDEwIDUgMTAtNUwxMiAyem0wIDV2MTBtMC01bC01LTIuNVY3bDUgMi41em0wIDVsNS0yLjV2LTUuNWwtNSAyLjV6Ii8+PC9zdmc+",
-      "sizes": "192x192",
-      "type": "image/svg+xml"
-    },
-    {
-      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTEyIDJMMiA3bDEwIDUgMTAtNUwxMiAyem0wIDV2MTBtMC01bC01LTIuNVY3bDUgMi41em0wIDVsNS0yLjV2LTUuNWwtNSAyLjV6Ii8+PC9zdmc+",
-      "sizes": "512x512",
-      "type": "image/svg+xml"
-    },
-    {
-      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxODAiIGhlaWdodD0iMTgwIiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTEyIDJMMiA3bDEwIDUgMTAtNUwxMiAyem0wIDV2MTBtMC01bC01LTIuNVY3bDUgMi41em0wIDVsNS0yLjV2LTUuNWwtNSAyLjV6Ii8+PC9zdmc+",
-      "sizes": "180x180",
-      "type": "image/svg+xml"
-    },
-    {
-      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0xMiAyTDIgN2wxMCA1IDEwLTVMMTIgMnpNMCA1djEwbTAtNWwtNS0yLjVWN2w1IDIuNXptMCA1bDUtMi41di01LjVsLTUgMi41eiIvPjwvc3ZnPg==",
-      "sizes": "32x32",
-      "type": "image/svg+xml"
-    },
-    {
-      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0xMiAyTDIgN2wxMCA1IDEwLTVMMTIgMnpNMCA1djEwbTAtNWwtNS0yLjVWN2w1IDIuNXptMCA1bDUtMi41di01LjVsLTUgMi41eiIvPjwvc3ZnPg==",
-      "sizes": "16x16",
-      "type": "image/svg+xml"
-    }
-  ]
+    "name": "Kangas Share Watchlist",
+    "short_name": "Kangas Watchlist",
+    "description": "Your personal share watchlist application.",
+    "start_url": "./",
+    "display": "standalone",
+    "background_color": "#f4f7f6",
+    "theme_color": "#28a745",
+    "icons": [
+        {
+            "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext x='5' y='.9em' font-size='65'%3E%F0%9F%8D%BA%3C/text%3E%3Ctext x='45' y='.9em' font-size='65'%3E%F0%9F%92%B0%3C/text%3E%3C/svg%3E",
+            "sizes": "192x192",
+            "type": "image/svg+xml"
+        },
+        {
+            "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext x='5' y='.9em' font-size='65'%3E%F0%9F%8D%BA%3C/text%3E%3Ctext x='45' y='.9em' font-size='65'%3E%F0%9F%92%B0%3C/text%3E%3C/svg%3E",
+            "sizes": "512x512",
+            "type": "image/svg+xml"
+        }
+    ]
 }

@@ -786,12 +786,12 @@ body.theme-subtle-10 { /* Subtle Stone */
 
 /* Base Styles */
 html, body {
-    overflow-x: hidden;
+    overflow-x: hidden; 
 }
 body {
     font-family: 'Inter', sans-serif;
-    margin: 0;
-    padding: 0;
+    margin: 0; 
+    padding: 0; 
     box-sizing: border-box;
     background-color: var(--background-color);
     color: var(--text-color);
@@ -806,8 +806,8 @@ body.sidebar-active {
 }
 
 .container {
-    max-width: 1200px;
-    margin: 20px auto;
+    max-width: 1200px; 
+    margin: 20px auto; 
     padding: 0 15px;
     position: relative;
 }
@@ -817,21 +817,21 @@ header {
     padding: 15px 20px;
     box-shadow: 0 2px 4px var(--shadow-color);
     display: flex;
-    flex-direction: column;
+    flex-direction: column; 
     gap: 10px;
-    position: relative;
-    height: auto;
+    position: relative; 
+    height: auto; 
 }
 
 .header-top-row {
     display: flex;
-    justify-content: center;
+    justify-content: center; 
     align-items: center;
     gap: 15px;
     position: relative;
-    width: 100%;
+    width: 100%; 
     box-sizing: border-box;
-    padding: 0 15px;
+    padding: 0 15px; 
 }
 
 h1#mainTitle {
@@ -839,15 +839,15 @@ h1#mainTitle {
     font-size: 1.8em;
     font-weight: 700;
     color: var(--text-color);
-    text-align: center;
-    flex-grow: 1;
+    text-align: center; 
+    flex-grow: 1; 
 }
 
 .header-action-btn {
     background: none;
     border: none;
     color: var(--text-color);
-    font-size: 1.8em;
+    font-size: 1.8em; 
     cursor: pointer;
     position: absolute;
     top: 50%;
@@ -861,26 +861,26 @@ h1#mainTitle {
     color: var(--button-hover-bg);
 }
 
-.header-action-btn-left {
-    left: 0;
+.header-action-btn-left { 
+    left: 0; 
 }
 
-.header-action-btn-right {
-    right: 0;
+.header-action-btn-right { 
+    right: 0; 
 }
 
 
-.hamburger-btn {
+.hamburger-btn { 
     background: none;
     border: none;
     color: var(--text-color);
-    font-size: 1.8em;
+    font-size: 1.8em; 
     cursor: pointer;
     top: 50%;
     transform: translateY(-50%);
-    padding: 5px 10px;
-    z-index: 11;
-    display: block;
+    padding: 5px 10px; 
+    z-index: 11; 
+    display: block; 
 }
 
 .hamburger-btn:hover {
@@ -888,40 +888,40 @@ h1#mainTitle {
 }
 
 .app-sidebar {
-    position: fixed;
+    position: fixed; 
     top: 0;
-    left: calc(-1 * var(--sidebar-width));
-    width: var(--sidebar-width);
+    left: calc(-1 * var(--sidebar-width)); 
+    width: var(--sidebar-width); 
     height: 100%;
     background-color: var(--sidebar-bg);
     box-shadow: 2px 0 5px var(--shadow-color);
-    transition: left 0.3s ease-in-out;
-    z-index: 1000;
+    transition: left 0.3s ease-in-out; 
+    z-index: 1000; 
     padding: 20px;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
+    overflow-y: auto; 
     border-right: 1px solid var(--sidebar-border);
 }
 
 .app-sidebar.open {
-    left: 0;
+    left: 0; 
 }
 
 .close-menu-btn {
     color: var(--close-sidebar-btn-color);
-    font-size: 2.5em;
+    font-size: 2.5em; 
     position: absolute;
     top: 10px;
     right: 15px;
     cursor: pointer;
     padding: 5px;
-    line-height: 1;
-    display: block;
-    background: none;
-    border: none;
-    font-family: sans-serif;
+    line-height: 1; 
+    display: block; 
+    background: none; 
+    border: none; 
+    font-family: sans-serif; 
 }
 
 .close-menu-btn:hover {
@@ -943,12 +943,12 @@ h1#mainTitle {
 
 .menu-buttons-group {
     display: flex;
-    flex-direction: column;
-    gap: 10px;
+    flex-direction: column; 
+    gap: 10px; 
 }
 
 /* Redesigned menu-button-item for standalone icon/text look */
-.menu-button-item {
+.menu-button-item { 
     background-color: var(--menu-button-bg); /* Transparent by default */
     color: var(--sidebar-text); /* Use sidebar text color */
     padding: 10px 15px; /* Reduced padding */
@@ -962,9 +962,9 @@ h1#mainTitle {
     align-items: center;
     gap: 10px;
     transition: background-color 0.2s ease, transform 0.1s ease;
-    width: 100%;
+    width: 100%; 
     box-sizing: border-box;
-    justify-content: flex-start;
+    justify-content: flex-start; 
 }
 
 .menu-button-item:hover {
@@ -1043,10 +1043,10 @@ h1#mainTitle {
     font-weight: 600;
 }
 
-.menu-dropdown {
+.menu-dropdown { 
     width: 100%;
     box-sizing: border-box;
-    margin-bottom: 10px;
+    margin-bottom: 10px; 
 }
 
 .sidebar-overlay {
@@ -1055,29 +1055,29 @@ h1#mainTitle {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 999;
-    display: none;
+    background-color: rgba(0, 0, 0, 0.5); 
+    z-index: 999; 
+    display: none; 
 }
 
 .sidebar-overlay.open {
-    display: block;
+    display: block; 
 }
 
 
 .watchlist-controls-row {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
+    flex-wrap: wrap; 
+    justify-content: center; 
     align-items: center;
-    gap: 15px 25px;
+    gap: 15px 25px; 
     padding: 10px 0;
     border-top: 1px solid var(--border-color);
     border-bottom: 1px solid var(--border-color);
-    width: 100%;
+    width: 100%; 
     box-sizing: border-box;
-    padding-left: 15px;
-    padding-right: 15px;
+    padding-left: 15px; 
+    padding-right: 15px; 
 }
 
 .watchlist-group,
@@ -1103,13 +1103,13 @@ h1#mainTitle {
     cursor: pointer;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
     min-width: 150px;
-    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http://www.w3.org/2000/svg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236c757d%22%20d%3D%22M287%2069.9a14.7%2014.7%200%200%200-20.8%200L146.2%20189.9%2026.3%2069.9a14.7%2014.7%200%200%200-20.8%2020.8L135.8%20216.7a14.7%2014.7%200%200%200%2020.8%200L287%2090.7a14.7%2014.7%200%200%200%200-20.8z%22%2F%3E%3C%2Fsvg%3E');
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http://www.w3.org/2000/svg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236c757d%22%20d%3D%22M287%2069.9a14.7%2014.7%200%200%200-20.8%200L146.2%20189.9%2026.3%2069.9a14.7%2014.7%200%200%200-20.8%2020.8L135.8%20216.7a14.7%2014.7%200%200%200%2020.8%200L287%2090.7a14.7%2014.7%200%200%200%200-20.8z%22%2F%3E%3C%2Fsvg%3E'); 
     background-repeat: no-repeat;
     background-position: right 12px top 50%;
     background-size: 12px auto;
     padding-right: 30px;
-    max-height: 45px;
-    overflow-y: hidden;
+    max-height: 45px; 
+    overflow-y: hidden; 
     width: 100%; /* Ensure it fills its flex-basis */
 }
 
@@ -1132,13 +1132,13 @@ h1#mainTitle {
 .asx-code-buttons-container {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
+    justify-content: center; 
     gap: 8px;
     padding: 10px 0;
     width: 100%;
     box-sizing: border-box;
-    padding-left: 15px;
-    padding-right: 15px;
+    padding-left: 15px; 
+    padding-right: 15px; 
 }
 
 .asx-code-btn {
@@ -1214,15 +1214,15 @@ table tbody tr:not(.selected):hover {
 }
 
 .mobile-share-cards {
-    display: none;
+    display: none; 
     flex-direction: column;
     gap: 15px;
     padding: 15px;
-    position: relative;
-    left: 0;
+    position: relative; 
+    left: 0; 
     right: 0;
-    width: 100%;
-    box-sizing: border-box;
+    width: 100%; 
+    box-sizing: border-box; 
 }
 
 .mobile-card {
@@ -1271,10 +1271,10 @@ table tbody tr:not(.selected):hover {
     box-shadow: 0 -2px 4px var(--shadow-color);
     padding: 10px 20px;
     display: flex;
-    justify-content: center;
+    justify-content: center; 
     align-items: center;
     z-index: 500;
-    transition: margin-left 0.3s ease, width 0.3s ease;
+    transition: margin-left 0.3s ease, width 0.3s ease; 
 }
 
 .google-auth-btn {
@@ -1291,7 +1291,7 @@ table tbody tr:not(.selected):hover {
     align-items: center;
     gap: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    margin: 0 auto;
+    margin: 0 auto; 
 }
 
 .google-auth-btn:hover {
@@ -1314,11 +1314,11 @@ table tbody tr:not(.selected):hover {
     top: 0;
     width: 100%;
     height: 100%;
-    overflow: auto;
+    overflow: auto; 
     background-color: var(--modal-bg);
-    padding-top: 60px;
-    padding-bottom: 20px;
-    box-sizing: border-box;
+    padding-top: 60px; 
+    padding-bottom: 20px; 
+    box-sizing: border-box; 
 }
 
 .modal-content {
@@ -1334,7 +1334,7 @@ table tbody tr:not(.selected):hover {
     color: var(--text-color);
     display: flex;
     flex-direction: column;
-    max-height: 90vh;
+    max-height: 90vh; 
 }
 
 /* Styles for modal header with icon */
@@ -1401,12 +1401,12 @@ table tbody tr:not(.selected):hover {
 
 
 .modal-body-scrollable {
-    flex-grow: 1;
-    overflow-y: auto;
-    padding-right: 10px;
-    margin-right: -10px;
+    flex-grow: 1; 
+    overflow-y: auto; 
+    padding-right: 10px; 
+    margin-right: -10px; 
     box-sizing: border-box;
-    overflow-x: hidden;
+    overflow-x: hidden; 
 }
 
 .add-share-modal-content .modal-body-scrollable {
@@ -1445,14 +1445,14 @@ table tbody tr:not(.selected):hover {
     opacity: 0.8;
     margin-top: 5px;
     margin-bottom: 5px;
-    display: block;
+    display: block; 
 }
 
 .commsec-message {
-    font-size: 0.75em;
-    margin-top: 0;
-    margin-bottom: 0;
-    line-height: 1.2;
+    font-size: 0.75em; 
+    margin-top: 0; 
+    margin-bottom: 0; 
+    line-height: 1.2; 
 }
 
 
@@ -1501,7 +1501,7 @@ table tbody tr:not(.selected):hover {
     margin-bottom: 15px;
     font-size: 1.2em;
     color: var(--text-color);
-    border-bottom: none;
+    border-bottom: none; 
     padding-bottom: 0;
 }
 
@@ -1516,7 +1516,7 @@ table tbody tr:not(.selected):hover {
     align-items: center;
     cursor: pointer;
     transition: color 0.2s ease, transform 0.1s ease;
-    flex-shrink: 0;
+    flex-shrink: 0; 
     width: 30px; /* Make clickable area consistent */
     height: 30px;
     border-radius: 50%; /* Make it round */
@@ -1551,7 +1551,7 @@ table tbody tr:not(.selected):hover {
     margin-bottom: 0;
     margin-right: 10px;
     font-weight: 600;
-    width: auto;
+    width: auto; 
     min-width: 0;
 }
 
@@ -1580,15 +1580,15 @@ table tbody tr:not(.selected):hover {
 
 .form-action-buttons,
 .modal-action-buttons,
-.custom-dialog-buttons {
+.custom-dialog-buttons { 
     display: flex;
-    flex-wrap: nowrap;
-    justify-content: center;
+    flex-wrap: nowrap; 
+    justify-content: center; 
     gap: 10px;
     margin-top: 25px;
-    flex-shrink: 0;
-    padding-top: 15px;
-    border-top: 1px solid var(--border-color);
+    flex-shrink: 0; 
+    padding-top: 15px; 
+    border-top: 1px solid var(--border-color); 
 }
 
 /* Styles for sticky footer in modals */
@@ -1659,7 +1659,7 @@ table tbody tr:not(.selected):hover {
     margin-bottom: 10px;
     font-size: 1.2em;
     color: var(--text-color);
-    border-bottom: none;
+    border-bottom: none; 
     padding-bottom: 0;
 }
 
@@ -1694,14 +1694,14 @@ table tbody tr:not(.selected):hover {
     margin-bottom: 10px;
     font-size: 1.2em;
     color: var(--text-color);
-    border-bottom: none;
+    border-bottom: none; 
     padding-bottom: 0;
 }
 
 .external-link {
-    display: inline-flex;
+    display: inline-flex; 
     align-items: center;
-    gap: 8px;
+    gap: 8px; 
     color: var(--link-color); /* Use link-color variable */
     text-decoration: none;
     font-weight: 600;
@@ -1742,7 +1742,7 @@ table tbody tr:not(.selected):hover {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
-    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http://www.w3.org/2000/svg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236c757d%22%20d%3D%22M287%2069.9a14.7%2014.7%200%200%200-20.8%200L146.2%20189.9%2026.3%2069.9a14.7%2014.7%200%200%200-20.8%2020.8L135.8%20216.7a14.7%2014.7%200%200%200%2020.8%200L287%2090.7a14.7%2014.7%200%200%200%200-20.8z%22%2F%3E%3C%2Fsvg%3E');
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http://www.w3.org/2000/svg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236c757d%22%20d%3D%22M287%2069.9a14.7%2014.7%200%200%200-20.8%200L146.2%20189.9%2026.3%2069.9a14.7%2014.7%200%200%200-20.8%2020.8L135.8%20216.7a14.7%2014.7%200%200%200%2020.8%200L287%2090.7a14.7%2014.7%200%200%200%200-20.8z%22%2F%3E%3C%2Fsvg%3E'); 
     background-repeat: no-repeat;
     background-position: right 12px top 50%;
     background-size: 12px auto;
@@ -1863,18 +1863,18 @@ table tbody tr:not(.selected):hover {
     background-color: var(--button-bg);
     color: var(--button-text);
     border: none;
-    border-radius: 50%;
+    border-radius: 50%; 
     width: 50px;
     height: 50px;
-    font-size: 1.8em;
+    font-size: 1.8em; 
     cursor: pointer;
     box-shadow: 0 4px 8px var(--shadow-color);
     transition: background-color 0.3s ease, transform 0.2s ease, opacity 0.3s ease;
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 0;
+    
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    padding: 0; 
 }
 
 #scrollToTopBtn:hover {
@@ -1882,7 +1882,7 @@ table tbody tr:not(.selected):hover {
     transform: translateY(-2px);
 }
 #scrollToTopBtn .fas {
-    font-weight: 900;
+    font-weight: 900; 
 }
 
 
@@ -1959,85 +1959,85 @@ table tbody tr:not(.selected):hover {
 
 @media (max-width: 768px) {
     h1#mainTitle {
-        font-size: 1.5em;
+        font-size: 1.5em; 
         flex-grow: 1;
-        white-space: normal;
-        overflow: visible;
-        text-overflow: clip;
-        text-align: center;
-        padding-left: 50px;
-        padding-right: 50px;
+        white-space: normal; 
+        overflow: visible; 
+        text-overflow: clip; 
+        text-align: center; 
+        padding-left: 50px; 
+        padding-right: 50px; 
         box-sizing: border-box;
-        line-height: 1.3;
+        line-height: 1.3; 
     }
 
     .header-top-row {
         justify-content: space-between;
         width: 100%;
-        padding-left: 15px;
-        padding-right: 15px;
+        padding-left: 15px; 
+        padding-right: 15px; 
     }
 
     .hamburger-btn {
-        display: block;
+        display: block; 
         position: absolute;
-        left: 0;
+        left: 0; 
         top: 50%;
         transform: translateY(-50%);
         padding: 5px 10px;
     }
 
     #addShareHeaderBtn {
-        display: block;
+        display: block; 
         position: absolute;
-        right: 0;
+        right: 0; 
         top: 50%;
         transform: translateY(-50%);
         padding: 5px 10px;
     }
 
     .app-sidebar {
-        left: calc(-1 * var(--sidebar-width));
-        width: 100%;
-        max-width: var(--sidebar-width);
-        padding-top: 70px;
+        left: calc(-1 * var(--sidebar-width)); 
+        width: 100%; 
+        max-width: var(--sidebar-width); 
+        padding-top: 70px; 
     }
     .app-sidebar.open {
-        left: 0;
+        left: 0; 
     }
     .sidebar-overlay.open {
         display: block;
-        background-color: rgba(0, 0, 0, 0.5);
-        pointer-events: auto;
+        background-color: rgba(0, 0, 0, 0.5); 
+        pointer-events: auto; 
     }
 
     .watchlist-controls-row {
         flex-wrap: wrap; /* Allow wrapping on mobile for the two items */
-        justify-content: center;
+        justify-content: center; 
         gap: 15px 25px; /* Adjust gap for mobile */
     }
     .watchlist-group,
     .sort-group {
         flex-basis: calc(50% - 12.5px); /* Each takes roughly half with gap */
         max-width: calc(50% - 12.5px);
-        flex-shrink: 0;
+        flex-shrink: 0; 
     }
     .dropdown-large {
         min-width: unset; /* Remove min-width for mobile */
-        padding: 8px 12px;
-        font-size: 0.9em;
-        padding-right: 25px;
-        background-size: 10px auto;
+        padding: 8px 12px; 
+        font-size: 0.9em; 
+        padding-right: 25px; 
+        background-size: 10px auto; 
     }
 
 
     .mobile-share-cards {
         display: flex;
-        position: relative;
-        left: 0;
+        position: relative; 
+        left: 0; 
         right: 0;
-        width: 100%;
-        box-sizing: border-box;
+        width: 100%; 
+        box-sizing: border-box; 
     }
     table {
         display: none;
@@ -2048,26 +2048,26 @@ table tbody tr:not(.selected):hover {
         margin: 20px auto;
         padding: 20px;
     }
-
+    
     .form-action-buttons,
     .modal-action-buttons,
-    .custom-dialog-buttons {
-        display: flex;
-        flex-direction: row;
-        flex-wrap: nowrap;
+    .custom-dialog-buttons { 
+        display: flex; 
+        flex-direction: row; 
+        flex-wrap: nowrap; 
         justify-content: space-around; /* Distribute space evenly */
-        gap: 5px;
+        gap: 5px; 
     }
     /* Adjusted styling for modal action icons on mobile */
-    .modal-action-icon {
-        width: auto;
+    .modal-action-icon { 
+        width: auto; 
         flex-grow: 1; /* Allow them to grow to fill space */
-        min-width: unset;
-        max-width: unset;
+        min-width: unset; 
+        max-width: unset; 
         padding: 8px; /* Slightly smaller padding for mobile */
         font-size: 1.3em; /* Slightly smaller font size for mobile icons */
     }
-
+    
     .comments-form-container .add-section-icon { /* Changed from .add-section-btn */
         width: 35px;
         height: 35px;
@@ -2075,16 +2075,16 @@ table tbody tr:not(.selected):hover {
     }
 
     #scrollToTopBtn {
-        right: 10px;
-        bottom: 10px;
-        display: flex;
+        right: 10px; 
+        bottom: 10px; 
+        display: flex; 
     }
 
     .google-auth-btn {
-        margin: 0 auto;
-        left: unset;
-        right: unset;
-        transform: none;
+        margin: 0 auto; 
+        left: unset; 
+        right: unset; 
+        transform: none; 
     }
 
     /* Context menu on mobile should be centered or near the tap */
@@ -2099,83 +2099,83 @@ table tbody tr:not(.selected):hover {
 
 @media (min-width: 769px) {
     header {
-        flex-direction: column;
+        flex-direction: column; 
         justify-content: flex-start;
-        align-items: center;
+        align-items: center; 
         flex-wrap: nowrap;
         padding-bottom: 0;
-        gap: 10px;
-        height: auto;
+        gap: 10px; 
+        height: auto; 
     }
 
     .header-top-row {
-        width: 100%;
+        width: 100%; 
         margin-bottom: 0;
-        justify-content: center;
-        flex-grow: 0;
-        height: auto;
-        position: relative;
+        justify-content: center; 
+        flex-grow: 0; 
+        height: auto; 
+        position: relative; 
     }
 
     h1#mainTitle {
         font-size: 2.2em;
-        text-align: center;
-        order: 1;
-        margin-left: 0;
-        flex-grow: 1;
+        text-align: center; 
+        order: 1; 
+        margin-left: 0; 
+        flex-grow: 1; 
         padding-left: 0;
         padding-right: 0;
-        line-height: 1;
-        white-space: nowrap;
+        line-height: 1; 
+        white-space: nowrap; 
         overflow: hidden;
         text-overflow: ellipsis;
     }
 
     .hamburger-btn {
-        position: absolute;
-        left: 0;
+        position: absolute; 
+        left: 0; 
         top: 50%;
         transform: translateY(-50%);
-        font-size: 2em;
+        font-size: 2em; 
         padding: 5px 10px;
-        height: auto;
+        height: auto; 
         display: flex;
         align-items: center;
         justify-content: center;
-        order: 0;
+        order: 0; 
     }
 
     #addShareHeaderBtn {
-        display: block;
+        display: block; 
         position: absolute;
-        right: 0;
+        right: 0; 
         top: 50%;
         transform: translateY(-50%);
         padding: 5px 10px;
     }
 
     .app-sidebar {
-        left: calc(-1 * var(--sidebar-width));
-        width: var(--sidebar-width);
-        box-shadow: 2px 0 5px var(--shadow-color);
+        left: calc(-1 * var(--sidebar-width)); 
+        width: var(--sidebar-width); 
+        box-shadow: 2px 0 5px var(--shadow-color); 
         border-right: 1px solid var(--sidebar-border);
         position: fixed;
         top: 0;
         height: 100%;
-        padding-top: calc(70px + 20px);
-        z-index: 998;
-        transition: left 0.3s ease-in-out;
+        padding-top: calc(70px + 20px); 
+        z-index: 998; 
+        transition: left 0.3s ease-in-out; 
     }
     .app-sidebar .close-menu-btn {
         display: block;
         top: 10px;
         right: 15px;
-        font-size: 1.5em;
+        font-size: 1.5em; 
     }
     .sidebar-overlay.open {
         display: block;
-        background-color: rgba(0, 0, 0, 0.1);
-        pointer-events: none;
+        background-color: rgba(0, 0, 0, 0.1); 
+        pointer-events: none; 
     }
 
     body.sidebar-active main.container {
@@ -2188,19 +2188,19 @@ table tbody tr:not(.selected):hover {
     }
 
     .watchlist-controls-row {
-        width: 100%;
-        justify-content: center;
-        flex-direction: row;
-        flex-wrap: nowrap;
-        gap: 20px 40px;
+        width: 100%; 
+        justify-content: center; 
+        flex-direction: row; 
+        flex-wrap: nowrap; 
+        gap: 20px 40px; 
         padding: 15px 0;
-        border-top: 1px solid var(--border-color);
+        border-top: 1px solid var(--border-color); 
         border-bottom: 1px solid var(--border-color);
     }
     .watchlist-group,
     .sort-group {
         width: auto; /* Allow content to dictate width */
-        justify-content: flex-start;
+        justify-content: flex-start; 
         padding: 0;
         flex-basis: auto; /* Reset flex-basis for desktop */
         max-width: unset; /* Reset max-width for desktop */
@@ -2223,7 +2223,7 @@ table tbody tr:not(.selected):hover {
     }
 
     #scrollToTopBtn {
-        display: none;
+        display: none; 
     }
 
     /* Context menu on desktop should follow mouse */
@@ -2247,6 +2247,4 @@ table tbody tr:not(.selected):hover {
     }
     .app-sidebar {
     }
-}
-
 }

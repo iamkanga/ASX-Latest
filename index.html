@@ -8,18 +8,10 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍆</text></svg>">
 
     <!-- Linking to your separate style.css file -->
-    <link rel="stylesheet" href="style.css?v=82"> <!-- Keeping v82 reference as per request -->
+    <link rel="stylesheet" href="style.css?v=82"> <!-- Updated to v82 -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
-    <!-- PWA: Link to your manifest.json file -->
-    <link rel="manifest" href="manifest.json">
-    <!-- Apple PWA Meta Tags (updated for modern use) -->
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta name="theme-color" content="#3b82f6">
 </head>
 <body>
     <header>
@@ -299,8 +291,6 @@
                 <span id="deleteShareFromDetailBtn" class="modal-action-icon danger" title="Delete Share"><i class="fas fa-trash-alt"></i></span>
                 <!-- Edit Share icon - NOW STANDALONE ICON -->
                 <span id="editShareFromDetailBtn" class="modal-action-icon" title="Edit Share"><i class="fas fa-edit"></i></span>
-                <!-- NEW: Add/Remove from Watchlist button -->
-                <span id="addToWatchlistBtn" class="modal-action-icon" title="Add/Remove from Watchlist"><i class="fas fa-list-check"></i></span>
             </div>
         </div>
     </div>
@@ -335,22 +325,6 @@
                 <span id="cancelManageWatchlistBtn" class="modal-action-icon secondary" title="Cancel"><i class="fas fa-times-circle"></i></span>
                 <!-- Save Watchlist Name icon - NOW STANDALONE ICON -->
                 <span id="saveWatchlistNameBtn" class="modal-action-icon" title="Save Name"><i class="fas fa-save"></i></span>
-            </div>
-        </div>
-    </div>
-
-    <!-- NEW: Add/Remove from Watchlist Modal -->
-    <div id="addToWatchlistModal" class="modal">
-        <div class="modal-content">
-            <span class="close-button" id="addToWatchlistCloseBtn">&times;</span>
-            <h2>Add/Remove Share from Watchlists</h2>
-            <p>Select watchlists for <strong id="shareNameForWatchlistModal"></strong>:</p>
-            <div id="watchlistCheckboxesContainer" class="watchlist-checkboxes-container">
-                <!-- Checkboxes will be dynamically added here by JS -->
-            </div>
-            <div class="form-action-buttons">
-                <span id="cancelAddToWatchlistBtn" class="modal-action-icon secondary" title="Cancel"><i class="fas fa-times-circle"></i></span>
-                <span id="saveAddToWatchlistBtn" class="modal-action-icon" title="Save Changes"><i class="fas fa-save"></i></span>
             </div>
         </div>
     </div>
@@ -448,15 +422,13 @@
     <div id="shareContextMenu" class="context-menu">
         <button id="contextEditShareBtn" class="context-menu-item"><i class="fas fa-edit"></i> Edit Share</button>
         <button id="contextDeleteShareBtn" class="context-menu-item danger-button"><i class="fas fa-trash-alt"></i> Delete Share</button>
-        <!-- NEW: Add to Watchlist context menu item -->
-        <button id="contextAddToWatchlistBtn" class="context-menu-item"><i class="fas fa-list-check"></i> Add/Remove from Watchlist</button>
     </div>
 
     <!-- Firebase and main script loading -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, FieldValue, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; // Added writeBatch
+        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, FieldValue, deleteField, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; // Added writeBatch
 
         // YOUR FIREBASE CONFIGURATION - THIS HAS BEEN INSERTED BASED ON YOUR PROVIDED DETAILS
         const firebaseConfig = {
@@ -526,20 +498,10 @@
         } : null;
 
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log("index.html (v89) script module loaded and DOMContentLoaded fired."); // Updated version number
-            // PWA: Register service worker
-            if ('serviceWorker' in navigator) {
-                try {
-                    // Corrected path for GitHub Pages
-                    const registration = await navigator.serviceWorker.register('/ASX-Latest/service-worker.js');
-                    console.log('Service Worker registered with scope:', registration.scope);
-                } catch (error) {
-                    console.error('Service Worker registration failed:', error);
-                }
-            }
+            console.log("index.html (v82) script module loaded and DOMContentLoaded fired."); // Updated version number
         }); 
     </script>
     <!-- Linking to your separate script.js file -->
-    <script src="script.js?v=158"></script> <!-- Keeping v158 reference as per request -->
+    <script src="script.js?v=150"></script> <!-- Updated to v150 -->
 </body>
 </html>
