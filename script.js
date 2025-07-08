@@ -1,5 +1,5 @@
-// File Version: v154
-// Last Updated: 2025-07-08 (Sign-in button centering fix, Google Sign In text alignment, Comments box fix, Google Sheet Live Price Integration - Phase 1)
+// File Version: v156
+// Last Updated: 2025-07-08 (Fixed addShareToTable error, re-checked comments box, re-checked button centering)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -838,6 +838,17 @@ function addShareToTable(share) {
     const displayEnteredPrice = (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? `$${enteredPriceNum.toFixed(2)}` : '-';
     enteredPriceCell.textContent = displayEnteredPrice;
 
+    // NEW: Live Price Cell
+    const livePriceCell = row.insertCell();
+    // Find live price for this share, handle different casing for 'Code' from Google Sheet
+    const livePriceItem = livePricesData.find(item => 
+        item.Code && item.Code.toUpperCase() === `ASX:${share.shareName.toUpperCase()}`
+    );
+    const livePrice = livePriceItem ? livePriceItem.Price : undefined;
+    livePriceCell.textContent = livePrice !== undefined ? `$${Number(livePrice).toFixed(2)}` : '-';
+    livePriceCell.title = livePrice !== undefined ? `Live Price: $${Number(livePrice).toFixed(2)}` : 'No live price available';
+
+
     const targetPriceNum = Number(share.targetPrice);
     const displayTargetPrice = (!isNaN(targetPriceNum) && targetPriceNum !== null) ? `$${targetPriceNum.toFixed(2)}` : '-';
     row.insertCell().textContent = displayTargetPrice;
@@ -860,13 +871,6 @@ function addShareToTable(share) {
             <span>Franked Yield:</span> <span class="value">${frankedYield !== null ? frankedYield.toFixed(2) + '%' : '-'}</span>
         </div>
     `;
-
-    // NEW: Live Price Cell
-    const livePriceCell = row.insertCell();
-    const livePrice = livePricesData.find(item => item.Code && item.Code.toUpperCase() === share.shareName.toUpperCase())?.Price;
-    livePriceCell.textContent = livePrice !== undefined ? `$${Number(livePrice).toFixed(2)}` : '-';
-    livePriceCell.title = livePrice !== undefined ? `Live Price: $${Number(livePrice).toFixed(2)}` : 'No live price available';
-
 
     const commentsCell = row.insertCell();
     let commentsText = '';
@@ -905,7 +909,10 @@ function addShareToMobileCards(share) {
     const displayEnteredPrice = (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? enteredPriceNum.toFixed(2) : '-';
 
     // NEW: Live Price for Mobile Cards
-    const livePrice = livePricesData.find(item => item.Code && item.Code.toUpperCase() === share.shareName.toUpperCase())?.Price;
+    const livePriceItem = livePricesData.find(item => 
+        item.Code && item.Code.toUpperCase() === `ASX:${share.shareName.toUpperCase()}`
+    );
+    const livePrice = livePriceItem ? livePriceItem.Price : undefined;
     const displayLivePrice = livePrice !== undefined ? `$${Number(livePrice).toFixed(2)}` : '-';
 
 
@@ -1037,7 +1044,7 @@ function renderWatchlist() {
         emptyWatchlistMessage.style.padding = '20px';
         emptyWatchlistMessage.style.color = 'var(--ghosted-text)';
         const td = document.createElement('td');
-        td.colSpan = 5; // Span all columns in the table
+        td.colSpan = 6; // Adjusted colspan for the new 'Live Price' column
         td.appendChild(emptyWatchlistMessage);
         const tr = document.createElement('tr');
         tr.appendChild(td);
@@ -1733,8 +1740,8 @@ function exportWatchlistToCSV() {
     }
 
     const headers = [
-        "Code", "Entered Price", "Target Price", "Dividend Amount", "Franking Credits (%)",
-        "Unfranked Yield (%)", "Franked Yield (%)", "Entry Date", "Comments", "Live Price" // Added Live Price to headers
+        "Code", "Entered Price", "Live Price", "Target Price", "Dividend Amount", "Franking Credits (%)", // Added Live Price to headers
+        "Unfranked Yield (%)", "Franked Yield (%)", "Entry Date", "Comments"
     ];
 
     const csvRows = [];
@@ -1760,20 +1767,20 @@ function exportWatchlistToCSV() {
         }
 
         // Get live price for export
-        const livePrice = livePricesData.find(item => item.Code && item.Code.toUpperCase() === share.shareName.toUpperCase())?.Price;
-        const exportLivePrice = livePrice !== undefined ? Number(livePrice).toFixed(2) : '';
+        const livePriceItem = livePricesData.find(item => item.Code && item.Code.toUpperCase() === `ASX:${share.shareName.toUpperCase()}`);
+        const exportLivePrice = livePriceItem ? Number(livePriceItem.Price).toFixed(2) : '';
 
         const row = [
             share.shareName || '',
             (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? enteredPriceNum.toFixed(2) : '',
+            exportLivePrice, // Added live price to the row
             (!isNaN(targetPriceNum) && targetPriceNum !== null) ? targetPriceNum.toFixed(2) : '',
             (!isNaN(dividendAmountNum) && dividendAmountNum !== null) ? dividendAmountNum.toFixed(3) : '',
             (!isNaN(frankingCreditsNum) && frankingCreditsNum !== null) ? frankingCreditsNum.toFixed(1) : '',
             unfrankedYield !== null ? unfrankedYield.toFixed(2) : '',
             frankedYield !== null ? frankedYield.toFixed(2) : '',
             formatDate(share.entryDate) || '',
-            allCommentsText,
-            exportLivePrice // Added live price to the row
+            allCommentsText
         ];
         csvRows.push(row.map(escapeCsvValue).join(','));
     });
@@ -2689,7 +2696,7 @@ async function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v154) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v155) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
