@@ -1,5 +1,5 @@
-// File Version: v150
-// Last Updated: 2025-07-02 (Fix ALL_SHARES_ID Typo)
+// File Version: v151
+// Last Updated: 2025-07-08 (Added "Display All" watchlist option, removed unwanted modal button, fixed comments display)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -688,6 +688,12 @@ function renderWatchlistSelect() {
     if (!watchlistSelect) { console.error("[renderWatchlistSelect] watchlistSelect element not found."); return; }
     watchlistSelect.innerHTML = '<option value="" disabled selected>Watchlist</option>'; // Default placeholder
 
+    // Add "Display All" option first
+    const allSharesOption = document.createElement('option');
+    allSharesOption.value = ALL_SHARES_ID;
+    allSharesOption.textContent = 'Display All Shares';
+    watchlistSelect.appendChild(allSharesOption);
+
     userWatchlists.forEach(watchlist => {
         const option = document.createElement('option');
         option.value = watchlist.id;
@@ -696,17 +702,16 @@ function renderWatchlistSelect() {
     });
 
     // Set the selected watchlist based on currentSelectedWatchlistIds
-    // If "All Shares" is selected, or multiple, default to the first actual watchlist
-    if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID) || currentSelectedWatchlistIds.length > 1) {
-        if (userWatchlists.length > 0) {
-            watchlistSelect.value = userWatchlists[0].id;
-        } else {
-            watchlistSelect.value = ''; // No watchlists available
-        }
+    if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID)) {
+        watchlistSelect.value = ALL_SHARES_ID;
     } else if (currentSelectedWatchlistIds.length === 1) {
         watchlistSelect.value = currentSelectedWatchlistIds[0];
+    } else if (userWatchlists.length > 0) {
+        // Fallback to the first watchlist if no specific selection or "All Shares" is not active
+        watchlistSelect.value = userWatchlists[0].id;
+        currentSelectedWatchlistIds = [userWatchlists[0].id]; // Ensure internal state matches UI
     } else {
-        watchlistSelect.value = ''; // No watchlist selected
+        watchlistSelect.value = ''; // No watchlists available
     }
     console.log("[UI Update] Watchlist select dropdown rendered.");
 }
@@ -715,10 +720,7 @@ function renderWatchlistSelect() {
 // function renderWatchlistSelectionModal() { ... }
 
 // handleAllSharesCheckboxChange (removed as per user's provided index.html)
-// function handleAllSharesCheckboxChange(event) { ... }
-
-// handleIndividualWatchlistCheckboxChange (removed as per user's provided index.html)
-// function handleIndividualWatchlistCheckboxChange(event) { ... }
+// function handleIndividualWatchlistCheckboxChange (removed as per user's provided index.html)
 
 
 function renderSortSelect() {
@@ -976,20 +978,17 @@ function renderWatchlist() {
     
     let sharesToRender = [];
 
-    // If no specific watchlists are selected (e.g., after initial login before any selection),
-    // or if "All Shares" was previously selected (which is not directly supported by the current UI but might be a saved state),
-    // default to showing shares from the first watchlist, or all if no watchlists exist.
-    if (currentSelectedWatchlistIds.length === 0 && userWatchlists.length > 0) {
-        // This case handles initial load where no preference is saved, or after logout/login where no specific WL is set.
-        // Default to the first watchlist.
-        currentSelectedWatchlistIds = [userWatchlists[0].id];
-        console.log("[Render] No specific watchlists selected, defaulting to first watchlist.");
-    } else if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID)) {
-        // This handles if ALL_SHARES_ID was saved from a previous version or manually set.
-        // It will effectively show all shares.
+    if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID)) {
         sharesToRender = [...allSharesData]; // Render all shares
         mainTitle.textContent = "All My Shares";
         console.log("[Render] Displaying all shares (from ALL_SHARES_ID in currentSelectedWatchlistIds).");
+    } else if (currentSelectedWatchlistIds.length === 0 && userWatchlists.length > 0) {
+        // This case handles initial load where no preference is saved, or after logout/login where no specific WL is set.
+        // Default to the first watchlist.
+        currentSelectedWatchlistIds = [userWatchlists[0].id];
+        sharesToRender = allSharesData.filter(share => currentSelectedWatchlistIds.includes(share.watchlistId));
+        mainTitle.textContent = userWatchlists[0].name;
+        console.log("[Render] No specific watchlists selected, defaulting to first watchlist.");
     } else if (currentSelectedWatchlistIds.length > 0) {
         sharesToRender = allSharesData.filter(share => currentSelectedWatchlistIds.includes(share.watchlistId));
         // Update mainTitle based on selected watchlists
@@ -1048,7 +1047,6 @@ function renderAsxCodeButtons() {
     const uniqueAsxCodes = new Set();
     
     let sharesForButtons = [];
-    // Fix: Corrected typo from ALL_SHAres_ID to ALL_SHARES_ID
     if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID)) { 
         sharesForButtons = [...allSharesData]; // Use all shares if "Show All Shares" is active
     } else {
@@ -1409,12 +1407,7 @@ async function loadShares() {
         const sharesCol = window.firestore.collection(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`);
         let q;
 
-        // In this version (v144), we are using a single watchlist select dropdown.
-        // So, currentSelectedWatchlistIds will usually contain only one ID, or be empty/contain ALL_SHARES_ID
-        // if that was a saved preference from a multi-select UI.
-        // We'll prioritize the single selected watchlist from the dropdown if available,
-        // otherwise fall back to the first watchlist in userWatchlists, or all if ALL_SHARES_ID is present.
-
+        // Determine the effective watchlist ID based on current selection
         let effectiveWatchlistId = null;
         if (watchlistSelect && watchlistSelect.value && watchlistSelect.value !== "") {
             effectiveWatchlistId = watchlistSelect.value;
@@ -1425,7 +1418,7 @@ async function loadShares() {
         }
 
         if (effectiveWatchlistId === ALL_SHARES_ID) {
-            // If "All Shares" is selected (from saved preference), fetch all shares.
+            // If "All Shares" is selected, fetch all shares.
             q = window.firestore.query(sharesCol);
             console.log(`[Shares] Setting up real-time listener for ALL shares for user: ${currentUserId}`);
         } else if (effectiveWatchlistId) {
@@ -1433,10 +1426,10 @@ async function loadShares() {
             q = window.firestore.query(sharesCol, window.firestore.where("watchlistId", "==", effectiveWatchlistId));
             console.log(`[Shares] Setting up real-time listener for shares in watchlist: ${effectiveWatchlistId}`);
         } else {
-            // No watchlist selected or available, query for nothing or handle as empty state.
-            // For now, if no watchlist is effective, we'll just fetch all and filter client-side (or show empty).
-            q = window.firestore.query(sharesCol); // Fetch all to allow client-side filtering if needed
-            console.warn("[Shares] No effective watchlist selected. Fetching all shares for potential client-side filtering.");
+            // If no watchlist is effective (e.g., no watchlists exist at all), query for nothing.
+            // This will result in an empty snapshot, correctly reflecting no shares to display.
+            q = window.firestore.query(sharesCol, window.firestore.where("watchlistId", "==", "NO_WATCHLIST_ID_EXISTS")); // Query for a non-existent ID
+            console.warn("[Shares] No effective watchlist selected or available. Querying for non-existent ID to get empty results.");
         }
         
         // Set up the real-time listener
@@ -1448,14 +1441,10 @@ async function loadShares() {
                 fetchedShares.push(share);
             });
 
-            // Client-side filtering based on effective watchlist ID, if not ALL_SHARES_ID
-            if (effectiveWatchlistId && effectiveWatchlistId !== ALL_SHARES_ID) {
-                allSharesData = fetchedShares.filter(share => share.watchlistId === effectiveWatchlistId);
-                console.log(`[Shares] Client-side filtered shares for watchlist ${effectiveWatchlistId}. Total shares after filter: ${allSharesData.length}`);
-            } else {
-                allSharesData = fetchedShares;
-                console.log(`[Shares] Shares data updated from snapshot. Total shares: ${allSharesData.length}`);
-            }
+            // No client-side filtering needed here if the query itself is already filtered by watchlistId.
+            // If effectiveWatchlistId is ALL_SHARES_ID, then q already fetches all.
+            allSharesData = fetchedShares;
+            console.log(`[Shares] Shares data updated from snapshot. Total shares: ${allSharesData.length}`);
             
             // Re-sort and re-render UI after data update
             sortShares(); // This will call renderWatchlist() internally
@@ -2021,7 +2010,7 @@ async function initializeAppLogic() {
             };
 
             if (selectedShareDocId) {
-                const existingShare = allSharesData.find(s => s.id === selectedShareDocId);
+                const existingShare = allSharesData.find(s => s.sId === selectedShareDocId); // Corrected to use s.id
                 if (existingShare) { shareData.previousFetchedPrice = existingShare.lastFetchedPrice; }
                 else { shareData.previousFetchedPrice = shareData.currentPrice; }
                 shareData.lastFetchedPrice = shareData.currentPrice;
@@ -2634,7 +2623,7 @@ async function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v150) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v151) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
