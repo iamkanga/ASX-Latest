@@ -1,5 +1,5 @@
-// File Version: v151
-// Last Updated: 2025-07-08 (Added "Display All" watchlist option, removed unwanted modal button, fixed comments display)
+// File Version: v152
+// Last Updated: 2025-07-08 (Fixed comments display, calculator percentage, updated bold themes)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -23,7 +23,7 @@ const LONG_PRESS_THRESHOLD = 500; // Time in ms for long press detection
 let touchStartX = 0;
 let touchStartY = 0;
 const TOUCH_MOVE_THRESHOLD = 10; // Pixels for touch movement to cancel long press
-const KANGA_EMAIL = 'iamkanga@gmail.com'; // CORRECTED EMAIL ADDRESS
+const KANGA_EMAIL = 'iamkanga@gmail.0com'; // CORRECTED EMAIL ADDRESS
 let currentCalculatorInput = '';
 let operator = null;
 let previousCalculatorInput = '';
@@ -2010,7 +2010,7 @@ async function initializeAppLogic() {
             };
 
             if (selectedShareDocId) {
-                const existingShare = allSharesData.find(s => s.sId === selectedShareDocId); // Corrected to use s.id
+                const existingShare = allSharesData.find(s => s.id === selectedShareDocId);
                 if (existingShare) { shareData.previousFetchedPrice = existingShare.lastFetchedPrice; }
                 else { shareData.previousFetchedPrice = shareData.currentPrice; }
                 shareData.lastFetchedPrice = shareData.currentPrice;
@@ -2427,31 +2427,38 @@ async function initializeAppLogic() {
 
     function handleAction(action) {
         if (action === 'clear') { resetCalculator(); return; }
-        if (action === 'percentage') { 
-            if (currentCalculatorInput === '' && previousCalculatorInput === '') return;
-            let val;
+        if (action === 'percentage') {
+            // Apply percentage to the current input
             if (currentCalculatorInput !== '') {
-                val = parseFloat(currentCalculatorInput);
-            } else if (previousCalculatorInput !== '') {
-                val = parseFloat(previousCalculatorInput);
+                const num = parseFloat(currentCalculatorInput);
+                if (isNaN(num)) return;
+                currentCalculatorInput = (num / 100).toString();
+            } else if (previousCalculatorInput !== '' && !operator) {
+                // If no current input, but a previous result (and no pending operator),
+                // apply percentage to previous result.
+                const num = parseFloat(previousCalculatorInput);
+                if (isNaN(num)) return;
+                previousCalculatorInput = (num / 100).toString();
+                calculatorResult.textContent = previousCalculatorInput; // Update result display directly
+            } else if (previousCalculatorInput !== '' && operator) {
+                // If there's an operator and previous input, and current input is empty (e.g., 50 + %)
+                // Treat it as 50 + (50% of 50)
+                const prev = parseFloat(previousCalculatorInput);
+                if (isNaN(prev)) return;
+                currentCalculatorInput = (prev / 100).toString(); // Make current input 1% of previous
+                calculateResult(); // Perform the operation now
+                previousCalculatorInput = calculatorResult.textContent;
+                currentCalculatorInput = '';
+                operator = null;
+                resultDisplayed = true;
+                updateCalculatorDisplay();
+                return;
             } else {
-                return; // Should not happen if previous checks pass
+                return; // No number to apply percentage to
             }
-
-            if (isNaN(val)) return;
-
-            if (operator && previousCalculatorInput !== '') {
-                // If there's a pending operation, calculate percentage of the previous number
-                const prevNum = parseFloat(previousCalculatorInput);
-                if (isNaN(prevNum)) return;
-                currentCalculatorInput = (prevNum * (val / 100)).toString();
-            } else {
-                // Otherwise, just divide the current input by 100
-                currentCalculatorInput = (val / 100).toString();
-            }
-            resultDisplayed = false; // A new calculation has started or modified
+            resultDisplayed = false;
             updateCalculatorDisplay();
-            return; 
+            return;
         }
         if (['add', 'subtract', 'multiply', 'divide'].includes(action)) {
             if (currentCalculatorInput === '' && previousCalculatorInput === '') return;
@@ -2623,7 +2630,7 @@ async function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v151) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v152) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
