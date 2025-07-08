@@ -1,5 +1,5 @@
-// File Version: v157
-// Last Updated: 2025-07-08 (Fixed Uncaught SyntaxError: Unexpected end of input by ensuring file completeness)
+// File Version: v158
+// Last Updated: 2025-07-08 (Ensuring complete file output, fixing live price TypeError, re-checking UI issues)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -1939,7 +1939,7 @@ async function initializeAppLogic() {
                     console.log("[Auth] Google Sign-In successful.");
                 }
                 catch (error) {
-                    console.error("[Auth] Google Sign-In failed:", error); // Log full error object
+                    console.error("[Auth] Google Sign-In failed:", error.message); // Log full error object
                     showCustomAlert("Google Sign-In failed: " + error.message);
                 }
             }
