@@ -1,5 +1,5 @@
-/* File Version: v84 */
-/* Last Updated: 2025-07-08 (Sign-in button centering, Bold theme text color, Disabled button styling, Comments box fix) */
+/* File Version: v85 */
+/* Last Updated: 2025-07-08 (Sign-in button centering fix, Google Sign In text alignment, Comments box visibility check) */
 
 :root {
     /* Light Theme (Default) */
@@ -1361,7 +1361,7 @@ table tbody tr:not(.selected):hover {
     box-shadow: 0 -2px 4px var(--shadow-color);
     padding: 10px 20px;
     display: flex;
-    justify-content: center; 
+    justify-content: center; /* Ensures content is centered */
     align-items: center;
     z-index: 500;
     transition: margin-left 0.3s ease, width 0.3s ease; 
@@ -1379,9 +1379,12 @@ table tbody tr:not(.selected):hover {
     transition: background-color 0.2s ease, transform 0.1s ease;
     display: flex;
     align-items: center;
+    justify-content: center; /* Center text/icon horizontally */
     gap: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    /* Centering on mobile handled in media query */
+    /* Removed margin: 0 auto; and left/right/transform for mobile centering as fixed-footer handles flex centering */
+    width: fit-content; /* Allow button to shrink to content size */
+    max-width: 100%; /* Prevent overflow on very small screens */
 }
 
 .google-auth-btn:hover {
@@ -2172,12 +2175,18 @@ table tbody tr:not(.selected):hover {
     }
 
     .google-auth-btn {
-        /* Centering on mobile */
-        margin: 0 auto; 
+        /* Centering on mobile handled by flexbox on fixed-footer */
+        margin: 0; /* Remove specific margins that might interfere */
         left: unset; 
         right: unset; 
         transform: none; 
+        width: 100%; /* Allow it to take full width of its flex container on mobile */
+        max-width: 250px; /* Limit max width for better appearance on larger phones */
     }
+    .fixed-footer {
+        justify-content: center; /* Ensure this is set to center for the button */
+    }
+
 
     /* Context menu on mobile should be centered or near the tap */
     .context-menu {

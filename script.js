@@ -1,5 +1,5 @@
-// File Version: v153
-// Last Updated: 2025-07-08 (Sign-in button centering, Bold theme text color, Disabled button styling, Comments box fix, Google Sign In text)
+// File Version: v154
+// Last Updated: 2025-07-08 (Sign-in button centering fix, Google Sign In text alignment, Comments box fix, Google Sheet Live Price Integration - Phase 1)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -48,6 +48,9 @@ let currentActiveTheme = 'system-default'; // Tracks the currently applied theme
 let savedSortOrder = null; // GLOBAL: Stores the sort order loaded from user settings
 let savedTheme = null; // GLOBAL: Stores the theme loaded from user settings
 
+// Google Sheet Live Price Integration Variables
+const GOOGLE_SHEET_API_URL = 'https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLjHYIb3nS6VBwmftOIYcwEpfA-GMt28JjM9QPqj38b4PvYyzbA34hr1PqLx7LEJrCzPe1-hLoniGIAa3eG9NejgHF1_kKWow8fMbnswtfMISQKhqMsOB5pVwUJ_XIFmadq2OtZ5xVTAstv3LeeuUDmyFawB6-TwytA7t2uAIf1bWUKBYtFQqYibVl7d1iOepLCFOxAMfqF6EuNRA4N4hIdIht1VqGEsWA7taET5v36MBTAOtww1f4U-Ygjnp3ih4ZuMvCAdjz0h_xe_U5pMtAO-ilK2Og&lib=M77eV8zQ-JkwezrdGZpU8UwFpls1LI6DY';
+let livePricesData = []; // Stores live prices fetched from Google Sheet
 
 let unsubscribeShares = null; // Holds the unsubscribe function for the Firestore shares listener
 
@@ -136,6 +139,7 @@ const contextEditShareBtn = document.getElementById('contextEditShareBtn');
 const contextDeleteShareBtn = document.getElementById('contextDeleteShareBtn');
 const logoutBtn = document.getElementById('logoutBtn'); // Now a span
 const exportWatchlistBtn = document.getElementById('exportWatchlistBtn'); // Export button
+const refreshPricesBtn = document.getElementById('refreshPricesBtn'); // NEW: Refresh Prices button
 
 // New elements for multi-select watchlist modal (commented out as per user's provided index.html)
 // const selectWatchlistsModal = document.getElementById('selectWatchlistsModal');
@@ -258,8 +262,10 @@ function updateMainButtonsState(enable) {
     if (revertToDefaultThemeBtn) revertToDefaultThemeBtn.disabled = !enable;
     if (sortSelect) sortSelect.disabled = !enable; // Ensure sort select is disabled if not enabled
     if (watchlistSelect) watchlistSelect.disabled = !enable; // Ensure watchlist select is disabled if not enabled
+    if (refreshPricesBtn) refreshPricesBtn.disabled = !enable; // NEW: Disable refresh button if not enabled
     console.log(`[UI State] Sort Select Disabled: ${sortSelect ? sortSelect.disabled : 'N/A'}`);
     console.log(`[UI State] Watchlist Select Disabled: ${watchlistSelect ? watchlistSelect.disabled : 'N/A'}`);
+    console.log(`[UI State] Refresh Prices Button Disabled: ${refreshPricesBtn ? refreshPricesBtn.disabled : 'N/A'}`);
 
 
     // Note: Modal action icons (e.g., saveShareBtn, deleteShareBtn) are handled separately
@@ -855,6 +861,13 @@ function addShareToTable(share) {
         </div>
     `;
 
+    // NEW: Live Price Cell
+    const livePriceCell = row.insertCell();
+    const livePrice = livePricesData.find(item => item.Code && item.Code.toUpperCase() === share.shareName.toUpperCase())?.Price;
+    livePriceCell.textContent = livePrice !== undefined ? `$${Number(livePrice).toFixed(2)}` : '-';
+    livePriceCell.title = livePrice !== undefined ? `Live Price: $${Number(livePrice).toFixed(2)}` : 'No live price available';
+
+
     const commentsCell = row.insertCell();
     let commentsText = '';
     if (share.comments && Array.isArray(share.comments) && share.comments.length > 0 && share.comments[0].text) {
@@ -891,11 +904,16 @@ function addShareToMobileCards(share) {
     const displayShareName = (share.shareName && String(share.shareName).trim() !== '') ? share.shareName : '(No Code)';
     const displayEnteredPrice = (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? enteredPriceNum.toFixed(2) : '-';
 
+    // NEW: Live Price for Mobile Cards
+    const livePrice = livePricesData.find(item => item.Code && item.Code.toUpperCase() === share.shareName.toUpperCase())?.Price;
+    const displayLivePrice = livePrice !== undefined ? `$${Number(livePrice).toFixed(2)}` : '-';
+
 
     card.innerHTML = `
         <h3>${displayShareName}</h3>
         <p><strong>Entry Date:</strong> ${formatDate(share.entryDate) || '-'}</p>
         <p><strong>Entered Price:</strong> $${displayEnteredPrice}</p>
+        <p><strong>Live Price:</strong> ${displayLivePrice}</p> <!-- NEW: Live Price -->
         <p><strong>Target:</strong> $${displayTargetPrice}</p>
         <p><strong>Dividend:</strong> $${displayDividendAmount}</p>
         <p><strong>Franking:</strong> ${displayFrankingCredits}</p>
@@ -1386,6 +1404,31 @@ async function loadUserWatchlistsAndSettings() {
 }
 
 /**
+ * Fetches live share prices from the Google Apps Script API.
+ */
+async function fetchLivePrices() {
+    if (!GOOGLE_SHEET_API_URL) {
+        console.warn("[Live Prices] Google Sheet API URL is not defined. Skipping live price fetch.");
+        return;
+    }
+    console.log("[Live Prices] Fetching live prices from Google Sheet API...");
+    try {
+        const response = await fetch(GOOGLE_SHEET_API_URL);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        // Assuming data is an array of objects like [{Code: "ASX:CBA", Price: 100.00}]
+        livePricesData = data;
+        console.log("[Live Prices] Successfully fetched live prices:", livePricesData);
+    } catch (error) {
+        console.error("[Live Prices] Error fetching live prices:", error);
+        showCustomAlert("Error fetching live prices: " + error.message, 2000);
+        livePricesData = []; // Clear old data on error
+    }
+}
+
+/**
  * Sets up a real-time Firestore listener for shares based on currentSelectedWatchlistIds.
  * Updates `allSharesData` and re-renders the UI whenever changes occur.
  */
@@ -1434,7 +1477,7 @@ async function loadShares() {
         }
         
         // Set up the real-time listener
-        unsubscribeShares = window.firestore.onSnapshot(q, (querySnapshot) => {
+        unsubscribeShares = window.firestore.onSnapshot(q, async (querySnapshot) => { // Added async here
             console.log("[Firestore Listener] Shares snapshot received. Processing changes.");
             let fetchedShares = [];
             querySnapshot.forEach((doc) => {
@@ -1442,11 +1485,12 @@ async function loadShares() {
                 fetchedShares.push(share);
             });
 
-            // No client-side filtering needed here if the query itself is already filtered by watchlistId.
-            // If effectiveWatchlistId is ALL_SHARES_ID, then q already fetches all.
             allSharesData = fetchedShares;
             console.log(`[Shares] Shares data updated from snapshot. Total shares: ${allSharesData.length}`);
             
+            // Fetch live prices after shares are loaded
+            await fetchLivePrices(); // Fetch live prices here
+
             // Re-sort and re-render UI after data update
             sortShares(); // This will call renderWatchlist() internally
             renderAsxCodeButtons(); // Crucial: Re-render ASX buttons based on updated allSharesData
@@ -1690,7 +1734,7 @@ function exportWatchlistToCSV() {
 
     const headers = [
         "Code", "Entered Price", "Target Price", "Dividend Amount", "Franking Credits (%)",
-        "Unfranked Yield (%)", "Franked Yield (%)", "Entry Date", "Comments"
+        "Unfranked Yield (%)", "Franked Yield (%)", "Entry Date", "Comments", "Live Price" // Added Live Price to headers
     ];
 
     const csvRows = [];
@@ -1715,6 +1759,10 @@ function exportWatchlistToCSV() {
             }).filter(Boolean).join('; '); // Join multiple comments with a semicolon and space
         }
 
+        // Get live price for export
+        const livePrice = livePricesData.find(item => item.Code && item.Code.toUpperCase() === share.shareName.toUpperCase())?.Price;
+        const exportLivePrice = livePrice !== undefined ? Number(livePrice).toFixed(2) : '';
+
         const row = [
             share.shareName || '',
             (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? enteredPriceNum.toFixed(2) : '',
@@ -1724,7 +1772,8 @@ function exportWatchlistToCSV() {
             unfrankedYield !== null ? unfrankedYield.toFixed(2) : '',
             frankedYield !== null ? frankedYield.toFixed(2) : '',
             formatDate(share.entryDate) || '',
-            allCommentsText
+            allCommentsText,
+            exportLivePrice // Added live price to the row
         ];
         csvRows.push(row.map(escapeCsvValue).join(','));
     });
@@ -2621,10 +2670,26 @@ async function initializeAppLogic() {
             toggleAppSidebar(false); // Close sidebar after clicking export
         });
     }
+
+    // NEW: Refresh Prices Button Event Listener
+    if (refreshPricesBtn) {
+        refreshPricesBtn.addEventListener('click', async () => {
+            console.log("[UI] Refresh Prices button clicked.");
+            if (currentUserId) {
+                if (loadingIndicator) loadingIndicator.style.display = 'block';
+                await fetchLivePrices(); // Re-fetch live prices
+                sortShares(); // Re-render shares with new prices (sortShares calls renderWatchlist)
+                if (loadingIndicator) loadingIndicator.style.display = 'none';
+                showCustomAlert("Live prices refreshed!", 1500);
+            } else {
+                showCustomAlert("Please sign in to refresh prices.", 1500);
+            }
+        });
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v153) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v154) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
