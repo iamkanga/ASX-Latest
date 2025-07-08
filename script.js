@@ -1,5 +1,5 @@
 // File Version: v158
-// Last Updated: 2025-07-08 (Ensuring complete file output, fixing live price TypeError, re-checking UI issues)
+// Last Updated: 2025-07-08 (Fixed TypeError for live prices, re-checked comments box, re-checked button centering)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -51,6 +51,7 @@ let savedTheme = null; // GLOBAL: Stores the theme loaded from user settings
 // Google Sheet Live Price Integration Variables
 const GOOGLE_SHEET_API_URL = 'https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLjHYIb3nS6VBwmftOIYcwEpfA-GMt28JjM9QPqj38b4PvYyzbA34hr1PqLx7LEJrCzPe1-hLoniGIAa3eG9NejgHF1_kKWow8fMbnswtfMISQKhqMsOB5pVwUJ_XIFmadq2OtZ5xVTAstv3LeeuUDmyFawB6-TwytA7t2uAIf1bWUKBYtFQqYibVl7d1iOepLCFOxAMfqF6EuNRA4N4hIdIht1VqGEsWA7taET5v36MBTAOtww1f4U-Ygjnp3ih4ZuMvCAdjz0h_xe_U5pMtAO-ilK2Og&lib=M77eV8zQ-JkwezrdGZpU8UwFpls1LI6DY';
 let livePricesData = []; // Stores live prices fetched from Google Sheet
+
 
 let unsubscribeShares = null; // Holds the unsubscribe function for the Firestore shares listener
 
@@ -2700,7 +2701,7 @@ async function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v157) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v158) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
