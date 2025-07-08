@@ -1,5 +1,5 @@
-/* File Version: v83 */
-/* Last Updated: 2025-07-08 (Sign-in button centering, Bold theme text color, Disabled button styling) */
+/* File Version: v84 */
+/* Last Updated: 2025-07-08 (Sign-in button centering, Bold theme text color, Disabled button styling, Comments box fix) */
 
 :root {
     /* Light Theme (Default) */
@@ -1116,7 +1116,7 @@ h1#mainTitle {
     transform: none;
 }
 /* This is for span/i elements that are "disabled" */
-.is-disabled-icon {
+[disabled], .is-disabled-icon {
     opacity: 0.5; /* Make it semi-transparent */
     cursor: not-allowed; /* Change cursor */
     box-shadow: none; /* Remove shadow */
@@ -1381,7 +1381,7 @@ table tbody tr:not(.selected):hover {
     align-items: center;
     gap: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    /* Removed margin: 0 auto; and left/right/transform for mobile centering */
+    /* Centering on mobile handled in media query */
 }
 
 .google-auth-btn:hover {
@@ -1481,6 +1481,7 @@ table tbody tr:not(.selected):hover {
 }
 
 /* General disabled styling for ALL clickable elements (buttons, icons) */
+/* This is now the primary rule for ghosting */
 [disabled], .is-disabled-icon {
     opacity: 0.5; /* Make it semi-transparent */
     cursor: not-allowed; /* Change cursor */

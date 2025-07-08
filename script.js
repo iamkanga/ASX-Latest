@@ -1,5 +1,5 @@
-// File Version: v152
-// Last Updated: 2025-07-08 (Sign-in button centering, Bold theme text color, Disabled button styling)
+// File Version: v153
+// Last Updated: 2025-07-08 (Sign-in button centering, Bold theme text color, Disabled button styling, Comments box fix, Google Sign In text)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -233,7 +233,8 @@ function formatDateTime(dateString) {
 // UI State Management Functions
 function updateAuthButtonText(isSignedIn, userName = 'Sign In') {
     if (googleAuthBtn) {
-        googleAuthBtn.textContent = isSignedIn ? (userName || 'Signed In') : 'Sign In';
+        // If signed in, show user name or "Signed In". If signed out, show "Google Sign In".
+        googleAuthBtn.textContent = isSignedIn ? (userName || 'Signed In') : 'Google Sign In';
         console.log(`[Auth UI] Auth button text updated to: ${googleAuthBtn.textContent}`);
     }
 }
@@ -374,7 +375,7 @@ function clearForm() {
     });
     if (commentsFormContainer) {
         commentsFormContainer.innerHTML = '';
-        addCommentSection(); // Always add one initial comment section
+        addCommentSection(); // Always add one initial comment section to make it visible
     }
     selectedShareDocId = null;
     originalShareData = null; // Reset original data when clearing form for new share
@@ -2623,7 +2624,7 @@ async function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v152) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v153) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
@@ -2648,7 +2649,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 await loadUserWatchlistsAndSettings(); // This will set currentSelectedWatchlistIds and then call loadShares()
             } else {
                 currentUserId = null;
-                updateAuthButtonText(false);
+                updateAuthButtonText(false); // Changed to false for "Google Sign In" text
                 mainTitle.textContent = "Share Watchlist";
                 console.log("[AuthState] User signed out.");
                 updateMainButtonsState(false);
