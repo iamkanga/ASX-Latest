@@ -8,7 +8,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍆</text></svg>">
 
     <!-- Linking to your separate style.css file -->
-    <link rel="stylesheet" href="style.css?v=87"> <!-- Updated to v87 -->
+    <link rel="stylesheet" href="style.css?v=88"> <!-- Updated to v88 -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -88,12 +88,7 @@
             <div class="menu-section">
                 <h3>Theme</h3> <!-- CHANGED: Title from "Theme Toggle" back to "Theme" -->
                 <div class="menu-buttons-group">
-                    <!-- Theme Toggle Button - Icon with Text -->
-                    <button id="themeToggleBtn" class="menu-button-item" data-action-closes-menu="false">
-                        <i class="fas fa-palette"></i> <span>Theme Toggle</span> <!-- CHANGED: Button text to "Theme Toggle" -->
-                    </button>
-                    
-                    <!-- New Theme Selector Dropdown -->
+                    <!-- New Theme Selector Dropdown - MOVED UP -->
                     <label for="colorThemeSelect" class="theme-select-label">Choose Color Theme:</label>
                     <select id="colorThemeSelect" class="dropdown-large menu-dropdown" data-action-closes-menu="false">
                         <option value="none" selected>No Custom Theme</option>
@@ -122,7 +117,10 @@
                             <option value="subtle-10">Subtle Stone</option>
                         </optgroup>
                     </select>
-
+                    <!-- Theme Toggle Button - MOVED DOWN -->
+                    <button id="themeToggleBtn" class="menu-button-item" data-action-closes-menu="false">
+                        <i class="fas fa-palette"></i> <span>Theme Toggle</span>
+                    </button>
                     <!-- Revert to Default Theme Button - Icon with Text -->
                     <button id="revertToDefaultThemeBtn" class="menu-button-item secondary-buttons" data-action-closes-menu="false">
                         <i class="fas fa-sun"></i><i class="fas fa-moon"></i> <span>Default Theme</span>
@@ -187,8 +185,8 @@
                     <thead>
                         <tr>
                             <th>Code</th>
+                            <th>Live Price</th> <!-- MOVED: Live Price Column Header -->
                             <th>Entered Price</th>
-                            <th>Live Price</th> <!-- NEW: Live Price Column Header -->
                             <th>Target Price</th>
                             <th>Dividends</th>
                             <th>Comments</th>
@@ -357,7 +355,7 @@
             </div>
             <div class="calc-input-group">
                 <label for="frankingCredits">Franking Credits (%):</label>
-                <input type="number" id="frankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 70 for 70%">
+                <input type="number" id="calcFrankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 70 for 70%">
             </div>
             <p><strong>Unfranked Yield:</strong> <span id="calcUnfrankedYield">-</span></p>
             <p><strong>Franked Yield:</strong> <span id="calcFrankedYield">-</span></p>
@@ -511,10 +509,10 @@
         } : null;
 
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log("index.html (v87) script module loaded and DOMContentLoaded fired."); // Updated version number
+            console.log("index.html (v88) script module loaded and DOMContentLoaded fired."); // Updated version number
         }); 
     </script>
     <!-- Linking to your separate script.js file -->
-    <script src="script.js?v=158"></script> <!-- Updated to v158 -->
+    <script src="script.js?v=159"></script> <!-- Updated to v159 -->
 </body>
 </html>

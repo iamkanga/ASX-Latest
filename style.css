@@ -1,5 +1,5 @@
-/* File Version: v87 */
-/* Last Updated: 2025-07-08 (Google Sign-in button styling, centering, comments box visibility, ASX buttons visibility) */
+/* File Version: v88 */
+/* Last Updated: 2025-07-08 (Google Sign-in button styling, centering, comments box visibility, Theme button order, Numerical input bold, Remove number input arrows) */
 
 :root {
     /* Light Theme (Default) */
@@ -399,8 +399,6 @@ body.theme-bold-7 { /* Emerald */
     --asx-button-text: #fff;
     --sidebar-text: #fff;
     --label-color: #ccc;
-    --input-placeholder-color: #aaa;
-    --ghosted-text: #bbb;
     --close-sidebar-btn-color: #ccc;
 }
 
@@ -726,7 +724,7 @@ body.theme-subtle-6 { /* Subtle Sand */
     --icon-danger-color: #e74c3c;
     --icon-danger-hover-color: #c0392b;
     --calc-num-btn-bg: #f2ebe6;
-    --calc-num-btn-text: #6a5a4a;
+    --calc-num-btn-text: #6a4a4a;
     --calc-num-btn-hover-bg: #eeb8a2;
 }
 
@@ -1595,11 +1593,28 @@ table tbody tr:not(.selected):hover {
     outline: none;
 }
 
+/* Hide number input arrows */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"] {
+    -moz-appearance: textfield; /* Firefox */
+}
+
+/* Bold numerical input */
+input[type="number"] {
+    font-weight: 700; /* Bold numerical input */
+}
+
+
 /* Styles for the new comments section container */
 .comments-form-container {
     margin-top: 20px;
     border-top: 1px solid var(--border-color);
     padding-top: 15px;
+    display: block; /* Ensure it's not hidden by default */
 }
 
 .comments-form-container h3 {
@@ -1823,6 +1838,21 @@ table tbody tr:not(.selected):hover {
     text-decoration: underline;
 }
 
+/* Live Price color styling */
+.live-price-up {
+    color: var(--success-color);
+    font-weight: bold;
+}
+.live-price-down {
+    color: var(--danger-color);
+    font-weight: bold;
+}
+.live-price-neutral {
+    color: var(--text-color); /* Or a specific neutral color */
+    font-weight: bold;
+}
+
+
 .calculator-modal-content {
 }
 .calc-input-group {
@@ -1864,6 +1894,22 @@ table tbody tr:not(.selected):hover {
     box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
     outline: none;
 }
+
+/* Hide number input arrows */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"] {
+    -moz-appearance: textfield; /* Firefox */
+}
+
+/* Bold numerical input */
+input[type="number"] {
+    font-weight: 700; /* Bold numerical input */
+}
+
 
 .calculator-modal-content hr {
     border: none;

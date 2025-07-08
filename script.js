@@ -1,5 +1,5 @@
 // File Version: v159
-// Last Updated: 2025-07-08 (Complete file output, fixed live price TypeError, comments box visibility, Google Sign-in button styling, clear input defaults)
+// Last Updated: 2025-07-08 (Complete file output, fixed live price TypeError, comments box visibility, Google Sign-in button styling, clear input defaults, numerical input bold, remove number input arrows)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -238,9 +238,12 @@ function formatDateTime(dateString) {
 // UI State Management Functions
 function updateAuthButtonText(isSignedIn, userName = 'Sign In') {
     if (googleAuthBtn) {
-        // If signed in, show user name or "Signed In". If signed out, show "Google Sign In".
-        googleAuthBtn.querySelector('.button-text').textContent = isSignedIn ? (userName || 'Signed In') : 'Sign in with Google';
-        console.log(`[Auth UI] Auth button text updated to: ${googleAuthBtn.querySelector('.button-text').textContent}`);
+        // If signed in, show user name or "Signed In". If signed out, show "Sign in with Google".
+        const buttonTextSpan = googleAuthBtn.querySelector('.button-text');
+        if (buttonTextSpan) {
+            buttonTextSpan.textContent = isSignedIn ? (userName || 'Signed In') : 'Sign in with Google';
+            console.log(`[Auth UI] Auth button text updated to: ${buttonTextSpan.textContent}`);
+        }
     }
 }
 
@@ -853,11 +856,6 @@ function addShareToTable(share) {
     const displayShareName = (share.shareName && String(share.shareName).trim() !== '') ? share.shareName : '(No Code)';
     row.insertCell().textContent = displayShareName;
 
-    const enteredPriceCell = row.insertCell();
-    const enteredPriceNum = Number(share.currentPrice);
-    const displayEnteredPrice = (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? `$${enteredPriceNum.toFixed(2)}` : '-';
-    enteredPriceCell.textContent = displayEnteredPrice;
-
     // NEW: Live Price Cell - Safely access item.Code and item.Price
     const livePriceCell = row.insertCell();
     // Normalize share name for lookup (remove ASX: if present, ensure uppercase)
@@ -867,14 +865,34 @@ function addShareToTable(share) {
     );
     // Ensure Price is a number before using toFixed
     const livePrice = livePriceItem && typeof livePriceItem.Price === 'number' && !isNaN(livePriceItem.Price) ? livePriceItem.Price : undefined;
+    const previousClosePrice = livePriceItem && typeof livePriceItem.PreviousClose === 'number' && !isNaN(livePriceItem.PreviousClose) ? livePriceItem.PreviousClose : undefined;
+
+    let livePriceDisplay = livePrice !== undefined ? `$${Number(livePrice).toFixed(2)}` : '-';
+    let livePriceClass = ''; // For red/green styling
+
+    if (livePrice !== undefined && previousClosePrice !== undefined) {
+        if (livePrice > previousClosePrice) {
+            livePriceClass = 'price-up'; // Green
+        } else if (livePrice < previousClosePrice) {
+            livePriceClass = 'price-down'; // Red
+        }
+    }
     
-    livePriceCell.textContent = livePrice !== undefined ? `$${Number(livePrice).toFixed(2)}` : '-';
+    livePriceCell.innerHTML = `<span class="numerical-input-bold ${livePriceClass}">${livePriceDisplay}</span>`;
     livePriceCell.title = livePrice !== undefined ? `Live Price: $${Number(livePrice).toFixed(2)}` : 'No live price available';
 
 
+    const enteredPriceCell = row.insertCell();
+    const enteredPriceNum = Number(share.currentPrice);
+    const displayEnteredPrice = (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? `$${enteredPriceNum.toFixed(2)}` : '-';
+    enteredPriceCell.innerHTML = `<span class="numerical-input-bold">${displayEnteredPrice}</span>`;
+
+
+    const targetPriceCell = row.insertCell();
     const targetPriceNum = Number(share.targetPrice);
     const displayTargetPrice = (!isNaN(targetPriceNum) && targetPriceNum !== null) ? `$${targetPriceNum.toFixed(2)}` : '-';
-    row.insertCell().textContent = displayTargetPrice;
+    targetPriceCell.innerHTML = `<span class="numerical-input-bold">${displayTargetPrice}</span>`;
+
 
     const dividendCell = row.insertCell();
     const dividendAmountNum = Number(share.dividendAmount);
@@ -885,13 +903,13 @@ function addShareToTable(share) {
 
     dividendCell.innerHTML = `
         <div class="dividend-yield-cell-content">
-            <span>Dividend:</span> <span class="value">${divAmountDisplay}</span>
+            <span>Dividend:</span> <span class="value numerical-input-bold">${divAmountDisplay}</span>
         </div>
         <div class="dividend-yield-cell-content">
-            <span>Unfranked Yield:</span> <span class="value">${unfrankedYield !== null ? unfrankedYield.toFixed(2) + '%' : '-'}</span>
+            <span>Unfranked Yield:</span> <span class="value numerical-input-bold">${unfrankedYield !== null ? unfrankedYield.toFixed(2) + '%' : '-'}</span>
         </div>
         <div class="dividend-yield-cell-content">
-            <span>Franked Yield:</span> <span class="value">${frankedYield !== null ? frankedYield.toFixed(2) + '%' : '-'}</span>
+            <span>Franked Yield:</span> <span class="value numerical-input-bold">${frankedYield !== null ? frankedYield.toFixed(2) + '%' : '-'}</span>
         </div>
     `;
 
@@ -937,19 +955,30 @@ function addShareToMobileCards(share) {
         typeof item.Code === 'string' && item.Code.toUpperCase().replace('ASX:', '') === normalizedShareName
     );
     const livePrice = livePriceItem && typeof livePriceItem.Price === 'number' && !isNaN(livePriceItem.Price) ? livePriceItem.Price : undefined;
-    const displayLivePrice = livePrice !== undefined ? `$${Number(livePrice).toFixed(2)}` : '-';
+    const previousClosePrice = livePriceItem && typeof livePriceItem.PreviousClose === 'number' && !isNaN(livePriceItem.PreviousClose) ? livePriceItem.PreviousClose : undefined;
+
+    let displayLivePrice = livePrice !== undefined ? `$${Number(livePrice).toFixed(2)}` : '-';
+    let livePriceClass = ''; // For red/green styling
+
+    if (livePrice !== undefined && previousClosePrice !== undefined) {
+        if (livePrice > previousClosePrice) {
+            livePriceClass = 'price-up'; // Green
+        } else if (livePrice < previousClosePrice) {
+            livePriceClass = 'price-down'; // Red
+        }
+    }
 
 
     card.innerHTML = `
         <h3>${displayShareName}</h3>
         <p><strong>Entry Date:</strong> ${formatDate(share.entryDate) || '-'}</p>
-        <p><strong>Entered Price:</strong> $${displayEnteredPrice}</p>
-        <p><strong>Live Price:</strong> ${displayLivePrice}</p> <!-- NEW: Live Price -->
-        <p><strong>Target:</strong> $${displayTargetPrice}</p>
-        <p><strong>Dividend:</strong> $${displayDividendAmount}</p>
-        <p><strong>Franking:</strong> ${displayFrankingCredits}</p>
-        <p><strong>Unfranked Yield:</strong> ${unfrankedYield !== null ? unfrankedYield.toFixed(2) + '%' : '-'}</p>
-        <p><strong>Franked Yield:</strong> ${frankedYield !== null ? frankedYield.toFixed(2) + '%' : '-'}</p>
+        <p><strong>Live Price:</strong> <span class="numerical-input-bold ${livePriceClass}">${displayLivePrice}</span></p> <!-- NEW: Live Price -->
+        <p><strong>Entered Price:</strong> <span class="numerical-input-bold">$${displayEnteredPrice}</span></p>
+        <p><strong>Target:</strong> <span class="numerical-input-bold">$${displayTargetPrice}</span></p>
+        <p><strong>Dividend:</strong> <span class="numerical-input-bold">$${displayDividendAmount}</span></p>
+        <p><strong>Franking:</strong> <span class="numerical-input-bold">${displayFrankingCredits}</span></p>
+        <p><strong>Unfranked Yield:</strong> <span class="numerical-input-bold">${unfrankedYield !== null ? unfrankedYield.toFixed(2) + '%' : '-'}</span></p>
+        <p><strong>Franked Yield:</strong> <span class="numerical-input-bold">${frankedYield !== null ? frankedYield.toFixed(2) + '%' : '-'}</span></p>
         <p class="card-comments"><strong>Comments:</strong> ${commentsSummary}</p>
     `;
     mobileShareCardsContainer.appendChild(card);
@@ -1449,7 +1478,7 @@ async function fetchLivePrices() {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        // Assuming data is an array of objects like [{Code: "ASX:CBA", Price: 100.00}]
+        // Assuming data is an array of objects like [{Code: "ASX:CBA", Price: 100.00, PreviousClose: 99.00}]
         livePricesData = data;
         console.log("[Live Prices] Successfully fetched live prices:", livePricesData);
     } catch (error) {
