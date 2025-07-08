@@ -1,5 +1,5 @@
-// File Version: v160 (Fixed ASX code button to open Share Details Modal)
-// Last Updated: 2025-07-07
+// File Version: v150 (Updated for Watchlist Fixes)
+// Last Updated: 2025-07-08 (Merged watchlist fixes from later versions)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -30,9 +30,27 @@ let previousCalculatorInput = '';
 let resultDisplayed = false;
 const DEFAULT_WATCHLIST_NAME = 'My Watchlist (Default)';
 const DEFAULT_WATCHLIST_ID_SUFFIX = 'default';
-let userWatchlists = []; // Stores all watchlists for the user
+let userWatchlists = []; // Stores all watchlists for the user (now an array of objects)
 let currentSelectedWatchlistIds = []; // Stores IDs of currently selected watchlists for display
 let unsubscribeShares = null; // To store the unsubscribe function for the Firestore listener
+
+// Constants for theme and sort order (keeping from v150 but ensuring consistency with v160 logic)
+const ALL_SHARES_ID = 'all_shares'; // Corrected ID for "All Shares" option
+let currentSortOrder = 'entryDate-desc'; // Default sort order
+let contextMenuOpen = false; // To track if the custom context menu is open
+let currentContextMenuShareId = null; // Stores the ID of the share that opened the context menu
+let originalShareData = null; // Stores the original share data when editing for dirty state check
+
+// Theme related variables (keeping from v150/v160)
+const CUSTOM_THEMES = [
+    'bold-1', 'bold-2', 'bold-3', 'bold-4', 'bold-5', 'bold-6', 'bold-7', 'bold-8', 'bold-9', 'bold-10',
+    'subtle-1', 'subtle-2', 'subtle-3', 'subtle-4', 'subtle-5', 'subtle-6', 'subtle-7', 'subtle-8', 'subtle-9', 'subtle-10'
+];
+let currentCustomThemeIndex = -1; // To track the current theme in the cycle
+let currentActiveTheme = 'system-default'; // Tracks the currently applied theme string (e.g., 'dark', 'bold', 'subtle', 'system-default')
+let savedSortOrder = null; // GLOBAL: Stores the sort order loaded from user settings
+let savedTheme = null; // GLOBAL: Stores the theme loaded from user settings
+
 
 // --- DOM ELEMENTS (Cached for performance) ---
 const mainTitle = document.getElementById('mainTitle');
@@ -83,7 +101,7 @@ const modalEntryDate = document.getElementById('modalEntryDate');
 const modalEnteredPrice = document.getElementById('modalEnteredPrice');
 const modalTargetPrice = document.getElementById('modalTargetPrice');
 const modalDividendAmount = document.getElementById('modalDividendAmount');
-const modalFrankingCredits = document.getElementById('modalFrankingCredits');
+const modalFrankingCredits = document.getElementById('modalFrankingCredits'); // Corrected ID from 'frankingCredits'
 const modalUnfrankedYield = document.getElementById('modalUnfrankedYield');
 const modalFrankedYield = document.getElementById('modalFrankedYield');
 const modalNewsLink = document.getElementById('modalNewsLink');
@@ -111,7 +129,7 @@ const deleteWatchlistInModalBtn = document.getElementById('deleteWatchlistInModa
 const cancelManageWatchlistBtn = document.getElementById('cancelManageWatchlistBtn');
 const saveWatchlistNameBtn = document.getElementById('saveWatchlistNameBtn');
 
-// NEW: Add/Remove from Watchlist Modal Elements
+// NEW: Add/Remove from Watchlist Modal Elements (from v160)
 const addToWatchlistModal = document.getElementById('addToWatchlistModal');
 const addToWatchlistCloseBtn = document.getElementById('addToWatchlistCloseBtn');
 const shareNameForWatchlistModal = document.getElementById('shareNameForWatchlistModal');
@@ -129,13 +147,13 @@ const calcFrankingCreditsInput = document.getElementById('calcFrankingCredits');
 const calcUnfrankedYieldSpan = document.getElementById('calcUnfrankedYield');
 const calcFrankedYieldSpan = document.getElementById('calcFrankedYield');
 const investmentValueSelect = document.getElementById('investmentValueSelect');
-const calcEstimatedDividendSpan = document.getElementById('calcEstimatedDividend');
+const calcEstimatedDividend = document.getElementById('calcEstimatedDividend'); // Corrected ID from 'calcEstimatedDividendSpan'
 
 // Standard Calculator Modal Elements
 const calculatorModal = document.getElementById('calculatorModal');
 const calculatorCloseBtn = calculatorModal ? calculatorModal.querySelector('.close-button') : null;
-const calculatorInputDisplay = document.getElementById('calculatorInput');
-const calculatorResultDisplay = document.getElementById('calculatorResult');
+const calculatorInput = document.getElementById('calculatorInput'); // Corrected ID from 'calculatorInputDisplay'
+const calculatorResult = document.getElementById('calculatorResult'); // Corrected ID from 'calculatorResultDisplay'
 const calculatorButtons = document.querySelector('.calculator-buttons');
 
 // Custom Dialog Modal Elements
@@ -150,51 +168,71 @@ const contextEditShareBtn = document.getElementById('contextEditShareBtn');
 const contextDeleteShareBtn = document.getElementById('contextDeleteShareBtn');
 const contextAddToWatchlistBtn = document.getElementById('contextAddToWatchlistBtn'); // NEW
 
-// --- CONSTANTS ---
-const ALL_SHARES_ID = 'all_shares';
-const CUSTOM_THEMES = [
-    'bold-1', 'bold-2', 'bold-3', 'bold-4', 'bold-5',
-    'bold-6', 'bold-7', 'bold-8', 'bold-9', 'bold-10',
-    'subtle-1', 'subtle-2', 'subtle-3', 'subtle-4', 'subtle-5',
-    'subtle-6', 'subtle-7', 'subtle-8', 'subtle-9', 'subtle-10'
-];
-let currentCustomThemeIndex = -1; // -1 for system-default, 0+ for custom themes
-let currentActiveTheme = 'system-default'; // Tracks the currently applied theme
-
-// --- UTILITY FUNCTIONS ---
-
-/**
- * Formats a number as Australian Dollars (AUD).
- * @param {number} amount - The number to format.
- * @returns {string} The formatted currency string.
- */
-function formatCurrency(amount) {
-    if (typeof amount !== 'number' || isNaN(amount)) {
-        return '$0.00';
-    }
-    return new Intl.NumberFormat('en-AU', {
-        style: 'currency',
-        currency: 'AUD',
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    }).format(amount);
+// Ensure sidebar overlay is present in DOM
+let sidebarOverlay = document.querySelector('.sidebar-overlay');
+if (!sidebarOverlay) {
+    sidebarOverlay = document.createElement('div');
+    sidebarOverlay.classList.add('sidebar-overlay');
+    document.body.appendChild(sidebarOverlay);
 }
 
+// Form inputs array for dirty state check
+const formInputs = [
+    shareNameInput, currentPriceInput, targetPriceInput,
+    dividendAmountInput, frankingCreditsInput
+];
+
+
+// --- GLOBAL HELPER FUNCTIONS ---
+
 /**
- * Formats a number as a percentage.
- * @param {number} value - The number to format (e.g., 0.75 for 75%).
- * @param {number} [decimals=0] - Number of decimal places.
- * @returns {string} The formatted percentage string.
+ * Helper function to apply/remove a disabled visual state to non-button elements (like spans/icons).
+ * This adds/removes the 'is-disabled-icon' class, which CSS then styles.
+ * @param {HTMLElement} element The element to disable/enable.
+ * @param {boolean} isDisabled True to disable, false to enable.
  */
-function formatPercentage(value, decimals = 0) {
-    if (typeof value !== 'number' || isNaN(value)) {
-        return '0%';
+function setIconDisabled(element, isDisabled) {
+    if (!element) {
+        console.warn(`[setIconDisabled] Element is null or undefined. Cannot set disabled state.`);
+        return;
     }
-    return new Intl.NumberFormat('en-AU', {
-        style: 'percent',
-        minimumFractionDigits: decimals,
-        maximumFractionDigits: decimals
-    }).format(value / 100); // Divide by 100 as input is 0-100
+    if (isDisabled) {
+        element.classList.add('is-disabled-icon');
+    } else {
+        element.classList.remove('is-disabled-icon');
+    }
+}
+
+// Centralized Modal Closing Function
+function closeModals() {
+    document.querySelectorAll('.modal').forEach(modal => {
+        if (modal) {
+            modal.style.setProperty('display', 'none', 'important');
+        }
+    });
+    resetCalculator();
+    deselectCurrentShare();
+    if (autoDismissTimeout) { clearTimeout(autoDismissTimeout); autoDismissTimeout = null; }
+    hideContextMenu();
+    console.log("[Modal] All modals closed.");
+}
+
+// Custom Dialog (Alert/Confirm) Functions
+function showCustomAlert(message, duration = 1000) {
+    if (!customDialogModal || !customDialogMessage || !customDialogConfirmBtn || !customDialogCancelBtn) {
+        console.error("Custom dialog elements not found. Cannot show alert.");
+        console.log("ALERT (fallback):", message);
+        return;
+    }
+    customDialogMessage.textContent = message;
+    setIconDisabled(customDialogConfirmBtn, true); // Hide and disable confirm for alert
+    customDialogConfirmBtn.style.display = 'none';
+    setIconDisabled(customDialogCancelBtn, true); // Hide and disable cancel for alert
+    customDialogCancelBtn.style.display = 'none';
+    showModal(customDialogModal);
+    if (autoDismissTimeout) { clearTimeout(autoDismissTimeout); }
+    autoDismissTimeout = setTimeout(() => { hideModal(customDialogModal); autoDismissTimeout = null; }, duration);
+    console.log(`[Alert] Showing alert: "${message}"`);
 }
 
 /**
@@ -220,1049 +258,472 @@ function formatDate(dateInput) {
     });
 }
 
-/**
- * Calculates unfranked and franked dividend yield.
- * @param {number} dividendAmount - Annual dividend amount per share.
- * @param {number} currentPrice - Current share price.
- * @param {number} frankingCredits - Franking credits percentage (0-100).
- * @returns {{unfrankedYield: number, frankedYield: number}} Calculated yields.
- */
-function calculateYields(dividendAmount, currentPrice, frankingCredits) {
-    let unfrankedYield = 0;
-    let frankedYield = 0;
-
-    if (currentPrice > 0 && dividendAmount >= 0) {
-        unfrankedYield = (dividendAmount / currentPrice) * 100;
-
-        // Franked yield calculation for Australian shares
-        const taxRateFactor = 0.30; // Australian company tax rate
-        const grossUpFactor = 1 / (1 - taxRateFactor); // Approx 1.42857
-        const frankingFactor = frankingCredits / 100;
-
-        frankedYield = (dividendAmount / currentPrice) * (1 + (frankingFactor * grossUpFactor)) * 100;
-    }
-    return { unfrankedYield, frankedYield };
-}
-
-/**
- * Displays a custom dialog message (alert/confirm replacement).
- * @param {string} message - The message to display.
- * @param {boolean} isConfirm - If true, shows Yes/No buttons; otherwise, only an OK button (which is the Confirm button acting as OK).
- * @returns {Promise<boolean>} Resolves true for "Yes"/"OK", false for "No".
- */
-function showCustomDialog(message, isConfirm = false) {
-    return new Promise(resolve => {
-        customDialogMessage.textContent = message;
-        customDialogModal.style.display = 'block';
-        customDialogConfirmBtn.style.display = 'flex'; // Always show confirm as 'OK' or 'Yes'
-
-        if (isConfirm) {
-            customDialogCancelBtn.style.display = 'flex'; // Show cancel for 'No'
-        } else {
-            customDialogCancelBtn.style.display = 'none'; // Hide cancel for 'OK'
-        }
-
-        // Clear previous listeners
-        const confirmClone = customDialogConfirmBtn.cloneNode(true);
-        customDialogConfirmBtn.parentNode.replaceChild(confirmClone, customDialogConfirmBtn);
-        const cancelClone = customDialogCancelBtn.cloneNode(true);
-        customDialogCancelBtn.parentNode.replaceChild(cancelClone, customDialogCancelBtn);
-
-        // Add new listeners
-        confirmClone.addEventListener('click', () => {
-            customDialogModal.style.display = 'none';
-            resolve(true);
-        }, { once: true });
-
-        if (isConfirm) {
-            cancelClone.addEventListener('click', () => {
-                customDialogModal.style.display = 'none';
-                resolve(false);
-            }, { once: true });
-        }
-        currentDialogCallback = resolve; // Store resolve for external dismissal if needed
-    });
-}
-
-/**
- * Shows a temporary auto-dismissing message.
- * @param {string} message - The message to display.
- * @param {number} duration - Duration in milliseconds before dismissal.
- */
-function showToastMessage(message, duration = 3000) {
-    const toast = document.createElement('div');
-    toast.className = 'toast-message';
-    toast.textContent = message;
-    document.body.appendChild(toast);
-
-    // Force reflow to ensure transition plays
-    void toast.offsetWidth;
-
-    toast.classList.add('show');
-
-    if (autoDismissTimeout) {
-        clearTimeout(autoDismissTimeout);
-    }
-    autoDismissTimeout = setTimeout(() => {
-        toast.classList.remove('show');
-        toast.addEventListener('transitionend', () => {
-            toast.remove();
-        }, { once: true });
-        autoDismissTimeout = null;
-    }, duration);
-}
-
-
-// --- UI STATE MANAGEMENT ---
-
-/**
- * Updates the text and state of the Google authentication button.
- * @param {boolean} isSignedIn - True if user is signed in, false otherwise.
- * @param {string} [email] - User's email to display if signed in.
- */
-function updateAuthButtonText(isSignedIn, email = '') {
+// UI State Management Functions
+function updateAuthButtonText(isSignedIn, userName = 'Sign In') {
     if (googleAuthBtn) {
-        if (isSignedIn) {
-            googleAuthBtn.textContent = `Signed in as ${email || 'User'}`;
-            googleAuthBtn.classList.add('signed-in');
-            googleAuthBtn.disabled = true; // Disable after sign-in
-        } else {
-            googleAuthBtn.textContent = 'Sign In with Google';
-            googleAuthBtn.classList.remove('signed-in');
-            googleAuthBtn.disabled = false; // Enable for sign-in
-        }
+        googleAuthBtn.textContent = isSignedIn ? (userName || 'Signed In') : 'Sign In';
+        console.log(`[Auth UI] Auth button text updated to: ${googleAuthBtn.textContent}`);
     }
 }
 
-/**
- * Updates the enabled/disabled state of main action buttons based on login status.
- * @param {boolean} enable - True to enable, false to disable.
- */
 function updateMainButtonsState(enable) {
-    const buttonsToControl = [
-        addShareHeaderBtn, newShareBtn, addWatchlistBtn, editWatchlistBtn,
-        standardCalcBtn, dividendCalcBtn, exportWatchlistBtn, sortSelect,
-        watchlistSelect
-    ];
-
-    buttonsToControl.forEach(btn => {
-        if (btn) {
-            btn.disabled = !enable;
-            if (btn.classList.contains('is-disabled-icon')) {
-                // For span/i elements acting as buttons, toggle a class
-                if (enable) {
-                    btn.classList.remove('is-disabled-icon');
-                } else {
-                    btn.classList.add('is-disabled-icon');
-                }
-            }
-        }
-    });
-
-    // Handle ASX code buttons separately, as they are dynamic
-    if (asxCodeButtonsContainer) {
-        const asxButtons = asxCodeButtonsContainer.querySelectorAll('.asx-code-btn');
-        asxButtons.forEach(btn => {
-            btn.disabled = !enable;
-        });
-    }
-
-    // Also control the theme toggle and revert buttons
+    console.log(`[UI State] Setting main buttons state to: ${enable ? 'ENABLED' : 'DISABLED'}`);
+    // Sidebar buttons (native buttons, use .disabled)
+    if (newShareBtn) newShareBtn.disabled = !enable;
+    if (standardCalcBtn) standardCalcBtn.disabled = !enable;
+    if (dividendCalcBtn) dividendCalcBtn.disabled = !enable;
+    if (exportWatchlistBtn) exportWatchlistBtn.disabled = !enable;
+    if (addWatchlistBtn) addWatchlistBtn.disabled = !enable;
+    // editWatchlistBtn's disabled state is also dependent on userWatchlists.length, handled in loadUserWatchlistsAndSettings
+    if (editWatchlistBtn) editWatchlistBtn.disabled = !enable || userWatchlists.length === 0; 
+    if (addShareHeaderBtn) addShareHeaderBtn.disabled = !enable;
+    // Logout button is now a span, handle its disabled state with setIconDisabled
+    if (logoutBtn) setIconDisabled(logoutBtn, !enable); 
     if (themeToggleBtn) themeToggleBtn.disabled = !enable;
     if (colorThemeSelect) colorThemeSelect.disabled = !enable;
     if (revertToDefaultThemeBtn) revertToDefaultThemeBtn.disabled = !enable;
+    if (sortSelect) sortSelect.disabled = !enable; // Ensure sort select is disabled if not enabled
+    if (watchlistSelect) watchlistSelect.disabled = !enable; // Ensure watchlist select is disabled if not enabled
+    console.log(`[UI State] Sort Select Disabled: ${sortSelect ? sortSelect.disabled : 'N/A'}`);
+    console.log(`[UI State] Watchlist Select Disabled: ${watchlistSelect ? watchlistSelect.disabled : 'N/A'}`);
 }
 
-
-/**
- * Toggles the visibility of the app sidebar.
- * @param {boolean} [forceOpen] - Optional. If true, forces sidebar open. If false, forces sidebar closed.
- */
-function toggleAppSidebar(forceOpen) {
-    if (!appSidebar || !sidebarOverlay) {
-        console.warn("[Sidebar] Sidebar elements not found. Cannot toggle.");
-        return;
-    }
-
-    const isOpen = appSidebar.classList.contains('open');
-    let shouldOpen;
-
-    if (typeof forceOpen === 'boolean') {
-        shouldOpen = forceOpen;
-    } else {
-        shouldOpen = !isOpen;
-    }
-
-    if (shouldOpen) {
-        appSidebar.classList.add('open');
-        sidebarOverlay.classList.add('open');
-        document.body.classList.add('sidebar-active');
-        console.log("[Sidebar] Sidebar opened.");
-    } else {
-        appSidebar.classList.remove('open');
-        sidebarOverlay.classList.remove('open');
-        document.body.classList.remove('sidebar-active');
-        console.log("[Sidebar] Sidebar closed.");
+function showModal(modalElement) {
+    if (modalElement) {
+        modalElement.style.setProperty('display', 'flex', 'important');
+        modalElement.scrollTop = 0;
+        const scrollableContent = modalElement.querySelector('.modal-body-scrollable');
+        if (scrollableContent) {
+            scrollableContent.scrollTop = 0;
+        }
+        console.log(`[Modal] Showing modal: ${modalElement.id}`);
     }
 }
 
-
-/**
- * Clears all share entries from the table and mobile cards.
- */
-function clearShareList() {
-    if (shareTableBody) {
-        shareTableBody.innerHTML = '';
+function hideModal(modalElement) {
+    if (modalElement) {
+        modalElement.style.setProperty('display', 'none', 'important');
+        console.log(`[Modal] Hiding modal: ${modalElement.id}`);
     }
-    if (mobileShareCardsContainer) {
-        mobileShareCardsContainer.innerHTML = '';
-    }
-    allSharesData = []; // Clear the in-memory array
-    console.log("[UI] Share list cleared.");
 }
 
-/**
- * Clears watchlist UI elements (select dropdown and ASX buttons).
- */
 function clearWatchlistUI() {
-    if (watchlistSelect) {
-        watchlistSelect.innerHTML = '<option value="" disabled selected>Select Watchlist</option>';
-    }
-    if (asxCodeButtonsContainer) {
-        asxCodeButtonsContainer.innerHTML = '';
-    }
+    if (watchlistSelect) watchlistSelect.innerHTML = '<option value="" disabled selected>Watchlist</option>';
     userWatchlists = [];
-    currentSelectedWatchlistIds = [];
+    currentSelectedWatchlistIds = []; // Reset this too
     console.log("[UI] Watchlist UI cleared.");
 }
 
-/**
- * Updates the theme toggle button and color theme selector to reflect the current theme.
- */
-function updateThemeToggleAndSelector() {
-    if (themeToggleBtn) {
-        // Update theme toggle button icon and text based on current theme
-        const isDark = document.body.classList.contains('dark-theme');
-        const icon = themeToggleBtn.querySelector('i');
-        const textSpan = themeToggleBtn.querySelector('span');
-        if (icon) {
-            icon.className = isDark ? 'fas fa-moon' : 'fas fa-sun';
-        }
-        if (textSpan) {
-            textSpan.textContent = isDark ? 'Dark Theme' : 'Light Theme';
-        }
-    }
-
-    if (colorThemeSelect) {
-        // Update the dropdown to show the currently active custom theme or 'none'
-        if (currentActiveTheme === 'system-default') {
-            colorThemeSelect.value = 'none';
-        } else {
-            colorThemeSelect.value = currentActiveTheme;
-        }
-    }
-    console.log(`[Theme] UI updated. Current active theme: ${currentActiveTheme}`);
-}
-
-/**
- * Applies the selected theme to the body.
- * @param {string} themeName - The name of the theme to apply (e.g., 'system-default', 'bold-1').
- */
-function applyTheme(themeName) {
-    // Remove all existing theme classes
-    document.body.className = '';
-
-    if (themeName === 'system-default') {
-        currentActiveTheme = 'system-default';
-        // Check system preference for initial dark/light mode
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            document.body.classList.add('dark-theme');
-        }
-        currentCustomThemeIndex = -1;
-        console.log("[Theme] Applied system-default theme.");
-    } else {
-        // Apply the specific custom theme
-        document.body.classList.add(`theme-${themeName}`);
-        currentActiveTheme = themeName;
-        currentCustomThemeIndex = CUSTOM_THEMES.indexOf(themeName);
-        console.log(`[Theme] Applied custom theme: ${themeName}`);
-    }
-    updateThemeToggleAndSelector(); // Update UI elements to reflect new theme
-}
-
-// --- FIRESTORE PATH HELPERS ---
-
-/**
- * Gets the document reference for a specific user's root data.
- * Path: `artifacts/{appId}/users/{userId}`
- * @param {string} userId - The user's ID.
- * @returns {string} The document path string for the user's root.
- */
-function getUserRootDocPath(userId) {
-    // currentAppId is set by window.getFirebaseAppId() in the DOMContentLoaded listener
-    // which gets it from the firebaseConfig.projectId embedded in index.html.
-    return `artifacts/${currentAppId}/users/${userId}`;
-}
-
-/**
- * Gets the collection reference for shares under a specific user.
- * Path: `artifacts/{appId}/users/{userId}/shares`
- * @param {string} userId - The user's ID.
- * @returns {CollectionReference} The Firestore CollectionReference for shares.
- */
-function getUserSharesCollectionRef(userId) {
-    return window.firestore.collection(db, getUserRootDocPath(userId), 'shares');
-}
-
-/**
- * Gets the document reference for a specific share under a user.
- * Path: `artifacts/{appId}/users/{userId}/shares/{shareId}`
- * @param {string} userId - The user's ID.
- * @param {string} shareId - The share's ID.
- * @returns {DocumentReference} The Firestore DocumentReference for the share.
- */
-function getUserShareDocRef(userId, shareId) {
-    return window.firestore.doc(db, getUserRootDocPath(userId), 'shares', shareId);
-}
-
-/**
- * Gets the document reference for user settings.
- * Path: `artifacts/{appId}/users/{userId}/user_settings/main_settings`
- * @param {string} userId - The user's ID.
- * @returns {DocumentReference} The Firestore DocumentReference for user settings.
- */
-function getUserSettingsDocRef(userId) {
-    return window.firestore.doc(db, getUserRootDocPath(userId), 'user_settings', 'main_settings');
-}
-
-/**
- * Gets the collection reference for the *old* watchlist structure.
- * Path: `artifacts/{appId}/users/{userId}/watchlists`
- * @param {string} userId - The user's ID.
- * @returns {CollectionReference} The Firestore CollectionReference for old watchlists.
- */
-function getOldWatchlistsCollectionRef(userId) {
-    return window.firestore.collection(db, getUserRootDocPath(userId), 'watchlists');
-}
-
-
-// --- FIREBASE AUTHENTICATION ---
-
-/**
- * Handles Google Sign-in.
- */
-async function handleGoogleSignIn() {
-    if (!auth || !window.authFunctions) {
-        console.error("[Auth] Firebase Auth not initialized.");
-        showToastMessage("Authentication service not available.", 3000);
-        return;
-    }
-    if (googleAuthBtn) {
-        googleAuthBtn.disabled = true; // Disable button immediately
-        googleAuthBtn.textContent = 'Signing In...';
-    }
-
-    const provider = window.authFunctions.GoogleAuthProviderInstance;
-    try {
-        const result = await window.authFunctions.signInWithPopup(auth, provider);
-        // User signed in successfully. onAuthStateChanged listener handles UI updates.
-        console.log("[Auth] Google Sign-in successful:", result.user.uid);
-        // Removed: showToastMessage(`Welcome, ${result.user.displayName || result.user.email}!`, 3000);
-    } catch (error) {
-        console.error("[Auth] Google Sign-in error:", error);
-        let errorMessage = "Sign-in failed. Please try again.";
-        if (error.code === 'auth/popup-closed-by-user') {
-            errorMessage = "Sign-in cancelled.";
-        } else if (error.code === 'auth/cancelled-popup-request') {
-            errorMessage = "Sign-in cancelled (popup already open).";
-        } else if (error.code === 'auth/network-request-failed') {
-            errorMessage = "Network error. Please check your connection.";
-        }
-        showCustomDialog(errorMessage); // Use custom dialog for errors
-        updateAuthButtonText(false); // Re-enable button on failure
-    } finally {
-        if (googleAuthBtn && !auth.currentUser) { // Only re-enable if still not signed in
-            googleAuthBtn.disabled = false;
-            googleAuthBtn.textContent = 'Sign In with Google';
-        }
-    }
-}
-
-/**
- * Handles user logout.
- */
-async function handleLogout() {
-    if (!auth || !window.authFunctions) {
-        console.error("[Auth] Firebase Auth not initialized.");
-        showToastMessage("Authentication service not available.", 3000);
-        return;
-    }
-
-    const confirmLogout = await showCustomDialog("Are you sure you want to log out?", true);
-    if (!confirmLogout) {
-        console.log("[Auth] Logout cancelled by user.");
-        return;
-    }
-
-    try {
-        await window.authFunctions.signOut(auth);
-        // User signed out successfully. onAuthStateChanged listener handles UI updates.
-        console.log("[Auth] User logged out.");
-        showToastMessage("You have been logged out.", 3000);
-    } catch (error) {
-        console.error("[Auth] Logout error:", error);
-        showCustomDialog("Logout failed. Please try again.");
-    }
-}
-
-// --- FIRESTORE DATA OPERATIONS ---
-
-/**
- * Loads user-specific watchlists and settings from Firestore, including migration logic.
- * This function is called after the user is authenticated.
- */
-async function loadUserWatchlistsAndSettings() {
-    if (!db || !currentUserId || !window.firestore) {
-        console.warn("[Firestore] Firestore or User ID not available for loading watchlists.");
-        return;
-    }
-    loadingIndicator.style.display = 'block';
-    console.log("[Firestore] Loading user watchlists and settings...");
-
-    const userSettingsDocRef = getUserSettingsDocRef(currentUserId);
-    const oldWatchlistsCollectionRef = getOldWatchlistsCollectionRef(currentUserId);
-
-    let settingsFromFirestore = null;
-    let oldWatchlistsFromFirestore = [];
-
-    try {
-        // 1. Try to load current settings (which should contain the primary watchlists array)
-        const settingsDocSnap = await window.firestore.getDoc(userSettingsDocRef);
-        if (settingsDocSnap.exists()) {
-            settingsFromFirestore = settingsDocSnap.data();
-            console.log("[Firestore] User settings loaded from main_settings:", settingsFromFirestore);
-            userWatchlists = settingsFromFirestore.watchlists || [];
-        } else {
-            console.log("[Firestore] No user settings found in main_settings.");
-            userWatchlists = [];
-        }
-
-        // 2. Try to load watchlists from the old separate 'watchlists' collection
-        const oldWatchlistsQuerySnapshot = await window.firestore.getDocs(oldWatchlistsCollectionRef);
-        oldWatchlistsQuerySnapshot.forEach(doc => {
-            const oldWatchlist = { id: doc.id, ...doc.data() };
-            // Ensure old watchlists have the 'shares' property for compatibility
-            if (!oldWatchlist.shares) {
-                oldWatchlist.shares = {};
-            }
-            oldWatchlistsFromFirestore.push(oldWatchlist);
-        });
-        console.log(`[Firestore] Found ${oldWatchlistsFromFirestore.length} watchlists in old collection.`);
-
-        // 3. Merge and deduplicate watchlists
-        let combinedWatchlists = [...userWatchlists]; // Start with watchlists from main_settings
-
-        oldWatchlistsFromFirestore.forEach(oldWl => {
-            // Check if a watchlist with the same ID already exists in combinedWatchlists
-            const exists = combinedWatchlists.some(currentWl => currentWl.id === oldWl.id);
-            if (!exists) {
-                combinedWatchlists.push(oldWl); // Add if it's a new ID
-            } else {
-                // If ID exists, merge properties, prioritizing existing (e.g., if 'shares' was added later)
-                const existingWl = combinedWatchlists.find(currentWl => currentWl.id === oldWl.id);
-                Object.assign(existingWl, oldWl); // Merge old data into existing
-                if (!existingWl.shares) { // Ensure shares object is present after merge
-                    existingWl.shares = {};
-                }
-            }
-        });
-
-        // Ensure default watchlist exists and is correctly structured
-        const defaultWlExists = combinedWatchlists.some(wl => wl.id === DEFAULT_WATCHLIST_ID_SUFFIX);
-        if (!defaultWlExists) {
-            combinedWatchlists.unshift({ // Add to the beginning
-                id: DEFAULT_WATCHLIST_ID_SUFFIX,
-                name: DEFAULT_WATCHLIST_NAME,
-                shares: {}
-            });
-            console.log("[Firestore] Ensured default watchlist exists.");
-        }
-
-        userWatchlists = combinedWatchlists; // Update the global array
-
-        // 4. Update currentSelectedWatchlistIds and theme based on settings or defaults
-        currentSelectedWatchlistIds = settingsFromFirestore?.currentSelectedWatchlistIds || [ALL_SHARES_ID];
-        const savedTheme = settingsFromFirestore?.theme || 'system-default';
-        applyTheme(savedTheme);
-
-        // 5. Save the combined watchlists back to main_settings (MIGRATION STEP)
-        await window.firestore.setDoc(userSettingsDocRef, {
-            watchlists: userWatchlists,
-            currentSelectedWatchlistIds: currentSelectedWatchlistIds,
-            theme: currentActiveTheme
-        }, { merge: true });
-        console.log("[Firestore] Watchlists and settings (including old data migration) saved to main_settings.");
-
-        populateWatchlistDropdown();
-        await loadShares(); // Load shares after watchlists are fully processed
-    } catch (error) {
-        console.error("[Firestore] Error loading user watchlists and settings:", error);
-        showCustomDialog("Error loading your data. Please try refreshing the page.");
-    } finally {
-        loadingIndicator.style.display = 'none';
-    }
-}
-
-/**
- * Saves user-specific settings to Firestore.
- */
-async function saveUserSettings() {
-    if (!db || !currentUserId || !window.firestore) {
-        console.warn("[Firestore] Firestore or User ID not available for saving settings.");
-        return;
-    }
-    console.log("[Firestore] Saving user settings...");
-    const userSettingsDocRef = getUserSettingsDocRef(currentUserId);
-
-    try {
-        await window.firestore.setDoc(userSettingsDocRef, {
-            watchlists: userWatchlists,
-            currentSelectedWatchlistIds: currentSelectedWatchlistIds,
-            theme: currentActiveTheme
-        }, { merge: true });
-        console.log("[Firestore] User settings saved successfully.");
-    } catch (error) {
-        console.error("[Firestore] Error saving user settings:", error);
-        showToastMessage("Error saving settings.", 3000);
-    }
-}
-
-/**
- * Adds a new share or updates an existing one in Firestore.
- * @param {object} shareData - The share data to save.
- * @param {string} [docId] - The ID of the document to update. If null, a new document is created.
- */
-async function saveShare(shareData, docId = null) {
-    if (!db || !currentUserId || !window.firestore) {
-        showCustomDialog("Error: Not authenticated or Firestore not available.");
-        return;
-    }
-
-    loadingIndicator.style.display = 'block';
-    try {
-        const shareCollectionRef = getUserSharesCollectionRef(currentUserId);
-        let shareDocRef;
-
-        if (docId) {
-            // Update existing share
-            shareDocRef = getUserShareDocRef(currentUserId, docId);
-            await window.firestore.setDoc(shareDocRef, shareData, { merge: true });
-            console.log(`[Firestore] Share updated with ID: ${docId}`);
-            showToastMessage("Share updated successfully!", 2000);
-        } else {
-            // Add new share
-            shareDocRef = await window.firestore.addDoc(shareCollectionRef, shareData);
-            console.log(`[Firestore] New share added with ID: ${shareDocRef.id}`);
-            showToastMessage("Share added successfully!", 2000);
-
-            // --- NEW LOGIC: Associate new share with the currently selected watchlist ---
-            const activeWatchlistId = currentSelectedWatchlistIds[0];
-            const activeWatchlist = userWatchlists.find(wl => wl.id === activeWatchlistId);
-
-            if (activeWatchlist) {
-                if (!activeWatchlist.shares) {
-                    activeWatchlist.shares = {};
-                }
-                activeWatchlist.shares[shareDocRef.id] = true; // Mark presence of the new share
-                await saveUserSettings(); // Persist the updated watchlists array
-                console.log(`[Firestore] New share ${shareDocRef.id} added to watchlist ${activeWatchlistId}.`);
-            } else {
-                console.warn(`[Firestore] Could not find active watchlist ${activeWatchlistId} to add new share to.`);
-            }
-            // --- END NEW LOGIC ---
-        }
-        hideModal(shareFormSection);
-    } catch (error) {
-        console.error("[Firestore] Error saving share:", error);
-        showCustomDialog("Error saving share. Please try again.");
-    } finally {
-        loadingIndicator.style.display = 'none';
-    }
-}
-
-/**
- * Deletes a share from Firestore.
- * @param {string} docId - The ID of the share document to delete.
- */
-async function deleteShare(docId) {
-    if (!db || !currentUserId || !window.firestore) {
-        showCustomDialog("Error: Not authenticated or Firestore not available.");
-        return;
-    }
-
-    const confirmDelete = await showCustomDialog("Are you sure you want to delete this share?", true);
-    if (!confirmDelete) {
-        console.log("[Firestore] Share deletion cancelled by user.");
-        return;
-    }
-
-    loadingIndicator.style.display = 'block';
-    try {
-        const shareDocRef = getUserShareDocRef(currentUserId, docId);
-
-        // Remove share from all watchlists it belongs to
-        const batch = window.firestore.writeBatch(db);
-        const userSettingsDocRef = getUserSettingsDocRef(currentUserId); // Get settings doc ref
-        const settingsSnap = await window.firestore.getDoc(userSettingsDocRef);
-        if (settingsSnap.exists()) {
-            const settings = settingsSnap.data();
-            const currentWatchlists = settings.watchlists || [];
-            currentWatchlists.forEach(watchlist => {
-                if (watchlist.shares && watchlist.shares[docId]) {
-                    // Update the shares map within the watchlist object in the user settings document
-                    // This requires updating the entire watchlists array or using a more complex field path
-                    // For simplicity and to avoid deep nesting issues, we'll update the array in memory
-                    // and then save the whole array back.
-                    delete watchlist.shares[docId];
-                }
-            });
-            // Update the entire watchlists array in the settings document
-            batch.update(userSettingsDocRef, { watchlists: currentWatchlists });
-        }
-        
-        // Delete the share document itself
-        batch.delete(shareDocRef);
-        
-        await batch.commit();
-
-        console.log(`[Firestore] Share deleted with ID: ${docId}`);
-        showToastMessage("Share deleted successfully!", 2000);
-        hideModal(shareDetailModal); // Hide detail modal if open
-        hideModal(shareFormSection); // Hide form modal if open
-        // The onSnapshot listener for shares will automatically update the UI
-    } catch (error) {
-        console.error("[Firestore] Error deleting share:", error);
-        showCustomDialog("Error deleting share. Please try again.");
-    } finally {
-        loadingIndicator.style.display = 'none';
-    }
-}
-
-/**
- * Sets up a real-time listener for shares in the currently selected watchlists.
- * This function replaces `loadShares` for real-time updates.
- */
-function setupSharesListener() {
-    if (unsubscribeShares) {
-        unsubscribeShares(); // Unsubscribe from previous listener if exists
-        unsubscribeShares = null;
-        console.log("[Firestore Listener] Unsubscribed from previous shares listener.");
-    }
-
-    if (!db || !currentUserId || !window.firestore || currentSelectedWatchlistIds.length === 0) {
-        console.warn("[Firestore Listener] Cannot set up shares listener: missing DB, User ID, Firestore, or no watchlists selected.");
-        clearShareList(); // Clear UI if no valid listener can be set up
-        return;
-    }
-
-    loadingIndicator.style.display = 'block';
-    console.log(`[Firestore Listener] Setting up shares listener for watchlists: ${currentSelectedWatchlistIds.join(', ')}`);
-
-    const sharesCollectionRef = getUserSharesCollectionRef(currentUserId);
-    const q = window.firestore.query(sharesCollectionRef);
-
-    unsubscribeShares = window.firestore.onSnapshot(q, (querySnapshot) => {
-        const sharesFromFirestore = [];
-        querySnapshot.forEach((doc) => {
-            const share = { id: doc.id, ...doc.data() };
-            sharesFromFirestore.push(share);
-        });
-
-        // Filter shares based on currentSelectedWatchlistIds
-        let filteredShares = [];
-        if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID)) {
-            filteredShares = sharesFromFirestore; // Show all shares
-        } else {
-            // Get shares that belong to any of the selected watchlists
-            filteredShares = sharesFromFirestore.filter(share =>
-                currentSelectedWatchlistIds.some(watchlistId => {
-                    const watchlist = userWatchlists.find(wl => wl.id === watchlistId);
-                    // Corrected: watchlist.shares[share.id] instead of watchlist.watchlist.shares[share.id]
-                    return watchlist && watchlist.shares && watchlist.shares[share.id];
-                })
-            );
-        }
-
-        allSharesData = filteredShares; // Update the global in-memory array
-        renderShareList(); // Re-render the UI with the filtered data
-        loadingIndicator.style.display = 'none';
-        console.log(`[Firestore Listener] Shares updated. Total shares: ${allSharesData.length}`);
-    }, (error) => {
-        console.error("[Firestore Listener] Error listening to shares:", error);
-        showCustomDialog("Error loading shares in real-time. Please refresh.");
-        loadingIndicator.style.display = 'none';
-    });
-}
-
-/**
- * Loads shares based on the currently selected watchlist(s) and sorting preference.
- * This function is now primarily a wrapper to trigger `setupSharesListener`.
- */
-async function loadShares() {
-    if (!currentUserId) {
-        console.log("[Load Shares] No user logged in. Clearing share list.");
-        clearShareList();
-        return;
-    }
-    setupSharesListener(); // This will handle loading and real-time updates
-}
-
-/**
- * Adds a new watchlist to Firestore.
- * @param {string} watchlistName - The name of the new watchlist.
- */
-async function addWatchlist(watchlistName) {
-    if (!db || !currentUserId || !window.firestore) {
-        showCustomDialog("Error: Not authenticated or Firestore not available.");
-        return;
-    }
-
-    if (!watchlistName.trim()) {
-        showCustomDialog("Watchlist name cannot be empty.");
-        return;
-    }
-
-    // Check for duplicate names
-    if (userWatchlists.some(wl => wl.name.toLowerCase() === watchlistName.toLowerCase())) {
-        showCustomDialog("A watchlist with this name already exists.");
-        return;
-    }
-
-    loadingIndicator.style.display = 'block';
-    try {
-        // Corrected: Generate a unique ID using doc() on a dummy collection reference
-        const newWatchlistId = window.firestore.doc(window.firestore.collection(db, 'dummy_collection_for_id_gen')).id; 
-        const newWatchlist = {
-            id: newWatchlistId,
-            name: watchlistName,
-            shares: {} // Initialize with an empty shares object
-        };
-        userWatchlists.push(newWatchlist);
-        await saveUserSettings(); // Save updated watchlists array (which now includes the new one)
-        
-        populateWatchlistDropdown();
-        watchlistSelect.value = newWatchlist.id; // Select the newly added watchlist
-        currentSelectedWatchlistIds = [newWatchlist.id]; // Make it the only selected one
-        await saveUserSettings(); // Save updated selected watchlist preference
-        loadShares(); // Reload shares for the new watchlist
-        hideModal(addWatchlistModal);
-        showToastMessage(`Watchlist "${watchlistName}" added!`, 2000);
-    } catch (error) {
-        console.error("[Firestore] Error adding watchlist:", error);
-        showCustomDialog("Error adding watchlist. Please try again.");
-    } finally {
-        loadingIndicator.style.display = 'none';
-    }
-}
-
-/**
- * Updates an existing watchlist's name.
- * @param {string} watchlistId - The ID of the watchlist to update.
- * @param {string} newName - The new name for the watchlist.
- */
-async function updateWatchlistName(watchlistId, newName) {
-    if (!db || !currentUserId || !window.firestore) {
-        showCustomDialog("Error: Not authenticated or Firestore not available.");
-        return;
-    }
-
-    if (!newName.trim()) {
-        showCustomDialog("Watchlist name cannot be empty.");
-        return;
-    }
-
-    // Check for duplicate names, excluding the current watchlist being edited
-    if (userWatchlists.some(wl => wl.id !== watchlistId && wl.name.toLowerCase() === newName.toLowerCase())) {
-        showCustomDialog("A watchlist with this name already exists.");
-        return;
-    }
-
-    loadingIndicator.style.display = 'block';
-    try {
-        const watchlistIndex = userWatchlists.findIndex(wl => wl.id === watchlistId);
-        if (watchlistIndex > -1) {
-            const oldName = userWatchlists[watchlistIndex].name;
-            userWatchlists[watchlistIndex].name = newName;
-            await saveUserSettings(); // Save updated watchlists array
-            populateWatchlistDropdown();
-            watchlistSelect.value = watchlistId; // Keep the watchlist selected
-            showToastMessage(`Watchlist "${oldName}" renamed to "${newName}"!`, 2000);
-        }
-        hideModal(manageWatchlistModal);
-    } catch (error) {
-        console.error("[Firestore] Error updating watchlist name:", error);
-        showCustomDialog("Error updating watchlist name. Please try again.");
-    } finally {
-        loadingIndicator.style.display = 'none';
-    }
-}
-
-/**
- * Deletes a watchlist from Firestore.
- * @param {string} watchlistId - The ID of the watchlist to delete.
- */
-async function deleteWatchlist(watchlistId) {
-    if (!db || !currentUserId || !window.firestore) {
-        showCustomDialog("Error: Not authenticated or Firestore not available.");
-        return;
-    }
-
-    if (watchlistId === DEFAULT_WATCHLIST_ID_SUFFIX) {
-        showCustomDialog("The default watchlist cannot be deleted.");
-        console.log("[Firestore] Attempted to delete default watchlist. Action blocked.");
-        return; // Prevent deletion of default watchlist
-    }
-
-    const confirm = await showCustomDialog("Are you sure you want to delete this watchlist? Shares within it will NOT be deleted, but will be unassigned from this watchlist.", true);
-    if (!confirm) {
-        console.log("[Firestore] Watchlist deletion cancelled by user.");
-        return;
-    }
-
-    loadingIndicator.style.display = 'block';
-    try {
-        userWatchlists = userWatchlists.filter(wl => wl.id !== watchlistId);
-        // If the deleted watchlist was selected, default to 'All Shares' or the default watchlist
-        if (currentSelectedWatchlistIds.includes(watchlistId)) {
-            currentSelectedWatchlistIds = [ALL_SHARES_ID];
-        }
-
-        await saveUserSettings(); // Save updated watchlists array and selected IDs
-        populateWatchlistDropdown();
-        watchlistSelect.value = currentSelectedWatchlistIds[0]; // Select the new active watchlist
-        loadShares(); // Reload shares based on new selection
-        hideModal(manageWatchlistModal);
-        showToastMessage("Watchlist deleted successfully!", 2000);
-    } catch (error) {
-        console.error("[Firestore] Error deleting watchlist:", error);
-        showCustomDialog("Error deleting watchlist. Please try again.");
-    } finally {
-        loadingIndicator.style.display = 'none';
-    }
-}
-
-/**
- * Adds or removes a share from a watchlist.
- * @param {string} shareId - The ID of the share.
- * @param {string} watchlistId - The ID of the watchlist.
- * @param {boolean} add - True to add, false to remove.
- */
-async function toggleShareInWatchlist(shareId, watchlistId, add) {
-    if (!db || !currentUserId || !window.firestore) {
-        showCustomDialog("Error: Not authenticated or Firestore not available.");
-        return;
-    }
-
-    loadingIndicator.style.display = 'block';
-    try {
-        const watchlistIndex = userWatchlists.findIndex(wl => wl.id === watchlistId);
-
-        if (watchlistIndex > -1) {
-            if (!userWatchlists[watchlistIndex].shares) {
-                userWatchlists[watchlistIndex].shares = {};
-            }
-
-            if (add) {
-                userWatchlists[watchlistIndex].shares[shareId] = true; // Mark presence
-                // showToastMessage(`Share added to "${userWatchlists[watchlistIndex].name}"`, 1500); // Only show toast after modal save
-            } else {
-                delete userWatchlists[watchlistIndex].shares[shareId];
-                // showToastMessage(`Share removed from "${userWatchlists[watchlistIndex].name}"`, 1500); // Only show toast after modal save
-            }
-            await saveUserSettings(); // Save updated watchlists array
-            // No need to reload shares here, as the onSnapshot listener will handle it.
-        }
-    } catch (error) {
-        console.error("[Firestore] Error toggling share in watchlist:", error);
-        showToastMessage("Error updating watchlist.", 2000);
-    } finally {
-        loadingIndicator.style.display = 'none';
-    }
-}
-
-/**
- * Exports the currently displayed shares to a CSV file.
- */
-function exportWatchlistToCSV() {
-    if (allSharesData.length === 0) {
-        showCustomDialog("No shares to export.");
-        return;
-    }
-
-    const headers = [
-        "Code", "Entry Date", "Entered Price", "Target Price",
-        "Dividend Amount", "Franking Credits (%)", "Unfranked Yield (%)",
-        "Franked Yield (%)", "Comments"
-    ];
-
-    const rows = allSharesData.map(share => {
-        const commentsText = share.comments ? share.comments.map(c => `${c.title}: ${c.text}`).join(' | ') : '';
-        const yields = calculateYields(share.dividendAmount, share.currentPrice, share.frankingCredits);
-
-        return [
-            `"${share.shareName}"`,
-            `"${formatDate(share.entryDate)}"` || '""',
-            `"${share.currentPrice || ''}"`,
-            `"${share.targetPrice || ''}"`,
-            `"${share.dividendAmount || ''}"`,
-            `"${share.frankingCredits || ''}"`,
-            `"${yields.unfrankedYield.toFixed(2)}"` || '""',
-            `"${yields.frankedYield.toFixed(2)}"` || '""',
-            `"${commentsText.replace(/"/g, '""')}"` // Escape double quotes within comments
-        ].join(',');
-    });
-
-    const csvContent = [
-        headers.join(','),
-        ...rows
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'shares_watchlist.csv');
-    link.style.display = 'none';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    showToastMessage("Watchlist exported to CSV!", 2000);
-    console.log("[Export] Watchlist exported to CSV.");
-}
-
-
-// --- UI RENDERING FUNCTIONS ---
-
-/**
- * Renders the list of shares in both table and mobile card formats.
- */
-function renderShareList() {
-    if (!shareTableBody || !mobileShareCardsContainer) {
-        console.warn("[Render] Share table or mobile cards container not found.");
-        return;
-    }
-
+function clearShareListUI() {
+    if (!shareTableBody) { console.error("[clearShareListUI] shareTableBody element not found."); return; }
+    if (!mobileShareCardsContainer) { console.error("[clearShareListUI] mobileShareCardsContainer element not found."); return; }
     shareTableBody.innerHTML = '';
     mobileShareCardsContainer.innerHTML = '';
+    console.log("[UI] Share list UI cleared.");
+}
 
-    // Apply sorting
-    const sortBy = sortSelect.value;
-    let sortedShares = [...allSharesData]; // Create a shallow copy to avoid modifying original
+function clearShareList() {
+    clearShareListUI();
+    if (asxCodeButtonsContainer) asxCodeButtonsContainer.innerHTML = '';
+    deselectCurrentShare();
+    console.log("[UI] Full share list cleared (UI + buttons).");
+}
 
-    if (sortBy) {
-        sortedShares.sort((a, b) => {
-            let valA, valB;
+function selectShare(shareId) {
+    console.log(`[Selection] Attempting to select share with ID: ${shareId}`);
+    deselectCurrentShare(); // Deselect any previously selected share
 
-            switch (sortBy) {
-                case 'entryDate-asc':
-                case 'entryDate-desc':
-                    valA = a.entryDate ? new Date(a.entryDate).getTime() : 0;
-                    valB = b.entryDate ? new Date(b.entryDate).getTime() : 0;
-                    break;
-                case 'shareName-asc':
-                case 'shareName-desc':
-                    valA = a.shareName ? a.shareName.toLowerCase() : '';
-                    valB = b.shareName ? b.shareName.toLowerCase() : '';
-                    break;
-                case 'dividendAmount-asc':
-                case 'dividendAmount-desc':
-                    valA = a.dividendAmount || 0;
-                    valB = b.dividendAmount || 0;
-                    break;
-                default:
-                    return 0;
-            }
+    const tableRow = document.querySelector(`#shareTable tbody tr[data-doc-id="${shareId}"]`);
+    const mobileCard = document.querySelector(`.mobile-card[data-doc-id="${shareId}"]`);
 
-            if (valA < valB) return sortBy.endsWith('-asc') ? -1 : 1;
-            if (valA > valB) return sortBy.endsWith('-asc') ? 1 : -1;
-            return 0;
-        });
+    if (tableRow) {
+        tableRow.classList.add('selected');
+        console.log(`[Selection] Selected table row for ID: ${shareId}`);
     }
-
-    if (sortedShares.length === 0) {
-        // Removed: shareTableBody.innerHTML = '<tr><td colspan="5" class="no-shares-message">No shares added yet. Click the "+" button to add one!</td></tr>';
-        // Removed: mobileShareCardsContainer.innerHTML = '<div class="no-shares-message">No shares added yet. Click the "+" button to add one!</div>';
-        return; // No content if no shares
+    if (mobileCard) {
+        mobileCard.classList.add('selected');
+        console.log(`[Selection] Selected mobile card for ID: ${shareId}`);
     }
+    selectedShareDocId = shareId;
+}
 
-    sortedShares.forEach(share => {
-        const yields = calculateYields(share.dividendAmount, share.currentPrice, share.frankingCredits);
-
-        // Desktop Table Row
-        const row = shareTableBody.insertRow();
-        row.dataset.id = share.id;
-        row.innerHTML = `
-            <td>${share.shareName || 'N/A'}</td>
-            <td>${formatCurrency(share.currentPrice)}</td>
-            <td>${formatCurrency(share.targetPrice)}</td>
-            <td>${formatCurrency(share.dividendAmount)} (${formatPercentage(yields.unfrankedYield, 2)})</td>
-            <td>${share.comments && share.comments.length > 0 ? share.comments[0].text : 'No comments'}</td>
-        `;
-        row.addEventListener('click', (event) => handleShareClick(event, share.id));
-        row.addEventListener('contextmenu', (event) => handleContextMenu(event, share.id));
-        row.addEventListener('touchstart', (event) => handleTouchStart(event, share.id), { passive: true });
-        row.addEventListener('touchmove', handleTouchMove, { passive: true });
-        row.addEventListener('touchend', (event) => handleTouchEnd(event, share.id));
-
-        // Mobile Card
-        const card = document.createElement('div');
-        card.className = 'mobile-card';
-        card.dataset.id = share.id;
-        card.innerHTML = `
-            <h3>${share.shareName || 'N/A'}</h3>
-            <p><strong>Entered Price:</strong> ${formatCurrency(share.currentPrice)}</p>
-            <p><strong>Target Price:</strong> ${formatCurrency(share.targetPrice)}</p>
-            <p><strong>Dividends:</strong> ${formatCurrency(share.dividendAmount)} (${formatPercentage(yields.unfrankedYield, 2)})</p>
-            <p><strong>Comments:</strong> ${share.comments && share.comments.length > 0 ? share.comments[0].text : 'No comments'}</p>
-        `;
-        card.addEventListener('click', (event) => handleShareClick(event, share.id));
-        card.addEventListener('contextmenu', (event) => handleContextMenu(event, share.id));
-        card.addEventListener('touchstart', (event) => handleTouchStart(event, share.id), { passive: true });
-        card.addEventListener('touchmove', handleTouchMove, { passive: true });
-        card.addEventListener('touchend', (event) => handleTouchEnd(event, share.id));
-        mobileShareCardsContainer.appendChild(card);
+function deselectCurrentShare() {
+    const currentlySelected = document.querySelectorAll('.share-list-section tr.selected, .mobile-card.selected');
+    console.log(`[Selection] Attempting to deselect ${currentlySelected.length} elements.`);
+    currentlySelected.forEach(el => {
+        el.classList.remove('selected');
     });
+    selectedShareDocId = null;
+    console.log("[Selection] Share deselected. selectedShareDocId is now null.");
+}
 
-    console.log("[UI] Share list rendered.");
-    updateAsxCodeButtons(); // Update ASX code buttons based on rendered shares
+function truncateText(text, maxLength) {
+    if (typeof text !== 'string' || text.length <= maxLength) {
+        return text;
+    }
+    return text.substring(0, maxLength) + '...';
+}
+
+function addCommentSection(title = '', text = '') {
+    if (!commentsFormContainer) { console.error("[addCommentSection] commentsFormContainer not found."); return; }
+    const commentSectionDiv = document.createElement('div');
+    commentSectionDiv.className = 'comment-section';
+    commentSectionDiv.innerHTML = `
+        <div class="comment-section-header">
+            <input type="text" class="comment-title-input" placeholder="Comment Title" value="${title}">
+            <button type="button" class="comment-delete-btn">&times;</button>
+        </div>
+        <textarea class="comment-text-input" placeholder="Your comments here...">${text}</textarea>
+    `;
+    commentsFormContainer.appendChild(commentSectionDiv);
+    
+    // Add event listeners for dirty state check
+    const commentTitleInput = commentSectionDiv.querySelector('.comment-title-input');
+    const commentTextInput = commentSectionDiv.querySelector('.comment-text-input');
+    if (commentTitleInput) commentTitleInput.addEventListener('input', checkFormDirtyState);
+    if (commentTextInput) commentTextInput.addEventListener('input', checkFormDirtyState);
+
+    commentSectionDiv.querySelector('.comment-delete-btn').addEventListener('click', (event) => {
+        console.log("[Comments] Delete comment button clicked.");
+        event.target.closest('.comment-section').remove();
+        checkFormDirtyState(); // Check dirty state after deleting a comment
+    });
+    console.log("[Comments] Added new comment section.");
+}
+
+function clearForm() {
+    formInputs.forEach(input => {
+        if (input) { input.value = ''; }
+    });
+    if (commentsFormContainer) {
+        commentsFormContainer.innerHTML = '';
+        addCommentSection(); // Always add one initial comment section
+    }
+    selectedShareDocId = null;
+    originalShareData = null; // Reset original data when clearing form for new share
+    if (deleteShareBtn) {
+        deleteShareBtn.classList.add('hidden'); // Hide delete icon when adding new share
+        console.log("[clearForm] deleteShareBtn hidden.");
+    }
+    // Initially disable save button until share name is entered and form is dirty
+    setIconDisabled(saveShareBtn, true);
+    console.log("[Form] Form fields cleared and selectedShareDocId reset. saveShareBtn disabled.");
+}
+
+function showEditFormForSelectedShare(shareIdToEdit = null) {
+    const targetShareId = shareIdToEdit || selectedShareDocId;
+
+    if (!targetShareId) {
+        showCustomAlert("Please select a share to edit.");
+        return;
+    }
+    const shareToEdit = allSharesData.find(share => share.id === targetShareId);
+    if (!shareToEdit) {
+        showCustomAlert("Selected share not found.");
+        return;
+    }
+    selectedShareDocId = targetShareId; 
+
+    formTitle.textContent = 'Edit Share';
+    shareNameInput.value = shareToEdit.shareName || '';
+    currentPriceInput.value = Number(shareToEdit.currentPrice) !== null && !isNaN(Number(shareToEdit.currentPrice)) ? Number(shareToEdit.currentPrice).toFixed(2) : '';
+    targetPriceInput.value = Number(shareToEdit.targetPrice) !== null && !isNaN(Number(shareToEdit.targetPrice)) ? Number(shareToEdit.targetPrice).toFixed(2) : '';
+    dividendAmountInput.value = Number(shareToEdit.dividendAmount) !== null && !isNaN(Number(shareToEdit.dividendAmount)) ? Number(shareToEdit.dividendAmount).toFixed(3) : '';
+    frankingCreditsInput.value = Number(shareToEdit.frankingCredits) !== null && !isNaN(Number(shareToEdit.frankingCredits)) ? Number(shareToEdit.frankingCredits).toFixed(1) : '';
+    
+    if (commentsFormContainer) {
+        commentsFormContainer.innerHTML = '';
+        if (shareToEdit.comments && Array.isArray(shareToEdit.comments) && shareToEdit.comments.length > 0) {
+            shareToEdit.comments.forEach(comment => addCommentSection(comment.title, comment.text));
+        } else {
+            addCommentSection();
+        }
+    }
+    if (deleteShareBtn) {
+        deleteShareBtn.classList.remove('hidden'); // Show delete icon when editing
+        setIconDisabled(deleteShareBtn, false); // Ensure it's enabled when shown
+        console.log("[showEditFormForSelectedShare] deleteShareBtn shown and enabled.");
+    }
+    
+    // Store original data for dirty state check
+    originalShareData = getCurrentFormData();
+    // Initially disable save button, it will be enabled if form is dirty
+    setIconDisabled(saveShareBtn, true); 
+    console.log("[showEditFormForSelectedShare] saveShareBtn initially disabled for dirty check.");
+    
+    showModal(shareFormSection);
+    shareNameInput.focus();
+    console.log(`[Form] Opened edit form for share: ${shareToEdit.shareName} (ID: ${selectedShareDocId})`);
 }
 
 /**
- * Populates the watchlist dropdown with user's watchlists.
+ * Gathers all current data from the share form inputs.
+ * @returns {object} An object representing the current state of the form.
  */
-function populateWatchlistDropdown() {
-    if (!watchlistSelect) {
-        console.warn("[Populate Watchlist] Watchlist select element not found.");
+function getCurrentFormData() {
+    const comments = [];
+    if (commentsFormContainer) {
+        commentsFormContainer.querySelectorAll('.comment-section').forEach(section => {
+            const titleInput = section.querySelector('.comment-title-input');
+            const textInput = section.querySelector('.comment-text-input');
+            const title = titleInput ? titleInput.value.trim() : '';
+            const text = textInput ? textInput.value.trim() : '';
+            comments.push({ title: title, text: text });
+        });
+    }
+
+    return {
+        shareName: shareNameInput.value.trim().toUpperCase(),
+        currentPrice: parseFloat(currentPriceInput.value),
+        targetPrice: parseFloat(targetPriceInput.value),
+        dividendAmount: parseFloat(dividendAmountInput.value),
+        frankingCredits: parseFloat(frankingCreditsInput.value),
+        comments: comments
+    };
+}
+
+/**
+ * Compares two share data objects (original vs. current form data) to check for equality.
+ * Handles null/NaN for numbers and deep comparison for comments array.
+ * @param {object} data1
+ * @param {object} data2
+ * @returns {boolean} True if data is identical, false otherwise.
+ */
+function areShareDataEqual(data1, data2) {
+    if (!data1 || !data2) return false; // One is null/undefined, so not equal
+
+    // Compare simple fields
+    const fields = ['shareName', 'currentPrice', 'targetPrice', 'dividendAmount', 'frankingCredits'];
+    for (const field of fields) {
+        let val1 = data1[field];
+        let val2 = data2[field];
+
+        // Handle NaN and null/undefined for numeric fields
+        if (typeof val1 === 'number' && isNaN(val1)) val1 = null;
+        if (typeof val2 === 'number' && isNaN(val2)) val2 = null;
+
+        if (val1 !== val2) {
+            // console.log(`[Dirty Check] Field '${field}' differs: '${val1}' vs '${val2}'`);
+            return false;
+        }
+    }
+
+    // Deep compare comments array
+    if (data1.comments.length !== data2.comments.length) {
+        // console.log("[Dirty Check] Comments length differs.");
+        return false;
+    }
+    for (let i = 0; i < data1.comments.length; i++) {
+        const comment1 = data1.comments[i];
+        const comment2 = data2.comments[i];
+        if (comment1.title !== comment2.title || comment1.text !== comment2.text) {
+            // console.log(`[Dirty Check] Comment ${i} differs.`);
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Checks the current state of the form against the original data (if editing)
+ * and the share name validity, then enables/disables the save button accordingly.
+ */
+function checkFormDirtyState() {
+    const currentData = getCurrentFormData();
+    const isShareNameValid = currentData.shareName.trim() !== '';
+
+    if (!isShareNameValid) {
+        setIconDisabled(saveShareBtn, true); // Always disable if share name is empty
+        // console.log("[Dirty Check] Save button disabled: Share name is empty.");
         return;
     }
 
-    watchlistSelect.innerHTML = ''; // Clear existing options
+    if (selectedShareDocId && originalShareData) {
+        // Editing an existing share
+        const isDirty = !areShareDataEqual(originalShareData, currentData);
+        setIconDisabled(saveShareBtn, !isDirty);
+        // console.log(`[Dirty Check] Editing existing share. Is dirty: ${isDirty}. Save button disabled: ${!isDirty}`);
+    } else {
+        // Adding a new share (only depends on share name validity)
+        setIconDisabled(saveShareBtn, !isShareNameValid);
+        // console.log(`[Dirty Check] Adding new share. Share name valid: ${isShareNameValid}. Save button disabled: ${!isShareNameValid}`);
+    }
+}
 
-    // Add "All Shares" option
+
+function showShareDetails() {
+    if (!selectedShareDocId) {
+        showCustomAlert("Please select a share to view details.");
+        return;
+    }
+    const share = allSharesData.find(s => s.id === selectedShareDocId);
+    if (!share) {
+        showCustomAlert("Share details not found.");
+        return;
+    }
+    modalShareName.textContent = share.shareName || 'N/A';
+    modalEntryDate.textContent = formatDate(share.entryDate) || 'N/A';
+    
+    const enteredPriceNum = Number(share.currentPrice);
+    modalEnteredPrice.textContent = (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? `$${enteredPriceNum.toFixed(2)}` : 'N/A';
+
+    const targetPriceNum = Number(share.targetPrice);
+    modalTargetPrice.textContent = (!isNaN(targetPriceNum) && targetPriceNum !== null) ? `$${targetPriceNum.toFixed(2)}` : 'N/A';
+    
+    const dividendAmountNum = Number(share.dividendAmount);
+    modalDividendAmount.textContent = (!isNaN(dividendAmountNum) && dividendAmountNum !== null) ? `$${dividendAmountNum.toFixed(3)}` : 'N/A';
+    
+    const frankingCreditsNum = Number(share.frankingCredits);
+    modalFrankingCredits.textContent = (!isNaN(frankingCreditsNum) && frankingCreditsNum !== null) ? `${frankingCreditsNum.toFixed(1)}%` : 'N/A';
+    
+    const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, enteredPriceNum); 
+    modalUnfrankedYield.textContent = unfrankedYield !== null ? `${unfrankedYield.toFixed(2)}%` : 'N/A';
+    
+    const frankedYield = calculateFrankedYield(dividendAmountNum, enteredPriceNum, frankingCreditsNum);
+    modalFrankedYield.textContent = frankedYield !== null ? `${frankedYield.toFixed(2)}%` : 'N/A';
+    
+    if (modalCommentsContainer) {
+        modalCommentsContainer.innerHTML = '';
+        if (share.comments && Array.isArray(share.comments) && share.comments.length > 0) {
+            share.comments.forEach(comment => {
+                if (comment.title || comment.text) {
+                    const commentDiv = document.createElement('div');
+                    commentDiv.className = 'modal-comment-item';
+                    commentDiv.innerHTML = `
+                        <strong>${comment.title || 'General Comment'}</strong>
+                        <p>${comment.text || ''}</p>
+                    `;
+                    modalCommentsContainer.appendChild(commentDiv);
+                }
+            });
+        } else {
+            modalCommentsContainer.innerHTML = '<p style="text-align: center; color: var(--label-color);">No comments for this share.</p>';
+        }
+    }
+
+    // NEW: Google News Link
+    if (modalNewsLink && share.shareName) {
+        const newsUrl = `https://news.google.com/search?q=${encodeURIComponent(share.shareName)}%20ASX&hl=en-AU&gl=AU&ceid=AU%3Aen`;
+        modalNewsLink.href = newsUrl;
+        modalNewsLink.textContent = `View ${share.shareName.toUpperCase()} News`;
+        modalNewsLink.style.display = 'inline-flex';
+        setIconDisabled(modalNewsLink, false);
+    } else if (modalNewsLink) {
+        modalNewsLink.style.display = 'none';
+        setIconDisabled(modalNewsLink, true);
+    }
+
+    // Market Index Link
+    if (modalMarketIndexLink && share.shareName) {
+        const marketIndexUrl = `https://www.marketindex.com.au/asx/${share.shareName.toLowerCase()}`;
+        modalMarketIndexLink.href = marketIndexUrl;
+        modalMarketIndexLink.textContent = `View ${share.shareName.toUpperCase()} on MarketIndex.com.au`;
+        modalMarketIndexLink.style.display = 'inline-flex';
+        setIconDisabled(modalMarketIndexLink, false); // Explicitly enable
+    } else if (modalMarketIndexLink) {
+        modalMarketIndexLink.style.display = 'none';
+        setIconDisabled(modalMarketIndexLink, true); // Explicitly disable if no shareName
+    }
+
+    if (modalFoolLink && share.shareName) {
+        const foolUrl = `https://www.fool.com.au/tickers/asx-${share.shareName.toLowerCase()}/`;
+        modalFoolLink.href = foolUrl;
+        modalFoolLink.textContent = `View ${share.shareName.toUpperCase()} on Fool.com.au`;
+        modalFoolLink.style.display = 'inline-flex';
+        setIconDisabled(modalFoolLink, false); // Explicitly enable
+    } else if (modalFoolLink) {
+        modalFoolLink.style.display = 'none';
+        setIconDisabled(modalFoolLink, true); // Explicitly disable if no shareName
+    }
+
+    if (modalCommSecLink && share.shareName) {
+        const commSecUrl = `https://www2.commsec.com.au/quotes/summary?stockCode=${share.shareName.toUpperCase()}&exchangeCode=ASX`;
+        modalCommSecLink.href = commSecUrl;
+        modalCommSecLink.textContent = `View ${share.shareName.toUpperCase()} on CommSec.com.au`;
+        modalCommSecLink.style.display = 'inline-flex';
+        setIconDisabled(modalCommSecLink, false); // Explicitly enable
+    } else if (modalCommSecLink) {
+        modalCommSecLink.style.display = 'none';
+        setIconDisabled(modalCommSecLink, true); // Explicitly disable if no shareName
+    }
+
+    if (commSecLoginMessage) {
+        commSecLoginMessage.style.display = 'block'; 
+    }
+
+    // Ensure editShareFromDetailBtn and deleteShareFromDetailBtn are enabled when showing details
+    setIconDisabled(editShareFromDetailBtn, false);
+    setIconDisabled(deleteShareFromDetailBtn, false); // NEW: Enable delete button in details modal
+    setIconDisabled(addToWatchlistBtn, false); // Enable add to watchlist button
+
+    showModal(shareDetailModal);
+    console.log(`[Details] Displayed details for share: ${share.shareName} (ID: ${selectedShareDocId})`);
+}
+
+function sortShares() {
+    const sortValue = currentSortOrder;
+    if (!sortValue || sortValue === '') {
+        console.log("[Sort] Sort placeholder selected, no explicit sorting applied.");
+        renderWatchlist(); 
+        return;
+    }
+    const [field, order] = sortValue.split('-');
+    allSharesData.sort((a, b) => {
+        let valA = a[field];
+        let valB = b[field];
+
+        if (field === 'currentPrice' || field === 'targetPrice' || field === 'dividendAmount' || field === 'frankingCredits') {
+            valA = (typeof valA === 'string' && valA.trim() !== '') ? parseFloat(valA) : valA;
+            valB = (typeof valB === 'string' && valB.trim() !== '') ? parseFloat(valB) : valB;
+            valA = (valA === null || valA === undefined || isNaN(valA)) ? (order === 'asc' ? Infinity : -Infinity) : valA;
+            valB = (valB === null || valB === undefined || isNaN(valB)) ? (order === 'asc' ? Infinity : -Infinity) : valB;
+            return order === 'asc' ? valA - valB : valB - valA;
+        } else if (field === 'shareName') {
+            const nameA = (a.shareName || '').toUpperCase().trim();
+            const nameB = (b.shareName || '').toUpperCase().trim();
+            if (nameA === '' && nameB === '') return 0;
+            if (nameA === '') return order === 'asc' ? 1 : -1;
+            if (nameB === '') return order === 'asc' ? -1 : 1;
+            return order === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+        } else if (field === 'entryDate') {
+            const dateA = new Date(valA);
+            const dateB = new Date(valB);
+            valA = isNaN(dateA.getTime()) ? (order === 'asc' ? Infinity : -Infinity) : dateA.getTime();
+            valB = isNaN(dateB.getTime()) ? (order === 'asc' ? Infinity : -Infinity) : dateB.getTime();
+            return order === 'asc' ? valA - valB : valB - valA;
+        } else {
+            if (order === 'asc') {
+                if (valA < valB) return -1;
+                if (valA > valB) return 1;
+                return 0;
+            } else {
+                if (valA > valB) return -1;
+                if (valA < valB) return 1;
+                return 0;
+            }
+        }
+    });
+    console.log("[Sort] Shares sorted. Rendering watchlist.");
+    renderWatchlist(); 
+}
+
+function renderWatchlistSelect() {
+    if (!watchlistSelect) { console.error("[renderWatchlistSelect] watchlistSelect element not found."); return; }
+    watchlistSelect.innerHTML = '<option value="" disabled selected>Watchlist</option>'; // Default placeholder
+
+    // Add "All Shares" option first
     const allSharesOption = document.createElement('option');
     allSharesOption.value = ALL_SHARES_ID;
     allSharesOption.textContent = 'All Shares';
     watchlistSelect.appendChild(allSharesOption);
 
-    // Add user-defined watchlists
-    // Sort watchlists alphabetically by name, but keep 'My Watchlist (Default)' first
+    // Sort user-defined watchlists alphabetically by name, but keep 'My Watchlist (Default)' first
     const sortedUserWatchlists = [...userWatchlists].sort((a, b) => {
-        if (a.id === DEFAULT_WATCHLIST_ID_SUFFIX) return -1;
-        if (b.id === DEFAULT_WATCHLIST_ID_SUFFIX) return 1;
+        if (a.id === getDefaultWatchlistId(currentUserId)) return -1; // Default watchlist always first
+        if (b.id === getDefaultWatchlistId(currentUserId)) return 1;
         return a.name.localeCompare(b.name);
     });
-
 
     sortedUserWatchlists.forEach(watchlist => {
         const option = document.createElement('option');
@@ -1272,331 +733,833 @@ function populateWatchlistDropdown() {
     });
 
     // Set the selected value based on currentSelectedWatchlistIds
-    // If multiple are selected (not yet supported by single dropdown), default to 'All Shares'
     if (currentSelectedWatchlistIds.length > 0) {
         const selectedId = currentSelectedWatchlistIds[0];
         if (watchlistSelect.querySelector(`option[value="${selectedId}"]`)) {
             watchlistSelect.value = selectedId;
         } else {
-            watchlistSelect.value = ALL_SHARES_ID; // Fallback if selected ID is no longer valid
+            // Fallback if selected ID is no longer valid (e.g., watchlist deleted)
+            watchlistSelect.value = ALL_SHARES_ID; 
             currentSelectedWatchlistIds = [ALL_SHARES_ID];
-            saveUserSettings(); // Save updated preference
+            saveLastSelectedWatchlistIds(currentSelectedWatchlistIds); // Save corrected preference
         }
     } else {
-        watchlistSelect.value = ALL_SHARES_ID; // Default if nothing selected
+        // Default to "All Shares" if no watchlist is selected
+        watchlistSelect.value = ALL_SHARES_ID; 
         currentSelectedWatchlistIds = [ALL_SHARES_ID];
-        saveUserSettings(); // Save updated preference
+        saveLastSelectedWatchlistIds(currentSelectedWatchlistIds); // Save default preference
     }
-    console.log("[UI] Watchlist dropdown populated.");
+    console.log("[UI Update] Watchlist select dropdown rendered.");
 }
 
-/**
- * Updates the ASX code buttons based on the currently displayed shares.
- */
-function updateAsxCodeButtons() {
-    if (!asxCodeButtonsContainer) {
-        console.warn("[Update ASX Buttons] ASX code buttons container not found.");
-        return;
+
+function renderSortSelect() {
+    if (!sortSelect) { console.error("[renderSortSelect] sortSelect element not found."); return; }
+    sortSelect.innerHTML = '<option value="" disabled selected>Sort by</option>'; // Changed placeholder text to "Sort by"
+
+    const options = [
+        { value: "entryDate-desc", text: "Date Added (Newest)" },
+        { value: "entryDate-asc", text: "Date Added (Oldest)" },
+        { value: "shareName-asc", text: "Code (A-Z)" },
+        { value: "shareName-desc", text: "Code (Z-A)" },
+        { value: "dividendAmount-desc", text: "Dividend (High-Low)" },
+        { value: "dividendAmount-asc", text: "Dividend (Low-High)" }
+    ];
+    options.forEach(opt => {
+        const optionElement = document.createElement('option');
+        optionElement.value = opt.value;
+        optionElement.textContent = opt.text;
+        sortSelect.appendChild(optionElement);
+    });
+
+    // Use the global currentSortOrder, which should have been set by loadUserWatchlistsAndSettings
+    if (currentUserId && currentSortOrder && Array.from(sortSelect.options).some(option => option.value === currentSortOrder)) {
+        sortSelect.value = currentSortOrder; // Set the select element's value
+        // currentSortOrder is already set by loadUserWatchlistsAndSettings
+        console.log(`[Sort] Applied saved sort order: ${currentSortOrder}`);
+    } else {
+        sortSelect.value = ''; 
+        currentSortOrder = ''; // Ensure global variable is reset if no valid option
+        console.log("[Sort] No valid saved sort order or not logged in, defaulting to placeholder.");
     }
+    console.log("[UI Update] Sort select rendered. Sort select disabled: ", sortSelect.disabled);
+}
 
-    asxCodeButtonsContainer.innerHTML = ''; // Clear existing buttons
+function addShareToTable(share) {
+    if (!shareTableBody) { console.error("[addShareToTable] shareTableBody element not found."); return; }
+    const row = shareTableBody.insertRow();
+    row.dataset.docId = share.id;
+    
+    // Double click / Tap for details
+    let lastClickTime = 0;
+    row.addEventListener('click', (event) => { 
+        console.log(`[Table Row Click] Share ID: ${share.id}`);
+        if (!contextMenuOpen) {
+            const currentTime = new Date().getTime();
+            const clickDelay = 300; // milliseconds for double click detection
+            if (currentTime - lastClickTime < clickDelay) {
+                // Double click detected
+                console.log(`[Table Row Double Click] Share ID: ${share.id}`);
+                selectShare(share.id); 
+                showShareDetails();
+            }
+            lastClickTime = currentTime;
+            selectShare(share.id); // Also select on single click
+        }
+    });
 
-    const uniqueAsxCodes = new Set(allSharesData.map(share => share.shareName).filter(Boolean)); // Get unique codes from currently displayed shares
+    // Right click for context menu
+    row.addEventListener('contextmenu', (event) => {
+        console.log(`[Table Row ContextMenu] Share ID: ${share.id}`);
+        event.preventDefault();
+        selectShare(share.id);
+        showContextMenu(event, share.id);
+    });
 
-    // Add an "All" button
-    const allButton = document.createElement('button');
-    allButton.className = 'asx-code-btn active'; // Initially active
-    allButton.textContent = 'All';
-    allButton.dataset.code = 'ALL';
-    asxCodeButtonsContainer.appendChild(allButton);
+    // Touch events for long press (mobile context menu)
+    let touchStartTime;
+    row.addEventListener('touchstart', (event) => {
+        console.log(`[Table Row TouchStart] Share ID: ${share.id}`);
+        if (event.touches.length === 1) {
+            touchStartTime = new Date().getTime();
+            touchStartX = event.touches[0].clientX;
+            touchStartY = event.touches[0].clientY;
+            longPressTimer = setTimeout(() => {
+                event.preventDefault(); // Prevent default browser context menu
+                selectShare(share.id);
+                showContextMenu(event, share.id);
+            }, LONG_PRESS_THRESHOLD);
+        }
+    });
 
-    allButton.addEventListener('click', () => {
-        // Remove active from all others
-        asxCodeButtonsContainer.querySelectorAll('.asx-code-btn').forEach(btn => btn.classList.remove('active'));
-        allButton.classList.add('active');
-        // When 'All' is clicked, we just re-render the full list of shares
-        renderShareList(); 
-        console.log("[ASX Buttons] 'All' button clicked.");
+    row.addEventListener('touchmove', (event) => {
+        if (longPressTimer) {
+            const currentX = event.touches[0].clientX;
+            const currentY = event.touches[0].clientY;
+            const distance = Math.sqrt(Math.pow(currentX - touchStartX, 2) + Math.pow(currentY - touchStartY, 2));
+            if (distance > TOUCH_MOVE_THRESHOLD) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+                console.log("[Table Row TouchMove] Long press cancelled due to movement.");
+            }
+        }
+    });
+
+    row.addEventListener('touchend', () => {
+        if (longPressTimer) {
+            clearTimeout(longPressTimer);
+            longPressTimer = null;
+            console.log("[Table Row TouchEnd] Long press timer cleared.");
+        }
     });
 
 
-    Array.from(uniqueAsxCodes).sort().forEach(code => {
+    const displayShareName = (share.shareName && String(share.shareName).trim() !== '') ? share.shareName : '(No Code)';
+    row.insertCell().textContent = displayShareName;
+
+    const enteredPriceCell = row.insertCell();
+    const enteredPriceNum = Number(share.currentPrice);
+    const displayEnteredPrice = (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? `$${enteredPriceNum.toFixed(2)}` : '-';
+    enteredPriceCell.textContent = displayEnteredPrice;
+
+    const targetPriceNum = Number(share.targetPrice);
+    const displayTargetPrice = (!isNaN(targetPriceNum) && targetPriceNum !== null) ? `$${targetPriceNum.toFixed(2)}` : '-';
+    row.insertCell().textContent = displayTargetPrice;
+
+    const dividendCell = row.insertCell();
+    const dividendAmountNum = Number(share.dividendAmount);
+    const frankingCreditsNum = Number(share.frankingCredits);
+    const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, enteredPriceNum); 
+    const frankedYield = calculateFrankedYield(dividendAmountNum, enteredPriceNum, frankingCreditsNum);
+    const divAmountDisplay = (!isNaN(dividendAmountNum) && dividendAmountNum !== null) ? `$${dividendAmountNum.toFixed(2)}` : '-';
+
+    dividendCell.innerHTML = `
+        <div class="dividend-yield-cell-content">
+            <span>Dividend:</span> <span class="value">${divAmountDisplay}</span>
+        </div>
+        <div class="dividend-yield-cell-content">
+            <span>Unfranked Yield:</span> <span class="value">${unfrankedYield !== null ? unfrankedYield.toFixed(2) + '%' : '-'}</span>
+        </div>
+        <div class="dividend-yield-cell-content">
+            <span>Franked Yield:</span> <span class="value">${frankedYield !== null ? frankedYield.toFixed(2) + '%' : '-'}</span>
+        </div>
+    `;
+
+    const commentsCell = row.insertCell();
+    let commentsText = '';
+    if (share.comments && Array.isArray(share.comments) && share.comments.length > 0 && share.comments[0].text) {
+        commentsText = share.comments[0].text;
+    }
+    commentsCell.textContent = truncateText(commentsText, 70);
+    console.log(`[Render] Added share ${displayShareName} to table.`);
+}
+
+function addShareToMobileCards(share) {
+    if (!mobileShareCardsContainer) { console.error("[addShareToMobileCards] mobileShareCardsContainer element not found."); return; }
+    if (!window.matchMedia("(max-width: 768px)").matches) { return; }
+
+    const card = document.createElement('div');
+    card.className = 'mobile-card';
+    card.dataset.docId = share.id;
+
+    const enteredPriceNum = Number(share.currentPrice);
+    const dividendAmountNum = Number(share.dividendAmount);
+    const frankingCreditsNum = Number(share.frankingCredits);
+    const targetPriceNum = Number(share.targetPrice);
+    
+    const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, enteredPriceNum);
+    const frankedYield = calculateFrankedYield(dividendAmountNum, enteredPriceNum, frankingCreditsNum);
+
+    let commentsSummary = '-';
+    if (share.comments && Array.isArray(share.comments) && share.comments.length > 0 && share.comments[0].text) {
+        commentsSummary = truncateText(share.comments[0].text, 70);
+    }
+
+    const displayTargetPrice = (!isNaN(targetPriceNum) && targetPriceNum !== null) ? targetPriceNum.toFixed(2) : '-';
+    const displayDividendAmount = (!isNaN(dividendAmountNum) && dividendAmountNum !== null) ? dividendAmountNum.toFixed(2) : '-';
+    const displayFrankingCredits = (!isNaN(frankingCreditsNum) && frankingCreditsNum !== null) ? `${frankingCreditsNum}%` : '-';
+    const displayShareName = (share.shareName && String(share.shareName).trim() !== '') ? share.shareName : '(No Code)';
+    const displayEnteredPrice = (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? enteredPriceNum.toFixed(2) : '-';
+
+
+    card.innerHTML = `
+        <h3>${displayShareName}</h3>
+        <p><strong>Entry Date:</strong> ${formatDate(share.entryDate) || '-'}</p>
+        <p><strong>Entered Price:</strong> $${displayEnteredPrice}</p>
+        <p><strong>Target:</strong> $${displayTargetPrice}</p>
+        <p><strong>Dividend:</strong> $${displayDividendAmount}</p>
+        <p><strong>Franking:</strong> ${displayFrankingCredits}</p>
+        <p><strong>Unfranked Yield:</strong> ${unfrankedYield !== null ? unfrankedYield.toFixed(2) + '%' : '-'}</p>
+        <p><strong>Franked Yield:</strong> ${frankedYield !== null ? frankedYield.toFixed(2) + '%' : '-'}</p>
+        <p class="card-comments"><strong>Comments:</strong> ${commentsSummary}</p>
+    `;
+    mobileShareCardsContainer.appendChild(card);
+
+    let lastClickTime = 0;
+    card.addEventListener('click', function(e) {
+        console.log(`[Mobile Card Click] Share ID: ${share.id}`);
+        if (!contextMenuOpen) {
+            const currentTime = new Date().getTime();
+            const clickDelay = 300; // milliseconds for double click detection
+            if (currentTime - lastClickTime < clickDelay) {
+                // Double click detected
+                console.log(`[Mobile Card Double Click] Share ID: ${share.id}`);
+                const docId = e.currentTarget.dataset.docId;
+                selectShare(docId);
+                showShareDetails();
+            }
+            lastClickTime = currentTime;
+            const docId = e.currentTarget.dataset.docId;
+            selectShare(docId); // Also select on single click
+        }
+    });
+
+    card.addEventListener('contextmenu', (event) => {
+        console.log(`[Mobile Card ContextMenu] Share ID: ${share.id}`);
+        event.preventDefault();
+        selectShare(share.id);
+        showContextMenu(event, share.id);
+    });
+
+    let touchStartTime;
+    card.addEventListener('touchstart', (event) => {
+        console.log(`[Mobile Card TouchStart] Share ID: ${share.id}`);
+        if (event.touches.length === 1) {
+            touchStartTime = new Date().getTime();
+            touchStartX = event.touches[0].clientX;
+            touchStartY = event.touches[0].clientY;
+            longPressTimer = setTimeout(() => {
+                event.preventDefault(); 
+                selectShare(share.id);
+                showContextMenu(event, share.id);
+            }, LONG_PRESS_THRESHOLD);
+        }
+    });
+
+    card.addEventListener('touchmove', (event) => {
+        if (longPressTimer) {
+            const currentX = event.touches[0].clientX;
+            const currentY = event.touches[0].clientY;
+            const distance = Math.sqrt(Math.pow(currentX - touchStartX, 2) + Math.pow(currentY - touchStartY, 2));
+            if (distance > TOUCH_MOVE_THRESHOLD) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+                console.log("[Mobile Card TouchMove] Long press cancelled due to movement.");
+            }
+        }
+    });
+
+    card.addEventListener('touchend', () => {
+        if (longPressTimer) {
+            clearTimeout(longPressTimer);
+            longPressTimer = null;
+            console.log("[Mobile Card TouchEnd] Long press timer cleared.");
+        }
+    });
+
+    console.log(`[Render] Added share ${displayShareName} to mobile cards.`);
+}
+
+/**
+ * Renders the watchlist based on the currentSelectedWatchlistIds.
+ */
+function renderWatchlist() {
+    console.log(`[Render] Rendering shares for selected watchlists: ${currentSelectedWatchlistIds.join(', ')}`);
+    clearShareListUI();
+    
+    let sharesToRender = [];
+
+    // If "All Shares" is selected, render all shares from allSharesData
+    if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID)) {
+        sharesToRender = [...allSharesData]; 
+        mainTitle.textContent = "All My Shares";
+        console.log("[Render] Displaying all shares (from ALL_SHARES_ID in currentSelectedWatchlistIds).");
+    } else if (currentSelectedWatchlistIds.length > 0) {
+        // Filter allSharesData based on the watchlistId property of each share
+        sharesToRender = allSharesData.filter(share => 
+            currentSelectedWatchlistIds.includes(share.watchlistId)
+        );
+        // Update mainTitle based on selected watchlists
+        const selectedNames = currentSelectedWatchlistIds.map(id => {
+            const wl = userWatchlists.find(w => w.id === id);
+            return wl ? wl.name : 'Unknown Watchlist';
+        });
+        if (selectedNames.length === 1) {
+            mainTitle.textContent = selectedNames[0];
+        } else if (selectedNames.length > 1) {
+            mainTitle.textContent = "Multiple Watchlists Selected";
+        } else {
+            mainTitle.textContent = "No Watchlists Selected"; // Should ideally not happen if logic is correct
+        }
+        console.log(`[Render] Displaying shares from watchlists: ${selectedNames.join(', ')}`);
+    } else {
+        // Fallback if no watchlists are selected or available (e.g., brand new user)
+        mainTitle.textContent = "Share Watchlist";
+        console.log("[Render] No watchlists available or selected for display.");
+    }
+
+
+    if (sharesToRender.length === 0) {
+        const emptyWatchlistMessage = document.createElement('p');
+        emptyWatchlistMessage.textContent = `No shares found for the selected watchlists. Add a new share to get started!`;
+        emptyWatchlistMessage.style.textAlign = 'center';
+        emptyWatchlistMessage.style.padding = '20px';
+        emptyWatchlistMessage.style.color = 'var(--ghosted-text)';
+        const td = document.createElement('td');
+        td.colSpan = 5; // Span all columns in the table
+        td.appendChild(emptyWatchlistMessage);
+        const tr = document.createElement('tr');
+        tr.appendChild(td);
+        shareTableBody.appendChild(tr); // For table
+        mobileShareCardsContainer.appendChild(emptyWatchlistMessage.cloneNode(true)); // For mobile cards
+    }
+
+    sharesToRender.forEach((share) => {
+        addShareToTable(share);
+        addShareToMobileCards(share); 
+    });
+    if (selectedShareDocId) {
+         const stillExists = sharesToRender.some(share => share.id === selectedShareDocId);
+         if (stillExists) {
+            selectShare(selectedShareDocId);
+         } else {
+            deselectCurrentShare();
+         }
+    }
+    console.log("[Render] Watchlist rendering complete.");
+}
+
+function renderAsxCodeButtons() {
+    if (!asxCodeButtonsContainer) { console.error("[renderAsxCodeButtons] asxCodeButtonsContainer element not found."); return; }
+    asxCodeButtonsContainer.innerHTML = ''; // Clear existing buttons
+    const uniqueAsxCodes = new Set();
+    
+    let sharesForButtons = [];
+    // Use allSharesData directly as it's already filtered by the onSnapshot listener
+    sharesForButtons = [...allSharesData]; 
+
+    sharesForButtons.forEach(share => {
+        if (share.shareName && typeof share.shareName === 'string' && share.shareName.trim() !== '') {
+                uniqueAsxCodes.add(share.shareName.trim().toUpperCase());
+        }
+    });
+
+    if (uniqueAsxCodes.size === 0) {
+        asxCodeButtonsContainer.style.display = 'none';
+        console.log("[UI] No unique ASX codes found for current view. Hiding ASX buttons container.");
+        return;
+    } else {
+        asxCodeButtonsContainer.style.display = 'flex';
+    }
+    const sortedAsxCodes = Array.from(uniqueAsxCodes).sort();
+    sortedAsxCodes.forEach(asxCode => {
         const button = document.createElement('button');
         button.className = 'asx-code-btn';
-        button.textContent = code;
-        button.dataset.code = code;
+        button.textContent = asxCode;
+        button.dataset.asxCode = asxCode;
         asxCodeButtonsContainer.appendChild(button);
-
-        button.addEventListener('click', () => {
-            // Remove active from all others
-            asxCodeButtonsContainer.querySelectorAll('.asx-code-btn').forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
-            
-            // NEW BEHAVIOR: Open Share Details Modal for the first share with this code
-            const firstShare = allSharesData.find(share => share.shareName === code);
-            if (firstShare) {
-                showShareDetails(firstShare.id);
-                console.log(`[ASX Buttons] Opened details for share: ${firstShare.id} from code button.`);
-            } else {
-                showToastMessage(`No details found for share code: ${code}`, 2000);
-            }
+        button.addEventListener('click', (event) => {
+            console.log(`[ASX Button Click] Button for ${asxCode} clicked.`); // Log to confirm click
+            const clickedCode = event.target.dataset.asxCode;
+            scrollToShare(clickedCode);
         });
     });
-    console.log("[UI] ASX code buttons updated.");
+    console.log(`[UI] Rendered ${sortedAsxCodes.length} code buttons.`);
 }
 
-/**
- * Filters and re-renders shares based on the selected ASX code button.
- * @param {string} code - The ASX code to filter by.
- */
-function filterSharesByAsxCode(code) {
-    // This function is no longer directly used by ASX code buttons for filtering.
-    // It's kept for potential future use if a filtering-only mode is desired.
-    if (code === 'ALL') {
-        renderShareList(); // Re-render all shares
-    } else {
-        const filtered = allSharesData.filter(share => share.shareName === code);
-        // Temporarily override allSharesData for rendering, then restore
-        const originalAllSharesData = allSharesData;
-        allSharesData = filtered;
-        renderShareList();
-        allSharesData = originalAllSharesData; // Restore original
-    }
-    console.log(`[Filter] Shares filtered by ASX code: ${code}`);
-}
-
-
-// --- MODAL MANAGEMENT ---
-
-/**
- * Shows a modal by setting its display style to 'block'.
- * @param {HTMLElement} modalElement - The modal element to show.
- * @param {boolean} [isShareDetailModal=false] - Flag to indicate if it's the share detail modal.
- */
-function showModal(modalElement) {
-    if (modalElement) {
-        modalElement.style.display = 'block';
-        // Add a slight delay for the fade-in effect to be visible
-        setTimeout(() => modalElement.classList.add('show'), 10);
-        console.log(`[Modal] Showing modal: ${modalElement.id}`);
-    }
-}
-
-/**
- * Hides a modal by setting its display style to 'none' after a fade-out.
- * @param {HTMLElement} modalElement - The modal element to hide.
- */
-function hideModal(modalElement) {
-    if (modalElement) {
-        modalElement.classList.remove('show');
-        modalElement.addEventListener('transitionend', function handler() {
-            modalElement.style.display = 'none';
-            modalElement.removeEventListener('transitionend', handler);
-            console.log(`[Modal] Hidden modal: ${modalElement.id}`);
-        }, { once: true });
-    }
-}
-
-/**
- * Populates the share form for editing an existing share.
- * @param {string} shareId - The ID of the share to edit.
- */
-function populateShareFormForEdit(shareId) {
-    const shareToEdit = allSharesData.find(share => share.id === shareId);
-    if (!shareToEdit) {
-        console.error("[Form] Share not found for editing:", shareId);
-        showCustomDialog("Share not found.");
-        return;
-    }
-
-    selectedShareDocId = shareId;
-    formTitle.textContent = 'Edit Share';
-    shareNameInput.value = shareToEdit.shareName || '';
-    currentPriceInput.value = shareToEdit.currentPrice || '';
-    targetPriceInput.value = shareToEdit.targetPrice || '';
-    dividendAmountInput.value = shareToEdit.dividendAmount || '';
-    frankingCreditsInput.value = shareToEdit.frankingCredits || '';
-
-    // Clear existing comments and add new ones
-    commentsFormContainer.querySelectorAll('.comment-section').forEach(section => section.remove());
-    if (shareToEdit.comments && shareToEdit.comments.length > 0) {
-        shareToEdit.comments.forEach(comment => addCommentSection(comment.title, comment.text));
-    } else {
-        addCommentSection(); // Add one empty comment section if none exist
-    }
-
-    // Show delete button for existing shares
-    if (deleteShareBtn) {
-        deleteShareBtn.classList.remove('hidden');
-        deleteShareBtn.onclick = () => deleteShare(shareId);
-    }
-    showModal(shareFormSection);
-    console.log(`[Form] Populated form for editing share: ${shareId}`);
-}
-
-/**
- * Clears the share form for adding a new share.
- */
-function clearShareFormForNew() {
-    selectedShareDocId = null;
-    formTitle.textContent = 'Add New Share';
-    shareNameInput.value = '';
-    currentPriceInput.value = '';
-    targetPriceInput.value = '';
-    dividendAmountInput.value = '';
-    frankingCreditsInput.value = '';
-
-    // Clear all existing comment sections
-    commentsFormContainer.querySelectorAll('.comment-section').forEach(section => section.remove());
-    addCommentSection(); // Add one empty comment section for new entry
-
-    // Hide delete button for new shares
-    if (deleteShareBtn) {
-        deleteShareBtn.classList.add('hidden');
-        deleteShareBtn.onclick = null;
-    }
-    showModal(shareFormSection);
-    console.log("[Form] Cleared form for new share.");
-}
-
-/**
- * Adds a new comment section to the share form.
- * @param {string} [title=''] - Initial title for the comment.
- * @param {string} [text=''] - Initial text for the comment.
- */
-function addCommentSection(title = '', text = '') {
-    const commentSection = document.createElement('div');
-    commentSection.className = 'comment-section';
-    commentSection.innerHTML = `
-        <div class="comment-section-header">
-            <input type="text" class="comment-title-input" placeholder="Comment Title" value="${title}">
-            <span class="comment-delete-btn"><i class="fas fa-trash-alt"></i></span>
-        </div>
-        <textarea class="comment-text-input" placeholder="Your comment here...">${text}</textarea>
-    `;
-    commentsFormContainer.appendChild(commentSection);
-
-    // Add event listener for the delete button within this new section
-    const deleteBtn = commentSection.querySelector('.comment-delete-btn');
-    if (deleteBtn) {
-        deleteBtn.addEventListener('click', () => {
-            if (commentsFormContainer.querySelectorAll('.comment-section').length > 1) {
-                commentSection.remove();
-                console.log("[Form] Comment section removed.");
-            } else {
-                showToastMessage("At least one comment section is required.", 2000);
-            }
-        });
-    }
-    console.log("[Form] Added new comment section.");
-}
-
-/**
- * Populates and displays the share detail modal.
- * @param {string} shareId - The ID of the share to display.
- */
-function showShareDetails(shareId) {
-    const share = allSharesData.find(s => s.id === shareId);
-    if (!share) {
-        console.error("[Details] Share not found:", shareId);
-        showCustomDialog("Share details not found.");
-        return;
-    }
-
-    selectedShareDocId = shareId; // Ensure selectedShareDocId is set for the "Add to Watchlist" button
-
-    modalShareName.textContent = share.shareName || 'N/A';
-    modalEntryDate.textContent = formatDate(share.entryDate);
-    modalEnteredPrice.textContent = formatCurrency(share.currentPrice);
-    modalTargetPrice.textContent = formatCurrency(share.targetPrice);
-    modalDividendAmount.textContent = `${formatCurrency(share.dividendAmount)} (Franking: ${formatPercentage(share.frankingCredits)})`;
-
-    const yields = calculateYields(share.dividendAmount, share.currentPrice, share.frankingCredits);
-    modalUnfrankedYield.textContent = formatPercentage(yields.unfrankedYield, 2);
-    modalFrankedYield.textContent = formatPercentage(yields.frankedYield, 2);
-
-    // External Links
-    const encodedShareName = encodeURIComponent(share.shareName);
-    modalNewsLink.href = `https://www.google.com/search?q=${encodedShareName}+ASX+news`;
-    modalMarketIndexLink.href = `https://www.marketindex.com.au/asx/${encodedShareName}`;
-    modalFoolLink.href = `https://www.fool.com.au/quote/${encodedShareName}/`;
-    modalCommSecLink.href = `https://www.commsec.com.au/market-insights/company-research/${encodedShareName}`;
-
-    // Comments
-    modalCommentsContainer.innerHTML = '<h3>Comments</h3>'; // Clear existing
-    if (share.comments && share.comments.length > 0) {
-        share.comments.forEach(comment => {
-            const commentItem = document.createElement('div');
-            commentItem.className = 'modal-comment-item';
-            commentItem.innerHTML = `
-                <strong>${comment.title || 'Untitled Comment'}</strong>
-                <p>${comment.text || 'No text provided.'}</p>
-            `;
-            modalCommentsContainer.appendChild(commentItem);
-        });
-    } else {
-        modalCommentsContainer.innerHTML += '<p class="ghosted-text">No comments for this share.</p>';
-    }
-
-    // Set up edit and delete buttons for this specific share
-    editShareFromDetailBtn.onclick = () => {
-        hideModal(shareDetailModal);
-        populateShareFormForEdit(share.id);
-    };
-    deleteShareFromDetailBtn.onclick = () => deleteShare(share.id);
-    if (addToWatchlistBtn) { // Ensure button exists before attaching listener
-        addToWatchlistBtn.onclick = () => { // NEW: Add to watchlist button handler
-            hideModal(shareDetailModal);
-            showAddToWatchlistModal(share.id);
-        };
-    }
-
-
-    showModal(shareDetailModal);
-    console.log(`[Details] Displaying details for share: ${shareId}`);
-}
-
-/**
- * Populates the manage watchlist modal for editing.
- * @param {string} watchlistId - The ID of the watchlist to manage.
- */
-function populateManageWatchlistModal(watchlistId) {
-    const watchlistToEdit = userWatchlists.find(wl => wl.id === watchlistId);
-    if (!watchlistToEdit) {
-        showCustomDialog("Watchlist not found.");
-        return;
-    }
-
-    editWatchlistNameInput.value = watchlistToEdit.name;
-
-    // Disable delete button for default watchlist
-    if (deleteWatchlistInModalBtn) {
-        if (watchlistId === DEFAULT_WATCHLIST_ID_SUFFIX) {
-            deleteWatchlistInModalBtn.classList.add('is-disabled-icon');
+function scrollToShare(asxCode) {
+    console.log(`[UI] Attempting to scroll to/highlight share with Code: ${asxCode}`);
+    const targetShare = allSharesData.find(s => s.shareName && s.shareName.toUpperCase() === asxCode.toUpperCase());
+    if (targetShare) {
+        selectShare(targetShare.id);
+        let elementToScrollTo = document.querySelector(`#shareTable tbody tr[data-doc-id="${targetShare.id}"]`);
+        if (!elementToScrollTo || window.matchMedia("(max-width: 768px)").matches) {
+            elementToScrollTo = document.querySelector(`.mobile-card[data-doc-id="${targetShare.id}"]`);
+        }
+        if (elementToScrollTo) {
+            elementToScrollTo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            console.log(`[UI] Scrolled to element for share ID: ${targetShare.id}`);
         } else {
-            deleteWatchlistInModalBtn.classList.remove('is-disabled-icon');
+            console.warn(`[UI] Element for share ID: ${targetShare.id} not found for scrolling.`);
+        }
+        showShareDetails(); 
+    } else {
+        showCustomAlert(`Share '${asxCode}' not found.`);
+        console.warn(`[UI] Share '${asxCode}' not found in allSharesData.`);
+    }
+}
+
+const COMPANY_TAX_RATE = 0.30;
+function calculateUnfrankedYield(dividendAmount, currentPrice) {
+    if (typeof dividendAmount !== 'number' || isNaN(dividendAmount) || dividendAmount <= 0) { return null; }
+    if (typeof currentPrice !== 'number' || isNaN(currentPrice) || currentPrice <= 0) { return null; }
+    return (dividendAmount / currentPrice) * 100;
+}
+
+function calculateFrankedYield(dividendAmount, currentPrice, frankingCreditsPercentage) {
+    if (typeof dividendAmount !== 'number' || isNaN(dividendAmount) || dividendAmount <= 0) { return null; }
+    if (typeof currentPrice !== 'number' || isNaN(currentPrice) || currentPrice <= 0) { return null; }
+    if (typeof frankingCreditsPercentage !== 'number' || isNaN(frankingCreditsPercentage) || frankingCreditsPercentage < 0 || frankingCreditsPercentage > 100) { return null; }
+    const unfrankedYield = calculateUnfrankedYield(dividendAmount, currentPrice);
+    if (unfrankedYield === null) return null;
+    const frankingRatio = frankingCreditsPercentage / 100;
+    const grossUpFactor = 1 / (1 - COMPANY_TAX_RATE); // Approx 1.42857
+    const frankedAmount = dividendAmount * (1 + (frankingRatio * grossUpFactor * COMPANY_TAX_RATE)); // Simplified gross-up logic
+    return (frankedAmount / currentPrice) * 100;
+}
+
+function estimateDividendIncome(investmentValue, dividendAmountPerShare, currentPricePerShare) {
+    if (typeof investmentValue !== 'number' || isNaN(investmentValue) || investmentValue <= 0) { return null; }
+    if (typeof dividendAmountPerShare !== 'number' || isNaN(dividendAmountPerShare) || dividendAmountPerShare <= 0) { return null; }
+    if (typeof currentPricePerShare !== 'number' || isNaN(currentPricePerShare) || currentPricePerShare <= 0) { return null; }
+    const numberOfShares = investmentValue / currentPricePerShare;
+    return numberOfShares * dividendAmountPerShare;
+}
+
+function updateCalculatorDisplay() {
+    calculatorInput.textContent = previousCalculatorInput + (operator ? ` ${getOperatorSymbol(operator)} ` : '') + currentCalculatorInput;
+    if (resultDisplayed) { /* nothing */ }
+    else if (currentCalculatorInput !== '') { calculatorResult.textContent = currentCalculatorInput; }
+    else if (previousCalculatorInput !== '' && operator) { calculatorResult.textContent = previousCalculatorInput; }
+    else { calculatorResult.textContent = '0'; }
+}
+
+function calculateResult() {
+    let prev = parseFloat(previousCalculatorInput);
+    let current = parseFloat(currentCalculatorInput);
+    if (isNaN(prev) || isNaN(current)) return;
+    let res;
+    switch (operator) {
+        case 'add': res = prev + current; break;
+        case 'subtract': res = prev - current; break;
+        case 'multiply': res = prev * current; break;
+        case 'divide':
+            if (current === 0) { showCustomAlert("Cannot divide by zero!"); res = 'Error'; }
+            else { res = prev / current; }
+            break;
+        default: return;
+    }
+    if (typeof res === 'number' && !isNaN(res)) { res = parseFloat(res.toFixed(10)); }
+    calculatorResult.textContent = res;
+    previousCalculatorInput = res.toString();
+    currentCalculatorInput = '';
+}
+
+function getOperatorSymbol(op) {
+    switch (op) {
+        case 'add': return '+'; case 'subtract': return '-';
+        case 'multiply': return '×'; case 'divide': return '÷';
+        default: return '';
+    }
+}
+
+function resetCalculator() {
+    currentCalculatorInput = ''; operator = null; previousCalculatorInput = '';
+    resultDisplayed = false; calculatorInput.textContent = ''; calculatorResult.textContent = '0';
+    console.log("[Calculator] Calculator state reset.");
+}
+
+async function applyTheme(themeName) {
+    const body = document.body;
+    // Remove all existing theme classes (dark-theme, theme-bold-X, theme-subtle-X)
+    body.className = body.className.split(' ').filter(c => !c.endsWith('-theme') && !c.startsWith('theme-')).join(' ');
+
+    currentActiveTheme = themeName;
+
+    if (themeName === 'system-default') {
+        body.removeAttribute('data-theme');
+        localStorage.removeItem('selectedTheme'); // Clear custom theme from local storage
+        localStorage.removeItem('theme'); // Clear old 'theme' key from local storage
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (systemPrefersDark) {
+            body.classList.add('dark-theme');
+        }
+        console.log("[Theme] Reverted to system default theme.");
+        currentCustomThemeIndex = -1;
+    } else if (themeName === 'light' || themeName === 'dark') { // Handle explicit light/dark if ever used
+        body.removeAttribute('data-theme');
+        localStorage.removeItem('selectedTheme');
+        localStorage.setItem('theme', themeName);
+        if (themeName === 'dark') {
+            body.classList.add('dark-theme');
+        }
+        console.log(`[Theme] Applied explicit default theme: ${themeName}`);
+        currentCustomThemeIndex = -1;
+    } else { // Custom themes
+        body.classList.add('theme-' + themeName);
+        body.setAttribute('data-theme', themeName); // Set data-theme attribute for CSS targeting
+        localStorage.setItem('selectedTheme', themeName); // Save custom theme to local storage
+        localStorage.removeItem('theme'); // Ensure old 'theme' key is removed
+        console.log(`[Theme] Applied custom theme: ${themeName}`);
+        currentCustomThemeIndex = CUSTOM_THEMES.indexOf(themeName);
+    }
+    
+    // Save theme preference to Firestore
+    if (currentUserId && db && window.firestore) {
+        const userSettingsDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/user_settings/main_settings`);
+        try {
+            await window.firestore.setDoc(userSettingsDocRef, { theme: themeName }, { merge: true });
+            console.log(`[Theme] Saved theme preference to Firestore: ${themeName}`);
+        } catch (error) {
+            console.error("[Theme] Error saving theme preference to Firestore:", error);
         }
     }
+    updateThemeToggleAndSelector();
+}
 
-    // Set initial state of save button based on current input value
-    updateSaveWatchlistNameButtonState();
+function updateThemeToggleAndSelector() {
+    // Update the dropdown to show the currently active custom theme or 'none'
+    if (colorThemeSelect) {
+        if (currentActiveTheme.startsWith('bold-') || currentActiveTheme.startsWith('subtle-')) {
+            colorThemeSelect.value = currentActiveTheme;
+        } else {
+            colorThemeSelect.value = 'none';
+        }
+        console.log(`[Theme UI] Color theme select updated to: ${colorThemeSelect.value}`);
+    }
 
-    // Set up event listeners for the specific watchlist
-    saveWatchlistNameBtn.onclick = () => updateWatchlistName(watchlistId, editWatchlistNameInput.value);
-    deleteWatchlistInModalBtn.onclick = () => deleteWatchlist(watchlistId);
+    // Update currentCustomThemeIndex based on the active theme
+    if (currentActiveTheme.startsWith('bold-') || currentActiveTheme.startsWith('subtle-')) {
+        currentCustomThemeIndex = CUSTOM_THEMES.indexOf(currentActiveTheme);
+    } else {
+        currentCustomThemeIndex = -1;
+    }
+}
 
-    showModal(manageWatchlistModal);
-    console.log(`[Watchlist] Populated manage watchlist modal for: ${watchlistId}`);
+function getDefaultWatchlistId(userId) {
+    return `${userId}_${DEFAULT_WATCHLIST_ID_SUFFIX}`;
+}
+
+async function saveLastSelectedWatchlistIds(watchlistIds) {
+    if (!db || !currentUserId || !window.firestore) {
+        console.warn("[Watchlist] Cannot save last selected watchlists: DB, User ID, or Firestore functions not available.");
+        return;
+    }
+    const userSettingsDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/user_settings/main_settings`);
+    try {
+        await window.firestore.setDoc(userSettingsDocRef, { currentSelectedWatchlistIds: watchlistIds }, { merge: true });
+        console.log(`[Watchlist] Saved last selected watchlist IDs: ${watchlistIds.join(', ')}`);
+    } catch (error) {
+        console.error("[Watchlist] Error saving last selected watchlist IDs:", error);
+    }
+}
+
+async function saveSortOrderPreference(sortOrder) {
+    if (!db || !currentUserId || !window.firestore) {
+        console.warn("[Sort] Cannot save sort order preference: DB, User ID, or Firestore functions not available. Skipping save.");
+        return;
+    }
+    const userSettingsDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/user_settings/main_settings`);
+    try {
+        await window.firestore.setDoc(userSettingsDocRef, { lastSortOrder: sortOrder }, { merge: true });
+        console.log(`[Sort] Saved sort order preference: ${sortOrder}`);
+    } catch (error) {
+        console.error("[Sort] Error saving sort order preference:", error);
+    }
+}
+
+async function loadUserWatchlistsAndSettings() {
+    if (!db || !currentUserId) {
+        console.warn("[User Settings] Firestore DB or User ID not available for loading settings.");
+        return;
+    }
+    userWatchlists = []; // Clear existing watchlists before loading
+    const userSettingsDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/user_settings/main_settings`);
+    const oldWatchlistsCollectionRef = window.firestore.collection(db, `artifacts/${currentAppId}/users/${currentUserId}/watchlists`);
+
+    try {
+        console.log("[User Settings] Fetching user settings and old watchlists for migration...");
+        let settingsFromFirestore = null;
+        const settingsDocSnap = await window.firestore.getDoc(userSettingsDocRef);
+        if (settingsDocSnap.exists()) {
+            settingsFromFirestore = settingsDocSnap.data();
+            userWatchlists = settingsFromFirestore.watchlists || [];
+            console.log("[User Settings] User settings loaded from main_settings.");
+        } else {
+            console.log("[User Settings] No user settings found in main_settings. Starting fresh.");
+            userWatchlists = [];
+        }
+
+        // --- Migration Logic from v160 ---
+        const oldWatchlistsFromCollection = [];
+        const oldWatchlistsQuerySnapshot = await window.firestore.getDocs(oldWatchlistsCollectionRef);
+        oldWatchlistsQuerySnapshot.forEach(doc => {
+            const oldWlData = doc.data();
+            // Ensure old watchlists have the 'shares' property for compatibility, and copy it
+            if (!oldWlData.shares) oldWlData.shares = {};
+            oldWatchlistsFromCollection.push({ id: doc.id, ...oldWlData });
+        });
+        console.log(`[Migration] Found ${oldWatchlistsFromCollection.length} watchlists in old collection.`);
+
+        let combinedWatchlists = [...userWatchlists]; // Start with watchlists from main_settings
+
+        oldWatchlistsFromCollection.forEach(oldWl => {
+            const existsInCombined = combinedWatchlists.some(currentWl => currentWl.id === oldWl.id);
+            if (!existsInCombined) {
+                combinedWatchlists.push(oldWl); // Add if it's a new ID
+            } else {
+                // If ID exists, merge properties, prioritizing existing (e.g., if 'shares' was added later)
+                const existingWl = combinedWatchlists.find(currentWl => currentWl.id === oldWl.id);
+                // Merge old watchlist data into the existing one, ensuring 'shares' is an object
+                Object.assign(existingWl, oldWl);
+                if (!existingWl.shares) existingWl.shares = {};
+            }
+        });
+        userWatchlists = combinedWatchlists; // Update the global array with merged data
+
+        // Ensure default watchlist exists and is correctly structured
+        const defaultWlId = getDefaultWatchlistId(currentUserId);
+        const defaultWlExists = userWatchlists.some(wl => wl.id === defaultWlId);
+        if (!defaultWlExists) {
+            userWatchlists.unshift({ // Add to the beginning for consistent ordering
+                id: defaultWlId,
+                name: DEFAULT_WATCHLIST_NAME,
+                shares: {} // Initialize with an empty shares object
+            });
+            console.log("[Migration] Ensured default watchlist exists.");
+        }
+        // --- End Migration Logic ---
+
+        // Sort watchlists alphabetically by name, but keep 'My Watchlist (Default)' first
+        userWatchlists.sort((a, b) => {
+            if (a.id === defaultWlId) return -1;
+            if (b.id === defaultWlId) return 1;
+            return a.name.localeCompare(b.name);
+        });
+
+        // Load saved preferences from settingsDocSnap or set defaults
+        currentSelectedWatchlistIds = settingsFromFirestore?.currentSelectedWatchlistIds || [ALL_SHARES_ID];
+        savedSortOrder = settingsFromFirestore?.lastSortOrder || 'entryDate-desc'; // Default sort order
+        savedTheme = settingsFromFirestore?.theme || 'system-default'; // Default theme
+
+        // Filter out any invalid watchlist IDs from currentSelectedWatchlistIds
+        currentSelectedWatchlistIds = currentSelectedWatchlistIds.filter(id => 
+            id === ALL_SHARES_ID || userWatchlists.some(wl => wl.id === id)
+        );
+        // If no valid watchlists are selected, default to the first available watchlist or ALL_SHARES_ID
+        if (currentSelectedWatchlistIds.length === 0) {
+            if (userWatchlists.length > 0) {
+                currentSelectedWatchlistIds = [userWatchlists[0].id];
+                console.warn("[User Settings] No valid watchlist selected, defaulting to first watchlist.");
+            } else {
+                currentSelectedWatchlistIds = [ALL_SHARES_ID]; // Should not happen if default is created
+                console.warn("[User Settings] No watchlists found, defaulting to ALL_SHARES_ID (though no shares might exist).");
+            }
+        }
+
+        // Save the consolidated watchlists and settings back to main_settings (important for migration persistence)
+        await window.firestore.setDoc(userSettingsDocRef, {
+            watchlists: userWatchlists,
+            currentSelectedWatchlistIds: currentSelectedWatchlistIds,
+            lastSortOrder: savedSortOrder,
+            theme: savedTheme
+        }, { merge: true });
+        console.log("[User Settings] Consolidated watchlists and settings saved to main_settings.");
+
+        populateWatchlistDropdown(); // Populate the UI dropdown
+        sortSelect.value = savedSortOrder; // Set the sort dropdown
+        currentSortOrder = savedSortOrder; // Update global sort order
+        renderSortSelect(); // Re-render sort select to ensure it's correct
+
+        applyTheme(savedTheme); // Apply the saved theme
+
+        updateMainButtonsState(true); 
+
+        // Trigger migration of old share fields (like 'name' to 'shareName', string numbers to actual numbers)
+        // This is separate from watchlist structure migration but good to run here.
+        await migrateOldSharesSchema(); // This function will also call loadShares() if migration occurs
+
+    } catch (error) {
+        console.error("[User Settings] Error loading user watchlists and settings:", error);
+        showCustomAlert("Error loading your data. Please try refreshing the page.");
+    } finally {
+        if (loadingIndicator) loadingIndicator.style.display = 'none';
+    }
 }
 
 /**
- * Updates the enabled state of the saveWatchlistNameBtn based on the input field's value.
+ * Saves user-specific settings to Firestore. This is called whenever userWatchlists or
+ * currentSelectedWatchlistIds or theme/sortOrder change in memory.
  */
-function updateSaveWatchlistNameButtonState() {
-    if (saveWatchlistNameBtn && editWatchlistNameInput) {
-        const isInputEmpty = editWatchlistNameInput.value.trim() === '';
-        // Enable if input is NOT empty, disable if empty
-        saveWatchlistNameBtn.classList.toggle('is-disabled-icon', isInputEmpty);
+async function saveUserSettings() {
+    if (!db || !currentUserId || !window.firestore) {
+        console.warn("[Firestore] Firestore or User ID not available for saving settings.");
+        return;
+    }
+    console.log("[Firestore] Saving user settings...");
+    const userSettingsDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/user_settings/main_settings`);
+
+    try {
+        await window.firestore.setDoc(userSettingsDocRef, {
+            watchlists: userWatchlists,
+            currentSelectedWatchlistIds: currentSelectedWatchlistIds,
+            lastSortOrder: currentSortOrder, // Save current sort order
+            theme: currentActiveTheme // Save current active theme
+        }, { merge: true });
+        console.log("[Firestore] User settings saved successfully.");
+    } catch (error) {
+        console.error("[Firestore] Error saving user settings:", error);
+        showCustomAlert("Error saving settings.", 3000);
+    }
+}
+
+/**
+ * Sets up a real-time Firestore listener for shares based on currentSelectedWatchlistIds.
+ * Updates `allSharesData` and re-renders the UI whenever changes occur.
+ */
+async function loadShares() {
+    // Unsubscribe from any previous listener to avoid multiple listeners
+    if (unsubscribeShares) {
+        unsubscribeShares();
+        unsubscribeShares = null;
+        console.log("[Firestore Listener] Unsubscribed from previous shares listener.");
+    }
+
+    if (!db || !currentUserId || !window.firestore) {
+        console.warn("[Shares] Firestore DB, User ID, or Firestore functions not available for loading shares. Clearing list.");
+        clearShareList();
+        return;
+    }
+    if (loadingIndicator) loadingIndicator.style.display = 'block';
+    
+    try {
+        const sharesCol = window.firestore.collection(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`);
+        let q;
+
+        let effectiveWatchlistIdsForQuery = [...currentSelectedWatchlistIds];
+
+        if (effectiveWatchlistIdsForQuery.includes(ALL_SHARES_ID)) {
+            // If "All Shares" is selected, fetch all shares.
+            q = window.firestore.query(sharesCol);
+            console.log(`[Shares] Setting up real-time listener for ALL shares for user: ${currentUserId}`);
+        } else if (effectiveWatchlistIdsForQuery.length > 0) {
+            // If specific watchlists are selected, use 'where' clause for watchlistId
+            // Firestore 'in' query supports up to 10 values, but for single-select dropdown, it's usually 1.
+            // If we ever support multi-select, this would need to change to multiple 'where' clauses or a single 'in'
+            // if the number of selected watchlists is small. For now, assuming single selection from dropdown.
+            q = window.firestore.query(sharesCol, window.firestore.where("watchlistId", "==", effectiveWatchlistIdsForQuery[0]));
+            console.log(`[Shares] Setting up real-time listener for shares in watchlist: ${effectiveWatchlistIdsForQuery[0]}`);
+        } else {
+            // No watchlist selected or available, query for nothing or handle as empty state.
+            // For now, if no watchlist is effective, we'll just fetch all and filter client-side (or show empty).
+            // This case should ideally be handled by defaulting to ALL_SHARES_ID or first watchlist.
+            q = window.firestore.query(sharesCol); // Fetch all to allow client-side filtering if needed
+            console.warn("[Shares] No effective watchlist selected. Fetching all shares for potential client-side filtering.");
+        }
+        
+        // Set up the real-time listener
+        unsubscribeShares = window.firestore.onSnapshot(q, (querySnapshot) => {
+            console.log("[Firestore Listener] Shares snapshot received. Processing changes.");
+            let fetchedShares = [];
+            querySnapshot.forEach((doc) => {
+                const share = { id: doc.id, ...doc.data() };
+                fetchedShares.push(share);
+            });
+
+            // Client-side filtering based on effective watchlist ID, if not ALL_SHARES_ID
+            // This is a fallback/double-check, as the query should ideally handle most filtering.
+            if (!effectiveWatchlistIdsForQuery.includes(ALL_SHARES_ID) && effectiveWatchlistIdsForQuery.length > 0) {
+                allSharesData = fetchedShares.filter(share => effectiveWatchlistIdsForQuery.includes(share.watchlistId));
+                console.log(`[Shares] Client-side filtered shares for watchlist(s) ${effectiveWatchlistIdsForQuery.join(', ')}. Total shares after filter: ${allSharesData.length}`);
+            } else {
+                allSharesData = fetchedShares;
+                console.log(`[Shares] Shares data updated from snapshot. Total shares: ${allSharesData.length}`);
+            }
+            
+            // Re-sort and re-render UI after data update
+            sortShares(); // This will call renderWatchlist() internally
+            renderAsxCodeButtons(); // Crucial: Re-render ASX buttons based on updated allSharesData
+            
+            if (loadingIndicator) loadingIndicator.style.display = 'none';
+        }, (error) => {
+            console.error("[Firestore Listener] Error listening to shares:", error);
+            showCustomAlert("Error loading shares in real-time: " + error.message);
+            if (loadingIndicator) loadingIndicator.style.display = 'none';
+        });
+
+    } catch (error) {
+        console.error("[Shares] Error setting up shares listener:", error);
+        showCustomAlert("Error setting up real-time share updates: " + error.message);
+        if (loadingIndicator) loadingIndicator.style.display = 'none';
+    }
+}
+
+/**
+ * Adds or removes a share from a watchlist.
+ * This function updates the `shares` map within the specific watchlist object in `userWatchlists`
+ * and then saves the entire `userWatchlists` array to Firestore.
+ * @param {string} shareId - The ID of the share.
+ * @param {string} watchlistId - The ID of the watchlist.
+ * @param {boolean} add - True to add, false to remove.
+ */
+async function toggleShareInWatchlist(shareId, watchlistId, add) {
+    if (!db || !currentUserId || !window.firestore) {
+        showCustomAlert("Error: Not authenticated or Firestore not available.");
+        return;
+    }
+
+    // Find the watchlist in the in-memory array
+    const watchlistIndex = userWatchlists.findIndex(wl => wl.id === watchlistId);
+
+    if (watchlistIndex > -1) {
+        // Ensure the 'shares' property exists as an object
+        if (!userWatchlists[watchlistIndex].shares) {
+            userWatchlists[watchlistIndex].shares = {};
+        }
+
+        if (add) {
+            userWatchlists[watchlistIndex].shares[shareId] = true; // Mark presence of the share
+            console.log(`[Watchlist Management] Share ${shareId} marked as present in watchlist ${watchlistId}.`);
+        } else {
+            delete userWatchlists[watchlistIndex].shares[shareId]; // Remove the share entry
+            console.log(`[Watchlist Management] Share ${shareId} removed from watchlist ${watchlistId}.`);
+        }
+        
+        // Save the updated userWatchlists array to Firestore
+        await saveUserSettings(); 
+        // The onSnapshot listener for shares will automatically update the UI if needed
+    } else {
+        console.warn(`[Watchlist Management] Watchlist with ID ${watchlistId} not found in userWatchlists array.`);
     }
 }
 
@@ -1608,17 +1571,17 @@ function showAddToWatchlistModal(shareId) {
     currentShareIdForWatchlistManagement = shareId;
     const share = allSharesData.find(s => s.id === shareId);
     if (!share) {
-        showCustomDialog("Share not found for watchlist management.");
+        showCustomAlert("Share not found for watchlist management.");
         return;
     }
 
     shareNameForWatchlistModal.textContent = share.shareName;
     watchlistCheckboxesContainer.innerHTML = ''; // Clear existing checkboxes
 
-    userWatchlists.forEach(watchlist => {
-        if (watchlist.id === ALL_SHARES_ID) return; // Skip "All Shares" option
-
+    // Filter out the "All Shares" option as it's not a real watchlist to assign to
+    userWatchlists.filter(wl => wl.id !== ALL_SHARES_ID).forEach(watchlist => {
         const checkboxId = `watchlist-${watchlist.id}`;
+        // Check if the share is currently in this watchlist based on the 'shares' map
         const isChecked = watchlist.shares && watchlist.shares[shareId];
 
         const div = document.createElement('div');
@@ -1669,394 +1632,383 @@ async function handleAddToWatchlistSave() {
         }
 
         if (changesMade) {
-            showToastMessage("Watchlist assignments updated!", 2000);
+            showCustomAlert("Watchlist assignments updated!", 2000);
         } else {
-            showToastMessage("No changes made to watchlists.", 2000);
+            showCustomAlert("No changes made to watchlists.", 2000);
         }
         hideModal(addToWatchlistModal);
     } catch (error) {
         console.error("[Watchlist Management] Error saving watchlist changes:", error);
-        showCustomDialog("Error saving watchlist changes. Please try again.");
+        showCustomAlert("Error saving watchlist changes. Please try again.");
     } finally {
         loadingIndicator.style.display = 'none';
         currentShareIdForWatchlistManagement = null; // Clear the stored share ID
     }
 }
 
-
-// --- EVENT HANDLERS ---
-
 /**
- * Handles clicks on share rows/cards to show details.
- * @param {Event} event - The click event.
- * @param {string} shareId - The ID of the clicked share.
+ * Migrates old share schema fields (e.g., 'name' to 'shareName', string numbers to actual numbers)
+ * and ensures shares have a 'watchlistId'. This function is designed to run once per user.
  */
-function handleShareClick(event, shareId) {
-    // Prevent context menu from showing if this was a long press that triggered it
-    if (event.detail === 0 && event.type === 'click') { // event.detail is 0 for synthetic clicks (e.g., from touchend after long press)
-        return;
+async function migrateOldSharesSchema() {
+    if (!db || !currentUserId || !window.firestore) {
+        console.warn("[Migration] Firestore DB, User ID, or Firestore functions not available for schema migration.");
+        return false;
     }
+    const sharesCol = window.firestore.collection(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`);
+    const q = window.firestore.query(sharesCol);
+    let sharesToUpdate = [];
+    let anyMigrationPerformed = false;
 
-    // Remove selected class from all rows/cards first
-    document.querySelectorAll('.share-row.selected, .mobile-card.selected').forEach(el => el.classList.remove('selected'));
+    try {
+        console.log("[Migration] Checking for old share schema to migrate.");
+        const querySnapshot = await window.firestore.getDocs(q);
 
-    // Add selected class to the clicked element
-    const clickedElement = event.currentTarget;
-    clickedElement.classList.add('selected');
+        querySnapshot.forEach(doc => {
+            const shareData = doc.data();
+            let updatePayload = {};
+            let needsUpdate = false;
 
-    showShareDetails(shareId);
-    console.log(`[Click] Share clicked: ${shareId}`);
-}
-
-/**
- * Handles the context menu (right-click on desktop, long-press on mobile).
- * @param {Event} event - The event (contextmenu or synthetic click from touchend).
- * @param {string} shareId - The ID of the share.
- */
-function handleContextMenu(event, shareId) {
-    event.preventDefault(); // Prevent default browser context menu
-
-    // Hide any currently open context menu
-    shareContextMenu.style.display = 'none';
-
-    // Set the share ID for the context menu buttons
-    shareContextMenu.dataset.shareId = shareId;
-
-    // Position the context menu
-    let x = event.clientX;
-    let y = event.clientY;
-
-    // Adjust position to keep it within viewport
-    const menuWidth = shareContextMenu.offsetWidth;
-    const menuHeight = shareContextMenu.offsetHeight;
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-
-    if (x + menuWidth > viewportWidth) {
-        x = viewportWidth - menuWidth - 10; // 10px margin from right
-    }
-    if (y + menuHeight > viewportHeight) {
-        y = viewportHeight - menuHeight - 10; // 10px margin from bottom
-    }
-
-    shareContextMenu.style.left = `${x}px`;
-    shareContextMenu.style.top = `${y}px`;
-    shareContextMenu.style.display = 'block';
-
-    // Set up context menu button actions
-    contextEditShareBtn.onclick = () => {
-        hideContextMenu();
-        populateShareFormForEdit(shareId);
-    };
-    contextDeleteShareBtn.onclick = () => {
-        hideContextMenu();
-        deleteShare(shareId);
-    };
-    if (contextAddToWatchlistBtn) { // Ensure button exists before attaching listener
-        contextAddToWatchlistBtn.onclick = () => { // NEW: Context menu add to watchlist
-            hideContextMenu();
-            showAddToWatchlistModal(shareId);
-        };
-    }
-
-
-    console.log(`[Context Menu] Displayed for share: ${shareId}`);
-}
-
-/**
- * Hides the context menu.
- */
-function hideContextMenu() {
-    if (shareContextMenu) {
-        shareContextMenu.style.display = 'none';
-        console.log("[Context Menu] Hidden.");
-    }
-}
-
-/**
- * Handles touch start for long press detection.
- * @param {TouchEvent} event - The touchstart event.
- * @param {string} shareId - The ID of the touched share.
- */
-function handleTouchStart(event, shareId) {
-    // Only consider the first touch for long press
-    if (event.touches.length === 1) {
-        selectedElementForTap = event.currentTarget;
-        touchStartX = event.touches[0].clientX;
-        touchStartY = event.touches[0].clientY;
-
-        longPressTimer = setTimeout(() => {
-            // Simulate a right-click (contextmenu event) for long press
-            const simulatedEvent = new MouseEvent('contextmenu', {
-                bubbles: true,
-                cancelable: true,
-                view: window,
-                button: 2, // Right-click button
-                clientX: touchStartX,
-                clientY: touchStartY
-            });
-            selectedElementForTap.dispatchEvent(simulatedEvent);
-            console.log("[Touch] Long press detected, simulating contextmenu.");
-            selectedElementForTap = null; // Reset to prevent click after long press
-        }, LONG_PRESS_THRESHOLD);
-    }
-}
-
-/**
- * Handles touch move to cancel long press if significant movement occurs.
- * @param {TouchEvent} event - The touchmove event.
- */
-function handleTouchMove(event) {
-    if (longPressTimer && selectedElementForTap) {
-        const currentX = event.touches[0].clientX;
-        const currentY = event.touches[0].clientY;
-        const deltaX = Math.abs(currentX - touchStartX);
-        const deltaY = Math.abs(currentY - touchStartY);
-
-        if (deltaX > TOUCH_MOVE_THRESHOLD || deltaY > TOUCH_MOVE_THRESHOLD) {
-            clearTimeout(longPressTimer);
-            longPressTimer = null;
-            console.log("[Touch] Long press cancelled due to movement.");
-        }
-    }
-}
-
-/**
- * Handles touch end for normal tap or after a cancelled long press.
- * @param {TouchEvent} event - The touchend event.
- * @param {string} shareId - The ID of the touched share.
- */
-function handleTouchEnd(event, shareId) {
-    if (longPressTimer) {
-        clearTimeout(longPressTimer);
-        longPressTimer = null;
-
-        // If long press was not triggered, this is a normal tap.
-        // Simulate a click event, but set event.detail to 0 to differentiate from actual clicks.
-        const simulatedClick = new MouseEvent('click', {
-            bubbles: true,
-            cancelable: true,
-            view: window,
-            detail: 0 // Indicate this is a synthetic click from touch
-        });
-        if (selectedElementForTap) {
-            selectedElementForTap.dispatchEvent(simulatedClick);
-            console.log("[Touch] Normal tap detected, simulating click.");
-        }
-    }
-    selectedElementForTap = null; // Reset for next interaction
-}
-
-
-// --- CALCULATOR LOGIC (Standard) ---
-
-/**
- * Handles standard calculator button clicks.
- * @param {Event} event - The click event.
- */
-function handleCalculatorButtonClick(event) {
-    const button = event.target.closest('.calc-btn');
-    if (!button) return;
-
-    const value = button.dataset.value;
-    const action = button.dataset.action;
-
-    if (resultDisplayed && (value || action === 'clear' || action === 'percentage')) {
-        // If a result is displayed and a number/clear/percentage is pressed, start a new calculation
-        currentCalculatorInput = '';
-        previousCalculatorInput = '';
-        operator = null;
-        resultDisplayed = false;
-        calculatorResultDisplay.textContent = '0';
-    }
-
-    if (value) {
-        // Handle number or decimal input
-        if (value === '.' && currentCalculatorInput.includes('.')) return; // Prevent multiple decimals
-        currentCalculatorInput += value;
-        calculatorInputDisplay.textContent = currentCalculatorInput;
-    } else if (action) {
-        // Handle operator or clear actions
-        if (action === 'clear') {
-            currentCalculatorInput = '';
-            previousCalculatorInput = '';
-            operator = null;
-            calculatorInputDisplay.textContent = '';
-            calculatorResultDisplay.textContent = '0';
-            resultDisplayed = false;
-        } else if (action === 'percentage') {
-            if (currentCalculatorInput) {
-                currentCalculatorInput = (parseFloat(currentCalculatorInput) / 100).toString();
-                calculatorInputDisplay.textContent = currentCalculatorInput;
-                calculatorResultDisplay.textContent = currentCalculatorInput;
-                resultDisplayed = true;
+            // 1. Migrate 'name' to 'shareName' if 'shareName' is missing or empty
+            if ((!shareData.shareName || String(shareData.shareName).trim() === '') && shareData.hasOwnProperty('name') && String(shareData.name).trim() !== '') {
+                needsUpdate = true;
+                updatePayload.shareName = String(shareData.name).trim();
+                updatePayload.name = window.firestore.FieldValue.delete(); // Delete old 'name' field
+                console.log(`[Migration] Share '${doc.id}': Migrating 'name' ('${shareData.name}') to 'shareName'.`);
             }
-        } else if (action === 'calculate') {
-            if (currentCalculatorInput && previousCalculatorInput && operator) {
-                const num1 = parseFloat(previousCalculatorInput);
-                const num2 = parseFloat(currentCalculatorInput);
-                let result;
-                switch (operator) {
-                    case 'add':
-                        result = num1 + num2;
-                        break;
-                    case 'subtract':
-                        result = num1 - num2;
-                        break;
-                    case 'multiply':
-                        result = num1 * num2;
-                        break;
-                    case 'divide':
-                        result = num2 !== 0 ? num1 / num2 : 'Error';
-                        break;
-                }
-                calculatorResultDisplay.textContent = result.toString();
-                currentCalculatorInput = result.toString();
-                previousCalculatorInput = '';
-                operator = null;
-                resultDisplayed = true;
-            }
-        } else { // Operator (+, -, ×, ÷)
-            if (currentCalculatorInput) {
-                if (previousCalculatorInput && operator) {
-                    // If there's a pending operation, calculate it first
-                    const num1 = parseFloat(previousCalculatorInput);
-                    const num2 = parseFloat(currentCalculatorInput);
-                    let interimResult;
-                    switch (operator) {
-                        case 'add':
-                            interimResult = num1 + num2;
-                            break;
-                        case 'subtract':
-                            interimResult = num1 - num2;
-                            break;
-                        case 'multiply':
-                            interimResult = num1 * num2;
-                            break;
-                            case 'divide':
-                                interimResult = num2 !== 0 ? num1 / num2 : 'Error';
-                                break;
+
+            // 2. Convert string numbers to actual numbers and handle NaN
+            const fieldsToConvert = ['currentPrice', 'targetPrice', 'dividendAmount', 'frankingCredits', 'entryPrice', 'lastFetchedPrice', 'previousFetchedPrice'];
+            fieldsToConvert.forEach(field => {
+                const value = shareData[field];
+                const originalValueType = typeof value;
+                let parsedValue = value; // Default to original value
+
+                if (originalValueType === 'string' && value.trim() !== '') {
+                    parsedValue = parseFloat(value);
+                    if (!isNaN(parsedValue)) {
+                        // Only update if type is different or string representation is different (e.g., "10.00" vs 10)
+                        if (originalValueType !== typeof parsedValue || value !== String(parsedValue)) {
+                            needsUpdate = true;
+                            updatePayload[field] = parsedValue;
+                            console.log(`[Migration] Share '${doc.id}': Converted ${field} from string '${value}' to number ${parsedValue}.`);
+                        }
+                    } else { // String but not a valid number
+                        needsUpdate = true;
+                        updatePayload[field] = null; // Set to null if invalid string
+                        console.warn(`[Migration] Share '${doc.id}': Field '${field}' was invalid string '${value}', setting to null.`);
                     }
-                    previousCalculatorInput = interimResult.toString();
-                } else {
-                    previousCalculatorInput = currentCalculatorInput;
+                } else if (originalValueType === 'number' && isNaN(value)) { // Number but NaN
+                    needsUpdate = true;
+                    updatePayload[field] = null; // Set to null if NaN
+                    console.warn(`[Migration] Share '${doc.id}': Field '${field}' was NaN number, setting to null.`);
                 }
-                currentCalculatorInput = '';
-                operator = action;
-                calculatorInputDisplay.textContent = `${previousCalculatorInput} ${getOperatorSymbol(action)}`;
-                resultDisplayed = false;
-            } else if (previousCalculatorInput) {
-                // If only previous input exists, change the operator
-                operator = action;
-                calculatorInputDisplay.textContent = `${previousCalculatorInput} ${getOperatorSymbol(action)}`;
+            });
+
+            // 3. Adjust frankingCredits if it's a decimal (e.g., 0.70 instead of 70)
+            const currentFranking = updatePayload.frankingCredits !== undefined ? updatePayload.frankingCredits : shareData.frankingCredits;
+            if (typeof currentFranking === 'number' && !isNaN(currentFranking) && currentFranking > 0 && currentFranking < 1) {
+                needsUpdate = true;
+                updatePayload.frankingCredits = currentFranking * 100;
+                console.log(`[Migration] Share '${doc.id}': Converted frankingCredits from decimal ${currentFranking} to percentage ${currentFranking * 100}.`);
             }
+
+            // 4. Ensure watchlistId is present and assign to default if missing
+            if (!shareData.hasOwnProperty('watchlistId')) {
+                needsUpdate = true;
+                updatePayload.watchlistId = getDefaultWatchlistId(currentUserId);
+                console.log(`[Migration] Share '${doc.id}' missing watchlistId. Assigning to default: ${updatePayload.watchlistId}.`);
+            }
+
+            // 5. Ensure price update fields are present
+            const effectiveCurrentPrice = (updatePayload.currentPrice !== undefined && !isNaN(updatePayload.currentPrice)) ? updatePayload.currentPrice : 
+                                          ((typeof shareData.currentPrice === 'string' ? parseFloat(shareData.currentPrice) : shareData.currentPrice) || null);
+
+            if (!shareData.hasOwnProperty('lastFetchedPrice') || (typeof shareData.lastFetchedPrice === 'string' && isNaN(parseFloat(shareData.lastFetchedPrice)))) {
+                needsUpdate = true;
+                updatePayload.lastFetchedPrice = effectiveCurrentPrice;
+                console.log(`[Migration] Share '${doc.id}': Setting missing lastFetchedPrice to ${effectiveCurrentPrice}.`);
+            }
+            if (!shareData.hasOwnProperty('previousFetchedPrice') || (typeof shareData.previousFetchedPrice === 'string' && isNaN(parseFloat(shareData.previousFetchedPrice)))) {
+                needsUpdate = true;
+                updatePayload.previousFetchedPrice = effectiveCurrentPrice;
+                console.log(`[Migration] Share '${doc.id}': Setting missing previousFetchedPrice to ${effectiveCurrentPrice}.`);
+            }
+            if (!shareData.hasOwnProperty('lastPriceUpdateTime')) {
+                needsUpdate = true;
+                updatePayload.lastPriceUpdateTime = new Date().toISOString();
+                console.log(`[Migration] Share '${doc.id}': Setting missing lastPriceUpdateTime.`);
+            }
+            
+            if (needsUpdate) {
+                sharesToUpdate.push({ ref: doc.ref, data: updatePayload });
+                anyMigrationPerformed = true;
+            }
+        });
+
+        if (sharesToUpdate.length > 0) {
+            console.log(`[Migration] Performing consolidated update for ${sharesToUpdate.length} shares for schema migration.`);
+            const batch = window.firestore.writeBatch(db);
+            sharesToUpdate.forEach(item => {
+                batch.update(item.ref, item.data);
+            });
+            await batch.commit();
+            showCustomAlert(`Migrated/Updated ${sharesToUpdate.length} old shares.`, 2000);
+            console.log("[Migration] Schema migration complete. Reloading shares.");
+            await loadShares(); // Reload shares after schema migration
+        } else {
+            console.log("[Migration] No old shares found requiring schema migration.");
+            // If no schema migration, still need to load shares for the first time
+            await loadShares(); // Initial load for current watchlist
         }
+        return anyMigrationPerformed;
+    } catch (error) {
+        console.error("[Migration] Error during schema migration:", error);
+        showCustomAlert("Error during data migration: " + error.message);
+        return false;
     }
 }
 
-/**
- * Helper to get the display symbol for calculator operators.
- * @param {string} action - The operator action string.
- * @returns {string} The display symbol.
- */
-function getOperatorSymbol(action) {
-    switch (action) {
-        case 'add': return '+';
-        case 'subtract': return '-';
-        case 'multiply': return '×';
-        case 'divide': return '÷';
-        default: return '';
-    }
-}
-
-// --- CALCULATOR LOGIC (Dividend) ---
-
-/**
- * Calculates and displays dividend yields and estimated annual dividend.
- */
-function calculateAndDisplayDividends() {
-    const price = parseFloat(calcCurrentPriceInput.value);
-    const dividend = parseFloat(calcDividendAmountInput.value);
-    const franking = parseFloat(calcFrankingCreditsInput.value);
-    const investmentValue = parseFloat(investmentValueSelect.value);
-
-    if (isNaN(price) || isNaN(dividend) || price <= 0 || dividend < 0) {
-        calcUnfrankedYieldSpan.textContent = '-';
-        calcFrankedYieldSpan.textContent = '-';
-        calcEstimatedDividendSpan.textContent = '-';
-        return;
-    }
-
-    const { unfrankedYield, frankedYield } = calculateYields(dividend, price, franking);
-
-    calcUnfrankedYieldSpan.textContent = formatPercentage(unfrankedYield, 2);
-    calcFrankedYieldSpan.textContent = formatPercentage(frankedYield, 2);
-
-    if (!isNaN(investmentValue) && investmentValue > 0) {
-        const estimatedDividend = (investmentValue / price) * dividend;
-        calcEstimatedDividendSpan.textContent = formatCurrency(estimatedDividend);
-    } else {
-        calcEstimatedDividendSpan.textContent = '-';
-    }
-}
 
 // --- INITIALIZATION ---
 
-/**
- * Initializes all event listeners and fetches initial data.
- * This function is called once after the initial Firebase auth state is determined.
- */
-function initializeAppLogic() {
-    console.log("Initializing app logic...");
+async function initializeAppLogic() {
+    console.log("initializeAppLogic: Firebase is ready. Starting app logic.");
 
-    // Global click listener to hide context menu
-    document.addEventListener('click', (event) => {
-        if (shareContextMenu && shareContextMenu.style.display === 'block' && !shareContextMenu.contains(event.target)) {
+    // Initial modal hiding
+    if (shareFormSection) shareFormSection.style.setProperty('display', 'none', 'important');
+    if (dividendCalculatorModal) dividendCalculatorModal.style.setProperty('display', 'none', 'important');
+    if (shareDetailModal) shareDetailModal.style.setProperty('display', 'none', 'important');
+    if (addWatchlistModal) addWatchlistModal.style.setProperty('display', 'none', 'important');
+    if (manageWatchlistModal) manageWatchlistModal.style.setProperty('display', 'none', 'important');
+    if (customDialogModal) customDialogModal.style.setProperty('display', 'none', 'important');
+    if (calculatorModal) calculatorModal.style.setProperty('display', 'none', 'important');
+    if (shareContextMenu) shareContextMenu.style.setProperty('display', 'none', 'important');
+    if (addToWatchlistModal) addToWatchlistModal.style.setProperty('display', 'none', 'important'); // NEW modal
+
+    // Service Worker Registration (keeping from v89 index.html)
+    // Note: This block is already in index.html's module script. Keeping it here for completeness
+    // but the one in index.html will likely run first.
+    if ('serviceWorker' in navigator) {
+        // No window.addEventListener('load') here to avoid duplicate registration if index.html already does it.
+        // It's better for index.html to handle initial registration.
+        console.log("Service Worker registration handled by index.html module script.");
+    }
+
+    // Share Name Input to uppercase and dirty state check
+    if (shareNameInput) {
+        shareNameInput.addEventListener('input', function() { 
+            this.value = this.value.toUpperCase(); 
+            checkFormDirtyState(); // Check dirty state on input
+        });
+    }
+
+    // Add event listeners to all form inputs for dirty state checking
+    formInputs.forEach(input => {
+        if (input) {
+            input.addEventListener('input', checkFormDirtyState);
+            input.addEventListener('change', checkFormDirtyState); // For number inputs, etc.
+        }
+    });
+
+
+    // Form input navigation with Enter key
+    formInputs.forEach((input, index) => {
+        if (input) {
+            input.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    if (index === formInputs.length - 1) {
+                        // Check for 'is-disabled-icon' class instead of 'disabled' attribute
+                        if (addCommentSectionBtn && addCommentSectionBtn.offsetParent !== null && !addCommentSectionBtn.classList.contains('is-disabled-icon')) { 
+                            addCommentSectionBtn.click();
+                            const newCommentTitleInput = commentsFormContainer.lastElementChild?.querySelector('.comment-title-input');
+                            if (newCommentTitleInput) {
+                                newCommentTitleInput.focus();
+                            }
+                        } else if (saveShareBtn && !saveShareBtn.classList.contains('is-disabled-icon')) { 
+                            saveShareBtn.click();
+                        }
+                    } else {
+                        if (formInputs[index + 1]) formInputs[index + 1].focus();
+                    }
+                }
+            });
+        }
+    });
+
+    // Add Comment Section Button
+    if (addCommentSectionBtn) {
+        // Ensure addCommentSectionBtn is never disabled by default
+        setIconDisabled(addCommentSectionBtn, false);
+        addCommentSectionBtn.addEventListener('click', () => {
+            addCommentSection();
+            checkFormDirtyState(); // Check dirty state after adding a comment section
+        });
+    }
+
+    // Close buttons for modals
+    document.querySelectorAll('.close-button').forEach(button => { button.addEventListener('click', closeModals); });
+
+    // Global click listener to close modals/context menu if clicked outside
+    window.addEventListener('click', (event) => {
+        if (event.target === shareDetailModal || event.target === dividendCalculatorModal ||
+            event.target === shareFormSection || event.target === customDialogModal ||
+            event.target === calculatorModal || event.target === addWatchlistModal ||
+            event.target === manageWatchlistModal || event.target === addToWatchlistModal) { // Added addToWatchlistModal
+            closeModals();
+        }
+
+        if (contextMenuOpen && shareContextMenu && !shareContextMenu.contains(event.target)) {
             hideContextMenu();
         }
     });
 
-    // Header Buttons
-    if (addShareHeaderBtn) {
-        addShareHeaderBtn.addEventListener('click', () => {
-            console.log("[UI] Add Share Header button clicked.");
-            clearShareFormForNew();
+    // Google Auth Button (Sign In/Out)
+    if (googleAuthBtn) {
+        googleAuthBtn.addEventListener('click', async () => {
+            console.log("[Auth] Google Auth Button Clicked.");
+            const currentAuth = window.firebaseAuth;
+            if (!currentAuth || !window.authFunctions) {
+                console.warn("[Auth] Auth service not ready or functions not loaded. Cannot process click.");
+                showCustomAlert("Authentication service not ready. Please try again in a moment.");
+                return;
+            }
+            if (currentAuth.currentUser) {
+                console.log("[Auth] Current user exists, attempting sign out.");
+                try {
+                    await window.authFunctions.signOut(currentAuth);
+                    console.log("[Auth] User signed out.");
+                } catch (error) {
+                    console.error("[Auth] Sign-Out failed:", error);
+                    showCustomAlert("Sign-Out failed: " + error.message);
+                }
+            } else {
+                console.log("[Auth] No current user, attempting sign in.");
+                try {
+                    const provider = window.authFunctions.GoogleAuthProviderInstance;
+                    if (!provider) {
+                        console.error("[Auth] GoogleAuthProvider instance not found. Is Firebase module script loaded?");
+                        showCustomAlert("Authentication service not ready. Please ensure Firebase module script is loaded.");
+                        return;
+                    }
+                    await window.authFunctions.signInWithPopup(currentAuth, provider);
+                    console.log("[Auth] Google Sign-In successful.");
+                }
+                catch (error) {
+                    console.error("[Auth] Google Sign-In failed:", error.message);
+                    showCustomAlert("Google Sign-In failed: " + error.message);
+                }
+            }
         });
     }
 
-    // Share Form Modal Buttons
-    if (shareFormCloseBtn) {
-        shareFormCloseBtn.addEventListener('click', () => { hideModal(shareFormSection); console.log("[UI] Share form close button clicked."); });
+    // Logout Button (No confirmation as per user request)
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', async () => {
+            console.log("[Auth] Logout Button Clicked (No Confirmation).");
+            const currentAuth = window.firebaseAuth;
+            if (!currentAuth || !window.authFunctions) {
+                console.warn("[Auth] Auth service not ready or functions not loaded. Cannot process logout.");
+                showCustomAlert("Authentication service not ready. Please try again in a moment.");
+                return;
+            }
+            try {
+                await window.authFunctions.signOut(currentAuth);
+                showCustomAlert("Logged out successfully!", 1500);
+                console.log("[Auth] User successfully logged out.");
+                toggleAppSidebar(false);
+            } catch (error) {
+                console.error("[Auth] Logout failed:", error);
+                showCustomAlert("Logout failed: " + error.message);
+            }
+        });
     }
-    if (cancelFormBtn) {
-        cancelFormBtn.addEventListener('click', () => { hideModal(shareFormSection); console.log("[UI] Share form cancel button clicked."); });
+
+    // Watchlist Select Change Listener
+    if (watchlistSelect) {
+        watchlistSelect.addEventListener('change', async (event) => {
+            console.log(`[Watchlist Select] Change event fired. New value: ${event.target.value}`);
+            currentSelectedWatchlistIds = [event.target.value]; // Update to single selection
+            await saveLastSelectedWatchlistIds(currentSelectedWatchlistIds);
+            await loadShares(); // Trigger load shares with new selection
+        });
     }
+
+    // Sort Select Change Listener
+    if (sortSelect) {
+        sortSelect.addEventListener('change', async (event) => {
+            console.log(`[Sort Select] Change event fired. New value: ${event.target.value}`);
+            currentSortOrder = sortSelect.value;
+            sortShares(); // This will call renderWatchlist()
+            await saveSortOrderPreference(currentSortOrder);
+        });
+    }
+
+    // New Share Button (from sidebar)
+    if (newShareBtn) {
+        newShareBtn.addEventListener('click', () => {
+            console.log("[UI] New Share button (sidebar) clicked.");
+            clearForm();
+            formTitle.textContent = 'Add New Share';
+            if (deleteShareBtn) { deleteShareBtn.classList.add('hidden'); } // Ensure it's hidden for new share
+            showModal(shareFormSection);
+            shareNameInput.focus();
+            toggleAppSidebar(false); 
+        });
+    }
+
+    // Add Share Header Button (from header)
+    if (addShareHeaderBtn) {
+        addShareHeaderBtn.addEventListener('click', () => {
+            console.log("[UI] Add Share button (header) clicked.");
+            clearForm();
+            formTitle.textContent = 'Add New Share';
+            if (deleteShareBtn) { deleteShareBtn.classList.add('hidden'); } // Ensure it's hidden for new share
+            showModal(shareFormSection);
+            shareNameInput.focus();
+        });
+    }
+
+    // Event listener for shareNameInput to toggle saveShareBtn
+    if (shareNameInput && saveShareBtn) {
+        shareNameInput.addEventListener('input', () => {
+            // This listener now just triggers the comprehensive dirty state check
+            checkFormDirtyState(); 
+        });
+    }
+
+    // Save Share Button
     if (saveShareBtn) {
         saveShareBtn.addEventListener('click', async () => {
-            console.log("[UI] Save Share button clicked.");
-            const shareName = shareNameInput.value.trim();
+            console.log("[Share Form] Save Share button clicked.");
+            // Ensure button is not disabled before proceeding
+            if (saveShareBtn.classList.contains('is-disabled-icon')) {
+                showCustomAlert("Please enter a share code and make changes to save.");
+                console.warn("[Save Share] Save button was disabled, preventing action.");
+                return;
+            }
+
+            const shareName = shareNameInput.value.trim().toUpperCase();
+            if (!shareName) { showCustomAlert("Code is required!"); return; }
+
             const currentPrice = parseFloat(currentPriceInput.value);
             const targetPrice = parseFloat(targetPriceInput.value);
             const dividendAmount = parseFloat(dividendAmountInput.value);
             const frankingCredits = parseFloat(frankingCreditsInput.value);
 
-            if (!shareName) {
-                showCustomDialog("Share Code is required.");
-                return;
-            }
-
-            // Collect all comments
             const comments = [];
-            commentsFormContainer.querySelectorAll('.comment-section').forEach(section => {
-                const titleInput = section.querySelector('.comment-title-input');
-                const textInput = section.querySelector('.comment-text-input');
-                if (titleInput && textInput && (titleInput.value.trim() || textInput.value.trim())) {
-                    comments.push({
-                        title: titleInput.value.trim(),
-                        text: textInput.value.trim()
-                    });
-                }
-            });
+            if (commentsFormContainer) {
+                commentsFormContainer.querySelectorAll('.comment-section').forEach(section => {
+                    const titleInput = section.querySelector('.comment-title-input');
+                    const textInput = section.querySelector('.comment-text-input');
+                    const title = titleInput ? titleInput.value.trim() : '';
+                    const text = textInput ? textInput.value.trim() : '';
+                    if (title || text) {
+                        comments.push({ title: title, text: text });
+                    }
+                });
+            }
 
             const shareData = {
                 shareName: shareName,
@@ -2065,188 +2017,601 @@ function initializeAppLogic() {
                 dividendAmount: isNaN(dividendAmount) ? null : dividendAmount,
                 frankingCredits: isNaN(frankingCredits) ? null : frankingCredits,
                 comments: comments,
-                entryDate: selectedShareDocId ? allSharesData.find(s => s.id === selectedShareDocId)?.entryDate : new Date().toISOString() // Preserve date for edits
+                userId: currentUserId,
+                // Assign to the currently selected watchlist from the dropdown.
+                // If no watchlist is selected (e.g., placeholder), default to the first available watchlist.
+                watchlistId: (watchlistSelect && watchlistSelect.value && watchlistSelect.value !== "" && watchlistSelect.value !== ALL_SHARES_ID) 
+                             ? watchlistSelect.value 
+                             : (userWatchlists.length > 0 ? userWatchlists[0].id : getDefaultWatchlistId(currentUserId)),
+                lastPriceUpdateTime: new Date().toISOString()
             };
 
-            await saveShare(shareData, selectedShareDocId);
-        });
-    }
-    if (addCommentSectionBtn) {
-        addCommentSectionBtn.addEventListener('click', () => {
-            console.log("[UI] Add Comment Section button clicked.");
-            addCommentSection();
+            if (selectedShareDocId) {
+                const existingShare = allSharesData.find(s => s.id === selectedShareDocId);
+                if (existingShare) { shareData.previousFetchedPrice = existingShare.lastFetchedPrice; }
+                else { shareData.previousFetchedPrice = shareData.currentPrice; } // Fallback if existing share not found in current data
+                shareData.lastFetchedPrice = shareData.currentPrice;
+
+                try {
+                    const shareDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, selectedShareDocId);
+                    await window.firestore.updateDoc(shareDocRef, shareData);
+                    showCustomAlert(`Share '${shareName}' updated successfully!`, 1500);
+                    console.log(`[Firestore] Share '${shareName}' (ID: ${selectedShareDocId}) updated.`);
+                } catch (error) {
+                    console.error("[Firestore] Error updating share:", error);
+                    showCustomAlert("Error updating share: " + error.message);
+                }
+            } else {
+                shareData.entryDate = new Date().toISOString();
+                shareData.lastFetchedPrice = shareData.currentPrice;
+                shareData.previousFetchedPrice = shareData.currentPrice;
+
+                try {
+                    const sharesColRef = window.firestore.collection(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`);
+                    const newDocRef = await window.firestore.addDoc(sharesColRef, shareData);
+                    selectedShareDocId = newDocRef.id;
+                    showCustomAlert(`Share '${shareName}' added successfully!`, 1500);
+                    console.log(`[Firestore] Share '${shareName}' added with ID: ${newDocRef.id}`);
+
+                    // Also add the new share to the 'shares' map of the assigned watchlist in userWatchlists array
+                    const assignedWatchlist = userWatchlists.find(wl => wl.id === shareData.watchlistId);
+                    if (assignedWatchlist) {
+                        if (!assignedWatchlist.shares) {
+                            assignedWatchlist.shares = {};
+                        }
+                        assignedWatchlist.shares[newDocRef.id] = true;
+                        await saveUserSettings(); // Persist the updated userWatchlists array
+                        console.log(`[Firestore] New share ${newDocRef.id} added to watchlist ${shareData.watchlistId} in settings.`);
+                    } else {
+                        console.warn(`[Firestore] Assigned watchlist ${shareData.watchlistId} not found in userWatchlists array after adding share.`);
+                    }
+
+                } catch (error) {
+                    console.error("[Firestore] Error adding share:", error);
+                    showCustomAlert("Error adding share: " + error.message);
+                }
+            }
+            closeModals();
         });
     }
 
-    // Share Detail Modal Buttons
-    if (shareDetailCloseBtn) {
-        shareDetailCloseBtn.addEventListener('click', () => { hideModal(shareDetailModal); console.log("[UI] Share detail close button clicked."); });
+    // Cancel Form Button
+    if (cancelFormBtn) {
+        cancelFormBtn.addEventListener('click', () => { console.log("[Form] Form canceled."); clearForm(); hideModal(shareFormSection); });
     }
+
+    // Delete Share Button (No confirmation as per user request)
+    if (deleteShareBtn) {
+        deleteShareBtn.addEventListener('click', async () => {
+            console.log("[Share Form] Delete Share button clicked (No Confirmation).");
+            // Ensure button is not disabled before proceeding
+            if (deleteShareBtn.classList.contains('is-disabled-icon')) {
+                console.warn("[Delete Share] Delete button was disabled, preventing action.");
+                return; // Do nothing if visually disabled
+            }
+            if (selectedShareDocId) {
+                try {
+                    const shareDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, selectedShareDocId);
+                    
+                    // Remove share from all watchlists it belongs to in user settings
+                    const userSettingsDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/user_settings/main_settings`);
+                    const settingsSnap = await window.firestore.getDoc(userSettingsDocRef);
+                    if (settingsSnap.exists()) {
+                        const settings = settingsSnap.data();
+                        const currentWatchlists = settings.watchlists || [];
+                        currentWatchlists.forEach(watchlist => {
+                            if (watchlist.shares && watchlist.shares[selectedShareDocId]) {
+                                delete watchlist.shares[selectedShareDocId];
+                                console.log(`[Firestore] Removed share ${selectedShareDocId} from watchlist ${watchlist.id} in settings.`);
+                            }
+                        });
+                        await window.firestore.updateDoc(userSettingsDocRef, { watchlists: currentWatchlists });
+                    }
+
+                    await window.firestore.deleteDoc(shareDocRef);
+                    showCustomAlert("Share deleted successfully!", 1500);
+                    console.log(`[Firestore] Share (ID: ${selectedShareDocId}) deleted.`);
+                    closeModals();
+                } catch (error) {
+                    console.error("[Firestore] Error deleting share:", error);
+                    showCustomAlert("Error deleting share: " + error.message);
+                }
+            } else { showCustomAlert("No share selected for deletion."); }
+        });
+    }
+
+    // Edit Share From Detail Button
+    if (editShareFromDetailBtn) {
+        editShareFromDetailBtn.addEventListener('click', () => {
+            console.log("[Share Details] Edit Share button clicked.");
+            // Ensure button is not disabled before proceeding
+            if (editShareFromDetailBtn.classList.contains('is-disabled-icon')) {
+                console.warn("[Edit Share From Detail] Edit button was disabled, preventing action.");
+                return; // Do nothing if visually disabled
+            }
+            hideModal(shareDetailModal);
+            showEditFormForSelectedShare();
+        });
+    }
+
+    // NEW: Delete Share From Detail Button
+    if (deleteShareFromDetailBtn) {
+        deleteShareFromDetailBtn.addEventListener('click', async () => {
+            console.log("[Share Details] Delete Share button clicked (No Confirmation).");
+            // Ensure button is not disabled before proceeding
+            if (deleteShareFromDetailBtn.classList.contains('is-disabled-icon')) {
+                console.warn("[Delete Share From Detail] Delete button was disabled, preventing action.");
+                return; // Do nothing if visually disabled
+            }
+            if (selectedShareDocId) {
+                try {
+                    const shareDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, selectedShareDocId);
+                    
+                    // Remove share from all watchlists it belongs to in user settings
+                    const userSettingsDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/user_settings/main_settings`);
+                    const settingsSnap = await window.firestore.getDoc(userSettingsDocRef);
+                    if (settingsSnap.exists()) {
+                        const settings = settingsSnap.data();
+                        const currentWatchlists = settings.watchlists || [];
+                        currentWatchlists.forEach(watchlist => {
+                            if (watchlist.shares && watchlist.shares[selectedShareDocId]) {
+                                delete watchlist.shares[selectedShareDocId];
+                                console.log(`[Firestore] Removed share ${selectedShareDocId} from watchlist ${watchlist.id} in settings.`);
+                            }
+                        });
+                        await window.firestore.updateDoc(userSettingsDocRef, { watchlists: currentWatchlists });
+                    }
+
+                    await window.firestore.deleteDoc(shareDocRef);
+                    showCustomAlert("Share deleted successfully!", 1500);
+                    console.log(`[Firestore] Share (ID: ${selectedShareDocId}) deleted.`);
+                    closeModals();
+                } catch (error) {
+                    console.error("[Firestore] Error deleting share:", error);
+                    showCustomAlert("Error deleting share: " + error.message);
+                }
+            } else { showCustomAlert("No share selected for deletion."); }
+        });
+    }
+
     // NEW: Add to Watchlist button in Share Detail Modal
     if (addToWatchlistBtn) {
         addToWatchlistBtn.addEventListener('click', () => {
             console.log("[UI] Add to Watchlist button clicked (from Share Detail).");
-            showAddToWatchlistModal(selectedShareDocId); // Use the currently selected share ID
-        });
-    }
-
-
-    // Add Watchlist Modal Buttons
-    if (addWatchlistBtn) {
-        addWatchlistBtn.addEventListener('click', () => {
-            console.log("[UI] Add Watchlist button clicked.");
-            newWatchlistNameInput.value = ''; // Clear input
-            showModal(addWatchlistModal);
-        });
-    }
-    if (addWatchlistCloseBtn) {
-        addWatchlistCloseBtn.addEventListener('click', () => { hideModal(addWatchlistModal); console.log("[UI] Add Watchlist close button clicked."); });
-    }
-    if (cancelAddWatchlistBtn) {
-        cancelAddWatchlistBtn.addEventListener('click', () => { hideModal(addWatchlistModal); console.log("[UI] Add Watchlist cancel button clicked."); });
-    }
-    if (saveWatchlistBtn) {
-        saveWatchlistBtn.addEventListener('click', () => {
-            console.log("[UI] Save Watchlist button clicked.");
-            addWatchlist(newWatchlistNameInput.value);
-        });
-    }
-
-    // Manage Watchlist Modal Buttons
-    if (editWatchlistBtn) {
-        editWatchlistBtn.addEventListener('click', () => {
-            console.log("[UI] Edit Watchlist button clicked.");
-            const selectedWatchlistId = watchlistSelect.value;
-            if (selectedWatchlistId) {
-                populateManageWatchlistModal(selectedWatchlistId);
+            // Ensure button is not disabled before proceeding
+            if (addToWatchlistBtn.classList.contains('is-disabled-icon')) {
+                console.warn("[Add to Watchlist] Button was disabled, preventing action.");
+                return; // Do nothing if visually disabled
+            }
+            if (selectedShareDocId) {
+                hideModal(shareDetailModal);
+                showAddToWatchlistModal(selectedShareDocId); // Use the currently selected share ID
             } else {
-                showCustomDialog("Please select a watchlist to edit.");
+                showCustomAlert("No share selected to add/remove from watchlists.");
             }
         });
     }
-    if (manageWatchlistCloseBtn) {
-        manageWatchlistCloseBtn.addEventListener('click', () => { hideModal(manageWatchlistModal); console.log("[UI] Manage Watchlist close button clicked."); });
+
+    // Context Menu Edit Share Button
+    if (contextEditShareBtn) {
+        contextEditShareBtn.addEventListener('click', () => {
+            console.log("[Context Menu] Edit Share button clicked.");
+            if (currentContextMenuShareId) {
+                const shareIdToEdit = currentContextMenuShareId;
+                hideContextMenu();
+                showEditFormForSelectedShare(shareIdToEdit);
+            } else {
+                console.warn("[Context Menu] No share ID found for editing.");
+            }
+        });
     }
-    if (cancelManageWatchlistBtn) {
-        cancelManageWatchlistBtn.addEventListener('click', () => { hideModal(manageWatchlistModal); console.log("[UI] Manage Watchlist cancel button clicked."); });
+
+    // Context Menu Delete Share Button (No confirmation as per user request)
+    if (contextDeleteShareBtn) {
+        contextDeleteShareBtn.addEventListener('click', async () => {
+            console.log("[Context Menu] Delete Share button clicked (No Confirmation).");
+            if (currentContextMenuShareId) {
+                const shareToDeleteId = currentContextMenuShareId;
+                hideContextMenu();
+                try {
+                    const shareDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, shareToDeleteId);
+                    
+                    // Remove share from all watchlists it belongs to in user settings
+                    const userSettingsDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/user_settings/main_settings`);
+                    const settingsSnap = await window.firestore.getDoc(userSettingsDocRef);
+                    if (settingsSnap.exists()) {
+                        const settings = settingsSnap.data();
+                        const currentWatchlists = settings.watchlists || [];
+                        currentWatchlists.forEach(watchlist => {
+                            if (watchlist.shares && watchlist.shares[shareToDeleteId]) {
+                                delete watchlist.shares[shareToDeleteId];
+                                console.log(`[Firestore] Removed share ${shareToDeleteId} from watchlist ${watchlist.id} in settings.`);
+                            }
+                        });
+                        await window.firestore.updateDoc(userSettingsDocRef, { watchlists: currentWatchlists });
+                    }
+
+                    await window.firestore.deleteDoc(shareDocRef);
+                    showCustomAlert("Share deleted successfully!", 1500);
+                    console.log(`[Firestore] Share (ID: ${shareToDeleteId}) deleted.`);
+                } catch (error) {
+                    console.error("[Firestore] Error deleting share:", error);
+                    showCustomAlert("Error deleting share: " + error.message);
+                }
+            } else {
+                showCustomAlert("No share selected for deletion from context menu.");
+                console.warn("[Context Menu] No share ID found for deletion.");
+            }
+        });
     }
+
+    // NEW: Context Menu Add/Remove from Watchlist button
+    if (contextAddToWatchlistBtn) {
+        contextAddToWatchlistBtn.addEventListener('click', () => {
+            console.log("[Context Menu] Add/Remove from Watchlist button clicked.");
+            if (currentContextMenuShareId) {
+                hideContextMenu();
+                showAddToWatchlistModal(currentContextMenuShareId);
+            } else {
+                showCustomAlert("No share selected to add/remove from watchlists.");
+            }
+        });
+    }
+
+
+    // Add Watchlist Button
+    if (addWatchlistBtn) {
+        addWatchlistBtn.addEventListener('click', () => {
+            console.log("[UI] Add Watchlist button clicked.");
+            if (newWatchlistNameInput) newWatchlistNameInput.value = '';
+            setIconDisabled(saveWatchlistBtn, true); // Disable save button initially
+            console.log("[Add Watchlist] saveWatchlistBtn disabled initially.");
+            showModal(addWatchlistModal);
+            newWatchlistNameInput.focus();
+            toggleAppSidebar(false);
+        });
+    }
+
+    // Event listener for newWatchlistNameInput to toggle saveWatchlistBtn
+    if (newWatchlistNameInput && saveWatchlistBtn) {
+        newWatchlistNameInput.addEventListener('input', () => {
+            const isDisabled = newWatchlistNameInput.value.trim() === '';
+            setIconDisabled(saveWatchlistBtn, isDisabled);
+        });
+    }
+
+    // Save Watchlist Button
+    if (saveWatchlistBtn) {
+        saveWatchlistBtn.addEventListener('click', async () => {
+            console.log("[Watchlist Form] Save Watchlist button clicked.");
+            // Ensure button is not disabled before proceeding
+            if (saveWatchlistBtn.classList.contains('is-disabled-icon')) {
+                showCustomAlert("Please enter a watchlist name.");
+                console.warn("[Save Watchlist] Save button was disabled, preventing action.");
+                return;
+            }
+
+            const watchlistName = newWatchlistNameInput.value.trim();
+            if (!watchlistName) {
+                showCustomAlert("Watchlist name is required!");
+                return;
+            }
+            if (userWatchlists.some(w => w.name.toLowerCase() === watchlistName.toLowerCase())) {
+                showCustomAlert("A watchlist with this name already exists!");
+                return;
+            }
+
+            try {
+                const newWatchlistId = window.firestore.doc(window.firestore.collection(db, 'dummy_collection_for_id_gen')).id; // Generate unique ID
+                const newWatchlistData = {
+                    id: newWatchlistId,
+                    name: watchlistName,
+                    shares: {}, // Initialize with empty shares map
+                    createdAt: new Date().toISOString()
+                };
+
+                userWatchlists.push(newWatchlistData); // Add to in-memory array
+                await saveUserSettings(); // Save the entire updated userWatchlists array to Firestore
+
+                showCustomAlert(`Watchlist '${watchlistName}' added!`, 1500);
+                console.log(`[Firestore] Watchlist '${watchlistName}' added with ID: ${newWatchlistId}`);
+                hideModal(addWatchlistModal);
+                
+                // After adding, select only this new watchlist
+                currentSelectedWatchlistIds = [newWatchlistId];
+                await saveLastSelectedWatchlistIds(currentSelectedWatchlistIds);
+                await loadUserWatchlistsAndSettings(); // This will re-render watchlists and trigger loadShares()
+            } catch (error) {
+                console.error("[Firestore] Error adding watchlist:", error);
+                showCustomAlert("Error adding watchlist: " + error.message);
+            }
+        });
+    }
+
+    // Cancel Add Watchlist Button
+    if (cancelAddWatchlistBtn) {
+        cancelAddWatchlistBtn.addEventListener('click', () => {
+            console.log("[Watchlist] Add Watchlist canceled.");
+            hideModal(addWatchlistModal);
+            if (newWatchlistNameInput) newWatchlistNameInput.value = '';
+        });
+    }
+
+    // Edit Watchlist Button
+    if (editWatchlistBtn) {
+        editWatchlistBtn.addEventListener('click', () => {
+            console.log("[UI] Edit Watchlist button clicked.");
+            // For editing, we need to pick ONE watchlist. Let's use the currently selected one.
+            let watchlistToEditId = watchlistSelect.value;
+
+            if (!watchlistToEditId || !userWatchlists.some(w => w.id === watchlistToEditId)) {
+                showCustomAlert("Please select a watchlist to edit.");
+                return;
+            }
+            const selectedWatchlistObj = userWatchlists.find(w => w.id === watchlistToEditId);
+            const watchlistToEditName = selectedWatchlistObj ? selectedWatchlistObj.name : '';
+
+            console.log(`[Edit Watchlist Button Click] Watchlist to edit ID: ${watchlistToEditId}, Name: ${watchlistToEditName}`);
+
+            editWatchlistNameInput.value = watchlistToEditName;
+            // The delete icon in the modal should still be disabled if it's the last watchlist
+            const isDisabledDelete = userWatchlists.length <= 1;
+            setIconDisabled(deleteWatchlistInModalBtn, isDisabledDelete); 
+            console.log(`[Edit Watchlist] deleteWatchlistInModalBtn disabled: ${isDisabledDelete}`);
+            setIconDisabled(saveWatchlistNameBtn, false); // Enable save button initially
+            console.log("[Edit Watchlist] saveWatchlistNameBtn enabled initially.");
+            showModal(manageWatchlistModal);
+            editWatchlistNameInput.focus();
+            toggleAppSidebar(false);
+        });
+    }
+
+    // Event listener for editWatchlistNameInput to toggle saveWatchlistNameBtn
+    if (editWatchlistNameInput && saveWatchlistNameBtn) {
+        editWatchlistNameInput.addEventListener('input', () => {
+            const isDisabled = editWatchlistNameInput.value.trim() === '';
+            setIconDisabled(saveWatchlistNameBtn, isDisabled);
+        });
+    }
+
+    // Save Watchlist Name Button
     if (saveWatchlistNameBtn) {
-        saveWatchlistNameBtn.addEventListener('click', () => {
-            console.log("[UI] Save Watchlist Name button clicked.");
-            const currentWatchlistId = watchlistSelect.value; // Get ID from currently selected dropdown value
-            updateWatchlistName(currentWatchlistId, editWatchlistNameInput.value);
+        saveWatchlistNameBtn.addEventListener('click', async () => {
+            console.log("[Manage Watchlist Form] Save Watchlist Name button clicked.");
+            // Ensure button is not disabled before proceeding
+            if (saveWatchlistNameBtn.classList.contains('is-disabled-icon')) {
+                showCustomAlert("Watchlist name cannot be empty.");
+                console.warn("[Save Watchlist Name] Save button was disabled, preventing action.");
+                return;
+            }
+
+            // For editing, we need to pick ONE watchlist. Let's use the currently selected one.
+            let watchlistToEditId = watchlistSelect.value;
+
+            const newName = editWatchlistNameInput.value.trim();
+            if (!newName) {
+                showCustomAlert("Watchlist name cannot be empty!");
+                return;
+            }
+            if (userWatchlists.some(w => w.name.toLowerCase() === newName.toLowerCase() && w.id !== watchlistToEditId)) {
+                showCustomAlert("A watchlist with this name already exists!");
+                return;
+            }
+
+            try {
+                // Update the name in the in-memory userWatchlists array
+                const watchlistIndex = userWatchlists.findIndex(wl => wl.id === watchlistToEditId);
+                if (watchlistIndex > -1) {
+                    userWatchlists[watchlistIndex].name = newName;
+                    await saveUserSettings(); // Save the entire updated userWatchlists array to Firestore
+                } else {
+                    console.error(`[Firestore] Watchlist with ID ${watchlistToEditId} not found in memory for renaming.`);
+                    showCustomAlert("Error: Watchlist not found in memory.");
+                    return;
+                }
+
+                showCustomAlert(`Watchlist renamed to '${newName}'!`, 1500);
+                console.log(`[Firestore] Watchlist (ID: ${watchlistToEditId}) renamed to '${newName}'.`);
+                hideModal(manageWatchlistModal);
+                await loadUserWatchlistsAndSettings(); // This will re-render watchlists and trigger loadShares()
+            } catch (error) {
+                console.error("[Firestore] Error renaming watchlist:", error);
+                showCustomAlert("Error renaming watchlist: " + error.message);
+            }
         });
     }
 
-    // NEW: Add input listener for editWatchlistNameInput to enable/disable save button
-    if (editWatchlistNameInput) {
-        editWatchlistNameInput.addEventListener('input', updateSaveWatchlistNameButtonState);
-    }
+    // Delete Watchlist In Modal Button (No confirmation as per user request)
+    if (deleteWatchlistInModalBtn) {
+        deleteWatchlistInModalBtn.addEventListener('click', async () => {
+            console.log("[Manage Watchlist Form] Delete Watchlist button clicked (No Confirmation).");
+            // Ensure button is not disabled before proceeding
+            if (deleteWatchlistInModalBtn.classList.contains('is-disabled-icon')) {
+                console.warn("[Delete Watchlist In Modal] Delete button was disabled, preventing action.");
+                return; // Do nothing if visually disabled
+            }
 
-    // NEW: Add/Remove from Watchlist Modal Buttons
-    if (addToWatchlistCloseBtn) {
-        addToWatchlistCloseBtn.addEventListener('click', () => { hideModal(addToWatchlistModal); console.log("[UI] Add/Remove from Watchlist close button clicked."); });
-    }
-    if (cancelAddToWatchlistBtn) {
-        cancelAddToWatchlistBtn.addEventListener('click', () => { hideModal(addToWatchlistModal); console.log("[UI] Add/Remove from Watchlist cancel button clicked."); });
-    }
-    if (saveAddToWatchlistBtn) {
-        saveAddToWatchlistBtn.addEventListener('click', () => {
-            console.log("[UI] Save Add/Remove from Watchlist button clicked.");
-            handleAddToWatchlistSave();
+            // For deleting, we need to pick ONE watchlist. Let's use the currently selected one.
+            let watchlistToDeleteId = watchlistSelect.value;
+
+            if (!watchlistToDeleteId) {
+                showCustomAlert("No watchlist selected for deletion.");
+                return;
+            }
+            if (userWatchlists.length <= 1) {
+                showCustomAlert("Cannot delete the last watchlist. Please create another watchlist first.");
+                return;
+            }
+            if (watchlistToDeleteId === getDefaultWatchlistId(currentUserId)) {
+                showCustomAlert("The default watchlist cannot be deleted.");
+                return;
+            }
+
+            const watchlistToDeleteName = userWatchlists.find(w => w.id === watchlistToDeleteId)?.name || 'Unknown Watchlist';
+            
+            try {
+                const sharesColRef = window.firestore.collection(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`);
+                const q = window.firestore.query(sharesColRef, window.firestore.where("watchlistId", "==", watchlistToDeleteId));
+                const querySnapshot = await window.firestore.getDocs(q);
+
+                const batch = window.firestore.writeBatch(db);
+                querySnapshot.forEach(doc => {
+                    // Update shares to remove their watchlistId or reassign to default
+                    const shareRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, doc.id);
+                    batch.update(shareRef, { watchlistId: getDefaultWatchlistId(currentUserId) }); // Reassign shares to default watchlist
+                });
+                await batch.commit();
+                console.log(`[Firestore] Reassigned ${querySnapshot.docs.length} shares from deleted watchlist '${watchlistToDeleteName}' to default.`);
+
+                // Remove the watchlist from the in-memory array
+                userWatchlists = userWatchlists.filter(wl => wl.id !== watchlistToDeleteId);
+                
+                // If the deleted watchlist was selected, switch to the default watchlist
+                if (currentSelectedWatchlistIds.includes(watchlistToDeleteId)) {
+                    currentSelectedWatchlistIds = [getDefaultWatchlistId(currentUserId)];
+                }
+
+                await saveUserSettings(); // Save the updated userWatchlists array and selected IDs
+                console.log(`[Firestore] Watchlist '${watchlistToDeleteName}' (ID: ${watchlistToDeleteId}) deleted from settings.`);
+
+                showCustomAlert(`Watchlist '${watchlistToDeleteName}' deleted and its shares reassigned to default!`, 2000);
+                closeModals();
+
+                await loadUserWatchlistsAndSettings(); // Re-render watchlists and trigger loadShares()
+            } catch (error) {
+                console.error("[Firestore] Error deleting watchlist:", error);
+                showCustomAlert("Error deleting watchlist: " + error.message);
+            }
         });
     }
 
-
-    // Watchlist Select Change
-    if (watchlistSelect) {
-        watchlistSelect.addEventListener('change', async (event) => {
-            console.log("[UI] Watchlist selection changed.");
-            currentSelectedWatchlistIds = [event.target.value]; // Update selected ID
-            await saveUserSettings(); // Save preference
-            loadShares(); // Reload shares based on new selection
+    // Cancel Manage Watchlist Button
+    if (cancelManageWatchlistBtn) {
+        cancelManageWatchlistBtn.addEventListener('click', () => {
+            console.log("[Watchlist] Manage Watchlist canceled.");
+            hideModal(manageWatchlistModal);
+            editWatchlistNameInput.value = '';
         });
     }
 
-    // Sort Select Change
-    if (sortSelect) {
-        sortSelect.addEventListener('change', () => {
-            console.log("[UI] Sort selection changed.");
-            renderShareList(); // Re-render with new sort order
-        });
-    }
-
-    // Google Auth Button
-    if (googleAuthBtn) {
-        googleAuthBtn.addEventListener('click', handleGoogleSignIn);
-    }
-
-    // Logout Button
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', handleLogout);
-    }
-
-    // Dividend Calculator Modal Buttons/Inputs
+    // Dividend Calculator Button
     if (dividendCalcBtn) {
         dividendCalcBtn.addEventListener('click', () => {
-            console.log("[UI] Dividend Calculator button clicked.");
-            // Reset inputs
-            calcCurrentPriceInput.value = '';
-            calcDividendAmountInput.value = '';
-            calcFrankingCreditsInput.value = '';
-            investmentValueSelect.value = '10000'; // Default investment value
-            calculateAndDisplayDividends(); // Calculate with empty inputs to show '-'
+            console.log("[UI] Dividend button clicked. Attempting to open modal.");
+            calcDividendAmountInput.value = ''; calcCurrentPriceInput.value = ''; calcFrankingCreditsInput.value = '';
+            calcUnfrankedYieldSpan.textContent = '-'; calcFrankedYieldSpan.textContent = '-'; calcEstimatedDividend.textContent = '-';
+            investmentValueSelect.value = '10000';
             showModal(dividendCalculatorModal);
+            calcCurrentPriceInput.focus(); 
+            console.log("[UI] Dividend Calculator modal opened.");
+            toggleAppSidebar(false);
         });
     }
-    if (dividendCalcCloseBtn) {
-        dividendCalcCloseBtn.addEventListener('click', () => { hideModal(dividendCalculatorModal); console.log("[UI] Dividend Calculator close button clicked."); });
-    }
-    if (calcCurrentPriceInput) {
-        calcCurrentPriceInput.addEventListener('input', calculateAndDisplayDividends);
-    }
-    if (calcDividendAmountInput) {
-        calcDividendAmountInput.addEventListener('input', calculateAndDisplayDividends);
-    }
-    if (calcFrankingCreditsInput) {
-        calcFrankingCreditsInput.addEventListener('input', calculateAndDisplayDividends);
-    }
-    if (investmentValueSelect) {
-        investmentValueSelect.addEventListener('change', calculateAndDisplayDividends);
+
+    // Dividend Calculator Input Listeners
+    [calcDividendAmountInput, calcCurrentPriceInput, calcFrankingCreditsInput, investmentValueSelect].forEach(input => {
+        if (input) {
+            input.addEventListener('input', updateDividendCalculations);
+            input.addEventListener('change', updateDividendCalculations);
+        }
+    });
+
+    function updateDividendCalculations() {
+        const currentPrice = parseFloat(calcCurrentPriceInput.value);
+        const dividendAmount = parseFloat(calcDividendAmountInput.value);
+        const frankingCredits = parseFloat(calcFrankingCreditsInput.value);
+        const investmentValue = parseFloat(investmentValueSelect.value);
+        
+        const unfrankedYield = calculateUnfrankedYield(dividendAmount, currentPrice);
+        const frankedYield = calculateFrankedYield(dividendAmount, currentPrice, frankingCredits);
+        const estimatedDividend = estimateDividendIncome(investmentValue, dividendAmount, currentPrice);
+        
+        calcUnfrankedYieldSpan.textContent = unfrankedYield !== null ? `${unfrankedYield.toFixed(2)}%` : '-';
+        calcFrankedYieldSpan.textContent = frankedYield !== null ? `${frankedYield.toFixed(2)}%` : '-';
+        calcEstimatedDividend.textContent = estimatedDividend !== null ? `$${estimatedDividend.toFixed(2)}` : '-';
     }
 
-    // Standard Calculator Modal Buttons
+    // Standard Calculator Button
     if (standardCalcBtn) {
         standardCalcBtn.addEventListener('click', () => {
             console.log("[UI] Standard Calculator button clicked.");
-            // Reset calculator state
-            currentCalculatorInput = '';
-            operator = null;
-            previousCalculatorInput = '';
-            resultDisplayed = false;
-            calculatorInputDisplay.textContent = '';
-            calculatorResultDisplay.textContent = '0';
+            resetCalculator();
             showModal(calculatorModal);
+            console.log("[UI] Standard Calculator modal opened.");
+            toggleAppSidebar(false);
         });
     }
-    if (calculatorCloseBtn) {
-        calculatorCloseBtn.addEventListener('click', () => { hideModal(calculatorModal); console.log("[UI] Standard Calculator close button clicked."); });
-    }
+
+    // Calculator Buttons
     if (calculatorButtons) {
-        calculatorButtons.addEventListener('click', handleCalculatorButtonClick);
+        calculatorButtons.addEventListener('click', (event) => {
+            const target = event.target;
+            // Ensure the clicked element is a calculator button and not disabled
+            if (!target.classList.contains('calc-btn') || target.classList.contains('is-disabled-icon')) { return; }
+            const value = target.dataset.value;
+            const action = target.dataset.action;
+            if (value) { appendNumber(value); }
+            else if (action) { handleAction(action); }
+        });
+    }
+
+    function appendNumber(num) {
+        if (resultDisplayed) { currentCalculatorInput = num; resultDisplayed = false; }
+        else { if (num === '.' && currentCalculatorInput.includes('.')) return; currentCalculatorInput += num; }
+        updateCalculatorDisplay();
+    }
+
+    function handleAction(action) {
+        if (action === 'clear') { resetCalculator(); return; }
+        if (action === 'percentage') { 
+            if (currentCalculatorInput === '' && previousCalculatorInput === '') return;
+            let val;
+            if (currentCalculatorInput !== '') {
+                val = parseFloat(currentCalculatorInput);
+            } else if (previousCalculatorInput !== '') {
+                val = parseFloat(previousCalculatorInput);
+            } else {
+                return; // Should not happen if previous checks pass
+            }
+
+            if (isNaN(val)) return;
+
+            if (operator && previousCalculatorInput !== '') {
+                // If there's a pending operation, calculate percentage of the previous number
+                const prevNum = parseFloat(previousCalculatorInput);
+                if (isNaN(prevNum)) return;
+                currentCalculatorInput = (prevNum * (val / 100)).toString();
+            } else {
+                // Otherwise, just divide the current input by 100
+                currentCalculatorInput = (val / 100).toString();
+            }
+            resultDisplayed = false; // A new calculation has started or modified
+            updateCalculatorDisplay();
+            return; 
+        }
+        if (['add', 'subtract', 'multiply', 'divide'].includes(action)) {
+            if (currentCalculatorInput === '' && previousCalculatorInput === '') return;
+            if (currentCalculatorInput !== '') {
+                if (previousCalculatorInput !== '') { calculateResult(); previousCalculatorInput = calculatorResult.textContent; }
+                else { previousCalculatorInput = currentCalculatorInput; }
+            }
+            operator = action; currentCalculatorInput = ''; resultDisplayed = false; updateCalculatorDisplay(); return;
+        }
+        if (action === 'calculate') {
+            if (previousCalculatorInput === '' || currentCalculatorInput === '' || operator === null) { return; }
+            calculateResult(); operator = null; resultDisplayed = true;
+        }
     }
 
     // Theme Toggle Button
     if (themeToggleBtn) {
         themeToggleBtn.addEventListener('click', () => {
             console.log("[Theme] Theme toggle button clicked.");
-            if (currentActiveTheme === 'system-default') {
-                // If currently system-default, cycle to the first custom theme
-                currentCustomThemeIndex = 0;
-                applyTheme(CUSTOM_THEMES[currentCustomThemeIndex]);
+            currentCustomThemeIndex = (currentCustomThemeIndex + 1);
+            if (currentCustomThemeIndex >= CUSTOM_THEMES.length) {
+                currentCustomThemeIndex = -1;
+                applyTheme('system-default');
             } else {
-                // If a custom theme is active, cycle to the next custom theme
-                currentCustomThemeIndex = (currentCustomThemeIndex + 1) % CUSTOM_THEMES.length;
                 const nextTheme = CUSTOM_THEMES[currentCustomThemeIndex];
                 applyTheme(nextTheme);
             }
@@ -2351,6 +2716,21 @@ function initializeAppLogic() {
             }
         });
 
+        window.addEventListener('resize', () => {
+            console.log("[Window Resize] Resizing window. Closing sidebar if open.");
+            const isDesktop = window.innerWidth > 768;
+            if (appSidebar.classList.contains('open')) {
+                toggleAppSidebar(false); // Close sidebar on resize for consistency
+            }
+            if (scrollToTopBtn) {
+                if (window.innerWidth > 768) {
+                    scrollToTopBtn.style.display = 'none';
+                } else {
+                    window.dispatchEvent(new Event('scroll')); // Re-evaluate visibility on mobile
+                }
+            }
+        });
+
         // Menu buttons that should close the sidebar
         const menuButtons = appSidebar.querySelectorAll('.menu-button-item');
         menuButtons.forEach(button => {
@@ -2358,7 +2738,6 @@ function initializeAppLogic() {
                 console.log(`[Sidebar Menu Item Click] Button '${event.currentTarget.textContent.trim()}' clicked.`);
                 // Check if the data-action-closes-menu attribute is explicitly set to "false"
                 const closesMenu = event.currentTarget.dataset.actionClosesMenu !== 'false';
-                // console.log(`[Sidebar Menu Item Click] data-action-closes-menu: ${event.currentTarget.dataset.actionClosesMenu}, closesMenu: ${closesMenu}`);
                 if (closesMenu) {
                     toggleAppSidebar(false);
                 }
@@ -2379,12 +2758,12 @@ function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v160) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v150) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
         auth = window.firebaseAuth;
-        currentAppId = window.getFirebaseAppId(); // Get the appId from index.html
+        currentAppId = window.getFirebaseAppId();
         console.log("[Firebase Ready] DB, Auth, and AppId assigned from window. Setting up auth state listener.");
         
         window.authFunctions.onAuthStateChanged(auth, async (user) => {
@@ -2401,7 +2780,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.log("[AuthState] Main title set to My Share Watchlist.");
                 }
                 updateMainButtonsState(true);
-                await loadUserWatchlistsAndSettings(); // This will trigger the new migration logic
+                await loadUserWatchlistsAndSettings(); // This will set currentSelectedWatchlistIds and then call loadShares()
             } else {
                 currentUserId = null;
                 updateAuthButtonText(false);
@@ -2434,7 +2813,7 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error("[Firebase] Firebase objects (db, auth, appId, firestore, authFunctions) are not available on DOMContentLoaded. Firebase initialization likely failed in index.html.");
         const errorDiv = document.getElementById('firebaseInitError');
         if (errorDiv) {
-            error.style.display = 'block';
+            errorDiv.style.display = 'block';
         }
         updateAuthButtonText(false);
         updateMainButtonsState(false);
