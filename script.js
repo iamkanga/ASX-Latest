@@ -1,5 +1,5 @@
-// File Version: v158
-// Last Updated: 2025-07-08 (Fixed TypeError for live prices, re-checked comments box, re-checked button centering)
+// File Version: v159
+// Last Updated: 2025-07-08 (Complete file output, fixed live price TypeError, comments box visibility, Google Sign-in button styling, clear input defaults)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -239,8 +239,8 @@ function formatDateTime(dateString) {
 function updateAuthButtonText(isSignedIn, userName = 'Sign In') {
     if (googleAuthBtn) {
         // If signed in, show user name or "Signed In". If signed out, show "Google Sign In".
-        googleAuthBtn.textContent = isSignedIn ? (userName || 'Signed In') : 'Google Sign In';
-        console.log(`[Auth UI] Auth button text updated to: ${googleAuthBtn.textContent}`);
+        googleAuthBtn.querySelector('.button-text').textContent = isSignedIn ? (userName || 'Signed In') : 'Sign in with Google';
+        console.log(`[Auth UI] Auth button text updated to: ${googleAuthBtn.querySelector('.button-text').textContent}`);
     }
 }
 
@@ -378,7 +378,26 @@ function addCommentSection(title = '', text = '') {
 
 function clearForm() {
     formInputs.forEach(input => {
-        if (input) { input.value = ''; }
+        if (input) { 
+            // Set value to empty string for text inputs
+            if (input.type === 'text') {
+                input.value = '';
+            } 
+            // For number inputs, set to empty string and add focus/click listener to clear
+            else if (input.type === 'number') {
+                input.value = ''; // Start empty
+                // Add a one-time listener to clear on focus/click if not already empty
+                const clearOnFocus = () => {
+                    if (input.value === '0' || input.value === '0.00' || input.value === '0.0') {
+                        input.value = '';
+                    }
+                    input.removeEventListener('focus', clearOnFocus);
+                    input.removeEventListener('click', clearOnFocus);
+                };
+                input.addEventListener('focus', clearOnFocus);
+                input.addEventListener('click', clearOnFocus);
+            }
+        }
     });
     if (commentsFormContainer) {
         commentsFormContainer.innerHTML = '';
@@ -802,7 +821,7 @@ function addShareToTable(share) {
             touchStartX = event.touches[0].clientX;
             touchStartY = event.touches[0].clientY;
             longPressTimer = setTimeout(() => {
-                event.preventDefault(); // Prevent default browser context menu
+                event.preventDefault(); 
                 selectShare(share.id);
                 showContextMenu(event, share.id);
             }, LONG_PRESS_THRESHOLD);
@@ -841,8 +860,10 @@ function addShareToTable(share) {
 
     // NEW: Live Price Cell - Safely access item.Code and item.Price
     const livePriceCell = row.insertCell();
+    // Normalize share name for lookup (remove ASX: if present, ensure uppercase)
+    const normalizedShareName = share.shareName ? share.shareName.toUpperCase().replace('ASX:', '') : '';
     const livePriceItem = livePricesData.find(item => 
-        typeof item.Code === 'string' && item.Code.toUpperCase() === `ASX:${share.shareName.toUpperCase()}`
+        typeof item.Code === 'string' && item.Code.toUpperCase().replace('ASX:', '') === normalizedShareName
     );
     // Ensure Price is a number before using toFixed
     const livePrice = livePriceItem && typeof livePriceItem.Price === 'number' && !isNaN(livePriceItem.Price) ? livePriceItem.Price : undefined;
@@ -911,8 +932,9 @@ function addShareToMobileCards(share) {
     const displayEnteredPrice = (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? enteredPriceNum.toFixed(2) : '-';
 
     // NEW: Live Price for Mobile Cards - Safely access item.Code and item.Price
+    const normalizedShareName = share.shareName ? share.shareName.toUpperCase().replace('ASX:', '') : '';
     const livePriceItem = livePricesData.find(item => 
-        typeof item.Code === 'string' && item.Code.toUpperCase() === `ASX:${share.shareName.toUpperCase()}`
+        typeof item.Code === 'string' && item.Code.toUpperCase().replace('ASX:', '') === normalizedShareName
     );
     const livePrice = livePriceItem && typeof livePriceItem.Price === 'number' && !isNaN(livePriceItem.Price) ? livePriceItem.Price : undefined;
     const displayLivePrice = livePrice !== undefined ? `$${Number(livePrice).toFixed(2)}` : '-';
@@ -1769,8 +1791,9 @@ function exportWatchlistToCSV() {
         }
 
         // Get live price for export - Safely access item.Code and item.Price
+        const normalizedShareName = share.shareName ? share.shareName.toUpperCase().replace('ASX:', '') : '';
         const livePriceItem = livePricesData.find(item => 
-            typeof item.Code === 'string' && item.Code.toUpperCase() === `ASX:${share.shareName.toUpperCase()}`
+            typeof item.Code === 'string' && item.Code.toUpperCase().replace('ASX:', '') === normalizedShareName
         );
         const exportLivePrice = livePriceItem && typeof livePriceItem.Price === 'number' && !isNaN(livePriceItem.Price) ? Number(livePriceItem.Price).toFixed(2) : '';
 
@@ -1940,7 +1963,7 @@ async function initializeAppLogic() {
                     console.log("[Auth] Google Sign-In successful.");
                 }
                 catch (error) {
-                    console.error("[Auth] Google Sign-In failed:", error.message); // Log full error object
+                    console.error("[Auth] Google Sign-In failed:", error); // Log full error object
                     showCustomAlert("Google Sign-In failed: " + error.message);
                 }
             }
@@ -2701,7 +2724,7 @@ async function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v158) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v159) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
