@@ -1,5 +1,5 @@
-/* File Version: v85 */
-/* Last Updated: 2025-07-08 (Fixed bold theme text color, comments display, calculator percentage) */
+/* File Version: v83 */
+/* Last Updated: 2025-07-08 (Sign-in button centering, Bold theme text color, Disabled button styling) */
 
 :root {
     /* Light Theme (Default) */
@@ -113,137 +113,143 @@ body.dark-theme {
 }
 
 /* Custom Themes */
-/* Bold Themes - Updated for better consistency and white text */
+/* Bold Themes */
 body.theme-bold-1 { /* Ocean Blue */
-    --background-color: #001f3f; /* Darker navy */
-    --text-color: #ffffff; /* All white text */
-    --header-bg: #003366; /* Deeper blue */
-    --card-bg: #004080; /* Medium blue */
-    --border-color: #0056b3; /* Slightly lighter blue */
-    --button-bg: #007bff; /* Standard blue */
-    --button-hover-bg: #0056b3;
-    --input-bg: #004080;
-    --input-border: #0056b3;
-    --input-placeholder-color: #a8d1ff;
-    --modal-content-bg: #004080;
-    --table-header-bg: #003366;
-    --table-row-hover-bg: #0056b3;
-    --asx-button-bg: #003366;
-    --asx-button-hover-bg: #0056b3;
-    --asx-button-active-bg: #007bff;
-    --sidebar-bg: #004080;
-    --sidebar-border: #0056b3;
+    --background-color: #1a2a3a;
+    --text-color: #e0f2f7;
+    --header-bg: #005f73;
+    --card-bg: #0a475a;
+    --border-color: #008793;
+    --button-bg: #00b4d8;
+    --button-hover-bg: #0096c7;
+    --input-bg: #0a475a;
+    --input-border: #008793;
+    --input-placeholder-color: #8ecae6;
+    --modal-content-bg: #0a475a;
+    --table-header-bg: #005f73;
+    --table-row-hover-bg: #008793;
+    --asx-button-bg: #005f73;
+    --asx-button-hover-bg: #008793;
+    --asx-button-active-bg: #00b4d8;
+    --sidebar-bg: #0a475a;
+    --sidebar-border: #008793;
     --menu-button-bg: transparent;
-    --menu-button-hover-bg: #004080;
-    --placeholder-text: #a8d1ff;
-    --ghosted-text: #c0e0ff;
-    --danger-button-bg: #dc3545;
-    --danger-button-hover-bg: #c82333;
-    --secondary-button-bg: #6c757d; /* Keep original secondary for contrast */
-    --secondary-button-hover-bg: #545b62;
-    --google-auth-btn-bg: #dd4b39;
-    --google-auth-btn-hover-bg: #c23321;
-    --label-color: #e0f2f7; /* Light label color */
-    --shadow-color: rgba(0, 0, 0, 0.4);
-    --close-sidebar-btn-color: #ffffff;
-    --icon-action-color: #007bff;
-    --icon-action-hover-color: #0056b3;
-    --icon-danger-color: #dc3545;
-    --icon-danger-hover-color: #c82333;
-    --calc-num-btn-bg: #0056b3;
-    --calc-num-btn-text: #ffffff;
-    --calc-num-btn-hover-bg: #007bff;
+    --menu-button-hover-bg: #0a475a;
+    --placeholder-text: #8ecae6;
+    --ghosted-text: #a8dadc;
+    --danger-button-bg: #e63946;
+    --danger-button-hover-bg: #c02d38;
+    --icon-action-color: #00b4d8;
+    --icon-action-hover-color: #0096c7;
+    --icon-danger-color: #e63946;
+    --icon-danger-hover-color: #c02d38;
+    --calc-num-btn-bg: #007f8c;
+    --calc-num-btn-text: #e0f2f7;
+    --calc-num-btn-hover-bg: #0096c7;
+    /* Force all text to white for bold themes */
+    color: #fff !important;
+    --text-color: #fff;
+    --asx-button-text: #fff;
+    --sidebar-text: #fff;
+    --label-color: #ccc;
+    --input-placeholder-color: #aaa;
+    --ghosted-text: #bbb;
+    --close-sidebar-btn-color: #ccc;
 }
 
 body.theme-bold-2 { /* Forest Green */
-    --background-color: #1a3a1a; /* Darker green */
-    --text-color: #ffffff; /* All white text */
-    --header-bg: #228b22; /* Medium forest green */
-    --card-bg: #3cb371; /* Tealish green */
-    --border-color: #4caf50; /* Slightly lighter green */
-    --button-bg: #28a745; /* Standard green */
-    --button-hover-bg: #218838;
-    --input-bg: #3cb371;
-    --input-border: #4caf50;
-    --input-placeholder-color: #a0e0a0;
-    --modal-content-bg: #3cb371;
-    --table-header-bg: #228b22;
-    --table-row-hover-bg: #4caf50;
-    --asx-button-bg: #228b22;
-    --asx-button-hover-bg: #4caf50;
-    --asx-button-active-bg: #28a745;
-    --sidebar-bg: #3cb371;
-    --sidebar-border: #4caf50;
+    --background-color: #2d422d;
+    --text-color: #e6ffe6;
+    --header-bg: #386641;
+    --card-bg: #4a754a;
+    --border-color: #6a9955;
+    --button-bg: #a7c957;
+    --button-hover-bg: #8ba84a;
+    --input-bg: #4a754a;
+    --input-border: #6a9955;
+    --input-placeholder-color: #c0d8b6;
+    --modal-content-bg: #4a754a;
+    --table-header-bg: #386641;
+    --table-row-hover-bg: #6a9955;
+    --asx-button-bg: #386641;
+    --asx-button-hover-bg: #6a9955;
+    --asx-button-active-bg: #a7c957;
+    --sidebar-bg: #4a754a;
+    --sidebar-border: #6a9955;
     --menu-button-bg: transparent;
-    --menu-button-hover-bg: #3cb371;
-    --placeholder-text: #a0e0a0;
-    --ghosted-text: #b0f0b0;
-    --danger-button-bg: #dc3545;
-    --danger-button-hover-bg: #c82333;
-    --secondary-button-bg: #6c757d;
-    --secondary-button-hover-bg: #545b62;
-    --google-auth-btn-bg: #dd4b39;
-    --google-auth-btn-hover-bg: #c23321;
-    --label-color: #e6ffe6;
-    --shadow-color: rgba(0, 0, 0, 0.4);
-    --close-sidebar-btn-color: #ffffff;
-    --icon-action-color: #28a745;
-    --icon-action-hover-color: #218838;
-    --icon-danger-color: #dc3545;
-    --icon-danger-hover-color: #c82333;
-    --calc-num-btn-bg: #4caf50;
-    --calc-num-btn-text: #ffffff;
-    --calc-num-btn-hover-bg: #28a745;
+    --menu-button-hover-bg: #4a754a;
+    --placeholder-text: #c0d8b6;
+    --ghosted-text: #d4e3c9;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #a7c957;
+    --icon-action-hover-color: #8ba84a;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #5a855a;
+    --calc-num-btn-text: #e6ffe6;
+    --calc-num-btn-hover-bg: #6a9955;
+    /* Force all text to white for bold themes */
+    color: #fff !important;
+    --text-color: #fff;
+    --asx-button-text: #fff;
+    --sidebar-text: #fff;
+    --label-color: #ccc;
+    --input-placeholder-color: #aaa;
+    --ghosted-text: #bbb;
+    --close-sidebar-btn-color: #ccc;
 }
 
-body.theme-bold-3 { /* Sunset Orange/Red */
-    --background-color: #3a1a1a; /* Dark red-brown */
-    --text-color: #ffffff; /* All white text */
-    --header-bg: #8b0000; /* Dark red */
-    --card-bg: #a52a2a; /* Brownish red */
-    --border-color: #cd5c5c; /* Indian red */
-    --button-bg: #dc143c; /* Crimson */
-    --button-hover-bg: #b22222;
-    --input-bg: #a52a2a;
-    --input-border: #cd5c5c;
-    --input-placeholder-color: #ffb3b3;
-    --modal-content-bg: #a52a2a;
-    --table-header-bg: #8b0000;
-    --table-row-hover-bg: #cd5c5c;
-    --asx-button-bg: #8b0000;
-    --asx-button-hover-bg: #cd5c5c;
-    --asx-button-active-bg: #dc143c;
-    --sidebar-bg: #a52a2a;
-    --sidebar-border: #cd5c5c;
+body.theme-bold-3 { /* Sunset Orange */
+    --background-color: #3b2a20;
+    --text-color: #fff8e1;
+    --header-bg: #e63946;
+    --card-bg: #f4a261;
+    --border-color: #e76f51;
+    --button-bg: #ffc300;
+    --button-hover-bg: #e0ac00;
+    --input-bg: #f4a261;
+    --input-border: #e76f51;
+    --input-placeholder-color: #ffe5b4;
+    --modal-content-bg: #f4a261;
+    --table-header-bg: #e63946;
+    --table-row-hover-bg: #e76f51;
+    --asx-button-bg: #e63946;
+    --asx-button-hover-bg: #e76f51;
+    --asx-button-active-bg: #ffc300;
+    --sidebar-bg: #f4a261;
+    --sidebar-border: #e76f51;
     --menu-button-bg: transparent;
-    --menu-button-hover-bg: #a52a2a;
-    --placeholder-text: #ffb3b3;
-    --ghosted-text: #ffcccc;
-    --danger-button-bg: #dc3545;
-    --danger-button-hover-bg: #c82333;
-    --secondary-button-bg: #6c757d;
-    --secondary-button-hover-bg: #545b62;
-    --google-auth-btn-bg: #dd4b39;
-    --google-auth-btn-hover-bg: #c23321;
-    --label-color: #ffe6e6;
-    --shadow-color: rgba(0, 0, 0, 0.4);
-    --close-sidebar-btn-color: #ffffff;
-    --icon-action-color: #dc143c;
-    --icon-action-hover-color: #b22222;
-    --icon-danger-color: #dc3545;
-    --icon-danger-hover-color: #c82333;
-    --calc-num-btn-bg: #cd5c5c;
-    --calc-num-btn-text: #ffffff;
-    --calc-num-btn-hover-bg: #dc143c;
+    --menu-button-hover-bg: #f4a261;
+    --placeholder-text: #ffe5b4;
+    --ghosted-text: #ffd790;
+    --danger-button-bg: #e63946;
+    --danger-button-hover-bg: #c02d38;
+    --icon-action-color: #ffc300;
+    --icon-action-hover-color: #e0ac00;
+    --icon-danger-color: #e63946;
+    --icon-danger-hover-color: #c02d38;
+    --calc-num-btn-bg: #f7b98d;
+    --calc-num-btn-text: #3b2a20;
+    --calc-num-btn-hover-bg: #f4a261;
+    /* Force all text to white for bold themes */
+    color: #fff !important;
+    --text-color: #fff;
+    --asx-button-text: #fff;
+    --sidebar-text: #fff;
+    --label-color: #ccc;
+    --input-placeholder-color: #aaa;
+    --ghosted-text: #bbb;
+    --close-sidebar-btn-color: #ccc;
 }
 
 body.theme-bold-4 { /* Royal Purple */
-    --background-color: #2a1a3a; /* Darker purple */
-    --text-color: #ffffff; /* All white text */
-    --header-bg: #5a189a; /* Deep purple */
-    --card-bg: #7b2cbf; /* Amethyst */
-    --border-color: #9d4edd; /* Medium purple */
-    --button-bg: #c77dff; /* Light purple */
+    --background-color: #2a1a3a;
+    --text-color: #f0e6ff;
+    --header-bg: #5a189a;
+    --card-bg: #7b2cbf;
+    --border-color: #9d4edd;
+    --button-bg: #c77dff;
     --button-hover-bg: #a842ff;
     --input-bg: #7b2cbf;
     --input-border: #9d4edd;
@@ -260,114 +266,120 @@ body.theme-bold-4 { /* Royal Purple */
     --menu-button-hover-bg: #7b2cbf;
     --placeholder-text: #e0baff;
     --ghosted-text: #e8d0ff;
-    --danger-button-bg: #dc3545;
-    --danger-button-hover-bg: #c82333;
-    --secondary-button-bg: #6c757d;
-    --secondary-button-hover-bg: #545b62;
-    --google-auth-btn-bg: #dd4b39;
-    --google-auth-btn-hover-bg: #c23321;
-    --label-color: #f0e6ff;
-    --shadow-color: rgba(0, 0, 0, 0.4);
-    --close-sidebar-btn-color: #ffffff;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
     --icon-action-color: #c77dff;
     --icon-action-hover-color: #a842ff;
-    --icon-danger-color: #dc3545;
-    --icon-danger-hover-color: #c82333;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
     --calc-num-btn-bg: #9d4edd;
-    --calc-num-btn-text: #ffffff;
+    --calc-num-btn-text: #f0e6ff;
     --calc-num-btn-hover-bg: #c77dff;
+    /* Force all text to white for bold themes */
+    color: #fff !important;
+    --text-color: #fff;
+    --asx-button-text: #fff;
+    --sidebar-text: #fff;
+    --label-color: #ccc;
+    --input-placeholder-color: #aaa;
+    --ghosted-text: #bbb;
+    --close-sidebar-btn-color: #ccc;
 }
 
-body.theme-bold-5 { /* Grape */
-    --background-color: #3a1a2a; /* Dark reddish-purple */
-    --text-color: #ffffff; /* All white text */
-    --header-bg: #6a004a; /* Dark magenta */
-    --card-bg: #9932cc; /* Dark orchid */
-    --border-color: #ba55d3; /* Medium orchid */
-    --button-bg: #da70d6; /* Orchid */
-    --button-hover-bg: #c71585;
-    --input-bg: #9932cc;
-    --input-border: #ba55d3;
-    --input-placeholder-color: #ffb3e0;
-    --modal-content-bg: #9932cc;
-    --table-header-bg: #6a004a;
-    --table-row-hover-bg: #ba55d3;
-    --asx-button-bg: #6a004a;
-    --asx-button-hover-bg: #ba55d3;
-    --asx-button-active-bg: #da70d6;
-    --sidebar-bg: #9932cc;
-    --sidebar-border: #ba55d3;
+body.theme-bold-5 { /* Deep Red */
+    --background-color: #3a1a1a;
+    --text-color: #ffe6e6;
+    --header-bg: #8b0000;
+    --card-bg: #a02020;
+    --border-color: #c0392b;
+    --button-bg: #e74c3c;
+    --button-hover-bg: #c0392b;
+    --input-bg: #a02020;
+    --input-border: #c0392b;
+    --input-placeholder-color: #ffbaba;
+    --modal-content-bg: #a02020;
+    --table-header-bg: #8b0000;
+    --table-row-hover-bg: #c0392b;
+    --asx-button-bg: #8b0000;
+    --asx-button-hover-bg: #c0392b;
+    --asx-button-active-bg: #e74c3c;
+    --sidebar-bg: #a02020;
+    --sidebar-border: #c0392b;
     --menu-button-bg: transparent;
-    --menu-button-hover-bg: #9932cc;
-    --placeholder-text: #ffb3e0;
-    --ghosted-text: #ffcced;
-    --danger-button-bg: #dc3545;
-    --danger-button-hover-bg: #c82333;
-    --secondary-button-bg: #6c757d;
-    --secondary-button-hover-bg: #545b62;
-    --google-auth-btn-bg: #dd4b39;
-    --google-auth-btn-hover-bg: #c23321;
-    --label-color: #ffe6f0;
-    --shadow-color: rgba(0, 0, 0, 0.4);
-    --close-sidebar-btn-color: #ffffff;
-    --icon-action-color: #da70d6;
-    --icon-action-hover-color: #c71585;
-    --icon-danger-color: #dc3545;
-    --icon-danger-hover-color: #c82333;
-    --calc-num-btn-bg: #ba55d3;
-    --calc-num-btn-text: #ffffff;
-    --calc-num-btn-hover-bg: #da70d6;
+    --menu-button-hover-bg: #a02020;
+    --placeholder-text: #ffbaba;
+    --ghosted-text: #ffcccc;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #e74c3c;
+    --icon-action-hover-color: #c0392b;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #c0392b;
+    --calc-num-btn-text: #ffe6e6;
+    --calc-num-btn-hover-bg: #e74c3c;
+    /* Force all text to white for bold themes */
+    color: #fff !important;
+    --text-color: #fff;
+    --asx-button-text: #fff;
+    --sidebar-text: #fff;
+    --label-color: #ccc;
+    --input-placeholder-color: #aaa;
+    --ghosted-text: #bbb;
+    --close-sidebar-btn-color: #ccc;
 }
 
-body.theme-bold-6 { /* Fire */
-    --background-color: #3a1a00; /* Very dark orange-brown */
-    --text-color: #ffffff; /* All white text */
-    --header-bg: #b8860b; /* Dark goldenrod */
-    --card-bg: #daa520; /* Goldenrod */
-    --border-color: #ffd700; /* Gold */
-    --button-bg: #ffc107; /* Amber */
-    --button-hover-bg: #e0a800;
+body.theme-bold-6 { /* Gold */
+    --background-color: #3b301a;
+    --text-color: #fff8e0;
+    --header-bg: #b8860b;
+    --card-bg: #daa520;
+    --border-color: #ffd700;
+    --button-bg: #ffeb3b;
+    --button-hover-bg: #fdd835;
     --input-bg: #daa520;
     --input-border: #ffd700;
-    --input-placeholder-color: #ffeeaa;
+    --input-placeholder-color: #ffee99;
     --modal-content-bg: #daa520;
     --table-header-bg: #b8860b;
     --table-row-hover-bg: #ffd700;
     --asx-button-bg: #b8860b;
     --asx-button-hover-bg: #ffd700;
-    --asx-button-active-bg: #ffc107;
+    --asx-button-active-bg: #ffeb3b;
     --sidebar-bg: #daa520;
     --sidebar-border: #ffd700;
     --menu-button-bg: transparent;
     --menu-button-hover-bg: #daa520;
-    --placeholder-text: #ffeeaa;
-    --ghosted-text: #fff2c0;
-    --danger-button-bg: #dc3545;
-    --danger-button-hover-bg: #c82333;
-    --secondary-button-bg: #6c757d;
-    --secondary-button-hover-bg: #545b62;
-    --google-auth-btn-bg: #dd4b39;
-    --google-auth-btn-hover-bg: #c23321;
-    --label-color: #fff8e0;
-    --shadow-color: rgba(0, 0, 0, 0.4);
-    --close-sidebar-btn-color: #ffffff;
-    --icon-action-color: #ffc107;
-    --icon-action-hover-color: #e0a800;
-    --icon-danger-color: #dc3545;
-    --icon-danger-hover-color: #c82333;
+    --placeholder-text: #ffee99;
+    --ghosted-text: #fff2c4;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #ffeb3b;
+    --icon-action-hover-color: #fdd835;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
     --calc-num-btn-bg: #ffd700;
-    --calc-num-btn-text: #ffffff;
-    --calc-num-btn-hover-bg: #ffc107;
+    --calc-num-btn-text: #3b301a;
+    --calc-num-btn-hover-bg: #ffeb3b;
+    /* Force all text to white for bold themes */
+    color: #fff !important;
+    --text-color: #fff;
+    --asx-button-text: #fff;
+    --sidebar-text: #fff;
+    --label-color: #ccc;
+    --input-placeholder-color: #aaa;
+    --ghosted-text: #bbb;
+    --close-sidebar-btn-color: #ccc;
 }
 
 body.theme-bold-7 { /* Emerald */
-    --background-color: #003322; /* Dark teal-green */
-    --text-color: #ffffff; /* All white text */
-    --header-bg: #006400; /* Dark green */
-    --card-bg: #228b22; /* Forest green */
-    --border-color: #3cb371; /* Medium sea green */
-    --button-bg: #28a745; /* Standard green */
-    --button-hover-bg: #218838;
+    --background-color: #1a3a2a;
+    --text-color: #e6fff0;
+    --header-bg: #006400;
+    --card-bg: #228b22;
+    --border-color: #3cb371;
+    --button-bg: #66bb6a;
+    --button-hover-bg: #4caf50;
     --input-bg: #228b22;
     --input-border: #3cb371;
     --input-placeholder-color: #99ffaa;
@@ -376,42 +388,43 @@ body.theme-bold-7 { /* Emerald */
     --table-row-hover-bg: #3cb371;
     --asx-button-bg: #006400;
     --asx-button-hover-bg: #3cb371;
-    --asx-button-active-bg: #28a745;
+    --asx-button-active-bg: #66bb6a;
     --sidebar-bg: #228b22;
     --sidebar-border: #3cb371;
     --menu-button-bg: transparent;
     --menu-button-hover-bg: #228b22;
     --placeholder-text: #99ffaa;
     --ghosted-text: #ccffdd;
-    --danger-button-bg: #dc3545;
-    --danger-button-hover-bg: #c82333;
-    --secondary-button-bg: #6c757d;
-    --secondary-button-hover-bg: #545b62;
-    --google-auth-btn-bg: #dd4b39;
-    --google-auth-btn-hover-bg: #c23321;
-    --label-color: #e6fff0;
-    --shadow-color: rgba(0, 0, 0, 0.4);
-    --close-sidebar-btn-color: #ffffff;
-    --icon-action-color: #28a745;
-    --icon-action-hover-color: #218838;
-    --icon-danger-color: #dc3545;
-    --icon-danger-hover-color: #c82333;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #66bb6a;
+    --icon-action-hover-color: #4caf50;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
     --calc-num-btn-bg: #3cb371;
-    --calc-num-btn-text: #ffffff;
-    --calc-num-btn-hover-bg: #28a745;
+    --calc-num-btn-text: #e6fff0;
+    --calc-num-btn-hover-bg: #66bb6a;
+    /* Force all text to white for bold themes */
+    color: #fff !important;
+    --text-color: #fff;
+    --asx-button-text: #fff;
+    --sidebar-text: #fff;
+    --label-color: #ccc;
+    --input-placeholder-color: #aaa;
+    --ghosted-text: #bbb;
+    --close-sidebar-btn-color: #ccc;
 }
 
 body.theme-bold-8 { /* Plum */
-    --background-color: #2a0a2a; /* Very dark purple */
-    --text-color: #ffffff; /* All white text */
-    --header-bg: #800080; /* Purple */
-    --card-bg: #9932cc; /* Dark orchid */
-    --border-color: #ba55d3; /* Medium orchid */
-    --button-bg: #da70d6; /* Orchid */
+    --background-color: #3a1a3a;
+    --text-color: #ffe6ff;
+    --header-bg: #800080;
+    --card-bg: #9932cc;
+    --border-color: #ba55d3;
+    --button-bg: #da70d6;
     --button-hover-bg: #c71585;
     --input-bg: #9932cc;
     --input-border: #ba55d3;
-    --input-placeholder-color: #ffb3ff;
     --modal-content-bg: #9932cc;
     --table-header-bg: #800080;
     --table-row-hover-bg: #ba55d3;
@@ -424,35 +437,36 @@ body.theme-bold-8 { /* Plum */
     --menu-button-hover-bg: #9932cc;
     --placeholder-text: #ffb3ff;
     --ghosted-text: #ffccff;
-    --danger-button-bg: #dc3545;
-    --danger-button-hover-bg: #c82333;
-    --secondary-button-bg: #6c757d;
-    --secondary-button-hover-bg: #545b62;
-    --google-auth-btn-bg: #dd4b39;
-    --google-auth-btn-hover-bg: #c23321;
-    --label-color: #ffe6ff;
-    --shadow-color: rgba(0, 0, 0, 0.4);
-    --close-sidebar-btn-color: #ffffff;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
     --icon-action-color: #da70d6;
     --icon-action-hover-color: #c71585;
-    --icon-danger-color: #dc3545;
-    --icon-danger-hover-color: #c82333;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
     --calc-num-btn-bg: #ba55d3;
-    --calc-num-btn-text: #ffffff;
+    --calc-num-btn-text: #ffe6ff;
     --calc-num-btn-hover-bg: #da70d6;
+    /* Force all text to white for bold themes */
+    color: #fff !important;
+    --text-color: #fff;
+    --asx-button-text: #fff;
+    --sidebar-text: #fff;
+    --label-color: #ccc;
+    --input-placeholder-color: #aaa;
+    --ghosted-text: #bbb;
+    --close-sidebar-btn-color: #ccc;
 }
 
 body.theme-bold-9 { /* Aqua */
-    --background-color: #002a2a; /* Very dark cyan */
-    --text-color: #ffffff; /* All white text */
-    --header-bg: #008b8b; /* Dark cyan */
-    --card-bg: #00ced1; /* Dark turquoise */
-    --border-color: #40e0d0; /* Turquoise */
-    --button-bg: #20b2aa; /* Light sea green */
+    --background-color: #1a3a3a;
+    --text-color: #e6ffff;
+    --header-bg: #008b8b;
+    --card-bg: #00ced1;
+    --border-color: #40e0d0;
+    --button-bg: #20b2aa;
     --button-hover-bg: #008080;
     --input-bg: #00ced1;
     --input-border: #40e0d0;
-    --input-placeholder-color: #99ffff;
     --modal-content-bg: #00ced1;
     --table-header-bg: #008b8b;
     --table-row-hover-bg: #40e0d0;
@@ -465,35 +479,36 @@ body.theme-bold-9 { /* Aqua */
     --menu-button-hover-bg: #00ced1;
     --placeholder-text: #99ffff;
     --ghosted-text: #ccffff;
-    --danger-button-bg: #dc3545;
-    --danger-button-hover-bg: #c82333;
-    --secondary-button-bg: #6c757d;
-    --secondary-button-hover-bg: #545b62;
-    --google-auth-btn-bg: #dd4b39;
-    --google-auth-btn-hover-bg: #c23321;
-    --label-color: #e6ffff;
-    --shadow-color: rgba(0, 0, 0, 0.4);
-    --close-sidebar-btn-color: #ffffff;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
     --icon-action-color: #20b2aa;
     --icon-action-hover-color: #008080;
-    --icon-danger-color: #dc3545;
-    --icon-danger-hover-color: #c82333;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
     --calc-num-btn-bg: #40e0d0;
-    --calc-num-btn-text: #ffffff;
+    --calc-num-btn-text: #e6ffff;
     --calc-num-btn-hover-bg: #20b2aa;
+    /* Force all text to white for bold themes */
+    color: #fff !important;
+    --text-color: #fff;
+    --asx-button-text: #fff;
+    --sidebar-text: #fff;
+    --label-color: #ccc;
+    --input-placeholder-color: #aaa;
+    --ghosted-text: #bbb;
+    --close-sidebar-btn-color: #ccc;
 }
 
-body.theme-bold-10 { /* Ruby Red */
-    --background-color: #3a0a0a; /* Very dark red */
-    --text-color: #ffffff; /* All white text */
-    --header-bg: #8b0000; /* Dark red */
-    --card-bg: #a52a2a; /* Brownish red */
-    --border-color: #cd5c5c; /* Indian red */
-    --button-bg: #dc143c; /* Crimson */
+body.theme-bold-10 { /* Ruby */
+    --background-color: #3a1a2a;
+    --text-color: #ffe6f0;
+    --header-bg: #8b0000;
+    --card-bg: #a52a2a;
+    --border-color: #cd5c5c;
+    --button-bg: #dc143c;
     --button-hover-bg: #b22222;
     --input-bg: #a52a2a;
     --input-border: #cd5c5c;
-    --input-placeholder-color: #ffb3b3;
     --modal-content-bg: #a52a2a;
     --table-header-bg: #8b0000;
     --table-row-hover-bg: #cd5c5c;
@@ -504,24 +519,26 @@ body.theme-bold-10 { /* Ruby Red */
     --sidebar-border: #cd5c5c;
     --menu-button-bg: transparent;
     --menu-button-hover-bg: #a52a2a;
-    --placeholder-text: #ffb3b3;
-    --ghosted-text: #ffcccc;
-    --danger-button-bg: #dc3545;
-    --danger-button-hover-bg: #c82333;
-    --secondary-button-bg: #6c757d;
-    --secondary-button-hover-bg: #545b62;
-    --google-auth-btn-bg: #dd4b39;
-    --google-auth-btn-hover-bg: #c23321;
-    --label-color: #ffe6e6;
-    --shadow-color: rgba(0, 0, 0, 0.4);
-    --close-sidebar-btn-color: #ffffff;
+    --placeholder-text: #ffb3c6;
+    --ghosted-text: #ffcce0;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
     --icon-action-color: #dc143c;
     --icon-action-hover-color: #b22222;
-    --icon-danger-color: #dc3545;
-    --icon-danger-hover-color: #c82333;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
     --calc-num-btn-bg: #cd5c5c;
-    --calc-num-btn-text: #ffffff;
+    --calc-num-btn-text: #ffe6f0;
     --calc-num-btn-hover-bg: #dc143c;
+    /* Force all text to white for bold themes */
+    color: #fff !important;
+    --text-color: #fff;
+    --asx-button-text: #fff;
+    --sidebar-text: #fff;
+    --label-color: #ccc;
+    --input-placeholder-color: #aaa;
+    --ghosted-text: #bbb;
+    --close-sidebar-btn-color: #ccc;
 }
 
 
@@ -1364,7 +1381,7 @@ table tbody tr:not(.selected):hover {
     align-items: center;
     gap: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    margin: 0 auto; 
+    /* Removed margin: 0 auto; and left/right/transform for mobile centering */
 }
 
 .google-auth-btn:hover {
@@ -2109,6 +2126,8 @@ table tbody tr:not(.selected):hover {
         position: relative; 
         left: 0; 
         right: 0;
+        width: 100%; 
+        box-sizing: border-box; 
     }
     table {
         display: none;
@@ -2152,6 +2171,7 @@ table tbody tr:not(.selected):hover {
     }
 
     .google-auth-btn {
+        /* Centering on mobile */
         margin: 0 auto; 
         left: unset; 
         right: unset; 
@@ -2303,19 +2323,5 @@ table tbody tr:not(.selected):hover {
         left: var(--mouse-x, 0);
         transform: none;
         bottom: auto;
-    }
-}
-
-@media (min-width: 1024px) {
-    header {
-        padding: 20px 30px;
-    }
-    h1#mainTitle {
-        font-size: 2.5em;
-    }
-    .container {
-        padding: 0 20px;
-    }
-    .app-sidebar {
     }
 }
