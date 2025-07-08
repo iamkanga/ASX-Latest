@@ -2434,7 +2434,7 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error("[Firebase] Firebase objects (db, auth, appId, firestore, authFunctions) are not available on DOMContentLoaded. Firebase initialization likely failed in index.html.");
         const errorDiv = document.getElementById('firebaseInitError');
         if (errorDiv) {
-            errorDiv.style.display = 'block';
+            error.style.display = 'block';
         }
         updateAuthButtonText(false);
         updateMainButtonsState(false);
