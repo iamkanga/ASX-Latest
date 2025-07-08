@@ -1,4 +1,4 @@
-// File Version: v158 (Added Add/Remove from Watchlist feature, fixed KANGA_EMAIL typo)
+// File Version: v160 (Fixed ASX code button to open Share Details Modal)
 // Last Updated: 2025-07-07
 
 // This script interacts with Firebase Firestore for data storage.
@@ -567,7 +567,7 @@ async function handleGoogleSignIn() {
         const result = await window.authFunctions.signInWithPopup(auth, provider);
         // User signed in successfully. onAuthStateChanged listener handles UI updates.
         console.log("[Auth] Google Sign-in successful:", result.user.uid);
-        showToastMessage(`Welcome, ${result.user.displayName || result.user.email}!`, 3000);
+        // Removed: showToastMessage(`Welcome, ${result.user.displayName || result.user.email}!`, 3000);
     } catch (error) {
         console.error("[Auth] Google Sign-in error:", error);
         let errorMessage = "Sign-in failed. Please try again.";
@@ -1191,9 +1191,9 @@ function renderShareList() {
     }
 
     if (sortedShares.length === 0) {
-        shareTableBody.innerHTML = '<tr><td colspan="5" class="no-shares-message">No shares added yet. Click the "+" button to add one!</td></tr>';
-        mobileShareCardsContainer.innerHTML = '<div class="no-shares-message">No shares added yet. Click the "+" button to add one!</div>';
-        return;
+        // Removed: shareTableBody.innerHTML = '<tr><td colspan="5" class="no-shares-message">No shares added yet. Click the "+" button to add one!</td></tr>';
+        // Removed: mobileShareCardsContainer.innerHTML = '<div class="no-shares-message">No shares added yet. Click the "+" button to add one!</div>';
+        return; // No content if no shares
     }
 
     sortedShares.forEach(share => {
@@ -1314,7 +1314,8 @@ function updateAsxCodeButtons() {
         // Remove active from all others
         asxCodeButtonsContainer.querySelectorAll('.asx-code-btn').forEach(btn => btn.classList.remove('active'));
         allButton.classList.add('active');
-        filterSharesByAsxCode('ALL'); // Explicitly filter by 'ALL'
+        // When 'All' is clicked, we just re-render the full list of shares
+        renderShareList(); 
         console.log("[ASX Buttons] 'All' button clicked.");
     });
 
@@ -1330,8 +1331,15 @@ function updateAsxCodeButtons() {
             // Remove active from all others
             asxCodeButtonsContainer.querySelectorAll('.asx-code-btn').forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
-            filterSharesByAsxCode(code);
-            console.log(`[ASX Buttons] Button for code '${code}' clicked.`);
+            
+            // NEW BEHAVIOR: Open Share Details Modal for the first share with this code
+            const firstShare = allSharesData.find(share => share.shareName === code);
+            if (firstShare) {
+                showShareDetails(firstShare.id);
+                console.log(`[ASX Buttons] Opened details for share: ${firstShare.id} from code button.`);
+            } else {
+                showToastMessage(`No details found for share code: ${code}`, 2000);
+            }
         });
     });
     console.log("[UI] ASX code buttons updated.");
@@ -1342,6 +1350,8 @@ function updateAsxCodeButtons() {
  * @param {string} code - The ASX code to filter by.
  */
 function filterSharesByAsxCode(code) {
+    // This function is no longer directly used by ASX code buttons for filtering.
+    // It's kept for potential future use if a filtering-only mode is desired.
     if (code === 'ALL') {
         renderShareList(); // Re-render all shares
     } else {
@@ -1361,6 +1371,7 @@ function filterSharesByAsxCode(code) {
 /**
  * Shows a modal by setting its display style to 'block'.
  * @param {HTMLElement} modalElement - The modal element to show.
+ * @param {boolean} [isShareDetailModal=false] - Flag to indicate if it's the share detail modal.
  */
 function showModal(modalElement) {
     if (modalElement) {
@@ -1492,6 +1503,8 @@ function showShareDetails(shareId) {
         return;
     }
 
+    selectedShareDocId = shareId; // Ensure selectedShareDocId is set for the "Add to Watchlist" button
+
     modalShareName.textContent = share.shareName || 'N/A';
     modalEntryDate.textContent = formatDate(share.entryDate);
     modalEnteredPrice.textContent = formatCurrency(share.currentPrice);
@@ -1531,10 +1544,13 @@ function showShareDetails(shareId) {
         populateShareFormForEdit(share.id);
     };
     deleteShareFromDetailBtn.onclick = () => deleteShare(share.id);
-    addToWatchlistBtn.onclick = () => { // NEW: Add to watchlist button handler
-        hideModal(shareDetailModal);
-        showAddToWatchlistModal(share.id);
-    };
+    if (addToWatchlistBtn) { // Ensure button exists before attaching listener
+        addToWatchlistBtn.onclick = () => { // NEW: Add to watchlist button handler
+            hideModal(shareDetailModal);
+            showAddToWatchlistModal(share.id);
+        };
+    }
+
 
     showModal(shareDetailModal);
     console.log(`[Details] Displaying details for share: ${shareId}`);
@@ -1736,10 +1752,13 @@ function handleContextMenu(event, shareId) {
         hideContextMenu();
         deleteShare(shareId);
     };
-    contextAddToWatchlistBtn.onclick = () => { // NEW: Context menu add to watchlist
-        hideContextMenu();
-        showAddToWatchlistModal(shareId);
-    };
+    if (contextAddToWatchlistBtn) { // Ensure button exists before attaching listener
+        contextAddToWatchlistBtn.onclick = () => { // NEW: Context menu add to watchlist
+            hideContextMenu();
+            showAddToWatchlistModal(shareId);
+        };
+    }
+
 
     console.log(`[Context Menu] Displayed for share: ${shareId}`);
 }
@@ -2279,7 +2298,7 @@ function initializeAppLogic() {
                     scrollToTopBtn.style.display = 'flex';
                     scrollToTopBtn.style.opacity = '1';
                 } else {
-                    scrollToToPBtn.style.opacity = '0';
+                    scrollToTopBtn.style.opacity = '0';
                     setTimeout(() => {
                         scrollToTopBtn.style.display = 'none';
                     }, 300);
@@ -2360,7 +2379,7 @@ function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v158) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v160) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
