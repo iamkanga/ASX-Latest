@@ -1,5 +1,5 @@
-/* File Version: v104 */
-/* Last Updated: 2025-07-09 (Refresh button vertical alignment fixed) */
+/* File Version: v105 */
+/* Last Updated: 2025-07-09 (Refresh button vertical alignment fixed, general cleanup) */
 
 :root {
     /* Light Theme (Default) */
@@ -148,7 +148,7 @@ body.theme-bold-1 { /* Ocean Blue */
     --icon-action-color: #00b4d8;
     --icon-action-hover-color: #0096c7;
     --icon-danger-color: #e63946;
-    --icon-danger-hover-color: #c02d38;
+    --icon-danger-hover-color: #c0392b;
     --calc-num-btn-bg: #007f8c;
     --calc-num-btn-text: #fff; /* Force white text */
     --calc-num-btn-hover-bg: #0096c7;
@@ -957,8 +957,7 @@ h1#mainTitle {
 /* Specific positioning for the refresh button */
 .header-action-btn.refresh-btn-offset {
     right: 50px; /* Adjust this value as needed to position it next to the plus button */
-    /* Ensure vertical alignment is centered */
-    top: 50%;
+    top: 50%; /* Ensure vertical alignment is centered */
     transform: translateY(-50%);
 }
 

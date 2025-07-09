@@ -1,5 +1,5 @@
 // File Version: v165
-// Last Updated: 2025-07-09 (Fixed modal opening, live price lookup, franking credits input, redundant save alert, refresh button positioning)
+// Last Updated: 2025-07-09 (Fixed modal opening, live price lookup, franking credits input, redundant save alert, refresh button positioning, and critical SyntaxError)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -310,20 +310,41 @@ function closeModals() {
             if (isEditableModal) {
                 // For share form, trigger saveShareFormData if it's not already saved
                 if (modal.id === 'shareFormSection') {
-                    saveShareFormData(); // This function handles dirty check internally
+                    // Only auto-save if the form is dirty AND share name is valid
+                    const currentFormData = getCurrentFormData();
+                    const isShareNameValid = currentFormData.shareName.trim() !== '';
+                    const isDirty = selectedShareDocId ? !areShareDataEqual(originalShareData, currentFormData) : isShareNameValid;
+                    
+                    if (isDirty) {
+                        saveShareFormData(); // This function handles dirty check internally
+                    } else {
+                        console.log("[Auto-Save] Skipping save: Share form not dirty.");
+                    }
                 } else if (modal.id === 'addWatchlistModal') {
-                    // For add watchlist, save only if name is entered
+                    // For add watchlist, save only if name is entered and it's not a duplicate
                     if (newWatchlistNameInput && newWatchlistNameInput.value.trim() !== '') {
-                        saveWatchlistData(); // Call a dedicated save for watchlist
+                        const watchlistName = newWatchlistNameInput.value.trim();
+                        if (!userWatchlists.some(w => w.name.toLowerCase() === watchlistName.toLowerCase())) {
+                            saveWatchlistData();
+                        } else {
+                            console.log("[Auto-Save] Skipping save: Add Watchlist form not dirty or duplicate name.");
+                        }
+                    } else {
+                         console.log("[Auto-Save] Skipping save: Add Watchlist form empty.");
                     }
                 } else if (modal.id === 'manageWatchlistModal') {
                     // For manage watchlist, save only if name is changed
                     const currentName = editWatchlistNameInput.value.trim();
                     const selectedWatchlistObj = userWatchlists.find(w => w.id === watchlistSelect.value);
                     if (selectedWatchlistObj && currentName !== selectedWatchlistObj.name) {
-                        saveEditedWatchlistName(); // Call a dedicated save for edited watchlist name
+                        saveEditedWatchlistName();
+                    } else {
+                        console.log("[Auto-Save] Skipping save: Manage Watchlist form not dirty.");
                     }
                 }
+            } else if (modal.id === 'dividendCalculatorModal' || modal.id === 'calculatorModal') {
+                // For calculators, do NOT show a "saved" alert on close.
+                console.log(`[Auto-Save] Calculator modal (${modal.id}) closed, no save alert.`);
             }
             modal.style.setProperty('display', 'none', 'important');
         }
@@ -1747,7 +1768,21 @@ async function migrateOldSharesToWatchlist() {
                 needsUpdate = true;
                 updatePayload.shareName = String(shareData.name).trim();
                 updatePayload.name = window.firestore.deleteField();
-                console.log(`[Migration] Share '${doc.id}': Converted ${field} from string '${value}' (type ${originalValueType}) to number ${parsedValue}.`);
+                console.log(`[Migration] Share '${doc.id}' missing 'shareName' but has 'name' ('${shareData.name}'). Migrating 'name' to 'shareName'.`);
+            }
+            const fieldsToConvert = ['currentPrice', 'targetPrice', 'dividendAmount', 'frankingCredits', 'entryPrice', 'lastFetchedPrice', 'previousFetchedPrice'];
+            fieldsToConvert.forEach(field => {
+                const value = shareData[field];
+                const originalValueType = typeof value;
+                let parsedValue = value;
+                if (originalValueType === 'string' && value.trim() !== '') {
+                    parsedValue = parseFloat(value);
+                    if (!isNaN(parsedValue)) {
+                        if (originalValueType !== typeof parsedValue || value !== String(parsedValue)) {
+                            needsUpdate = true;
+                            updatePayload[field] = parsedValue;
+                            console.log(`[Migration] Share '${doc.id}': Converted ${field} from string '${value}' (type ${originalValueType}) to number ${parsedValue}.`);
+                        }
                     } else {
                         needsUpdate = true;
                         updatePayload[field] = null;
@@ -2083,15 +2118,17 @@ async function initializeAppLogic() {
         }
     });
 
-    // Add Comment Section Button
+    // Add Comment Section Button (Re-implementation)
+    // Remove existing event listener if any to prevent duplicates
     if (addCommentSectionBtn) {
-        // Ensure addCommentSectionBtn is never disabled by default
-        setIconDisabled(addCommentSectionBtn, false);
+        addCommentSectionBtn.removeEventListener('click', addCommentSection); // Remove old listener if it exists
         addCommentSectionBtn.addEventListener('click', () => {
             addCommentSection();
             checkFormDirtyState(); // Check dirty state after adding a comment section
         });
+        setIconDisabled(addCommentSectionBtn, false); // Ensure it's enabled by default
     }
+
 
     // Global click listener to close modals/context menu if clicked outside
     window.addEventListener('click', (event) => {
@@ -2760,7 +2797,7 @@ async function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v163) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v165) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
