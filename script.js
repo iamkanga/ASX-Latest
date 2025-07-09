@@ -1,5 +1,5 @@
-// File Version: v160
-// Last Updated: 2025-07-08 (Complete file output, fixed live price TypeError, comments box visibility, Google Sign-in button styling, clear input defaults, numerical input bold, remove number input arrows, live price color, new Google Sheet URL)
+// File Version: v161
+// Last Updated: 2025-07-09 (Fixed Google Sign-in button 'G' logo, Dividend Calculator display, modal input clearing, and updated Google Sheet URL)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -49,7 +49,7 @@ let savedSortOrder = null; // GLOBAL: Stores the sort order loaded from user set
 let savedTheme = null; // GLOBAL: Stores the theme loaded from user settings
 
 // Google Sheet Live Price Integration Variables
-const GOOGLE_SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbwWRS8RbfLasIjWtDpY3HhrxfmdaBA3SQt3CXTtNIFQgJMW-lNdankJtWQn4M0_zP7X/exec'; // UPDATED URL
+const GOOGLE_SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbwjuU2ZE1rCe4kiHT7WD-7CALkB0pg-zxkizz0xMIrhKxCBlKEp-YoMiUK85BQ2dHnZ/exec'; // UPDATED URL
 let livePricesData = []; // Stores live prices fetched from Google Sheet
 
 
@@ -64,10 +64,10 @@ const standardCalcBtn = document.getElementById('standardCalcBtn');
 const dividendCalcBtn = document.getElementById('dividendCalcBtn');
 const asxCodeButtonsContainer = document.getElementById('asxCodeButtonsContainer');
 const shareFormSection = document.getElementById('shareFormSection');
-const formCloseButton = document.querySelector('.form-close-button');
+// const formCloseButton = document.querySelector('.form-close-button'); // Removed 'X' button
 const formTitle = document.getElementById('formTitle');
 const saveShareBtn = document.getElementById('saveShareBtn');
-const cancelFormBtn = document.getElementById('cancelFormBtn');
+// const cancelFormBtn = document.getElementById('cancelFormBtn'); // Removed Cancel button
 const deleteShareBtn = document.getElementById('deleteShareBtn');
 const shareNameInput = document.getElementById('shareName');
 const currentPriceInput = document.getElementById('currentPrice');
@@ -86,7 +86,7 @@ const modalEntryDate = document.getElementById('modalEntryDate');
 const modalEnteredPrice = document.getElementById('modalEnteredPrice');
 const modalTargetPrice = document.getElementById('modalTargetPrice');
 const modalDividendAmount = document.getElementById('modalDividendAmount');
-const modalFrankingCredits = document.getElementById('frankingCredits');
+const modalFrankingCredits = document.getElementById('modalFrankingCredits'); // Corrected ID
 const modalCommentsContainer = document.getElementById('modalCommentsContainer');
 const modalUnfrankedYieldSpan = document.getElementById('modalUnfrankedYield');
 const modalFrankedYieldSpan = document.getElementById('modalFrankedYield');
@@ -98,10 +98,10 @@ const modalFoolLink = document.getElementById('modalFoolLink');
 const modalCommSecLink = document.getElementById('modalCommSecLink');
 const commSecLoginMessage = document.getElementById('commSecLoginMessage');
 const dividendCalculatorModal = document.getElementById('dividendCalculatorModal');
-const calcCloseButton = document.querySelector('.calc-close-button');
+// const calcCloseButton = document.querySelector('.calc-close-button'); // Removed 'X' button
 const calcCurrentPriceInput = document.getElementById('calcCurrentPrice');
 const calcDividendAmountInput = document.getElementById('calcDividendAmount');
-const calcFrankingCreditsInput = document.getElementById('calcFrankingCredits');
+const calcFrankingCreditsInput = document.getElementById('frankingCredits'); // Corrected ID for calculator's franking input
 const calcUnfrankedYieldSpan = document.getElementById('calcUnfrankedYield');
 const calcFrankedYieldSpan = document.getElementById('calcFrankedYield');
 const investmentValueSelect = document.getElementById('investmentValueSelect');
@@ -129,12 +129,12 @@ const editWatchlistBtn = document.getElementById('editWatchlistBtn');
 const addWatchlistModal = document.getElementById('addWatchlistModal');
 const newWatchlistNameInput = document.getElementById('newWatchlistName');
 const saveWatchlistBtn = document.getElementById('saveWatchlistBtn'); // Now a span
-const cancelAddWatchlistBtn = document.getElementById('cancelAddWatchlistBtn'); // Now a span
+// const cancelAddWatchlistBtn = document.getElementById('cancelAddWatchlistBtn'); // Removed Cancel button
 const manageWatchlistModal = document.getElementById('manageWatchlistModal');
 const editWatchlistNameInput = document.getElementById('editWatchlistName');
 const saveWatchlistNameBtn = document.getElementById('saveWatchlistNameBtn'); // Now a span
 const deleteWatchlistInModalBtn = document.getElementById('deleteWatchlistInModalBtn'); // Now a span
-const cancelManageWatchlistBtn = document.getElementById('cancelManageWatchlistBtn'); // Now a span
+// const cancelManageWatchlistBtn = document.getElementById('cancelManageWatchlistBtn'); // Removed Cancel button
 const shareContextMenu = document.getElementById('shareContextMenu');
 const contextEditShareBtn = document.getElementById('contextEditShareBtn');
 const contextDeleteShareBtn = document.getElementById('contextDeleteShareBtn');
@@ -240,9 +240,20 @@ function updateAuthButtonText(isSignedIn, userName = 'Sign In') {
     if (googleAuthBtn) {
         // If signed in, show user name or "Signed In". If signed out, show "Sign in with Google".
         const buttonTextSpan = googleAuthBtn.querySelector('.button-text');
+        const googleGIcon = googleAuthBtn.querySelector('.google-g-icon');
+
         if (buttonTextSpan) {
             buttonTextSpan.textContent = isSignedIn ? (userName || 'Signed In') : 'Sign in with Google';
             console.log(`[Auth UI] Auth button text updated to: ${buttonTextSpan.textContent}`);
+        }
+
+        // Ensure the SVG is visible/hidden correctly
+        if (googleGIcon) {
+            if (isSignedIn || !isSignedIn) { // Always show the G icon
+                googleGIcon.style.display = 'block';
+            } else {
+                googleGIcon.style.display = 'none';
+            }
         }
     }
 }
@@ -1143,12 +1154,12 @@ function renderWatchlist() {
         addShareToMobileCards(share); 
     });
     if (selectedShareDocId) {
-         const stillExists = sharesToRender.some(share => share.id === selectedShareDocId);
-         if (stillExists) {
+        const stillExists = sharesToRender.some(share => share.id === selectedShareDocId);
+        if (stillExists) {
             selectShare(selectedShareDocId);
-         } else {
+        } else {
             deselectCurrentShare();
-         }
+        }
     }
     console.log("[Render] Watchlist rendering complete.");
 }
@@ -1355,7 +1366,7 @@ function getDefaultWatchlistId(userId) {
 
 async function saveLastSelectedWatchlistIds(watchlistIds) {
     if (!db || !currentUserId || !window.firestore) {
-        console.warn("[Watchlist] Cannot save last selected watchlists: DB, User ID, or Firestore functions not available.");
+        console.warn("[Watchlist] Cannot save last selected watchlists: DB, User ID, or Firestore functions not available. Skipping save.");
         return;
     }
     const userProfileDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/profile/settings`);
@@ -1437,7 +1448,7 @@ async function loadUserWatchlistsAndSettings() {
             );
             // If "Show All Shares" was selected, ensure it's still valid (i.e., there are watchlists)
             if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID) && userWatchlists.length === 0) {
-                 currentSelectedWatchlistIds = []; // Cannot show all if there are none
+                currentSelectedWatchlistIds = []; // Cannot show all if there are none
             }
             if (currentSelectedWatchlistIds.length === 0) { // If after filtering, nothing is selected
                 currentSelectedWatchlistIds = [userWatchlists[0].id]; // Default to the first watchlist
@@ -1940,6 +1951,19 @@ async function initializeAppLogic() {
         if (input) {
             input.addEventListener('input', checkFormDirtyState);
             input.addEventListener('change', checkFormDirtyState); // For number inputs, etc.
+            // Add focus listener to clear input value if it's '0' or '0.00'
+            input.addEventListener('focus', function() {
+                if (this.type === 'number' && (this.value === '0' || this.value === '0.00' || this.value === '0.000')) {
+                    this.value = '';
+                }
+            });
+            // Add blur listener to re-format if empty after focus
+            input.addEventListener('blur', function() {
+                if (this.type === 'number' && this.value === '') {
+                    // Optionally, you could set it back to a default like '0.00' if desired,
+                    // but the request is to leave it empty. So, no action here.
+                }
+            });
         }
     });
 
@@ -1979,8 +2003,8 @@ async function initializeAppLogic() {
         });
     }
 
-    // Close buttons for modals
-    document.querySelectorAll('.close-button').forEach(button => { button.addEventListener('click', closeModals); });
+    // Close buttons for modals (No 'X' close buttons now, only click outside)
+    // document.querySelectorAll('.close-button').forEach(button => { button.addEventListener('click', closeModals); });
 
     // Global click listener to close modals/context menu if clicked outside
     window.addEventListener('click', (event) => {
@@ -2153,8 +2177,8 @@ async function initializeAppLogic() {
                 // Assign to the currently selected watchlist from the dropdown.
                 // If no watchlist is selected (e.g., placeholder), default to the first available watchlist.
                 watchlistId: (watchlistSelect && watchlistSelect.value && watchlistSelect.value !== "") 
-                             ? watchlistSelect.value 
-                             : (userWatchlists.length > 0 ? userWatchlists[0].id : getDefaultWatchlistId(currentUserId)),
+                               ? watchlistSelect.value 
+                               : (userWatchlists.length > 0 ? userWatchlists[0].id : getDefaultWatchlistId(currentUserId)),
                 lastPriceUpdateTime: new Date().toISOString()
             };
 
@@ -2194,10 +2218,10 @@ async function initializeAppLogic() {
         });
     }
 
-    // Cancel Form Button
-    if (cancelFormBtn) {
-        cancelFormBtn.addEventListener('click', () => { console.log("[Form] Form canceled."); clearForm(); hideModal(shareFormSection); });
-    }
+    // Removed Cancel Form Button event listener as the button is removed from HTML
+    // if (cancelFormBtn) {
+    //     cancelFormBtn.addEventListener('click', () => { console.log("[Form] Form canceled."); clearForm(); hideModal(shareFormSection); });
+    // }
 
     // Delete Share Button (No confirmation as per user request)
     if (deleteShareBtn) {
@@ -2366,14 +2390,14 @@ async function initializeAppLogic() {
         });
     }
 
-    // Cancel Add Watchlist Button
-    if (cancelAddWatchlistBtn) {
-        cancelAddWatchlistBtn.addEventListener('click', () => {
-            console.log("[Watchlist] Add Watchlist canceled.");
-            hideModal(addWatchlistModal);
-            if (newWatchlistNameInput) newWatchlistNameInput.value = '';
-        });
-    }
+    // Removed Cancel Add Watchlist Button event listener as the button is removed from HTML
+    // if (cancelAddWatchlistBtn) {
+    //     cancelAddWatchlistBtn.addEventListener('click', () => {
+    //         console.log("[Watchlist] Add Watchlist canceled.");
+    //         hideModal(addWatchlistModal);
+    //         if (newWatchlistNameInput) newWatchlistNameInput.value = '';
+    //     });
+    // }
 
     // Edit Watchlist Button
     if (editWatchlistBtn) {
@@ -2498,24 +2522,30 @@ async function initializeAppLogic() {
         });
     }
 
-    // Cancel Manage Watchlist Button
-    if (cancelManageWatchlistBtn) {
-        cancelManageWatchlistBtn.addEventListener('click', () => {
-            console.log("[Watchlist] Manage Watchlist canceled.");
-            hideModal(manageWatchlistModal);
-            editWatchlistNameInput.value = '';
-        });
-    }
+    // Removed Cancel Manage Watchlist Button event listener as the button is removed from HTML
+    // if (cancelManageWatchlistBtn) {
+    //     cancelManageWatchlistBtn.addEventListener('click', () => {
+    //         console.log("[Watchlist] Manage Watchlist canceled.");
+    //         hideModal(manageWatchlistModal);
+    //         editWatchlistNameInput.value = '';
+    //     });
+    // }
 
     // Dividend Calculator Button
     if (dividendCalcBtn) {
         dividendCalcBtn.addEventListener('click', () => {
             console.log("[UI] Dividend button clicked. Attempting to open modal.");
-            calcDividendAmountInput.value = ''; calcCurrentPriceInput.value = ''; calcFrankingCreditsInput.value = '';
-            calcUnfrankedYieldSpan.textContent = '-'; calcFrankedYieldSpan.textContent = '-'; calcEstimatedDividend.textContent = '-';
-            investmentValueSelect.value = '10000';
+            // Clear and reset inputs for the calculator
+            if (calcDividendAmountInput) calcDividendAmountInput.value = '';
+            if (calcCurrentPriceInput) calcCurrentPriceInput.value = '';
+            if (calcFrankingCreditsInput) calcFrankingCreditsInput.value = '';
+            if (calcUnfrankedYieldSpan) calcUnfrankedYieldSpan.textContent = '-';
+            if (calcFrankedYieldSpan) calcFrankedYieldSpan.textContent = '-';
+            if (calcEstimatedDividend) calcEstimatedDividend.textContent = '-';
+            if (investmentValueSelect) investmentValueSelect.value = '10000'; // Reset to default investment value
+            
             showModal(dividendCalculatorModal);
-            calcCurrentPriceInput.focus(); 
+            if (calcCurrentPriceInput) calcCurrentPriceInput.focus(); 
             console.log("[UI] Dividend Calculator modal opened.");
             toggleAppSidebar(false);
         });
@@ -2526,6 +2556,12 @@ async function initializeAppLogic() {
         if (input) {
             input.addEventListener('input', updateDividendCalculations);
             input.addEventListener('change', updateDividendCalculations);
+            // Add focus listener to clear input value if it's '0' or '0.00'
+            input.addEventListener('focus', function() {
+                if (this.type === 'number' && (this.value === '0' || this.value === '0.00' || this.value === '0.000')) {
+                    this.value = '';
+                }
+            });
         }
     });
 
@@ -2535,7 +2571,7 @@ async function initializeAppLogic() {
         const frankingCredits = parseFloat(calcFrankingCreditsInput.value);
         const investmentValue = parseFloat(investmentValueSelect.value);
         
-        const unfrankedYield = calculateUnfrankedYield(dividendAmount, currentPrice);
+        const unfrankedYield = calculateUnfrankedYield(dividendAmount, currentPrice); 
         const frankedYield = calculateFrankedYield(dividendAmount, currentPrice, frankingCredits);
         const estimatedDividend = estimateDividendIncome(investmentValue, dividendAmount, currentPrice);
         
@@ -2603,7 +2639,12 @@ async function initializeAppLogic() {
             return; 
         }
         if (['add', 'subtract', 'multiply', 'divide'].includes(action)) {
-            if (currentCalculatorInput === '' && previousCalculatorInput === '') return;
+            if (currentCalculatorInput === '' && previousCalculatorInput === '') {
+                // If no input and no previous result, but an operator is pressed, assume 0
+                if (previousCalculatorInput === '') {
+                    previousCalculatorInput = '0';
+                }
+            }
             if (currentCalculatorInput !== '') {
                 if (previousCalculatorInput !== '') { calculateResult(); previousCalculatorInput = calculatorResult.textContent; }
                 else { previousCalculatorInput = currentCalculatorInput; }
@@ -2789,7 +2830,7 @@ async function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v160) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v161) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
