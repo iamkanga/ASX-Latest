@@ -1,5 +1,5 @@
-/* File Version: v92 */
-/* Last Updated: 2025-07-09 (Fixed Google Sign-in button 'G' logo visibility and potential visual quirks) */
+/* File Version: v93 */
+/* Last Updated: 2025-07-09 (Fixed Google Sign-in button 'G' logo visibility and yellow artifact) */
 
 :root {
     /* Light Theme (Default) */
@@ -108,7 +108,7 @@ body.dark-theme {
     --close-sidebar-btn-color: #bbb;
     --icon-action-color: #3498db; /* Dark theme action icon color */
     --icon-action-hover-color: #2980b9;
-    --icon-danger-color: #e74c3c; /* Dark theme danger icon color */
+    --icon-danger-color: #e74c3c;
     --icon-danger-hover-color: #c0392b;
     --calc-num-btn-bg: #5a758e; /* Dark: Calculator number button background */
     --calc-num-btn-text: #ecf0f1; /* Dark: Calculator number button text */
@@ -1379,7 +1379,7 @@ table tbody tr:not(.selected):hover {
     width: fit-content;
     max-width: 100%;
     height: 40px; /* Standard Google button height */
-    overflow: hidden; /* Hide anything outside */
+    overflow: hidden; /* Ensure content outside is clipped */
 }
 
 /* Ensure no focus outline causes unexpected visuals */
@@ -1405,7 +1405,7 @@ table tbody tr:not(.selected):hover {
 }
 
 .google-icon-wrapper {
-    background-color: #fff;
+    background-color: #fff; /* Explicitly white background for the icon area */
     padding: 0; /* Remove padding from wrapper */
     height: 100%; /* Fill button height */
     width: 40px; /* Fixed width for icon area */
@@ -1414,6 +1414,7 @@ table tbody tr:not(.selected):hover {
     justify-content: center; /* Center horizontally */
     border-right: 1px solid #dadce0; /* Separator line */
     flex-shrink: 0; /* Prevent wrapper from shrinking below its width */
+    overflow: hidden; /* Ensure anything overflowing this wrapper is clipped */
 }
 
 /* Style for the Google 'G' SVG icon */
@@ -1421,7 +1422,9 @@ table tbody tr:not(.selected):hover {
     width: 18px; /* Standard Google icon size */
     height: 18px;
     display: block; /* Ensure it behaves as a block element within flex */
-    /* vertical-align: middle; Removed as flexbox handles alignment */
+    /* Remove any fill or stroke properties that might be overriding the SVG's internal colors */
+    fill: currentColor; /* Inherit color from parent, though SVG paths have explicit colors */
+    stroke: none; /* Ensure no stroke is applied */
 }
 
 .google-auth-btn .button-text {
@@ -1432,7 +1435,10 @@ table tbody tr:not(.selected):hover {
     line-height: 40px; /* Match button height for vertical centering */
     color: #4285F4; /* Ensure text color is Google Blue */
     /* Add a subtle text shadow to prevent the "yellow fill" if it was a rendering artifact */
-    text-shadow: 0 0 1px rgba(0,0,0,0.01); 
+    text-shadow: 0 0 1px rgba(0,0,0,0.01);
+    /* Explicitly set background properties to prevent bleed */
+    background-color: transparent;
+    background-image: none;
 }
 
 
