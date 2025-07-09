@@ -1,5 +1,5 @@
-// File Version: v162
-// Last Updated: 2025-07-09 (Google Sign-in button simplified, Dividend Calculator fixed, modal input clearing, auto-save on modal close)
+// File Version: v163
+// Last Updated: 2025-07-09 (Google Sign-in button simplified, Dividend Calculator fixed, modal input clearing, auto-save on modal close, refresh button positioning)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -244,6 +244,62 @@ async function saveShareFormData() {
     }
 }
 
+// Helper function for saving new watchlist (for auto-save and explicit save)
+async function saveWatchlistData() {
+    const watchlistName = newWatchlistNameInput.value.trim();
+    if (!watchlistName) {
+        showCustomAlert("Watchlist name is required!");
+        return;
+    }
+    if (userWatchlists.some(w => w.name.toLowerCase() === watchlistName.toLowerCase())) {
+        showCustomAlert("A watchlist with this name already exists!");
+        return;
+    }
+
+    try {
+        const watchlistsColRef = window.firestore.collection(db, `artifacts/${currentAppId}/users/${currentUserId}/watchlists`);
+        const newWatchlistRef = await window.firestore.addDoc(watchlistsColRef, {
+            name: watchlistName,
+            createdAt: new Date().toISOString(),
+            userId: currentUserId
+        });
+        showCustomAlert(`Watchlist '${watchlistName}' added!`, 1500);
+        console.log(`[Firestore] Watchlist '${watchlistName}' added with ID: ${newWatchlistRef.id}`);
+        
+        currentSelectedWatchlistIds = [newWatchlistRef.id];
+        await saveLastSelectedWatchlistIds(currentSelectedWatchlistIds);
+        await loadUserWatchlistsAndSettings(); // This will re-render watchlists and trigger loadShares()
+    } catch (error) {
+        console.error("[Firestore] Error adding watchlist:", error);
+        showCustomAlert("Error adding watchlist: " + error.message);
+    }
+}
+
+// Helper function for saving edited watchlist name (for auto-save and explicit save)
+async function saveEditedWatchlistName() {
+    let watchlistToEditId = watchlistSelect.value;
+    const newName = editWatchlistNameInput.value.trim();
+    if (!newName) {
+        showCustomAlert("Watchlist name cannot be empty!");
+        return;
+    }
+    if (userWatchlists.some(w => w.name.toLowerCase() === newName.toLowerCase() && w.id !== watchlistToEditId)) {
+        showCustomAlert("A watchlist with this name already exists!");
+        return;
+    }
+
+    try {
+        const watchlistDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/watchlists`, watchlistToEditId);
+        await window.firestore.updateDoc(watchlistDocRef, { name: newName });
+        showCustomAlert(`Watchlist renamed to '${newName}'!`, 1500);
+        console.log(`[Firestore] Watchlist (ID: ${watchlistToEditId}) renamed to '${newName}'.`);
+        await loadUserWatchlistsAndSettings(); // This will re-render watchlists and trigger loadShares()
+    } catch (error) {
+        console.error("[Firestore] Error renaming watchlist:", error);
+        showCustomAlert("Error renaming watchlist: " + error.message);
+    }
+}
+
 
 // Centralized Modal Closing Function
 function closeModals() {
@@ -319,11 +375,8 @@ function formatDateTime(dateString) {
 function updateAuthButtonText(isSignedIn, userName = 'Sign In') {
     if (googleAuthBtn) {
         const buttonTextSpan = googleAuthBtn.querySelector('.button-text');
-        // The SVG is now removed, so no need to manage its display here.
-        // The text will simply take its place.
-
         if (buttonTextSpan) {
-            buttonTextSpan.textContent = isSignedIn ? (userName || 'Signed In') : 'Sign in with Google';
+            buttonTextSpan.textContent = isSignedIn ? (userName || 'Signed In') : 'Sign In with Google';
             console.log(`[Auth UI] Auth button text updated to: ${buttonTextSpan.textContent}`);
         }
     }
@@ -1012,9 +1065,9 @@ function addShareToTable(share) {
     const commentsCell = row.insertCell();
     let commentsText = '';
     if (share.comments && Array.isArray(share.comments) && share.comments.length > 0 && share.comments[0].text) {
-        commentsText = share.comments[0].text;
+        commentsText = truncateText(commentsText, 70);
     }
-    commentsCell.textContent = truncateText(commentsText, 70);
+    commentsCell.textContent = commentsText;
     console.log(`[Render] Added share ${displayShareName} to table.`);
 }
 
@@ -1574,9 +1627,12 @@ async function fetchLivePrices() {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        // Assuming data is an array of objects like [{Code: "ASX:CBA", Price: 100.00, PreviousClose: 99.00}]
         livePricesData = data;
         console.log("[Live Prices] Successfully fetched live prices:", livePricesData);
+        // Add more detailed logging for live prices data to debug display issues
+        if (livePricesData.length > 0) {
+            console.log("[Live Prices Debug] First live price item:", livePricesData[0]);
+        }
     } catch (error) {
         console.error("[Live Prices] Error fetching live prices:", error);
         showCustomAlert("Error fetching live prices: " + error.message, 2000);
@@ -2777,7 +2833,7 @@ async function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v162) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v163) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
