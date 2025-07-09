@@ -1,5 +1,5 @@
-/* File Version: v91 */
-/* Last Updated: 2025-07-09 (Google Sign-in button with 'G' logo, professional styling) */
+/* File Version: v92 */
+/* Last Updated: 2025-07-09 (Fixed Google Sign-in button 'G' logo visibility and potential visual quirks) */
 
 :root {
     /* Light Theme (Default) */
@@ -1382,6 +1382,12 @@ table tbody tr:not(.selected):hover {
     overflow: hidden; /* Hide anything outside */
 }
 
+/* Ensure no focus outline causes unexpected visuals */
+.google-auth-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.5); /* Standard Google blue focus ring */
+}
+
 .google-auth-btn:hover {
     background-color: #f8f8f8; /* Very light gray on hover */
     box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15); /* Slightly larger shadow */
@@ -1403,17 +1409,19 @@ table tbody tr:not(.selected):hover {
     padding: 0; /* Remove padding from wrapper */
     height: 100%; /* Fill button height */
     width: 40px; /* Fixed width for icon area */
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; /* Use flexbox to center the SVG */
+    align-items: center; /* Center vertically */
+    justify-content: center; /* Center horizontally */
     border-right: 1px solid #dadce0; /* Separator line */
+    flex-shrink: 0; /* Prevent wrapper from shrinking below its width */
 }
 
 /* Style for the Google 'G' SVG icon */
 .google-g-icon {
     width: 18px; /* Standard Google icon size */
     height: 18px;
-    vertical-align: middle;
+    display: block; /* Ensure it behaves as a block element within flex */
+    /* vertical-align: middle; Removed as flexbox handles alignment */
 }
 
 .google-auth-btn .button-text {
@@ -1423,6 +1431,8 @@ table tbody tr:not(.selected):hover {
     white-space: nowrap; /* Prevent text wrapping */
     line-height: 40px; /* Match button height for vertical centering */
     color: #4285F4; /* Ensure text color is Google Blue */
+    /* Add a subtle text shadow to prevent the "yellow fill" if it was a rendering artifact */
+    text-shadow: 0 0 1px rgba(0,0,0,0.01); 
 }
 
 
