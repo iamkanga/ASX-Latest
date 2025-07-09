@@ -1,5 +1,5 @@
-/* File Version: v89 */
-/* Last Updated: 2025-07-08 (Google Sign-in button styling, centering, comments box visibility, Theme button order, Numerical input bold, Remove number input arrows, Live price color, Sticky modal footer) */
+/* File Version: v91 */
+/* Last Updated: 2025-07-09 (Google Sign-in button with 'G' logo, professional styling) */
 
 :root {
     /* Light Theme (Default) */
@@ -1289,6 +1289,7 @@ table tbody tr {
 
 table tbody tr.selected {
     background-color: var(--table-row-hover-bg);
+    border-color: var(--button-bg);
     font-weight: 600;
 }
 
@@ -1408,7 +1409,8 @@ table tbody tr:not(.selected):hover {
     border-right: 1px solid #dadce0; /* Separator line */
 }
 
-.google-icon {
+/* Style for the Google 'G' SVG icon */
+.google-g-icon {
     width: 18px; /* Standard Google icon size */
     height: 18px;
     vertical-align: middle;
@@ -1994,7 +1996,7 @@ input[type="number"] {
 }
 
 /* Remove explicit grid-row/column for individual number and operator buttons.
-   They will now flow naturally based on HTML order and grid-template-columns. */
+    They will now flow naturally based on HTML order and grid-template-columns. */
 /* The HTML order in index.html v73 is: C, %, ÷, 7, 8, 9, ×, 4, 5, 6, -, 1, 2, 3, +, 0, ., = */
 /* This ensures 3 numbers per row and operators on the right. */
 
