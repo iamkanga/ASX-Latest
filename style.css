@@ -1,5 +1,5 @@
-/* File Version: v100 */
-/* Last Updated: 2025-07-09 (Removed 'X' close buttons from modals, repositioned modal header buttons, further Google 'G' logo fixes) */
+/* File Version: v101 */
+/* Last Updated: 2025-07-09 (Google Sign-in button simplified, modal input clearing, auto-save on modal close) */
 
 :root {
     /* Light Theme (Default) */
@@ -1374,12 +1374,13 @@ table tbody tr:not(.selected):hover {
     transition: background-color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
     display: flex;
     align-items: center;
-    justify-content: flex-start; /* Align content to start */
+    justify-content: center; /* Center content horizontally */
     box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1); /* Subtle shadow */
     width: fit-content;
     max-width: 100%;
     height: 40px; /* Standard Google button height */
     overflow: hidden; /* Ensure content outside is clipped */
+    padding: 0 24px; /* Add padding directly to the button */
 }
 
 /* Ensure no focus outline causes unexpected visuals */
@@ -1405,58 +1406,27 @@ table tbody tr:not(.selected):hover {
 }
 
 .google-icon-wrapper {
-    background-color: #fff; /* Explicitly white background for the icon area */
-    padding: 0; /* Remove padding from wrapper */
-    height: 100%; /* Fill button height */
-    width: 40px; /* Fixed width for icon area */
-    display: flex; /* Use flexbox to center the SVG */
-    align-items: center; /* Center vertically */
-    justify-content: center; /* Center horizontally */
-    border-right: 1px solid #dadce0; /* Separator line */
-    flex-shrink: 0; /* Prevent wrapper from shrinking below its width */
-    overflow: hidden; /* Ensure anything overflowing this wrapper is clipped */
-    position: relative; /* Establish positioning context for potential children */
-    z-index: 1; /* Ensure it's above any potential background issues */
+    /* This wrapper is now effectively empty and can be removed or styled to be invisible */
+    display: none; /* Hide the wrapper entirely */
 }
 
-/* Style for the Google 'G' SVG icon */
-.google-g-icon {
-    width: 18px; /* Standard Google icon size */
-    height: 18px;
-    display: block; /* Ensure it behaves as a block element within flex */
-    /* Attempt to force proper SVG color rendering */
-    fill: initial; /* Reset fill to its initial value, allowing SVG's internal colors */
-    stroke: none; /* Ensure no stroke is applied */
-    position: relative; /* Ensure it renders above any background issues */
-    z-index: 2; /* Higher z-index than wrapper */
-    /* Add a small transform to potentially force a new rendering layer */
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
-    -moz-transform: translateZ(0);
-}
-
-/* Target SVG paths directly with !important to ensure their colors are used */
-.google-g-icon path {
-    /* The SVG paths have their own fill attributes, we want them to be respected */
-    fill: inherit; /* Inherit from the SVG element, which is set to 'initial' */
-    stroke: none;
-}
+/* Style for the Google 'G' SVG icon - no longer needed as SVG is removed from HTML */
+/* .google-g-icon { ... } */
+/* .google-g-icon path { ... } */
 
 
 .google-auth-btn .button-text {
-    padding: 0 12px; /* Padding for text */
-    flex-grow: 1; /* Allow text to take remaining space */
+    padding: 0; /* Remove padding from text span as it's now on the button */
+    flex-grow: 0; /* No longer needs to grow */
     text-align: center; /* Center text within its span */
     white-space: nowrap; /* Prevent text wrapping */
     line-height: 40px; /* Match button height for vertical centering */
     color: #4285F4; /* Ensure text color is Google Blue */
-    /* Add a subtle text shadow to prevent the "yellow fill" if it was a rendering artifact */
-    text-shadow: 0 0 1px rgba(0,0,0,0.01);
-    /* Explicitly set background properties to prevent bleed */
+    text-shadow: none; /* Remove subtle text shadow */
     background-color: transparent;
     background-image: none;
-    position: relative; /* Establish positioning context */
-    z-index: 1; /* Ensure it's above any potential background issues */
+    position: static; /* Reset positioning */
+    z-index: auto; /* Reset z-index */
 }
 
 
@@ -1509,14 +1479,8 @@ table tbody tr:not(.selected):hover {
     align-items: center;
 }
 
-/* Removed .modal-header-with-icon .close-button rule */
-/* Removed .close-button rule */
-/* Removed .close-button:hover, .close-button:focus rule */
-
-
 .modal-header-with-icon h2 {
     margin: 0;
-    /* Removed flex-grow: 1; and text-align: center; to allow title to be left-aligned */
     text-align: left; /* Align title to the left */
     font-size: 1.6em;
 }
@@ -1529,7 +1493,6 @@ table tbody tr:not(.selected):hover {
     cursor: pointer;
     padding: 5px;
     transition: color 0.2s ease, transform 0.1s ease;
-    order: 1; /* Keep original order, but now within a flex container */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1548,7 +1511,6 @@ table tbody tr:not(.selected):hover {
 }
 
 /* General disabled styling for ALL clickable elements (buttons, icons) */
-/* This is now the primary rule for ghosting */
 [disabled], .is-disabled-icon {
     opacity: 0.5; /* Make it semi-transparent */
     cursor: not-allowed; /* Change cursor */
@@ -1575,7 +1537,6 @@ table tbody tr:not(.selected):hover {
 .modal-content h2 {
     margin-top: 0;
     margin-bottom: 20px;
-    /* Removed text-align: center; from here, now handled by .modal-header-with-icon h2 */
     color: var(--text-color);
     font-size: 1.6em;
 }
@@ -1731,7 +1692,7 @@ input[type="number"] {
     transform: scale(1.1);
 }
 
-/* Modal Action Buttons (Moved to header, now in modal-header-action-icons) */
+/* Modal Action Buttons (Now in modal-header-action-icons) */
 .form-action-buttons,
 .modal-action-buttons,
 .custom-dialog-buttons { 
@@ -2204,7 +2165,7 @@ input[type="number"] {
         padding: 20px;
     }
     
-    /* MODAL FOOTER BUTTONS (Sticky at bottom for mobile) */
+    /* MODAL FOOTER BUTTONS (Now in modal header) */
     .modal-form-buttons.sticky-footer {
         display: none; /* Hide the sticky footer as buttons are moved */
     }

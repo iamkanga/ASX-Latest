@@ -8,7 +8,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍆</text></svg>">
 
     <!-- Linking to your separate style.css file -->
-    <link rel="stylesheet" href="style.css?v=99"> <!-- Updated to v99 -->
+    <link rel="stylesheet" href="style.css?v=101"> <!-- Updated to v101 -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -206,15 +206,9 @@
     <footer class="fixed-footer">
         <button id="googleAuthBtn" class="google-auth-btn">
             <div class="google-icon-wrapper">
-                <!-- Google 'G' logo SVG -->
-                <svg class="google-g-icon" version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
-                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.63-6.63C34.51 3.59 29.34 1 24 1 14.4 1 6.4 6.82 2.89 15.15l7.98 6.19C13.29 13.91 18.28 9.5 24 9.5z"/>
-                    <path fill="#34A853" d="M46.98 24.5c0-.87-.06-1.68-.19-2.49H24v9.5h12.48c-.77 4.55-4.04 7.69-8.91 7.69-5.46 0-9.98-4.72-9.98-10.99s4.52-10.99 9.98-10.99c3.12 0 5.66 1.3 7.77 3.2l7.05-6.19c-4.14-3.8-9.9-6.18-16.82-6.18C14.4 1 6.4 6.82 2.89 15.15l7.98 6.19C13.29 13.91 18.28 9.5 24 9.5z"/>
-                    <path fill="#4285F4" d="M24.01 47c6.64 0 12.3-2.43 16.82-6.18l-7.05-6.19c-2.11 1.9-4.65 3.2-7.77 3.2-5.46 0-9.98-4.72-9.98-10.99s4.52-10.99 9.98-10.99c3.12 0 5.66 1.3 7.77 3.2l7.05-6.19c-4.14-3.8-9.9-6.18-16.82-6.18C14.4 1 6.4 6.82 2.89 15.15l7.98 6.19C13.29 13.91 18.28 9.5 24 9.5z"/>
-                    <path fill="#FBBC05" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.63-6.63C34.51 3.59 29.34 1 24 1 14.4 1 6.4 6.82 2.89 15.15l7.98 6.19C13.29 13.91 18.28 9.5 24 9.5z"/>
-                </svg>
+                <!-- Removed Google 'G' logo SVG -->
             </div>
-            <span class="button-text">Sign In</span>
+            <span class="button-text">Sign In with Google</span>
         </button>
     </footer>
 
@@ -356,8 +350,8 @@
                 <input type="number" id="calcDividendAmount" step="0.001" placeholder="e.g., 1.250">
             </div>
             <div class="calc-input-group">
-                <label for="frankingCredits">Franking Credits (%):</label>
-                <input type="number" id="frankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 70 for 70%">
+                <label for="calcFrankingCredits">Franking Credits (%):</label>
+                <input type="number" id="calcFrankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 70 for 70%">
             </div>
             <p><strong>Unfranked Yield:</strong> <span id="calcUnfrankedYield">-</span></p>
             <p><strong>Franked Yield:</strong> <span id="calcFrankedYield">-</span></p>
@@ -510,10 +504,10 @@
         } : null;
 
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log("index.html (v94) script module loaded and DOMContentLoaded fired."); // Updated version number
+            console.log("index.html (v95) script module loaded and DOMContentLoaded fired."); // Updated version number
         }); 
     </script>
     <!-- Linking to your separate script.js file -->
-    <script src="script.js?v=161"></script>
+    <script src="script.js?v=162"></script>
 </body>
 </html>
