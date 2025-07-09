@@ -1,5 +1,5 @@
-/* File Version: v102 */
-/* Last Updated: 2025-07-09 (Google Sign-in button simplified, refresh button positioning) */
+/* File Version: v103 */
+/* Last Updated: 2025-07-09 (Refresh button positioning, general cleanup) */
 
 :root {
     /* Light Theme (Default) */
@@ -956,7 +956,8 @@ h1#mainTitle {
 
 /* Specific positioning for the refresh button */
 .header-action-btn.refresh-btn-offset {
-    right: 50px; /* Adjust this value as needed to position it next to the plus button */
+    /* Adjust these values to position it next to the plus button */
+    right: 50px; /* Example: If the plus button is at right: 0px, and is 40px wide, 50px gives 10px spacing */
 }
 
 

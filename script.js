@@ -1,5 +1,5 @@
-// File Version: v163
-// Last Updated: 2025-07-09 (Google Sign-in button simplified, Dividend Calculator fixed, modal input clearing, auto-save on modal close, refresh button positioning)
+// File Version: v164
+// Last Updated: 2025-07-09 (Moved helper functions, fixed franking credits input, added live price display debugging, auto-save on modal close)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -799,15 +799,15 @@ function showShareDetails() {
         setIconDisabled(modalFoolLink, true); // Explicitly disable if no shareName
     }
 
-    if (modalCommSecLink && share.shareName) {
+    if (commSecLink && share.shareName) { // Corrected from modalCommSecLink to commSecLink
         const commSecUrl = `https://www2.commsec.com.au/quotes/summary?stockCode=${share.shareName.toUpperCase()}&exchangeCode=ASX`;
-        modalCommSecLink.href = commSecUrl;
-        modalCommSecLink.textContent = `View ${share.shareName.toUpperCase()} on CommSec.com.au`;
-        modalCommSecLink.style.display = 'inline-flex';
-        setIconDisabled(modalCommSecLink, false); // Explicitly enable
-    } else if (modalCommSecLink) {
-        modalCommSecLink.style.display = 'none';
-        setIconDisabled(modalCommSecLink, true); // Explicitly disable if no shareName
+        commSecLink.href = commSecUrl;
+        commSecLink.textContent = `View ${share.shareName.toUpperCase()} on CommSec.com.au`;
+        commSecLink.style.display = 'inline-flex';
+        setIconDisabled(commSecLink, false); // Explicitly enable
+    } else if (commSecLink) {
+        commSecLink.style.display = 'none';
+        setIconDisabled(commSecLink, true); // Explicitly disable if no shareName
     }
 
     if (commSecLoginMessage) {
@@ -1012,6 +1012,9 @@ function addShareToTable(share) {
     const livePriceItem = livePricesData.find(item => 
         typeof item.Code === 'string' && item.Code.toUpperCase().replace('ASX:', '') === normalizedShareName
     );
+    // Debugging live price display
+    console.log(`[Live Price Debug] Share: ${share.shareName}, Normalized: ${normalizedShareName}, LivePriceItem:`, livePriceItem);
+
     // Ensure Price is a number before using toFixed
     const livePrice = livePriceItem && typeof livePriceItem.Price === 'number' && !isNaN(livePriceItem.Price) ? livePriceItem.Price : undefined;
     const previousClosePrice = livePriceItem && typeof livePriceItem.PreviousClose === 'number' && !isNaN(livePriceItem.PreviousClose) ? livePriceItem.PreviousClose : undefined;
@@ -1065,7 +1068,7 @@ function addShareToTable(share) {
     const commentsCell = row.insertCell();
     let commentsText = '';
     if (share.comments && Array.isArray(share.comments) && share.comments.length > 0 && share.comments[0].text) {
-        commentsText = truncateText(commentsText, 70);
+        commentsText = truncateText(share.comments[0].text, 70);
     }
     commentsCell.textContent = commentsText;
     console.log(`[Render] Added share ${displayShareName} to table.`);
@@ -1103,6 +1106,9 @@ function addShareToMobileCards(share) {
     const livePriceItem = livePricesData.find(item => 
         typeof item.Code === 'string' && item.Code.toUpperCase().replace('ASX:', '') === normalizedShareName
     );
+    // Debugging live price display
+    console.log(`[Live Price Debug] Mobile Card Share: ${share.shareName}, Normalized: ${normalizedShareName}, LivePriceItem:`, livePriceItem);
+
     const livePrice = livePriceItem && typeof livePriceItem.Price === 'number' && !isNaN(livePriceItem.Price) ? livePriceItem.Price : undefined;
     const previousClosePrice = livePriceItem && typeof livePriceItem.PreviousClose === 'number' && !isNaN(livePriceItem.PreviousClose) ? livePriceItem.PreviousClose : undefined;
 
@@ -2384,38 +2390,6 @@ async function initializeAppLogic() {
         });
     }
 
-    // Helper function for saving new watchlist (for auto-save and explicit save)
-    async function saveWatchlistData() {
-        const watchlistName = newWatchlistNameInput.value.trim();
-        if (!watchlistName) {
-            showCustomAlert("Watchlist name is required!");
-            return;
-        }
-        if (userWatchlists.some(w => w.name.toLowerCase() === watchlistName.toLowerCase())) {
-            showCustomAlert("A watchlist with this name already exists!");
-            return;
-        }
-
-        try {
-            const watchlistsColRef = window.firestore.collection(db, `artifacts/${currentAppId}/users/${currentUserId}/watchlists`);
-            const newWatchlistRef = await window.firestore.addDoc(watchlistsColRef, {
-                name: watchlistName,
-                createdAt: new Date().toISOString(),
-                userId: currentUserId
-            });
-            showCustomAlert(`Watchlist '${watchlistName}' added!`, 1500);
-            console.log(`[Firestore] Watchlist '${watchlistName}' added with ID: ${newWatchlistRef.id}`);
-            
-            currentSelectedWatchlistIds = [newWatchlistRef.id];
-            await saveLastSelectedWatchlistIds(currentSelectedWatchlistIds);
-            await loadUserWatchlistsAndSettings(); // This will re-render watchlists and trigger loadShares()
-        } catch (error) {
-            console.error("[Firestore] Error adding watchlist:", error);
-            showCustomAlert("Error adding watchlist: " + error.message);
-        }
-    }
-
-
     // Edit Watchlist Button
     if (editWatchlistBtn) {
         editWatchlistBtn.addEventListener('click', () => {
@@ -2463,32 +2437,6 @@ async function initializeAppLogic() {
             closeModals(); // Close modal after explicit save
         });
     }
-
-    // Helper function for saving edited watchlist name (for auto-save and explicit save)
-    async function saveEditedWatchlistName() {
-        let watchlistToEditId = watchlistSelect.value;
-        const newName = editWatchlistNameInput.value.trim();
-        if (!newName) {
-            showCustomAlert("Watchlist name cannot be empty!");
-            return;
-        }
-        if (userWatchlists.some(w => w.name.toLowerCase() === newName.toLowerCase() && w.id !== watchlistToEditId)) {
-            showCustomAlert("A watchlist with this name already exists!");
-            return;
-        }
-
-        try {
-            const watchlistDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/watchlists`, watchlistToEditId);
-            await window.firestore.updateDoc(watchlistDocRef, { name: newName });
-            showCustomAlert(`Watchlist renamed to '${newName}'!`, 1500);
-            console.log(`[Firestore] Watchlist (ID: ${watchlistToEditId}) renamed to '${newName}'.`);
-            await loadUserWatchlistsAndSettings(); // This will re-render watchlists and trigger loadShares()
-        } catch (error) {
-            console.error("[Firestore] Error renaming watchlist:", error);
-            showCustomAlert("Error renaming watchlist: " + error.message);
-        }
-    }
-
 
     // Delete Watchlist In Modal Button (No confirmation as per user request)
     if (deleteWatchlistInModalBtn) {
