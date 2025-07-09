@@ -1,5 +1,5 @@
-/* File Version: v97 */
-/* Last Updated: 2025-07-09 (Removed 'X' close buttons from modals, further Google 'G' logo fixes) */
+/* File Version: v98 */
+/* Last Updated: 2025-07-09 (Removed 'X' close buttons from modals, repositioned modal header buttons, further Google 'G' logo fixes) */
 
 :root {
     /* Light Theme (Default) */
@@ -1426,10 +1426,9 @@ table tbody tr:not(.selected):hover {
     width: 18px; /* Standard Google icon size */
     height: 18px;
     display: block; /* Ensure it behaves as a block element within flex */
-    /* Force rendering by setting a fill, even though SVG paths have explicit colors */
-    /* Use !important to override any potential inherited fills */
-    fill: initial !important; /* Reset fill to its initial value, allowing SVG's internal colors */
-    stroke: none !important; /* Ensure no stroke is applied */
+    /* Attempt to force proper SVG color rendering */
+    fill: initial; /* Reset fill to its initial value, allowing SVG's internal colors */
+    stroke: none; /* Ensure no stroke is applied */
     position: relative; /* Ensure it renders above any background issues */
     z-index: 2; /* Higher z-index than wrapper */
     /* Add a small transform to potentially force a new rendering layer */
@@ -1440,8 +1439,10 @@ table tbody tr:not(.selected):hover {
 
 /* Target SVG paths directly with !important to ensure their colors are used */
 .google-g-icon path {
-    fill: inherit !important; /* Forces paths to inherit fill from parent, which is 'initial' on the SVG itself */
-    stroke: none !important;
+    /* Use !important to override any potential inherited fills */
+    /* The SVG paths have their own fill attributes, we want them to be respected */
+    fill: inherit; /* Inherit from the SVG element, which is set to 'initial' */
+    stroke: none;
 }
 
 
@@ -1496,7 +1497,7 @@ table tbody tr:not(.selected):hover {
 /* Styles for modal header with icon */
 .modal-header-with-icon {
     display: flex;
-    justify-content: space-between;
+    justify-content: space-between; /* Distribute space between title and icons */
     align-items: center;
     margin-bottom: 20px;
     position: relative;
@@ -1504,13 +1505,22 @@ table tbody tr:not(.selected):hover {
     border-bottom: 1px solid var(--border-color);
 }
 
+/* New container for action icons in modal header */
+.modal-header-action-icons {
+    display: flex;
+    gap: 10px; /* Space between icons */
+    align-items: center;
+}
+
 /* Removed .modal-header-with-icon .close-button rule */
+/* Removed .close-button rule */
+/* Removed .close-button:hover, .close-button:focus rule */
+
 
 .modal-header-with-icon h2 {
     margin: 0;
-    flex-grow: 1;
-    text-align: center;
-    order: 2;
+    /* Removed flex-grow: 1; and text-align: center; to allow title to be left-aligned */
+    text-align: left; /* Align title to the left */
     font-size: 1.6em;
 }
 
@@ -1522,7 +1532,7 @@ table tbody tr:not(.selected):hover {
     cursor: pointer;
     padding: 5px;
     transition: color 0.2s ease, transform 0.1s ease;
-    order: 1;
+    order: 1; /* Keep original order, but now within a flex container */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1568,13 +1578,10 @@ table tbody tr:not(.selected):hover {
 .modal-content h2 {
     margin-top: 0;
     margin-bottom: 20px;
-    text-align: center;
+    /* Removed text-align: center; from here, now handled by .modal-header-with-icon h2 */
     color: var(--text-color);
     font-size: 1.6em;
 }
-
-/* Removed .close-button rule */
-/* Removed .close-button:hover, .close-button:focus rule */
 
 
 .ghosted-text {
@@ -1727,7 +1734,7 @@ input[type="number"] {
     transform: scale(1.1);
 }
 
-/* Modal Action Buttons (Moved to header, now sticky footer for mobile) */
+/* Modal Action Buttons (Moved to header, now in modal-header-action-icons) */
 .form-action-buttons,
 .modal-action-buttons,
 .custom-dialog-buttons { 
@@ -1741,21 +1748,9 @@ input[type="number"] {
     border-top: 1px solid var(--border-color); 
 }
 
-/* Styles for sticky footer for modal action buttons */
+/* Removed sticky footer action buttons, now in header */
 .modal-form-buttons.sticky-footer {
-    position: sticky;
-    bottom: -25px; /* Adjust based on modal padding */
-    left: -25px; /* Adjust based on modal padding */
-    right: -25px; /* Adjust based on modal padding */
-    padding: 25px; /* Match modal padding */
-    background-color: var(--modal-content-bg);
-    border-top: 1px solid var(--border-color);
-    box-shadow: 0 -2px 8px var(--shadow-color);
-    z-index: 10;
-    margin-top: 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    display: none; /* Hide the sticky footer as buttons are moved */
 }
 
 /* Base style for modal action icons (now span/i elements) */
@@ -1905,7 +1900,7 @@ input[type="number"] {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
-    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http://www.w3.org/2000/2000/svg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236c757d%22%20d%3D%22M287%2069.9a14.7%2014.7%200%200%200-20.8%200L146.2%20189.9%2026.3%2069.9a14.7%2014.7%200%200%200-20.8%2020.8L135.8%20216.7a14.7%2014.7%200%200%200%2020.8%200L287%2090.7a14.7%2014.7%200%200%200%200-20.8z%22%2F%3E%3C%2Fsvg%3E'); 
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http://www.w3.org/2000/svg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236c757d%22%20d%3D%22M287%2069.9a14.7%2014.7%200%200%200-20.8%200L146.2%20189.9%2026.3%2069.9a14.7%2014.7%200%200%200-20.8%2020.8L135.8%20216.7a14.7%2014.7%200%200%200%2020.8%200L287%2090.7a14.7%2014.7%200%200%200%200-20.8z%22%2F%3E%3C%2Fsvg%3E'); 
     background-repeat: no-repeat;
     background-position: right 12px top 50%;
     background-size: 12px auto;
