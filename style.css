@@ -1,5 +1,5 @@
-/* File Version: v93 */
-/* Last Updated: 2025-07-09 (Fixed Google Sign-in button 'G' logo visibility and yellow artifact) */
+/* File Version: v95 */
+/* Last Updated: 2025-07-09 (Attempting to force Google 'G' logo visibility and eliminate yellow artifact) */
 
 :root {
     /* Light Theme (Default) */
@@ -1415,6 +1415,8 @@ table tbody tr:not(.selected):hover {
     border-right: 1px solid #dadce0; /* Separator line */
     flex-shrink: 0; /* Prevent wrapper from shrinking below its width */
     overflow: hidden; /* Ensure anything overflowing this wrapper is clipped */
+    position: relative; /* Establish positioning context for potential children */
+    z-index: 1; /* Ensure it's above any potential background issues */
 }
 
 /* Style for the Google 'G' SVG icon */
@@ -1422,9 +1424,16 @@ table tbody tr:not(.selected):hover {
     width: 18px; /* Standard Google icon size */
     height: 18px;
     display: block; /* Ensure it behaves as a block element within flex */
-    /* Remove any fill or stroke properties that might be overriding the SVG's internal colors */
-    fill: currentColor; /* Inherit color from parent, though SVG paths have explicit colors */
+    /* Force rendering by setting a fill, even though SVG paths have explicit colors */
+    fill: #000; /* Default to black, will be overridden by SVG paths */
+    /* Important: Ensure the SVG's internal path fills are not overridden by a parent's currentColor */
+    /* This is often the culprit for missing SVG colors */
+    /* To ensure the SVG's internal colors are used, we explicitly set fill to 'initial' or 'unset'
+       or ensure no parent CSS rule is setting a fill that propagates to SVG paths. */
+    fill: initial; /* Reset fill to its initial value, allowing SVG's internal colors */
     stroke: none; /* Ensure no stroke is applied */
+    position: relative; /* Ensure it renders above any background issues */
+    z-index: 2; /* Higher z-index than wrapper */
 }
 
 .google-auth-btn .button-text {
@@ -1439,6 +1448,8 @@ table tbody tr:not(.selected):hover {
     /* Explicitly set background properties to prevent bleed */
     background-color: transparent;
     background-image: none;
+    position: relative; /* Establish positioning context */
+    z-index: 1; /* Ensure it's above any potential background issues */
 }
 
 
