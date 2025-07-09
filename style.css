@@ -1,5 +1,5 @@
-/* File Version: v103 */
-/* Last Updated: 2025-07-09 (Refresh button positioning, general cleanup) */
+/* File Version: v104 */
+/* Last Updated: 2025-07-09 (Refresh button vertical alignment fixed) */
 
 :root {
     /* Light Theme (Default) */
@@ -956,8 +956,10 @@ h1#mainTitle {
 
 /* Specific positioning for the refresh button */
 .header-action-btn.refresh-btn-offset {
-    /* Adjust these values to position it next to the plus button */
-    right: 50px; /* Example: If the plus button is at right: 0px, and is 40px wide, 50px gives 10px spacing */
+    right: 50px; /* Adjust this value as needed to position it next to the plus button */
+    /* Ensure vertical alignment is centered */
+    top: 50%;
+    transform: translateY(-50%);
 }
 
 
@@ -2123,6 +2125,8 @@ input[type="number"] {
     /* Specific positioning for the refresh button on mobile */
     .header-action-btn.refresh-btn-offset {
         right: 50px; /* Adjust this value as needed to position it next to the plus button */
+        top: 50%; /* Ensure vertical alignment is centered */
+        transform: translateY(-50%);
     }
 
 
@@ -2290,6 +2294,8 @@ input[type="number"] {
     /* Specific positioning for the refresh button on desktop */
     .header-action-btn.refresh-btn-offset {
         right: 50px; /* Adjust this value as needed to position it next to the plus button */
+        top: 50%; /* Ensure vertical alignment is centered */
+        transform: translateY(-50%);
     }
 
 

@@ -1,5 +1,5 @@
-// File Version: v164
-// Last Updated: 2025-07-09 (Moved helper functions, fixed franking credits input, added live price display debugging, auto-save on modal close)
+// File Version: v165
+// Last Updated: 2025-07-09 (Fixed modal opening, live price lookup, franking credits input, redundant save alert, refresh button positioning)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -699,6 +699,10 @@ function showShareDetails() {
     const livePriceItem = livePricesData.find(item => 
         typeof item.Code === 'string' && item.Code.toUpperCase().replace('ASX:', '') === normalizedShareName
     );
+    // Debugging live price display
+    console.log(`[Live Price Debug] Share: ${share.shareName}, Normalized: ${normalizedShareName}, LivePriceItem:`, livePriceItem);
+
+    // Ensure Price is a number before using toFixed
     const livePrice = livePriceItem && typeof livePriceItem.Price === 'number' && !isNaN(livePriceItem.Price) ? livePriceItem.Price : undefined;
     const previousClosePrice = livePriceItem && typeof livePriceItem.PreviousClose === 'number' && !isNaN(livePriceItem.PreviousClose) ? livePriceItem.PreviousClose : undefined;
 
@@ -788,26 +792,15 @@ function showShareDetails() {
         setIconDisabled(modalMarketIndexLink, true); // Explicitly disable if no shareName
     }
 
-    if (modalFoolLink && share.shareName) {
-        const foolUrl = `https://www.fool.com.au/tickers/asx-${share.shareName.toLowerCase()}/`;
-        modalFoolLink.href = foolUrl;
-        modalFoolLink.textContent = `View ${share.shareName.toUpperCase()} on Fool.com.au`;
-        modalFoolLink.style.display = 'inline-flex';
-        setIconDisabled(modalFoolLink, false); // Explicitly enable
-    } else if (modalFoolLink) {
-        modalFoolLink.style.display = 'none';
-        setIconDisabled(modalFoolLink, true); // Explicitly disable if no shareName
-    }
-
-    if (commSecLink && share.shareName) { // Corrected from modalCommSecLink to commSecLink
+    if (modalCommSecLink && share.shareName) { // Corrected from modalCommSecLink to commSecLink
         const commSecUrl = `https://www2.commsec.com.au/quotes/summary?stockCode=${share.shareName.toUpperCase()}&exchangeCode=ASX`;
-        commSecLink.href = commSecUrl;
-        commSecLink.textContent = `View ${share.shareName.toUpperCase()} on CommSec.com.au`;
-        commSecLink.style.display = 'inline-flex';
-        setIconDisabled(commSecLink, false); // Explicitly enable
-    } else if (commSecLink) {
-        commSecLink.style.display = 'none';
-        setIconDisabled(commSecLink, true); // Explicitly disable if no shareName
+        modalCommSecLink.href = commSecUrl;
+        modalCommSecLink.textContent = `View ${share.shareName.toUpperCase()} on CommSec.com.au`;
+        modalCommSecLink.style.display = 'inline-flex';
+        setIconDisabled(modalCommSecLink, false); // Explicitly enable
+    } else if (modalCommSecLink) {
+        modalCommSecLink.style.display = 'none';
+        setIconDisabled(modalCommSecLink, true); // Explicitly disable if no shareName
     }
 
     if (commSecLoginMessage) {
@@ -1068,7 +1061,7 @@ function addShareToTable(share) {
     const commentsCell = row.insertCell();
     let commentsText = '';
     if (share.comments && Array.isArray(share.comments) && share.comments.length > 0 && share.comments[0].text) {
-        commentsText = truncateText(share.comments[0].text, 70);
+        commentsText = truncateText(commentsText, 70);
     }
     commentsCell.textContent = commentsText;
     console.log(`[Render] Added share ${displayShareName} to table.`);
@@ -1754,21 +1747,7 @@ async function migrateOldSharesToWatchlist() {
                 needsUpdate = true;
                 updatePayload.shareName = String(shareData.name).trim();
                 updatePayload.name = window.firestore.deleteField();
-                console.log(`[Migration] Share '${doc.id}' missing 'shareName' but has 'name' ('${shareData.name}'). Migrating 'name' to 'shareName'.`);
-            }
-            const fieldsToConvert = ['currentPrice', 'targetPrice', 'dividendAmount', 'frankingCredits', 'entryPrice', 'lastFetchedPrice', 'previousFetchedPrice'];
-            fieldsToConvert.forEach(field => {
-                const value = shareData[field];
-                const originalValueType = typeof value;
-                let parsedValue = value;
-                if (originalValueType === 'string' && value.trim() !== '') {
-                    parsedValue = parseFloat(value);
-                    if (!isNaN(parsedValue)) {
-                        if (originalValueType !== typeof parsedValue || value !== String(parsedValue)) {
-                            needsUpdate = true;
-                            updatePayload[field] = parsedValue;
-                            console.log(`[Migration] Share '${doc.id}': Converted ${field} from string '${value}' (type ${originalValueType}) to number ${parsedValue}.`);
-                        }
+                console.log(`[Migration] Share '${doc.id}': Converted ${field} from string '${value}' (type ${originalValueType}) to number ${parsedValue}.`);
                     } else {
                         needsUpdate = true;
                         updatePayload[field] = null;
