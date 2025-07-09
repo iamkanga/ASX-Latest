@@ -1,5 +1,5 @@
 /* File Version: v89 */
-/* Last Updated: 2025-07-08 (Google Sign-in button styling, centering, comments box visibility, Theme button order, Numerical input bold, Remove number input arrows, Live price color) */
+/* Last Updated: 2025-07-08 (Google Sign-in button styling, centering, comments box visibility, Theme button order, Numerical input bold, Remove number input arrows, Live price color, Sticky modal footer) */
 
 :root {
     /* Light Theme (Default) */
@@ -1708,6 +1708,7 @@ input[type="number"] {
     transform: scale(1.1);
 }
 
+/* Modal Action Buttons (Moved to header, now sticky footer for mobile) */
 .form-action-buttons,
 .modal-action-buttons,
 .custom-dialog-buttons { 
@@ -1721,13 +1722,13 @@ input[type="number"] {
     border-top: 1px solid var(--border-color); 
 }
 
-/* Styles for sticky footer in modals */
-.modal-content .sticky-footer {
+/* Styles for sticky footer for modal action buttons */
+.modal-form-buttons.sticky-footer {
     position: sticky;
-    bottom: -25px;
-    left: -25px;
-    right: -25px;
-    padding: 25px;
+    bottom: -25px; /* Adjust based on modal padding */
+    left: -25px; /* Adjust based on modal padding */
+    right: -25px; /* Adjust based on modal padding */
+    padding: 25px; /* Match modal padding */
     background-color: var(--modal-content-bg);
     border-top: 1px solid var(--border-color);
     box-shadow: 0 -2px 8px var(--shadow-color);
@@ -1775,6 +1776,19 @@ input[type="number"] {
 .modal-action-icon.secondary:hover {
     color: var(--secondary-button-hover-bg);
     background-color: var(--menu-button-hover-bg);
+}
+
+/* Numerical input styling */
+.numerical-input-bold {
+    font-weight: 700; /* Bold for all numerical inputs */
+}
+
+.price-up {
+    color: var(--price-up-color); /* Green */
+}
+
+.price-down {
+    color: var(--price-down-color); /* Red */
 }
 
 
@@ -2179,15 +2193,29 @@ input[type="number"] {
         padding: 20px;
     }
     
-    .form-action-buttons,
-    .modal-action-buttons,
-    .custom-dialog-buttons { 
-        display: flex; 
-        flex-direction: row; 
-        flex-wrap: nowrap; 
+    /* MODAL FOOTER BUTTONS (Sticky at bottom for mobile) */
+    .modal-form-buttons.sticky-footer {
+        position: sticky;
+        bottom: -20px; /* Adjust based on modal padding */
+        left: -20px; /* Adjust based on modal padding */
+        right: -20px; /* Adjust based on modal padding */
+        padding: 20px; /* Match modal padding */
+        background-color: var(--modal-content-bg);
+        border-top: 1px solid var(--border-color);
+        box-shadow: 0 -2px 8px var(--shadow-color);
+        z-index: 10;
+        margin-top: auto; /* Push to bottom */
+        display: flex;
         justify-content: space-around; /* Distribute space evenly */
-        gap: 5px; 
+        align-items: center;
+        flex-wrap: nowrap;
+        border-radius: 0 0 8px 8px; /* Rounded bottom corners */
     }
+    /* Ensure modal body can scroll behind sticky footer */
+    .modal-body-scrollable {
+        padding-bottom: 80px; /* Enough space for sticky footer */
+    }
+
     /* Adjusted styling for modal action icons on mobile */
     .modal-action-icon { 
         width: auto; 
