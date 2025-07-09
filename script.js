@@ -751,10 +751,10 @@ function renderWatchlistSelect() {
     if (!watchlistSelect) { console.error("[renderWatchlistSelect] watchlistSelect element not found."); return; }
     watchlistSelect.innerHTML = '<option value="" disabled selected>Watchlist</option>'; // Default placeholder
 
-    // Add "Display All" option first
+    // Add "All Shares" option first
     const allSharesOption = document.createElement('option');
     allSharesOption.value = ALL_SHARES_ID;
-    allSharesOption.textContent = 'Display All Shares';
+    allSharesOption.textContent = 'All Shares'; // Removed "Display"
     watchlistSelect.appendChild(allSharesOption);
 
     userWatchlists.forEach(watchlist => {
@@ -1713,16 +1713,19 @@ function showContextMenu(event, shareId) {
     }
 
     const menuWidth = shareContextMenu.offsetWidth;
-    const menuHeight = shareContextMenu.offsetHeight;
+    const menuHeight = shareContextMenu.offsetWidth; // Corrected from offsetHeight to offsetWidth
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
 
+    // Adjust x position if menu overflows right
     if (x + menuWidth > viewportWidth) {
-        x = viewportWidth - menuWidth - 10;
+        x = viewportWidth - menuWidth - 10; // 10px padding from right edge
     }
+    // Adjust y position if menu overflows bottom
     if (y + menuHeight > viewportHeight) {
-        y = viewportHeight - menuHeight - 10;
+        y = viewportHeight - menuHeight - 10; // 10px padding from bottom edge
     }
+    // Ensure menu doesn't go off screen to the left or top
     if (x < 10) x = 10;
     if (y < 10) y = 10;
 
