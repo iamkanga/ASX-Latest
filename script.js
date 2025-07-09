@@ -1,5 +1,5 @@
-// File Version: v160
-// Last Updated: 2025-07-08 (Complete file output, fixed live price TypeError, comments box visibility, Google Sign-in button styling, clear input defaults, numerical input bold, remove number input arrows, live price color, new Google Sheet URL)
+// File Version: v161
+// Last Updated: 2025-07-08 (Complete file output, fixed live price TypeError, comments box visibility, Google Sign-in button styling, clear input defaults, numerical input bold, remove number input arrows, live price color, new Google Sheet URL, modal button positioning and scrollability)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -2789,7 +2789,7 @@ async function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v160) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v161) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;

@@ -8,7 +8,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍆</text></svg>">
 
     <!-- Linking to your separate style.css file -->
-    <link rel="stylesheet" href="style.css?v=90"> <!-- Updated to v90 -->
+    <link rel="stylesheet" href="style.css?v=91"> <!-- Updated to v91 -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -221,8 +221,12 @@
         <div class="modal-content add-share-modal-content">
             <!-- Header with close button and title -->
             <div class="modal-header-with-icon">
-                <span class="close-button form-close-button">&times;</span>
                 <h2 id="formTitle">Add New Share</h2>
+                <!-- Action buttons for Add/Edit Share modal -->
+                <span id="deleteShareBtn" class="modal-action-icon danger hidden" title="Delete"><i class="fas fa-trash-alt"></i></span>
+                <span id="cancelFormBtn" class="modal-action-icon secondary" title="Cancel"><i class="fas fa-times-circle"></i></span>
+                <span id="saveShareBtn" class="modal-action-icon" title="Save Share"><i class="fas fa-save"></i></span>
+                <span class="close-button form-close-button">&times;</span> <!-- Primary close button -->
             </div>
             
             <!-- Scrollable content area for the form inputs and comments -->
@@ -251,15 +255,8 @@
             </div>
             <!-- END Scrollable content area -->
 
-            <!-- Sticky footer for action icons -->
-            <div class="form-action-buttons modal-form-buttons sticky-footer">
-                <!-- Delete Icon -->
-                <span id="deleteShareBtn" class="modal-action-icon danger hidden" title="Delete"><i class="fas fa-trash-alt"></i></span>
-                <!-- Cancel Icon -->
-                <span id="cancelFormBtn" class="modal-action-icon secondary" title="Cancel"><i class="fas fa-times-circle"></i></span>
-                <!-- Save Share Icon -->
-                <span id="saveShareBtn" class="modal-action-icon" title="Save Share"><i class="fas fa-save"></i></span>
-            </div>
+            <!-- Removed sticky footer for action icons -->
+            <!-- <div class="form-action-buttons modal-form-buttons sticky-footer"></div> -->
         </div>
     </div>
 
@@ -267,11 +264,11 @@
     <div id="shareDetailModal" class="modal">
         <div class="modal-content">
             <div class="modal-header-with-icon">
-                <span class="close-button form-close-button">&times;</span> <!-- Changed to form-close-button for consistency -->
                 <h2 id="modalShareName">Share Details</h2>
                 <!-- Action buttons for details modal -->
                 <span id="deleteShareFromDetailBtn" class="modal-action-icon danger" title="Delete Share"><i class="fas fa-trash-alt"></i></span>
                 <span id="editShareFromDetailBtn" class="modal-action-icon" title="Edit Share"><i class="fas fa-edit"></i></span>
+                <span class="close-button form-close-button">&times;</span> <!-- Primary close button -->
             </div>
             
             <!-- NEW: Scrollable content for share details modal -->
@@ -310,11 +307,11 @@
     <div id="addWatchlistModal" class="modal">
         <div class="modal-content">
             <div class="modal-header-with-icon">
-                <span class="close-button form-close-button">&times;</span>
-                <h2>Add New Watchlist</h2>
+                <h2 id="formTitle">Add New Watchlist</h2>
                 <!-- Moved action buttons here -->
                 <span id="cancelAddWatchlistBtn" class="modal-action-icon secondary" title="Cancel"><i class="fas fa-times-circle"></i></span>
                 <span id="saveWatchlistBtn" class="modal-action-icon" title="Save Watchlist"><i class="fas fa-save"></i></span>
+                <span class="close-button form-close-button">&times;</span> <!-- Primary close button -->
             </div>
             <label for="newWatchlistName">Watchlist Name:</label>
             <input type="text" id="newWatchlistName" placeholder="e.g., Tech Stocks" required>
@@ -327,12 +324,12 @@
     <div id="manageWatchlistModal" class="modal">
         <div class="modal-content">
             <div class="modal-header-with-icon">
-                <span class="close-button form-close-button">&times;</span>
-                <h2>Manage Watchlist</h2>
+                <h2 id="formTitle">Manage Watchlist</h2>
                 <!-- Moved action buttons here -->
                 <span id="deleteWatchlistInModalBtn" class="modal-action-icon danger" title="Delete Watchlist"><i class="fas fa-trash-alt"></i></span>
                 <span id="cancelManageWatchlistBtn" class="modal-action-icon secondary" title="Cancel"><i class="fas fa-times-circle"></i></span>
                 <span id="saveWatchlistNameBtn" class="modal-action-icon" title="Save Name"><i class="fas fa-save"></i></span>
+                <span class="close-button form-close-button">&times;</span> <!-- Primary close button -->
             </div>
             <label for="editWatchlistName">Watchlist Name:</label>
             <input type="text" id="editWatchlistName" required>
@@ -514,6 +511,6 @@
         }); 
     </script>
     <!-- Linking to your separate script.js file -->
-    <script src="script.js?v=160"></script> <!-- Updated to v160 -->
+    <script src="script.js?v=161"></script> <!-- Updated to v161 -->
 </body>
 </html>
