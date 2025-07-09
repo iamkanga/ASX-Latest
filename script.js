@@ -1,5 +1,5 @@
-// File Version: v159
-// Last Updated: 2025-07-08 (Complete file output, fixed live price TypeError, comments box visibility, Google Sign-in button styling, clear input defaults, numerical input bold, remove number input arrows)
+// File Version: v160
+// Last Updated: 2025-07-08 (Complete file output, fixed live price TypeError, comments box visibility, Google Sign-in button styling, clear input defaults, numerical input bold, remove number input arrows, live price color, new Google Sheet URL)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -49,7 +49,7 @@ let savedSortOrder = null; // GLOBAL: Stores the sort order loaded from user set
 let savedTheme = null; // GLOBAL: Stores the theme loaded from user settings
 
 // Google Sheet Live Price Integration Variables
-const GOOGLE_SHEET_API_URL = 'https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLjHYIb3nS6VBwmftOIYcwEpfA-GMt28JjM9QPqj38b4PvYyzbA34hr1PqLx7LEJrCzPe1-hLoniGIAa3eG9NejgHF1_kKWow8fMbnswtfMISQKhqMsOB5pVwUJ_XIFmadq2OtZ5xVTAstv3LeeuUDmyFawB6-TwytA7t2uAIf1bWUKBYtFQqYibVl7d1iOepLCFOxAMfqF6EuNRA4N4hIdIht1VqGEsWA7taET5v36MBTAOtww1f4U-Ygjnp3ih4ZuMvCAdjz0h_xe_U5pMtAO-ilK2Og&lib=M77eV8zQ-JkwezrdGZpU8UwFpls1LI6DY';
+const GOOGLE_SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbwWRS8RbfLasIjWtDpY3HhrxfmdaBA3SQt3CXTtNIFQgJMW-lNdankJtWQn4M0_zP7X/exec'; // UPDATED URL
 let livePricesData = []; // Stores live prices fetched from Google Sheet
 
 
@@ -572,8 +572,41 @@ function showShareDetails() {
     modalShareName.textContent = share.shareName || 'N/A';
     modalEntryDate.textContent = formatDate(share.entryDate) || 'N/A';
     
+    // Live Price for Modal Details
+    const normalizedShareName = share.shareName ? share.shareName.toUpperCase().replace('ASX:', '') : '';
+    const livePriceItem = livePricesData.find(item => 
+        typeof item.Code === 'string' && item.Code.toUpperCase().replace('ASX:', '') === normalizedShareName
+    );
+    const livePrice = livePriceItem && typeof livePriceItem.Price === 'number' && !isNaN(livePriceItem.Price) ? livePriceItem.Price : undefined;
+    const previousClosePrice = livePriceItem && typeof livePriceItem.PreviousClose === 'number' && !isNaN(livePriceItem.PreviousClose) ? livePriceItem.PreviousClose : undefined;
+
+    let livePriceDisplay = livePrice !== undefined ? `$${Number(livePrice).toFixed(2)}` : '-';
+    let livePriceClass = ''; // For red/green styling
+
+    if (livePrice !== undefined && previousClosePrice !== undefined) {
+        if (livePrice > previousClosePrice) {
+            livePriceClass = 'price-up'; // Green
+        } else if (livePrice < previousClosePrice) {
+            livePriceClass = 'price-down'; // Red
+        }
+    }
+
+    // Insert Live Price before Entered Price in the modal details
+    // Remove any existing live price paragraph first to prevent duplicates on re-opening
+    const existingLivePriceParagraph = document.querySelector('#shareDetailModal #modalLivePrice');
+    if (existingLivePriceParagraph) {
+        existingLivePriceParagraph.remove();
+    }
+    const enteredPriceParagraph = document.getElementById('modalEnteredPrice').closest('p');
+    if (enteredPriceParagraph) {
+        const livePriceParagraph = document.createElement('p');
+        livePriceParagraph.id = 'modalLivePrice'; // Add an ID to easily find and remove it later
+        livePriceParagraph.innerHTML = `<strong>Live Price:</strong> <span class="numerical-input-bold ${livePriceClass}">${livePriceDisplay}</span>`;
+        enteredPriceParagraph.parentNode.insertBefore(livePriceParagraph, enteredPriceParagraph);
+    }
+
     const enteredPriceNum = Number(share.currentPrice);
-    modalEnteredPrice.textContent = (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? `$${enteredPriceNum.toFixed(2)}` : 'N/A';
+    document.getElementById('modalEnteredPrice').textContent = (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? `$${enteredPriceNum.toFixed(2)}` : 'N/A';
 
     const targetPriceNum = Number(share.targetPrice);
     modalTargetPrice.textContent = (!isNaN(targetPriceNum) && targetPriceNum !== null) ? `$${targetPriceNum.toFixed(2)}` : 'N/A';
@@ -2426,17 +2459,17 @@ async function initializeAppLogic() {
             }
 
             // For deleting, we need to pick ONE watchlist. Let's use the currently selected one.
-            let watchlistToDeleteId = watchlistSelect.value;
+            let watchlistToEditId = watchlistSelect.value; // Use the currently active watchlist ID
 
-            if (!watchlistToDeleteId || userWatchlists.length <= 1) {
+            if (!watchlistToEditId || userWatchlists.length <= 1) {
                 showCustomAlert("Cannot delete the last watchlist. Please create another watchlist first.");
                 return;
             }
-            const watchlistToDeleteName = userWatchlists.find(w => w.id === watchlistToDeleteId)?.name || 'Unknown Watchlist';
+            const watchlistToDeleteName = userWatchlists.find(w => w.id === watchlistToEditId)?.name || 'Unknown Watchlist';
             
             try {
                 const sharesColRef = window.firestore.collection(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`);
-                const q = window.firestore.query(sharesColRef, window.firestore.where("watchlistId", "==", watchlistToDeleteId));
+                const q = window.firestore.query(sharesColRef, window.firestore.where("watchlistId", "==", watchlistToEditId));
                 const querySnapshot = await window.firestore.getDocs(q);
 
                 const batch = window.firestore.writeBatch(db);
@@ -2447,9 +2480,9 @@ async function initializeAppLogic() {
                 await batch.commit();
                 console.log(`[Firestore] Deleted ${querySnapshot.docs.length} shares from watchlist '${watchlistToDeleteName}'.`);
 
-                const watchlistDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/watchlists`, watchlistToDeleteId);
+                const watchlistDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/watchlists`, watchlistToEditId);
                 await window.firestore.deleteDoc(watchlistDocRef);
-                console.log(`[Firestore] Watchlist '${watchlistToDeleteName}' (ID: ${watchlistToDeleteId}) deleted.`);
+                console.log(`[Firestore] Watchlist '${watchlistToDeleteName}' (ID: ${watchlistToEditId}) deleted.`);
 
                 showCustomAlert(`Watchlist '${watchlistToDeleteName}' and its shares deleted successfully!`, 2000);
                 closeModals();
@@ -2753,7 +2786,7 @@ async function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v159) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v160) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;

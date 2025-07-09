@@ -1,5 +1,5 @@
-/* File Version: v88 */
-/* Last Updated: 2025-07-08 (Google Sign-in button styling, centering, comments box visibility, Theme button order, Numerical input bold, Remove number input arrows) */
+/* File Version: v89 */
+/* Last Updated: 2025-07-08 (Google Sign-in button styling, centering, comments box visibility, Theme button order, Numerical input bold, Remove number input arrows, Live price color) */
 
 :root {
     /* Light Theme (Default) */
@@ -55,6 +55,9 @@
     --calc-num-btn-bg: #f0f0f0; /* Default: Calculator number button background */
     --calc-num-btn-text: #333; /* Default: Calculator number button text */
     --calc-num-btn-hover-bg: #e0e0e0; /* Default: Calculator number button hover */
+
+    --price-up-color: #28a745; /* Green for up */
+    --price-down-color: #dc3545; /* Red for down */
 }
 
 /* Dark Theme Variables */
@@ -110,6 +113,9 @@ body.dark-theme {
     --calc-num-btn-bg: #5a758e; /* Dark: Calculator number button background */
     --calc-num-btn-text: #ecf0f1; /* Dark: Calculator number button text */
     --calc-num-btn-hover-bg: #6c8095; /* Dark: Calculator number button hover */
+
+    --price-up-color: #2ecc71; /* Dark Green for up */
+    --price-down-color: #e74c3c; /* Dark Red for down */
 }
 
 /* Custom Themes */
@@ -724,7 +730,7 @@ body.theme-subtle-6 { /* Subtle Sand */
     --icon-danger-color: #e74c3c;
     --icon-danger-hover-color: #c0392b;
     --calc-num-btn-bg: #f2ebe6;
-    --calc-num-btn-text: #6a4a4a;
+    --calc-num-btn-text: #6a5a4a;
     --calc-num-btn-hover-bg: #eeb8a2;
 }
 
@@ -1354,47 +1360,52 @@ table tbody tr:not(.selected):hover {
     transition: margin-left 0.3s ease, width 0.3s ease; 
 }
 
+/* Google Sign-in Button Styling */
 .google-auth-btn {
-    background-color: #4285F4; /* Google Blue */
-    color: #fff;
+    background-color: #fff; /* White background */
+    color: #4285F4; /* Google Blue text */
     padding: 0; /* Remove padding from button itself */
-    border: none;
-    border-radius: 2px; /* Sharper corners for Google button */
+    border: 1px solid #dadce0; /* Light gray border */
+    border-radius: 4px; /* Slightly rounded corners */
     cursor: pointer;
     font-size: 1.1em;
-    font-weight: 600;
-    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+    font-weight: 500; /* Medium font weight */
+    transition: background-color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: flex-start; /* Align content to start */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25); /* Subtle shadow */
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1); /* Subtle shadow */
     width: fit-content;
     max-width: 100%;
-    height: 42px; /* Fixed height for Google button */
+    height: 40px; /* Standard Google button height */
     overflow: hidden; /* Hide anything outside */
 }
 
 .google-auth-btn:hover {
-    background-color: #357ae8; /* Darker blue on hover */
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3); /* Slightly larger shadow */
+    background-color: #f8f8f8; /* Very light gray on hover */
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15); /* Slightly larger shadow */
+    border-color: #c6c6c6; /* Slightly darker border on hover */
     transform: none; /* No translateY on hover for traditional look */
 }
 
 .google-auth-btn:disabled {
-    background-color: var(--secondary-button-bg);
+    background-color: #e0e0e0; /* Lighter gray when disabled */
+    color: #a0a0a0; /* Gray text when disabled */
     cursor: not-allowed;
-    opacity: 0.5;
+    opacity: 1; /* Keep opacity 1, change background/text color */
     box-shadow: none;
+    border-color: #e0e0e0;
 }
 
 .google-icon-wrapper {
     background-color: #fff;
-    padding: 10px; /* Padding around the icon */
+    padding: 0; /* Remove padding from wrapper */
     height: 100%; /* Fill button height */
+    width: 40px; /* Fixed width for icon area */
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 2px 0 0 2px; /* Rounded only on left */
+    border-right: 1px solid #dadce0; /* Separator line */
 }
 
 .google-icon {
@@ -1408,7 +1419,8 @@ table tbody tr:not(.selected):hover {
     flex-grow: 1; /* Allow text to take remaining space */
     text-align: center; /* Center text within its span */
     white-space: nowrap; /* Prevent text wrapping */
-    line-height: 42px; /* Match button height for vertical centering */
+    line-height: 40px; /* Match button height for vertical centering */
+    color: #4285F4; /* Ensure text color is Google Blue */
 }
 
 
@@ -1593,19 +1605,14 @@ table tbody tr:not(.selected):hover {
     outline: none;
 }
 
-/* Hide number input arrows */
-input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button {
+/* Hide number input arrows (spin buttons) */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
 input[type="number"] {
     -moz-appearance: textfield; /* Firefox */
-}
-
-/* Bold numerical input */
-input[type="number"] {
-    font-weight: 700; /* Bold numerical input */
 }
 
 
@@ -1614,7 +1621,6 @@ input[type="number"] {
     margin-top: 20px;
     border-top: 1px solid var(--border-color);
     padding-top: 15px;
-    display: block; /* Ensure it's not hidden by default */
 }
 
 .comments-form-container h3 {
@@ -1838,21 +1844,6 @@ input[type="number"] {
     text-decoration: underline;
 }
 
-/* Live Price color styling */
-.live-price-up {
-    color: var(--success-color);
-    font-weight: bold;
-}
-.live-price-down {
-    color: var(--danger-color);
-    font-weight: bold;
-}
-.live-price-neutral {
-    color: var(--text-color); /* Or a specific neutral color */
-    font-weight: bold;
-}
-
-
 .calculator-modal-content {
 }
 .calc-input-group {
@@ -1894,22 +1885,6 @@ input[type="number"] {
     box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
     outline: none;
 }
-
-/* Hide number input arrows */
-input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-input[type="number"] {
-    -moz-appearance: textfield; /* Firefox */
-}
-
-/* Bold numerical input */
-input[type="number"] {
-    font-weight: 700; /* Bold numerical input */
-}
-
 
 .calculator-modal-content hr {
     border: none;
