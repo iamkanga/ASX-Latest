@@ -1,5 +1,5 @@
-// File Version: v161
-// Last Updated: 2025-07-08 (Complete file output, fixed live price TypeError, comments box visibility, Google Sign-in button styling, clear input defaults, numerical input bold, remove number input arrows, live price color, new Google Sheet URL, modal button positioning and scrollability)
+// File Version: v160
+// Last Updated: 2025-07-08 (Complete file output, fixed live price TypeError, comments box visibility, Google Sign-in button styling, clear input defaults, numerical input bold, remove number input arrows, live price color, new Google Sheet URL)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -433,7 +433,7 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
 
     formTitle.textContent = 'Edit Share';
     shareNameInput.value = shareToEdit.shareName || '';
-    currentPriceInput.value = Number(shareToEdit.currentPrice) !== null && !isNaN(Number(shareToEdit.currentPrice)) ? Number(shareToToEdit.currentPrice).toFixed(2) : '';
+    currentPriceInput.value = Number(shareToEdit.currentPrice) !== null && !isNaN(Number(shareToEdit.currentPrice)) ? Number(shareToEdit.currentPrice).toFixed(2) : '';
     targetPriceInput.value = Number(shareToEdit.targetPrice) !== null && !isNaN(Number(shareToEdit.targetPrice)) ? Number(shareToEdit.targetPrice).toFixed(2) : '';
     dividendAmountInput.value = Number(shareToEdit.dividendAmount) !== null && !isNaN(Number(shareToEdit.dividendAmount)) ? Number(shareToEdit.dividendAmount).toFixed(3) : '';
     frankingCreditsInput.value = Number(shareToEdit.frankingCredits) !== null && !isNaN(Number(shareToEdit.frankingCredits)) ? Number(shareToEdit.frankingCredits).toFixed(1) : '';
@@ -677,6 +677,17 @@ function showShareDetails() {
         setIconDisabled(modalFoolLink, true); // Explicitly disable if no shareName
     }
 
+    if (modalCommSecLink && share.shareName) {
+        const commSecUrl = `https://www2.commsec.com.au/quotes/summary?stockCode=${share.shareName.toUpperCase()}&exchangeCode=ASX`;
+        modalCommSecLink.href = commSecUrl;
+        modalCommSecLink.textContent = `View ${share.shareName.toUpperCase()} on CommSec.com.au`;
+        modalCommSecLink.style.display = 'inline-flex';
+        setIconDisabled(modalCommSecLink, false); // Explicitly enable
+    } else if (modalCommSecLink) {
+        modalCommSecLink.style.display = 'none';
+        setIconDisabled(modalCommSecLink, true); // Explicitly disable if no shareName
+    }
+
     if (commSecLoginMessage) {
         commSecLoginMessage.style.display = 'block'; 
     }
@@ -783,7 +794,7 @@ function renderSortSelect() {
         { value: "entryDate-desc", text: "Date Added (Newest)" },
         { value: "entryDate-asc", text: "Date Added (Oldest)" },
         { value: "shareName-asc", text: "Code (A-Z)" },
-        { value="shareName-desc", text: "Code (Z-A)" },
+        { value: "shareName-desc", text: "Code (Z-A)" },
         { value: "dividendAmount-desc", text: "Dividend (High-Low)" },
         { value: "dividendAmount-asc", text: "Dividend (Low-High)" }
     ];
@@ -801,7 +812,7 @@ function renderSortSelect() {
     } else {
         sortSelect.value = ''; 
         currentSortOrder = ''; // Ensure global variable is reset if no valid option
-        console.log("[UI Update] Sort select rendered. Sort select disabled: ", sortSelect.disabled);
+        console.log("[Sort] No valid saved sort order or not logged in, defaulting to placeholder.");
     }
     console.log("[UI Update] Sort select rendered. Sort select disabled: ", sortSelect.disabled);
 }
@@ -1448,7 +1459,7 @@ async function loadUserWatchlistsAndSettings() {
         } else {
             sortSelect.value = ''; 
             currentSortOrder = ''; // Ensure global variable is reset if no valid option
-            console.log("[UI Update] Sort select rendered. Sort select disabled: ", sortSelect.disabled);
+            console.log("[Sort] No valid saved sort order or not logged in, defaulting to placeholder.");
         }
         renderSortSelect(); // Re-render to ensure placeholder is correctly shown if no saved sort order
         
@@ -2036,8 +2047,8 @@ async function initializeAppLogic() {
             }
             try {
                 await window.authFunctions.signOut(currentAuth);
-                    console.log("[Auth] User signed out.");
                 showCustomAlert("Logged out successfully!", 1500);
+                console.log("[Auth] User successfully logged out.");
                 toggleAppSidebar(false);
             } catch (error) {
                 console.error("[Auth] Logout failed:", error);
@@ -2778,7 +2789,7 @@ async function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v161) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v160) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
