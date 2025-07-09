@@ -1425,13 +1425,9 @@ table tbody tr:not(.selected):hover {
     height: 18px;
     display: block; /* Ensure it behaves as a block element within flex */
     /* Force rendering by setting a fill, even though SVG paths have explicit colors */
-    fill: #000; /* Default to black, will be overridden by SVG paths */
-    /* Important: Ensure the SVG's internal path fills are not overridden by a parent's currentColor */
-    /* This is often the culprit for missing SVG colors */
-    /* To ensure the SVG's internal colors are used, we explicitly set fill to 'initial' or 'unset'
-       or ensure no parent CSS rule is setting a fill that propagates to SVG paths. */
-    fill: initial; /* Reset fill to its initial value, allowing SVG's internal colors */
-    stroke: none; /* Ensure no stroke is applied */
+    /* Use !important to override any potential inherited fills */
+    fill: initial !important; /* Reset fill to its initial value, allowing SVG's internal colors */
+    stroke: none !important; /* Ensure no stroke is applied */
     position: relative; /* Ensure it renders above any background issues */
     z-index: 2; /* Higher z-index than wrapper */
 }
