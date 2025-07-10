@@ -1,5 +1,5 @@
-/* File Version: v87 */
-/* Last Updated: 2025-07-10 (Google Sign In button styling, Live Price styling) */
+/* File Version: v88 */
+/* Last Updated: 2025-07-10 (Google Sign In button styling, Live Price styling, Price Change styling) */
 
 :root {
     /* Light Theme (Default) */
@@ -2184,11 +2184,6 @@ table td.live-price-cell {
 .calc-btn.zero {
     grid-column: span 2;
 }
-
-/* Remove explicit grid-row/column for individual number and operator buttons.
-   They will now flow naturally based on HTML order and grid-template-columns. */
-/* The HTML order in index.html v73 is: C, %, ÷, 7, 8, 9, ×, 4, 5, 6, -, 1, 2, 3, +, 0, ., = */
-/* This ensures 3 numbers per row and operators on the right. */
 
 
 #scrollToTopBtn {

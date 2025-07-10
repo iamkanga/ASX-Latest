@@ -1,5 +1,5 @@
-// File Version: v156
-// Last Updated: 2025-07-10 (Fixed duplicate variable declaration for frankedYield)
+// File Version: v157
+// Last Updated: 2025-07-10 (Live Price order, removed cancel button from manage watchlist modal)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -138,7 +138,7 @@ const manageWatchlistModal = document.getElementById('manageWatchlistModal');
 const editWatchlistNameInput = document.getElementById('editWatchlistName');
 const saveWatchlistNameBtn = document.getElementById('saveWatchlistNameBtn'); // Now a span
 const deleteWatchlistInModalBtn = document.getElementById('deleteWatchlistInModalBtn'); // Now a span
-const cancelManageWatchlistBtn = document.getElementById('cancelManageWatchlistBtn'); // Now a span
+const cancelManageWatchlistBtn = document.getElementById('cancelManageWatchlistBtn'); // Now a span - removed from HTML
 const shareContextMenu = document.getElementById('shareContextMenu');
 const contextEditShareBtn = document.getElementById('contextEditShareBtn');
 const contextDeleteShareBtn = document.getElementById('contextDeleteShareBtn');
@@ -552,7 +552,6 @@ function showShareDetails() {
     modalEntryDate.textContent = formatDate(share.entryDate) || 'N/A';
     
     const enteredPriceNum = Number(share.currentPrice);
-    modalEnteredPrice.textContent = (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? `$${enteredPriceNum.toFixed(2)}` : 'N/A';
 
     // NEW: Display Live Price and Price Change
     const livePrice = livePrices[share.shareName.toUpperCase()];
@@ -599,6 +598,7 @@ function showShareDetails() {
         }
     }
 
+    modalEnteredPrice.textContent = (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? `$${enteredPriceNum.toFixed(2)}` : 'N/A'; // MOVED DOWN
     const targetPriceNum = Number(share.targetPrice);
     modalTargetPrice.textContent = (!isNaN(targetPriceNum) && targetPriceNum !== null) ? `$${targetPriceNum.toFixed(2)}` : 'N/A';
     
@@ -613,7 +613,6 @@ function showShareDetails() {
     const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, priceForYield); 
     modalUnfrankedYieldSpan.textContent = unfrankedYield !== null ? `${unfrankedYield.toFixed(2)}%` : 'N/A';
     
-    // Corrected: Removed duplicate declaration of 'frankedYield'
     const frankedYield = calculateFrankedYield(dividendAmountNum, priceForYield, frankingCreditsNum);
     modalFrankedYieldSpan.textContent = frankedYield !== null ? `${frankedYield.toFixed(2)}%` : 'N/A';
     
@@ -885,12 +884,7 @@ function addShareToTable(share) {
     const displayShareName = (share.shareName && String(share.shareName).trim() !== '') ? share.shareName : '(No Code)';
     row.insertCell().textContent = displayShareName;
 
-    const enteredPriceCell = row.insertCell();
-    const enteredPriceNum = Number(share.currentPrice);
-    const displayEnteredPrice = (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? `$${enteredPriceNum.toFixed(2)}` : '-';
-    enteredPriceCell.textContent = displayEnteredPrice;
-
-    // NEW: Live Price Cell
+    // NEW: Live Price Cell (moved up)
     const livePriceCell = row.insertCell();
     const livePrice = livePrices[share.shareName.toUpperCase()];
     const previousFetchedPrice = Number(share.previousFetchedPrice); // From Firestore
@@ -904,8 +898,8 @@ function addShareToTable(share) {
         let comparisonPrice = null;
         if (lastFetchedPrice !== undefined && lastFetchedPrice !== null && !isNaN(lastFetchedPrice)) {
             comparisonPrice = lastFetchedPrice;
-        } else if (enteredPriceNum !== undefined && enteredPriceNum !== null && !isNaN(enteredPriceNum)) {
-            comparisonPrice = enteredPriceNum;
+        } else if (Number(share.currentPrice) !== undefined && Number(share.currentPrice) !== null && !isNaN(Number(share.currentPrice))) {
+            comparisonPrice = Number(share.currentPrice);
         }
 
         if (comparisonPrice !== null) {
@@ -927,6 +921,11 @@ function addShareToTable(share) {
     } else {
         livePriceCell.textContent = 'N/A';
     }
+
+    const enteredPriceCell = row.insertCell(); // MOVED DOWN
+    const enteredPriceNum = Number(share.currentPrice);
+    const displayEnteredPrice = (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? `$${enteredPriceNum.toFixed(2)}` : '-';
+    enteredPriceCell.textContent = displayEnteredPrice;
 
 
     const targetPriceNum = Number(share.targetPrice);
@@ -958,7 +957,7 @@ function addShareToTable(share) {
     const commentsCell = row.insertCell();
     let commentsText = '';
     if (share.comments && Array.isArray(share.comments) && share.comments.length > 0 && share.comments[0].text) {
-        commentsText = truncateText(commentsText, 70);
+        commentsText = share.comments[0].text;
     }
     commentsCell.textContent = truncateText(commentsText, 70);
     console.log(`[Render] Added share ${displayShareName} to table.`);
@@ -1029,8 +1028,8 @@ function addShareToMobileCards(share) {
     card.innerHTML = `
         <h3>${displayShareName}</h3>
         <p><strong>Entry Date:</strong> ${formatDate(share.entryDate) || '-'}</p>
-        <p><strong>Entered Price:</strong> $${displayEnteredPrice}</p>
         ${livePriceHtml} <!-- NEW -->
+        <p><strong>Entered Price:</strong> $${displayEnteredPrice}</p> <!-- MOVED DOWN -->
         <p><strong>Target:</strong> $${displayTargetPrice}</p>
         <p><strong>Dividend:</strong> $${displayDividendAmount}</p>
         <p><strong>Franking:</strong> ${displayFrankingCredits}</p>
@@ -2586,14 +2585,14 @@ async function initializeAppLogic() {
         });
     }
 
-    // Cancel Manage Watchlist Button
-    if (cancelManageWatchlistBtn) {
-        cancelManageWatchlistBtn.addEventListener('click', () => {
-            console.log("[Watchlist] Manage Watchlist canceled.");
-            hideModal(manageWatchlistModal);
-            editWatchlistNameInput.value = '';
-        });
-    }
+    // Removed Cancel Manage Watchlist Button event listener as the button is removed from HTML
+    // if (cancelManageWatchlistBtn) {
+    //     cancelManageWatchlistBtn.addEventListener('click', () => {
+    //         console.log("[Watchlist] Manage Watchlist canceled.");
+    //         hideModal(manageWatchlistModal);
+    //         editWatchlistNameInput.value = '';
+    //     });
+    // }
 
     // Dividend Calculator Button
     if (dividendCalcBtn) {
@@ -2860,7 +2859,7 @@ async function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v156) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v157) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;

@@ -8,7 +8,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍆</text></svg>">
 
     <!-- Linking to your separate style.css file -->
-    <link rel="stylesheet" href="style.css?v=86"> <!-- Updated to v86 -->
+    <link rel="stylesheet" href="style.css?v=88"> <!-- Updated to v88 -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -84,12 +84,7 @@
             <div class="menu-section">
                 <h3>Theme</h3> <!-- CHANGED: Title from "Theme Toggle" back to "Theme" -->
                 <div class="menu-buttons-group">
-                    <!-- Theme Toggle Button - Icon with Text -->
-                    <button id="themeToggleBtn" class="menu-button-item" data-action-closes-menu="false">
-                        <i class="fas fa-palette"></i> <span>Theme Toggle</span> <!-- CHANGED: Button text to "Theme Toggle" -->
-                    </button>
-                    
-                    <!-- New Theme Selector Dropdown -->
+                    <!-- New Theme Selector Dropdown - MOVED ABOVE TOGGLE -->
                     <label for="colorThemeSelect" class="theme-select-label">Choose Color Theme:</label>
                     <select id="colorThemeSelect" class="dropdown-large menu-dropdown" data-action-closes-menu="false">
                         <option value="none" selected>No Custom Theme</option>
@@ -119,6 +114,11 @@
                         </optgroup>
                     </select>
 
+                    <!-- Theme Toggle Button - Icon with Text -->
+                    <button id="themeToggleBtn" class="menu-button-item" data-action-closes-menu="false">
+                        <i class="fas fa-palette"></i> <span>Theme Toggle</span> <!-- CHANGED: Button text to "Theme Toggle" -->
+                    </button>
+                    
                     <!-- Revert to Default Theme Button - Icon with Text -->
                     <button id="revertToDefaultThemeBtn" class="menu-button-item secondary-buttons" data-action-closes-menu="false">
                         <i class="fas fa-sun"></i><i class="fas fa-moon"></i> <span>Default Theme</span>
@@ -183,8 +183,8 @@
                     <thead>
                         <tr>
                             <th>Code</th>
-                            <th>Entered Price</th>
-                            <th>Live Price</th> <!-- NEW COLUMN -->
+                            <th>Live Price</th> <!-- MOVED UP -->
+                            <th>Entered Price</th> <!-- MOVED DOWN -->
                             <th>Target Price</th>
                             <th>Dividends</th>
                             <th>Comments</th>
@@ -265,8 +265,8 @@
             <!-- NEW: Scrollable content for share details modal -->
             <div class="modal-body-scrollable">
                 <p><strong>Entry Date:</strong> <span id="modalEntryDate"></span></p>
-                <p><strong>Entered Price:</strong> <span id="modalEnteredPrice"></span></p>
-                <p><strong>Live Price:</strong> <span id="modalLivePrice"></span> <span id="modalPriceChange" class="price-change"></span></p> <!-- NEW -->
+                <p><strong>Live Price:</strong> <span id="modalLivePrice"></span> <span id="modalPriceChange" class="price-change"></span></p> <!-- MOVED UP -->
+                <p><strong>Entered Price:</strong> <span id="modalEnteredPrice"></span></p> <!-- MOVED DOWN -->
                 <p><strong>Target Price:</strong> <span id="modalTargetPrice"></span></p>
                 <p><strong>Dividend Amount:</strong> <span id="modalDividendAmount"></span></p>
                 <p><strong>Franking Credits:</strong> <span id="modalFrankingCredits"></span></p>
@@ -326,9 +326,7 @@
             <div class="form-action-buttons">
                 <!-- Delete Watchlist icon - NOW STANDALONE ICON -->
                 <span id="deleteWatchlistInModalBtn" class="modal-action-icon danger" title="Delete Watchlist"><i class="fas fa-trash-alt"></i></span>
-                <!-- Cancel Manage Watchlist icon - NOW STANDALONE ICON -->
-                <span id="cancelManageWatchlistBtn" class="modal-action-icon secondary" title="Cancel"><i class="fas fa-times-circle"></i></span>
-                <!-- Save Watchlist Name icon - NOW STANDALONE ICON -->
+                <!-- Removed Cancel Manage Watchlist icon -->
                 <span id="saveWatchlistNameBtn" class="modal-action-icon" title="Save Name"><i class="fas fa-save"></i></span>
             </div>
         </div>
@@ -507,6 +505,6 @@
         }); 
     </script>
     <!-- Linking to your separate script.js file -->
-    <script src="script.js?v=154"></script> <!-- Updated to v154 -->
+    <script src="script.js?v=157"></script> <!-- Updated to v157 -->
 </body>
 </html>
