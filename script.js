@@ -1,5 +1,5 @@
-// File Version: v155
-// Last Updated: 2025-07-10 (Fixed infinite recursion in renderSortSelect)
+// File Version: v156
+// Last Updated: 2025-07-10 (Fixed duplicate variable declaration for frankedYield)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -611,9 +611,9 @@ function showShareDetails() {
     // Use livePrice for yield calculation if available, otherwise use enteredPriceNum
     const priceForYield = (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) ? livePrice : enteredPriceNum;
     const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, priceForYield); 
-    const frankedYield = calculateFrankedYield(dividendAmountNum, priceForYield, frankingCreditsNum);
     modalUnfrankedYieldSpan.textContent = unfrankedYield !== null ? `${unfrankedYield.toFixed(2)}%` : 'N/A';
     
+    // Corrected: Removed duplicate declaration of 'frankedYield'
     const frankedYield = calculateFrankedYield(dividendAmountNum, priceForYield, frankingCreditsNum);
     modalFrankedYieldSpan.textContent = frankedYield !== null ? `${frankedYield.toFixed(2)}%` : 'N/A';
     
@@ -958,7 +958,7 @@ function addShareToTable(share) {
     const commentsCell = row.insertCell();
     let commentsText = '';
     if (share.comments && Array.isArray(share.comments) && share.comments.length > 0 && share.comments[0].text) {
-        commentsText = share.comments[0].text;
+        commentsText = truncateText(commentsText, 70);
     }
     commentsCell.textContent = truncateText(commentsText, 70);
     console.log(`[Render] Added share ${displayShareName} to table.`);
@@ -2860,7 +2860,7 @@ async function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v155) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v156) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
