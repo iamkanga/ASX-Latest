@@ -1,5 +1,5 @@
-/* File Version: v86 */
-/* Last Updated: 2025-07-10 (Google Sign In button styling) */
+/* File Version: v87 */
+/* Last Updated: 2025-07-10 (Google Sign In button styling, Live Price styling) */
 
 :root {
     /* Light Theme (Default) */
@@ -58,6 +58,11 @@
     --calc-num-btn-bg: #f0f0f0; /* Default: Calculator number button background */
     --calc-num-btn-text: #333; /* Default: Calculator number button text */
     --calc-num-btn-hover-bg: #e0e0e0; /* Default: Calculator number button hover */
+
+    /* Live Price Colors */
+    --price-up-color: #28a745; /* Green for price increase */
+    --price-down-color: #dc3545; /* Red for price decrease */
+    --price-neutral-color: #6c757d; /* Gray for no change */
 }
 
 /* Dark Theme Variables */
@@ -116,6 +121,11 @@ body.dark-theme {
     --calc-num-btn-bg: #5a758e; /* Dark: Calculator number button background */
     --calc-num-btn-text: #ecf0f1; /* Dark: Calculator number button text */
     --calc-num-btn-hover-bg: #6c8095; /* Dark: Calculator number button hover */
+
+    /* Live Price Colors */
+    --price-up-color: #2ecc71; /* Green for price increase */
+    --price-down-color: #e74c3c; /* Red for price decrease */
+    --price-neutral-color: #95a5a6; /* Gray for no change */
 }
 
 /* Custom Themes */
@@ -166,6 +176,11 @@ body.theme-bold-1 { /* Ocean Blue */
     --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
     --google-auth-btn-text: #4285F4; /* Google Blue text */
     /* --- End Google Auth Button Specific Variables --- */
+
+    /* Live Price Colors */
+    --price-up-color: #2ecc71; /* Green for price increase */
+    --price-down-color: #e74c3c; /* Red for price decrease */
+    --price-neutral-color: #a8dadc; /* Gray for no change */
 }
 
 body.theme-bold-2 { /* Forest Green */
@@ -214,6 +229,11 @@ body.theme-bold-2 { /* Forest Green */
     --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
     --google-auth-btn-text: #4285F4; /* Google Blue text */
     /* --- End Google Auth Button Specific Variables --- */
+
+    /* Live Price Colors */
+    --price-up-color: #2ecc71; /* Green for price increase */
+    --price-down-color: #e74c3c; /* Red for price decrease */
+    --price-neutral-color: #d4e3c9; /* Gray for no change */
 }
 
 body.theme-bold-3 { /* Sunset Orange */
@@ -244,7 +264,7 @@ body.theme-bold-3 { /* Sunset Orange */
     --icon-action-color: #ffc300;
     --icon-action-hover-color: #e0ac00;
     --icon-danger-color: #e63946;
-    --icon-danger-hover-color: #c02d38;
+    --icon-danger-hover-color: #c0392b;
     --calc-num-btn-bg: #f7b98d;
     --calc-num-btn-text: #3b2a20;
     --calc-num-btn-hover-bg: #f4a261;
@@ -262,6 +282,11 @@ body.theme-bold-3 { /* Sunset Orange */
     --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
     --google-auth-btn-text: #4285F4; /* Google Blue text */
     /* --- End Google Auth Button Specific Variables --- */
+
+    /* Live Price Colors */
+    --price-up-color: #2ecc71; /* Green for price increase */
+    --price-down-color: #e74c3c; /* Red for price decrease */
+    --price-neutral-color: #ffd790; /* Gray for no change */
 }
 
 body.theme-bold-4 { /* Royal Purple */
@@ -310,6 +335,11 @@ body.theme-bold-4 { /* Royal Purple */
     --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
     --google-auth-btn-text: #4285F4; /* Google Blue text */
     /* --- End Google Auth Button Specific Variables --- */
+
+    /* Live Price Colors */
+    --price-up-color: #2ecc71; /* Green for price increase */
+    --price-down-color: #e74c3c; /* Red for price decrease */
+    --price-neutral-color: #e8d0ff; /* Gray for no change */
 }
 
 body.theme-bold-5 { /* Deep Red */
@@ -358,6 +388,11 @@ body.theme-bold-5 { /* Deep Red */
     --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
     --google-auth-btn-text: #4285F4; /* Google Blue text */
     /* --- End Google Auth Button Specific Variables --- */
+
+    /* Live Price Colors */
+    --price-up-color: #2ecc71; /* Green for price increase */
+    --price-down-color: #e74c3c; /* Red for price decrease */
+    --price-neutral-color: #ffcccc; /* Gray for no change */
 }
 
 body.theme-bold-6 { /* Gold */
@@ -406,6 +441,11 @@ body.theme-bold-6 { /* Gold */
     --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
     --google-auth-btn-text: #4285F4; /* Google Blue text */
     /* --- End Google Auth Button Specific Variables --- */
+
+    /* Live Price Colors */
+    --price-up-color: #2ecc71; /* Green for price increase */
+    --price-down-color: #e74c3c; /* Red for price decrease */
+    --price-neutral-color: #fff2c4; /* Gray for no change */
 }
 
 body.theme-bold-7 { /* Emerald */
@@ -454,6 +494,11 @@ body.theme-bold-7 { /* Emerald */
     --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
     --google-auth-btn-text: #4285F4; /* Google Blue text */
     /* --- End Google Auth Button Specific Variables --- */
+
+    /* Live Price Colors */
+    --price-up-color: #2ecc71; /* Green for price increase */
+    --price-down-color: #e74c3c; /* Red for price decrease */
+    --price-neutral-color: #ccffdd; /* Gray for no change */
 }
 
 body.theme-bold-8 { /* Plum */
@@ -501,6 +546,11 @@ body.theme-bold-8 { /* Plum */
     --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
     --google-auth-btn-text: #4285F4; /* Google Blue text */
     /* --- End Google Auth Button Specific Variables --- */
+
+    /* Live Price Colors */
+    --price-up-color: #2ecc71; /* Green for price increase */
+    --price-down-color: #e74c3c; /* Red for price decrease */
+    --price-neutral-color: #ffccff; /* Gray for no change */
 }
 
 body.theme-bold-9 { /* Aqua */
@@ -548,6 +598,11 @@ body.theme-bold-9 { /* Aqua */
     --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
     --google-auth-btn-text: #4285F4; /* Google Blue text */
     /* --- End Google Auth Button Specific Variables --- */
+
+    /* Live Price Colors */
+    --price-up-color: #2ecc71; /* Green for price increase */
+    --price-down-color: #e74c3c; /* Red for price decrease */
+    --price-neutral-color: #ccffff; /* Gray for no change */
 }
 
 body.theme-bold-10 { /* Ruby */
@@ -595,6 +650,11 @@ body.theme-bold-10 { /* Ruby */
     --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
     --google-auth-btn-text: #4285F4; /* Google Blue text */
     /* --- End Google Auth Button Specific Variables --- */
+
+    /* Live Price Colors */
+    --price-up-color: #2ecc71; /* Green for price increase */
+    --price-down-color: #e74c3c; /* Red for price decrease */
+    --price-neutral-color: #ffcce0; /* Gray for no change */
 }
 
 
@@ -635,6 +695,11 @@ body.theme-subtle-1 { /* Subtle Sky */
     --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
     --google-auth-btn-text: #4285F4; /* Google Blue text */
     /* --- End Google Auth Button Specific Variables --- */
+
+    /* Live Price Colors */
+    --price-up-color: #28a745; /* Green for price increase */
+    --price-down-color: #dc3545; /* Red for price decrease */
+    --price-neutral-color: #6c757d; /* Gray for no change */
 }
 
 body.theme-subtle-2 { /* Subtle Earth */
@@ -673,6 +738,11 @@ body.theme-subtle-2 { /* Subtle Earth */
     --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
     --google-auth-btn-text: #4285F4; /* Google Blue text */
     /* --- End Google Auth Button Specific Variables --- */
+
+    /* Live Price Colors */
+    --price-up-color: #28a745; /* Green for price increase */
+    --price-down-color: #dc3545; /* Red for price decrease */
+    --price-neutral-color: #6c757d; /* Gray for no change */
 }
 
 body.theme-subtle-3 { /* Subtle Rose */
@@ -711,6 +781,11 @@ body.theme-subtle-3 { /* Subtle Rose */
     --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
     --google-auth-btn-text: #4285F4; /* Google Blue text */
     /* --- End Google Auth Button Specific Variables --- */
+
+    /* Live Price Colors */
+    --price-up-color: #28a745; /* Green for price increase */
+    --price-down-color: #dc3545; /* Red for price decrease */
+    --price-neutral-color: #6c757d; /* Gray for no change */
 }
 
 body.theme-subtle-4 { /* Subtle Lavender */
@@ -749,6 +824,11 @@ body.theme-subtle-4 { /* Subtle Lavender */
     --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
     --google-auth-btn-text: #4285F4; /* Google Blue text */
     /* --- End Google Auth Button Specific Variables --- */
+
+    /* Live Price Colors */
+    --price-up-color: #28a745; /* Green for price increase */
+    --price-down-color: #dc3545; /* Red for price decrease */
+    --price-neutral-color: #6c757d; /* Gray for no change */
 }
 
 body.theme-subtle-5 { /* Subtle Mint */
@@ -787,6 +867,11 @@ body.theme-subtle-5 { /* Subtle Mint */
     --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
     --google-auth-btn-text: #4285F4; /* Google Blue text */
     /* --- End Google Auth Button Specific Variables --- */
+
+    /* Live Price Colors */
+    --price-up-color: #28a745; /* Green for price increase */
+    --price-down-color: #dc3545; /* Red for price decrease */
+    --price-neutral-color: #6c757d; /* Gray for no change */
 }
 
 body.theme-subtle-6 { /* Subtle Sand */
@@ -825,6 +910,11 @@ body.theme-subtle-6 { /* Subtle Sand */
     --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
     --google-auth-btn-text: #4285F4; /* Google Blue text */
     /* --- End Google Auth Button Specific Variables --- */
+
+    /* Live Price Colors */
+    --price-up-color: #28a745; /* Green for price increase */
+    --price-down-color: #dc3545; /* Red for price decrease */
+    --price-neutral-color: #6c757d; /* Gray for no change */
 }
 
 body.theme-subtle-7 { /* Subtle Graphite */
@@ -863,6 +953,11 @@ body.theme-subtle-7 { /* Subtle Graphite */
     --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
     --google-auth-btn-text: #4285F4; /* Google Blue text */
     /* --- End Google Auth Button Specific Variables --- */
+
+    /* Live Price Colors */
+    --price-up-color: #28a745; /* Green for price increase */
+    --price-down-color: #dc3545; /* Red for price decrease */
+    --price-neutral-color: #6c757d; /* Gray for no change */
 }
 
 body.theme-subtle-8 { /* Subtle Peach */
@@ -901,6 +996,11 @@ body.theme-subtle-8 { /* Subtle Peach */
     --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
     --google-auth-btn-text: #4285F4; /* Google Blue text */
     /* --- End Google Auth Button Specific Variables --- */
+
+    /* Live Price Colors */
+    --price-up-color: #28a745; /* Green for price increase */
+    --price-down-color: #dc3545; /* Red for price decrease */
+    --price-neutral-color: #6c757d; /* Gray for no change */
 }
 
 body.theme-subtle-9 { /* Subtle Teal */
@@ -939,6 +1039,11 @@ body.theme-subtle-9 { /* Subtle Teal */
     --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
     --google-auth-btn-text: #4285F4; /* Google Blue text */
     /* --- End Google Auth Button Specific Variables --- */
+
+    /* Live Price Colors */
+    --price-up-color: #28a745; /* Green for price increase */
+    --price-down-color: #dc3545; /* Red for price decrease */
+    --price-neutral-color: #6c757d; /* Gray for no change */
 }
 
 body.theme-subtle-10 { /* Subtle Stone */
@@ -977,6 +1082,11 @@ body.theme-subtle-10 { /* Subtle Stone */
     --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
     --google-auth-btn-text: #4285F4; /* Google Blue text */
     /* --- End Google Auth Button Specific Variables --- */
+
+    /* Live Price Colors */
+    --price-up-color: #28a745; /* Green for price increase */
+    --price-down-color: #dc3545; /* Red for price decrease */
+    --price-neutral-color: #6c757d; /* Gray for no change */
 }
 
 
@@ -1408,6 +1518,31 @@ table tbody tr.selected {
 table tbody tr:not(.selected):hover {
     background-color: var(--table-row-hover-bg);
 }
+
+/* New: Live Price Column Styling */
+table td.live-price-cell {
+    font-weight: 600;
+}
+
+.price-change {
+    font-size: 0.8em;
+    margin-left: 5px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.price-change.positive {
+    color: var(--price-up-color);
+}
+
+.price-change.negative {
+    color: var(--price-down-color);
+}
+
+.price-change.neutral {
+    color: var(--price-neutral-color);
+}
+
 
 .mobile-share-cards {
     display: none; 

@@ -1,5 +1,5 @@
-// File Version: v153
-// Last Updated: 2025-07-08 (Sign-in button centering, Bold theme text color, Disabled button styling, Comments box fix, Google Sign In text)
+// File Version: v154
+// Last Updated: 2025-07-10 (Live Price Integration from Google Apps Script)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -37,6 +37,12 @@ let currentSortOrder = 'entryDate-desc'; // Default sort order, now a global var
 let contextMenuOpen = false; // To track if the custom context menu is open
 let currentContextMenuShareId = null; // Stores the ID of the share that opened the context menu
 let originalShareData = null; // Stores the original share data when editing for dirty state check
+
+// Live Price Data
+const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwjuU2ZE1rCe4kiHT7WD-7CALkB0pg-zxkizz0xMIrhKxCBlKEp-YoMiUK85BQ2dHnZ/exec';
+let livePrices = {}; // Stores live price data: {ASX_CODE: price}
+let livePriceFetchInterval = null; // To hold the interval ID for live price updates
+const LIVE_PRICE_FETCH_INTERVAL_MS = 5 * 60 * 1000; // Fetch every 5 minutes
 
 // Theme related variables
 const CUSTOM_THEMES = [
@@ -80,6 +86,8 @@ const shareDetailModal = document.getElementById('shareDetailModal');
 const modalShareName = document.getElementById('modalShareName');
 const modalEntryDate = document.getElementById('modalEntryDate');
 const modalEnteredPrice = document.getElementById('modalEnteredPrice');
+const modalLivePrice = document.getElementById('modalLivePrice'); // NEW
+const modalPriceChange = document.getElementById('modalPriceChange'); // NEW
 const modalTargetPrice = document.getElementById('modalTargetPrice');
 const modalDividendAmount = document.getElementById('modalDividendAmount');
 const modalFrankingCredits = document.getElementById('frankingCredits');
@@ -546,6 +554,51 @@ function showShareDetails() {
     const enteredPriceNum = Number(share.currentPrice);
     modalEnteredPrice.textContent = (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? `$${enteredPriceNum.toFixed(2)}` : 'N/A';
 
+    // NEW: Display Live Price and Price Change
+    const livePrice = livePrices[share.shareName.toUpperCase()];
+    const previousFetchedPrice = Number(share.previousFetchedPrice); // From Firestore
+    const lastFetchedPrice = Number(share.lastFetchedPrice); // From Firestore
+
+    if (modalLivePrice) {
+        if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) {
+            modalLivePrice.textContent = `$${livePrice.toFixed(2)}`;
+            modalLivePrice.style.display = 'inline';
+        } else {
+            modalLivePrice.textContent = 'N/A';
+            modalLivePrice.style.display = 'inline'; // Still show N/A
+        }
+    }
+
+    if (modalPriceChange) {
+        modalPriceChange.textContent = ''; // Clear previous content
+        modalPriceChange.classList.remove('positive', 'negative', 'neutral');
+
+        // Determine which price to compare against for change
+        let comparisonPrice = null;
+        if (lastFetchedPrice !== undefined && lastFetchedPrice !== null && !isNaN(lastFetchedPrice)) {
+            comparisonPrice = lastFetchedPrice;
+        } else if (enteredPriceNum !== undefined && enteredPriceNum !== null && !isNaN(enteredPriceNum)) {
+            comparisonPrice = enteredPriceNum;
+        }
+
+        if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice) && comparisonPrice !== null) {
+            const change = livePrice - comparisonPrice;
+            if (change > 0) {
+                modalPriceChange.textContent = `(+$${change.toFixed(2)})`;
+                modalPriceChange.classList.add('positive');
+            } else if (change < 0) {
+                modalPriceChange.textContent = `(-$${Math.abs(change).toFixed(2)})`;
+                modalPriceChange.classList.add('negative');
+            } else {
+                modalPriceChange.textContent = `($0.00)`;
+                modalPriceChange.classList.add('neutral');
+            }
+            modalPriceChange.style.display = 'inline';
+        } else {
+            modalPriceChange.style.display = 'none'; // Hide if no valid comparison
+        }
+    }
+
     const targetPriceNum = Number(share.targetPrice);
     modalTargetPrice.textContent = (!isNaN(targetPriceNum) && targetPriceNum !== null) ? `$${targetPriceNum.toFixed(2)}` : 'N/A';
     
@@ -580,7 +633,7 @@ function showShareDetails() {
         }
     }
 
-    // NEW: Google News Link
+    // Google News Link
     if (modalNewsLink && share.shareName) {
         const newsUrl = `https://news.google.com/search?q=${encodeURIComponent(share.shareName)}%20ASX&hl=en-AU&gl=AU&ceid=AU%3Aen`;
         modalNewsLink.href = newsUrl;
@@ -752,6 +805,7 @@ function renderSortSelect() {
         currentSortOrder = ''; // Ensure global variable is reset if no valid option
         console.log("[Sort] No valid saved sort order or not logged in, defaulting to placeholder.");
     }
+    renderSortSelect(); // Re-render to ensure placeholder is correctly shown if no saved sort order
     console.log("[UI Update] Sort select rendered. Sort select disabled: ", sortSelect.disabled);
 }
 
@@ -832,6 +886,45 @@ function addShareToTable(share) {
     const displayEnteredPrice = (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? `$${enteredPriceNum.toFixed(2)}` : '-';
     enteredPriceCell.textContent = displayEnteredPrice;
 
+    // NEW: Live Price Cell
+    const livePriceCell = row.insertCell();
+    const livePrice = livePrices[share.shareName.toUpperCase()];
+    const previousFetchedPrice = Number(share.previousFetchedPrice); // From Firestore
+    const lastFetchedPrice = Number(share.lastFetchedPrice); // From Firestore
+
+    if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) {
+        livePriceCell.textContent = `$${livePrice.toFixed(2)}`;
+        livePriceCell.classList.add('live-price-cell'); // Add class for styling
+        
+        // Determine price change relative to last fetched price or entered price if no last fetched
+        let comparisonPrice = null;
+        if (lastFetchedPrice !== undefined && lastFetchedPrice !== null && !isNaN(lastFetchedPrice)) {
+            comparisonPrice = lastFetchedPrice;
+        } else if (enteredPriceNum !== undefined && enteredPriceNum !== null && !isNaN(enteredPriceNum)) {
+            comparisonPrice = enteredPriceNum;
+        }
+
+        if (comparisonPrice !== null) {
+            const change = livePrice - comparisonPrice;
+            const priceChangeSpan = document.createElement('span');
+            priceChangeSpan.classList.add('price-change');
+            if (change > 0) {
+                priceChangeSpan.textContent = `(+$${change.toFixed(2)})`;
+                priceChangeSpan.classList.add('positive');
+            } else if (change < 0) {
+                priceChangeSpan.textContent = `(-$${Math.abs(change).toFixed(2)})`;
+                priceChangeSpan.classList.add('negative');
+            } else {
+                priceChangeSpan.textContent = `($0.00)`;
+                priceChangeSpan.classList.add('neutral');
+            }
+            livePriceCell.appendChild(priceChangeSpan);
+        }
+    } else {
+        livePriceCell.textContent = 'N/A';
+    }
+
+
     const targetPriceNum = Number(share.targetPrice);
     const displayTargetPrice = (!isNaN(targetPriceNum) && targetPriceNum !== null) ? `$${targetPriceNum.toFixed(2)}` : '-';
     row.insertCell().textContent = displayTargetPrice;
@@ -839,8 +932,11 @@ function addShareToTable(share) {
     const dividendCell = row.insertCell();
     const dividendAmountNum = Number(share.dividendAmount);
     const frankingCreditsNum = Number(share.frankingCredits);
-    const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, enteredPriceNum); 
-    const frankedYield = calculateFrankedYield(dividendAmountNum, enteredPriceNum, frankingCreditsNum);
+    // Use livePrice for yield calculation if available, otherwise use enteredPriceNum
+    const priceForYield = (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) ? livePrice : enteredPriceNum;
+
+    const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, priceForYield); 
+    const frankedYield = calculateFrankedYield(dividendAmountNum, priceForYield, frankingCreditsNum);
     const divAmountDisplay = (!isNaN(dividendAmountNum) && dividendAmountNum !== null) ? `$${dividendAmountNum.toFixed(2)}` : '-';
 
     dividendCell.innerHTML = `
@@ -877,8 +973,15 @@ function addShareToMobileCards(share) {
     const frankingCreditsNum = Number(share.frankingCredits);
     const targetPriceNum = Number(share.targetPrice);
     
-    const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, enteredPriceNum);
-    const frankedYield = calculateFrankedYield(dividendAmountNum, enteredPriceNum, frankingCreditsNum);
+    // Use livePrice for yield calculation if available, otherwise use enteredPriceNum
+    const livePrice = livePrices[share.shareName.toUpperCase()];
+    const previousFetchedPrice = Number(share.previousFetchedPrice); // From Firestore
+    const lastFetchedPrice = Number(share.lastFetchedPrice); // From Firestore
+
+    const priceForYield = (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) ? livePrice : enteredPriceNum;
+
+    const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, priceForYield);
+    const frankedYield = calculateFrankedYield(dividendAmountNum, priceForYield, frankingCreditsNum);
 
     let commentsSummary = '-';
     if (share.comments && Array.isArray(share.comments) && share.comments.length > 0 && share.comments[0].text) {
@@ -891,11 +994,39 @@ function addShareToMobileCards(share) {
     const displayShareName = (share.shareName && String(share.shareName).trim() !== '') ? share.shareName : '(No Code)';
     const displayEnteredPrice = (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? enteredPriceNum.toFixed(2) : '-';
 
+    let livePriceHtml = '';
+    if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) {
+        livePriceHtml = `<p><strong>Live Price:</strong> $${livePrice.toFixed(2)}`;
+        
+        let comparisonPrice = null;
+        if (lastFetchedPrice !== undefined && lastFetchedPrice !== null && !isNaN(lastFetchedPrice)) {
+            comparisonPrice = lastFetchedPrice;
+        } else if (enteredPriceNum !== undefined && enteredPriceNum !== null && !isNaN(enteredPriceNum)) {
+            comparisonPrice = enteredPriceNum;
+        }
+
+        if (comparisonPrice !== null) {
+            const change = livePrice - comparisonPrice;
+            if (change > 0) {
+                livePriceHtml += ` <span class="price-change positive">(+$${change.toFixed(2)})</span></p>`;
+            } else if (change < 0) {
+                livePriceHtml += ` <span class="price-change negative">(-$${Math.abs(change).toFixed(2)})</span></p>`;
+            } else {
+                livePriceHtml += ` <span class="price-change neutral">($0.00)</span></p>`;
+            }
+        } else {
+            livePriceHtml += `</p>`;
+        }
+    } else {
+        livePriceHtml = `<p><strong>Live Price:</strong> N/A</p>`;
+    }
+
 
     card.innerHTML = `
         <h3>${displayShareName}</h3>
         <p><strong>Entry Date:</strong> ${formatDate(share.entryDate) || '-'}</p>
         <p><strong>Entered Price:</strong> $${displayEnteredPrice}</p>
+        ${livePriceHtml} <!-- NEW -->
         <p><strong>Target:</strong> $${displayTargetPrice}</p>
         <p><strong>Dividend:</strong> $${displayDividendAmount}</p>
         <p><strong>Franking:</strong> ${displayFrankingCredits}</p>
@@ -1019,7 +1150,7 @@ function renderWatchlist() {
         emptyWatchlistMessage.style.padding = '20px';
         emptyWatchlistMessage.style.color = 'var(--ghosted-text)';
         const td = document.createElement('td');
-        td.colSpan = 5; // Span all columns in the table
+        td.colSpan = 6; // Span all columns including Live Price
         td.appendChild(emptyWatchlistMessage);
         const tr = document.createElement('tr');
         tr.appendChild(td);
@@ -1386,6 +1517,76 @@ async function loadUserWatchlistsAndSettings() {
 }
 
 /**
+ * Fetches live price data from the Google Apps Script Web App.
+ * Updates the `livePrices` global object.
+ */
+async function fetchLivePrices() {
+    console.log("[Live Price] Attempting to fetch live prices...");
+    try {
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        console.log("[Live Price] Raw data received:", data);
+
+        const newLivePrices = {};
+        data.forEach(item => {
+            // Find the key that is not 'Price', 'PreviousClose', '52 High', '52 Low'
+            const asxCodeKey = Object.keys(item).find(key => 
+                key !== 'Price' && key !== 'PreviousClose' && key !== '52 High' && key !== '52 Low'
+            );
+            if (asxCodeKey && item[asxCodeKey] && item['Price'] !== undefined) {
+                const asxCode = String(item[asxCodeKey]).toUpperCase();
+                const price = parseFloat(item['Price']);
+                if (!isNaN(price)) {
+                    newLivePrices[asxCode] = price;
+                } else {
+                    console.warn(`[Live Price] Invalid price for ${asxCode}: ${item['Price']}`);
+                }
+            } else {
+                console.warn("[Live Price] Skipping item due to missing ASX code key or price:", item);
+            }
+        });
+        livePrices = newLivePrices;
+        console.log("[Live Price] Live prices updated:", livePrices);
+        // After fetching new prices, re-render the watchlist to update displayed prices
+        renderWatchlist(); 
+    } catch (error) {
+        console.error("[Live Price] Error fetching live prices:", error);
+        // Optionally show a non-dismissing alert for persistent errors:
+        // showCustomAlert("Error fetching live prices: " + error.message, 5000); 
+    }
+}
+
+/**
+ * Starts the periodic fetching of live prices.
+ */
+function startLivePriceUpdates() {
+    if (livePriceFetchInterval) {
+        clearInterval(livePriceFetchInterval);
+        console.log("[Live Price] Cleared existing live price interval.");
+    }
+    // Fetch immediately on start
+    fetchLivePrices(); 
+    // Then set up interval
+    livePriceFetchInterval = setInterval(fetchLivePrices, LIVE_PRICE_FETCH_INTERVAL_MS);
+    console.log(`[Live Price] Started live price updates every ${LIVE_PRICE_FETCH_INTERVAL_MS / 1000 / 60} minutes.`);
+}
+
+/**
+ * Stops the periodic fetching of live prices.
+ */
+function stopLivePriceUpdates() {
+    if (livePriceFetchInterval) {
+        clearInterval(livePriceFetchInterval);
+        livePriceFetchInterval = null;
+        console.log("[Live Price] Stopped live price updates.");
+    }
+}
+
+
+/**
  * Sets up a real-time Firestore listener for shares based on currentSelectedWatchlistIds.
  * Updates `allSharesData` and re-renders the UI whenever changes occur.
  */
@@ -1689,7 +1890,7 @@ function exportWatchlistToCSV() {
     }
 
     const headers = [
-        "Code", "Entered Price", "Target Price", "Dividend Amount", "Franking Credits (%)",
+        "Code", "Entered Price", "Live Price", "Price Change", "Target Price", "Dividend Amount", "Franking Credits (%)",
         "Unfranked Yield (%)", "Franked Yield (%)", "Entry Date", "Comments"
     ];
 
@@ -1702,8 +1903,30 @@ function exportWatchlistToCSV() {
         const frankingCreditsNum = Number(share.frankingCredits);
         const targetPriceNum = Number(share.targetPrice);
 
-        const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, enteredPriceNum);
-        const frankedYield = calculateFrankedYield(dividendAmountNum, enteredPriceNum, frankingCreditsNum);
+        const livePrice = livePrices[share.shareName.toUpperCase()];
+        const previousFetchedPrice = Number(share.previousFetchedPrice);
+        const lastFetchedPrice = Number(share.lastFetchedPrice);
+
+        let priceChange = '';
+        if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) {
+            let comparisonPrice = null;
+            if (lastFetchedPrice !== undefined && lastFetchedPrice !== null && !isNaN(lastFetchedPrice)) {
+                comparisonPrice = lastFetchedPrice;
+            } else if (enteredPriceNum !== undefined && enteredPriceNum !== null && !isNaN(enteredPriceNum)) {
+                comparisonPrice = enteredPriceNum;
+            }
+
+            if (comparisonPrice !== null) {
+                const change = livePrice - comparisonPrice;
+                priceChange = change.toFixed(2);
+            }
+        }
+
+        // Use livePrice for yield calculation if available, otherwise use enteredPriceNum
+        const priceForYield = (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) ? livePrice : enteredPriceNum;
+
+        const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, priceForYield);
+        const frankedYield = calculateFrankedYield(dividendAmountNum, priceForYield, frankingCreditsNum);
 
         let allCommentsText = '';
         if (share.comments && Array.isArray(share.comments)) {
@@ -1718,6 +1941,8 @@ function exportWatchlistToCSV() {
         const row = [
             share.shareName || '',
             (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? enteredPriceNum.toFixed(2) : '',
+            (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) ? livePrice.toFixed(2) : '', // Live Price
+            priceChange, // Price Change
             (!isNaN(targetPriceNum) && targetPriceNum !== null) ? targetPriceNum.toFixed(2) : '',
             (!isNaN(dividendAmountNum) && dividendAmountNum !== null) ? dividendAmountNum.toFixed(3) : '',
             (!isNaN(frankingCreditsNum) && frankingCreditsNum !== null) ? frankingCreditsNum.toFixed(1) : '',
@@ -1763,8 +1988,6 @@ async function initializeAppLogic() {
     if (calculatorModal) calculatorModal.style.setProperty('display', 'none', 'important');
     if (shareContextMenu) shareContextMenu.style.setProperty('display', 'none', 'important');
     // if (selectWatchlistsModal) selectWatchlistsModal.style.setProperty('display', 'none', 'important'); // New modal - removed as per user's provided index.html
-
-    // renderWatchlistSelect(); // Replaced by renderWatchlistSelectionModal
 
     // Service Worker Registration
     if ('serviceWorker' in navigator) {
@@ -2012,9 +2235,17 @@ async function initializeAppLogic() {
 
             if (selectedShareDocId) {
                 const existingShare = allSharesData.find(s => s.id === selectedShareDocId); // Corrected to use s.id
-                if (existingShare) { shareData.previousFetchedPrice = existingShare.lastFetchedPrice; }
-                else { shareData.previousFetchedPrice = shareData.currentPrice; }
-                shareData.lastFetchedPrice = shareData.currentPrice;
+                // Update lastFetchedPrice and previousFetchedPrice only if currentPrice is valid and changed
+                if (shareData.currentPrice !== null && existingShare && existingShare.currentPrice !== shareData.currentPrice) {
+                    shareData.previousFetchedPrice = existingShare.lastFetchedPrice; // Store old lastFetchedPrice
+                    shareData.lastFetchedPrice = shareData.currentPrice; // Update lastFetchedPrice to new currentPrice
+                } else if (!existingShare || existingShare.lastFetchedPrice === undefined) { // If it's a new field or no existing share
+                    shareData.previousFetchedPrice = shareData.currentPrice;
+                    shareData.lastFetchedPrice = shareData.currentPrice;
+                } else { // No change in currentPrice, preserve existing fetched prices
+                    shareData.previousFetchedPrice = existingShare.previousFetchedPrice;
+                    shareData.lastFetchedPrice = existingShare.lastFetchedPrice;
+                }
 
                 try {
                     const shareDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, selectedShareDocId);
@@ -2624,7 +2855,7 @@ async function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v153) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v154) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
@@ -2647,6 +2878,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 updateMainButtonsState(true);
                 await loadUserWatchlistsAndSettings(); // This will set currentSelectedWatchlistIds and then call loadShares()
+                startLivePriceUpdates(); // Start fetching live prices when user signs in
             } else {
                 currentUserId = null;
                 updateAuthButtonText(false); // Changed to false for "Google Sign In" text
@@ -2662,6 +2894,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     unsubscribeShares = null;
                     console.log("[Firestore Listener] Unsubscribed from shares listener on logout.");
                 }
+                stopLivePriceUpdates(); // Stop fetching live prices when user signs out
             }
             // Ensure initializeAppLogic is only called once after initial auth state is determined
             if (!window._appLogicInitialized) {

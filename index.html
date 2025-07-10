@@ -8,7 +8,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍆</text></svg>">
 
     <!-- Linking to your separate style.css file -->
-    <link rel="stylesheet" href="style.css?v=82"> <!-- Updated to v82 -->
+    <link rel="stylesheet" href="style.css?v=86"> <!-- Updated to v86 -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -184,6 +184,7 @@
                         <tr>
                             <th>Code</th>
                             <th>Entered Price</th>
+                            <th>Live Price</th> <!-- NEW COLUMN -->
                             <th>Target Price</th>
                             <th>Dividends</th>
                             <th>Comments</th>
@@ -201,7 +202,7 @@
     </main>
 
     <footer class="fixed-footer">
-        <button id="googleAuthBtn" class="google-auth-btn">Sign In</button>
+        <button id="googleAuthBtn" class="google-auth-btn">Google Sign In</button>
     </footer>
 
     <!-- Scroll-to-Top Button -->
@@ -265,6 +266,7 @@
             <div class="modal-body-scrollable">
                 <p><strong>Entry Date:</strong> <span id="modalEntryDate"></span></p>
                 <p><strong>Entered Price:</strong> <span id="modalEnteredPrice"></span></p>
+                <p><strong>Live Price:</strong> <span id="modalLivePrice"></span> <span id="modalPriceChange" class="price-change"></span></p> <!-- NEW -->
                 <p><strong>Target Price:</strong> <span id="modalTargetPrice"></span></p>
                 <p><strong>Dividend Amount:</strong> <span id="modalDividendAmount"></span></p>
                 <p><strong>Franking Credits:</strong> <span id="modalFrankingCredits"></span></p>
@@ -505,6 +507,6 @@
         }); 
     </script>
     <!-- Linking to your separate script.js file -->
-    <script src="script.js?v=151"></script> <!-- Updated to v151 -->
+    <script src="script.js?v=154"></script> <!-- Updated to v154 -->
 </body>
 </html>
