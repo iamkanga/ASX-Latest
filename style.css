@@ -1,5 +1,5 @@
-/* File Version: v95 */
-/* Last Updated: 2025-07-10 (Fixed header alignment, removed comments from main table/cards, added watchlist selection modal styling, fixed truncation) */
+/* File Version: v96 */
+/* Last Updated: 2025-07-10 (Fixed header alignment, removed comments from main table/cards, added watchlist selection modal styling) */
 
 :root {
     /* Light Theme (Default) */
@@ -260,7 +260,7 @@ body.theme-bold-3 { /* Sunset Orange */
     --placeholder-text: #ffe5b4;
     --ghosted-text: #ffd790;
     --danger-button-bg: #e63946;
-    --danger-button-hover-bg: #c0392b;
+    --danger-button-hover-bg: #c02d38;
     --icon-action-color: #ffc300;
     --icon-action-hover-color: #e0ac00;
     --icon-danger-color: #e63946;
