@@ -8,7 +8,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍆</text></svg>">
 
     <!-- Linking to your separate style.css file -->
-    <link rel="stylesheet" href="style.css?v=88"> <!-- Updated to v88 -->
+    <link rel="stylesheet" href="style.css?v=89"> <!-- Updated to v89 -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -77,6 +77,10 @@
                     <!-- Export Watchlist Button - NEW -->
                     <button id="exportWatchlistBtn" class="menu-button-item" data-action-closes-menu="true">
                         <i class="fas fa-file-export"></i> <span>Export Watchlist (CSV)</span>
+                    </button>
+                    <!-- NEW: Refresh Live Prices Button -->
+                    <button id="refreshLivePricesBtn" class="menu-button-item" data-action-closes-menu="false">
+                        <i class="fas fa-sync-alt"></i> <span>Refresh Live Prices</span>
                     </button>
                 </div>
             </div>
@@ -248,9 +252,7 @@
             <div class="form-action-buttons modal-form-buttons sticky-footer">
                 <!-- Delete Icon -->
                 <span id="deleteShareBtn" class="modal-action-icon danger hidden" title="Delete"><i class="fas fa-trash-alt"></i></span>
-                <!-- Cancel Icon -->
-                <span id="cancelFormBtn" class="modal-action-icon secondary" title="Cancel"><i class="fas fa-times-circle"></i></span>
-                <!-- Save Share Icon -->
+                <!-- Cancel Icon - REMOVED -->
                 <span id="saveShareBtn" class="modal-action-icon" title="Save Share"><i class="fas fa-save"></i></span>
             </div>
         </div>
@@ -308,9 +310,7 @@
             <label for="newWatchlistName">Watchlist Name:</label>
             <input type="text" id="newWatchlistName" placeholder="e.g., Tech Stocks" required>
             <div class="form-action-buttons">
-                <!-- Cancel Add Watchlist icon - NOW STANDALONE ICON -->
-                <span id="cancelAddWatchlistBtn" class="modal-action-icon secondary" title="Cancel"><i class="fas fa-times-circle"></i></span>
-                <!-- Save Watchlist icon - NOW STANDALONE ICON -->
+                <!-- Cancel Add Watchlist icon - REMOVED -->
                 <span id="saveWatchlistBtn" class="modal-action-icon" title="Save Watchlist"><i class="fas fa-save"></i></span>
             </div>
         </div>
@@ -505,6 +505,6 @@
         }); 
     </script>
     <!-- Linking to your separate script.js file -->
-    <script src="script.js?v=157"></script> <!-- Updated to v157 -->
+    <script src="script.js?v=158"></script> <!-- Updated to v158 -->
 </body>
 </html>

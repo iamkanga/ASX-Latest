@@ -1,5 +1,5 @@
-// File Version: v157
-// Last Updated: 2025-07-10 (Live Price order, removed cancel button from manage watchlist modal)
+// File Version: v158
+// Last Updated: 2025-07-10 (Removed specific cancel buttons, added manual live price refresh button logic)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -69,7 +69,7 @@ const shareFormSection = document.getElementById('shareFormSection');
 const formCloseButton = document.querySelector('.form-close-button');
 const formTitle = document.getElementById('formTitle');
 const saveShareBtn = document.getElementById('saveShareBtn');
-const cancelFormBtn = document.getElementById('cancelFormBtn');
+const cancelFormBtn = document.getElementById('cancelFormBtn'); // This button is removed from HTML
 const deleteShareBtn = document.getElementById('deleteShareBtn');
 const shareNameInput = document.getElementById('shareName');
 const currentPriceInput = document.getElementById('currentPrice');
@@ -138,12 +138,13 @@ const manageWatchlistModal = document.getElementById('manageWatchlistModal');
 const editWatchlistNameInput = document.getElementById('editWatchlistName');
 const saveWatchlistNameBtn = document.getElementById('saveWatchlistNameBtn'); // Now a span
 const deleteWatchlistInModalBtn = document.getElementById('deleteWatchlistInModalBtn'); // Now a span
-const cancelManageWatchlistBtn = document.getElementById('cancelManageWatchlistBtn'); // Now a span - removed from HTML
+// const cancelManageWatchlistBtn = document.getElementById('cancelManageWatchlistBtn'); // Now a span - removed from HTML
 const shareContextMenu = document.getElementById('shareContextMenu');
 const contextEditShareBtn = document.getElementById('contextEditShareBtn');
 const contextDeleteShareBtn = document.getElementById('contextDeleteShareBtn');
 const logoutBtn = document.getElementById('logoutBtn'); // Now a span
 const exportWatchlistBtn = document.getElementById('exportWatchlistBtn'); // Export button
+const refreshLivePricesBtn = document.getElementById('refreshLivePricesBtn'); // NEW
 
 // New elements for multi-select watchlist modal (commented out as per user's provided index.html)
 // const selectWatchlistsModal = document.getElementById('selectWatchlistsModal');
@@ -266,6 +267,7 @@ function updateMainButtonsState(enable) {
     if (revertToDefaultThemeBtn) revertToDefaultThemeBtn.disabled = !enable;
     if (sortSelect) sortSelect.disabled = !enable; // Ensure sort select is disabled if not enabled
     if (watchlistSelect) watchlistSelect.disabled = !enable; // Ensure watchlist select is disabled if not enabled
+    if (refreshLivePricesBtn) refreshLivePricesBtn.disabled = !enable; // NEW: Disable refresh button if not enabled
     console.log(`[UI State] Sort Select Disabled: ${sortSelect ? sortSelect.disabled : 'N/A'}`);
     console.log(`[UI State] Watchlist Select Disabled: ${watchlistSelect ? watchlistSelect.disabled : 'N/A'}`);
 
@@ -988,7 +990,7 @@ function addShareToMobileCards(share) {
 
     let commentsSummary = '-';
     if (share.comments && Array.isArray(share.comments) && share.comments.length > 0 && share.comments[0].text) {
-        commentsSummary = truncateText(share.comments[0].text, 70);
+        commentsSummary = truncateText(commentsSummary, 70); // Corrected to use commentsSummary
     }
 
     const displayTargetPrice = (!isNaN(targetPriceNum) && targetPriceNum !== null) ? targetPriceNum.toFixed(2) : '-';
@@ -2281,10 +2283,10 @@ async function initializeAppLogic() {
         });
     }
 
-    // Cancel Form Button
-    if (cancelFormBtn) {
-        cancelFormBtn.addEventListener('click', () => { console.log("[Form] Form canceled."); clearForm(); hideModal(shareFormSection); });
-    }
+    // Removed Cancel Form Button event listener as the button is removed from HTML
+    // if (cancelFormBtn) {
+    //     cancelFormBtn.addEventListener('click', () => { console.log("[Form] Form canceled."); clearForm(); hideModal(shareFormSection); });
+    // }
 
     // Delete Share Button (No confirmation as per user request)
     if (deleteShareBtn) {
@@ -2586,13 +2588,13 @@ async function initializeAppLogic() {
     }
 
     // Removed Cancel Manage Watchlist Button event listener as the button is removed from HTML
-    // if (cancelManageWatchlistBtn) {
-    //     cancelManageWatchlistBtn.addEventListener('click', () => {
-    //         console.log("[Watchlist] Manage Watchlist canceled.");
-    //         hideModal(manageWatchlistModal);
-    //         editWatchlistNameInput.value = '';
-    //     });
-    // }
+    if (cancelManageWatchlistBtn) { // Check if element exists before adding listener
+        cancelManageWatchlistBtn.addEventListener('click', () => {
+            console.log("[Watchlist] Manage Watchlist canceled.");
+            hideModal(manageWatchlistModal);
+            editWatchlistNameInput.value = '';
+        });
+    }
 
     // Dividend Calculator Button
     if (dividendCalcBtn) {
@@ -2856,10 +2858,19 @@ async function initializeAppLogic() {
             toggleAppSidebar(false); // Close sidebar after clicking export
         });
     }
+
+    // NEW: Refresh Live Prices Button Event Listener
+    if (refreshLivePricesBtn) {
+        refreshLivePricesBtn.addEventListener('click', () => {
+            console.log("[UI] Refresh Live Prices button clicked.");
+            fetchLivePrices(); // Manually trigger a fetch
+            showCustomAlert("Refreshing live prices...", 1000);
+        });
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v157) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v158) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;

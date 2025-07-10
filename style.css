@@ -1,5 +1,5 @@
-/* File Version: v88 */
-/* Last Updated: 2025-07-10 (Google Sign In button styling, Live Price styling, Price Change styling) */
+/* File Version: v89 */
+/* Last Updated: 2025-07-10 (Google Sign In button styling, Live Price styling, Price Change styling, Refresh button styling) */
 
 :root {
     /* Light Theme (Default) */
@@ -2214,6 +2214,34 @@ table td.live-price-cell {
 }
 #scrollToTopBtn .fas {
     font-weight: 900; 
+}
+
+/* NEW: Refresh Live Prices Button Styling */
+#refreshLivePricesBtn {
+    background-color: var(--info-color); /* Info blue or similar */
+    color: var(--button-text);
+    padding: 10px 15px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 600;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 4px var(--shadow-color);
+}
+
+#refreshLivePricesBtn:hover {
+    background-color: var(--link-hover-color);
+    transform: translateY(-1px);
+}
+
+#refreshLivePricesBtn:disabled {
+    background-color: var(--secondary-button-bg);
+    cursor: not-allowed;
+    opacity: 0.5;
 }
 
 
