@@ -1355,6 +1355,7 @@ function renderAsxCodeButtons() {
             const clickedCode = event.target.dataset.asxCode;
             scrollToShare(clickedCode);
         });
+        asxCodeButtonsContainer.appendChild(button); // Append the button here
     });
     console.log(`[UI] Rendered ${sortedAsxCodes.length} code buttons.`);
 }
@@ -1888,7 +1889,7 @@ function showContextMenu(event, shareId) {
     }
 
     const menuWidth = shareContextMenu.offsetWidth;
-    const menuHeight = shareContextMenu.offsetWidth; // Corrected from offsetHeight to offsetWidth
+    const menuHeight = shareContextMenu.offsetHeight; // Corrected from offsetWidth to offsetHeight
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
 
