@@ -1,5 +1,5 @@
-// File Version: v165
-// Last Updated: 2025-07-09 (Fixed modal opening, live price lookup, franking credits input, redundant save alert, refresh button positioning, and critical SyntaxError)
+// File Version: v166
+// Last Updated: 2025-07-09 (Fixed modal opening, live price lookup, franking credits input, redundant save alert, refresh button positioning, shared double-ups, and delete error)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -218,15 +218,18 @@ async function saveShareFormData() {
 
     try {
         if (selectedShareDocId) {
-            const existingShare = allSharesData.find(s => s.id === selectedShareDocId);
-            if (existingShare) { shareData.previousFetchedPrice = existingShare.lastFetchedPrice; }
-            else { shareData.previousFetchedPrice = shareData.currentPrice; }
-            shareData.lastFetchedPrice = shareData.currentPrice;
-
+            // Before updating, check if the document still exists. This handles cases where it might have been deleted.
             const shareDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, selectedShareDocId);
-            await window.firestore.updateDoc(shareDocRef, shareData);
-            showCustomAlert(`Share '${shareName}' updated!`, 1000);
-            console.log(`[Auto-Save] Share '${shareName}' (ID: ${selectedShareDocId}) auto-updated.`);
+            const docSnap = await window.firestore.getDoc(shareDocRef);
+            if (docSnap.exists()) {
+                await window.firestore.updateDoc(shareDocRef, shareData);
+                showCustomAlert(`Share '${shareName}' updated!`, 1000);
+                console.log(`[Auto-Save] Share '${shareName}' (ID: ${selectedShareDocId}) auto-updated.`);
+                return true; // Indicate successful save
+            } else {
+                console.warn(`[Auto-Save] Skipping update: Document ${selectedShareDocId} no longer exists.`);
+                return false; // Indicate no save occurred
+            }
         } else {
             shareData.entryDate = new Date().toISOString();
             shareData.lastFetchedPrice = shareData.currentPrice;
@@ -237,10 +240,12 @@ async function saveShareFormData() {
             selectedShareDocId = newDocRef.id; // Set selectedShareDocId for the new share
             showCustomAlert(`Share '${shareName}' added!`, 1000);
             console.log(`[Auto-Save] New share '${shareName}' auto-added with ID: ${newDocRef.id}`);
+            return true; // Indicate successful save
         }
     } catch (error) {
         console.error("[Auto-Save] Error auto-saving share:", error);
         showCustomAlert("Error auto-saving share: " + error.message);
+        return false; // Indicate save failed
     }
 }
 
@@ -249,11 +254,11 @@ async function saveWatchlistData() {
     const watchlistName = newWatchlistNameInput.value.trim();
     if (!watchlistName) {
         showCustomAlert("Watchlist name is required!");
-        return;
+        return false; // Indicate no save occurred
     }
     if (userWatchlists.some(w => w.name.toLowerCase() === watchlistName.toLowerCase())) {
         showCustomAlert("A watchlist with this name already exists!");
-        return;
+        return false; // Indicate no save occurred
     }
 
     try {
@@ -269,9 +274,11 @@ async function saveWatchlistData() {
         currentSelectedWatchlistIds = [newWatchlistRef.id];
         await saveLastSelectedWatchlistIds(currentSelectedWatchlistIds);
         await loadUserWatchlistsAndSettings(); // This will re-render watchlists and trigger loadShares()
+        return true; // Indicate successful save
     } catch (error) {
         console.error("[Firestore] Error adding watchlist:", error);
         showCustomAlert("Error adding watchlist: " + error.message);
+        return false; // Indicate save failed
     }
 }
 
@@ -281,11 +288,11 @@ async function saveEditedWatchlistName() {
     const newName = editWatchlistNameInput.value.trim();
     if (!newName) {
         showCustomAlert("Watchlist name cannot be empty!");
-        return;
+        return false; // Indicate no save occurred
     }
     if (userWatchlists.some(w => w.name.toLowerCase() === newName.toLowerCase() && w.id !== watchlistToEditId)) {
         showCustomAlert("A watchlist with this name already exists!");
-        return;
+        return false; // Indicate no save occurred
     }
 
     try {
@@ -294,9 +301,11 @@ async function saveEditedWatchlistName() {
         showCustomAlert(`Watchlist renamed to '${newName}'!`, 1500);
         console.log(`[Firestore] Watchlist (ID: ${watchlistToEditId}) renamed to '${newName}'.`);
         await loadUserWatchlistsAndSettings(); // This will re-render watchlists and trigger loadShares()
+        return true; // Indicate successful save
     } catch (error) {
         console.error("[Firestore] Error renaming watchlist:", error);
         showCustomAlert("Error renaming watchlist: " + error.message);
+        return false; // Indicate save failed
     }
 }
 
@@ -307,44 +316,58 @@ function closeModals() {
         if (modal) {
             // Check if the modal is one of the "editable" modals that should auto-save
             const isEditableModal = modal.id === 'shareFormSection' || modal.id === 'addWatchlistModal' || modal.id === 'manageWatchlistModal';
-            if (isEditableModal) {
-                // For share form, trigger saveShareFormData if it's not already saved
-                if (modal.id === 'shareFormSection') {
-                    // Only auto-save if the form is dirty AND share name is valid
-                    const currentFormData = getCurrentFormData();
-                    const isShareNameValid = currentFormData.shareName.trim() !== '';
-                    const isDirty = selectedShareDocId ? !areShareDataEqual(originalShareData, currentFormData) : isShareNameValid;
-                    
-                    if (isDirty) {
-                        saveShareFormData(); // This function handles dirty check internally
-                    } else {
-                        console.log("[Auto-Save] Skipping save: Share form not dirty.");
-                    }
-                } else if (modal.id === 'addWatchlistModal') {
-                    // For add watchlist, save only if name is entered and it's not a duplicate
-                    if (newWatchlistNameInput && newWatchlistNameInput.value.trim() !== '') {
-                        const watchlistName = newWatchlistNameInput.value.trim();
-                        if (!userWatchlists.some(w => w.name.toLowerCase() === watchlistName.toLowerCase())) {
-                            saveWatchlistData();
-                        } else {
-                            console.log("[Auto-Save] Skipping save: Add Watchlist form not dirty or duplicate name.");
+            
+            // Track if a save operation was triggered and successful
+            let saveAttempted = false;
+            let saveSuccessful = false;
+
+            if (modal.id === 'shareFormSection') {
+                const currentFormData = getCurrentFormData();
+                const isShareNameValid = currentFormData.shareName.trim() !== '';
+                const isDirty = selectedShareDocId ? !areShareDataEqual(originalShareData, currentFormData) : isShareNameValid;
+
+                if (isDirty) {
+                    saveAttempted = true;
+                    // Use a IIFE or separate async function to await saveShareFormData
+                    (async () => {
+                        saveSuccessful = await saveShareFormData();
+                        if (saveAttempted && saveSuccessful) {
+                            // Only show alert if a save was attempted AND successful
+                            // (The alert is already shown by saveShareFormData, so no need to duplicate)
                         }
+                    })();
+                } else {
+                    console.log("[Auto-Save] Skipping save: Share form not dirty.");
+                }
+            } else if (modal.id === 'addWatchlistModal') {
+                if (newWatchlistNameInput && newWatchlistNameInput.value.trim() !== '') {
+                    const watchlistName = newWatchlistNameInput.value.trim();
+                    if (!userWatchlists.some(w => w.name.toLowerCase() === watchlistName.toLowerCase())) {
+                        saveAttempted = true;
+                        (async () => {
+                            saveSuccessful = await saveWatchlistData();
+                        })();
                     } else {
-                         console.log("[Auto-Save] Skipping save: Add Watchlist form empty.");
+                        console.log("[Auto-Save] Skipping save: Add Watchlist form not dirty or duplicate name.");
                     }
-                } else if (modal.id === 'manageWatchlistModal') {
-                    // For manage watchlist, save only if name is changed
-                    const currentName = editWatchlistNameInput.value.trim();
-                    const selectedWatchlistObj = userWatchlists.find(w => w.id === watchlistSelect.value);
-                    if (selectedWatchlistObj && currentName !== selectedWatchlistObj.name) {
-                        saveEditedWatchlistName();
-                    } else {
-                        console.log("[Auto-Save] Skipping save: Manage Watchlist form not dirty.");
-                    }
+                } else {
+                     console.log("[Auto-Save] Skipping save: Add Watchlist form empty.");
+                }
+            } else if (modal.id === 'manageWatchlistModal') {
+                const currentName = editWatchlistNameInput.value.trim();
+                const selectedWatchlistObj = userWatchlists.find(w => w.id === watchlistSelect.value);
+                if (selectedWatchlistObj && currentName !== selectedWatchlistObj.name) {
+                    saveAttempted = true;
+                    (async () => {
+                        saveSuccessful = await saveEditedWatchlistName();
+                    })();
+                } else {
+                    console.log("[Auto-Save] Skipping save: Manage Watchlist form not dirty.");
                 }
             } else if (modal.id === 'dividendCalculatorModal' || modal.id === 'calculatorModal') {
-                // For calculators, do NOT show a "saved" alert on close.
                 console.log(`[Auto-Save] Calculator modal (${modal.id}) closed, no save alert.`);
+                // Explicitly do not show alert for calculators
+                saveAttempted = false;
             }
             modal.style.setProperty('display', 'none', 'important');
         }
@@ -1775,30 +1798,37 @@ async function migrateOldSharesToWatchlist() {
                 const value = shareData[field];
                 const originalValueType = typeof value;
                 let parsedValue = value;
+                let fieldNeedsUpdate = false; // Flag to track if this specific field needs update
+
                 if (originalValueType === 'string' && value.trim() !== '') {
                     parsedValue = parseFloat(value);
-                    if (!isNaN(parsedValue)) {
-                        if (originalValueType !== typeof parsedValue || value !== String(parsedValue)) {
-                            needsUpdate = true;
-                            updatePayload[field] = parsedValue;
-                            console.log(`[Migration] Share '${doc.id}': Converted ${field} from string '${value}' (type ${originalValueType}) to number ${parsedValue}.`);
-                        }
-                    } else {
-                        needsUpdate = true;
-                        updatePayload[field] = null;
+                    if (isNaN(parsedValue)) {
+                        parsedValue = null; // Set to null if parsing fails
+                        fieldNeedsUpdate = true;
                         console.warn(`[Migration] Share '${doc.id}': Field '${field}' was invalid string '${value}', setting to null.`);
+                    } else if (originalValueType !== typeof parsedValue || value !== String(parsedValue)) {
+                        // Only update if type changed or string representation is different (e.g., "1.0" to 1)
+                        fieldNeedsUpdate = true;
+                        console.log(`[Migration] Share '${doc.id}': Converted ${field} from string '${value}' (type ${originalValueType}) to number ${parsedValue}.`);
                     }
                 } else if (originalValueType === 'number' && isNaN(value)) {
-                    needsUpdate = true;
-                    updatePayload[field] = null;
+                    parsedValue = null;
+                    fieldNeedsUpdate = true;
                     console.warn(`[Migration] Share '${doc.id}': Field '${field}' was NaN number, setting to null.`);
                 }
+
+                // Apply franking credits specific logic after parsing
                 if (field === 'frankingCredits' && typeof parsedValue === 'number' && !isNaN(parsedValue)) {
-                    if (parsedValue > 0 && parsedValue < 1) {
-                        needsUpdate = true;
-                        updatePayload.frankingCredits = parsedValue * 100;
-                        console.log(`[Migration] Share '${doc.id}': Converted frankingCredits from decimal ${parsedValue} to percentage ${parsedValue * 100}.`);
+                    if (parsedValue > 0 && parsedValue < 1) { // Convert 0.7 to 70
+                        parsedValue *= 100;
+                        fieldNeedsUpdate = true;
+                        console.log(`[Migration] Share '${doc.id}': Converted frankingCredits from decimal to percentage ${parsedValue}.`);
                     }
+                }
+
+                if (fieldNeedsUpdate) {
+                    needsUpdate = true; // Overall share needs update
+                    updatePayload[field] = parsedValue;
                 }
             });
             const effectiveCurrentPrice = (typeof updatePayload.currentPrice === 'number' && !isNaN(updatePayload.currentPrice)) ? updatePayload.currentPrice :
@@ -2315,7 +2345,6 @@ async function initializeAppLogic() {
     if (deleteShareFromDetailBtn) {
         deleteShareFromDetailBtn.addEventListener('click', async () => {
             console.log("[Share Details] Delete Share button clicked (No Confirmation).");
-            // Ensure button is not disabled before proceeding
             if (deleteShareFromDetailBtn.classList.contains('is-disabled-icon')) {
                 console.warn("[Delete Share From Detail] Delete button was disabled, preventing action.");
                 return; // Do nothing if visually disabled
@@ -2331,7 +2360,9 @@ async function initializeAppLogic() {
                     console.error("[Firestore] Error deleting share:", error);
                     showCustomAlert("Error deleting share: " + error.message);
                 }
-            } else { showCustomAlert("No share selected for deletion."); }
+            } else {
+                showCustomAlert("No share selected for deletion.");
+            }
         });
     }
 
@@ -2548,7 +2579,7 @@ async function initializeAppLogic() {
         calcEstimatedDividend.textContent = estimatedDividend !== null ? `$${estimatedDividend.toFixed(2)}` : '-';
     }
 
-    // Standard Calculator Button
+    // Standard Calculator Modal
     if (standardCalcBtn) {
         standardCalcBtn.addEventListener('click', () => {
             console.log("[UI] Standard Calculator button clicked.");
