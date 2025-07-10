@@ -1,5 +1,5 @@
-/* File Version: v106 */
-/* Last Updated: 2025-07-09 (Refresh button vertical alignment fixed, general cleanup) */
+/* File Version: v86 */
+/* Last Updated: 2025-07-10 (Google Sign In button styling) */
 
 :root {
     /* Light Theme (Default) */
@@ -42,8 +42,11 @@
     --danger-button-hover-bg: #c82333;
     --secondary-button-bg: #6c757d;
     --secondary-button-hover-bg: #545b62;
-    --google-auth-btn-bg: #dd4b39;
-    --google-auth-btn-hover-bg: #c23321;
+    /* --- Google Auth Button Specific Variables --- */
+    --google-auth-btn-bg: #FFFFFF; /* White background */
+    --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
+    --google-auth-btn-text: #4285F4; /* Google Blue text */
+    /* --- End Google Auth Button Specific Variables --- */
     --label-color: #555;
     --shadow-color: rgba(0, 0, 0, 0.15);
     --sidebar-width: 280px;
@@ -55,9 +58,6 @@
     --calc-num-btn-bg: #f0f0f0; /* Default: Calculator number button background */
     --calc-num-btn-text: #333; /* Default: Calculator number button text */
     --calc-num-btn-hover-bg: #e0e0e0; /* Default: Calculator number button hover */
-
-    --price-up-color: #28a745; /* Green for up */
-    --price-down-color: #dc3545; /* Red for down */
 }
 
 /* Dark Theme Variables */
@@ -101,28 +101,28 @@ body.dark-theme {
     --danger-button-hover-bg: #c0392b;
     --secondary-button-bg: #7f8c8d;
     --secondary-button-hover-bg: #616e70;
-    --google-auth-btn-bg: #e74c3c;
-    --google-auth-btn-hover-bg: #c0392b;
+    /* --- Google Auth Button Specific Variables (overridden for dark theme) --- */
+    --google-auth-btn-bg: #FFFFFF; /* White background */
+    --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
+    --google-auth-btn-text: #4285F4; /* Google Blue text */
+    /* --- End Google Auth Button Specific Variables --- */
     --label-color: #bbb;
     --shadow-color: rgba(0, 0, 0, 0.4);
     --close-sidebar-btn-color: #bbb;
     --icon-action-color: #3498db; /* Dark theme action icon color */
     --icon-action-hover-color: #2980b9;
-    --icon-danger-color: #e74c3c;
+    --icon-danger-color: #e74c3c; /* Dark theme danger icon color */
     --icon-danger-hover-color: #c0392b;
     --calc-num-btn-bg: #5a758e; /* Dark: Calculator number button background */
     --calc-num-btn-text: #ecf0f1; /* Dark: Calculator number button text */
     --calc-num-btn-hover-bg: #6c8095; /* Dark: Calculator number button hover */
-
-    --price-up-color: #2ecc71; /* Dark Green for up */
-    --price-down-color: #e74c3c; /* Dark Red for down */
 }
 
 /* Custom Themes */
 /* Bold Themes */
 body.theme-bold-1 { /* Ocean Blue */
     --background-color: #1a2a3a;
-    --text-color: #fff; /* Force white text */
+    --text-color: #e0f2f7;
     --header-bg: #005f73;
     --card-bg: #0a475a;
     --border-color: #008793;
@@ -130,7 +130,7 @@ body.theme-bold-1 { /* Ocean Blue */
     --button-hover-bg: #0096c7;
     --input-bg: #0a475a;
     --input-border: #008793;
-    --input-placeholder-color: #aaa; /* Lighter placeholder */
+    --input-placeholder-color: #8ecae6;
     --modal-content-bg: #0a475a;
     --table-header-bg: #005f73;
     --table-row-hover-bg: #008793;
@@ -141,28 +141,36 @@ body.theme-bold-1 { /* Ocean Blue */
     --sidebar-border: #008793;
     --menu-button-bg: transparent;
     --menu-button-hover-bg: #0a475a;
-    --placeholder-text: #ccc; /* Lighter placeholder */
-    --ghosted-text: #bbb; /* Lighter ghosted text */
+    --placeholder-text: #8ecae6;
+    --ghosted-text: #a8dadc;
     --danger-button-bg: #e63946;
     --danger-button-hover-bg: #c02d38;
     --icon-action-color: #00b4d8;
     --icon-action-hover-color: #0096c7;
     --icon-danger-color: #e63946;
-    --icon-danger-hover-color: #c0392b;
+    --icon-danger-hover-color: #c02d38;
     --calc-num-btn-bg: #007f8c;
-    --calc-num-btn-text: #fff; /* Force white text */
+    --calc-num-btn-text: #e0f2f7;
     --calc-num-btn-hover-bg: #0096c7;
-    /* Ensure all text elements inherit white */
+    /* Force all text to white for bold themes */
     color: #fff !important;
+    --text-color: #fff;
     --asx-button-text: #fff;
     --sidebar-text: #fff;
     --label-color: #ccc;
+    --input-placeholder-color: #aaa;
+    --ghosted-text: #bbb;
     --close-sidebar-btn-color: #ccc;
+    /* --- Google Auth Button Specific Variables (overridden for bold themes) --- */
+    --google-auth-btn-bg: #FFFFFF; /* White background */
+    --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
+    --google-auth-btn-text: #4285F4; /* Google Blue text */
+    /* --- End Google Auth Button Specific Variables --- */
 }
 
 body.theme-bold-2 { /* Forest Green */
     --background-color: #2d422d;
-    --text-color: #fff; /* Force white text */
+    --text-color: #e6ffe6;
     --header-bg: #386641;
     --card-bg: #4a754a;
     --border-color: #6a9955;
@@ -170,7 +178,7 @@ body.theme-bold-2 { /* Forest Green */
     --button-hover-bg: #8ba84a;
     --input-bg: #4a754a;
     --input-border: #6a9955;
-    --input-placeholder-color: #aaa; /* Lighter placeholder */
+    --input-placeholder-color: #c0d8b6;
     --modal-content-bg: #4a754a;
     --table-header-bg: #386641;
     --table-row-hover-bg: #6a9955;
@@ -181,8 +189,8 @@ body.theme-bold-2 { /* Forest Green */
     --sidebar-border: #6a9955;
     --menu-button-bg: transparent;
     --menu-button-hover-bg: #4a754a;
-    --placeholder-text: #ccc; /* Lighter placeholder */
-    --ghosted-text: #bbb; /* Lighter ghosted text */
+    --placeholder-text: #c0d8b6;
+    --ghosted-text: #d4e3c9;
     --danger-button-bg: #e74c3c;
     --danger-button-hover-bg: #c0392b;
     --icon-action-color: #a7c957;
@@ -190,19 +198,27 @@ body.theme-bold-2 { /* Forest Green */
     --icon-danger-color: #e74c3c;
     --icon-danger-hover-color: #c0392b;
     --calc-num-btn-bg: #5a855a;
-    --calc-num-btn-text: #fff; /* Force white text */
+    --calc-num-btn-text: #e6ffe6;
     --calc-num-btn-hover-bg: #6a9955;
-    /* Ensure all text elements inherit white */
+    /* Force all text to white for bold themes */
     color: #fff !important;
+    --text-color: #fff;
     --asx-button-text: #fff;
     --sidebar-text: #fff;
     --label-color: #ccc;
+    --input-placeholder-color: #aaa;
+    --ghosted-text: #bbb;
     --close-sidebar-btn-color: #ccc;
+    /* --- Google Auth Button Specific Variables (overridden for bold themes) --- */
+    --google-auth-btn-bg: #FFFFFF; /* White background */
+    --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
+    --google-auth-btn-text: #4285F4; /* Google Blue text */
+    /* --- End Google Auth Button Specific Variables --- */
 }
 
 body.theme-bold-3 { /* Sunset Orange */
     --background-color: #3b2a20;
-    --text-color: #fff; /* Force white text */
+    --text-color: #fff8e1;
     --header-bg: #e63946;
     --card-bg: #f4a261;
     --border-color: #e76f51;
@@ -210,7 +226,7 @@ body.theme-bold-3 { /* Sunset Orange */
     --button-hover-bg: #e0ac00;
     --input-bg: #f4a261;
     --input-border: #e76f51;
-    --input-placeholder-color: #aaa; /* Lighter placeholder */
+    --input-placeholder-color: #ffe5b4;
     --modal-content-bg: #f4a261;
     --table-header-bg: #e63946;
     --table-row-hover-bg: #e76f51;
@@ -221,30 +237,36 @@ body.theme-bold-3 { /* Sunset Orange */
     --sidebar-border: #e76f51;
     --menu-button-bg: transparent;
     --menu-button-hover-bg: #f4a261;
-    --placeholder-text: #ccc; /* Lighter placeholder */
-    --ghosted-text: #bbb; /* Lighter ghosted text */
+    --placeholder-text: #ffe5b4;
+    --ghosted-text: #ffd790;
     --danger-button-bg: #e63946;
     --danger-button-hover-bg: #c02d38;
     --icon-action-color: #ffc300;
     --icon-action-hover-color: #e0ac00;
     --icon-danger-color: #e63946;
-    --icon-danger-hover-color: #c0392b;
+    --icon-danger-hover-color: #c02d38;
     --calc-num-btn-bg: #f7b98d;
-    --calc-num-btn-text: #fff; /* Force white text */
+    --calc-num-btn-text: #3b2a20;
     --calc-num-btn-hover-bg: #f4a261;
-    /* Ensure all text elements inherit white */
+    /* Force all text to white for bold themes */
     color: #fff !important;
+    --text-color: #fff;
     --asx-button-text: #fff;
     --sidebar-text: #fff;
     --label-color: #ccc;
     --input-placeholder-color: #aaa;
     --ghosted-text: #bbb;
     --close-sidebar-btn-color: #ccc;
+    /* --- Google Auth Button Specific Variables (overridden for bold themes) --- */
+    --google-auth-btn-bg: #FFFFFF; /* White background */
+    --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
+    --google-auth-btn-text: #4285F4; /* Google Blue text */
+    /* --- End Google Auth Button Specific Variables --- */
 }
 
 body.theme-bold-4 { /* Royal Purple */
     --background-color: #2a1a3a;
-    --text-color: #fff; /* Force white text */
+    --text-color: #f0e6ff;
     --header-bg: #5a189a;
     --card-bg: #7b2cbf;
     --border-color: #9d4edd;
@@ -252,7 +274,7 @@ body.theme-bold-4 { /* Royal Purple */
     --button-hover-bg: #a842ff;
     --input-bg: #7b2cbf;
     --input-border: #9d4edd;
-    --input-placeholder-color: #aaa; /* Lighter placeholder */
+    --input-placeholder-color: #e0baff;
     --modal-content-bg: #7b2cbf;
     --table-header-bg: #5a189a;
     --table-row-hover-bg: #9d4edd;
@@ -263,8 +285,8 @@ body.theme-bold-4 { /* Royal Purple */
     --sidebar-border: #9d4edd;
     --menu-button-bg: transparent;
     --menu-button-hover-bg: #7b2cbf;
-    --placeholder-text: #ccc; /* Lighter placeholder */
-    --ghosted-text: #bbb; /* Lighter ghosted text */
+    --placeholder-text: #e0baff;
+    --ghosted-text: #e8d0ff;
     --danger-button-bg: #e74c3c;
     --danger-button-hover-bg: #c0392b;
     --icon-action-color: #c77dff;
@@ -272,21 +294,27 @@ body.theme-bold-4 { /* Royal Purple */
     --icon-danger-color: #e74c3c;
     --icon-danger-hover-color: #c0392b;
     --calc-num-btn-bg: #9d4edd;
-    --calc-num-btn-text: #fff; /* Force white text */
+    --calc-num-btn-text: #f0e6ff;
     --calc-num-btn-hover-bg: #c77dff;
-    /* Ensure all text elements inherit white */
+    /* Force all text to white for bold themes */
     color: #fff !important;
+    --text-color: #fff;
     --asx-button-text: #fff;
     --sidebar-text: #fff;
     --label-color: #ccc;
     --input-placeholder-color: #aaa;
     --ghosted-text: #bbb;
     --close-sidebar-btn-color: #ccc;
+    /* --- Google Auth Button Specific Variables (overridden for bold themes) --- */
+    --google-auth-btn-bg: #FFFFFF; /* White background */
+    --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
+    --google-auth-btn-text: #4285F4; /* Google Blue text */
+    /* --- End Google Auth Button Specific Variables --- */
 }
 
 body.theme-bold-5 { /* Deep Red */
     --background-color: #3a1a1a;
-    --text-color: #fff; /* Force white text */
+    --text-color: #ffe6e6;
     --header-bg: #8b0000;
     --card-bg: #a02020;
     --border-color: #c0392b;
@@ -294,7 +322,7 @@ body.theme-bold-5 { /* Deep Red */
     --button-hover-bg: #c0392b;
     --input-bg: #a02020;
     --input-border: #c0392b;
-    --input-placeholder-color: #aaa; /* Lighter placeholder */
+    --input-placeholder-color: #ffbaba;
     --modal-content-bg: #a02020;
     --table-header-bg: #8b0000;
     --table-row-hover-bg: #c0392b;
@@ -305,8 +333,8 @@ body.theme-bold-5 { /* Deep Red */
     --sidebar-border: #c0392b;
     --menu-button-bg: transparent;
     --menu-button-hover-bg: #a02020;
-    --placeholder-text: #ccc; /* Lighter placeholder */
-    --ghosted-text: #bbb; /* Lighter ghosted text */
+    --placeholder-text: #ffbaba;
+    --ghosted-text: #ffcccc;
     --danger-button-bg: #e74c3c;
     --danger-button-hover-bg: #c0392b;
     --icon-action-color: #e74c3c;
@@ -314,16 +342,259 @@ body.theme-bold-5 { /* Deep Red */
     --icon-danger-color: #e74c3c;
     --icon-danger-hover-color: #c0392b;
     --calc-num-btn-bg: #c0392b;
-    --calc-num-btn-text: #fff; /* Force white text */
+    --calc-num-btn-text: #ffe6e6;
     --calc-num-btn-hover-bg: #e74c3c;
-    /* Ensure all text elements inherit white */
+    /* Force all text to white for bold themes */
     color: #fff !important;
+    --text-color: #fff;
     --asx-button-text: #fff;
     --sidebar-text: #fff;
     --label-color: #ccc;
     --input-placeholder-color: #aaa;
     --ghosted-text: #bbb;
     --close-sidebar-btn-color: #ccc;
+    /* --- Google Auth Button Specific Variables (overridden for bold themes) --- */
+    --google-auth-btn-bg: #FFFFFF; /* White background */
+    --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
+    --google-auth-btn-text: #4285F4; /* Google Blue text */
+    /* --- End Google Auth Button Specific Variables --- */
+}
+
+body.theme-bold-6 { /* Gold */
+    --background-color: #3b301a;
+    --text-color: #fff8e0;
+    --header-bg: #b8860b;
+    --card-bg: #daa520;
+    --border-color: #ffd700;
+    --button-bg: #ffeb3b;
+    --button-hover-bg: #fdd835;
+    --input-bg: #daa520;
+    --input-border: #ffd700;
+    --input-placeholder-color: #ffee99;
+    --modal-content-bg: #daa520;
+    --table-header-bg: #b8860b;
+    --table-row-hover-bg: #ffd700;
+    --asx-button-bg: #b8860b;
+    --asx-button-hover-bg: #ffd700;
+    --asx-button-active-bg: #ffeb3b;
+    --sidebar-bg: #daa520;
+    --sidebar-border: #ffd700;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #daa520;
+    --placeholder-text: #ffee99;
+    --ghosted-text: #fff2c4;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #ffeb3b;
+    --icon-action-hover-color: #fdd835;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #ffd700;
+    --calc-num-btn-text: #3b301a;
+    --calc-num-btn-hover-bg: #ffeb3b;
+    /* Force all text to white for bold themes */
+    color: #fff !important;
+    --text-color: #fff;
+    --asx-button-text: #fff;
+    --sidebar-text: #fff;
+    --label-color: #ccc;
+    --input-placeholder-color: #aaa;
+    --ghosted-text: #bbb;
+    --close-sidebar-btn-color: #ccc;
+    /* --- Google Auth Button Specific Variables (overridden for bold themes) --- */
+    --google-auth-btn-bg: #FFFFFF; /* White background */
+    --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
+    --google-auth-btn-text: #4285F4; /* Google Blue text */
+    /* --- End Google Auth Button Specific Variables --- */
+}
+
+body.theme-bold-7 { /* Emerald */
+    --background-color: #1a3a2a;
+    --text-color: #e6fff0;
+    --header-bg: #006400;
+    --card-bg: #228b22;
+    --border-color: #3cb371;
+    --button-bg: #66bb6a;
+    --button-hover-bg: #4caf50;
+    --input-bg: #228b22;
+    --input-border: #3cb371;
+    --input-placeholder-color: #99ffaa;
+    --modal-content-bg: #228b22;
+    --table-header-bg: #006400;
+    --table-row-hover-bg: #3cb371;
+    --asx-button-bg: #006400;
+    --asx-button-hover-bg: #3cb371;
+    --asx-button-active-bg: #66bb6a;
+    --sidebar-bg: #228b22;
+    --sidebar-border: #3cb371;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #228b22;
+    --placeholder-text: #99ffaa;
+    --ghosted-text: #ccffdd;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #66bb6a;
+    --icon-action-hover-color: #4caf50;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #3cb371;
+    --calc-num-btn-text: #e6fff0;
+    --calc-num-btn-hover-bg: #66bb6a;
+    /* Force all text to white for bold themes */
+    color: #fff !important;
+    --text-color: #fff;
+    --asx-button-text: #fff;
+    --sidebar-text: #fff;
+    --label-color: #ccc;
+    --input-placeholder-color: #aaa;
+    --ghosted-text: #bbb;
+    --close-sidebar-btn-color: #ccc;
+    /* --- Google Auth Button Specific Variables (overridden for bold themes) --- */
+    --google-auth-btn-bg: #FFFFFF; /* White background */
+    --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
+    --google-auth-btn-text: #4285F4; /* Google Blue text */
+    /* --- End Google Auth Button Specific Variables --- */
+}
+
+body.theme-bold-8 { /* Plum */
+    --background-color: #3a1a3a;
+    --text-color: #ffe6ff;
+    --header-bg: #800080;
+    --card-bg: #9932cc;
+    --border-color: #ba55d3;
+    --button-bg: #da70d6;
+    --button-hover-bg: #c71585;
+    --input-bg: #9932cc;
+    --input-border: #ba55d3;
+    --modal-content-bg: #9932cc;
+    --table-header-bg: #800080;
+    --table-row-hover-bg: #ba55d3;
+    --asx-button-bg: #800080;
+    --asx-button-hover-bg: #ba55d3;
+    --asx-button-active-bg: #da70d6;
+    --sidebar-bg: #9932cc;
+    --sidebar-border: #ba55d3;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #9932cc;
+    --placeholder-text: #ffb3ff;
+    --ghosted-text: #ffccff;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #da70d6;
+    --icon-action-hover-color: #c71585;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #ba55d3;
+    --calc-num-btn-text: #ffe6ff;
+    --calc-num-btn-hover-bg: #da70d6;
+    /* Force all text to white for bold themes */
+    color: #fff !important;
+    --text-color: #fff;
+    --asx-button-text: #fff;
+    --sidebar-text: #fff;
+    --label-color: #ccc;
+    --input-placeholder-color: #aaa;
+    --ghosted-text: #bbb;
+    --close-sidebar-btn-color: #ccc;
+    /* --- Google Auth Button Specific Variables (overridden for bold themes) --- */
+    --google-auth-btn-bg: #FFFFFF; /* White background */
+    --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
+    --google-auth-btn-text: #4285F4; /* Google Blue text */
+    /* --- End Google Auth Button Specific Variables --- */
+}
+
+body.theme-bold-9 { /* Aqua */
+    --background-color: #1a3a3a;
+    --text-color: #e6ffff;
+    --header-bg: #008b8b;
+    --card-bg: #00ced1;
+    --border-color: #40e0d0;
+    --button-bg: #20b2aa;
+    --button-hover-bg: #008080;
+    --input-bg: #00ced1;
+    --input-border: #40e0d0;
+    --modal-content-bg: #00ced1;
+    --table-header-bg: #008b8b;
+    --table-row-hover-bg: #40e0d0;
+    --asx-button-bg: #008b8b;
+    --asx-button-hover-bg: #40e0d0;
+    --asx-button-active-bg: #20b2aa;
+    --sidebar-bg: #00ced1;
+    --sidebar-border: #40e0d0;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #00ced1;
+    --placeholder-text: #99ffff;
+    --ghosted-text: #ccffff;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #20b2aa;
+    --icon-action-hover-color: #008080;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #40e0d0;
+    --calc-num-btn-text: #e6ffff;
+    --calc-num-btn-hover-bg: #20b2aa;
+    /* Force all text to white for bold themes */
+    color: #fff !important;
+    --text-color: #fff;
+    --asx-button-text: #fff;
+    --sidebar-text: #fff;
+    --label-color: #ccc;
+    --input-placeholder-color: #aaa;
+    --ghosted-text: #bbb;
+    --close-sidebar-btn-color: #ccc;
+    /* --- Google Auth Button Specific Variables (overridden for bold themes) --- */
+    --google-auth-btn-bg: #FFFFFF; /* White background */
+    --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
+    --google-auth-btn-text: #4285F4; /* Google Blue text */
+    /* --- End Google Auth Button Specific Variables --- */
+}
+
+body.theme-bold-10 { /* Ruby */
+    --background-color: #3a1a2a;
+    --text-color: #ffe6f0;
+    --header-bg: #8b0000;
+    --card-bg: #a52a2a;
+    --border-color: #cd5c5c;
+    --button-bg: #dc143c;
+    --button-hover-bg: #b22222;
+    --input-bg: #a52a2a;
+    --input-border: #cd5c5c;
+    --modal-content-bg: #a52a2a;
+    --table-header-bg: #8b0000;
+    --table-row-hover-bg: #cd5c5c;
+    --asx-button-bg: #8b0000;
+    --asx-button-hover-bg: #cd5c5c;
+    --asx-button-active-bg: #dc143c;
+    --sidebar-bg: #a52a2a;
+    --sidebar-border: #cd5c5c;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #a52a2a;
+    --placeholder-text: #ffb3c6;
+    --ghosted-text: #ffcce0;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #dc143c;
+    --icon-action-hover-color: #b22222;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #cd5c5c;
+    --calc-num-btn-text: #ffe6f0;
+    --calc-num-btn-hover-bg: #dc143c;
+    /* Force all text to white for bold themes */
+    color: #fff !important;
+    --text-color: #fff;
+    --asx-button-text: #fff;
+    --sidebar-text: #fff;
+    --label-color: #ccc;
+    --input-placeholder-color: #aaa;
+    --ghosted-text: #bbb;
+    --close-sidebar-btn-color: #ccc;
+    /* --- Google Auth Button Specific Variables (overridden for bold themes) --- */
+    --google-auth-btn-bg: #FFFFFF; /* White background */
+    --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
+    --google-auth-btn-text: #4285F4; /* Google Blue text */
+    /* --- End Google Auth Button Specific Variables --- */
 }
 
 
@@ -359,6 +630,11 @@ body.theme-subtle-1 { /* Subtle Sky */
     --calc-num-btn-bg: #d0eaf5;
     --calc-num-btn-text: #334455;
     --calc-num-btn-hover-bg: #87ceeb;
+    /* --- Google Auth Button Specific Variables (overridden for subtle themes) --- */
+    --google-auth-btn-bg: #FFFFFF; /* White background */
+    --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
+    --google-auth-btn-text: #4285F4; /* Google Blue text */
+    /* --- End Google Auth Button Specific Variables --- */
 }
 
 body.theme-subtle-2 { /* Subtle Earth */
@@ -392,6 +668,11 @@ body.theme-subtle-2 { /* Subtle Earth */
     --calc-num-btn-bg: #ede6df;
     --calc-num-btn-text: #5a4a3a;
     --calc-num-btn-hover-bg: #b8a28f;
+    /* --- Google Auth Button Specific Variables (overridden for subtle themes) --- */
+    --google-auth-btn-bg: #FFFFFF; /* White background */
+    --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
+    --google-auth-btn-text: #4285F4; /* Google Blue text */
+    /* --- End Google Auth Button Specific Variables --- */
 }
 
 body.theme-subtle-3 { /* Subtle Rose */
@@ -425,6 +706,11 @@ body.theme-subtle-3 { /* Subtle Rose */
     --calc-num-btn-bg: #f2e6eb;
     --calc-num-btn-text: #6a4a5a;
     --calc-num-btn-hover-bg: #eeb8c6;
+    /* --- Google Auth Button Specific Variables (overridden for subtle themes) --- */
+    --google-auth-btn-bg: #FFFFFF; /* White background */
+    --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
+    --google-auth-btn-text: #4285F4; /* Google Blue text */
+    /* --- End Google Auth Button Specific Variables --- */
 }
 
 body.theme-subtle-4 { /* Subtle Lavender */
@@ -458,6 +744,11 @@ body.theme-subtle-4 { /* Subtle Lavender */
     --calc-num-btn-bg: #ede6f2;
     --calc-num-btn-text: #5a4a6a;
     --calc-num-btn-hover-bg: #c6b8eb;
+    /* --- Google Auth Button Specific Variables (overridden for subtle themes) --- */
+    --google-auth-btn-bg: #FFFFFF; /* White background */
+    --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
+    --google-auth-btn-text: #4285F4; /* Google Blue text */
+    /* --- End Google Auth Button Specific Variables --- */
 }
 
 body.theme-subtle-5 { /* Subtle Mint */
@@ -491,6 +782,11 @@ body.theme-subtle-5 { /* Subtle Mint */
     --calc-num-btn-bg: #e6f2eb;
     --calc-num-btn-text: #4a6a5a;
     --calc-num-btn-hover-bg: #b8eec6;
+    /* --- Google Auth Button Specific Variables (overridden for subtle themes) --- */
+    --google-auth-btn-bg: #FFFFFF; /* White background */
+    --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
+    --google-auth-btn-text: #4285F4; /* Google Blue text */
+    /* --- End Google Auth Button Specific Variables --- */
 }
 
 body.theme-subtle-6 { /* Subtle Sand */
@@ -524,6 +820,11 @@ body.theme-subtle-6 { /* Subtle Sand */
     --calc-num-btn-bg: #f2ebe6;
     --calc-num-btn-text: #6a5a4a;
     --calc-num-btn-hover-bg: #eeb8a2;
+    /* --- Google Auth Button Specific Variables (overridden for subtle themes) --- */
+    --google-auth-btn-bg: #FFFFFF; /* White background */
+    --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
+    --google-auth-btn-text: #4285F4; /* Google Blue text */
+    /* --- End Google Auth Button Specific Variables --- */
 }
 
 body.theme-subtle-7 { /* Subtle Graphite */
@@ -557,6 +858,11 @@ body.theme-subtle-7 { /* Subtle Graphite */
     --calc-num-btn-bg: #ebebeb;
     --calc-num-btn-text: #4a4a4a;
     --calc-num-btn-hover-bg: #b8b8b8;
+    /* --- Google Auth Button Specific Variables (overridden for subtle themes) --- */
+    --google-auth-btn-bg: #FFFFFF; /* White background */
+    --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
+    --google-auth-btn-text: #4285F4; /* Google Blue text */
+    /* --- End Google Auth Button Specific Variables --- */
 }
 
 body.theme-subtle-8 { /* Subtle Peach */
@@ -590,6 +896,11 @@ body.theme-subtle-8 { /* Subtle Peach */
     --calc-num-btn-bg: #f2ebe6;
     --calc-num-btn-text: #6a4a4a;
     --calc-num-btn-hover-bg: #eeb8a2;
+    /* --- Google Auth Button Specific Variables (overridden for subtle themes) --- */
+    --google-auth-btn-bg: #FFFFFF; /* White background */
+    --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
+    --google-auth-btn-text: #4285F4; /* Google Blue text */
+    /* --- End Google Auth Button Specific Variables --- */
 }
 
 body.theme-subtle-9 { /* Subtle Teal */
@@ -623,6 +934,11 @@ body.theme-subtle-9 { /* Subtle Teal */
     --calc-num-btn-bg: #e6f2eb;
     --calc-num-btn-text: #4a6a6a;
     --calc-num-btn-hover-bg: #b8eec6;
+    /* --- Google Auth Button Specific Variables (overridden for subtle themes) --- */
+    --google-auth-btn-bg: #FFFFFF; /* White background */
+    --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
+    --google-auth-btn-text: #4285F4; /* Google Blue text */
+    /* --- End Google Auth Button Specific Variables --- */
 }
 
 body.theme-subtle-10 { /* Subtle Stone */
@@ -656,6 +972,11 @@ body.theme-subtle-10 { /* Subtle Stone */
     --calc-num-btn-bg: #f0f0f0;
     --calc-num-btn-text: #5a5a5a;
     --calc-num-btn-hover-bg: #c0c0c0;
+    /* --- Google Auth Button Specific Variables (overridden for subtle themes) --- */
+    --google-auth-btn-bg: #FFFFFF; /* White background */
+    --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
+    --google-auth-btn-text: #4285F4; /* Google Blue text */
+    /* --- End Google Auth Button Specific Variables --- */
 }
 
 
@@ -742,13 +1063,6 @@ h1#mainTitle {
 
 .header-action-btn-right { 
     right: 0; 
-}
-
-/* Specific positioning for the refresh button */
-.header-action-btn.refresh-btn-offset {
-    right: 50px; /* Adjust this value as needed to position it next to the plus button */
-    top: 50%; /* Ensure vertical alignment is centered */
-    transform: translateY(-50%);
 }
 
 
@@ -845,7 +1159,7 @@ h1#mainTitle {
     gap: 10px;
     transition: background-color 0.2s ease, transform 0.1s ease;
     width: 100%; 
-    box-sizing: border-box; 
+    box-sizing: border-box;
     justify-content: flex-start; 
 }
 
@@ -1088,7 +1402,6 @@ table tbody tr {
 
 table tbody tr.selected {
     background-color: var(--table-row-hover-bg);
-    border-color: var(--button-bg);
     font-weight: 600;
 }
 
@@ -1160,72 +1473,36 @@ table tbody tr:not(.selected):hover {
     transition: margin-left 0.3s ease, width 0.3s ease; 
 }
 
-/* Google Sign-in Button Styling */
 .google-auth-btn {
-    background-color: #fff; /* White background */
-    color: #4285F4; /* Google Blue text */
-    padding: 0; /* Remove padding from button itself */
-    border: 1px solid #dadce0; /* Light gray border */
-    border-radius: 4px; /* Slightly rounded corners */
+    background-color: var(--google-auth-btn-bg); /* Use the new variable */
+    color: var(--google-auth-btn-text); /* Use the new variable */
+    padding: 12px 25px;
+    border: 1px solid var(--google-auth-btn-text); /* Add a border matching text color */
+    border-radius: 25px;
     cursor: pointer;
     font-size: 1.1em;
-    font-weight: 500; /* Medium font weight */
-    transition: background-color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    font-weight: 600;
+    transition: background-color 0.2s ease, transform 0.1s ease, border-color 0.2s ease; /* Add border-color to transition */
     display: flex;
     align-items: center;
-    justify-content: center; /* Center content horizontally */
-    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1); /* Subtle shadow */
-    width: fit-content;
-    max-width: 100%;
-    height: 40px; /* Standard Google button height */
-    overflow: hidden; /* Ensure content outside is clipped */
-    padding: 0 24px; /* Add padding directly to the button */
-}
-
-/* Ensure no focus outline causes unexpected visuals */
-.google-auth-btn:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.5); /* Standard Google blue focus ring */
+    justify-content: center; /* Center text/icon horizontally */
+    gap: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    width: fit-content; /* Allow button to shrink to content size */
+    max-width: 100%; /* Prevent overflow on very small screens */
 }
 
 .google-auth-btn:hover {
-    background-color: #f8f8f8; /* Very light gray on hover */
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15); /* Slightly larger shadow */
-    border-color: #c6c6c6; /* Slightly darker border on hover */
-    transform: none; /* No translateY on hover for traditional look */
+    background-color: var(--google-auth-btn-hover-bg); /* Use the new variable */
+    transform: translateY(-2px);
 }
 
 .google-auth-btn:disabled {
-    background-color: #e0e0e0; /* Lighter gray when disabled */
-    color: #a0a0a0; /* Gray text when disabled */
+    background-color: var(--secondary-button-bg);
+    color: var(--button-text); /* Keep white text for disabled state */
+    border-color: transparent; /* Remove border when disabled */
     cursor: not-allowed;
-    opacity: 1; /* Keep opacity 1, change background/text color */
-    box-shadow: none;
-    border-color: #e0e0e0;
-}
-
-.google-icon-wrapper {
-    /* This wrapper is now effectively empty and can be removed or styled to be invisible */
-    display: none; /* Hide the wrapper entirely */
-}
-
-/* Style for the Google 'G' SVG icon - no longer needed as SVG is removed from HTML */
-/* .google-g-icon { ... } */
-/* .google-g-icon path { ... } */
-
-
-.google-auth-btn .button-text {
-    padding: 0; /* Remove padding from text span as it's now on the button */
-    flex-grow: 0; /* No longer needs to grow */
-    text-align: center; /* Center text within its span */
-    white-space: nowrap; /* Prevent text wrapping */
-    line-height: 40px; /* Match button height for vertical centering */
-    color: #4285F4; /* Ensure text color is Google Blue */
-    text-shadow: none; /* Remove subtle text shadow */
-    background-color: transparent;
-    background-image: none;
-    position: static; /* Reset positioning */
-    z-index: auto; /* Reset z-index */
+    opacity: 0.5;
 }
 
 
@@ -1263,7 +1540,7 @@ table tbody tr:not(.selected):hover {
 /* Styles for modal header with icon */
 .modal-header-with-icon {
     display: flex;
-    justify-content: space-between; /* Distribute space between title and icons */
+    justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
     position: relative;
@@ -1271,16 +1548,19 @@ table tbody tr:not(.selected):hover {
     border-bottom: 1px solid var(--border-color);
 }
 
-/* New container for action icons in modal header */
-.modal-header-action-icons {
-    display: flex;
-    gap: 10px; /* Space between icons */
-    align-items: center;
+.modal-header-with-icon .close-button {
+    position: static;
+    order: 3;
+    transform: none;
+    font-size: 2em;
+    margin-left: auto;
 }
 
 .modal-header-with-icon h2 {
     margin: 0;
-    text-align: left; /* Align title to the left */
+    flex-grow: 1;
+    text-align: center;
+    order: 2;
     font-size: 1.6em;
 }
 
@@ -1292,6 +1572,7 @@ table tbody tr:not(.selected):hover {
     cursor: pointer;
     padding: 5px;
     transition: color 0.2s ease, transform 0.1s ease;
+    order: 1;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1310,6 +1591,7 @@ table tbody tr:not(.selected):hover {
 }
 
 /* General disabled styling for ALL clickable elements (buttons, icons) */
+/* This is now the primary rule for ghosting */
 [disabled], .is-disabled-icon {
     opacity: 0.5; /* Make it semi-transparent */
     cursor: not-allowed; /* Change cursor */
@@ -1336,10 +1618,27 @@ table tbody tr:not(.selected):hover {
 .modal-content h2 {
     margin-top: 0;
     margin-bottom: 20px;
+    text-align: center;
     color: var(--text-color);
     font-size: 1.6em;
 }
 
+.close-button {
+    color: var(--text-color);
+    font-size: 2em;
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: var(--danger-button-bg);
+    text-decoration: none;
+    cursor: pointer;
+}
 
 .ghosted-text {
     color: var(--ghosted-text);
@@ -1387,17 +1686,6 @@ table tbody tr:not(.selected):hover {
     box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
     outline: none;
 }
-
-/* Hide number input arrows (spin buttons) */
-input[type="number"]::-webkit-outer-spin-button,
-input[type="number"]::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-input[type="number"] {
-    -moz-appearance: textfield; /* Firefox */
-}
-
 
 /* Styles for the new comments section container */
 .comments-form-container {
@@ -1491,7 +1779,6 @@ input[type="number"] {
     transform: scale(1.1);
 }
 
-/* Modal Action Buttons (Now in modal-header-action-icons) */
 .form-action-buttons,
 .modal-action-buttons,
 .custom-dialog-buttons { 
@@ -1505,9 +1792,21 @@ input[type="number"] {
     border-top: 1px solid var(--border-color); 
 }
 
-/* Removed sticky footer action buttons, now in header */
-.modal-form-buttons.sticky-footer {
-    display: none; /* Hide the sticky footer as buttons are moved */
+/* Styles for sticky footer in modals */
+.modal-content .sticky-footer {
+    position: sticky;
+    bottom: -25px;
+    left: -25px;
+    right: -25px;
+    padding: 25px;
+    background-color: var(--modal-content-bg);
+    border-top: 1px solid var(--border-color);
+    box-shadow: 0 -2px 8px var(--shadow-color);
+    z-index: 10;
+    margin-top: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 /* Base style for modal action icons (now span/i elements) */
@@ -1547,19 +1846,6 @@ input[type="number"] {
 .modal-action-icon.secondary:hover {
     color: var(--secondary-button-hover-bg);
     background-color: var(--menu-button-hover-bg);
-}
-
-/* Numerical input styling */
-.numerical-input-bold {
-    font-weight: 700; /* Bold for all numerical inputs */
-}
-
-.price-up {
-    color: var(--price-up-color); /* Green */
-}
-
-.price-down {
-    color: var(--price-down-color); /* Red */
 }
 
 
@@ -1765,7 +2051,7 @@ input[type="number"] {
 }
 
 /* Remove explicit grid-row/column for individual number and operator buttons.
-    They will now flow naturally based on HTML order and grid-template-columns. */
+   They will now flow naturally based on HTML order and grid-template-columns. */
 /* The HTML order in index.html v73 is: C, %, ÷, 7, 8, 9, ×, 4, 5, 6, -, 1, 2, 3, +, 0, ., = */
 /* This ensures 3 numbers per row and operators on the right. */
 
@@ -1911,14 +2197,6 @@ input[type="number"] {
         padding: 5px 10px;
     }
 
-    /* Specific positioning for the refresh button on mobile */
-    .header-action-btn.refresh-btn-offset {
-        right: 50px; /* Adjust this value as needed to position it next to the plus button */
-        top: 50%; /* Ensure vertical alignment is centered */
-        transform: translateY(-50%);
-    }
-
-
     .app-sidebar {
         left: calc(-1 * var(--sidebar-width)); 
         width: 100%; 
@@ -1972,11 +2250,15 @@ input[type="number"] {
         padding: 20px;
     }
     
-    /* MODAL FOOTER BUTTONS (Now in modal header) */
-    .modal-form-buttons.sticky-footer {
-        display: none; /* Hide the sticky footer as buttons are moved */
+    .form-action-buttons,
+    .modal-action-buttons,
+    .custom-dialog-buttons { 
+        display: flex; 
+        flex-direction: row; 
+        flex-wrap: nowrap; 
+        justify-content: space-around; /* Distribute space evenly */
+        gap: 5px; 
     }
-
     /* Adjusted styling for modal action icons on mobile */
     .modal-action-icon { 
         width: auto; 
@@ -2079,14 +2361,6 @@ input[type="number"] {
         transform: translateY(-50%);
         padding: 5px 10px;
     }
-
-    /* Specific positioning for the refresh button on desktop */
-    .header-action-btn.refresh-btn-offset {
-        right: 50px; /* Adjust this value as needed to position it next to the plus button */
-        top: 50%; /* Ensure vertical alignment is centered */
-        transform: translateY(-50%);
-    }
-
 
     .app-sidebar {
         left: calc(-1 * var(--sidebar-width)); 
