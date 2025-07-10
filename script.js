@@ -1,5 +1,5 @@
-// File Version: v163
-// Last Updated: 2025-07-10 (Fixed shareToToEdit typo, addressed context menu visibility, refined comments display, fixed watchlist selection modal, aligned header elements)
+// File Version: v164
+// Last Updated: 2025-07-10 (Fixed right-click/long-press context menu, fixed comments display, fixed watchlist selection modal functionality, aligned header elements)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -195,7 +195,8 @@ function closeModals() {
         }
     });
     resetCalculator();
-    deselectCurrentShare();
+    // Do NOT deselect share here. selectedShareDocId is needed for context menu actions.
+    // deselectCurrentShare(); 
     if (autoDismissTimeout) { clearTimeout(autoDismissTimeout); autoDismissTimeout = null; }
     hideContextMenu();
     console.log("[Modal] All modals closed.");
@@ -320,10 +321,16 @@ function clearShareList() {
 
 function selectShare(shareId) {
     console.log(`[Selection] Attempting to select share with ID: ${shareId}`);
-    deselectCurrentShare(); // Deselect any previously selected share
+    // Do NOT deselect here, as it interferes with context menu selection
+    // deselectCurrentShare(); 
 
     const tableRow = document.querySelector(`#shareTable tbody tr[data-doc-id="${shareId}"]`);
     const mobileCard = document.querySelector(`.mobile-card[data-doc-id="${shareId}"]`);
+
+    // Ensure only the newly selected row/card has the 'selected' class
+    document.querySelectorAll('.share-list-section tr.selected, .mobile-card.selected').forEach(el => {
+        el.classList.remove('selected');
+    });
 
     if (tableRow) {
         tableRow.classList.add('selected');
@@ -418,7 +425,7 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
     shareNameInput.value = shareToEdit.shareName || '';
     currentPriceInput.value = Number(shareToEdit.currentPrice) !== null && !isNaN(Number(shareToEdit.currentPrice)) ? Number(shareToEdit.currentPrice).toFixed(2) : '';
     targetPriceInput.value = Number(shareToEdit.targetPrice) !== null && !isNaN(Number(shareToEdit.targetPrice)) ? Number(shareToEdit.targetPrice).toFixed(2) : '';
-    dividendAmountInput.value = Number(shareToEdit.dividendAmount) !== null && !isNaN(Number(shareToEdit.dividendAmount)) ? Number(shareToEdit.dividendAmount).toFixed(3) : ''; // Fixed typo: shareToToEdit -> shareToEdit
+    dividendAmountInput.value = Number(shareToEdit.dividendAmount) !== null && !isNaN(Number(shareToEdit.dividendAmount)) ? Number(shareToEdit.dividendAmount).toFixed(3) : '';
     frankingCreditsInput.value = Number(shareToEdit.frankingCredits) !== null && !isNaN(Number(shareToEdit.frankingCredits)) ? Number(shareToEdit.frankingCredits).toFixed(1) : '';
     
     if (commentsFormContainer) {
@@ -920,7 +927,7 @@ function addShareToTable(share) {
             touchStartX = event.touches[0].clientX;
             touchStartY = event.touches[0].clientY;
             longPressTimer = setTimeout(() => {
-                event.preventDefault(); // Prevent default browser context menu
+                event.preventDefault(); 
                 selectShare(share.id);
                 showContextMenu(event, share.id);
             }, LONG_PRESS_THRESHOLD);
@@ -2291,20 +2298,20 @@ async function initializeAppLogic() {
             }
             
             // Determine watchlistId for saving
-            let targetWatchlistId;
+            let finalWatchlistId;
             if (selectWatchlistForShareModal && selectWatchlistForShareModal.style.display !== 'none' && confirmWatchlistSelectionBtn.dataset.selectedWatchlistId) {
                 // If the watchlist selection modal was used, use its selected ID
-                targetWatchlistId = confirmWatchlistSelectionBtn.dataset.selectedWatchlistId;
+                finalWatchlistId = confirmWatchlistSelectionBtn.dataset.selectedWatchlistId;
                 delete shareNameInput.dataset.targetWatchlistId; // Clear it after use
-                console.log(`[Save Share] Using targetWatchlistId from dataset: ${targetWatchlistId}`);
+                console.log(`[Save Share] Using targetWatchlistId from dataset: ${finalWatchlistId}`);
             } else if (watchlistSelect && watchlistSelect.value && watchlistSelect.value !== ALL_SHARES_ID) {
                 // Otherwise, use the currently selected watchlist from the main dropdown (if not "All Shares")
-                targetWatchlistId = watchlistSelect.value;
-                console.log(`[Save Share] Using selected watchlist from dropdown: ${targetWatchlistId}`);
+                finalWatchlistId = watchlistSelect.value;
+                console.log(`[Save Share] Using selected watchlist from dropdown: ${finalWatchlistId}`);
             } else {
                 // Fallback to the default watchlist if "All Shares" is selected or no other specific watchlist
-                targetWatchlistId = userWatchlists.length > 0 ? userWatchlists[0].id : getDefaultWatchlistId(currentUserId);
-                console.log(`[Save Share] Falling back to default watchlist: ${targetWatchlistId}`);
+                finalWatchlistId = userWatchlists.length > 0 ? userWatchlists[0].id : getDefaultWatchlistId(currentUserId);
+                console.log(`[Save Share] Falling back to default watchlist: ${finalWatchlistId}`);
             }
 
 
@@ -2316,7 +2323,7 @@ async function initializeAppLogic() {
                 frankingCredits: isNaN(frankingCredits) ? null : frankingCredits,
                 comments: comments,
                 userId: currentUserId,
-                watchlistId: targetWatchlistId, // Use the determined watchlist ID
+                watchlistId: finalWatchlistId, // Use the determined watchlist ID
                 lastPriceUpdateTime: new Date().toISOString()
             };
 
@@ -2366,7 +2373,7 @@ async function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v163) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v164) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
