@@ -1,4 +1,4 @@
-// File Version: v171
+// File Version: v172
 // Last Updated: 2025-07-09 (Fixed delete/auto-add bug, modal opening, live price lookup, franking credits input, redundant save alert, refresh button positioning, shared double-ups)
 
 // This script interacts with Firebase Firestore for data storage.
@@ -610,7 +610,7 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
     currentPriceInput.value = Number(shareToEdit.currentPrice) !== null && !isNaN(Number(shareToEdit.currentPrice)) ? Number(shareToEdit.currentPrice).toFixed(2) : '';
     targetPriceInput.value = Number(shareToEdit.targetPrice) !== null && !isNaN(Number(shareToEdit.targetPrice)) ? Number(shareToEdit.targetPrice).toFixed(2) : '';
     dividendAmountInput.value = Number(shareToEdit.dividendAmount) !== null && !isNaN(Number(shareToEdit.dividendAmount)) ? Number(shareToEdit.dividendAmount).toFixed(3) : '';
-    frankingCreditsInput.value = Number(shareToEdit.frankingCredits) !== null && !isNaN(Number(shareToToEdit.frankingCredits)) ? Number(shareToEdit.frankingCredits).toFixed(1) : ''; // Corrected typo
+    frankingCreditsInput.value = Number(shareToEdit.frankingCredits) !== null && !isNaN(Number(shareToEdit.frankingCredits)) ? Number(shareToEdit.frankingCredits).toFixed(1) : ''; // Corrected typo
     
     if (commentsFormContainer) {
         commentsFormContainer.innerHTML = '';
@@ -2843,7 +2843,7 @@ async function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v171) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v170) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
@@ -2898,7 +2898,7 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error("[Firebase] Firebase objects (db, auth, appId, firestore, authFunctions) are not available on DOMContentLoaded. Firebase initialization likely failed in index.html.");
         const errorDiv = document.getElementById('firebaseInitError');
         if (errorDiv) {
-            errorDiv.style.display = 'block';
+            error.style.display = 'block';
         }
         updateAuthButtonText(false);
         updateMainButtonsState(false);
