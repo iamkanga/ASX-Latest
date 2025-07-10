@@ -1,5 +1,5 @@
-// File Version: v172
-// Last Updated: 2025-07-09 (Fixed delete/auto-add bug, modal opening, live price lookup, franking credits input, redundant save alert, refresh button positioning, shared double-ups)
+// File Version: v173
+// Last Updated: 2025-07-09 (Fixed incorrect alert/action on calculator close, and ASX code button display)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -37,7 +37,8 @@ let currentSortOrder = 'entryDate-desc'; // Default sort order, now a global var
 let contextMenuOpen = false; // To track if the custom context menu is open
 let currentContextMenuShareId = null; // Stores the ID of the share that opened the context menu
 let originalShareData = null; // Stores the original share data when editing for dirty state check
-let isDeletingShare = false; // NEW: Flag to prevent auto-save after a delete operation
+let isDeletingShare = false; // Flag to prevent auto-save after a delete operation
+let lastSavedShareId = null; // NEW: Track the ID of the last successfully saved share
 
 // Theme related variables
 const CUSTOM_THEMES = [
@@ -227,9 +228,11 @@ async function saveShareFormData() {
                 await window.firestore.updateDoc(shareDocRef, shareData);
                 showCustomAlert(`Share '${shareName}' updated!`, 1000);
                 console.log(`[Auto-Save] Share '${shareName}' (ID: ${selectedShareDocId}) auto-updated.`);
+                lastSavedShareId = selectedShareDocId; // Track last saved share
                 return true; // Indicate successful save
             } else {
                 console.warn(`[Auto-Save] Skipping update: Document ${selectedShareDocId} no longer exists. It may have been deleted.`);
+                lastSavedShareId = null; // Clear last saved ID if document is gone
                 return false; // Indicate no save occurred
             }
         } else {
@@ -242,11 +245,13 @@ async function saveShareFormData() {
             selectedShareDocId = newDocRef.id; // Set selectedShareDocId for the new share
             showCustomAlert(`Share '${shareName}' added!`, 1000);
             console.log(`[Auto-Save] New share '${shareName}' auto-added with ID: ${newDocRef.id}`);
+            lastSavedShareId = newDocRef.id; // Track last saved share
             return true; // Indicate successful save
         }
     } catch (error) {
         console.error("[Auto-Save] Error auto-saving share:", error);
         showCustomAlert("Error auto-saving share: " + error.message);
+        lastSavedShareId = null; // Clear last saved ID on error
         return false; // Indicate save failed
     }
 }
@@ -2898,7 +2903,7 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error("[Firebase] Firebase objects (db, auth, appId, firestore, authFunctions) are not available on DOMContentLoaded. Firebase initialization likely failed in index.html.");
         const errorDiv = document.getElementById('firebaseInitError');
         if (errorDiv) {
-            error.style.display = 'block';
+            errorDiv.style.display = 'block';
         }
         updateAuthButtonText(false);
         updateMainButtonsState(false);
