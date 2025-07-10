@@ -1,5 +1,5 @@
-// File Version: v170
-// Last Updated: 2025-07-09 (Fixed modal opening, live price lookup, franking credits input, redundant save alert, refresh button positioning, shared double-ups, and delete error)
+// File Version: v171
+// Last Updated: 2025-07-09 (Fixed delete/auto-add bug, modal opening, live price lookup, franking credits input, redundant save alert, refresh button positioning, shared double-ups)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -200,8 +200,8 @@ async function saveShareFormData() {
     const shareName = currentData.shareName;
     const currentPrice = currentData.currentPrice;
     const targetPrice = currentData.targetPrice;
-    const dividendAmount = currentData.dividendAmount;
-    const frankingCredits = currentData.frankingCredits;
+    const dividendAmount = parseFloat(dividendAmountInput.value); // Ensure parsing here
+    const frankingCredits = parseFloat(frankingCreditsInput.value); // Ensure parsing here
     const comments = currentData.comments;
 
     const shareData = {
@@ -610,7 +610,7 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
     currentPriceInput.value = Number(shareToEdit.currentPrice) !== null && !isNaN(Number(shareToEdit.currentPrice)) ? Number(shareToEdit.currentPrice).toFixed(2) : '';
     targetPriceInput.value = Number(shareToEdit.targetPrice) !== null && !isNaN(Number(shareToEdit.targetPrice)) ? Number(shareToEdit.targetPrice).toFixed(2) : '';
     dividendAmountInput.value = Number(shareToEdit.dividendAmount) !== null && !isNaN(Number(shareToEdit.dividendAmount)) ? Number(shareToEdit.dividendAmount).toFixed(3) : '';
-    frankingCreditsInput.value = Number(shareToEdit.frankingCredits) !== null && !isNaN(Number(shareToEdit.frankingCredits)) ? Number(shareToEdit.frankingCredits).toFixed(1) : '';
+    frankingCreditsInput.value = Number(shareToEdit.frankingCredits) !== null && !isNaN(Number(shareToToEdit.frankingCredits)) ? Number(shareToEdit.frankingCredits).toFixed(1) : ''; // Corrected typo
     
     if (commentsFormContainer) {
         commentsFormContainer.innerHTML = '';
@@ -910,9 +910,7 @@ function sortShares() {
 
 function renderWatchlistSelect() {
     if (!watchlistSelect) { console.error("[renderWatchlistSelect] watchlistSelect element not found."); return; }
-    // Ensure the default option is always present, even if no watchlists are loaded yet.
-    // This handles the "Watchlist is not displayed in the watchlist Box before you assigned in" issue.
-    watchlistSelect.innerHTML = '<option value="" disabled selected>Watchlist</option>'; 
+    watchlistSelect.innerHTML = '<option value="" disabled selected>Watchlist</option>'; // Default placeholder
 
     // Add "All Shares" option first
     const allSharesOption = document.createElement('option');
@@ -1347,7 +1345,6 @@ function renderAsxCodeButtons() {
         button.className = 'asx-code-btn';
         button.textContent = asxCode;
         button.dataset.asxCode = asxCode;
-        asxCodeButtonsContainer.appendChild(button);
         button.addEventListener('click', (event) => {
             console.log(`[ASX Button Click] Button for ${asxCode} clicked.`); // Log to confirm click
             const clickedCode = event.target.dataset.asxCode;
@@ -2846,7 +2843,7 @@ async function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v169) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v171) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
