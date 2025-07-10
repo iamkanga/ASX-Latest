@@ -1,5 +1,5 @@
-// File Version: v158
-// Last Updated: 2025-07-10 (Removed specific cancel buttons, added manual live price refresh button logic)
+// File Version: v159
+// Last Updated: 2025-07-10 (Fixed hamburger menu, clear input fields on focus, added manual live price refresh button logic)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -416,7 +416,7 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
     shareNameInput.value = shareToEdit.shareName || '';
     currentPriceInput.value = Number(shareToEdit.currentPrice) !== null && !isNaN(Number(shareToEdit.currentPrice)) ? Number(shareToEdit.currentPrice).toFixed(2) : '';
     targetPriceInput.value = Number(shareToEdit.targetPrice) !== null && !isNaN(Number(shareToEdit.targetPrice)) ? Number(shareToEdit.targetPrice).toFixed(2) : '';
-    dividendAmountInput.value = Number(shareToEdit.dividendAmount) !== null && !isNaN(Number(shareToEdit.dividendAmount)) ? Number(shareToEdit.dividendAmount).toFixed(3) : '';
+    dividendAmountInput.value = Number(shareToEdit.dividendAmount) !== null && !isNaN(Number(shareToToEdit.dividendAmount)) ? Number(shareToEdit.dividendAmount).toFixed(3) : '';
     frankingCreditsInput.value = Number(shareToEdit.frankingCredits) !== null && !isNaN(Number(shareToEdit.frankingCredits)) ? Number(shareToEdit.frankingCredits).toFixed(1) : '';
     
     if (commentsFormContainer) {
@@ -990,7 +990,7 @@ function addShareToMobileCards(share) {
 
     let commentsSummary = '-';
     if (share.comments && Array.isArray(share.comments) && share.comments.length > 0 && share.comments[0].text) {
-        commentsSummary = truncateText(commentsSummary, 70); // Corrected to use commentsSummary
+        commentsSummary = truncateText(share.comments[0].text, 70);
     }
 
     const displayTargetPrice = (!isNaN(targetPriceNum) && targetPriceNum !== null) ? targetPriceNum.toFixed(2) : '-';
@@ -2021,6 +2021,12 @@ async function initializeAppLogic() {
         if (input) {
             input.addEventListener('input', checkFormDirtyState);
             input.addEventListener('change', checkFormDirtyState); // For number inputs, etc.
+            // NEW: Clear input on focus
+            input.addEventListener('focus', function() {
+                this.select(); // Selects all text in the input
+                // This allows the user to easily type over existing content.
+                // Actual clearing happens if they start typing.
+            });
         }
     });
 
@@ -2588,13 +2594,14 @@ async function initializeAppLogic() {
     }
 
     // Removed Cancel Manage Watchlist Button event listener as the button is removed from HTML
-    if (cancelManageWatchlistBtn) { // Check if element exists before adding listener
-        cancelManageWatchlistBtn.addEventListener('click', () => {
-            console.log("[Watchlist] Manage Watchlist canceled.");
-            hideModal(manageWatchlistModal);
-            editWatchlistNameInput.value = '';
-        });
-    }
+    // The element `cancelManageWatchlistBtn` is no longer in the HTML, so this listener is removed.
+    // if (cancelManageWatchlistBtn) {
+    //     cancelManageWatchlistBtn.addEventListener('click', () => {
+    //         console.log("[Watchlist] Manage Watchlist canceled.");
+    //         hideModal(manageWatchlistModal);
+    //         editWatchlistNameInput.value = '';
+    //     });
+    // }
 
     // Dividend Calculator Button
     if (dividendCalcBtn) {
@@ -2870,7 +2877,7 @@ async function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v158) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v159) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
