@@ -1,5 +1,5 @@
 // File Version: v167
-// Last Updated: 2025-07-09 (Fixed SyntaxError, modal opening, live price lookup, franking credits input, redundant save alert, shared double-ups, and delete error)
+// Last Updated: 2025-07-09 (Fixed SyntaxError, modal opening, live price lookup, franking credits input, redundant save alert, refresh button positioning, shared double-ups, and delete error)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -332,10 +332,13 @@ function closeModals() {
                         const isShareNameValid = currentFormData.shareName.trim() !== '';
                         const isDirty = selectedShareDocId ? !areShareDataEqual(originalShareData, currentFormData) : isShareNameValid;
                         
-                        if (isDirty) {
+                        // Only attempt save if dirty AND shareName is valid
+                        if (isDirty && isShareNameValid) { // Added isShareNameValid check here
                             saveSuccessful = await saveShareFormData();
-                        } else {
+                        } else if (!isDirty) { // Log if not dirty, but don't show alert
                             console.log("[Auto-Save] Skipping save: Share form not dirty.");
+                        } else if (!isShareNameValid) { // Log if invalid name, but don't show alert on close
+                            console.warn("[Auto-Save] Skipping save: Share form has invalid name.");
                         }
                     } else if (modal.id === 'addWatchlistModal') {
                         if (newWatchlistNameInput && newWatchlistNameInput.value.trim() !== '') {
@@ -357,11 +360,8 @@ function closeModals() {
                             console.log("[Auto-Save] Skipping save: Manage Watchlist form not dirty.");
                         }
                     }
-                    // No need to show alert here, as the individual save functions already handle it.
-                    // This also prevents the "Watchlist name cannot be empty!" alert from showing after a calculator modal close.
                 })();
             } else if (modal.id === 'dividendCalculatorModal' || modal.id === 'calculatorModal') {
-                // For calculators, do NOT show a "saved" alert on close.
                 console.log(`[Auto-Save] Calculator modal (${modal.id}) closed, no save alert.`);
             }
             modal.style.setProperty('display', 'none', 'important');
@@ -1142,7 +1142,7 @@ function addShareToMobileCards(share) {
     console.log(`[Live Price Debug] Mobile Card Share: ${share.shareName}, Normalized: ${normalizedShareName}, LivePriceItem:`, livePriceItem);
 
     const livePrice = livePriceItem && typeof livePriceItem.Price === 'number' && !isNaN(livePriceItem.Price) ? livePriceItem.Price : undefined;
-    const previousClosePrice = livePriceItem && typeof livePriceItem.PreviousClose === 'number' && !isNaN(livePriceItem.PreviousClose) ? livePriceItem.PreviousPrice : undefined; // Corrected to PreviousClose
+    const previousClosePrice = livePriceItem && typeof livePriceItem.PreviousClose === 'number' && !isNaN(livePriceItem.PreviousClose) ? livePriceItem.PreviousClose : undefined; // Corrected to PreviousClose
 
     let displayLivePrice = livePrice !== undefined ? `$${Number(livePrice).toFixed(2)}` : '-';
     let livePriceClass = ''; // For red/green styling
@@ -1786,7 +1786,7 @@ async function migrateOldSharesToWatchlist() {
                 needsUpdate = true;
                 updatePayload.shareName = String(shareData.name).trim();
                 updatePayload.name = window.firestore.deleteField();
-                console.log(`[Migration] Share '${doc.id}' missing 'shareName' but has 'name' ('${shareData.name}'). Migrating 'name' to 'shareName'.`);
+                console.log(`[Migration] Share '${doc.id}': Converted 'name' to 'shareName'.`);
             }
             const fieldsToConvert = ['currentPrice', 'targetPrice', 'dividendAmount', 'frankingCredits', 'entryPrice', 'lastFetchedPrice', 'previousFetchedPrice'];
             fieldsToConvert.forEach(field => {
@@ -2828,7 +2828,7 @@ async function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v165) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v167) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
