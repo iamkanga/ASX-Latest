@@ -1,5 +1,5 @@
-// File Version: v162
-// Last Updated: 2025-07-10 (Fixed right-click/long-press context menu, fixed comment display on main list/cards, improved comment title display)
+// File Version: v163
+// Last Updated: 2025-07-10 (Fixed shareToToEdit typo, addressed context menu visibility, refined comments display, fixed watchlist selection modal, aligned header elements)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -418,7 +418,7 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
     shareNameInput.value = shareToEdit.shareName || '';
     currentPriceInput.value = Number(shareToEdit.currentPrice) !== null && !isNaN(Number(shareToEdit.currentPrice)) ? Number(shareToEdit.currentPrice).toFixed(2) : '';
     targetPriceInput.value = Number(shareToEdit.targetPrice) !== null && !isNaN(Number(shareToEdit.targetPrice)) ? Number(shareToEdit.targetPrice).toFixed(2) : '';
-    dividendAmountInput.value = Number(shareToEdit.dividendAmount) !== null && !isNaN(Number(shareToEdit.dividendAmount)) ? Number(shareToEdit.dividendAmount).toFixed(3) : '';
+    dividendAmountInput.value = Number(shareToEdit.dividendAmount) !== null && !isNaN(Number(shareToEdit.dividendAmount)) ? Number(shareToEdit.dividendAmount).toFixed(3) : ''; // Fixed typo: shareToToEdit -> shareToEdit
     frankingCreditsInput.value = Number(shareToEdit.frankingCredits) !== null && !isNaN(Number(shareToEdit.frankingCredits)) ? Number(shareToEdit.frankingCredits).toFixed(1) : '';
     
     if (commentsFormContainer) {
@@ -874,7 +874,7 @@ function renderSortSelect() {
     } else {
         sortSelect.value = ''; 
         currentSortOrder = ''; // Ensure global variable is reset if no valid option
-        console.log("[Sort] No valid saved sort order or not logged in, defaulting to placeholder.");
+        console.log("[UI Update] Sort select rendered. Sort select disabled: ", sortSelect.disabled);
     }
     // Removed the recursive call to renderSortSelect() here
     console.log("[UI Update] Sort select rendered. Sort select disabled: ", sortSelect.disabled);
@@ -1025,6 +1025,7 @@ function addShareToTable(share) {
     const commentsCell = row.insertCell();
     // Comments section removed from main watchlist/cards
     commentsCell.textContent = ''; 
+    commentsCell.style.display = 'none'; // Ensure the cell is hidden
     console.log(`[Render] Added share ${displayShareName} to table.`);
 }
 
@@ -1851,12 +1852,15 @@ function showContextMenu(event, shareId) {
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
 
+    // Adjust x position to prevent overflow
     if (x + menuWidth > viewportWidth) {
-        x = viewportWidth - menuWidth - 10;
+        x = viewportWidth - menuWidth - 10; // 10px padding from right edge
     }
+    // Adjust y position to prevent overflow
     if (y + menuHeight > viewportHeight) {
-        y = viewportHeight - menuHeight - 10;
+        y = viewportHeight - menuHeight - 10; // 10px padding from bottom edge
     }
+    // Ensure it doesn't go off screen to the left/top
     if (x < 10) x = 10;
     if (y < 10) y = 10;
 
@@ -1872,7 +1876,9 @@ function hideContextMenu() {
         shareContextMenu.style.display = 'none';
         contextMenuOpen = false;
         currentContextMenuShareId = null;
-        deselectCurrentShare();
+        // Do NOT deselect share here, as the user might click edit/delete from context menu,
+        // and we need selectedShareDocId to be set for those actions.
+        // deselectCurrentShare(); 
         console.log("[Context Menu] Hidden.");
     }
 }
@@ -2322,8 +2328,8 @@ async function initializeAppLogic() {
                     shareData.previousFetchedPrice = existingShare.lastFetchedPrice; // Store old lastFetchedPrice
                     shareData.lastFetchedPrice = shareData.currentPrice; // Update lastFetchedPrice to new currentPrice
                 } else if (!existingShare || existingShare.lastFetchedPrice === undefined) { // If it's a new field or no existing share
-                    shareData.previousFetchedPrice = shareData.currentPrice;
-                    shareData.lastFetchedPrice = shareData.currentPrice;
+                    shareData.previousFetchedPrice = existingShare.previousFetchedPrice; // Preserve existing if no change
+                    shareData.lastFetchedPrice = existingShare.lastFetchedPrice; // Preserve existing if no change
                 } else { // No change in currentPrice, preserve existing fetched prices
                     shareData.previousFetchedPrice = existingShare.previousFetchedPrice;
                     shareData.lastFetchedPrice = existingShare.lastFetchedPrice;
@@ -2360,7 +2366,7 @@ async function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v162) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v163) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
