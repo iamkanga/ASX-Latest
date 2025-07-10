@@ -1,5 +1,5 @@
-// File Version: v154
-// Last Updated: 2025-07-10 (Live Price Integration from Google Apps Script)
+// File Version: v155
+// Last Updated: 2025-07-10 (Fixed infinite recursion in renderSortSelect)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -608,10 +608,13 @@ function showShareDetails() {
     const frankingCreditsNum = Number(share.frankingCredits);
     modalFrankingCredits.textContent = (!isNaN(frankingCreditsNum) && frankingCreditsNum !== null) ? `${frankingCreditsNum.toFixed(1)}%` : 'N/A';
     
-    const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, enteredPriceNum); 
+    // Use livePrice for yield calculation if available, otherwise use enteredPriceNum
+    const priceForYield = (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) ? livePrice : enteredPriceNum;
+    const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, priceForYield); 
+    const frankedYield = calculateFrankedYield(dividendAmountNum, priceForYield, frankingCreditsNum);
     modalUnfrankedYieldSpan.textContent = unfrankedYield !== null ? `${unfrankedYield.toFixed(2)}%` : 'N/A';
     
-    const frankedYield = calculateFrankedYield(dividendAmountNum, enteredPriceNum, frankingCreditsNum);
+    const frankedYield = calculateFrankedYield(dividendAmountNum, priceForYield, frankingCreditsNum);
     modalFrankedYieldSpan.textContent = frankedYield !== null ? `${frankedYield.toFixed(2)}%` : 'N/A';
     
     if (modalCommentsContainer) {
@@ -797,15 +800,16 @@ function renderSortSelect() {
     });
 
     // Use the global currentSortOrder, which should have been set by loadUserWatchlistsAndSettings
-    if (currentUserId && currentSortOrder && Array.from(sortSelect.options).some(option => option.value === currentSortOrder)) {
-        sortSelect.value = currentSortOrder; // Set the select element's value
+    if (currentUserId && savedSortOrder && Array.from(sortSelect.options).some(option => option.value === savedSortOrder)) {
+        sortSelect.value = savedSortOrder; // Set the select element's value
+        currentSortOrder = savedSortOrder; // Update the global variable
         console.log(`[Sort] Applied saved sort order: ${currentSortOrder}`);
     } else {
         sortSelect.value = ''; 
         currentSortOrder = ''; // Ensure global variable is reset if no valid option
         console.log("[Sort] No valid saved sort order or not logged in, defaulting to placeholder.");
     }
-    renderSortSelect(); // Re-render to ensure placeholder is correctly shown if no saved sort order
+    // Removed the recursive call to renderSortSelect() here
     console.log("[UI Update] Sort select rendered. Sort select disabled: ", sortSelect.disabled);
 }
 
@@ -1401,7 +1405,8 @@ async function saveSortOrderPreference(sortOrder) {
     try {
         await window.firestore.setDoc(userProfileDocRef, { lastSortOrder: sortOrder }, { merge: true });
         console.log(`[Sort] Saved sort order preference: ${sortOrder}`);
-    } catch (error) {
+    }
+    catch (error) {
         console.error("[Sort] Error saving sort order preference:", error);
     }
 }
@@ -2855,7 +2860,7 @@ async function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v154) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v155) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
@@ -2912,7 +2917,7 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error("[Firebase] Firebase objects (db, auth, appId, firestore, authFunctions) are not available on DOMContentLoaded. Firebase initialization likely failed in index.html.");
         const errorDiv = document.getElementById('firebaseInitError');
         if (errorDiv) {
-            errorDiv.style.display = 'block';
+                errorDiv.style.display = 'block';
         }
         updateAuthButtonText(false);
         updateMainButtonsState(false);
