@@ -1,5 +1,5 @@
-// File Version: v167
-// Last Updated: 2025-07-09 (Fixed SyntaxError, modal opening, live price lookup, franking credits input, redundant save alert, refresh button positioning, shared double-ups, and delete error)
+// File Version: v168
+// Last Updated: 2025-07-09 (Fixed modal opening, live price lookup, franking credits input, redundant save alert, refresh button positioning, shared double-ups, and delete error)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -1124,7 +1124,7 @@ function addShareToMobileCards(share) {
 
     let commentsSummary = '-';
     if (share.comments && Array.isArray(share.comments) && share.comments.length > 0 && share.comments[0].text) {
-        commentsSummary = truncateText(share.comments[0].text, 70);
+        commentsSummary = truncateText(commentsSummary, 70); // Corrected to use commentsSummary
     }
 
     const displayTargetPrice = (!isNaN(targetPriceNum) && targetPriceNum !== null) ? targetPriceNum.toFixed(2) : '-';
