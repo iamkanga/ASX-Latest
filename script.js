@@ -2844,7 +2844,7 @@ async function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v167) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v169) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
