@@ -1,5 +1,5 @@
-// File Version: v159
-// Last Updated: 2025-07-10 (Fixed hamburger menu, clear input fields on focus, added manual live price refresh button logic)
+// File Version: v160
+// Last Updated: 2025-07-10 (Fixed shareToToEdit typo, clear input fields on focus, added manual live price refresh button logic)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -69,7 +69,7 @@ const shareFormSection = document.getElementById('shareFormSection');
 const formCloseButton = document.querySelector('.form-close-button');
 const formTitle = document.getElementById('formTitle');
 const saveShareBtn = document.getElementById('saveShareBtn');
-const cancelFormBtn = document.getElementById('cancelFormBtn'); // This button is removed from HTML
+// const cancelFormBtn = document.getElementById('cancelFormBtn'); // This button is removed from HTML
 const deleteShareBtn = document.getElementById('deleteShareBtn');
 const shareNameInput = document.getElementById('shareName');
 const currentPriceInput = document.getElementById('currentPrice');
@@ -133,7 +133,7 @@ const editWatchlistBtn = document.getElementById('editWatchlistBtn');
 const addWatchlistModal = document.getElementById('addWatchlistModal');
 const newWatchlistNameInput = document.getElementById('newWatchlistName');
 const saveWatchlistBtn = document.getElementById('saveWatchlistBtn'); // Now a span
-const cancelAddWatchlistBtn = document.getElementById('cancelAddWatchlistBtn'); // Now a span
+// const cancelAddWatchlistBtn = document.getElementById('cancelAddWatchlistBtn'); // Now a span - removed from HTML
 const manageWatchlistModal = document.getElementById('manageWatchlistModal');
 const editWatchlistNameInput = document.getElementById('editWatchlistName');
 const saveWatchlistNameBtn = document.getElementById('saveWatchlistNameBtn'); // Now a span
@@ -385,7 +385,8 @@ function clearForm() {
     });
     if (commentsFormContainer) {
         commentsFormContainer.innerHTML = '';
-        addCommentSection(); // Always add one initial comment section to make it visible
+        // Do not add a default comment section here, user will click "+" to add
+        // addCommentSection(); 
     }
     selectedShareDocId = null;
     originalShareData = null; // Reset original data when clearing form for new share
@@ -416,7 +417,7 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
     shareNameInput.value = shareToEdit.shareName || '';
     currentPriceInput.value = Number(shareToEdit.currentPrice) !== null && !isNaN(Number(shareToEdit.currentPrice)) ? Number(shareToEdit.currentPrice).toFixed(2) : '';
     targetPriceInput.value = Number(shareToEdit.targetPrice) !== null && !isNaN(Number(shareToEdit.targetPrice)) ? Number(shareToEdit.targetPrice).toFixed(2) : '';
-    dividendAmountInput.value = Number(shareToEdit.dividendAmount) !== null && !isNaN(Number(shareToToEdit.dividendAmount)) ? Number(shareToEdit.dividendAmount).toFixed(3) : '';
+    dividendAmountInput.value = Number(shareToEdit.dividendAmount) !== null && !isNaN(Number(shareToEdit.dividendAmount)) ? Number(shareToEdit.dividendAmount).toFixed(3) : '';
     frankingCreditsInput.value = Number(shareToEdit.frankingCredits) !== null && !isNaN(Number(shareToEdit.frankingCredits)) ? Number(shareToEdit.frankingCredits).toFixed(1) : '';
     
     if (commentsFormContainer) {
@@ -424,7 +425,8 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
         if (shareToEdit.comments && Array.isArray(shareToEdit.comments) && shareToEdit.comments.length > 0) {
             shareToEdit.comments.forEach(comment => addCommentSection(comment.title, comment.text));
         } else {
-            addCommentSection();
+            // Do not add a default comment section here, user will click "+" to add
+            // addCommentSection();
         }
     }
     if (deleteShareBtn) {
@@ -456,7 +458,9 @@ function getCurrentFormData() {
             const textInput = section.querySelector('.comment-text-input');
             const title = titleInput ? titleInput.value.trim() : '';
             const text = textInput ? textInput.value.trim() : '';
-            comments.push({ title: title, text: text });
+            if (title || text) { // Only add comment if it has content
+                comments.push({ title: title, text: text });
+            }
         });
     }
 
@@ -957,11 +961,8 @@ function addShareToTable(share) {
     `;
 
     const commentsCell = row.insertCell();
-    let commentsText = '';
-    if (share.comments && Array.isArray(share.comments) && share.comments.length > 0 && share.comments[0].text) {
-        commentsText = share.comments[0].text;
-    }
-    commentsCell.textContent = truncateText(commentsText, 70);
+    // Comments section removed from main watchlist/cards
+    commentsCell.textContent = ''; 
     console.log(`[Render] Added share ${displayShareName} to table.`);
 }
 
@@ -988,10 +989,11 @@ function addShareToMobileCards(share) {
     const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, priceForYield);
     const frankedYield = calculateFrankedYield(dividendAmountNum, priceForYield, frankingCreditsNum);
 
-    let commentsSummary = '-';
-    if (share.comments && Array.isArray(share.comments) && share.comments.length > 0 && share.comments[0].text) {
-        commentsSummary = truncateText(share.comments[0].text, 70);
-    }
+    // Comments section removed from main watchlist/cards
+    // let commentsSummary = '-';
+    // if (share.comments && Array.isArray(share.comments) && share.comments.length > 0 && share.comments[0].text) {
+    //     commentsSummary = truncateText(share.comments[0].text, 70);
+    // }
 
     const displayTargetPrice = (!isNaN(targetPriceNum) && targetPriceNum !== null) ? targetPriceNum.toFixed(2) : '-';
     const displayDividendAmount = (!isNaN(dividendAmountNum) && dividendAmountNum !== null) ? dividendAmountNum.toFixed(2) : '-';
@@ -1037,7 +1039,6 @@ function addShareToMobileCards(share) {
         <p><strong>Franking:</strong> ${displayFrankingCredits}</p>
         <p><strong>Unfranked Yield:</strong> ${unfrankedYield !== null ? unfrankedYield.toFixed(2) + '%' : '-'}</p>
         <p><strong>Franked Yield:</strong> ${frankedYield !== null ? frankedYield.toFixed(2) + '%' : '-'}</p>
-        <p class="card-comments"><strong>Comments:</strong> ${commentsSummary}</p>
     `;
     mobileShareCardsContainer.appendChild(card);
 
@@ -2021,11 +2022,9 @@ async function initializeAppLogic() {
         if (input) {
             input.addEventListener('input', checkFormDirtyState);
             input.addEventListener('change', checkFormDirtyState); // For number inputs, etc.
-            // NEW: Clear input on focus
+            // NEW: Clear input on focus (select all text)
             input.addEventListener('focus', function() {
                 this.select(); // Selects all text in the input
-                // This allows the user to easily type over existing content.
-                // Actual clearing happens if they start typing.
             });
         }
     });
@@ -2461,14 +2460,14 @@ async function initializeAppLogic() {
         });
     }
 
-    // Cancel Add Watchlist Button
-    if (cancelAddWatchlistBtn) {
-        cancelAddWatchlistBtn.addEventListener('click', () => {
-            console.log("[Watchlist] Add Watchlist canceled.");
-            hideModal(addWatchlistModal);
-            if (newWatchlistNameInput) newWatchlistNameInput.value = '';
-        });
-    }
+    // Removed Cancel Add Watchlist Button event listener as the button is removed from HTML
+    // if (cancelAddWatchlistBtn) {
+    //     cancelAddWatchlistBtn.addEventListener('click', () => {
+    //         console.log("[Watchlist] Add Watchlist canceled.");
+    //         hideModal(addWatchlistModal);
+    //         if (newWatchlistNameInput) newWatchlistNameInput.value = '';
+    //     });
+    // }
 
     // Edit Watchlist Button
     if (editWatchlistBtn) {
@@ -2877,7 +2876,7 @@ async function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v159) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v160) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;

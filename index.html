@@ -8,7 +8,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍆</text></svg>">
 
     <!-- Linking to your separate style.css file -->
-    <link rel="stylesheet" href="style.css?v=89"> <!-- Updated to v89 -->
+    <link rel="stylesheet" href="style.css?v=90"> <!-- Updated to v90 -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -36,6 +36,10 @@
             <div class="menu-section">
                 <h3>Share Actions</h3>
                 <div class="menu-buttons-group">
+                    <!-- NEW: Refresh Live Prices Button - MOVED TO TOP OF SHARE ACTIONS -->
+                    <button id="refreshLivePricesBtn" class="menu-button-item" data-action-closes-menu="false">
+                        <i class="fas fa-sync-alt"></i> <span>Refresh Live Prices</span>
+                    </button>
                     <!-- Add New Share - Icon with Text -->
                     <button id="newShareBtn" class="menu-button-item" data-action-closes-menu="true">
                         <i class="fas fa-plus-circle"></i> <span>Add New Share</span>
@@ -77,10 +81,6 @@
                     <!-- Export Watchlist Button - NEW -->
                     <button id="exportWatchlistBtn" class="menu-button-item" data-action-closes-menu="true">
                         <i class="fas fa-file-export"></i> <span>Export Watchlist (CSV)</span>
-                    </button>
-                    <!-- NEW: Refresh Live Prices Button -->
-                    <button id="refreshLivePricesBtn" class="menu-button-item" data-action-closes-menu="false">
-                        <i class="fas fa-sync-alt"></i> <span>Refresh Live Prices</span>
                     </button>
                 </div>
             </div>
@@ -401,7 +401,7 @@
                 <button class="calc-btn operator" data-action="add">+</button>
                 
                 <!-- Row 5: 0 (span 2), ., = (span 1) -->
-                <button class="calc-btn zero" data-value="0">0</button>
+                <button class="calc-btn zero" data-value="0"></button>
                 <button class="calc-btn" data-value=".">.</button>
                 <button class="calc-btn equals" data-action="calculate">=</button>
             </div>
@@ -505,6 +505,6 @@
         }); 
     </script>
     <!-- Linking to your separate script.js file -->
-    <script src="script.js?v=159"></script> <!-- Updated to v159 -->
+    <script src="script.js?v=160"></script> <!-- Updated to v160 -->
 </body>
 </html>
