@@ -1,4 +1,4 @@
-// File Version: v169
+// File Version: v170
 // Last Updated: 2025-07-09 (Fixed modal opening, live price lookup, franking credits input, redundant save alert, refresh button positioning, shared double-ups, and delete error)
 
 // This script interacts with Firebase Firestore for data storage.
@@ -910,7 +910,9 @@ function sortShares() {
 
 function renderWatchlistSelect() {
     if (!watchlistSelect) { console.error("[renderWatchlistSelect] watchlistSelect element not found."); return; }
-    watchlistSelect.innerHTML = '<option value="" disabled selected>Watchlist</option>'; // Default placeholder
+    // Ensure the default option is always present, even if no watchlists are loaded yet.
+    // This handles the "Watchlist is not displayed in the watchlist Box before you assigned in" issue.
+    watchlistSelect.innerHTML = '<option value="" disabled selected>Watchlist</option>'; 
 
     // Add "All Shares" option first
     const allSharesOption = document.createElement('option');

@@ -1,4 +1,4 @@
-/* File Version: v105 */
+/* File Version: v106 */
 /* Last Updated: 2025-07-09 (Refresh button vertical alignment fixed, general cleanup) */
 
 :root {
@@ -224,7 +224,7 @@ body.theme-bold-3 { /* Sunset Orange */
     --placeholder-text: #ccc; /* Lighter placeholder */
     --ghosted-text: #bbb; /* Lighter ghosted text */
     --danger-button-bg: #e63946;
-    --danger-button-hover-bg: #c02d38;
+    --danger-button-hover-bg: #c0392b;
     --icon-action-color: #ffc300;
     --icon-action-hover-color: #e0ac00;
     --icon-danger-color: #e63946;
@@ -405,8 +405,6 @@ body.theme-bold-7 { /* Emerald */
     --asx-button-text: #fff;
     --sidebar-text: #fff;
     --label-color: #ccc;
-    --input-placeholder-color: #aaa;
-    --ghosted-text: #bbb;
     --close-sidebar-btn-color: #ccc;
 }
 
