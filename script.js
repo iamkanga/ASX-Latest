@@ -1,4 +1,4 @@
-// File Version: v168
+// File Version: v169
 // Last Updated: 2025-07-09 (Fixed modal opening, live price lookup, franking credits input, redundant save alert, refresh button positioning, shared double-ups, and delete error)
 
 // This script interacts with Firebase Firestore for data storage.
@@ -37,6 +37,7 @@ let currentSortOrder = 'entryDate-desc'; // Default sort order, now a global var
 let contextMenuOpen = false; // To track if the custom context menu is open
 let currentContextMenuShareId = null; // Stores the ID of the share that opened the context menu
 let originalShareData = null; // Stores the original share data when editing for dirty state check
+let isDeletingShare = false; // NEW: Flag to prevent auto-save after a delete operation
 
 // Theme related variables
 const CUSTOM_THEMES = [
@@ -328,17 +329,23 @@ function closeModals() {
                 (async () => {
                     let saveSuccessful = false;
                     if (modal.id === 'shareFormSection') {
-                        const currentFormData = getCurrentFormData();
-                        const isShareNameValid = currentFormData.shareName.trim() !== '';
-                        const isDirty = selectedShareDocId ? !areShareDataEqual(originalShareData, currentFormData) : isShareNameValid;
-                        
-                        // Only attempt save if dirty AND shareName is valid
-                        if (isDirty && isShareNameValid) { // Added isShareNameValid check here
-                            saveSuccessful = await saveShareFormData();
-                        } else if (!isDirty) { // Log if not dirty, but don't show alert
-                            console.log("[Auto-Save] Skipping save: Share form not dirty.");
-                        } else if (!isShareNameValid) { // Log if invalid name, but don't show alert on close
-                            console.warn("[Auto-Save] Skipping save: Share form has invalid name.");
+                        // Only attempt auto-save if not currently in a delete operation
+                        if (!isDeletingShare) { // Check the flag here
+                            const currentFormData = getCurrentFormData();
+                            const isShareNameValid = currentFormData.shareName.trim() !== '';
+                            const isDirty = selectedShareDocId ? !areShareDataEqual(originalShareData, currentFormData) : isShareNameValid;
+                            
+                            // Only attempt save if dirty AND shareName is valid
+                            if (isDirty && isShareNameValid) { 
+                                saveSuccessful = await saveShareFormData();
+                            } else if (!isDirty) { 
+                                console.log("[Auto-Save] Skipping save: Share form not dirty.");
+                            } else if (!isShareNameValid) { 
+                                console.warn("[Auto-Save] Skipping save: Share form has invalid name.");
+                            }
+                        } else {
+                            console.log("[Auto-Save] Skipping save: Delete operation in progress.");
+                            isDeletingShare = false; // Reset the flag after skipping
                         }
                     } else if (modal.id === 'addWatchlistModal') {
                         if (newWatchlistNameInput && newWatchlistNameInput.value.trim() !== '') {
@@ -2308,6 +2315,7 @@ async function initializeAppLogic() {
                 return; // Do nothing if visually disabled
             }
             if (selectedShareDocId) {
+                isDeletingShare = true; // Set flag before deletion
                 try {
                     const shareDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, selectedShareDocId);
                     await window.firestore.deleteDoc(shareDocRef);
@@ -2319,6 +2327,8 @@ async function initializeAppLogic() {
                 } catch (error) {
                     console.error("[Firestore] Error deleting share:", error);
                     showCustomAlert("Error deleting share: " + error.message);
+                } finally {
+                    isDeletingShare = false; // Reset flag after operation completes or fails
                 }
             } else { showCustomAlert("No share selected for deletion."); }
         });
@@ -2347,6 +2357,7 @@ async function initializeAppLogic() {
                 return; // Do nothing if visually disabled
             }
             if (selectedShareDocId) {
+                isDeletingShare = true; // Set flag before deletion
                 try {
                     const shareDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, selectedShareDocId);
                     await window.firestore.deleteDoc(shareDocRef);
@@ -2358,6 +2369,8 @@ async function initializeAppLogic() {
                 } catch (error) {
                     console.error("[Firestore] Error deleting share:", error);
                     showCustomAlert("Error deleting share: " + error.message);
+                } finally {
+                    isDeletingShare = false; // Reset flag after operation completes or fails
                 }
             } else { showCustomAlert("No share selected for deletion."); }
         });
@@ -2382,6 +2395,7 @@ async function initializeAppLogic() {
         contextDeleteShareBtn.addEventListener('click', async () => {
             console.log("[Context Menu] Delete Share button clicked (No Confirmation).");
             if (currentContextMenuShareId) {
+                isDeletingShare = true; // Set flag before deletion
                 const shareToDeleteId = currentContextMenuShareId;
                 hideContextMenu();
                 try {
@@ -2395,6 +2409,8 @@ async function initializeAppLogic() {
                 } catch (error) {
                     console.error("[Firestore] Error deleting share:", error);
                     showCustomAlert("Error deleting share: " + error.message);
+                } finally {
+                    isDeletingShare = false; // Reset flag after operation completes or fails
                 }
             } else {
                 showCustomAlert("No share selected for deletion from context menu.");
