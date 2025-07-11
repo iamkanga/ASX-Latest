@@ -1,5 +1,5 @@
-// File Version: v178
-// Last Updated: 2025-07-11 (Fixed calculator getOperatorSymbol ReferenceError; re-checked comments section add button visibility)
+// File Version: v179
+// Last Updated: 2025-07-11 (Focused on fixing Watchlist Selection for New Shares and Add New Watchlist save functionality)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -469,7 +469,7 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
     if (commentsFormContainer) {
         commentsFormContainer.innerHTML = ''; 
         if (shareToEdit.comments && Array.isArray(shareToEdit.comments) && shareToEdit.comments.length > 0) {
-            console.log(`[showEditFormForSelectedShare] Found ${shareToTo.comments.length} comments. Adding them to form.`);
+            console.log(`[showEditFormForSelectedShare] Found ${shareToEdit.comments.length} comments. Adding them to form.`);
             shareToEdit.comments.forEach(comment => addCommentSection(comment.title, comment.text));
         } else {
             console.log("[showEditFormForSelectedShare] No comments found for this share. Adding one empty comment section.");
@@ -631,7 +631,6 @@ function showShareDetails() {
             } else if (change < 0) {
                 priceChangeSpan.textContent = `(-$${Math.abs(change).toFixed(2)})`;
                 priceChangeSpan.classList.add('negative');
-                // Added a space for readability in negative change
                 priceChangeSpan.textContent = priceChangeSpan.textContent.replace('(-', ' (-');
             } else {
                 priceChangeSpan.textContent = `($0.00)`;
@@ -692,9 +691,6 @@ function showShareDetails() {
             noCommentsP.textContent = 'No comments for this share.';
             commentsSectionDiv.appendChild(noCommentsP);
         }
-        // Append comments section after the yield information (assuming yield spans are direct children of modalBodyScrollable)
-        // A more robust way would be to find a common parent for yield display and insert after that.
-        // For now, let's append at the end of the scrollable body.
         modalBodyScrollable.appendChild(commentsSectionDiv);
     }
 
@@ -1021,8 +1017,7 @@ function addShareToTable(share) {
             } else if (change < 0) {
                 priceChangeSpan.textContent = `(-$${Math.abs(change).toFixed(2)})`;
                 priceChangeSpan.classList.add('negative');
-                // Added a space for readability in negative change
-                priceChangeSpan.textContent = priceChangeSpan.textContent.replace('(-', ' (-');
+                priceChangeSpan.textContent = priceChangeSpan.textContent.replace('(-', ' (-'); // Add space for readability
             } else {
                 priceChangeSpan.textContent = `($0.00)`;
                 priceChangeSpan.classList.add('neutral');
@@ -1115,6 +1110,7 @@ function addShareToMobileCards(share) {
                 livePriceHtml += ` <span class="price-change positive">(+$${change.toFixed(2)})</span></p>`;
             } else if (change < 0) {
                 livePriceHtml += ` <span class="price-change negative">(-$${Math.abs(change).toFixed(2)})</span></p>`;
+                livePriceHtml = livePriceHtml.replace('(-', ' (-'); // Add space for readability
             } else {
                 livePriceHtml += ` <span class="price-change neutral">($0.00)</span></p>`;
             }
@@ -1302,7 +1298,6 @@ function renderAsxCodeButtons() {
         button.className = 'asx-code-btn';
         button.textContent = asxCode;
         button.dataset.asxCode = asxCode;
-        asxCodeButtonsContainer.appendChild(button);
         button.addEventListener('click', (event) => {
             console.log(`[ASX Button Click] Button for ${asxCode} clicked.`); 
             const clickedCode = event.target.dataset.asxCode;
@@ -2500,6 +2495,57 @@ async function initializeAppLogic() {
         console.warn("[Sidebar Button Debug] Standard Calc Button element (standardCalcBtn) NOT found.");
     }
 
+    if (calculatorButtons) {
+        calculatorButtons.addEventListener('click', (event) => {
+            const target = event.target;
+            if (target.classList.contains('calc-btn')) {
+                const value = target.dataset.value;
+                const action = target.dataset.action;
+
+                console.log(`[Calculator Button Click] Value: ${value}, Action: ${action}`);
+
+                if (value) {
+                    if (resultDisplayed) {
+                        currentCalculatorInput = value;
+                        resultDisplayed = false;
+                    } else {
+                        currentCalculatorInput += value;
+                    }
+                } else if (action) {
+                    if (action === 'clear') {
+                        resetCalculator();
+                    } else if (action === 'calculate') {
+                        calculateResult();
+                        resultDisplayed = true;
+                    } else if (action === 'percentage') {
+                        if (currentCalculatorInput !== '') {
+                            currentCalculatorInput = (parseFloat(currentCalculatorInput) / 100).toString();
+                        } else if (previousCalculatorInput !== '') {
+                            previousCalculatorInput = (parseFloat(previousCalculatorInput) / 100).toString();
+                        }
+                    } else { // Operator
+                        if (currentCalculatorInput !== '') {
+                            if (previousCalculatorInput !== '') {
+                                calculateResult();
+                            }
+                            operator = action;
+                            previousCalculatorInput = calculatorResult.textContent;
+                            currentCalculatorInput = '';
+                        } else if (previousCalculatorInput !== '' && !operator) {
+                            operator = action;
+                        } else if (previousCalculatorInput !== '' && operator) {
+                            operator = action; 
+                        }
+                    }
+                }
+                updateCalculatorDisplay();
+            }
+        });
+    } else {
+        console.warn("[Calculator] calculatorButtons element not found.");
+    }
+
+
     if (dividendCalcBtn) {
         console.log("[Sidebar Button Debug] Dividend Calc Button element found.");
         dividendCalcBtn.addEventListener('click', () => {
@@ -2511,7 +2557,6 @@ async function initializeAppLogic() {
         console.warn("[Sidebar Button Debug] Dividend Calc Button element (dividendCalcBtn) NOT found.");
     }
 
-    // Dividend Calculator Input Change Listeners - Issue 6c
     if (calcCurrentPriceInput) calcCurrentPriceInput.addEventListener('input', updateDividendCalculator);
     if (calcDividendAmountInput) calcDividendAmountInput.addEventListener('input', updateDividendCalculator);
     if (calcFrankingCreditsInput) calcFrankingCreditsInput.addEventListener('input', updateDividendCalculator);
@@ -2535,7 +2580,6 @@ async function initializeAppLogic() {
         console.log(`[Dividend Calculator] Unfranked: ${unfrankedYield}, Franked: ${frankedYield}, Estimated: ${estimatedDividend}`);
     }
 
-    // Add New Watchlist - Issue 4a
     if (addWatchlistBtn) {
         console.log("[Sidebar Button Debug] Add Watchlist Button element found.");
         addWatchlistBtn.addEventListener('click', () => {
