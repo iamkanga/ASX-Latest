@@ -1,5 +1,5 @@
-/* File Version: v104 */
-/* Last Updated: 2025-07-11 (Adjusted calculator button sizing for standard calculator to fit frame) */
+/* File Version: v105 */
+/* Last Updated: 2025-07-11 (Fixed calculator button sizing & frames; refined modal comment title display & position; added Dividends header; adjusted watchlist text formatting) */
 
 :root {
     /* Light Theme (Default) */
@@ -1122,6 +1122,23 @@ table th {
     white-space: nowrap;
 }
 
+/* Issue 6: Add Dividends title to header */
+table th:nth-child(5)::before { /* Target the 5th column header (Dividends) */
+    content: "Dividends"; /* Add the text content */
+    display: block; /* Make it a block to take up space */
+    font-weight: 600; /* Ensure it's bold */
+    color: var(--text-color); /* Inherit text color */
+    margin-bottom: 5px; /* Add some space between title and content if any */
+}
+/* Hide the actual content of the 5th th if it's empty or just has a placeholder */
+table th:nth-child(5) {
+    text-indent: -9999px; /* Hide original text content, keep padding/border */
+    line-height: 0; /* Collapse line height for original text */
+    padding-top: 12px; /* Restore original padding */
+    padding-bottom: 12px;
+}
+
+
 table tbody tr {
     transition: background-color 0.2s ease;
     cursor: pointer;
@@ -1160,7 +1177,7 @@ table td.live-price-cell {
     color: var(--price-neutral-color);
 }
 
-/* Issue 10: Watchlist Text Formatting */
+/* Issue 7: Watchlist Text Formatting */
 /* All user input and numerical input should be in bold */
 table tbody td:nth-child(1) { /* Share Code */
     font-weight: 700;
@@ -1808,7 +1825,7 @@ table tbody tr.selected,
     color: var(--button-text);
 }
 
-/* Calculator specific styles - Issue 6a */
+/* Calculator specific styles - Issue 5a */
 .calculator-display {
     background-color: var(--input-bg);
     border: 1px solid var(--input-border);
@@ -1852,20 +1869,20 @@ table tbody tr.selected,
     color: var(--calc-num-btn-text);
     border: none;
     border-radius: 50%; /* Make buttons round */
-    /* Adjusted padding and font-size to make buttons fit better */
-    padding: 15px; /* Reduced padding */
-    font-size: 1.2em; /* Reduced font size */
+    padding: 15px; 
+    font-size: 1.2em; 
     font-weight: 600;
     cursor: pointer;
     transition: background-color 0.2s ease;
     display: flex;
     justify-content: center;
     align-items: center;
-    aspect-ratio: 1 / 1; /* Keep buttons square/round */
+    aspect-ratio: 1 / 1; 
     /* Further adjustment to size for better fit */
-    width: 100%; /* Ensure they fill the grid cell */
-    max-width: 60px; /* Limit max size for larger screens */
-    height: auto; /* Allow height to adjust with padding/font-size */
+    width: 100%; 
+    max-width: 60px; 
+    height: 60px; /* Fixed height to ensure circular shape */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
 }
 
 .calc-btn:hover {
@@ -1891,12 +1908,12 @@ table tbody tr.selected,
 }
 
 .calc-btn.zero {
-    grid-column: span 2; /* Make zero button span two columns */
-    border-radius: 30px; /* Make it oval */
+    grid-column: span 2; 
+    border-radius: 30px; 
 }
 
 .calc-btn.equals {
-    background-color: var(--calc-operator-btn-bg); /* Same as operator for consistency */
+    background-color: var(--calc-operator-btn-bg); 
     color: var(--calc-operator-btn-text);
 }
 
@@ -1907,82 +1924,82 @@ table tbody tr.selected,
 
 /* Scroll-to-Top Button */
 #scrollToTopBtn {
-    display: none; /* Hidden by default */
-    position: fixed; /* Fixed/sticky position */
-    bottom: 20px; /* Place the button at the bottom of the page */
-    right: 20px; /* Place the button at the right side */
-    z-index: 99; /* Make sure it does not overlap */
-    border: none; /* Remove borders */
-    outline: none; /* Remove outline */
-    background-color: var(--button-bg); /* Set a background color */
-    color: white; /* Text color */
-    cursor: pointer; /* Add a mouse pointer on hover */
-    padding: 15px; /* Some padding */
-    border-radius: 50%; /* Rounded corners */
-    font-size: 18px; /* Increase font size */
-    box-shadow: 0 4px 8px var(--shadow-color); /* Add a subtle shadow */
+    display: none; 
+    position: fixed; 
+    bottom: 20px; 
+    right: 20px; 
+    z-index: 99; 
+    border: none; 
+    outline: none; 
+    background-color: var(--button-bg); 
+    color: white; 
+    cursor: pointer; 
+    padding: 15px; 
+    border-radius: 50%; 
+    font-size: 18px; 
+    box-shadow: 0 4px 8px var(--shadow-color); 
     transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 #scrollToTopBtn:hover {
-    background-color: var(--button-hover-bg); /* Darker background on hover */
+    background-color: var(--button-hover-bg); 
     transform: translateY(-2px);
 }
 
 /* Media Queries for Responsiveness */
 @media (max-width: 768px) {
     .table-container {
-        display: none; /* Hide table on smaller screens */
+        display: none; 
     }
 
     .mobile-share-cards {
-        display: flex; /* Show cards on smaller screens */
+        display: flex; 
     }
 
     .watchlist-group,
     .sort-group {
-        flex-basis: 100%; /* Stack dropdowns vertically on mobile */
+        flex-basis: 100%; 
         max-width: 100%;
     }
 
     .dropdown-large {
-        width: 100%; /* Full width for dropdowns on mobile */
+        width: 100%; 
     }
 
     .header-top-row {
-        padding: 0 10px; /* Adjust padding for smaller screens */
+        padding: 0 10px; 
         gap: 10px;
     }
 
     h1#mainTitle {
-        font-size: 1.5em; /* Smaller title on mobile */
+        font-size: 1.5em; 
     }
 
     .header-action-btn,
     .hamburger-btn {
-        font-size: 1.5em; /* Smaller icons on mobile */
+        font-size: 1.5em; 
         padding: 5px;
     }
 
     .app-sidebar {
-        width: 250px; /* Slightly smaller sidebar on mobile */
+        width: 250px; 
         padding: 15px;
     }
 
     .close-menu-btn {
-        font-size: 2em; /* Adjust close button size */
+        font-size: 2em; 
         top: 5px;
-        right: 10px;
+        right: 15px;
     }
 
     .modal-content {
-        width: 95%; /* Wider modal on smaller screens */
-        margin: 20px auto; /* Adjust margin */
+        width: 95%; 
+        margin: 20px auto; 
         padding: 15px;
     }
 
     .modal-content h2 {
-        font-size: 1.4em; /* Smaller modal titles */
+        font-size: 1.4em; 
     }
 
     .close-button {
@@ -1996,26 +2013,26 @@ table tbody tr.selected,
     .modal-content textarea,
     .calc-input-group input[type="number"],
     .calc-input-group select {
-        width: calc(100% - 20px); /* Adjust input width */
+        width: calc(100% - 20px); 
     }
 
     .form-action-buttons,
     .modal-action-buttons,
     .custom-dialog-buttons {
-        flex-direction: row; /* Keep as row, but allow wrapping */
+        flex-direction: row; 
         flex-wrap: wrap;
         gap: 8px;
         justify-content: space-around;
     }
 
     .modal-action-icon {
-        flex-grow: 0; /* Don't force grow on mobile */
-        min-width: 45px; /* Ensure sufficient touch target */
-        max-width: none; /* Remove max width constraint */
+        flex-grow: 0; 
+        min-width: 45px; 
+        max-width: none; 
     }
 
     .modal-content .sticky-footer {
-        bottom: -15px; /* Adjust sticky footer position */
+        bottom: -15px; 
         left: -15px;
         right: -15px;
         padding: 15px;
@@ -2031,7 +2048,7 @@ table tbody tr.selected,
         padding: 10px 12px;
     }
     #scrollToTopBtn {
-        bottom: 70px; /* Adjust for fixed footer on mobile */
+        bottom: 70px; 
     }
 }
 
@@ -2043,7 +2060,7 @@ table tbody tr.selected,
     border: 1px solid var(--border-color);
     border-radius: 5px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-    z-index: 1001; /* Above modals */
+    z-index: 1001; 
     min-width: 150px;
     padding: 5px 0;
     list-style: none;
@@ -2057,9 +2074,9 @@ table tbody tr.selected,
     color: var(--text-color);
     cursor: pointer;
     transition: background-color 0.2s ease;
-    background: none; /* Ensure no default button background */
-    border: none; /* Remove button borders */
-    width: 100%; /* Fill parent width */
+    background: none; 
+    border: none; 
+    width: 100%; 
     text-align: left;
     font-size: 1em;
 }
@@ -2070,11 +2087,11 @@ table tbody tr.selected,
 
 .context-menu-item i {
     font-size: 1.1em;
-    color: var(--icon-action-color); /* Use action color for icons */
+    color: var(--icon-action-color); 
 }
 
 .context-menu-item.danger-button i {
-    color: var(--icon-danger-color); /* Override for danger items */
+    color: var(--icon-danger-color); 
 }
 
 /* Hide comments column on main table and cards */
