@@ -354,9 +354,9 @@ function clearForm() {
     }
     setIconDisabled(saveShareBtn, true);
     console.log("[Form] Form fields cleared and selectedShareDocId reset. saveShareBtn disabled.");
-}
 
-function showEditFormForSelectedShare(shareIdToEdit = null) {
+
+    function showEditFormForSelectedShare(shareIdToEdit = null) {
     const targetShareId = shareIdToEdit || selectedShareDocId;
 
     if (!targetShareId) {
