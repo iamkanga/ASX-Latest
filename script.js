@@ -614,23 +614,12 @@ function showShareDetails() {
         setIconDisabled(modalFoolLink, true);
     }
 
-    if (modalCommSecLink && share.shareName) {
-        const commSecUrl = `https://www2.commsec.com.au/quotes/summary?stockCode=${share.shareName.toUpperCase()}&exchangeCode=ASX`;
-        modalCommSecLink.href = commSecUrl;
-        modalCommSecLink.textContent = `View ${share.shareName.toUpperCase()} on CommSec.com.au`;
-        modalCommSecLink.style.display = 'inline-flex';
-        setIconDisabled(modalCommSecLink, false);
-    } else if (modalCommSecLink) {
-        modalCommSecLink.style.display = 'none';
-        setIconDisabled(modalCommSecLink, true);
-    }
-
     if (commSecLoginMessage) {
         commSecLoginMessage.style.display = 'block'; 
     }
 
-    setIconDisabled(editShareFromDetailBtn, false);
-    setIconDisabled(deleteShareFromDetailBtn, false);
+    // Moved to header: setIconDisabled(editShareFromDetailBtn, false);
+    // Moved to header: setIconDisabled(deleteShareFromDetailBtn, false);
 
     showModal(shareDetailModal);
     console.log(`[Details] Displayed details for share: ${share.shareName} (ID: ${selectedShareDocId})`);
@@ -689,7 +678,7 @@ function renderWatchlistSelect() {
 
     const allSharesOption = document.createElement('option');
     allSharesOption.value = ALL_SHARES_ID;
-    allSharesOption.textContent = 'Display All Shares';
+    allSharesOption.textContent = 'All Shares'; // MODIFIED: Removed "Display"
     watchlistSelect.appendChild(allSharesOption);
 
     userWatchlists.forEach(watchlist => {
@@ -1293,7 +1282,8 @@ async function saveLastSelectedWatchlistIds(watchlistIds) {
     try {
         await window.firestore.setDoc(userProfileDocRef, { lastSelectedWatchlistIds: watchlistIds }, { merge: true });
         console.log(`[Watchlist] Saved last selected watchlist IDs: ${watchlistIds.join(', ')}`);
-    } catch (error) {
+    }
+    catch (error) {
         console.error("[Watchlist] Error saving last selected watchlist IDs:", error);
     }
 }
