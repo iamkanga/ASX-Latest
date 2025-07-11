@@ -1,5 +1,5 @@
-// File Version: v169
-// Last Updated: 2025-07-11 (Fixed hamburger menu not closing on overlay click)
+// File Version: v170
+// Last Updated: 2025-07-11 (Removed delete confirmation dialogs; re-investigated sidebar closing and sidebar button functionality; re-checked edit from details modal)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -2181,6 +2181,7 @@ async function initializeAppLogic() {
         // Ensure addCommentSectionBtn is never disabled by default
         setIconDisabled(addCommentSectionBtn, false);
         addCommentSectionBtn.addEventListener('click', () => {
+            console.log("[Comments] Add comment section button clicked."); // Debug log
             addCommentSection();
             checkFormDirtyState(); // Check dirty state after adding a comment section
         });
@@ -2254,6 +2255,7 @@ async function initializeAppLogic() {
 
     // Logout Button (No confirmation as per user request)
     if (logoutBtn) {
+        console.log("[Sidebar Button Debug] Logout Button element found.");
         logoutBtn.addEventListener('click', async () => {
             console.log("[Auth] Logout Button Clicked (No Confirmation).");
             const currentAuth = window.firebaseAuth;
@@ -2272,6 +2274,8 @@ async function initializeAppLogic() {
                 showCustomAlert("Logout failed: " + error.message);
             }
         });
+    } else {
+        console.warn("[Sidebar Button Debug] Logout Button element (logoutBtn) NOT found on DOMContentLoaded.");
     }
 
     // Watchlist Select Change Listener
@@ -2296,11 +2300,14 @@ async function initializeAppLogic() {
 
     // New Share Button (from sidebar)
     if (newShareBtn) {
+        console.log("[Sidebar Button Debug] New Share Button element found.");
         newShareBtn.addEventListener('click', () => {
             console.log("[UI] New Share button (sidebar) clicked.");
             handleNewShareCreation(); // Call the new handler
             toggleAppSidebar(false); 
         });
+    } else {
+        console.warn("[Sidebar Button Debug] New Share Button element (newShareBtn) NOT found on DOMContentLoaded.");
     }
 
     // Add Share Header Button (from header)
@@ -2425,23 +2432,21 @@ async function initializeAppLogic() {
         });
     }
 
-    // Delete Share Button in Share Form Modal
+    // Delete Share Button in Share Form Modal (No confirmation)
     if (deleteShareBtn) {
-        deleteShareBtn.addEventListener('click', () => {
+        deleteShareBtn.addEventListener('click', async () => {
             if (!selectedShareDocId) { showCustomAlert("No share selected to delete."); return; }
-            showCustomConfirm("Are you sure you want to delete this share?", async () => {
-                try {
-                    const shareDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, selectedShareDocId);
-                    await window.firestore.deleteDoc(shareDocRef);
-                    showCustomAlert("Share deleted successfully!", 1500);
-                    console.log(`[Firestore] Share (ID: ${selectedShareDocId}) deleted.`);
-                    closeModals(); // Close the form modal
-                    deselectCurrentShare(); // Deselect after deletion
-                } catch (error) {
-                    console.error("[Firestore] Error deleting share:", error);
-                    showCustomAlert("Error deleting share: " + error.message);
-                }
-            });
+            try {
+                const shareDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, selectedShareDocId);
+                await window.firestore.deleteDoc(shareDocRef);
+                showCustomAlert("Share deleted successfully!", 1500);
+                console.log(`[Firestore] Share (ID: ${selectedShareDocId}) deleted.`);
+                closeModals(); // Close the form modal
+                deselectCurrentShare(); // Deselect after deletion
+            } catch (error) {
+                console.error("[Firestore] Error deleting share:", error);
+                showCustomAlert("Error deleting share: " + error.message);
+            }
         });
     }
 
@@ -2459,23 +2464,21 @@ async function initializeAppLogic() {
         });
     }
 
-    // Delete Share Button from Share Details Modal
+    // Delete Share Button from Share Details Modal (No confirmation)
     if (deleteShareFromDetailBtn) {
-        deleteShareFromDetailBtn.addEventListener('click', () => {
+        deleteShareFromDetailBtn.addEventListener('click', async () => {
             if (!selectedShareDocId) { showCustomAlert("No share selected to delete."); return; }
-            showCustomConfirm("Are you sure you want to delete this share?", async () => {
-                try {
-                    const shareDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, selectedShareDocId);
-                    await window.firestore.deleteDoc(shareDocRef);
-                    showCustomAlert("Share deleted successfully!", 1500);
-                    console.log(`[Firestore] Share (ID: ${selectedShareDocId}) deleted from details modal.`);
-                    closeModals(); // Close the details modal
-                    deselectCurrentShare(); // Deselect after deletion
-                } catch (error) {
-                    console.error("[Firestore] Error deleting share from details modal:", error);
-                    showCustomAlert("Error deleting share: " + error.message);
-                }
-            });
+            try {
+                const shareDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, selectedShareDocId);
+                await window.firestore.deleteDoc(shareDocRef);
+                showCustomAlert("Share deleted successfully!", 1500);
+                console.log(`[Firestore] Share (ID: ${selectedShareDocId}) deleted from details modal.`);
+                closeModals(); // Close the details modal
+                deselectCurrentShare(); // Deselect after deletion
+            } catch (error) {
+                console.error("[Firestore] Error deleting share from details modal:", error);
+                showCustomAlert("Error deleting share: " + error.message);
+            }
         });
     }
 
@@ -2488,23 +2491,21 @@ async function initializeAppLogic() {
         });
     }
 
-    // Context Menu Delete Button
+    // Context Menu Delete Button (No confirmation)
     if (contextDeleteShareBtn) {
-        contextDeleteShareBtn.addEventListener('click', () => {
+        contextDeleteShareBtn.addEventListener('click', async () => {
             if (!currentContextMenuShareId) { showCustomAlert("No share selected to delete."); return; }
-            showCustomConfirm("Are you sure you want to delete this share?", async () => {
-                try {
-                    const shareDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, currentContextMenuShareId);
-                    await window.firestore.deleteDoc(shareDocRef);
-                    showCustomAlert("Share deleted successfully!", 1500);
-                    console.log(`[Firestore] Share (ID: ${currentContextMenuShareId}) deleted from context menu.`);
-                    hideContextMenu();
-                    deselectCurrentShare(); // Deselect after deletion
-                } catch (error) {
-                    console.error("[Firestore] Error deleting share from context menu:", error);
-                    showCustomAlert("Error deleting share: " + error.message);
-                }
-            });
+            try {
+                const shareDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, currentContextMenuShareId);
+                await window.firestore.deleteDoc(shareDocRef);
+                showCustomAlert("Share deleted successfully!", 1500);
+                console.log(`[Firestore] Share (ID: ${currentContextMenuShareId}) deleted from context menu.`);
+                hideContextMenu();
+                deselectCurrentShare(); // Deselect after deletion
+            } catch (error) {
+                console.error("[Firestore] Error deleting share from context menu:", error);
+                showCustomAlert("Error deleting share: " + error.message);
+            }
         });
     }
 
@@ -2515,7 +2516,10 @@ async function initializeAppLogic() {
             if (targetButton && targetButton.dataset.actionClosesMenu === 'true') {
                 toggleAppSidebar(false);
             }
+            console.log(`[Sidebar Debug] Click inside sidebar. Target: ${event.target.id || event.target.className}`);
         });
+    } else {
+        console.warn("[Sidebar Debug] appSidebar element NOT found during initializeAppLogic.");
     }
 
     // Hamburger button click listener
@@ -2531,10 +2535,13 @@ async function initializeAppLogic() {
 
     // Sidebar overlay click listener (to close sidebar)
     if (sidebarOverlay) {
-        console.log("[Auth Debug] Sidebar Overlay element found.");
-        sidebarOverlay.addEventListener('click', () => {
+        console.log("[Auth Debug] Sidebar Overlay element found. Adding click listener.");
+        sidebarOverlay.addEventListener('click', (event) => {
             console.log("[Auth Debug] Sidebar Overlay Clicked. Closing sidebar.");
-            toggleAppSidebar(false);
+            // Ensure the click target is indeed the overlay itself, not something within it that might have propagated
+            if (event.target === sidebarOverlay) {
+                toggleAppSidebar(false);
+            }
         });
     } else {
         console.warn("[Auth Debug] Sidebar Overlay element (sidebarOverlay) NOT found on DOMContentLoaded.");
@@ -2550,6 +2557,184 @@ async function initializeAppLogic() {
     } else {
         console.warn("[Auth Debug] Close Menu Button element (closeMenuBtn) NOT found on DOMContentLoaded.");
     }
+
+    // Add listeners for other sidebar buttons to diagnose Issue 9
+    // Standard Calculator
+    if (standardCalcBtn) {
+        console.log("[Sidebar Button Debug] Standard Calc Button element found.");
+        standardCalcBtn.addEventListener('click', () => {
+            console.log("[Sidebar Button Click] Standard Calculator button clicked.");
+            showModal(calculatorModal);
+            toggleAppSidebar(false);
+        });
+    } else {
+        console.warn("[Sidebar Button Debug] Standard Calc Button element (standardCalcBtn) NOT found.");
+    }
+
+    // Dividend Calculator
+    if (dividendCalcBtn) {
+        console.log("[Sidebar Button Debug] Dividend Calc Button element found.");
+        dividendCalcBtn.addEventListener('click', () => {
+            console.log("[Sidebar Button Click] Dividend Calculator button clicked.");
+            showModal(dividendCalculatorModal);
+            toggleAppSidebar(false);
+        });
+    } else {
+        console.warn("[Sidebar Button Debug] Dividend Calc Button element (dividendCalcBtn) NOT found.");
+    }
+
+    // Add Watchlist
+    if (addWatchlistBtn) {
+        console.log("[Sidebar Button Debug] Add Watchlist Button element found.");
+        addWatchlistBtn.addEventListener('click', () => {
+            console.log("[Sidebar Button Click] Add Watchlist button clicked.");
+            showModal(addWatchlistModal);
+            toggleAppSidebar(false);
+        });
+    } else {
+        console.warn("[Sidebar Button Debug] Add Watchlist Button element (addWatchlistBtn) NOT found.");
+    }
+
+    // Edit Watchlist (Note: functionality for this modal is not yet fully implemented)
+    if (editWatchlistBtn) {
+        console.log("[Sidebar Button Debug] Edit Watchlist Button element found.");
+        editWatchlistBtn.addEventListener('click', () => {
+            console.log("[Sidebar Button Click] Edit Watchlist button clicked.");
+            // Placeholder for actual edit watchlist logic
+            showCustomAlert("Edit Watchlist functionality coming soon!", 1500);
+            toggleAppSidebar(false);
+        });
+    } else {
+        console.warn("[Sidebar Button Debug] Edit Watchlist Button element (editWatchlistBtn) NOT found.");
+    }
+
+    // Export Watchlist
+    if (exportWatchlistBtn) {
+        console.log("[Sidebar Button Debug] Export Watchlist Button element found.");
+        exportWatchlistBtn.addEventListener('click', () => {
+            console.log("[Sidebar Button Click] Export Watchlist button clicked.");
+            exportWatchlistToCSV();
+            toggleAppSidebar(false);
+        });
+    } else {
+        console.warn("[Sidebar Button Debug] Export Watchlist Button element (exportWatchlistBtn) NOT found.");
+    }
+
+    // Theme Toggle Button
+    if (themeToggleBtn) {
+        console.log("[Sidebar Button Debug] Theme Toggle Button element found.");
+        themeToggleBtn.addEventListener('click', () => {
+            console.log("[Sidebar Button Click] Theme Toggle button clicked.");
+            // Toggle between light and dark themes
+            if (document.body.classList.contains('dark-theme')) {
+                applyTheme('light');
+            } else {
+                applyTheme('dark');
+            }
+        });
+    } else {
+        console.warn("[Sidebar Button Debug] Theme Toggle Button element (themeToggleBtn) NOT found.");
+    }
+
+    // Color Theme Select
+    if (colorThemeSelect) {
+        console.log("[Sidebar Button Debug] Color Theme Select element found.");
+        colorThemeSelect.addEventListener('change', (event) => {
+            console.log("[Sidebar Button Change] Color Theme Select changed. Value:", event.target.value);
+            if (event.target.value === 'none') {
+                applyTheme('system-default');
+            } else {
+                applyTheme(event.target.value);
+            }
+        });
+    } else {
+        console.warn("[Sidebar Button Debug] Color Theme Select element (colorThemeSelect) NOT found.");
+    }
+
+    // Revert to Default Theme Button
+    if (revertToDefaultThemeBtn) {
+        console.log("[Sidebar Button Debug] Revert to Default Theme Button element found.");
+        revertToDefaultThemeBtn.addEventListener('click', () => {
+            console.log("[Sidebar Button Click] Revert to Default Theme button clicked.");
+            applyTheme('system-default');
+        });
+    } else {
+        console.warn("[Sidebar Button Debug] Revert to Default Theme Button element (revertToDefaultThemeBtn) NOT found.");
+    }
+
+    // Refresh Live Prices Button
+    if (refreshLivePricesBtn) {
+        console.log("[Sidebar Button Debug] Refresh Live Prices Button element found.");
+        refreshLivePricesBtn.addEventListener('click', () => {
+            console.log("[Sidebar Button Click] Refresh Live Prices button clicked.");
+            fetchLivePrices(); // Manually trigger price fetch
+            showCustomAlert("Refreshing live prices...", 1000);
+            toggleAppSidebar(false);
+        });
+    } else {
+        console.warn("[Sidebar Button Debug] Refresh Live Prices Button element (refreshLivePricesBtn) NOT found.");
+    }
+
+    // Watchlist Selection Modal Buttons
+    if (confirmWatchlistSelectionBtn) {
+        confirmWatchlistSelectionBtn.addEventListener('click', () => {
+            console.log("[Watchlist Selection] Confirm button clicked.");
+            const selectedWatchlistId = confirmWatchlistSelectionBtn.dataset.selectedWatchlistId;
+            if (selectedWatchlistId) {
+                // Logic to set the watchlist for the new share
+                // This would typically involve setting a global variable or passing it to the share form
+                // For now, we'll just close the modal and log.
+                console.log(`[Watchlist Selection] Confirmed selection: ${selectedWatchlistId}`);
+                // This is where you'd typically pass the selectedWatchlistId to the share form
+                // For now, let's assume the share form will pick up the currently selected watchlist in the main dropdown
+                // or you might want to store this in a temp variable and assign it when the share is saved.
+                // For simplicity, if we are adding a share after this, the default logic will use the currently
+                // selected watchlist in the main dropdown. If "All Shares" was selected, this modal ensures
+                // a specific watchlist is chosen for the new share.
+                // We need to ensure the share form knows which watchlist to save to.
+                // A simple way is to set a temporary global variable or pass it directly.
+                // For now, the handleNewShareCreation() logic already determines the finalWatchlistId.
+                closeModals();
+                // Re-open the share form if it was closed to select watchlist
+                clearForm();
+                formTitle.textContent = 'Add New Share';
+                if (deleteShareBtn) { deleteShareBtn.classList.add('hidden'); }
+                showModal(shareFormSection);
+                shareNameInput.focus();
+                // Potentially set a hidden input or global variable in the share form for the selected watchlist ID
+                // shareFormSection.querySelector('#hiddenWatchlistIdInput').value = selectedWatchlistId;
+            } else {
+                showCustomAlert("Please select a watchlist.");
+            }
+        });
+    }
+
+    if (cancelWatchlistSelectionBtn) {
+        cancelWatchlistSelectionBtn.addEventListener('click', () => {
+            console.log("[Watchlist Selection] Cancel button clicked.");
+            closeModals();
+        });
+    }
+
+    // Scroll to top button functionality
+    window.onscroll = function() {
+        if (scrollToTopBtn) {
+            if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+                scrollToTopBtn.style.display = "block";
+            } else {
+                scrollToTopBtn.style.display = "none";
+            }
+        }
+    };
+
+    if (scrollToTopBtn) {
+        scrollToTopBtn.addEventListener('click', () => {
+            document.body.scrollTop = 0; // For Safari
+            document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
+            console.log("[UI] Scrolled to top.");
+        });
+    }
+
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -2561,7 +2746,7 @@ document.addEventListener('DOMContentLoaded', function() {
     window._appLogicInitializedOnce = true;
 
 
-    console.log("script.js (v169) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v170) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
