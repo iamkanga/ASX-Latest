@@ -1,5 +1,5 @@
-// File Version: v166
-// Last Updated: 2025-07-10 (Fixed critical interaction bugs: hamburger, modal buttons, context menu; completed dynamic comments; fixed watchlist selection modal functionality)
+// File Version: v167
+// Last Updated: 2025-07-10 (Prioritized hamburger menu fix; fixed modal edit/delete buttons; fixed context menu display/functionality; implemented dynamic add/delete comments in modal; fixed watchlist selection modal)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -261,7 +261,16 @@ function updateMainButtonsState(enable) {
     if (addWatchlistBtn) addWatchlistBtn.disabled = !enable;
     // editWatchlistBtn's disabled state is also dependent on userWatchlists.length, handled in loadUserWatchlistsAndSettings
     if (editWatchlistBtn) editWatchlistBtn.disabled = !enable || userWatchlists.length === 0; 
-    if (addShareHeaderBtn) addShareHeaderBtn.disabled = !enable;
+    // Fix for Add Share Header Button visibility before sign-in
+    if (addShareHeaderBtn) {
+        if (enable) {
+            addShareHeaderBtn.classList.remove('is-disabled-icon');
+            addShareHeaderBtn.style.display = ''; // Ensure it's displayed when enabled
+        } else {
+            addShareHeaderBtn.classList.add('is-disabled-icon');
+            addShareHeaderBtn.style.display = 'none'; // Hide when disabled
+        }
+    }
     // Logout button is now a span, handle its disabled state with setIconDisabled
     if (logoutBtn) setIconDisabled(logoutBtn, !enable); 
     if (themeToggleBtn) themeToggleBtn.disabled = !enable;
@@ -1086,13 +1095,12 @@ function addShareToMobileCards(share) {
             if (change > 0) {
                 livePriceHtml += ` <span class="price-change positive">(+$${change.toFixed(2)})</span></p>`;
             } else if (change < 0) {
-                livePriceHtml += ` <span class="price-change negative">(-$${Math.abs(change).toFixed(2)})`;
+                livePriceHtml += ` <span class="price-change negative">(-$${Math.abs(change).toFixed(2)})</span></p>`;
             } else {
-                livePriceHtml += ` <span class="price-change neutral">($0.00)`;
+                livePriceHtml += ` <span class="price-change neutral">($0.00)</span></p>`;
             }
-            livePriceHtml += `</span></p>`; // Close the span and p tag
         } else {
-            livePriceHtml = `<p><strong>Live Price:</strong> N/A</p>`;
+            livePriceHtml += `</p>`;
         }
     } else {
         livePriceHtml = `<p><strong>Live Price:</strong> N/A</p>`;
@@ -2389,7 +2397,7 @@ document.addEventListener('DOMContentLoaded', function() {
     window._appLogicInitializedOnce = true;
 
 
-    console.log("script.js (v165) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v166) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
