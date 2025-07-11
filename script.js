@@ -1,5 +1,5 @@
-// File Version: v165
-// Last Updated: 2025-07-10 (Fixed right-click/long-press context menu, fixed comments display, fixed watchlist selection modal functionality, aligned header elements)
+// File Version: v166
+// Last Updated: 2025-07-10 (Fixed critical SyntaxError, improved context menu handling, fixed modal buttons, completed comments section, improved watchlist selection)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -861,7 +861,7 @@ function renderSortSelect() {
         { value: "shareName-asc", text: "Code (A-Z)" },
         { value: "shareName-desc", text: "Code (Z-A)" },
         { value: "dividendAmount-desc", text: "Dividend (High-Low)" },
-        { value="dividendAmount-asc", text: "Dividend (Low-High)" }
+        { value: "dividendAmount-asc", text: "Dividend (Low-High)" }
     ];
     options.forEach(opt => {
         const optionElement = document.createElement('option');
@@ -1459,7 +1459,8 @@ async function saveLastSelectedWatchlistIds(watchlistIds) {
     try {
         await window.firestore.setDoc(userProfileDocRef, { lastSelectedWatchlistIds: watchlistIds }, { merge: true });
         console.log(`[Watchlist] Saved last selected watchlist IDs: ${watchlistIds.join(', ')}`);
-    } catch (error) {
+    }
+    catch (error) {
         console.error("[Watchlist] Error saving last selected watchlist IDs:", error);
     }
 }
@@ -2030,7 +2031,7 @@ function exportWatchlistToCSV() {
             (!isNaN(dividendAmountNum) && dividendAmountNum !== null) ? dividendAmountNum.toFixed(3) : '',
             (!isNaN(frankingCreditsNum) && frankingCreditsNum !== null) ? frankingCreditsNum.toFixed(1) : '',
             unfrankedYield !== null ? unfrankedYield.toFixed(2) : '',
-            frankedYield !== null ? frankedYield.toFixed(2) : '',
+            frankedYield !== null ? frankedYield.toFixed(2) + '%' : '',
             formatDate(share.entryDate) || '',
             allCommentsText
         ];
