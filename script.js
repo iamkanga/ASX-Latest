@@ -1,5 +1,5 @@
-// File Version: v168
-// Last Updated: 2025-07-11 (Added extensive logging for Google Auth button to diagnose non-functionality)
+// File Version: v169
+// Last Updated: 2025-07-11 (Fixed hamburger menu not closing on overlay click)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -2191,10 +2191,11 @@ async function initializeAppLogic() {
 
     // Global click listener to close modals/context menu if clicked outside
     window.addEventListener('click', (event) => {
+        // Close modals if clicked outside
         if (event.target === shareDetailModal || event.target === dividendCalculatorModal ||
             event.target === shareFormSection || event.target === customDialogModal ||
             event.target === calculatorModal || event.target === addWatchlistModal ||
-            event.target === manageWatchlistModal || event.target === selectWatchlistForShareModal) { // NEW: Added selectWatchlistForShareModal
+            event.target === manageWatchlistModal || event.target === selectWatchlistForShareModal) { 
             closeModals();
         }
 
@@ -2448,8 +2449,13 @@ async function initializeAppLogic() {
     if (editShareFromDetailBtn) {
         editShareFromDetailBtn.addEventListener('click', () => {
             console.log("[UI] Edit Share button (details modal) clicked.");
-            showEditFormForSelectedShare(); // This will use selectedShareDocId
-            closeModals(); // Close the details modal
+            // Ensure selectedShareDocId is correctly set from the details modal context
+            if (selectedShareDocId) {
+                showEditFormForSelectedShare(selectedShareDocId); // Pass the currently selected ID
+                closeModals(); // Close the details modal
+            } else {
+                showCustomAlert("No share selected to edit.");
+            }
         });
     }
 
@@ -2555,7 +2561,7 @@ document.addEventListener('DOMContentLoaded', function() {
     window._appLogicInitializedOnce = true;
 
 
-    console.log("script.js (v168) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v169) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
