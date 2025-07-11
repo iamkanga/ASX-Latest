@@ -1,5 +1,5 @@
-// File Version: v170
-// Last Updated: 2025-07-11 (Removed delete confirmation dialogs; re-investigated sidebar closing and sidebar button functionality; re-checked edit from details modal)
+// File Version: v171
+// Last Updated: 2025-07-11 (Refined sidebar closing logic; added debug for edit modal & comments; adjusted add share button visibility pre-login; confirmed sidebar button clicks)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -308,7 +308,7 @@ function updateMainButtonsState(enable) {
             addShareHeaderBtn.style.display = ''; // Ensure it's displayed when enabled
         } else {
             addShareHeaderBtn.classList.add('is-disabled-icon');
-            addShareHeaderBtn.style.display = 'none'; // Hide when disabled
+            addShareHeaderBtn.style.display = 'block'; // Keep visible but disabled before sign-in
         }
     }
     // Logout button is now a span, handle its disabled state with setIconDisabled
@@ -457,15 +457,19 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
     const targetShareId = shareIdToEdit || selectedShareDocId;
 
     if (!targetShareId) {
+        console.warn("[showEditFormForSelectedShare] No targetShareId provided or selectedShareDocId is null.");
         showCustomAlert("Please select a share to edit.");
         return;
     }
     const shareToEdit = allSharesData.find(share => share.id === targetShareId);
     if (!shareToEdit) {
+        console.error(`[showEditFormForSelectedShare] Share with ID ${targetShareId} not found in allSharesData.`);
         showCustomAlert("Selected share not found.");
         return;
     }
     selectedShareDocId = targetShareId; 
+    console.log(`[showEditFormForSelectedShare] Attempting to open edit form for share: ${shareToEdit.shareName} (ID: ${targetShareId})`);
+    console.log("[showEditFormForSelectedShare] Share data for editing:", shareToEdit);
 
     formTitle.textContent = 'Edit Share';
     shareNameInput.value = shareToEdit.shareName || '';
@@ -475,14 +479,18 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
     frankingCreditsInput.value = Number(shareToEdit.frankingCredits) !== null && !isNaN(Number(shareToEdit.frankingCredits)) ? Number(shareToEdit.frankingCredits).toFixed(1) : '';
     
     if (commentsFormContainer) {
-        commentsFormContainer.innerHTML = '';
+        commentsFormContainer.innerHTML = ''; // Clear existing comments sections
         if (shareToEdit.comments && Array.isArray(shareToEdit.comments) && shareToEdit.comments.length > 0) {
+            console.log(`[showEditFormForSelectedShare] Found ${shareToEdit.comments.length} comments. Adding them to form.`);
             shareToEdit.comments.forEach(comment => addCommentSection(comment.title, comment.text));
         } else {
+            console.log("[showEditFormForSelectedShare] No comments found for this share. Not adding default comment section.");
             // Do not add a default comment section here, user will click "+" to add
-            // addCommentSection();
         }
+    } else {
+        console.warn("[showEditFormForSelectedShare] commentsFormContainer not found.");
     }
+
     if (deleteShareBtn) {
         deleteShareBtn.classList.remove('hidden'); // Show delete icon when editing
         setIconDisabled(deleteShareBtn, false); // Ensure it's enabled when shown
@@ -1428,6 +1436,7 @@ function resetCalculator() {
 
 async function applyTheme(themeName) {
     const body = document.body;
+    // Remove all theme-related classes first
     body.className = body.className.split(' ').filter(c => !c.endsWith('-theme') && !c.startsWith('theme-')).join(' ');
 
     currentActiveTheme = themeName;
@@ -1460,6 +1469,7 @@ async function applyTheme(themeName) {
         currentCustomThemeIndex = CUSTOM_THEMES.indexOf(themeName);
     }
     
+    console.log(`[Theme Debug] Body class after applyTheme: "${body.className}"`); // Debug log
     if (currentUserId && db && window.firestore) {
         const userProfileDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/profile/settings`);
         try {
@@ -1482,11 +1492,19 @@ function updateThemeToggleAndSelector() {
         console.log(`[Theme UI] Color theme select updated to: ${colorThemeSelect.value}`);
     }
 
-    if (currentActiveTheme.startsWith('bold-') || currentActiveTheme.startsWith('subtle-')) {
-        currentCustomThemeIndex = CUSTOM_THEMES.indexOf(currentActiveTheme);
-    } else {
-        currentCustomThemeIndex = -1;
+    // This logic is for the themeToggleBtn to visually reflect dark/light mode
+    if (themeToggleBtn) {
+        const icon = themeToggleBtn.querySelector('i.fas.fa-palette');
+        if (icon) {
+            icon.classList.remove('fa-sun', 'fa-moon', 'fa-palette');
+            if (document.body.classList.contains('dark-theme')) {
+                icon.classList.add('fa-sun'); // Show sun when in dark mode (to switch to light)
+            } else {
+                icon.classList.add('fa-moon'); // Show moon when in light mode (to switch to dark)
+            }
+        }
     }
+    console.log(`[Theme UI] Theme toggle button icon updated.`);
 }
 
 function getDefaultWatchlistId(userId) {
@@ -1620,7 +1638,7 @@ async function loadUserWatchlistsAndSettings() {
                 applyTheme('system-default');
             }
         }
-        updateThemeToggleAndSelector();
+        updateThemeToggleAndSelector(); // Ensure theme UI is updated after loading settings
 
         updateMainButtonsState(true); 
 
@@ -2200,6 +2218,24 @@ async function initializeAppLogic() {
             closeModals();
         }
 
+        // Issue 3: Hamburger Menu Not Closing on Click Away
+        // Only hide sidebar if the click is outside the sidebar AND not on the hamburger button
+        if (appSidebar.classList.contains('open')) {
+            const isClickInsideSidebar = appSidebar.contains(event.target);
+            const isClickOnHamburger = hamburgerBtn && hamburgerBtn.contains(event.target);
+            const isClickOnOverlay = sidebarOverlay && sidebarOverlay.contains(event.target); // Check if click is specifically on the overlay
+
+            // If the click is outside the sidebar and not on the hamburger button, close the sidebar.
+            // On desktop, the overlay has pointer-events: none, so clicks pass through to body/main content.
+            // On mobile, the overlay has pointer-events: auto, so clicking it should close the sidebar.
+            if (!isClickInsideSidebar && !isClickOnHamburger) {
+                // For desktop, this condition will be met if clicking outside the sidebar.
+                // For mobile, if the click is on the overlay (which is outside the sidebar), it should close.
+                console.log(`[Sidebar Debug] Global click detected. isClickInsideSidebar: ${isClickInsideSidebar}, isClickOnHamburger: ${isClickOnHamburger}, isClickOnOverlay: ${isClickOnOverlay}`);
+                toggleAppSidebar(false);
+            }
+        }
+
         // Only hide context menu if the click is not inside the context menu itself,
         // and not on a selected share row/card (which might be opening the menu).
         if (contextMenuOpen && shareContextMenu && !shareContextMenu.contains(event.target)) {
@@ -2459,6 +2495,7 @@ async function initializeAppLogic() {
                 showEditFormForSelectedShare(selectedShareDocId); // Pass the currently selected ID
                 closeModals(); // Close the details modal
             } else {
+                console.warn("[UI] Edit Share button clicked, but selectedShareDocId is null.");
                 showCustomAlert("No share selected to edit.");
             }
         });
@@ -2536,10 +2573,11 @@ async function initializeAppLogic() {
     // Sidebar overlay click listener (to close sidebar)
     if (sidebarOverlay) {
         console.log("[Auth Debug] Sidebar Overlay element found. Adding click listener.");
+        // The global click listener now handles closing when clicking outside sidebar,
+        // but this specific listener ensures clicks directly on the overlay also close it.
         sidebarOverlay.addEventListener('click', (event) => {
             console.log("[Auth Debug] Sidebar Overlay Clicked. Closing sidebar.");
-            // Ensure the click target is indeed the overlay itself, not something within it that might have propagated
-            if (event.target === sidebarOverlay) {
+            if (event.target === sidebarOverlay) { // Ensure click is directly on the overlay
                 toggleAppSidebar(false);
             }
         });
@@ -2681,28 +2719,18 @@ async function initializeAppLogic() {
             console.log("[Watchlist Selection] Confirm button clicked.");
             const selectedWatchlistId = confirmWatchlistSelectionBtn.dataset.selectedWatchlistId;
             if (selectedWatchlistId) {
-                // Logic to set the watchlist for the new share
-                // This would typically involve setting a global variable or passing it to the share form
-                // For now, we'll just close the modal and log.
                 console.log(`[Watchlist Selection] Confirmed selection: ${selectedWatchlistId}`);
-                // This is where you'd typically pass the selectedWatchlistId to the share form
-                // For now, let's assume the share form will pick up the currently selected watchlist in the main dropdown
-                // or you might want to store this in a temp variable and assign it when the share is saved.
-                // For simplicity, if we are adding a share after this, the default logic will use the currently
-                // selected watchlist in the main dropdown. If "All Shares" was selected, this modal ensures
-                // a specific watchlist is chosen for the new share.
-                // We need to ensure the share form knows which watchlist to save to.
-                // A simple way is to set a temporary global variable or pass it directly.
-                // For now, the handleNewShareCreation() logic already determines the finalWatchlistId.
                 closeModals();
-                // Re-open the share form if it was closed to select watchlist
+                // When selecting a watchlist for a new share, we need to ensure the share form opens
+                // and knows which watchlist to assign the new share to.
+                // The handleNewShareCreation() function is responsible for this.
+                // For now, if this modal was used, it implies we're adding a new share to a specific watchlist.
+                // We'll clear the form and open it, the save logic will pick up the last selected watchlist.
                 clearForm();
                 formTitle.textContent = 'Add New Share';
                 if (deleteShareBtn) { deleteShareBtn.classList.add('hidden'); }
                 showModal(shareFormSection);
                 shareNameInput.focus();
-                // Potentially set a hidden input or global variable in the share form for the selected watchlist ID
-                // shareFormSection.querySelector('#hiddenWatchlistIdInput').value = selectedWatchlistId;
             } else {
                 showCustomAlert("Please select a watchlist.");
             }
@@ -2746,7 +2774,7 @@ document.addEventListener('DOMContentLoaded', function() {
     window._appLogicInitializedOnce = true;
 
 
-    console.log("script.js (v170) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v171) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
