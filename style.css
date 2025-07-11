@@ -1,5 +1,5 @@
-/* File Version: v105 */
-/* Last Updated: 2025-07-11 (Fixed calculator button sizing & frames; refined modal comment title display & position; added Dividends header; adjusted watchlist text formatting) */
+/* File Version: v106 */
+/* Last Updated: 2025-07-11 (Fixed calculator button sizing and frames; refined modal comment title display and ensured add button visibility; added Dividends header; adjusted watchlist text formatting) */
 
 :root {
     /* Light Theme (Default) */
@@ -1123,19 +1123,24 @@ table th {
 }
 
 /* Issue 6: Add Dividends title to header */
-table th:nth-child(5)::before { /* Target the 5th column header (Dividends) */
+table th:nth-child(5) { /* Target the 5th column header (Dividends) */
+    text-align: center; /* Center the new title */
+    vertical-align: middle; /* Vertically align */
+    position: relative; /* Needed for pseudo-element positioning */
+    overflow: hidden; /* Hide original text if any */
+    padding-top: 12px; /* Restore original padding */
+    padding-bottom: 12px;
+}
+table th:nth-child(5)::before { 
     content: "Dividends"; /* Add the text content */
     display: block; /* Make it a block to take up space */
     font-weight: 600; /* Ensure it's bold */
     color: var(--text-color); /* Inherit text color */
-    margin-bottom: 5px; /* Add some space between title and content if any */
-}
-/* Hide the actual content of the 5th th if it's empty or just has a placeholder */
-table th:nth-child(5) {
-    text-indent: -9999px; /* Hide original text content, keep padding/border */
-    line-height: 0; /* Collapse line height for original text */
-    padding-top: 12px; /* Restore original padding */
-    padding-bottom: 12px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    white-space: nowrap;
 }
 
 
@@ -1869,7 +1874,7 @@ table tbody tr.selected,
     color: var(--calc-num-btn-text);
     border: none;
     border-radius: 50%; /* Make buttons round */
-    padding: 15px; 
+    padding: 0; /* Remove padding to allow precise sizing */
     font-size: 1.2em; 
     font-weight: 600;
     cursor: pointer;
@@ -1878,11 +1883,11 @@ table tbody tr.selected,
     justify-content: center;
     align-items: center;
     aspect-ratio: 1 / 1; 
-    /* Further adjustment to size for better fit */
     width: 100%; 
-    max-width: 60px; 
-    height: 60px; /* Fixed height to ensure circular shape */
-    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+    height: 100%; /* Fill the grid cell */
+    box-sizing: border-box; 
+    /* Add a border to create the "frame" */
+    border: 1px solid var(--border-color); 
 }
 
 .calc-btn:hover {
