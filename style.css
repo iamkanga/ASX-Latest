@@ -2299,19 +2299,3 @@ table td.live-price-cell {
         font-size: 1em;
     }
 }
-/* --- DEBUGGING: FORCED VISIBILITY OF ADD COMMENT BUTTON (v2) --- */
-#addCommentSectionBtn i.fas.fa-plus { /* Target the Font Awesome icon directly */
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    font-size: 3em !important; /* Make it HUGE */
-    color: lime !important; /* Make it bright green */
-    background-color: purple !important; /* Give it a background to see its area */
-    width: 50px !important; /* Force a size */
-    height: 50px !important; /* Force a size */
-    border-radius: 50% !important;
-    line-height: 1 !important; /* Ensure vertical centering */
-    text-align: center !important;
-    z-index: 99999 !important; /* Ensure it's on top */
-    position: relative !important; /* Ensure it's positioned */
-}
