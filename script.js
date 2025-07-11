@@ -1,5 +1,5 @@
-// File Version: v174
-// Last Updated: 2025-07-11 (Fixed edit from details modal; fixed comments add/display; fixed watchlist selection for new shares; implemented dividend calculator; refined theme logic)
+// File Version: v175
+// Last Updated: 2025-07-11 (Fixed edit from details modal; fixed comments add/display & position; fixed watchlist selection for new shares & new watchlist save; implemented dividend calculator; refined theme logic)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -474,7 +474,6 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
             shareToEdit.comments.forEach(comment => addCommentSection(comment.title, comment.text));
         } else {
             console.log("[showEditFormForSelectedShare] No comments found for this share. Adding one empty comment section.");
-            // Issue 3: Add one empty comment section if no comments exist
             addCommentSection();
         }
     } else {
@@ -637,7 +636,7 @@ function showShareDetails() {
                 priceChangeSpan.textContent = `($0.00)`;
                 priceChangeSpan.classList.add('neutral');
             }
-            modalPriceChange.appendChild(priceChangeSpan); // Append to modalPriceChange element
+            modalPriceChange.appendChild(priceChangeSpan); 
             modalPriceChange.style.display = 'inline';
         } else {
             modalPriceChange.style.display = 'none'; 
@@ -661,37 +660,39 @@ function showShareDetails() {
     const frankedYield = calculateFrankedYield(dividendAmountNum, priceForYield, frankingCreditsNum);
     modalFrankedYieldSpan.textContent = frankedYield !== null ? `${frankedYield.toFixed(2)}%` : 'N/A';
     
-    // Issue 3d: Move comments display here
-    const commentsSectionHtml = `
-        <div id="modalCommentsContainer" class="modal-comments-sections">
-            <h3>Comments</h3>
-            ${(share.comments && Array.isArray(share.comments) && share.comments.length > 0) ?
-                share.comments.map(comment => {
-                    if (comment.title || comment.text) {
-                        return `
-                            <div class="modal-comment-item">
-                                <strong style="display: block; margin-bottom: 5px;">${comment.title || 'General Comment'}</strong>
-                                <p style="margin: 0;">${comment.text || ''}</p>
-                            </div>
-                        `;
-                    }
-                    return '';
-                }).join('') :
-                '<p style="text-align: center; color: var(--label-color);">No comments for this share.</p>'
-            }
-        </div>
-    `;
-
-    // Find the correct insertion point. Assuming modalUnfrankedYieldSpan and modalFrankedYieldSpan are within a parent,
-    // and we want to insert after their parent or a common container for yield info.
-    // For simplicity, let's append it to the modal-body-scrollable directly if it's not already there.
+    // Issue 3c & 3d: Comments display in modal with title separation and correct position
     const modalBodyScrollable = shareDetailModal.querySelector('.modal-body-scrollable');
     if (modalBodyScrollable) {
         let existingCommentsContainer = modalBodyScrollable.querySelector('#modalCommentsContainer');
         if (existingCommentsContainer) {
-            existingCommentsContainer.remove(); // Remove old one to prevent duplicates on re-open
+            existingCommentsContainer.remove(); 
         }
-        modalBodyScrollable.insertAdjacentHTML('beforeend', commentsSectionHtml);
+
+        const commentsSectionDiv = document.createElement('div');
+        commentsSectionDiv.id = 'modalCommentsContainer';
+        commentsSectionDiv.className = 'modal-comments-sections';
+        commentsSectionDiv.innerHTML = '<h3>Comments</h3>';
+
+        if (share.comments && Array.isArray(share.comments) && share.comments.length > 0) {
+            share.comments.forEach(comment => {
+                if (comment.title || comment.text) {
+                    const commentDiv = document.createElement('div');
+                    commentDiv.className = 'modal-comment-item';
+                    commentDiv.innerHTML = `
+                        <strong>${comment.title || 'General Comment'}</strong>
+                        <p>${comment.text || ''}</p>
+                    `;
+                    commentsSectionDiv.appendChild(commentDiv);
+                }
+            });
+        } else {
+            const noCommentsP = document.createElement('p');
+            noCommentsP.style.textAlign = 'center';
+            noCommentsP.style.color = 'var(--label-color)';
+            noCommentsP.textContent = 'No comments for this share.';
+            commentsSectionDiv.appendChild(noCommentsP);
+        }
+        modalBodyScrollable.appendChild(commentsSectionDiv);
     }
 
 
@@ -1046,9 +1047,6 @@ function addShareToTable(share) {
     const frankedYield = calculateFrankedYield(dividendAmountNum, priceForYield, frankingCreditsNum);
     const divAmountDisplay = (!isNaN(dividendAmountNum) && dividendAmountNum !== null) ? `$${dividendAmountNum.toFixed(2)}` : '-';
 
-    // Issue 7: Add Dividends title to header
-    // The table header is in index.html, so this is a CSS/HTML issue.
-    // For now, ensure the content is correctly structured.
     dividendCell.innerHTML = `
         <div class="dividend-yield-cell-content">
             <span>Dividend:</span> <span class="value">${divAmountDisplay}</span>
@@ -2281,7 +2279,7 @@ async function initializeAppLogic() {
                     const textInput = section.querySelector('.comment-text-input');
                     const title = titleInput ? titleInput.value.trim() : '';
                     const text = textInput ? textInput.value.trim() : '';
-                    if (title || text) {
+                    if (title || text) { 
                         comments.push({ title: title, text: text });
                     }
                 });
@@ -2293,7 +2291,7 @@ async function initializeAppLogic() {
 
             if (tempNewShareWatchlistId) {
                 finalWatchlistId = tempNewShareWatchlistId;
-                sessionStorage.removeItem('tempNewShareWatchlistId'); // Clear after use
+                sessionStorage.removeItem('tempNewShareWatchlistId'); 
                 console.log(`[Save Share Debug] Using selected watchlist from modal (temp storage): ${finalWatchlistId}`);
             } else if (watchlistSelect && watchlistSelect.value && watchlistSelect.value !== ALL_SHARES_ID) {
                 finalWatchlistId = watchlistSelect.value;
@@ -2383,10 +2381,7 @@ async function initializeAppLogic() {
             console.log("[UI] Edit Share button (details modal) clicked.");
             console.log(`[Edit Modal Debug] selectedShareDocId before showEditForm: ${selectedShareDocId}`);
             if (selectedShareDocId) {
-                // Instead of directly calling showEditFormForSelectedShare,
-                // we ensure the current modal is hidden first, then call it.
-                // This prevents potential conflicts with modal display states.
-                hideModal(shareDetailModal); // Hide details modal first
+                hideModal(shareDetailModal); 
                 showEditFormForSelectedShare(selectedShareDocId); 
             } else {
                 console.warn("[UI] Edit Share button clicked, but selectedShareDocId is null.");
@@ -2503,7 +2498,7 @@ async function initializeAppLogic() {
         console.warn("[Sidebar Button Debug] Dividend Calc Button element (dividendCalcBtn) NOT found.");
     }
 
-    // Dividend Calculator Input Change Listeners - Issue 6b
+    // Dividend Calculator Input Change Listeners - Issue 6c
     if (calcCurrentPriceInput) calcCurrentPriceInput.addEventListener('input', updateDividendCalculator);
     if (calcDividendAmountInput) calcDividendAmountInput.addEventListener('input', updateDividendCalculator);
     if (calcFrankingCreditsInput) calcFrankingCreditsInput.addEventListener('input', updateDividendCalculator);
@@ -2527,22 +2522,72 @@ async function initializeAppLogic() {
         console.log(`[Dividend Calculator] Unfranked: ${unfrankedYield}, Franked: ${frankedYield}, Estimated: ${estimatedDividend}`);
     }
 
-
+    // Add New Watchlist - Issue 5a
     if (addWatchlistBtn) {
         console.log("[Sidebar Button Debug] Add Watchlist Button element found.");
         addWatchlistBtn.addEventListener('click', () => {
             console.log("[Sidebar Button Click] Add Watchlist button clicked.");
+            newWatchlistNameInput.value = ''; // Clear input field
+            setIconDisabled(saveWatchlistBtn, true); // Disable save initially
             showModal(addWatchlistModal);
+            newWatchlistNameInput.focus();
             toggleAppSidebar(false);
         });
     } else {
         console.warn("[Sidebar Button Debug] Add Watchlist Button element (addWatchlistBtn) NOT found.");
     }
 
+    if (saveWatchlistBtn) {
+        saveWatchlistBtn.addEventListener('click', async () => {
+            console.log("[Add Watchlist] Save button clicked.");
+            const newWatchlistName = newWatchlistNameInput.value.trim();
+            if (!newWatchlistName) {
+                showCustomAlert("Watchlist name cannot be empty.");
+                return;
+            }
+
+            if (!db || !currentUserId || !window.firestore) {
+                showCustomAlert("Database not ready. Cannot save watchlist.");
+                return;
+            }
+
+            try {
+                const watchlistsColRef = window.firestore.collection(db, `artifacts/${currentAppId}/users/${currentUserId}/watchlists`);
+                // Check for duplicate name
+                const q = window.firestore.query(watchlistsColRef, window.firestore.where("name", "==", newWatchlistName));
+                const querySnapshot = await window.firestore.getDocs(q);
+                if (!querySnapshot.empty) {
+                    showCustomAlert(`Watchlist '${newWatchlistName}' already exists.`);
+                    return;
+                }
+
+                await window.firestore.addDoc(watchlistsColRef, {
+                    name: newWatchlistName,
+                    createdAt: new Date().toISOString()
+                });
+                showCustomAlert(`Watchlist '${newWatchlistName}' added!`, 1500);
+                console.log(`[Firestore] Watchlist '${newWatchlistName}' added.`);
+                closeModals();
+                await loadUserWatchlistsAndSettings(); // Reload watchlists in dropdown
+            } catch (error) {
+                console.error("[Firestore] Error adding watchlist:", error);
+                showCustomAlert("Error adding watchlist: " + error.message);
+            }
+        });
+        // Enable/disable save button based on input
+        if (newWatchlistNameInput) {
+            newWatchlistNameInput.addEventListener('input', () => {
+                setIconDisabled(saveWatchlistBtn, newWatchlistNameInput.value.trim() === '');
+            });
+        }
+    }
+
+
     if (editWatchlistBtn) {
         console.log("[Sidebar Button Debug] Edit Watchlist Button element found.");
         editWatchlistBtn.addEventListener('click', () => {
             console.log("[Sidebar Button Click] Edit Watchlist button clicked.");
+            // Placeholder for actual edit watchlist logic
             showCustomAlert("Edit Watchlist functionality coming soon!", 1500);
             toggleAppSidebar(false);
         });
@@ -2572,7 +2617,7 @@ async function initializeAppLogic() {
                 applyTheme('dark');
             }
             if (colorThemeSelect) { 
-                colorThemeSelect.value = 'none'; // Set selector to 'none' as it's now a direct light/dark toggle
+                colorThemeSelect.value = 'none'; 
                 console.log("[Theme Toggle] Set colorThemeSelect to 'none' after toggle.");
             }
         });
@@ -2588,7 +2633,6 @@ async function initializeAppLogic() {
             if (event.target.value === 'none') {
                 applyTheme('system-default');
             } else {
-                // Find the correct custom theme name (e.g., 'bold-1' from 'bold-1' selected value)
                 applyTheme(event.target.value);
             }
         });
@@ -2599,31 +2643,23 @@ async function initializeAppLogic() {
     // Revert to Default Theme Button - Issue 1d
     if (revertToDefaultThemeBtn) {
         console.log("[Sidebar Button Debug] Revert to Default Theme Button element found.");
-        let isDefaultLight = true; // Internal state for light/dark toggle when in system-default
         revertToDefaultThemeBtn.addEventListener('click', () => {
             console.log("[Sidebar Button Click] Revert to Default Theme button clicked.");
             
-            // Check if current theme is already system-default
             if (currentActiveTheme === 'system-default' || (currentActiveTheme === 'light' && !localStorage.getItem('selectedTheme')) || (currentActiveTheme === 'dark' && !localStorage.getItem('selectedTheme'))) {
-                // If already system-default (or explicit light/dark without custom selection), toggle between light/dark
                 if (document.body.classList.contains('dark-theme')) {
                     applyTheme('light');
-                    isDefaultLight = true;
                 } else {
                     applyTheme('dark');
-                    isDefaultLight = false;
                 }
-                console.log(`[Revert Theme] Toggled between light/dark. isDefaultLight: ${isDefaultLight}`);
+                console.log(`[Revert Theme] Toggled between light/dark.`);
             } else {
-                // If a custom theme is active, revert to system-default first
                 applyTheme('system-default');
-                // Reset internal toggle state based on system preference after reverting
-                isDefaultLight = window.matchMedia('(prefers-color-scheme: dark)').matches ? false : true; 
                 console.log("[Revert Theme] Reverted to system-default.");
             }
 
             if (colorThemeSelect) { 
-                colorThemeSelect.value = 'none'; // Ensure selector resets to 'none'
+                colorThemeSelect.value = 'none'; 
                 console.log("[Revert Theme] Set colorThemeSelect to 'none'.");
             }
         });
@@ -2704,7 +2740,7 @@ document.addEventListener('DOMContentLoaded', function() {
     window._appLogicInitializedOnce = true;
 
 
-    console.log("script.js (v174) DOMContentLoaded fired."); 
+    console.log("script.js (v175) DOMContentLoaded fired."); 
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
