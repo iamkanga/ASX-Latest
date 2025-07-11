@@ -1,5 +1,5 @@
 // File Version: v166
-// Last Updated: 2025-07-10 (Fixed critical SyntaxError, improved context menu handling, fixed modal buttons, completed comments section, improved watchlist selection)
+// Last Updated: 2025-07-10 (Fixed critical interaction bugs: hamburger, modal buttons, context menu; completed dynamic comments; fixed watchlist selection modal)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
