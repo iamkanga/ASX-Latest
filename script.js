@@ -1,5 +1,5 @@
-// File Version: v176
-// Last Updated: 2025-07-11 (Re-investigated standard calculator button responsiveness; re-checked comments section add/display)
+// File Version: v177
+// Last Updated: 2025-07-11 (Fixed standard calculator button responsiveness; re-checked comments section add/display)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -1107,7 +1107,12 @@ function addShareToMobileCards(share) {
             if (change > 0) {
                 livePriceHtml += ` <span class="price-change positive">(+$${change.toFixed(2)})</span></p>`;
             } else if (change < 0) {
-                livePriceHtml += ` <span class="price-change negative">(-$${Math.abs(change).toFixed(2)})</span></p>`;
+                livePriceHtml += ` <span class="price-change negative">(-$${Math.abs(change).toFixed(2)})`;
+                // Add a space to separate the negative sign from the parenthesis
+                if (change < 0) {
+                    livePriceHtml = livePriceHtml.replace('(-', ' (-');
+                }
+                livePriceHtml += `)</span></p>`;
             } else {
                 livePriceHtml += ` <span class="price-change neutral">($0.00)</span></p>`;
             }
@@ -1319,7 +1324,7 @@ function scrollToShare(asxCode) {
             console.log(`[UI] Scrolled to element for share ID: ${targetShare.id}`);
         } else {
             showCustomAlert(`Share '${asxCode}' not found.`);
-            console.warn(`[UI] Element for share ID: ${targetShare.id} not found for scrolling.`);
+            console.warn(`[UI] Share '${asxCode}' not found in allSharesData.`);
         }
         showShareDetails(); 
     } else {
@@ -1973,7 +1978,7 @@ function exportWatchlistToCSV() {
 
         const livePrice = livePrices[share.shareName.toUpperCase()];
         const previousFetchedPrice = Number(share.previousFetchedPrice);
-        const lastFetchedPrice = Number(share.lastFetchedPrice);
+        const lastFetchedPrice = Number(share.currentPrice); // Use currentPrice as last fetched if live not available
 
         let priceChange = '';
         if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) {
@@ -2488,6 +2493,7 @@ async function initializeAppLogic() {
     if (calculatorButtons) {
         calculatorButtons.addEventListener('click', (event) => {
             const target = event.target;
+            // Ensure the clicked element is a button and not the container itself
             if (target.classList.contains('calc-btn')) {
                 const value = target.dataset.value;
                 const action = target.dataset.action;
@@ -2524,7 +2530,7 @@ async function initializeAppLogic() {
                         } else if (previousCalculatorInput !== '' && !operator) {
                             operator = action;
                         } else if (previousCalculatorInput !== '' && operator) {
-                            operator = action; // Change operator if already set
+                            operator = action; 
                         }
                     }
                 }
@@ -2786,7 +2792,7 @@ document.addEventListener('DOMContentLoaded', function() {
     window._appLogicInitializedOnce = true;
 
 
-    console.log("script.js (v175) DOMContentLoaded fired."); 
+    console.log("script.js (v177) DOMContentLoaded fired."); 
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;

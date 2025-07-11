@@ -1,4 +1,4 @@
-/* File Version: v106 */
+/* File Version: v107 */
 /* Last Updated: 2025-07-11 (Fixed calculator button sizing and frames; refined modal comment title display and ensured add button visibility; added Dividends header; adjusted watchlist text formatting) */
 
 :root {
@@ -1872,7 +1872,7 @@ table tbody tr.selected,
 .calc-btn {
     background-color: var(--calc-num-btn-bg);
     color: var(--calc-num-btn-text);
-    border: none;
+    border: 1px solid var(--border-color); /* Ensure border is visible */
     border-radius: 50%; /* Make buttons round */
     padding: 0; /* Remove padding to allow precise sizing */
     font-size: 1.2em; 
@@ -1886,8 +1886,6 @@ table tbody tr.selected,
     width: 100%; 
     height: 100%; /* Fill the grid cell */
     box-sizing: border-box; 
-    /* Add a border to create the "frame" */
-    border: 1px solid var(--border-color); 
 }
 
 .calc-btn:hover {
