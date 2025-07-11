@@ -1,5 +1,5 @@
-// File Version: v175
-// Last Updated: 2025-07-11 (Fixed edit from details modal; fixed comments add/display & position; fixed watchlist selection for new shares & new watchlist save; implemented dividend calculator; refined theme logic)
+// File Version: v176
+// Last Updated: 2025-07-11 (Re-investigated standard calculator button responsiveness; re-checked comments section add/display)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -424,7 +424,6 @@ function clearForm() {
     });
     if (commentsFormContainer) {
         commentsFormContainer.innerHTML = '';
-        // Issue 3: Always add one empty comment section when clearing form for a new share
         addCommentSection(); 
     }
     selectedShareDocId = null;
@@ -660,7 +659,6 @@ function showShareDetails() {
     const frankedYield = calculateFrankedYield(dividendAmountNum, priceForYield, frankingCreditsNum);
     modalFrankedYieldSpan.textContent = frankedYield !== null ? `${frankedYield.toFixed(2)}%` : 'N/A';
     
-    // Issue 3c & 3d: Comments display in modal with title separation and correct position
     const modalBodyScrollable = shareDetailModal.querySelector('.modal-body-scrollable');
     if (modalBodyScrollable) {
         let existingCommentsContainer = modalBodyScrollable.querySelector('#modalCommentsContainer');
@@ -2285,7 +2283,6 @@ async function initializeAppLogic() {
                 });
             }
             
-            // Issue 4: Determine watchlistId for saving
             let finalWatchlistId;
             const tempNewShareWatchlistId = sessionStorage.getItem('tempNewShareWatchlistId');
 
@@ -2487,6 +2484,58 @@ async function initializeAppLogic() {
         console.warn("[Sidebar Button Debug] Standard Calc Button element (standardCalcBtn) NOT found.");
     }
 
+    // Standard Calculator Button Event Listeners - Issue 5b
+    if (calculatorButtons) {
+        calculatorButtons.addEventListener('click', (event) => {
+            const target = event.target;
+            if (target.classList.contains('calc-btn')) {
+                const value = target.dataset.value;
+                const action = target.dataset.action;
+
+                console.log(`[Calculator Button Click] Value: ${value}, Action: ${action}`);
+
+                if (value) {
+                    if (resultDisplayed) {
+                        currentCalculatorInput = value;
+                        resultDisplayed = false;
+                    } else {
+                        currentCalculatorInput += value;
+                    }
+                } else if (action) {
+                    if (action === 'clear') {
+                        resetCalculator();
+                    } else if (action === 'calculate') {
+                        calculateResult();
+                        resultDisplayed = true;
+                    } else if (action === 'percentage') {
+                        if (currentCalculatorInput !== '') {
+                            currentCalculatorInput = (parseFloat(currentCalculatorInput) / 100).toString();
+                        } else if (previousCalculatorInput !== '') {
+                            previousCalculatorInput = (parseFloat(previousCalculatorInput) / 100).toString();
+                        }
+                    } else { // Operator
+                        if (currentCalculatorInput !== '') {
+                            if (previousCalculatorInput !== '') {
+                                calculateResult();
+                            }
+                            operator = action;
+                            previousCalculatorInput = calculatorResult.textContent;
+                            currentCalculatorInput = '';
+                        } else if (previousCalculatorInput !== '' && !operator) {
+                            operator = action;
+                        } else if (previousCalculatorInput !== '' && operator) {
+                            operator = action; // Change operator if already set
+                        }
+                    }
+                }
+                updateCalculatorDisplay();
+            }
+        });
+    } else {
+        console.warn("[Calculator] calculatorButtons element not found.");
+    }
+
+
     if (dividendCalcBtn) {
         console.log("[Sidebar Button Debug] Dividend Calc Button element found.");
         dividendCalcBtn.addEventListener('click', () => {
@@ -2522,13 +2571,13 @@ async function initializeAppLogic() {
         console.log(`[Dividend Calculator] Unfranked: ${unfrankedYield}, Franked: ${frankedYield}, Estimated: ${estimatedDividend}`);
     }
 
-    // Add New Watchlist - Issue 5a
+    // Add New Watchlist - Issue 4a
     if (addWatchlistBtn) {
         console.log("[Sidebar Button Debug] Add Watchlist Button element found.");
         addWatchlistBtn.addEventListener('click', () => {
             console.log("[Sidebar Button Click] Add Watchlist button clicked.");
-            newWatchlistNameInput.value = ''; // Clear input field
-            setIconDisabled(saveWatchlistBtn, true); // Disable save initially
+            newWatchlistNameInput.value = ''; 
+            setIconDisabled(saveWatchlistBtn, true); 
             showModal(addWatchlistModal);
             newWatchlistNameInput.focus();
             toggleAppSidebar(false);
@@ -2553,7 +2602,6 @@ async function initializeAppLogic() {
 
             try {
                 const watchlistsColRef = window.firestore.collection(db, `artifacts/${currentAppId}/users/${currentUserId}/watchlists`);
-                // Check for duplicate name
                 const q = window.firestore.query(watchlistsColRef, window.firestore.where("name", "==", newWatchlistName));
                 const querySnapshot = await window.firestore.getDocs(q);
                 if (!querySnapshot.empty) {
@@ -2568,13 +2616,12 @@ async function initializeAppLogic() {
                 showCustomAlert(`Watchlist '${newWatchlistName}' added!`, 1500);
                 console.log(`[Firestore] Watchlist '${newWatchlistName}' added.`);
                 closeModals();
-                await loadUserWatchlistsAndSettings(); // Reload watchlists in dropdown
+                await loadUserWatchlistsAndSettings(); 
             } catch (error) {
                 console.error("[Firestore] Error adding watchlist:", error);
                 showCustomAlert("Error adding watchlist: " + error.message);
             }
         });
-        // Enable/disable save button based on input
         if (newWatchlistNameInput) {
             newWatchlistNameInput.addEventListener('input', () => {
                 setIconDisabled(saveWatchlistBtn, newWatchlistNameInput.value.trim() === '');
@@ -2587,7 +2634,6 @@ async function initializeAppLogic() {
         console.log("[Sidebar Button Debug] Edit Watchlist Button element found.");
         editWatchlistBtn.addEventListener('click', () => {
             console.log("[Sidebar Button Click] Edit Watchlist button clicked.");
-            // Placeholder for actual edit watchlist logic
             showCustomAlert("Edit Watchlist functionality coming soon!", 1500);
             toggleAppSidebar(false);
         });
