@@ -750,10 +750,10 @@ function renderWatchlistSelect() {
     if (!watchlistSelect) { console.error("[renderWatchlistSelect] watchlistSelect element not found."); return; }
     watchlistSelect.innerHTML = '<option value="" disabled selected>Watchlist</option>'; // Default placeholder
 
-    // Add "Display All" option first
+    // Add "All Shares" option first
     const allSharesOption = document.createElement('option');
     allSharesOption.value = ALL_SHARES_ID;
-    allSharesOption.textContent = 'Display All Shares';
+    allSharesOption.textContent = 'All Shares'; // Changed from 'Display All Shares' to 'All Shares'
     watchlistSelect.appendChild(allSharesOption);
 
     userWatchlists.forEach(watchlist => {
@@ -1462,7 +1462,7 @@ async function loadUserWatchlistsAndSettings() {
             currentSelectedWatchlistIds = currentSelectedWatchlistIds.filter(id => 
                 id === ALL_SHARES_ID || userWatchlists.some(wl => wl.id === id)
             );
-            // If "Show All Shares" was selected, ensure it's still valid (i.e., there are watchlists)
+            // If "All Shares" was selected, ensure it's still valid (i.e., there are watchlists)
             if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID) && userWatchlists.length === 0) {
                  currentSelectedWatchlistIds = []; // Cannot show all if there are none
             }

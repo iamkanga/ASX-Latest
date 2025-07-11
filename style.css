@@ -1123,7 +1123,7 @@ table th {
     white-space: nowrap;
 }
 
-/* Issue 6: Add Dividends title to header */
+/* 5. Dividends Column Title */
 table th:nth-child(5) { /* Target the 5th column header (Dividends) */
     text-align: center; /* Center the new title */
     vertical-align: middle; /* Vertically align */
