@@ -866,7 +866,7 @@ h1#mainTitle {
 
 /* This is for native buttons */
 .menu-button-item:disabled {
-    background-color: var(--secondary-button-bg); /* Use secondary for disabled danger */
+    background-color: var(--secondary-button-bg);
     cursor: not-allowed;
     opacity: 0.5; /* Adjusted opacity for disabled buttons */
     box-shadow: none;

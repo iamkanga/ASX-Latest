@@ -1,4 +1,4 @@
-// File Version: v164
+// File Version: v165
 // Last Updated: 2025-07-10 (Fixed right-click/long-press context menu, fixed comments display, fixed watchlist selection modal functionality, aligned header elements)
 
 // This script interacts with Firebase Firestore for data storage.
@@ -321,16 +321,13 @@ function clearShareList() {
 
 function selectShare(shareId) {
     console.log(`[Selection] Attempting to select share with ID: ${shareId}`);
-    // Do NOT deselect here, as it interferes with context menu selection
-    // deselectCurrentShare(); 
-
-    const tableRow = document.querySelector(`#shareTable tbody tr[data-doc-id="${shareId}"]`);
-    const mobileCard = document.querySelector(`.mobile-card[data-doc-id="${shareId}"]`);
-
     // Ensure only the newly selected row/card has the 'selected' class
     document.querySelectorAll('.share-list-section tr.selected, .mobile-card.selected').forEach(el => {
         el.classList.remove('selected');
     });
+
+    const tableRow = document.querySelector(`#shareTable tbody tr[data-doc-id="${shareId}"]`);
+    const mobileCard = document.querySelector(`.mobile-card[data-doc-id="${shareId}"]`);
 
     if (tableRow) {
         tableRow.classList.add('selected');
@@ -896,6 +893,7 @@ function addShareToTable(share) {
     let lastClickTime = 0;
     row.addEventListener('click', (event) => { 
         console.log(`[Table Row Click] Share ID: ${share.id}`);
+        // Only select if not a right-click/long-press initiating the context menu
         if (!contextMenuOpen) {
             const currentTime = new Date().getTime();
             const clickDelay = 300; // milliseconds for double click detection
@@ -904,9 +902,10 @@ function addShareToTable(share) {
                 console.log(`[Table Row Double Click] Share ID: ${share.id}`);
                 selectShare(share.id); 
                 showShareDetails();
+            } else {
+                selectShare(share.id); // Also select on single click
             }
             lastClickTime = currentTime;
-            selectShare(share.id); // Also select on single click
         }
     });
 
@@ -914,7 +913,7 @@ function addShareToTable(share) {
     row.addEventListener('contextmenu', (event) => {
         console.log(`[Table Row ContextMenu] Share ID: ${share.id}`);
         event.preventDefault();
-        selectShare(share.id);
+        selectShare(share.id); // Ensure share is selected before showing context menu
         showContextMenu(event, share.id);
     });
 
@@ -928,7 +927,7 @@ function addShareToTable(share) {
             touchStartY = event.touches[0].clientY;
             longPressTimer = setTimeout(() => {
                 event.preventDefault(); 
-                selectShare(share.id);
+                selectShare(share.id); // Ensure share is selected before showing context menu
                 showContextMenu(event, share.id);
             }, LONG_PRESS_THRESHOLD);
         }
@@ -1115,6 +1114,7 @@ function addShareToMobileCards(share) {
     let lastClickTime = 0;
     card.addEventListener('click', function(e) {
         console.log(`[Mobile Card Click] Share ID: ${share.id}`);
+        // Only select if not a right-click/long-press initiating the context menu
         if (!contextMenuOpen) {
             const currentTime = new Date().getTime();
             const clickDelay = 300; // milliseconds for double click detection
@@ -1124,10 +1124,10 @@ function addShareToMobileCards(share) {
                 const docId = e.currentTarget.dataset.docId;
                 selectShare(docId);
                 showShareDetails();
+            } else {
+                selectShare(docId); // Also select on single click
             }
             lastClickTime = currentTime;
-            const docId = e.currentTarget.dataset.docId;
-            selectShare(docId); // Also select on single click
         }
     });
 
@@ -2154,8 +2154,14 @@ async function initializeAppLogic() {
             closeModals();
         }
 
+        // Only hide context menu if the click is not inside the context menu itself,
+        // and not on a selected share row/card (which might be opening the menu).
         if (contextMenuOpen && shareContextMenu && !shareContextMenu.contains(event.target)) {
-            hideContextMenu();
+            // Check if the click was on a share row/card that might have just opened the menu
+            const isShareElement = event.target.closest('.share-list-section tr, .mobile-card');
+            if (!isShareElement || isShareElement.dataset.docId !== currentContextMenuShareId) {
+                hideContextMenu();
+            }
         }
     });
 
@@ -2191,7 +2197,7 @@ async function initializeAppLogic() {
                     console.log("[Auth] Google Sign-In successful.");
                 }
                 catch (error) {
-                    console.error("[Auth] Google Sign-In failed:", error.message);
+                    console.error("[Auth] Google Sign-In failed:", error); // Log full error object
                     showCustomAlert("Google Sign-In failed: " + error.message);
                 }
             }
@@ -2373,7 +2379,15 @@ async function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v164) DOMContentLoaded fired."); // Updated version number
+    // Ensure this script only runs its initialization logic once
+    if (window._appLogicInitializedOnce) {
+        console.warn("script.js: initializeAppLogic already executed. Skipping duplicate initialization.");
+        return;
+    }
+    window._appLogicInitializedOnce = true;
+
+
+    console.log("script.js (v165) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
