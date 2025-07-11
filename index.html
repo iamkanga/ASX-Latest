@@ -8,7 +8,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍆</text></svg>">
 
     <!-- Linking to your separate style.css file -->
-    <link rel="stylesheet" href="style.css?v=90"> <!-- Updated to v90 -->
+    <link rel="stylesheet" href="style.css?v=108"> <!-- Updated to v107 -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -76,16 +76,6 @@
             </div>
 
             <div class="menu-section">
-                <h3>Data Actions</h3>
-                <div class="menu-buttons-group">
-                    <!-- Export Watchlist Button - NEW -->
-                    <button id="exportWatchlistBtn" class="menu-button-item" data-action-closes-menu="true">
-                        <i class="fas fa-file-export"></i> <span>Export Watchlist (CSV)</span>
-                    </button>
-                </div>
-            </div>
-
-            <div class="menu-section">
                 <h3>Theme</h3> <!-- CHANGED: Title from "Theme Toggle" back to "Theme" -->
                 <div class="menu-buttons-group">
                     <!-- New Theme Selector Dropdown - MOVED ABOVE TOGGLE -->
@@ -126,6 +116,17 @@
                     <!-- Revert to Default Theme Button - Icon with Text -->
                     <button id="revertToDefaultThemeBtn" class="menu-button-item secondary-buttons" data-action-closes-menu="false">
                         <i class="fas fa-sun"></i><i class="fas fa-moon"></i> <span>Default Theme</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Data Actions Section - MOVED TO NEW POSITION -->
+            <div class="menu-section">
+                <h3>Data Actions</h3>
+                <div class="menu-buttons-group">
+                    <!-- Export Watchlist Button -->
+                    <button id="exportWatchlistBtn" class="menu-button-item" data-action-closes-menu="true">
+                        <i class="fas fa-file-export"></i> <span>Export Watchlist (CSV)</span>
                     </button>
                 </div>
             </div>
@@ -190,8 +191,8 @@
                             <th>Live Price</th> <!-- MOVED UP -->
                             <th>Entered Price</th> <!-- MOVED DOWN -->
                             <th>Target Price</th>
-                            <th>Dividends</th>
-                            <th>Comments</th>
+                            <th></th> <!-- Placeholder for Dividends, title added by CSS -->
+                            <!-- Comments column header removed -->
                         </tr>
                     </thead>
                     <tbody>
@@ -252,7 +253,6 @@
             <div class="form-action-buttons modal-form-buttons sticky-footer">
                 <!-- Delete Icon -->
                 <span id="deleteShareBtn" class="modal-action-icon danger hidden" title="Delete"><i class="fas fa-trash-alt"></i></span>
-                <!-- Cancel Icon - REMOVED -->
                 <span id="saveShareBtn" class="modal-action-icon" title="Save Share"><i class="fas fa-save"></i></span>
             </div>
         </div>
@@ -275,20 +275,17 @@
                 <p><strong>Unfranked Yield:</strong> <span id="modalUnfrankedYield"></span></p>
                 <p><strong>Franked Yield:</strong> <span id="modalFrankedYield"></span></p>
 
+                <!-- External links section moved below comments in script.js, but HTML placeholder remains -->
                 <div class="external-links-section">
                     <h3>External Links</h3>
-                    <!-- NEW: News Link -->
                     <p><a id="modalNewsLink" href="#" target="_blank" class="external-link"><i class="fas fa-external-link-alt"></i> View News</a></p>
                     <p><a id="modalMarketIndexLink" href="#" target="_blank" class="external-link"><i class="fas fa-external-link-alt"></i> View on MarketIndex.com.au</a></p>
                     <p><a id="modalFoolLink" href="#" target="_blank" class="external-link"><i class="fas fa-external-link-alt"></i> View on Fool.com.au</a></p>
                     <p><a id="modalCommSecLink" href="#" target="_blank" class="external-link"><i class="fas fa-external-link-alt"></i> View on CommSec.com.au</a></p>
                     <p id="commSecLoginMessage" class="ghosted-text commsec-message">Requires single CommSec login per session</p>
                 </div>
-
-                <div id="modalCommentsContainer" class="modal-comments-sections">
-                    <h3>Comments</h3>
-                    <!-- Comments will be displayed here -->
-                </div>
+                <!-- Comments will be dynamically added here by JS in showShareDetails() -->
+                <div id="modalCommentsContainer" style="display:none;"></div> <!-- Placeholder, content added by JS -->
             </div>
             <!-- END NEW: Scrollable content for share details modal -->
 
@@ -297,7 +294,6 @@
                 <span id="deleteShareFromDetailBtn" class="modal-action-icon danger" title="Delete Share"><i class="fas fa-trash-alt"></i></span>
                 <!-- Edit Share icon -->
                 <span id="editShareFromDetailBtn" class="modal-action-icon" title="Edit Share"><i class="fas fa-edit"></i></span>
-                <!-- REMOVED UNWANTED BUTTON HERE -->
             </div>
         </div>
     </div>
@@ -310,7 +306,6 @@
             <label for="newWatchlistName">Watchlist Name:</label>
             <input type="text" id="newWatchlistName" placeholder="e.g., Tech Stocks" required>
             <div class="form-action-buttons">
-                <!-- Cancel Add Watchlist icon - REMOVED -->
                 <span id="saveWatchlistBtn" class="modal-action-icon" title="Save Watchlist"><i class="fas fa-save"></i></span>
             </div>
         </div>
@@ -326,7 +321,6 @@
             <div class="form-action-buttons">
                 <!-- Delete Watchlist icon - NOW STANDALONE ICON -->
                 <span id="deleteWatchlistInModalBtn" class="modal-action-icon danger" title="Delete Watchlist"><i class="fas fa-trash-alt"></i></span>
-                <!-- Removed Cancel Manage Watchlist icon -->
                 <span id="saveWatchlistNameBtn" class="modal-action-icon" title="Save Name"><i class="fas fa-save"></i></span>
             </div>
         </div>
@@ -347,7 +341,7 @@
             </div>
             <div class="calc-input-group">
                 <label for="frankingCredits">Franking Credits (%):</label>
-                <input type="number" id="calcFrankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 70 for 70%">
+                <input type="number" id="frankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 70 for 70%">
             </div>
             <p><strong>Unfranked Yield:</strong> <span id="calcUnfrankedYield">-</span></p>
             <p><strong>Franked Yield:</strong> <span id="calcFrankedYield">-</span></p>
@@ -401,7 +395,7 @@
                 <button class="calc-btn operator" data-action="add">+</button>
                 
                 <!-- Row 5: 0 (span 2), ., = (span 1) -->
-                <button class="calc-btn zero" data-value="0"></button>
+                <button class="calc-btn zero" data-value="0">0</button> <!-- Added 0 content -->
                 <button class="calc-btn" data-value=".">.</button>
                 <button class="calc-btn equals" data-action="calculate">=</button>
             </div>
@@ -426,6 +420,22 @@
         <button id="contextEditShareBtn" class="context-menu-item"><i class="fas fa-edit"></i> Edit Share</button>
         <button id="contextDeleteShareBtn" class="context-menu-item danger-button"><i class="fas fa-trash-alt"></i> Delete Share</button>
     </div>
+
+    <!-- NEW: Watchlist Selection Modal for New Shares -->
+    <div id="selectWatchlistForShareModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Select Watchlist for New Share</h2>
+            <ul id="watchlistSelectionList" class="watchlist-selection-list">
+                <!-- Watchlist options populated by JS -->
+            </ul>
+            <div class="form-action-buttons">
+                <span id="cancelWatchlistSelectionBtn" class="modal-action-icon secondary" title="Cancel"><i class="fas fa-times-circle"></i></span>
+                <span id="confirmWatchlistSelectionBtn" class="modal-action-icon" title="Confirm"><i class="fas fa-check-circle"></i></span>
+            </div>
+        </div>
+    </div>
+
 
     <!-- Firebase and main script loading -->
     <script type="module">
@@ -501,7 +511,7 @@
         } : null;
 
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log("index.html (v82) script module loaded and DOMContentLoaded fired."); // Updated version number
+            console.log("index.html (v86) script module loaded and DOMContentLoaded fired."); // Updated version number
         }); 
     </script>
     <!-- Linking to your separate script.js file -->
