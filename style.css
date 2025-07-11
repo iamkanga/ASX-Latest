@@ -1,5 +1,5 @@
-/* File Version: v103 */
-/* Last Updated: 2025-07-11 (Adjusted calculator button sizing for standard calculator) */
+/* File Version: v104 */
+/* Last Updated: 2025-07-11 (Adjusted calculator button sizing for standard calculator to fit frame) */
 
 :root {
     /* Light Theme (Default) */
@@ -1862,6 +1862,10 @@ table tbody tr.selected,
     justify-content: center;
     align-items: center;
     aspect-ratio: 1 / 1; /* Keep buttons square/round */
+    /* Further adjustment to size for better fit */
+    width: 100%; /* Ensure they fill the grid cell */
+    max-width: 60px; /* Limit max size for larger screens */
+    height: auto; /* Allow height to adjust with padding/font-size */
 }
 
 .calc-btn:hover {
