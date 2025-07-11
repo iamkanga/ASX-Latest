@@ -1,5 +1,5 @@
-// File Version: v171
-// Last Updated: 2025-07-11 (Refined sidebar closing logic; added debug for edit modal & comments; adjusted add share button visibility pre-login; confirmed sidebar button clicks)
+// File Version: v172
+// Last Updated: 2025-07-11 (Improved edit modal data population; fixed comments section add/display; added default empty comment for new shares; added calculator display debug)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -39,7 +39,7 @@ let currentContextMenuShareId = null; // Stores the ID of the share that opened 
 let originalShareData = null; // Stores the original share data when editing for dirty state check
 
 // Live Price Data
-const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwjuU2ZE1rCe4kiHT7WD-7CALkB0pg-zxkizz0xMIrhKxCBlKEp-YoMiUK85BQ2dHnZ/exec';
+const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwjuU2ZE1rCe4kiHT7WD-7CALkB0pg-zxizZ0xMIrhKxCBlKEp-YoMiUK85BQ2dHnZ/exec';
 let livePrices = {}; // Stores live price data: {ASX_CODE: price}
 let livePriceFetchInterval = null; // To hold the interval ID for live price updates
 const LIVE_PRICE_FETCH_INTERVAL_MS = 5 * 60 * 1000; // Fetch every 5 minutes
@@ -439,8 +439,8 @@ function clearForm() {
     });
     if (commentsFormContainer) {
         commentsFormContainer.innerHTML = '';
-        // Do not add a default comment section here, user will click "+" to add
-        // addCommentSection(); 
+        // Issue 4: Always add one empty comment section when clearing form for a new share
+        addCommentSection(); 
     }
     selectedShareDocId = null;
     originalShareData = null; // Reset original data when clearing form for new share
@@ -484,8 +484,9 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
             console.log(`[showEditFormForSelectedShare] Found ${shareToEdit.comments.length} comments. Adding them to form.`);
             shareToEdit.comments.forEach(comment => addCommentSection(comment.title, comment.text));
         } else {
-            console.log("[showEditFormForSelectedShare] No comments found for this share. Not adding default comment section.");
-            // Do not add a default comment section here, user will click "+" to add
+            console.log("[showEditFormForSelectedShare] No comments found for this share. Adding one empty comment section.");
+            // Issue 4: Add one empty comment section if no comments exist
+            addCommentSection();
         }
     } else {
         console.warn("[showEditFormForSelectedShare] commentsFormContainer not found.");
@@ -1397,6 +1398,7 @@ function updateCalculatorDisplay() {
     else if (currentCalculatorInput !== '') { calculatorResult.textContent = currentCalculatorInput; }
     else if (previousCalculatorInput !== '' && operator) { calculatorResult.textContent = previousCalculatorInput; }
     else { calculatorResult.textContent = '0'; }
+    console.log(`[Calculator Display] Input: "${calculatorInput.textContent}", Result: "${calculatorResult.textContent}"`); // Debug log
 }
 
 function calculateResult() {
@@ -2774,7 +2776,7 @@ document.addEventListener('DOMContentLoaded', function() {
     window._appLogicInitializedOnce = true;
 
 
-    console.log("script.js (v171) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v172) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
