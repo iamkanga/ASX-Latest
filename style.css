@@ -1,5 +1,5 @@
-/* File Version: v102 */
-/* Last Updated: 2025-07-11 (Fixed watchlist/sort dropdown width on desktop; improved calculator button styling; refined modal comment title display; adjusted watchlist text formatting) */
+/* File Version: v103 */
+/* Last Updated: 2025-07-11 (Adjusted calculator button sizing for standard calculator) */
 
 :root {
     /* Light Theme (Default) */
@@ -1852,8 +1852,9 @@ table tbody tr.selected,
     color: var(--calc-num-btn-text);
     border: none;
     border-radius: 50%; /* Make buttons round */
-    padding: 20px; /* Adjust padding for size */
-    font-size: 1.5em;
+    /* Adjusted padding and font-size to make buttons fit better */
+    padding: 15px; /* Reduced padding */
+    font-size: 1.2em; /* Reduced font size */
     font-weight: 600;
     cursor: pointer;
     transition: background-color 0.2s ease;
