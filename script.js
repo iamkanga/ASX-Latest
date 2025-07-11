@@ -1,5 +1,5 @@
-// File Version: v177
-// Last Updated: 2025-07-11 (Fixed standard calculator button responsiveness; re-checked comments section add/display)
+// File Version: v178
+// Last Updated: 2025-07-11 (Fixed calculator getOperatorSymbol ReferenceError; re-checked comments section add button visibility)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -469,7 +469,7 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
     if (commentsFormContainer) {
         commentsFormContainer.innerHTML = ''; 
         if (shareToEdit.comments && Array.isArray(shareToEdit.comments) && shareToEdit.comments.length > 0) {
-            console.log(`[showEditFormForSelectedShare] Found ${shareToEdit.comments.length} comments. Adding them to form.`);
+            console.log(`[showEditFormForSelectedShare] Found ${shareToTo.comments.length} comments. Adding them to form.`);
             shareToEdit.comments.forEach(comment => addCommentSection(comment.title, comment.text));
         } else {
             console.log("[showEditFormForSelectedShare] No comments found for this share. Adding one empty comment section.");
@@ -631,6 +631,8 @@ function showShareDetails() {
             } else if (change < 0) {
                 priceChangeSpan.textContent = `(-$${Math.abs(change).toFixed(2)})`;
                 priceChangeSpan.classList.add('negative');
+                // Added a space for readability in negative change
+                priceChangeSpan.textContent = priceChangeSpan.textContent.replace('(-', ' (-');
             } else {
                 priceChangeSpan.textContent = `($0.00)`;
                 priceChangeSpan.classList.add('neutral');
@@ -690,6 +692,9 @@ function showShareDetails() {
             noCommentsP.textContent = 'No comments for this share.';
             commentsSectionDiv.appendChild(noCommentsP);
         }
+        // Append comments section after the yield information (assuming yield spans are direct children of modalBodyScrollable)
+        // A more robust way would be to find a common parent for yield display and insert after that.
+        // For now, let's append at the end of the scrollable body.
         modalBodyScrollable.appendChild(commentsSectionDiv);
     }
 
@@ -1016,6 +1021,8 @@ function addShareToTable(share) {
             } else if (change < 0) {
                 priceChangeSpan.textContent = `(-$${Math.abs(change).toFixed(2)})`;
                 priceChangeSpan.classList.add('negative');
+                // Added a space for readability in negative change
+                priceChangeSpan.textContent = priceChangeSpan.textContent.replace('(-', ' (-');
             } else {
                 priceChangeSpan.textContent = `($0.00)`;
                 priceChangeSpan.classList.add('neutral');
@@ -1107,12 +1114,7 @@ function addShareToMobileCards(share) {
             if (change > 0) {
                 livePriceHtml += ` <span class="price-change positive">(+$${change.toFixed(2)})</span></p>`;
             } else if (change < 0) {
-                livePriceHtml += ` <span class="price-change negative">(-$${Math.abs(change).toFixed(2)})`;
-                // Add a space to separate the negative sign from the parenthesis
-                if (change < 0) {
-                    livePriceHtml = livePriceHtml.replace('(-', ' (-');
-                }
-                livePriceHtml += `)</span></p>`;
+                livePriceHtml += ` <span class="price-change negative">(-$${Math.abs(change).toFixed(2)})</span></p>`;
             } else {
                 livePriceHtml += ` <span class="price-change neutral">($0.00)</span></p>`;
             }
@@ -1367,6 +1369,16 @@ function updateCalculatorDisplay() {
     else if (previousCalculatorInput !== '' && operator) { calculatorResult.textContent = previousCalculatorInput; }
     else { calculatorResult.textContent = '0'; }
     console.log(`[Calculator Display] Input: "${calculatorInput.textContent}", Result: "${calculatorResult.textContent}"`); 
+}
+
+// Moved getOperatorSymbol to global scope for accessibility
+function getOperatorSymbol(op) {
+    switch (op) {
+        case 'add': return '+'; case 'subtract': return '-';
+        case 'multiply': return '×'; case 'divide': return '÷';
+        case 'percentage': return '%'; // Added percentage symbol
+        default: return '';
+    }
 }
 
 function calculateResult() {
@@ -1978,7 +1990,7 @@ function exportWatchlistToCSV() {
 
         const livePrice = livePrices[share.shareName.toUpperCase()];
         const previousFetchedPrice = Number(share.previousFetchedPrice);
-        const lastFetchedPrice = Number(share.currentPrice); // Use currentPrice as last fetched if live not available
+        const lastFetchedPrice = Number(share.currentPrice); 
 
         let priceChange = '';
         if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) {
@@ -2377,7 +2389,6 @@ async function initializeAppLogic() {
         });
     }
 
-    // Edit Share Button from Share Details Modal - Issue 2
     if (editShareFromDetailBtn) {
         editShareFromDetailBtn.addEventListener('click', () => {
             console.log("[UI] Edit Share button (details modal) clicked.");
@@ -2488,59 +2499,6 @@ async function initializeAppLogic() {
     } else {
         console.warn("[Sidebar Button Debug] Standard Calc Button element (standardCalcBtn) NOT found.");
     }
-
-    // Standard Calculator Button Event Listeners - Issue 5b
-    if (calculatorButtons) {
-        calculatorButtons.addEventListener('click', (event) => {
-            const target = event.target;
-            // Ensure the clicked element is a button and not the container itself
-            if (target.classList.contains('calc-btn')) {
-                const value = target.dataset.value;
-                const action = target.dataset.action;
-
-                console.log(`[Calculator Button Click] Value: ${value}, Action: ${action}`);
-
-                if (value) {
-                    if (resultDisplayed) {
-                        currentCalculatorInput = value;
-                        resultDisplayed = false;
-                    } else {
-                        currentCalculatorInput += value;
-                    }
-                } else if (action) {
-                    if (action === 'clear') {
-                        resetCalculator();
-                    } else if (action === 'calculate') {
-                        calculateResult();
-                        resultDisplayed = true;
-                    } else if (action === 'percentage') {
-                        if (currentCalculatorInput !== '') {
-                            currentCalculatorInput = (parseFloat(currentCalculatorInput) / 100).toString();
-                        } else if (previousCalculatorInput !== '') {
-                            previousCalculatorInput = (parseFloat(previousCalculatorInput) / 100).toString();
-                        }
-                    } else { // Operator
-                        if (currentCalculatorInput !== '') {
-                            if (previousCalculatorInput !== '') {
-                                calculateResult();
-                            }
-                            operator = action;
-                            previousCalculatorInput = calculatorResult.textContent;
-                            currentCalculatorInput = '';
-                        } else if (previousCalculatorInput !== '' && !operator) {
-                            operator = action;
-                        } else if (previousCalculatorInput !== '' && operator) {
-                            operator = action; 
-                        }
-                    }
-                }
-                updateCalculatorDisplay();
-            }
-        });
-    } else {
-        console.warn("[Calculator] calculatorButtons element not found.");
-    }
-
 
     if (dividendCalcBtn) {
         console.log("[Sidebar Button Debug] Dividend Calc Button element found.");
