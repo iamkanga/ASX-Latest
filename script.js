@@ -1,5 +1,5 @@
-// File Version: v179
-// Last Updated: 2025-07-11 (Focused on fixing Watchlist Selection for New Shares and Add New Watchlist save functionality)
+// File Version: v178
+// Last Updated: 2025-07-11 (Fixed standard calculator button responsiveness; re-checked comments section add/display)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -631,7 +631,7 @@ function showShareDetails() {
             } else if (change < 0) {
                 priceChangeSpan.textContent = `(-$${Math.abs(change).toFixed(2)})`;
                 priceChangeSpan.classList.add('negative');
-                priceChangeSpan.textContent = priceChangeSpan.textContent.replace('(-', ' (-');
+                priceChangeSpan.textContent = priceChangeSpan.textContent.replace('(-', ' (-'); 
             } else {
                 priceChangeSpan.textContent = `($0.00)`;
                 priceChangeSpan.classList.add('neutral');
@@ -1017,7 +1017,7 @@ function addShareToTable(share) {
             } else if (change < 0) {
                 priceChangeSpan.textContent = `(-$${Math.abs(change).toFixed(2)})`;
                 priceChangeSpan.classList.add('negative');
-                priceChangeSpan.textContent = priceChangeSpan.textContent.replace('(-', ' (-'); // Add space for readability
+                priceChangeSpan.textContent = priceChangeSpan.textContent.replace('(-', ' (-'); 
             } else {
                 priceChangeSpan.textContent = `($0.00)`;
                 priceChangeSpan.classList.add('neutral');
@@ -1110,7 +1110,7 @@ function addShareToMobileCards(share) {
                 livePriceHtml += ` <span class="price-change positive">(+$${change.toFixed(2)})</span></p>`;
             } else if (change < 0) {
                 livePriceHtml += ` <span class="price-change negative">(-$${Math.abs(change).toFixed(2)})</span></p>`;
-                livePriceHtml = livePriceHtml.replace('(-', ' (-'); // Add space for readability
+                livePriceHtml = livePriceHtml.replace('(-', ' (-'); 
             } else {
                 livePriceHtml += ` <span class="price-change neutral">($0.00)</span></p>`;
             }
@@ -1366,12 +1366,11 @@ function updateCalculatorDisplay() {
     console.log(`[Calculator Display] Input: "${calculatorInput.textContent}", Result: "${calculatorResult.textContent}"`); 
 }
 
-// Moved getOperatorSymbol to global scope for accessibility
 function getOperatorSymbol(op) {
     switch (op) {
         case 'add': return '+'; case 'subtract': return '-';
         case 'multiply': return '×'; case 'divide': return '÷';
-        case 'percentage': return '%'; // Added percentage symbol
+        case 'percentage': return '%'; 
         default: return '';
     }
 }
@@ -2409,7 +2408,7 @@ async function initializeAppLogic() {
                 closeModals(); 
                 deselectCurrentShare(); 
             } catch (error) {
-                console.error("[Firestore] Error deleting share from details modal:", error);
+                console.error("[Firestore] Error deleting share:", error);
                 showCustomAlert("Error deleting share: " + error.message);
             }
         });
