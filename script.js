@@ -1,5 +1,5 @@
-// File Version: v172
-// Last Updated: 2025-07-11 (Improved edit modal data population; fixed comments section add/display; added default empty comment for new shares; added calculator display debug)
+// File Version: v173
+// Last Updated: 2025-07-11 (Enhanced edit modal data population debug; refined comments section add/display debug; improved watchlist selection debug; added calculator debug; refined theme logic and debug)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -439,7 +439,7 @@ function clearForm() {
     });
     if (commentsFormContainer) {
         commentsFormContainer.innerHTML = '';
-        // Issue 4: Always add one empty comment section when clearing form for a new share
+        // Issue 3: Always add one empty comment section when clearing form for a new share
         addCommentSection(); 
     }
     selectedShareDocId = null;
@@ -473,10 +473,15 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
 
     formTitle.textContent = 'Edit Share';
     shareNameInput.value = shareToEdit.shareName || '';
+    console.log(`[showEditFormForSelectedShare] shareNameInput.value set to: ${shareNameInput.value}`);
     currentPriceInput.value = Number(shareToEdit.currentPrice) !== null && !isNaN(Number(shareToEdit.currentPrice)) ? Number(shareToEdit.currentPrice).toFixed(2) : '';
+    console.log(`[showEditFormForSelectedShare] currentPriceInput.value set to: ${currentPriceInput.value}`);
     targetPriceInput.value = Number(shareToEdit.targetPrice) !== null && !isNaN(Number(shareToEdit.targetPrice)) ? Number(shareToEdit.targetPrice).toFixed(2) : '';
+    console.log(`[showEditFormForSelectedShare] targetPriceInput.value set to: ${targetPriceInput.value}`);
     dividendAmountInput.value = Number(shareToEdit.dividendAmount) !== null && !isNaN(Number(shareToEdit.dividendAmount)) ? Number(shareToEdit.dividendAmount).toFixed(3) : '';
+    console.log(`[showEditFormForSelectedShare] dividendAmountInput.value set to: ${dividendAmountInput.value}`);
     frankingCreditsInput.value = Number(shareToEdit.frankingCredits) !== null && !isNaN(Number(shareToEdit.frankingCredits)) ? Number(shareToEdit.frankingCredits).toFixed(1) : '';
+    console.log(`[showEditFormForSelectedShare] frankingCreditsInput.value set to: ${frankingCreditsInput.value}`);
     
     if (commentsFormContainer) {
         commentsFormContainer.innerHTML = ''; // Clear existing comments sections
@@ -485,7 +490,7 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
             shareToEdit.comments.forEach(comment => addCommentSection(comment.title, comment.text));
         } else {
             console.log("[showEditFormForSelectedShare] No comments found for this share. Adding one empty comment section.");
-            // Issue 4: Add one empty comment section if no comments exist
+            // Issue 3: Add one empty comment section if no comments exist
             addCommentSection();
         }
     } else {
@@ -1404,6 +1409,7 @@ function updateCalculatorDisplay() {
 function calculateResult() {
     let prev = parseFloat(previousCalculatorInput);
     let current = parseFloat(currentCalculatorInput);
+    console.log(`[Calculator Calculation] Before: prev=${prev}, current=${current}, operator=${operator}`); // Debug log
     if (isNaN(prev) || isNaN(current)) return;
     let res;
     switch (operator) {
@@ -1417,6 +1423,7 @@ function calculateResult() {
         default: return;
     }
     if (typeof res === 'number' && !isNaN(res)) { res = parseFloat(res.toFixed(10)); }
+    console.log(`[Calculator Calculation] After: res=${res}`); // Debug log
     calculatorResult.textContent = res;
     previousCalculatorInput = res.toString();
     currentCalculatorInput = '';
@@ -1442,6 +1449,7 @@ async function applyTheme(themeName) {
     body.className = body.className.split(' ').filter(c => !c.endsWith('-theme') && !c.startsWith('theme-')).join(' ');
 
     currentActiveTheme = themeName;
+    console.log(`[Theme Debug] Applying theme: ${themeName}`);
 
     if (themeName === 'system-default') {
         body.removeAttribute('data-theme');
@@ -1489,16 +1497,18 @@ function updateThemeToggleAndSelector() {
         if (currentActiveTheme.startsWith('bold-') || currentActiveTheme.startsWith('subtle-')) {
             colorThemeSelect.value = currentActiveTheme;
         } else {
-            colorThemeSelect.value = 'none';
+            // Ensure 'none' is selected if it's a default light/dark/system theme
+            colorThemeSelect.value = 'none'; 
         }
         console.log(`[Theme UI] Color theme select updated to: ${colorThemeSelect.value}`);
     }
 
     // This logic is for the themeToggleBtn to visually reflect dark/light mode
     if (themeToggleBtn) {
-        const icon = themeToggleBtn.querySelector('i.fas.fa-palette');
+        const icon = themeToggleBtn.querySelector('i.fas'); // Select the icon element
         if (icon) {
-            icon.classList.remove('fa-sun', 'fa-moon', 'fa-palette');
+            // Remove all possible icon classes before adding the correct one
+            icon.classList.remove('fa-sun', 'fa-moon', 'fa-palette'); 
             if (document.body.classList.contains('dark-theme')) {
                 icon.classList.add('fa-sun'); // Show sun when in dark mode (to switch to light)
             } else {
@@ -1696,6 +1706,7 @@ async function fetchLivePrices() {
         renderWatchlist(); 
     } catch (error) {
         console.error("[Live Price] Error fetching live prices:", error);
+        console.warn("[Live Price] This is likely due to CORS policy or 404 (Not Found) from the Google Apps Script Web App. Please check its deployment and permissions.");
         // Optionally show a non-dismissing alert for persistent errors:
         // showCustomAlert("Error fetching live prices: " + error.message, 5000); 
     }
@@ -2396,21 +2407,20 @@ async function initializeAppLogic() {
                 });
             }
             
-            // Determine watchlistId for saving
+            // Determine watchlistId for saving - Issue 4
             let finalWatchlistId;
             if (selectWatchlistForShareModal && selectWatchlistForShareModal.style.display !== 'none' && confirmWatchlistSelectionBtn.dataset.selectedWatchlistId) {
                 // If the watchlist selection modal was used, use its selected ID
                 finalWatchlistId = confirmWatchlistSelectionBtn.dataset.selectedWatchlistId;
-                delete shareNameInput.dataset.targetWatchlistId; // Clear it after use
-                console.log(`[Save Share] Using targetWatchlistId from dataset: ${finalWatchlistId}`);
+                console.log(`[Save Share Debug] Using selected watchlist from modal: ${finalWatchlistId}`);
             } else if (watchlistSelect && watchlistSelect.value && watchlistSelect.value !== ALL_SHARES_ID) {
                 // Otherwise, use the currently selected watchlist from the main dropdown (if not "All Shares")
                 finalWatchlistId = watchlistSelect.value;
-                console.log(`[Save Share] Using selected watchlist from dropdown: ${finalWatchlistId}`);
+                console.log(`[Save Share Debug] Using selected watchlist from main dropdown: ${finalWatchlistId}`);
             } else {
                 // Fallback to the default watchlist if "All Shares" is selected or no other specific watchlist
                 finalWatchlistId = userWatchlists.length > 0 ? userWatchlists[0].id : getDefaultWatchlistId(currentUserId);
-                console.log(`[Save Share] Falling back to default watchlist: ${finalWatchlistId}`);
+                console.log(`[Save Share Debug] Falling back to default watchlist: ${finalWatchlistId}`);
             }
 
 
@@ -2426,7 +2436,8 @@ async function initializeAppLogic() {
                 lastPriceUpdateTime: new Date().toISOString()
             };
 
-            // ... (rest of the save share logic) ...
+            console.log("[Save Share Debug] Share data to be saved:", shareData);
+
             if (selectedShareDocId) {
                 const existingShare = allSharesData.find(s => s.id === selectedShareDocId); // Corrected to use s.id
                 // Update lastFetchedPrice and previousFetchedPrice only if currentPrice is valid and changed
@@ -2488,10 +2499,11 @@ async function initializeAppLogic() {
         });
     }
 
-    // Edit Share Button from Share Details Modal
+    // Edit Share Button from Share Details Modal - Issue 2
     if (editShareFromDetailBtn) {
         editShareFromDetailBtn.addEventListener('click', () => {
             console.log("[UI] Edit Share button (details modal) clicked.");
+            console.log(`[Edit Modal Debug] selectedShareDocId before showEditForm: ${selectedShareDocId}`);
             // Ensure selectedShareDocId is correctly set from the details modal context
             if (selectedShareDocId) {
                 showEditFormForSelectedShare(selectedShareDocId); // Pass the currently selected ID
@@ -2598,7 +2610,7 @@ async function initializeAppLogic() {
         console.warn("[Auth Debug] Close Menu Button element (closeMenuBtn) NOT found on DOMContentLoaded.");
     }
 
-    // Add listeners for other sidebar buttons to diagnose Issue 9
+    // Add listeners for other sidebar buttons to diagnose Issue 5
     // Standard Calculator
     if (standardCalcBtn) {
         console.log("[Sidebar Button Debug] Standard Calc Button element found.");
@@ -2665,11 +2677,14 @@ async function initializeAppLogic() {
         console.log("[Sidebar Button Debug] Theme Toggle Button element found.");
         themeToggleBtn.addEventListener('click', () => {
             console.log("[Sidebar Button Click] Theme Toggle button clicked.");
-            // Toggle between light and dark themes
+            // Issue 1c: Toggle between light and dark themes, and update selector to 'none'
             if (document.body.classList.contains('dark-theme')) {
                 applyTheme('light');
             } else {
                 applyTheme('dark');
+            }
+            if (colorThemeSelect) { // Ensure selector reflects the toggle
+                colorThemeSelect.value = 'none';
             }
         });
     } else {
@@ -2691,12 +2706,29 @@ async function initializeAppLogic() {
         console.warn("[Sidebar Button Debug] Color Theme Select element (colorThemeSelect) NOT found.");
     }
 
-    // Revert to Default Theme Button
+    // Revert to Default Theme Button - Issue 1d
     if (revertToDefaultThemeBtn) {
         console.log("[Sidebar Button Debug] Revert to Default Theme Button element found.");
+        let isDefaultLight = true; // Track internal state for light/dark toggle after default
         revertToDefaultThemeBtn.addEventListener('click', () => {
             console.log("[Sidebar Button Click] Revert to Default Theme button clicked.");
-            applyTheme('system-default');
+            if (currentActiveTheme === 'system-default') {
+                // If already system-default, toggle between light/dark
+                if (isDefaultLight) {
+                    applyTheme('dark');
+                    isDefaultLight = false;
+                } else {
+                    applyTheme('light');
+                    isDefaultLight = true;
+                }
+            } else {
+                // If not system-default, revert to system-default first
+                applyTheme('system-default');
+                isDefaultLight = window.matchMedia('(prefers-color-scheme: dark)').matches ? false : true; // Reset based on system preference
+            }
+            if (colorThemeSelect) { // Ensure selector reflects the toggle
+                colorThemeSelect.value = 'none';
+            }
         });
     } else {
         console.warn("[Sidebar Button Debug] Revert to Default Theme Button element (revertToDefaultThemeBtn) NOT found.");
@@ -2715,19 +2747,21 @@ async function initializeAppLogic() {
         console.warn("[Sidebar Button Debug] Refresh Live Prices Button element (refreshLivePricesBtn) NOT found.");
     }
 
-    // Watchlist Selection Modal Buttons
+    // Watchlist Selection Modal Buttons - Issue 4
     if (confirmWatchlistSelectionBtn) {
         confirmWatchlistSelectionBtn.addEventListener('click', () => {
             console.log("[Watchlist Selection] Confirm button clicked.");
             const selectedWatchlistId = confirmWatchlistSelectionBtn.dataset.selectedWatchlistId;
+            console.log(`[Watchlist Selection Debug] ID selected in modal: ${selectedWatchlistId}`);
             if (selectedWatchlistId) {
-                console.log(`[Watchlist Selection] Confirmed selection: ${selectedWatchlistId}`);
+                // Store the selected watchlist ID temporarily for when the share is saved
+                // This will be picked up by the saveShareBtn logic
+                sessionStorage.setItem('tempNewShareWatchlistId', selectedWatchlistId);
+                
+                console.log(`[Watchlist Selection] Confirmed selection: ${selectedWatchlistId}. Stored in sessionStorage.`);
                 closeModals();
-                // When selecting a watchlist for a new share, we need to ensure the share form opens
-                // and knows which watchlist to assign the new share to.
-                // The handleNewShareCreation() function is responsible for this.
-                // For now, if this modal was used, it implies we're adding a new share to a specific watchlist.
-                // We'll clear the form and open it, the save logic will pick up the last selected watchlist.
+                
+                // Re-open the share form so the user can add details
                 clearForm();
                 formTitle.textContent = 'Add New Share';
                 if (deleteShareBtn) { deleteShareBtn.classList.add('hidden'); }
@@ -2742,6 +2776,7 @@ async function initializeAppLogic() {
     if (cancelWatchlistSelectionBtn) {
         cancelWatchlistSelectionBtn.addEventListener('click', () => {
             console.log("[Watchlist Selection] Cancel button clicked.");
+            sessionStorage.removeItem('tempNewShareWatchlistId'); // Clear temp storage on cancel
             closeModals();
         });
     }
@@ -2776,7 +2811,7 @@ document.addEventListener('DOMContentLoaded', function() {
     window._appLogicInitializedOnce = true;
 
 
-    console.log("script.js (v172) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v173) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
