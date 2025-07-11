@@ -1,5 +1,5 @@
-/* File Version: v100 */
-/* Last Updated: 2025-07-11 (Fixed header alignment, removed comments from main table/cards, added watchlist selection modal styling, fixed scroll-to-top button visibility) */
+/* File Version: v102 */
+/* Last Updated: 2025-07-11 (Fixed watchlist/sort dropdown width on desktop; improved calculator button styling; refined modal comment title display; adjusted watchlist text formatting) */
 
 :root {
     /* Light Theme (Default) */
@@ -58,6 +58,13 @@
     --calc-num-btn-bg: #f0f0f0; /* Default: Calculator number button background */
     --calc-num-btn-text: #333; /* Default: Calculator number button text */
     --calc-num-btn-hover-bg: #e0e0e0; /* Default: Calculator number button hover */
+    --calc-operator-btn-bg: #ff9500; /* Calculator operator button background */
+    --calc-operator-btn-text: #fff; /* Calculator operator button text */
+    --calc-operator-btn-hover-bg: #e08000; /* Calculator operator button hover */
+    --calc-clear-btn-bg: #d4d4d2; /* Calculator clear button background */
+    --calc-clear-btn-text: #333; /* Calculator clear button text */
+    --calc-clear-btn-hover-bg: #c0c0c0; /* Calculator clear button hover */
+
 
     /* Live Price Colors */
     --price-up-color: #28a745; /* Green for price increase */
@@ -121,6 +128,12 @@ body.dark-theme {
     --calc-num-btn-bg: #5a758e; /* Dark: Calculator number button background */
     --calc-num-btn-text: #ecf0f1; /* Dark: Calculator number button text */
     --calc-num-btn-hover-bg: #6c8095; /* Dark: Calculator number button hover */
+    --calc-operator-btn-bg: #ff9500; /* Calculator operator button background */
+    --calc-operator-btn-text: #fff; /* Calculator operator button text */
+    --calc-operator-btn-hover-bg: #e08000; /* Calculator operator button hover */
+    --calc-clear-btn-bg: #7f8c8d; /* Dark: Calculator clear button background */
+    --calc-clear-btn-text: #ecf0f1; /* Dark: Calculator clear button text */
+    --calc-clear-btn-hover-bg: #616e70; /* Dark: Calculator clear button hover */
 
     /* Live Price Colors */
     --price-up-color: #2ecc71; /* Green for price increase */
@@ -162,6 +175,12 @@ body.theme-bold-1 { /* Ocean Blue */
     --calc-num-btn-bg: #007f8c;
     --calc-num-btn-text: #e0f2f7;
     --calc-num-btn-hover-bg: #0096c7;
+    --calc-operator-btn-bg: #ff9500;
+    --calc-operator-btn-text: #fff;
+    --calc-operator-btn-hover-bg: #e08000;
+    --calc-clear-btn-bg: #005f73;
+    --calc-clear-btn-text: #e0f2f7;
+    --calc-clear-btn-hover-bg: #008793;
     /* Force all text to white for bold themes */
     color: #fff !important;
     --text-color: #fff;
@@ -215,6 +234,12 @@ body.theme-bold-2 { /* Forest Green */
     --calc-num-btn-bg: #5a855a;
     --calc-num-btn-text: #e6ffe6;
     --calc-num-btn-hover-bg: #6a9955;
+    --calc-operator-btn-bg: #ff9500;
+    --calc-operator-btn-text: #fff;
+    --calc-operator-btn-hover-bg: #e08000;
+    --calc-clear-btn-bg: #386641;
+    --calc-clear-btn-text: #e6ffe6;
+    --calc-clear-btn-hover-bg: #6a9955;
     /* Force all text to white for bold themes */
     color: #fff !important;
     --text-color: #fff;
@@ -268,6 +293,12 @@ body.theme-bold-3 { /* Sunset Orange */
     --calc-num-btn-bg: #f7b98d;
     --calc-num-btn-text: #3b2a20;
     --calc-num-btn-hover-bg: #f4a261;
+    --calc-operator-btn-bg: #ffc300;
+    --calc-operator-btn-text: #fff;
+    --calc-operator-btn-hover-bg: #e0ac00;
+    --calc-clear-btn-bg: #e63946;
+    --calc-clear-btn-text: #fff;
+    --calc-clear-btn-hover-bg: #c02d38;
     /* Force all text to white for bold themes */
     color: #fff !important;
     --text-color: #fff;
@@ -321,6 +352,12 @@ body.theme-bold-4 { /* Royal Purple */
     --calc-num-btn-bg: #9d4edd;
     --calc-num-btn-text: #f0e6ff;
     --calc-num-btn-hover-bg: #c77dff;
+    --calc-operator-btn-bg: #ff9500;
+    --calc-operator-btn-text: #fff;
+    --calc-operator-btn-hover-bg: #e08000;
+    --calc-clear-btn-bg: #5a189a;
+    --calc-clear-btn-text: #f0e6ff;
+    --calc-clear-btn-hover-bg: #9d4edd;
     /* Force all text to white for bold themes */
     color: #fff !important;
     --text-color: #fff;
@@ -374,6 +411,12 @@ body.theme-bold-5 { /* Deep Red */
     --calc-num-btn-bg: #c0392b;
     --calc-num-btn-text: #ffe6e6;
     --calc-num-btn-hover-bg: #e74c3c;
+    --calc-operator-btn-bg: #ff9500;
+    --calc-operator-btn-text: #fff;
+    --calc-operator-btn-hover-bg: #e08000;
+    --calc-clear-btn-bg: #8b0000;
+    --calc-clear-btn-text: #ffe6e6;
+    --calc-clear-btn-hover-bg: #c0392b;
     /* Force all text to white for bold themes */
     color: #fff !important;
     --text-color: #fff;
@@ -427,6 +470,12 @@ body.theme-bold-6 { /* Gold */
     --calc-num-btn-bg: #ffd700;
     --calc-num-btn-text: #3b301a;
     --calc-num-btn-hover-bg: #ffeb3b;
+    --calc-operator-btn-bg: #ff9500;
+    --calc-operator-btn-text: #fff;
+    --calc-operator-btn-hover-bg: #e08000;
+    --calc-clear-btn-bg: #b8860b;
+    --calc-clear-btn-text: #fff8e0;
+    --calc-clear-btn-hover-bg: #ffd700;
     /* Force all text to white for bold themes */
     color: #fff !important;
     --text-color: #fff;
@@ -480,6 +529,12 @@ body.theme-bold-7 { /* Emerald */
     --calc-num-btn-bg: #3cb371;
     --calc-num-btn-text: #e6fff0;
     --calc-num-btn-hover-bg: #66bb6a;
+    --calc-operator-btn-bg: #ff9500;
+    --calc-operator-btn-text: #fff;
+    --calc-operator-btn-hover-bg: #e08000;
+    --calc-clear-btn-bg: #006400;
+    --calc-clear-btn-text: #e6fff0;
+    --calc-clear-btn-hover-bg: #3cb371;
     /* Force all text to white for bold themes */
     color: #fff !important;
     --text-color: #fff;
@@ -532,6 +587,12 @@ body.theme-subtle-8 { /* Peach */
     --calc-num-btn-bg: #f2ebe6;
     --calc-num-btn-text: #6a4a4a;
     --calc-num-btn-hover-bg: #eeb8a2;
+    --calc-operator-btn-bg: #ff9500;
+    --calc-operator-btn-text: #fff;
+    --calc-operator-btn-hover-bg: #e08000;
+    --calc-clear-btn-bg: #d4d4d2;
+    --calc-clear-btn-text: #333;
+    --calc-clear-btn-hover-bg: #c0c0c0;
     /* --- Google Auth Button Specific Variables (overridden for subtle themes) --- */
     --google-auth-btn-bg: #FFFFFF; /* White background */
     --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
@@ -575,6 +636,12 @@ body.theme-subtle-9 { /* Teal */
     --calc-num-btn-bg: #e6f2eb;
     --calc-num-btn-text: #4a6a6a;
     --calc-num-btn-hover-bg: #b8eec6;
+    --calc-operator-btn-bg: #ff9500;
+    --calc-operator-btn-text: #fff;
+    --calc-operator-btn-hover-bg: #e08000;
+    --calc-clear-btn-bg: #d4d4d2;
+    --calc-clear-btn-text: #333;
+    --calc-clear-btn-hover-bg: #c0c0c0;
     /* --- Google Auth Button Specific Variables (overridden for subtle themes) --- */
     --google-auth-btn-bg: #FFFFFF; /* White background */
     --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
@@ -618,6 +685,12 @@ body.theme-subtle-10 { /* Subtle Stone */
     --calc-num-btn-bg: #f0f0f0;
     --calc-num-btn-text: #5a5a5a;
     --calc-num-btn-hover-bg: #c0c0c0;
+    --calc-operator-btn-bg: #ff9500;
+    --calc-operator-btn-text: #fff;
+    --calc-operator-btn-hover-bg: #e08000;
+    --calc-clear-btn-bg: #d4d4d2;
+    --calc-clear-btn-text: #333;
+    --calc-clear-btn-hover-bg: #c0c0c0;
     /* --- Google Auth Button Specific Variables (overridden for subtle themes) --- */
     --google-auth-btn-bg: #FFFFFF; /* White background */
     --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
@@ -918,7 +991,7 @@ h1#mainTitle {
 .watchlist-controls-row {
     display: flex;
     flex-wrap: wrap; 
-    justify-content: center; 
+    justify-content: center; /* Center items horizontally */
     align-items: center;
     gap: 15px 25px; 
     padding: 10px 0;
@@ -935,9 +1008,9 @@ h1#mainTitle {
     display: flex;
     align-items: center;
     gap: 8px;
-    /* On desktop, they will share space evenly */
-    flex-basis: calc(50% - 12.5px); /* Two items, 25px gap */
-    max-width: calc(50% - 12.5px);
+    flex-basis: auto; /* Allow content to dictate width */
+    max-width: 250px; /* Max width for each dropdown on desktop */
+    flex-grow: 0; /* Prevent them from growing to fill space */
 }
 
 .dropdown-large {
@@ -1087,6 +1160,36 @@ table td.live-price-cell {
     color: var(--price-neutral-color);
 }
 
+/* Issue 10: Watchlist Text Formatting */
+/* All user input and numerical input should be in bold */
+table tbody td:nth-child(1) { /* Share Code */
+    font-weight: 700;
+}
+table tbody td:nth-child(2) { /* Live Price */
+    font-weight: 700; /* Already bold from .live-price-cell */
+}
+table tbody td:nth-child(3) { /* Entered Price */
+    font-weight: 700;
+}
+table tbody td:nth-child(4) { /* Target Price */
+    font-weight: 700;
+}
+.dividend-yield-cell-content .value { /* Dividend amounts and yields */
+    font-weight: 700;
+}
+/* All other text should be normal */
+table tbody td {
+    font-weight: 400; /* Reset to normal for non-specified cells */
+}
+table tbody td span { /* Ensure spans within cells inherit or are normal */
+    font-weight: 400;
+}
+/* Override for specific elements that should be bold */
+table tbody tr.selected,
+.mobile-card.selected {
+    font-weight: 600; /* Keep selected state bold */
+}
+
 
 .mobile-share-cards {
     display: none; 
@@ -1125,17 +1228,25 @@ table td.live-price-cell {
     margin-bottom: 10px;
     color: var(--text-color);
     font-size: 1.2em;
+    font-weight: 700; /* Share name in mobile card should be bold */
 }
 
 .mobile-card p {
     margin: 5px 0;
     font-size: 0.9em;
     color: var(--text-color);
+    font-weight: 400; /* Default text normal */
 }
 
 .mobile-card p strong {
     color: var(--label-color);
+    font-weight: 600; /* Labels should be bold */
 }
+/* Specific numerical values in mobile cards should be bold */
+.mobile-card p:not(:first-child) span { /* Target, Dividend, Yield values */
+    font-weight: 700;
+}
+
 
 .fixed-footer {
     position: sticky;
@@ -1439,9 +1550,13 @@ table td.live-price-cell {
     flex-grow: 1;
     margin-bottom: 0;
     margin-right: 10px;
-    font-weight: 600;
+    font-weight: 700; /* Make comment title bold */
     width: auto; 
     min-width: 0;
+}
+
+.comment-section .comment-text-input {
+    font-weight: 400; /* Ensure comment text is normal */
 }
 
 .comment-section .comment-delete-btn {
@@ -1563,6 +1678,7 @@ table td.live-price-cell {
 .modal-comment-item p {
     margin: 0;
     line-height: 1.5;
+    font-weight: 400; /* Ensure comment text is normal */
 }
 
 .modal-comment-item strong {
@@ -1570,6 +1686,7 @@ table td.live-price-cell {
     font-size: 0.95em;
     display: block;
     margin-bottom: 5px;
+    font-weight: 700; /* Make comment title bold in details modal */
 }
 
 .external-links-section {
@@ -1690,6 +1807,98 @@ table td.live-price-cell {
     background-color: var(--button-hover-bg);
     color: var(--button-text);
 }
+
+/* Calculator specific styles - Issue 6a */
+.calculator-display {
+    background-color: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    text-align: right;
+    font-size: 2em;
+    min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+}
+
+.calculator-input {
+    font-size: 0.6em;
+    color: var(--ghosted-text);
+    min-height: 1.2em;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+.calculator-result {
+    font-size: 1em;
+    font-weight: 700;
+    color: var(--text-color);
+    min-height: 1.2em;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+.calculator-buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+
+.calc-btn {
+    background-color: var(--calc-num-btn-bg);
+    color: var(--calc-num-btn-text);
+    border: none;
+    border-radius: 50%; /* Make buttons round */
+    padding: 20px; /* Adjust padding for size */
+    font-size: 1.5em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    aspect-ratio: 1 / 1; /* Keep buttons square/round */
+}
+
+.calc-btn:hover {
+    background-color: var(--calc-num-btn-hover-bg);
+}
+
+.calc-btn.operator {
+    background-color: var(--calc-operator-btn-bg);
+    color: var(--calc-operator-btn-text);
+}
+
+.calc-btn.operator:hover {
+    background-color: var(--calc-operator-btn-hover-bg);
+}
+
+.calc-btn.clear {
+    background-color: var(--calc-clear-btn-bg);
+    color: var(--calc-clear-btn-text);
+}
+
+.calc-btn.clear:hover {
+    background-color: var(--calc-clear-btn-hover-bg);
+}
+
+.calc-btn.zero {
+    grid-column: span 2; /* Make zero button span two columns */
+    border-radius: 30px; /* Make it oval */
+}
+
+.calc-btn.equals {
+    background-color: var(--calc-operator-btn-bg); /* Same as operator for consistency */
+    color: var(--calc-operator-btn-text);
+}
+
+.calc-btn.equals:hover {
+    background-color: var(--calc-operator-btn-hover-bg);
+}
+
 
 /* Scroll-to-Top Button */
 #scrollToTopBtn {
