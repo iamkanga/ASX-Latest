@@ -1,5 +1,5 @@
-// File Version: v162
-// Last Updated: 2025-07-12 (Removed custom themes, fixed dividend calculator, reconstructed table header)
+// File Version: v163
+// Last Updated: 2025-07-12 (Fixed dividend calculator input references, improved table header rendering, initial share display, edit watchlist button)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -80,7 +80,7 @@ const modalLivePrice = document.getElementById('modalLivePrice'); // NEW
 const modalPriceChange = document.getElementById('modalPriceChange'); // NEW
 const modalTargetPrice = document.getElementById('modalTargetPrice');
 const modalDividendAmount = document.getElementById('modalDividendAmount');
-const modalFrankingCredits = document.getElementById('frankingCredits');
+const modalFrankingCredits = document.getElementById('modalFrankingCredits');
 const modalCommentsContainer = document.getElementById('modalCommentsContainer');
 const modalUnfrankedYieldSpan = document.getElementById('modalUnfrankedYield');
 const modalFrankedYieldSpan = document.getElementById('modalFrankedYield');
@@ -92,14 +92,15 @@ const modalFoolLink = document.getElementById('modalFoolLink');
 const modalCommSecLink = document.getElementById('modalCommSecLink');
 const commSecLoginMessage = document.getElementById('commSecLoginMessage');
 const dividendCalculatorModal = document.getElementById('dividendCalculatorModal');
-const calcCloseButton = document.querySelector('.calc-close-button');
-const calcCurrentPriceInput = document.getElementById('calcCurrentPrice');
-const calcDividendAmountInput = document.getElementById('calcDividendAmount');
-const calcFrankingCreditsInput = document.getElementById('calcFrankingCredits');
-const calcUnfrankedYieldSpan = document.getElementById('calcUnfrankedYield');
-const calcFrankedYieldSpan = document.getElementById('calcFrankedYield');
-const investmentValueSelect = document.getElementById('investmentValueSelect');
-const calcEstimatedDividend = document.getElementById('calcEstimatedDividend');
+// These references for calculator inputs are now dynamically assigned in the click listener
+let calcCurrentPriceInput;
+let calcDividendAmountInput;
+let calcFrankingCreditsInput;
+let investmentValueSelect;
+let calcUnfrankedYieldSpan;
+let calcFrankedYieldSpan;
+let calcEstimatedDividend;
+
 const sortSelect = document.getElementById('sortSelect');
 const customDialogModal = document.getElementById('customDialogModal');
 const customDialogMessage = document.getElementById('customDialogMessage');
@@ -107,9 +108,6 @@ const customDialogConfirmBtn = document.getElementById('customDialogConfirmBtn')
 const customDialogCancelBtn = document.getElementById('customDialogCancelBtn'); // Now a span
 const watchlistSelect = document.getElementById('watchlistSelect');
 const themeToggleBtn = document.getElementById('themeToggleBtn');
-// Removed colorThemeSelect and revertToDefaultThemeBtn as they are no longer in HTML
-// const colorThemeSelect = document.getElementById('colorThemeSelect');
-// const revertToDefaultThemeBtn = document.getElementById('revertToDefaultThemeBtn');
 const scrollToTopBtn = document.getElementById('scrollToTopBtn');
 const hamburgerBtn = document.getElementById('hamburgerBtn');
 const appSidebar = document.getElementById('appSidebar');
@@ -235,10 +233,6 @@ function updateMainButtonsState(enable) {
     // Logout button is now a span, handle its disabled state with setIconDisabled
     if (logoutBtn) setIconDisabled(logoutBtn, !enable); 
     if (themeToggleBtn) themeToggleBtn.disabled = !enable;
-    // Removed colorThemeSelect.disabled
-    // if (colorThemeSelect) colorThemeSelect.disabled = !enable;
-    // Removed revertToDefaultThemeBtn.disabled
-    // if (revertToDefaultThemeBtn) revertToDefaultThemeBtn.disabled = !enable;
     if (sortSelect) sortSelect.disabled = !enable; // Ensure sort select is disabled if not enabled
     if (watchlistSelect) watchlistSelect.disabled = !enable; // Ensure watchlist select is disabled if not enabled
     if (refreshLivePricesBtn) refreshLivePricesBtn.disabled = !enable; // NEW: Disable refresh button if not enabled
@@ -359,8 +353,6 @@ function clearForm() {
     });
     if (commentsFormContainer) {
         commentsFormContainer.innerHTML = '';
-        // Do not add a default comment section here, user will click "+" to add
-        // addCommentSection(); 
     }
     selectedShareDocId = null;
     originalShareData = null; // Reset original data when clearing form for new share
@@ -1426,6 +1418,21 @@ async function loadUserWatchlistsAndSettings() {
             // If no saved theme in Firestore, default to system preference
             applyTheme('system-default');
         }
+
+        // Fix for "Edit Current Watchlist" button being ghosted out
+        // Ensure it's enabled if there are watchlists.
+        if (editWatchlistBtn) {
+            setIconDisabled(editWatchlistBtn, userWatchlists.length === 0);
+            console.log(`[Edit Watchlist Button] Enabled state set to: ${userWatchlists.length > 0}`);
+        }
+
+
+        const migratedSomething = await migrateOldSharesToWatchlist();
+        if (!migratedSomething) {
+            console.log("[Watchlist] No old shares to migrate/update, directly setting up shares listener for current watchlist.");
+            await loadShares(); // Now sets up onSnapshot listener
+        }
+
     } catch (error) {
         console.error("[User Settings] Error loading user watchlists and settings:", error);
         showCustomAlert("Error loading user settings: " + error.message);
@@ -2494,6 +2501,15 @@ async function initializeAppLogic() {
     if (dividendCalcBtn) {
         dividendCalcBtn.addEventListener('click', () => {
             console.log("[UI] Dividend button clicked. Attempting to open modal.");
+            // Assign references to calculator input elements here, when the modal is opened
+            calcCurrentPriceInput = document.getElementById('calcCurrentPrice');
+            calcDividendAmountInput = document.getElementById('calcDividendAmount');
+            calcFrankingCreditsInput = document.getElementById('frankingCredits');
+            investmentValueSelect = document.getElementById('investmentValueSelect');
+            calcUnfrankedYieldSpan = document.getElementById('calcUnfrankedYield');
+            calcFrankedYieldSpan = document.getElementById('calcFrankedYield');
+            calcEstimatedDividend = document.getElementById('calcEstimatedDividend');
+
             // Ensure elements exist before trying to set their value
             if (calcDividendAmountInput) calcDividendAmountInput.value = '';
             if (calcCurrentPriceInput) calcCurrentPriceInput.value = '';
@@ -2501,7 +2517,20 @@ async function initializeAppLogic() {
             if (calcUnfrankedYieldSpan) calcUnfrankedYieldSpan.textContent = '-';
             if (calcFrankedYieldSpan) calcFrankedYieldSpan.textContent = '-';
             if (calcEstimatedDividend) calcEstimatedDividend.textContent = '-';
-            if (investmentValueSelect) investmentValueSelect.value = '10000';
+            if (investmentValueSelect) investmentValueSelect.value = '10000'; // Default value
+
+            // Add event listeners for dividend calculator inputs if not already added
+            // This ensures listeners are attached only once per element
+            if (!dividendCalcBtn._listenersAdded) { // Use a flag to prevent multiple attachments
+                [calcCurrentPriceInput, calcDividendAmountInput, calcFrankingCreditsInput, investmentValueSelect].forEach(input => {
+                    if (input) {
+                        input.addEventListener('input', updateDividendCalculations);
+                        input.addEventListener('change', updateDividendCalculations);
+                    }
+                });
+                dividendCalcBtn._listenersAdded = true; // Set flag
+            }
+            
             showModal(dividendCalculatorModal);
             if (calcCurrentPriceInput) calcCurrentPriceInput.focus(); 
             console.log("[UI] Dividend Calculator modal opened.");
@@ -2509,19 +2538,20 @@ async function initializeAppLogic() {
         });
     }
 
-    // Dividend Calculator Input Listeners
-    [calcDividendAmountInput, calcCurrentPriceInput, calcFrankingCreditsInput, investmentValueSelect].forEach(input => {
-        if (input) {
-            input.addEventListener('input', updateDividendCalculations);
-            input.addEventListener('change', updateDividendCalculations);
-        }
-    });
+    // Dividend Calculator Input Listeners - Moved inside dividendCalcBtn click listener for dynamic assignment
+    // [calcDividendAmountInput, calcCurrentPriceInput, calcFrankingCreditsInput, investmentValueSelect].forEach(input => {
+    //     if (input) {
+    //         input.addEventListener('input', updateDividendCalculations);
+    //         input.addEventListener('change', updateDividendCalculations);
+    //     }
+    // });
 
     function updateDividendCalculations() {
-        const currentPrice = parseFloat(calcCurrentPriceInput.value);
-        const dividendAmount = parseFloat(calcDividendAmountInput.value);
-        const frankingCredits = parseFloat(calcFrankingCreditsInput.value);
-        const investmentValue = parseFloat(investmentValueSelect.value);
+        // Ensure elements are available before reading their values
+        const currentPrice = parseFloat(calcCurrentPriceInput ? calcCurrentPriceInput.value : '');
+        const dividendAmount = parseFloat(calcDividendAmountInput ? calcDividendAmountInput.value : '');
+        const frankingCredits = parseFloat(calcFrankingCreditsInput ? calcFrankingCreditsInput.value : '');
+        const investmentValue = parseFloat(investmentValueSelect ? investmentValueSelect.value : '');
         
         const unfrankedYield = calculateUnfrankedYield(dividendAmount, currentPrice);
         const frankedYield = calculateFrankedYield(dividendAmount, currentPrice, frankingCredits);
@@ -2545,10 +2575,6 @@ async function initializeAppLogic() {
             console.log(`[Theme] Toggled theme to: ${document.body.classList.contains('dark-theme') ? 'dark' : 'light'}`);
         });
     }
-
-    // Removed Color Theme Select Dropdown and Revert to Default Theme Button logic
-    // if (colorThemeSelect) { ... }
-    // if (revertToDefaultThemeBtn) { ... }
 
     // System Dark Mode Preference Listener
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
@@ -2676,7 +2702,7 @@ async function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v162) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v163) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
@@ -2698,8 +2724,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.log("[AuthState] Main title set to My Share Watchlist.");
                 }
                 updateMainButtonsState(true);
-                await loadUserWatchlistsAndSettings(); // This will set currentSelectedWatchlistIds and then call loadShares()
+                // Moved startLivePriceUpdates to before loadUserWatchlistsAndSettings
                 startLivePriceUpdates(); // Start fetching live prices when user signs in
+                await loadUserWatchlistsAndSettings(); // This will set currentSelectedWatchlistIds and then call loadShares()
             } else {
                 currentUserId = null;
                 updateAuthButtonText(false); // Changed to false for "Google Sign In" text
