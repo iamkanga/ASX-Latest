@@ -1,4 +1,4 @@
-/* File Version: v96 */
+/* File Version: v97 */
 /* Last Updated: 2025-07-10 (Fixed header alignment, removed comments from main table/cards, added watchlist selection modal styling) */
 
 :root {
@@ -260,7 +260,7 @@ body.theme-bold-3 { /* Sunset Orange */
     --placeholder-text: #ffe5b4;
     --ghosted-text: #ffd790;
     --danger-button-bg: #e63946;
-    --danger-button-hover-bg: #c02d38;
+    --danger-button-hover-bg: #c0392b;
     --icon-action-color: #ffc300;
     --icon-action-hover-color: #e0ac00;
     --icon-danger-color: #e63946;

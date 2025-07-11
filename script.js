@@ -679,7 +679,7 @@ function showShareDetails() {
         setIconDisabled(modalFoolLink, false); // Explicitly enable
     } else if (modalFoolLink) {
         modalFoolLink.style.display = 'none';
-        setIconDisabled(modalFoolLink, true); // Explicitly disable if no shareName
+        setIconDisabled(modalFoolLink, true);
     }
 
     if (modalCommSecLink && share.shareName) {
@@ -690,7 +690,7 @@ function showShareDetails() {
         setIconDisabled(modalCommSecLink, false); // Explicitly enable
     } else if (modalCommSecLink) {
         modalCommSecLink.style.display = 'none';
-        setIconDisabled(modalCommSecLink, true); // Explicitly disable if no shareName
+        setIconDisabled(modalCommSecLink, true);
     }
 
     if (commSecLoginMessage) {
@@ -861,7 +861,7 @@ function renderSortSelect() {
         { value: "shareName-asc", text: "Code (A-Z)" },
         { value: "shareName-desc", text: "Code (Z-A)" },
         { value: "dividendAmount-desc", text: "Dividend (High-Low)" },
-        { value: "dividendAmount-asc", text: "Dividend (Low-High)" }
+        { value="dividendAmount-asc", text: "Dividend (Low-High)" }
     ];
     options.forEach(opt => {
         const optionElement = document.createElement('option');
@@ -1557,7 +1557,7 @@ async function loadUserWatchlistsAndSettings() {
         } else {
             sortSelect.value = ''; 
             currentSortOrder = ''; // Ensure global variable is reset if no valid option
-            console.log("[Sort] No valid saved sort order or not logged in, defaulting to placeholder.");
+            console.log("[UI Update] Sort select rendered. Sort select disabled: ", sortSelect.disabled);
         }
         renderSortSelect(); // Re-render to ensure placeholder is correctly shown if no saved sort order
         
@@ -2157,7 +2157,7 @@ async function initializeAppLogic() {
         // Only hide context menu if the click is not inside the context menu itself,
         // and not on a selected share row/card (which might be opening the menu).
         if (contextMenuOpen && shareContextMenu && !shareContextMenu.contains(event.target)) {
-            // Check if the click was on a share row/card that might have just opened the menu
+            // Check if the click was on a share element that might have just opened the menu
             const isShareElement = event.target.closest('.share-list-section tr, .mobile-card');
             if (!isShareElement || isShareElement.dataset.docId !== currentContextMenuShareId) {
                 hideContextMenu();
