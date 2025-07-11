@@ -1181,40 +1181,41 @@ table td.live-price-cell {
     max-height: 90vh; 
 }
 
+/* MODIFIED: Modal Header with Icon for Alignment and Buttons */
 .modal-header-with-icon {
     display: flex;
-    justify-content: space-between;
+    justify-content: space-between; /* Space out title and button group */
     align-items: center;
     margin-bottom: 20px;
     position: relative;
     padding-bottom: 10px;
     border-bottom: 1px solid var(--border-color);
-}
-
-.modal-header-with-icon .close-button {
-    position: static;
-    order: 3;
-    transform: none;
-    font-size: 2em;
-    margin-left: auto;
+    flex-wrap: nowrap; /* Prevent wrapping on small screens */
 }
 
 .modal-header-with-icon h2 {
     margin: 0;
     flex-grow: 1;
     text-align: center;
-    order: 2;
     font-size: 1.6em;
+    flex-shrink: 1; /* Allow title to shrink if buttons need space */
+    min-width: 0; /* Allow title to shrink below its content size */
 }
 
-.close-button {
-    color: var(--text-color);
+/* New group for action buttons and close button */
+.modal-header-action-group {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Space between icons */
+    flex-shrink: 0; /* Prevent this group from shrinking */
+}
+
+.modal-header-with-icon .close-button {
+    position: static; /* Remove absolute positioning */
+    margin-left: 0; /* Remove auto margin */
     font-size: 2em;
-    position: absolute;
-    top: 10px;
-    right: 20px;
-    cursor: pointer;
-    transition: color 0.2s ease;
+    padding: 5px; /* Add some padding for touch target */
+    line-height: 1; /* Ensure icon is vertically centered */
 }
 
 .close-button:hover,
@@ -1391,50 +1392,42 @@ table td.live-price-cell {
     transform: scale(1.1);
 }
 
-/* Action Buttons in Modals (Save, Delete, etc.) */
+/* REMOVED: Action Buttons in Modals (Save, Delete, etc.) - These are now in the header */
 .form-action-buttons,
 .modal-action-buttons,
 .custom-dialog-buttons { 
-    display: flex;
-    flex-wrap: nowrap; 
-    justify-content: center; 
-    gap: 10px;
-    margin-top: 25px;
-    flex-shrink: 0; 
-    padding-top: 15px; 
-    border-top: 1px solid var(--border-color); 
+    /* display: flex; */ /* REMOVED */
+    /* flex-wrap: nowrap; */ /* REMOVED */
+    /* justify-content: center; */ /* REMOVED */
+    /* gap: 10px; */ /* REMOVED */
+    /* margin-top: 25px; */ /* REMOVED */
+    /* flex-shrink: 0; */ /* REMOVED */
+    /* padding-top: 15px; */ /* REMOVED */
+    /* border-top: 1px solid var(--border-color); */ /* REMOVED */
+    display: none; /* Hide these old containers */
 }
 
+/* REMOVED: Sticky footer for action icons - These are now in the header */
 .modal-content .sticky-footer {
-    position: sticky;
-    bottom: -25px;
-    left: -25px;
-    right: -25px;
-    padding: 25px;
-    background-color: var(--modal-content-bg);
-    border-top: 1px solid var(--border-color);
-    box-shadow: 0 -2px 8px var(--shadow-color);
-    z-index: 10;
-    margin-top: 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    display: none; /* Hide this old container */
 }
 
+/* MODIFIED: Modal Action Icons for positioning in header */
 .modal-action-icon {
     background: none;
     border: none;
     padding: 8px;
     border-radius: 8px;
     cursor: pointer;
-    font-size: 1.5em;
+    font-size: 1.5em; /* Adjusted size for header */
     display: flex;
     align-items: center;
     justify-content: center;
     transition: background-color 0.2s ease, color 0.2s ease, transform 0.1s ease;
-    flex-grow: 1;
-    max-width: 60px;
-    color: var(--icon-action-color);
+    flex-shrink: 0; /* Prevent shrinking */
+    width: 40px; /* Fixed width for consistent sizing */
+    height: 40px; /* Fixed height for consistent sizing */
+    color: var(--icon-action-color); /* Default color for action icons */
 }
 
 .modal-action-icon:hover {
@@ -1454,7 +1447,7 @@ table td.live-price-cell {
     color: var(--secondary-button-bg);
 }
 .modal-action-icon.secondary:hover {
-    color: var(--secondary-button-hover-bg);
+    color: var(--secondary-button-hover-color);
     background-color: var(--menu-button-hover-bg);
 }
 
@@ -1836,6 +1829,7 @@ table td.live-price-cell {
 
     .hamburger-btn {
         font-size: 1.3em;
+        padding: 5px;
     }
 
     .asx-code-buttons-container {

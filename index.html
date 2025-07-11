@@ -215,10 +215,16 @@
     <!-- Share Form Modal -->
     <div id="shareFormSection" class="modal">
         <div class="modal-content add-share-modal-content">
-            <!-- Header with close button and title -->
+            <!-- Header with close button and title - MODIFIED -->
             <div class="modal-header-with-icon">
-                <span class="close-button form-close-button">&times;</span>
                 <h2 id="formTitle">Add New Share</h2>
+                <div class="modal-header-action-group">
+                    <!-- Delete Icon - MOVED TO TOP RIGHT -->
+                    <span id="deleteShareBtn" class="modal-action-icon danger hidden" title="Delete"><i class="fas fa-trash-alt"></i></span>
+                    <!-- Save Icon - MOVED TO TOP RIGHT -->
+                    <span id="saveShareBtn" class="modal-action-icon" title="Save Share"><i class="fas fa-save"></i></span>
+                    <span class="close-button form-close-button">&times;</span>
+                </div>
             </div>
             
             <!-- Scrollable content area for the form inputs and comments -->
@@ -251,20 +257,28 @@
             </div>
             <!-- END Scrollable content area -->
 
-            <!-- Sticky footer for action icons -->
-            <div class="form-action-buttons modal-form-buttons sticky-footer">
-                <!-- Delete Icon -->
+            <!-- REMOVED: Old sticky footer for action icons -->
+            <!-- <div class="form-action-buttons modal-form-buttons sticky-footer">
                 <span id="deleteShareBtn" class="modal-action-icon danger hidden" title="Delete"><i class="fas fa-trash-alt"></i></span>
                 <span id="saveShareBtn" class="modal-action-icon" title="Save Share"><i class="fas fa-save"></i></span>
-            </div>
+            </div> -->
         </div>
     </div>
 
     <!-- Share Details Modal -->
     <div id="shareDetailModal" class="modal">
         <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2 id="modalShareName">Share Details</h2>
+            <!-- Header with close button and title - MODIFIED -->
+            <div class="modal-header-with-icon">
+                <h2 id="modalShareName">Share Details</h2>
+                <div class="modal-header-action-group">
+                    <!-- Delete Share icon - MOVED TO TOP RIGHT -->
+                    <span id="deleteShareFromDetailBtn" class="modal-action-icon danger" title="Delete Share"><i class="fas fa-trash-alt"></i></span>
+                    <!-- Edit Share icon - MOVED TO TOP RIGHT -->
+                    <span id="editShareFromDetailBtn" class="modal-action-icon" title="Edit Share"><i class="fas fa-edit"></i></span>
+                    <span class="close-button">&times;</span>
+                </div>
+            </div>
             
             <!-- Scrollable content for share details modal -->
             <div class="modal-body-scrollable">
@@ -294,12 +308,11 @@
             </div>
             <!-- END Scrollable content for share details modal -->
 
-            <div class="modal-action-buttons">
-                <!-- Delete Share icon -->
+            <!-- REMOVED: Old action buttons -->
+            <!-- <div class="modal-action-buttons">
                 <span id="deleteShareFromDetailBtn" class="modal-action-icon danger" title="Delete Share"><i class="fas fa-trash-alt"></i></span>
-                <!-- Edit Share icon -->
                 <span id="editShareFromDetailBtn" class="modal-action-icon" title="Edit Share"><i class="fas fa-edit"></i></span>
-            </div>
+            </div> -->
         </div>
     </div>
 
