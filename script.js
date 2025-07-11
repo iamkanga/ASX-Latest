@@ -70,7 +70,8 @@ const currentPriceInput = document.getElementById('currentPrice');
 const targetPriceInput = document.getElementById('targetPrice');
 const dividendAmountInput = document.getElementById('dividendAmount');
 const frankingCreditsInput = document.getElementById('frankingCredits');
-const commentsFormContainer = document.getElementById('commentsFormContainer');
+// CORRECTED: This now points to the new dynamicCommentsArea ID
+const commentsFormContainer = document.getElementById('dynamicCommentsArea'); 
 const addCommentSectionBtn = document.getElementById('addCommentSectionBtn');
 const shareTableBody = document.querySelector('#shareTable tbody');
 const mobileShareCardsContainer = document.getElementById('mobileShareCards');
@@ -308,9 +309,11 @@ function deselectCurrentShare() {
 }
 
 function addCommentSection(title = '', text = '') {
-    if (!commentsFormContainer) { console.error("[addCommentSection] commentsFormContainer not found."); return; }
+    // commentsFormContainer now correctly points to #dynamicCommentsArea
+    if (!commentsFormContainer) { console.error("[addCommentSection] commentsFormContainer (dynamicCommentsArea) not found."); return; }
     const commentSectionDiv = document.createElement('div');
     commentSectionDiv.className = 'comment-section';
+    // This HTML is for the individual comment input box, NOT the main H3 header
     commentSectionDiv.innerHTML = `
         <div class="comment-section-header">
             <input type="text" class="comment-title-input" placeholder="Comment Title" value="${title}">
@@ -337,9 +340,8 @@ function clearForm() {
     formInputs.forEach(input => {
         if (input) { input.value = ''; }
     });
-    if (commentsFormContainer) {
-        commentsFormContainer.innerHTML = ''; // Clears all existing comment sections
-        // IMPORTANT: No addCommentSection() call here. It's handled by the modal open triggers.
+    if (commentsFormContainer) { // This now refers to #dynamicCommentsArea
+        commentsFormContainer.innerHTML = ''; // Clears ONLY the dynamically added comments
     }
     selectedShareDocId = null;
     originalShareData = null;
@@ -372,8 +374,8 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
     dividendAmountInput.value = Number(shareToEdit.dividendAmount) !== null && !isNaN(Number(shareToEdit.dividendAmount)) ? Number(shareToEdit.dividendAmount).toFixed(3) : '';
     frankingCreditsInput.value = Number(shareToEdit.frankingCredits) !== null && !isNaN(Number(shareToEdit.frankingCredits)) ? Number(shareToEdit.frankingCredits).toFixed(1) : '';
     
-    if (commentsFormContainer) {
-        commentsFormContainer.innerHTML = ''; // Clear existing comments
+    if (commentsFormContainer) { // This now refers to #dynamicCommentsArea
+        commentsFormContainer.innerHTML = ''; // Clear existing dynamic comment sections
         if (shareToEdit.comments && Array.isArray(shareToEdit.comments) && shareToEdit.comments.length > 0) {
             shareToEdit.comments.forEach(comment => addCommentSection(comment.title, comment.text));
         } else {
@@ -402,7 +404,7 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
  */
 function getCurrentFormData() {
     const comments = [];
-    if (commentsFormContainer) {
+    if (commentsFormContainer) { // This now refers to #dynamicCommentsArea
         commentsFormContainer.querySelectorAll('.comment-section').forEach(section => {
             const titleInput = section.querySelector('.comment-title-input');
             const textInput = section.querySelector('.comment-text-input');
@@ -869,10 +871,10 @@ function addShareToTable(share) {
             <span>Dividend:</span> <span class="value">${divAmountDisplay}</span>
         </div>
         <div class="dividend-yield-cell-content">
-            <span>Unfranked Yield:</span> <span class="value">${unfrankedYield !== null ? unfrankedYield.toFixed(2) + '%' : '-'}</span>
+            <span>Unfranked Yield:</span> <span class="value">${unfrankedYield !== null ? unfrankedYield.toFixed(2) + '%' : '-'}&#xFE0E;</span>
         </div>
         <div class="dividend-yield-cell-content">
-            <span>Franked Yield:</span> <span class="value">${frankedYield !== null ? frankedYield.toFixed(2) + '%' : '-'}</span>
+            <span>Franked Yield:</span> <span class="value">${frankedYield !== null ? frankedYield.toFixed(2) + '%' : '-'}&#xFE0E;</span>
         </div>
     `;
 
@@ -945,8 +947,8 @@ function addShareToMobileCards(share) {
         <p><strong>Target:</strong> $${displayTargetPrice}</p>
         <p><strong>Dividend:</strong> $${displayDividendAmount}</p>
         <p><strong>Franking:</strong> ${displayFrankingCredits}</p>
-        <p><strong>Unfranked Yield:</strong> ${unfrankedYield !== null ? unfrankedYield.toFixed(2) + '%' : '-'}</p>
-        <p><strong>Franked Yield:</strong> ${frankedYield !== null ? frankedYield.toFixed(2) + '%' : '-'}</p>
+        <p><strong>Unfranked Yield:</strong> ${unfrankedYield !== null ? unfrankedYield.toFixed(2) + '%' : '-'}&#xFE0E;</p>
+        <p><strong>Franked Yield:</strong> ${frankedYield !== null ? frankedYield.toFixed(2) + '%' : '-'}&#xFE0E;</p>
     `;
     mobileShareCardsContainer.appendChild(card);
 
@@ -1826,7 +1828,7 @@ function exportWatchlistToCSV() {
             (!isNaN(dividendAmountNum) && dividendAmountNum !== null) ? dividendAmountNum.toFixed(3) : '',
             (!isNaN(frankingCreditsNum) && frankingCreditsNum !== null) ? frankingCreditsNum.toFixed(1) : '',
             unfrankedYield !== null ? unfrankedYield.toFixed(2) : '',
-            frankedYield !== null ? frankedYield.toFixed(2) + '%' : '', // Ensure % is added
+            frankedYield !== null ? frankedYield.toFixed(2) + '%' : '',
             formatDate(share.entryDate) || '',
             allCommentsText
         ];
@@ -1981,7 +1983,7 @@ async function initializeAppLogic() {
                     console.log("[Auth] Google Sign-In successful.");
                 }
                 catch (error) {
-                    console.error("[Auth] Google Sign-In failed:", error.message);
+                    console.error("[Auth] Google Sign-In failed: " + error.message);
                     showCustomAlert("Google Sign-In failed: " + error.message);
                 }
             }
@@ -2084,7 +2086,7 @@ async function initializeAppLogic() {
             const frankingCredits = parseFloat(frankingCreditsInput.value);
 
             const comments = [];
-            if (commentsFormContainer) {
+            if (commentsFormContainer) { // This now refers to #dynamicCommentsArea
                 commentsFormContainer.querySelectorAll('.comment-section').forEach(section => {
                     const titleInput = section.querySelector('.comment-title-input');
                     const textInput = section.querySelector('.comment-text-input');
