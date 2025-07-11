@@ -8,7 +8,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍆</text></svg>">
 
     <!-- Linking to your separate style.css file -->
-    <link rel="stylesheet" href="style.css?v=107"> <!-- Updated to v100 -->
+    <link rel="stylesheet" href="style.css?v=107"> <!-- Updated to v107 -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -191,7 +191,7 @@
                             <th>Live Price</th> <!-- MOVED UP -->
                             <th>Entered Price</th> <!-- MOVED DOWN -->
                             <th>Target Price</th>
-                            <th>Dividends</th>
+                            <th></th> <!-- Placeholder for Dividends, title added by CSS -->
                             <!-- Comments column header removed -->
                         </tr>
                     </thead>
@@ -275,20 +275,17 @@
                 <p><strong>Unfranked Yield:</strong> <span id="modalUnfrankedYield"></span></p>
                 <p><strong>Franked Yield:</strong> <span id="modalFrankedYield"></span></p>
 
+                <!-- External links section moved below comments in script.js, but HTML placeholder remains -->
                 <div class="external-links-section">
                     <h3>External Links</h3>
-                    <!-- NEW: News Link -->
                     <p><a id="modalNewsLink" href="#" target="_blank" class="external-link"><i class="fas fa-external-link-alt"></i> View News</a></p>
                     <p><a id="modalMarketIndexLink" href="#" target="_blank" class="external-link"><i class="fas fa-external-link-alt"></i> View on MarketIndex.com.au</a></p>
                     <p><a id="modalFoolLink" href="#" target="_blank" class="external-link"><i class="fas fa-external-link-alt"></i> View on Fool.com.au</a></p>
                     <p><a id="modalCommSecLink" href="#" target="_blank" class="external-link"><i class="fas fa-external-link-alt"></i> View on CommSec.com.au</a></p>
                     <p id="commSecLoginMessage" class="ghosted-text commsec-message">Requires single CommSec login per session</p>
                 </div>
-
-                <div id="modalCommentsContainer" class="modal-comments-sections">
-                    <h3>Comments</h3>
-                    <!-- Comments will be displayed here -->
-                </div>
+                <!-- Comments will be dynamically added here by JS in showShareDetails() -->
+                <div id="modalCommentsContainer" style="display:none;"></div> <!-- Placeholder, content added by JS -->
             </div>
             <!-- END NEW: Scrollable content for share details modal -->
 
@@ -398,7 +395,7 @@
                 <button class="calc-btn operator" data-action="add">+</button>
                 
                 <!-- Row 5: 0 (span 2), ., = (span 1) -->
-                <button class="calc-btn zero" data-value="0"></button>
+                <button class="calc-btn zero" data-value="0">0</button> <!-- Added 0 content -->
                 <button class="calc-btn" data-value=".">.</button>
                 <button class="calc-btn equals" data-action="calculate">=</button>
             </div>
@@ -514,7 +511,7 @@
         } : null;
 
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log("index.html (v83) script module loaded and DOMContentLoaded fired."); // Updated version number
+            console.log("index.html (v84) script module loaded and DOMContentLoaded fired."); // Updated version number
         }); 
     </script>
     <!-- Linking to your separate script.js file -->
