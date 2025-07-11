@@ -338,8 +338,13 @@ function clearForm() {
         if (input) { input.value = ''; }
     });
     if (commentsFormContainer) {
-        commentsFormContainer.innerHTML = '';
-addCommentSection(); // <--- ADD THIS LINE   
+    commentsFormContainer.innerHTML = '';
+    if (shareToEdit.comments && Array.isArray(shareToEdit.comments) && shareToEdit.comments.length > 0) {
+        shareToEdit.comments.forEach(comment => addCommentSection(comment.title, comment.text));
+    } else {
+        addCommentSection(); // <--- THIS LINE MUST BE HERE
+    }
+}  
     }
     selectedShareDocId = null;
     originalShareData = null;
@@ -2027,7 +2032,7 @@ async function initializeAppLogic() {
 
     // New Share Button (from sidebar)
     if (newShareBtn) {
-        newShareBtn.addEventListener('click', () => {
+        newShareBtn.addEventListener('click', () => {addCommentSection(); // <--- ADD THIS LINE
             console.log("[UI] New Share button (sidebar) clicked.");
             clearForm();
             formTitle.textContent = 'Add New Share';
@@ -2038,7 +2043,7 @@ async function initializeAppLogic() {
         });
     }
 
-    // Add Share Header Button (from header)
+      // Add Share Header Button (from header)
     if (addShareHeaderBtn) {
         addShareHeaderBtn.addEventListener('click', () => {
             console.log("[UI] Add Share button (header) clicked.");
@@ -2047,8 +2052,10 @@ async function initializeAppLogic() {
             if (deleteShareBtn) { deleteShareBtn.classList.add('hidden'); }
             showModal(shareFormSection);
             shareNameInput.focus();
+            addCommentSection(); // <--- This is the line that should be added here
         });
     }
+
 
     // Event listener for shareNameInput to toggle saveShareBtn
     if (shareNameInput && saveShareBtn) {

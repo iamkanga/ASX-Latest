@@ -2294,20 +2294,31 @@ table td.live-price-cell {
         font-size: 1em;
     }
 }
-    /* --- DEBUGGING: FORCED VISIBILITY OF ADD COMMENT BUTTON --- */
-    #addCommentSectionBtn {
-        display: flex !important; /* Force display */
-        visibility: visible !important; /* Force visibility */
-        opacity: 1 !important; /* Force full opacity */
-        width: auto !important; /* Allow it to take its natural width */
-        height: auto !important; /* Allow it to take its natural height */
-        padding: 10px !important; /* Give it some space to be seen */
-        background-color: #ff0000 !important; /* Make it red to easily spot it */
-        color: white !important; /* White text for contrast */
-        border-radius: 50% !important; /* Make it round */
-        font-size: 2em !important; /* Make the icon large */
-        z-index: 9999 !important; /* Ensure it's on top of other elements */
-        position: relative !important; /* Ensure positioning context */
+        /* --- DEBUGGING: FORCED VISIBILITY OF ADD COMMENT BUTTON (v2) --- */
+    #addCommentSectionBtn i.fas.fa-plus { /* Target the Font Awesome icon directly */
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        font-size: 3em !important; /* Make it HUGE */
+        color: lime !important; /* Make it bright green */
+        background-color: purple !important; /* Give it a background to see its area */
+        width: 50px !important; /* Force a size */
+        height: 50px !important; /* Force a size */
+        border-radius: 50% !important;
+        line-height: 1 !important; /* Ensure vertical centering */
+        text-align: center !important;
+        z-index: 99999 !important; /* Ensure it's on top */
+        position: relative !important; /* Ensure it's positioned */
     }
-    /* --- END DEBUGGING CSS --- */
+
+    #addCommentSectionBtn { /* Also ensure its parent span is visible */
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        background-color: orange !important; /* See the span's area */
+        padding: 5px !important;
+        border-radius: 8px !important;
+        z-index: 99998 !important;
+    }
+    /* --- END DEBUGGING CSS (v2) --- */
     
