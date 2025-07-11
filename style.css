@@ -1,5 +1,5 @@
 /* File Version: v100 */
-/* Last Updated: 2025-07-10 (Fixed header alignment, removed comments from main table/cards, added watchlist selection modal styling) */
+/* Last Updated: 2025-07-11 (Fixed header alignment, removed comments from main table/cards, added watchlist selection modal styling, fixed scroll-to-top button visibility) */
 
 :root {
     /* Light Theme (Default) */
@@ -1689,4 +1689,186 @@ table td.live-price-cell {
 .watchlist-selection-item.selected:hover {
     background-color: var(--button-hover-bg);
     color: var(--button-text);
+}
+
+/* Scroll-to-Top Button */
+#scrollToTopBtn {
+    display: none; /* Hidden by default */
+    position: fixed; /* Fixed/sticky position */
+    bottom: 20px; /* Place the button at the bottom of the page */
+    right: 20px; /* Place the button at the right side */
+    z-index: 99; /* Make sure it does not overlap */
+    border: none; /* Remove borders */
+    outline: none; /* Remove outline */
+    background-color: var(--button-bg); /* Set a background color */
+    color: white; /* Text color */
+    cursor: pointer; /* Add a mouse pointer on hover */
+    padding: 15px; /* Some padding */
+    border-radius: 50%; /* Rounded corners */
+    font-size: 18px; /* Increase font size */
+    box-shadow: 0 4px 8px var(--shadow-color); /* Add a subtle shadow */
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+#scrollToTopBtn:hover {
+    background-color: var(--button-hover-bg); /* Darker background on hover */
+    transform: translateY(-2px);
+}
+
+/* Media Queries for Responsiveness */
+@media (max-width: 768px) {
+    .table-container {
+        display: none; /* Hide table on smaller screens */
+    }
+
+    .mobile-share-cards {
+        display: flex; /* Show cards on smaller screens */
+    }
+
+    .watchlist-group,
+    .sort-group {
+        flex-basis: 100%; /* Stack dropdowns vertically on mobile */
+        max-width: 100%;
+    }
+
+    .dropdown-large {
+        width: 100%; /* Full width for dropdowns on mobile */
+    }
+
+    .header-top-row {
+        padding: 0 10px; /* Adjust padding for smaller screens */
+        gap: 10px;
+    }
+
+    h1#mainTitle {
+        font-size: 1.5em; /* Smaller title on mobile */
+    }
+
+    .header-action-btn,
+    .hamburger-btn {
+        font-size: 1.5em; /* Smaller icons on mobile */
+        padding: 5px;
+    }
+
+    .app-sidebar {
+        width: 250px; /* Slightly smaller sidebar on mobile */
+        padding: 15px;
+    }
+
+    .close-menu-btn {
+        font-size: 2em; /* Adjust close button size */
+        top: 5px;
+        right: 10px;
+    }
+
+    .modal-content {
+        width: 95%; /* Wider modal on smaller screens */
+        margin: 20px auto; /* Adjust margin */
+        padding: 15px;
+    }
+
+    .modal-content h2 {
+        font-size: 1.4em; /* Smaller modal titles */
+    }
+
+    .close-button {
+        font-size: 1.8em;
+        top: 5px;
+        right: 15px;
+    }
+
+    .modal-content input[type="text"],
+    .modal-content input[type="number"],
+    .modal-content textarea,
+    .calc-input-group input[type="number"],
+    .calc-input-group select {
+        width: calc(100% - 20px); /* Adjust input width */
+    }
+
+    .form-action-buttons,
+    .modal-action-buttons,
+    .custom-dialog-buttons {
+        flex-direction: row; /* Keep as row, but allow wrapping */
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: space-around;
+    }
+
+    .modal-action-icon {
+        flex-grow: 0; /* Don't force grow on mobile */
+        min-width: 45px; /* Ensure sufficient touch target */
+        max-width: none; /* Remove max width constraint */
+    }
+
+    .modal-content .sticky-footer {
+        bottom: -15px; /* Adjust sticky footer position */
+        left: -15px;
+        right: -15px;
+        padding: 15px;
+    }
+
+    /* Context menu on mobile */
+    .context-menu {
+        font-size: 0.9em;
+        padding: 8px;
+        border-radius: 8px;
+    }
+    .context-menu-item {
+        padding: 10px 12px;
+    }
+    #scrollToTopBtn {
+        bottom: 70px; /* Adjust for fixed footer on mobile */
+    }
+}
+
+/* Context Menu Styling */
+.context-menu {
+    display: none;
+    position: fixed;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    z-index: 1001; /* Above modals */
+    min-width: 150px;
+    padding: 5px 0;
+    list-style: none;
+}
+
+.context-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 15px;
+    color: var(--text-color);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    background: none; /* Ensure no default button background */
+    border: none; /* Remove button borders */
+    width: 100%; /* Fill parent width */
+    text-align: left;
+    font-size: 1em;
+}
+
+.context-menu-item:hover {
+    background-color: var(--table-row-hover-bg);
+}
+
+.context-menu-item i {
+    font-size: 1.1em;
+    color: var(--icon-action-color); /* Use action color for icons */
+}
+
+.context-menu-item.danger-button i {
+    color: var(--icon-danger-color); /* Override for danger items */
+}
+
+/* Hide comments column on main table and cards */
+#shareTable th:last-child,
+#shareTable td:last-child {
+    display: none;
+}
+/* Ensure comments are not displayed in mobile cards */
+.mobile-card p:has(strong:contains("Comments:")) {
+    display: none;
 }
