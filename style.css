@@ -1,4 +1,4 @@
-/* File Version: v98 */
+/* File Version: v99 */
 /* Last Updated: 2025-07-10 (Fixed header alignment, removed comments from main table/cards, added watchlist selection modal styling) */
 
 :root {
@@ -672,8 +672,8 @@ header {
 
 .header-top-row {
     display: flex;
-    justify-content: center; 
-    align-items: center;
+    justify-content: space-between; /* Distribute items with space between */
+    align-items: center; /* Vertically align items */
     gap: 15px;
     position: relative;
     width: 100%; 
@@ -688,20 +688,23 @@ h1#mainTitle {
     color: var(--text-color);
     text-align: center; 
     flex-grow: 1; 
+    order: 2; /* Ensure title is in the middle */
 }
 
+/* Adjust header action buttons to align with flexbox */
 .header-action-btn {
     background: none;
     border: none;
     color: var(--text-color);
     font-size: 1.8em; 
     cursor: pointer;
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
+    position: static; /* Remove absolute positioning */
+    top: auto;
+    transform: none;
     padding: 5px 10px;
     z-index: 11;
     display: block;
+    flex-shrink: 0; /* Prevent shrinking */
 }
 
 .header-action-btn:hover {
@@ -709,11 +712,11 @@ h1#mainTitle {
 }
 
 .header-action-btn-left { 
-    left: 0; 
+    order: 1; /* Hamburger on the left */
 }
 
 .header-action-btn-right { 
-    right: 0; 
+    order: 3; /* Add Share on the right */
 }
 
 
@@ -723,8 +726,8 @@ h1#mainTitle {
     color: var(--text-color);
     font-size: 1.8em; 
     cursor: pointer;
-    top: 50%;
-    transform: translateY(-50%);
+    top: auto; /* Remove absolute positioning */
+    transform: none;
     padding: 5px 10px; 
     z-index: 11; 
     display: block; 

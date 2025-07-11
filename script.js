@@ -1,5 +1,5 @@
 // File Version: v166
-// Last Updated: 2025-07-10 (Fixed critical interaction bugs: hamburger, modal buttons, context menu; completed dynamic comments; fixed watchlist selection modal)
+// Last Updated: 2025-07-10 (Fixed critical interaction bugs: hamburger, modal buttons, context menu; completed dynamic comments; fixed watchlist selection modal functionality)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -668,7 +668,7 @@ function showShareDetails() {
         setIconDisabled(modalMarketIndexLink, false); // Explicitly enable
     } else if (modalMarketIndexLink) {
         modalMarketIndexLink.style.display = 'none';
-        setIconDisabled(modalMarketIndexLink, true); // Explicitly disable if no shareName
+        setIconDisabled(modalMarketIndexLink, true);
     }
 
     if (modalFoolLink && share.shareName) {
@@ -927,7 +927,7 @@ function addShareToTable(share) {
             touchStartY = event.touches[0].clientY;
             longPressTimer = setTimeout(() => {
                 event.preventDefault(); 
-                selectShare(share.id); // Ensure share is selected before showing context menu
+                selectShare(share.id);
                 showContextMenu(event, share.id);
             }, LONG_PRESS_THRESHOLD);
         }
@@ -1086,12 +1086,13 @@ function addShareToMobileCards(share) {
             if (change > 0) {
                 livePriceHtml += ` <span class="price-change positive">(+$${change.toFixed(2)})</span></p>`;
             } else if (change < 0) {
-                livePriceHtml += ` <span class="price-change negative">(-$${Math.abs(change).toFixed(2)})</span></p>`;
+                livePriceHtml += ` <span class="price-change negative">(-$${Math.abs(change).toFixed(2)})`;
             } else {
-                livePriceHtml += ` <span class="price-change neutral">($0.00)</span></p>`;
+                livePriceHtml += ` <span class="price-change neutral">($0.00)`;
             }
+            livePriceHtml += `</span></p>`; // Close the span and p tag
         } else {
-            livePriceHtml += `</p>`;
+            livePriceHtml = `<p><strong>Live Price:</strong> N/A</p>`;
         }
     } else {
         livePriceHtml = `<p><strong>Live Price:</strong> N/A</p>`;
