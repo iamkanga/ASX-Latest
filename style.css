@@ -1,5 +1,5 @@
 /* File Version: v109 */
-/* Last Updated: 2025-07-12 (Fixed calculator button sizing & frames; added Dividends header) */
+/* Last Updated: 2025-07-12 (Removed custom themes and standard calculator styling) */
 
 :root {
     /* Light Theme (Default) */
@@ -55,16 +55,18 @@
     --icon-action-hover-color: #0056b3;
     --icon-danger-color: #dc3545; /* New variable for danger icons */
     --icon-danger-hover-color: #c82333;
-    --calc-num-btn-bg: #f0f0f0; /* Default: Calculator number button background */
-    --calc-num-btn-text: #333; /* Default: Calculator number button text */
-    --calc-num-btn-hover-bg: #e0e0e0; /* Default: Calculator number button hover */
-    --calc-operator-btn-bg: #ff9500; /* Calculator operator button background */
-    --calc-operator-btn-text: #fff; /* Calculator operator button text */
-    --calc-operator-btn-hover-bg: #e08000; /* Calculator operator button hover */
-    --calc-clear-btn-bg: #d4d4d2; /* Calculator clear button background */
-    --calc-clear-btn-text: #333; /* Calculator clear button text */
-    --calc-clear-btn-hover-bg: #c0c0c0; /* Calculator clear button hover */
-
+    /* Removed standard calculator button variables */
+    /*
+    --calc-num-btn-bg: #f0f0f0;
+    --calc-num-btn-text: #333;
+    --calc-num-btn-hover-bg: #e0e0e0;
+    --calc-operator-btn-bg: #ff9500;
+    --calc-operator-btn-text: #fff;
+    --calc-operator-btn-hover-bg: #e08000;
+    --calc-clear-btn-bg: #d4d4d2;
+    --calc-clear-btn-text: #333;
+    --calc-clear-btn-hover-bg: #c0c0c0;
+    */
 
     /* Live Price Colors */
     --price-up-color: #28a745; /* Green for price increase */
@@ -125,15 +127,18 @@ body.dark-theme {
     --icon-action-hover-color: #2980b9;
     --icon-danger-color: #e74c3c; /* Dark theme danger icon color */
     --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #5a758e; /* Dark: Calculator number button background */
-    --calc-num-btn-text: #ecf0f1; /* Dark: Calculator number button text */
-    --calc-num-btn-hover-bg: #6c8095; /* Dark: Calculator number button hover */
-    --calc-operator-btn-bg: #ff9500; /* Calculator operator button background */
-    --calc-operator-btn-text: #fff; /* Calculator operator button text */
-    --calc-operator-btn-hover-bg: #e08000; /* Calculator operator button hover */
-    --calc-clear-btn-bg: #7f8c8d; /* Dark: Calculator clear button background */
-    --calc-clear-btn-text: #ecf0f1; /* Dark: Calculator clear button text */
-    --calc-clear-btn-hover-bg: #616e70; /* Dark: Calculator clear button hover */
+    /* Removed standard calculator button variables */
+    /*
+    --calc-num-btn-bg: #5a758e;
+    --calc-num-btn-text: #ecf0f1;
+    --calc-num-btn-hover-bg: #6c8095;
+    --calc-operator-btn-bg: #ff9500;
+    --calc-operator-btn-text: #fff;
+    --calc-operator-btn-hover-bg: #e08000;
+    --calc-clear-btn-bg: #7f8c8d;
+    --calc-clear-btn-text: #ecf0f1;
+    --calc-clear-btn-hover-bg: #616e70;
+    */
 
     /* Live Price Colors */
     --price-up-color: #2ecc71; /* Green for price increase */
@@ -141,567 +146,7 @@ body.dark-theme {
     --price-neutral-color: #95a5a6; /* Gray for no change */
 }
 
-/* Custom Themes */
-/* Bold Themes */
-body.theme-bold-1 { /* Ocean Blue */
-    --background-color: #1a2a3a;
-    --text-color: #e0f2f7;
-    --header-bg: #005f73;
-    --card-bg: #0a475a;
-    --border-color: #008793;
-    --button-bg: #00b4d8;
-    --button-hover-bg: #0096c7;
-    --input-bg: #0a475a;
-    --input-border: #008793;
-    --input-placeholder-color: #8ecae6;
-    --modal-content-bg: #0a475a;
-    --table-header-bg: #005f73;
-    --table-row-hover-bg: #008793;
-    --asx-button-bg: #005f73;
-    --asx-button-hover-bg: #008793;
-    --asx-button-active-bg: #00b4d8;
-    --sidebar-bg: #0a475a;
-    --sidebar-border: #008793;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #0a475a;
-    --placeholder-text: #8ecae6;
-    --ghosted-text: #a8dadc;
-    --danger-button-bg: #e63946;
-    --danger-button-hover-bg: #c02d38;
-    --icon-action-color: #00b4d8;
-    --icon-action-hover-color: #0096c7;
-    --icon-danger-color: #e63946;
-    --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #007f8c;
-    --calc-num-btn-text: #e0f2f7;
-    --calc-num-btn-hover-bg: #0096c7;
-    --calc-operator-btn-bg: #ff9500;
-    --calc-operator-btn-text: #fff;
-    --calc-operator-btn-hover-bg: #e08000;
-    --calc-clear-btn-bg: #005f73;
-    --calc-clear-btn-text: #e0f2f7;
-    --calc-clear-btn-hover-bg: #008793;
-    /* Force all text to white for bold themes */
-    color: #fff !important;
-    --text-color: #fff;
-    --asx-button-text: #fff;
-    --sidebar-text: #fff;
-    --label-color: #ccc;
-    --input-placeholder-color: #aaa;
-    --ghosted-text: #bbb;
-    --close-sidebar-btn-color: #ccc;
-    /* --- Google Auth Button Specific Variables (overridden for bold themes) --- */
-    --google-auth-btn-bg: #FFFFFF; /* White background */
-    --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
-    --google-auth-btn-text: #4285F4; /* Google Blue text */
-    /* --- End Google Auth Button Specific Variables --- */
-
-    /* Live Price Colors */
-    --price-up-color: #2ecc71; /* Green for price increase */
-    --price-down-color: #e74c3c; /* Red for price decrease */
-    --price-neutral-color: #a8dadc; /* Gray for no change */
-}
-
-body.theme-bold-2 { /* Forest Green */
-    --background-color: #2d422d;
-    --text-color: #e6ffe6;
-    --header-bg: #386641;
-    --card-bg: #4a754a;
-    --border-color: #6a9955;
-    --button-bg: #a7c957;
-    --button-hover-bg: #8ba84a;
-    --input-bg: #4a754a;
-    --input-border: #6a9955;
-    --input-placeholder-color: #c0d8b6;
-    --modal-content-bg: #4a754a;
-    --table-header-bg: #386641;
-    --table-row-hover-bg: #6a9955;
-    --asx-button-bg: #386641;
-    --asx-button-hover-bg: #6a9955;
-    --asx-button-active-bg: #a7c957;
-    --sidebar-bg: #4a754a;
-    --sidebar-border: #6a9955;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #4a754a;
-    --placeholder-text: #c0d8b6;
-    --ghosted-text: #d4e3c9;
-    --danger-button-bg: #e74c3c;
-    --danger-button-hover-bg: #c0392b;
-    --icon-action-color: #a7c957;
-    --icon-action-hover-color: #8ba84a;
-    --icon-danger-color: #e74c3c;
-    --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #5a855a;
-    --calc-num-btn-text: #e6ffe6;
-    --calc-num-btn-hover-bg: #6a9955;
-    --calc-operator-btn-bg: #ff9500;
-    --calc-operator-btn-text: #fff;
-    --calc-operator-btn-hover-bg: #e08000;
-    --calc-clear-btn-bg: #386641;
-    --calc-clear-btn-text: #e6ffe6;
-    --calc-clear-btn-hover-bg: #6a9955;
-    /* Force all text to white for bold themes */
-    color: #fff !important;
-    --text-color: #fff;
-    --asx-button-text: #fff;
-    --sidebar-text: #fff;
-    --label-color: #ccc;
-    --input-placeholder-color: #aaa;
-    --ghosted-text: #bbb;
-    --close-sidebar-btn-color: #ccc;
-    /* --- Google Auth Button Specific Variables (overridden for bold themes) --- */
-    --google-auth-btn-bg: #FFFFFF; /* White background */
-    --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
-    --google-auth-btn-text: #4285F4; /* Google Blue text */
-    /* --- End Google Auth Button Specific Variables --- */
-
-    /* Live Price Colors */
-    --price-up-color: #2ecc71; /* Green for price increase */
-    --price-down-color: #e74c3c; /* Red for price decrease */
-    --price-neutral-color: #d4e3c9; /* Gray for no change */
-}
-
-body.theme-bold-3 { /* Sunset Orange */
-    --background-color: #3b2a20;
-    --text-color: #fff8e1;
-    --header-bg: #e63946;
-    --card-bg: #f4a261;
-    --border-color: #e76f51;
-    --button-bg: #ffc300;
-    --button-hover-bg: #e0ac00;
-    --input-bg: #f4a261;
-    --input-border: #e76f51;
-    --input-placeholder-color: #ffe5b4;
-    --modal-content-bg: #f4a261;
-    --table-header-bg: #e63946;
-    --table-row-hover-bg: #e76f51;
-    --asx-button-bg: #e63946;
-    --asx-button-hover-bg: #e76f51;
-    --asx-button-active-bg: #ffc300;
-    --sidebar-bg: #f4a261;
-    --sidebar-border: #e76f51;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #f4a261;
-    --placeholder-text: #ffe5b4;
-    --ghosted-text: #ffd790;
-    --danger-button-bg: #e63946;
-    --danger-button-hover-bg: #c02d38;
-    --icon-action-color: #ffc300;
-    --icon-action-hover-color: #e0ac00;
-    --icon-danger-color: #e63946;
-    --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #f7b98d;
-    --calc-num-btn-text: #3b2a20;
-    --calc-num-btn-hover-bg: #f4a261;
-    --calc-operator-btn-bg: #ff9500;
-    --calc-operator-btn-text: #fff;
-    --calc-operator-btn-hover-bg: #e0ac00;
-    --calc-clear-btn-bg: #e63946;
-    --calc-clear-btn-text: #fff;
-    --calc-clear-btn-hover-bg: #c02d38;
-    /* Force all text to white for bold themes */
-    color: #fff !important;
-    --text-color: #fff;
-    --asx-button-text: #fff;
-    --sidebar-text: #fff;
-    --label-color: #ccc;
-    --input-placeholder-color: #aaa;
-    --ghosted-text: #bbb;
-    --close-sidebar-btn-color: #ccc;
-    /* --- Google Auth Button Specific Variables (overridden for bold themes) --- */
-    --google-auth-btn-bg: #FFFFFF; /* White background */
-    --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
-    --google-auth-btn-text: #4285F4; /* Google Blue text */
-    /* --- End Google Auth Button Specific Variables --- */
-
-    /* Live Price Colors */
-    --price-up-color: #2ecc71; /* Green for price increase */
-    --price-down-color: #e74c3c; /* Red for price decrease */
-    --price-neutral-color: #ffd790; /* Gray for no change */
-}
-
-body.theme-bold-4 { /* Royal Purple */
-    --background-color: #2a1a3a;
-    --text-color: #f0e6ff;
-    --header-bg: #5a189a;
-    --card-bg: #7b2cbf;
-    --border-color: #9d4edd;
-    --button-bg: #c77dff;
-    --button-hover-bg: #a842ff;
-    --input-bg: #7b2cbf;
-    --input-border: #9d4edd;
-    --input-placeholder-color: #e0baff;
-    --modal-content-bg: #7b2cbf;
-    --table-header-bg: #5a189a;
-    --table-row-hover-bg: #9d4edd;
-    --asx-button-bg: #5a189a;
-    --asx-button-hover-bg: #9d4edd;
-    --asx-button-active-bg: #c77dff;
-    --sidebar-bg: #7b2cbf;
-    --sidebar-border: #9d4edd;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #7b2cbf;
-    --placeholder-text: #e0baff;
-    --ghosted-text: #e8d0ff;
-    --danger-button-bg: #e74c3c;
-    --danger-button-hover-bg: #c0392b;
-    --icon-action-color: #c77dff;
-    --icon-action-hover-color: #a842ff;
-    --icon-danger-color: #e74c3c;
-    --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #9d4edd;
-    --calc-num-btn-text: #f0e6ff;
-    --calc-num-btn-hover-bg: #c77dff;
-    --calc-operator-btn-bg: #ff9500;
-    --calc-operator-btn-text: #fff;
-    --calc-operator-btn-hover-bg: #e08000;
-    --calc-clear-btn-bg: #5a189a;
-    --calc-clear-btn-text: #f0e6ff;
-    --calc-clear-btn-hover-bg: #9d4edd;
-    /* Force all text to white for bold themes */
-    color: #fff !important;
-    --text-color: #fff;
-    --asx-button-text: #fff;
-    --sidebar-text: #fff;
-    --label-color: #ccc;
-    --input-placeholder-color: #aaa;
-    --ghosted-text: #bbb;
-    --close-sidebar-btn-color: #ccc;
-    /* --- Google Auth Button Specific Variables (overridden for bold themes) --- */
-    --google-auth-btn-bg: #FFFFFF; /* White background */
-    --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
-    --google-auth-btn-text: #4285F4; /* Google Blue text */
-    /* --- End Google Auth Button Specific Variables --- */
-
-    /* Live Price Colors */
-    --price-up-color: #2ecc71; /* Green for price increase */
-    --price-down-color: #e74c3c; /* Red for price decrease */
-    --price-neutral-color: #e8d0ff; /* Gray for no change */
-}
-
-body.theme-bold-5 { /* Deep Red */
-    --background-color: #3a1a1a;
-    --text-color: #ffe6e6;
-    --header-bg: #8b0000;
-    --card-bg: #a02020;
-    --border-color: #c0392b;
-    --button-bg: #e74c3c;
-    --button-hover-bg: #c0392b;
-    --input-bg: #a02020;
-    --input-border: #c0392b;
-    --input-placeholder-color: #ffbaba;
-    --modal-content-bg: #a02020;
-    --table-header-bg: #8b0000;
-    --table-row-hover-bg: #c0392b;
-    --asx-button-bg: #8b0000;
-    --asx-button-hover-bg: #c0392b;
-    --asx-button-active-bg: #e74c3c;
-    --sidebar-bg: #a02020;
-    --sidebar-border: #c0392b;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #a02020;
-    --placeholder-text: #ffbaba;
-    --ghosted-text: #ffcccc;
-    --danger-button-bg: #e74c3c;
-    --danger-button-hover-bg: #c0392b;
-    --icon-action-color: #e74c3c;
-    --icon-action-hover-color: #c0392b;
-    --icon-danger-color: #e74c3c;
-    --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #c0392b;
-    --calc-num-btn-text: #ffe6e6;
-    --calc-num-btn-hover-bg: #e74c3c;
-    --calc-operator-btn-bg: #ff9500;
-    --calc-operator-btn-text: #fff;
-    --calc-operator-btn-hover-bg: #e08000;
-    --calc-clear-btn-bg: #8b0000;
-    --calc-clear-btn-text: #ffe6e6;
-    --calc-clear-btn-hover-bg: #c0392b;
-    /* Force all text to white for bold themes */
-    color: #fff !important;
-    --text-color: #fff;
-    --asx-button-text: #fff;
-    --sidebar-text: #fff;
-    --label-color: #ccc;
-    --input-placeholder-color: #aaa;
-    --ghosted-text: #bbb;
-    --close-sidebar-btn-color: #ccc;
-    /* --- Google Auth Button Specific Variables (overridden for bold themes) --- */
-    --google-auth-btn-bg: #FFFFFF; /* White background */
-    --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
-    --google-auth-btn-text: #4285F4; /* Google Blue text */
-    /* --- End Google Auth Button Specific Variables --- */
-
-    /* Live Price Colors */
-    --price-up-color: #2ecc71; /* Green for price increase */
-    --price-down-color: #e74c3c; /* Red for price decrease */
-    --price-neutral-color: #ffcccc; /* Gray for no change */
-}
-
-body.theme-bold-6 { /* Gold */
-    --background-color: #3b301a;
-    --text-color: #fff8e0;
-    --header-bg: #b8860b;
-    --card-bg: #daa520;
-    --border-color: #ffd700;
-    --button-bg: #ffeb3b;
-    --button-hover-bg: #fdd835;
-    --input-bg: #daa520;
-    --input-border: #ffd700;
-    --input-placeholder-color: #ffee99;
-    --modal-content-bg: #daa520;
-    --table-header-bg: #b8860b;
-    --table-row-hover-bg: #ffd700;
-    --asx-button-bg: #b8860b;
-    --asx-button-hover-bg: #ffd700;
-    --asx-button-active-bg: #ffeb3b;
-    --sidebar-bg: #daa520;
-    --sidebar-border: #ffd700;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #daa520;
-    --placeholder-text: #ffee99;
-    --ghosted-text: #fff2c4;
-    --danger-button-bg: #e74c3c;
-    --danger-button-hover-bg: #c0392b;
-    --icon-action-color: #ffeb3b;
-    --icon-action-hover-color: #fdd835;
-    --icon-danger-color: #e74c3c;
-    --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #ffd700;
-    --calc-num-btn-text: #3b301a;
-    --calc-num-btn-hover-bg: #ffeb3b;
-    --calc-operator-btn-bg: #ff9500;
-    --calc-operator-btn-text: #fff;
-    --calc-operator-btn-hover-bg: #e08000;
-    --calc-clear-btn-bg: #b8860b;
-    --calc-clear-btn-text: #fff8e0;
-    --calc-clear-btn-hover-bg: #ffd700;
-    /* Force all text to white for bold themes */
-    color: #fff !important;
-    --text-color: #fff;
-    --asx-button-text: #fff;
-    --sidebar-text: #fff;
-    --label-color: #ccc;
-    --input-placeholder-color: #aaa;
-    --ghosted-text: #bbb;
-    --close-sidebar-btn-color: #ccc;
-    /* --- Google Auth Button Specific Variables (overridden for bold themes) --- */
-    --google-auth-btn-bg: #FFFFFF; /* White background */
-    --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
-    --google-auth-btn-text: #4285F4; /* Google Blue text */
-    /* --- End Google Auth Button Specific Variables --- */
-
-    /* Live Price Colors */
-    --price-up-color: #2ecc71; /* Green for price increase */
-    --price-down-color: #e74c3c; /* Red for price decrease */
-    --price-neutral-color: #fff2c4; /* Gray for no change */
-}
-
-body.theme-bold-7 { /* Emerald */
-    --background-color: #1a3a2a;
-    --text-color: #e6fff0;
-    --header-bg: #006400;
-    --card-bg: #228b22;
-    --border-color: #3cb371;
-    --button-bg: #66bb6a;
-    --button-hover-bg: #4caf50;
-    --input-bg: #228b22;
-    --input-border: #3cb371;
-    --input-placeholder-color: #99ffaa;
-    --modal-content-bg: #228b22;
-    --table-header-bg: #006400;
-    --table-row-hover-bg: #3cb371;
-    --asx-button-bg: #006400;
-    --asx-button-hover-bg: #3cb371;
-    --asx-button-active-bg: #66bb6a;
-    --sidebar-bg: #228b22;
-    --sidebar-border: #3cb371;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #228b22;
-    --placeholder-text: #99ffaa;
-    --ghosted-text: #ccffdd;
-    --danger-button-bg: #e74c3c;
-    --danger-button-hover-bg: #c0392b;
-    --icon-action-color: #66bb6a;
-    --icon-action-hover-color: #4caf50;
-    --icon-danger-color: #e74c3c;
-    --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #3cb371;
-    --calc-num-btn-text: #e6fff0;
-    --calc-num-btn-hover-bg: #66bb6a;
-    --calc-operator-btn-bg: #ff9500;
-    --calc-operator-btn-text: #fff;
-    --calc-operator-btn-hover-bg: #e08000;
-    --calc-clear-btn-bg: #006400;
-    --calc-clear-btn-text: #e6fff0;
-    --calc-clear-btn-hover-bg: #3cb371;
-    /* Force all text to white for bold themes */
-    color: #fff !important;
-    --text-color: #fff;
-    --asx-button-text: #fff;
-    --sidebar-text: #fff;
-    --label-color: #ccc;
-    --input-placeholder-color: #aaa;
-    --ghosted-text: #bbb;
-    --close-sidebar-btn-color: #ccc;
-    /* --- Google Auth Button Specific Variables (overridden for bold themes) --- */
-    --google-auth-btn-bg: #FFFFFF; /* White background */
-    --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
-    --google-auth-btn-text: #4285F4; /* Google Blue text */
-    /* --- End Google Auth Button Specific Variables --- */
-
-    /* Live Price Colors */
-    --price-up-color: #2ecc71; /* Green for price increase */
-    --price-down-color: #e74c3c; /* Red for price decrease */
-    --price-neutral-color: #ccffdd; /* Gray for no change */
-}
-
-body.theme-subtle-8 { /* Peach */
-    --background-color: #fff5f0;
-    --text-color: #6a4a4a;
-    --header-bg: #f7e6e0;
-    --card-bg: #ffffff;
-    --border-color: #e6d0c9;
-    --button-bg: #eeb8a2;
-    --button-hover-bg: #d4a28f;
-    --input-bg: #ffffff;
-    --input-border: #d9beaf;
-    --modal-content-bg: #ffffff;
-    --table-header-bg: #f2ebe6;
-    --table-row-hover-bg: #f7f2ef;
-    --asx-button-bg: #f2ebe6;
-    --asx-button-hover-bg: #e6d0c9;
-    --asx-button-active-bg: #eeb8a2;
-    --sidebar-bg: #fffbf8;
-    --sidebar-border: #e6d0c9;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #f7f2ef;
-    --placeholder-text: #c6b3a6;
-    --ghosted-text: #d9c0b8;
-    --danger-button-bg: #e74c3c;
-    --danger-button-hover-bg: #c0392b;
-    --icon-action-color: #eeb8a2;
-    --icon-action-hover-color: #d4a28f;
-    --icon-danger-color: #e74c3c;
-    --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #f2ebe6;
-    --calc-num-btn-text: #6a4a4a;
-    --calc-num-btn-hover-bg: #eeb8a2;
-    --calc-operator-btn-bg: #ff9500;
-    --calc-operator-btn-text: #fff;
-    --calc-operator-btn-hover-bg: #e08000;
-    --calc-clear-btn-bg: #d4d4d2;
-    --calc-clear-btn-text: #333;
-    --calc-clear-btn-hover-bg: #c0c0c0;
-    /* --- Google Auth Button Specific Variables (overridden for subtle themes) --- */
-    --google-auth-btn-bg: #FFFFFF; /* White background */
-    --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
-    --google-auth-btn-text: #4285F4; /* Google Blue text */
-    /* --- End Google Auth Button Specific Variables --- */
-
-    /* Live Price Colors */
-    --price-up-color: #28a745; /* Green for price increase */
-    --price-down-color: #dc3545; /* Red for price decrease */
-    --price-neutral-color: #6c757d; /* Gray for no change */
-}
-
-body.theme-subtle-9 { /* Teal */
-    --background-color: #f0fff8;
-    --text-color: #4a6a6a;
-    --header-bg: #e0f7f2;
-    --card-bg: #ffffff;
-    --border-color: #c9e6d9;
-    --button-bg: #b8eec6;
-    --button-hover-bg: #a2d4b0;
-    --input-bg: #ffffff;
-    --input-border: #b9d9c0;
-    --modal-content-bg: #ffffff;
-    --table-header-bg: #e6f2eb;
-    --table-row-hover-bg: #eff7f2;
-    --asx-button-bg: #e6f2eb;
-    --asx-button-hover-bg: #c9e6d9;
-    --asx-button-active-bg: #b8eec6;
-    --sidebar-bg: #f8fffb;
-    --sidebar-border: #c9e6d9;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #eff7f2;
-    --placeholder-text: #a6c6b3;
-    --ghosted-text: #b8d9c0;
-    --danger-button-bg: #e74c3c;
-    --danger-button-hover-bg: #c0392b;
-    --icon-action-color: #b8eec6;
-    --icon-action-hover-color: #a2d4b0;
-    --icon-danger-color: #e74c3c;
-    --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #e6f2eb;
-    --calc-num-btn-text: #4a6a6a;
-    --calc-num-btn-hover-bg: #b8eec6;
-    --calc-operator-btn-bg: #ff9500;
-    --calc-operator-btn-text: #fff;
-    --calc-operator-btn-hover-bg: #e08000;
-    --calc-clear-btn-bg: #d4d4d2;
-    --calc-clear-btn-text: #333;
-    --calc-clear-btn-hover-bg: #c0c0c0;
-    /* --- Google Auth Button Specific Variables (overridden for subtle themes) --- */
-    --google-auth-btn-bg: #FFFFFF; /* White background */
-    --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
-    --google-auth-btn-text: #4285F4; /* Google Blue text */
-    /* --- End Google Auth Button Specific Variables --- */
-
-    /* Live Price Colors */
-    --price-up-color: #28a745; /* Green for price increase */
-    --price-down-color: #dc3545; /* Red for price decrease */
-    --price-neutral-color: #6c757d; /* Gray for no change */
-}
-
-body.theme-subtle-10 { /* Subtle Stone */
-    --background-color: #f8f8f8;
-    --text-color: #5a5a5a;
-    --header-bg: #e8e8e8;
-    --card-bg: #ffffff;
-    --border-color: #d8d8d8;
-    --button-bg: #c0c0c0;
-    --button-hover-bg: #a8a8a8;
-    --input-bg: #ffffff;
-    --input-border: #b8b8b8;
-    --modal-content-bg: #ffffff;
-    --table-header-bg: #f0f0f0;
-    --table-row-hover-bg: #f5f5f5;
-    --asx-button-bg: #f0f0f0;
-    --asx-button-hover-bg: #d8d8d8;
-    --asx-button-active-bg: #c0c0c0;
-    --sidebar-bg: #fcfcfc;
-    --sidebar-border: #d8d8d8;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #f5f5f5;
-    --placeholder-text: #a6a6a6;
-    --ghosted-text: #b8b8b8;
-    --danger-button-bg: #e74c3c;
-    --danger-button-hover-bg: #c0392b;
-    --icon-action-color: #c0c0c0;
-    --icon-action-hover-color: #a8a8a8;
-    --icon-danger-color: #e74c3c;
-    --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #f0f0f0;
-    --calc-num-btn-text: #5a5a5a;
-    --calc-num-btn-hover-bg: #c0c0c0;
-    --calc-operator-btn-bg: #ff9500;
-    --calc-operator-btn-text: #fff;
-    --calc-operator-btn-hover-bg: #e08000;
-    --calc-clear-btn-bg: #d4d4d2;
-    --calc-clear-btn-text: #333;
-    --calc-clear-btn-hover-bg: #c0c0c0;
-    /* --- Google Auth Button Specific Variables (overridden for subtle themes) --- */
-    --google-auth-btn-bg: #FFFFFF; /* White background */
-    --google-auth-btn-hover-bg: #F0F0F0; /* Light gray on hover */
-    --google-auth-btn-text: #4285F4; /* Google Blue text */
-    /* --- End Google Auth Button Specific Variables --- */
-
-    /* Live Price Colors */
-    --price-up-color: #28a745; /* Green for price increase */
-    --price-down-color: #dc3545; /* Red for price decrease */
-    --price-neutral-color: #6c757d; /* Gray for no change */
-}
+/* Removed custom theme definitions (Bold Themes, Subtle Themes) */
 
 
 /* Base Styles */
@@ -915,16 +360,18 @@ h1#mainTitle {
     display: none; /* Hide text for icon-only */
 }
 
-/* Special case for revert to default theme button with two icons */
+/* Removed specific styling for revert to default theme button with two icons */
+/*
 #revertToDefaultThemeBtn.menu-button-item.icon-only {
     display: flex;
-    gap: 0; /* No gap between two icons */
+    gap: 0;
     justify-content: center;
 }
 #revertToDefaultThemeBtn.menu-button-item.icon-only i {
     font-size: 1.5em;
-    margin: 0 2px; /* Small margin between icons */
+    margin: 0 2px;
 }
+*/
 
 
 /* Logout button styling (now a span) - MODIFIED FOR ICON-ONLY LOOK WITH TEXT */
@@ -1831,7 +1278,8 @@ table tbody tr.selected,
     color: var(--button-text);
 }
 
-/* 1. Calculator specific styles - Issue 5a */
+/* Removed standard calculator specific styles */
+/*
 .calculator-display {
     background-color: var(--input-bg);
     border: 1px solid var(--input-border);
@@ -1873,20 +1321,20 @@ table tbody tr.selected,
 .calc-btn {
     background-color: var(--calc-num-btn-bg);
     color: var(--calc-num-btn-text);
-    border: 1px solid var(--border-color); /* Ensure border is visible */
-    border-radius: 50%; /* Make buttons round */
-    padding: 0; /* Remove padding to allow precise sizing */
-    font-size: 1.2em; 
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    padding: 0;
+    font-size: 1.2em;
     font-weight: 600;
     cursor: pointer;
     transition: background-color 0.2s ease;
     display: flex;
     justify-content: center;
     align-items: center;
-    aspect-ratio: 1 / 1; /* Maintain 1:1 aspect ratio for round buttons */
-    width: 100%; /* Fill the grid cell */
-    height: 100%; /* Fill the grid cell */
-    box-sizing: border-box; 
+    aspect-ratio: 1 / 1;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
 }
 
 .calc-btn:hover {
@@ -1912,18 +1360,19 @@ table tbody tr.selected,
 }
 
 .calc-btn.zero {
-    grid-column: span 2; 
-    border-radius: 30px; /* Slightly more rounded for the wider button */
+    grid-column: span 2;
+    border-radius: 30px;
 }
 
 .calc-btn.equals {
-    background-color: var(--calc-operator-btn-bg); 
+    background-color: var(--calc-operator-btn-bg);
     color: var(--calc-operator-btn-text);
 }
 
 .calc-btn.equals:hover {
     background-color: var(--calc-operator-btn-hover-bg);
 }
+*/
 
 
 /* Scroll-to-Top Button */

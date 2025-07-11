@@ -73,47 +73,14 @@
             </div>
 
             <div class="menu-section">
-                <h3>Theme</h3> <!-- CHANGED: Title from "Theme Toggle" back to "Theme" -->
+                <h3>Theme</h3>
                 <div class="menu-buttons-group">
-                    <!-- New Theme Selector Dropdown - MOVED ABOVE TOGGLE -->
-                    <label for="colorThemeSelect" class="theme-select-label">Choose Color Theme:</label>
-                    <select id="colorThemeSelect" class="dropdown-large menu-dropdown" data-action-closes-menu="false">
-                        <option value="none" selected>No Custom Theme</option>
-                        <optgroup label="Bold Themes">
-                            <option value="bold-1">Bold Ocean</option>
-                            <option value="bold-2">Bold Forest</option>
-                            <option value="bold-3">Bold Sunset</option>
-                            <option value="bold-4">Bold Royal</option>
-                            <option value="bold-5">Bold Grape</option>
-                            <option value="bold-6">Bold Fire</option>
-                            <option value="bold-7">Bold Emerald</option>
-                            <option value="bold-8">Bold Plum</option>
-                            <option value="bold-9">Bold Aqua</option>
-                            <option value="bold-10">Bold Ruby</option>
-                        </optgroup>
-                        <optgroup label="Subtle Themes">
-                            <option value="subtle-1">Subtle Sky</option>
-                            <option value="subtle-2">Subtle Earth</option>
-                            <option value="subtle-3">Subtle Rose</option>
-                            <option value="subtle-4">Subtle Lavender</option>
-                            <option value="subtle-5">Subtle Mint</option>
-                            <option value="subtle-6">Subtle Sand</option>
-                            <option value="subtle-7">Subtle Graphite</option>
-                            <option value="subtle-8">Subtle Peach</option>
-                            <option value="subtle-9">Subtle Teal</option>
-                            <option value="subtle-10">Subtle Stone</option>
-                        </optgroup>
-                    </select>
-
                     <!-- Theme Toggle Button - Icon with Text -->
                     <button id="themeToggleBtn" class="menu-button-item" data-action-closes-menu="false">
-                        <i class="fas fa-palette"></i> <span>Theme Toggle</span> <!-- CHANGED: Button text to "Theme Toggle" -->
+                        <i class="fas fa-palette"></i> <span>Theme Toggle</span>
                     </button>
-                    
-                    <!-- Revert to Default Theme Button - Icon with Text -->
-                    <button id="revertToDefaultThemeBtn" class="menu-button-item secondary-buttons" data-action-closes-menu="false">
-                        <i class="fas fa-sun"></i><i class="fas fa-moon"></i> <span>Default Theme</span>
-                    </button>
+                    <!-- Removed Theme Selector Dropdown -->
+                    <!-- Removed Revert to Default Theme Button -->
                 </div>
             </div>
 
@@ -503,6 +470,6 @@
         }); 
     </script>
     <!-- Linking to your separate script.js file -->
-    <script src="script.js?v=160"></script> <!-- Updated to v160 -->
+    <script src="script.js?v=161"></script> <!-- Updated to v161 -->
 </body>
 </html>

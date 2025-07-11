@@ -1,5 +1,5 @@
-// File Version: v161
-// Last Updated: 2025-07-12 (Removed standard calculator, confirmed dividend calculator and dividend header)
+// File Version: v162
+// Last Updated: 2025-07-12 (Removed custom themes, fixed dividend calculator, reconstructed table header)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -24,11 +24,6 @@ let touchStartX = 0;
 let touchStartY = 0;
 const TOUCH_MOVE_THRESHOLD = 10; // Pixels for touch movement to cancel long press
 const KANGA_EMAIL = 'iamkanga@gmail.com'; // CORRECTED EMAIL ADDRESS
-// Removed standard calculator variables
-// let currentCalculatorInput = '';
-// let operator = null;
-// let previousCalculatorInput = '';
-// let resultDisplayed = false;
 const DEFAULT_WATCHLIST_NAME = 'My Watchlist (Default)';
 const DEFAULT_WATCHLIST_ID_SUFFIX = 'default';
 let userWatchlists = []; // Stores all watchlists for the user
@@ -45,13 +40,8 @@ let livePrices = {}; // Stores live price data: {ASX_CODE: price}
 let livePriceFetchInterval = null; // To hold the interval ID for live price updates
 const LIVE_PRICE_FETCH_INTERVAL_MS = 5 * 60 * 1000; // Fetch every 5 minutes
 
-// Theme related variables
-const CUSTOM_THEMES = [
-    'bold-1', 'bold-2', 'bold-3', 'bold-4', 'bold-5', 'bold-6', 'bold-7', 'bold-8', 'bold-9', 'bold-10',
-    'subtle-1', 'subtle-2', 'subtle-3', 'subtle-4', 'subtle-5', 'subtle-6', 'subtle-7', 'subtle-8', 'subtle-9', 'subtle-10'
-];
-let currentCustomThemeIndex = -1; // To track the current theme in the cycle
-let currentActiveTheme = 'system-default'; // Tracks the currently applied theme string (e.g., 'dark', 'bold', 'subtle', 'system-default')
+// Theme related variables - Removed CUSTOM_THEMES array
+let currentActiveTheme = 'system-default'; // Tracks the currently applied theme string (e.g., 'dark', 'light', 'system-default')
 let savedSortOrder = null; // GLOBAL: Stores the sort order loaded from user settings
 let savedTheme = null; // GLOBAL: Stores the theme loaded from user settings
 
@@ -63,7 +53,6 @@ let unsubscribeShares = null; // Holds the unsubscribe function for the Firestor
 const mainTitle = document.getElementById('mainTitle');
 const addShareHeaderBtn = document.getElementById('addShareHeaderBtn');
 const newShareBtn = document.getElementById('newShareBtn');
-// Removed standardCalcBtn
 const dividendCalcBtn = document.getElementById('dividendCalcBtn');
 const asxCodeButtonsContainer = document.getElementById('asxCodeButtonsContainer');
 const shareFormSection = document.getElementById('shareFormSection');
@@ -79,6 +68,7 @@ const frankingCreditsInput = document.getElementById('frankingCredits');
 const commentsFormContainer = document.getElementById('commentsFormContainer');
 const addCommentSectionBtn = document.getElementById('addCommentSectionBtn'); // Now a span
 const shareTableBody = document.querySelector('#shareTable tbody');
+const shareTableHeader = document.querySelector('#shareTable thead'); // NEW: Reference to table header
 const mobileShareCardsContainer = document.getElementById('mobileShareCards');
 const loadingIndicator = document.getElementById('loadingIndicator');
 const googleAuthBtn = document.getElementById('googleAuthBtn');
@@ -115,15 +105,11 @@ const customDialogModal = document.getElementById('customDialogModal');
 const customDialogMessage = document.getElementById('customDialogMessage');
 const customDialogConfirmBtn = document.getElementById('customDialogConfirmBtn'); // Now a span
 const customDialogCancelBtn = document.getElementById('customDialogCancelBtn'); // Now a span
-// Removed standard calculator modal and button references
-// const calculatorModal = document.getElementById('calculatorModal');
-// const calculatorInput = document.getElementById('calculatorInput');
-// const calculatorResult = document.getElementById('calculatorResult');
-// const calculatorButtons = document.querySelector('.calculator-buttons');
-const watchlistSelect = document.getElementById('watchlistSelect'); // Re-added for now as per user's provided index.html
+const watchlistSelect = document.getElementById('watchlistSelect');
 const themeToggleBtn = document.getElementById('themeToggleBtn');
-const colorThemeSelect = document.getElementById('colorThemeSelect');
-const revertToDefaultThemeBtn = document.getElementById('revertToDefaultThemeBtn');
+// Removed colorThemeSelect and revertToDefaultThemeBtn as they are no longer in HTML
+// const colorThemeSelect = document.getElementById('colorThemeSelect');
+// const revertToDefaultThemeBtn = document.getElementById('revertToDefaultThemeBtn');
 const scrollToTopBtn = document.getElementById('scrollToTopBtn');
 const hamburgerBtn = document.getElementById('hamburgerBtn');
 const appSidebar = document.getElementById('appSidebar');
@@ -185,7 +171,6 @@ function closeModals() {
             modal.style.setProperty('display', 'none', 'important');
         }
     });
-    // Removed resetCalculator() call
     deselectCurrentShare();
     if (autoDismissTimeout) { clearTimeout(autoDismissTimeout); autoDismissTimeout = null; }
     hideContextMenu();
@@ -209,9 +194,6 @@ function showCustomAlert(message, duration = 1000) {
     autoDismissTimeout = setTimeout(() => { hideModal(customDialogModal); autoDismissTimeout = null; }, duration);
     console.log(`[Alert] Showing alert: "${message}"`);
 }
-
-// Confirmation screen removed as per user request
-// function showCustomConfirm(message, onConfirm, onCancel = null) { ... }
 
 // Date Formatting Helper Functions (Australian Style)
 function formatDate(dateString) {
@@ -244,7 +226,6 @@ function updateMainButtonsState(enable) {
     console.log(`[UI State] Setting main buttons state to: ${enable ? 'ENABLED' : 'DISABLED'}`);
     // Sidebar buttons (native buttons, use .disabled)
     if (newShareBtn) newShareBtn.disabled = !enable;
-    // Removed standardCalcBtn.disabled
     if (dividendCalcBtn) dividendCalcBtn.disabled = !enable;
     if (exportWatchlistBtn) exportWatchlistBtn.disabled = !enable;
     if (addWatchlistBtn) addWatchlistBtn.disabled = !enable;
@@ -254,8 +235,10 @@ function updateMainButtonsState(enable) {
     // Logout button is now a span, handle its disabled state with setIconDisabled
     if (logoutBtn) setIconDisabled(logoutBtn, !enable); 
     if (themeToggleBtn) themeToggleBtn.disabled = !enable;
-    if (colorThemeSelect) colorThemeSelect.disabled = !enable;
-    if (revertToDefaultThemeBtn) revertToDefaultThemeBtn.disabled = !enable;
+    // Removed colorThemeSelect.disabled
+    // if (colorThemeSelect) colorThemeSelect.disabled = !enable;
+    // Removed revertToDefaultThemeBtn.disabled
+    // if (revertToDefaultThemeBtn) revertToDefaultThemeBtn.disabled = !enable;
     if (sortSelect) sortSelect.disabled = !enable; // Ensure sort select is disabled if not enabled
     if (watchlistSelect) watchlistSelect.disabled = !enable; // Ensure watchlist select is disabled if not enabled
     if (refreshLivePricesBtn) refreshLivePricesBtn.disabled = !enable; // NEW: Disable refresh button if not enabled
@@ -744,7 +727,7 @@ function renderWatchlistSelect() {
     // Add "All Shares" option first
     const allSharesOption = document.createElement('option');
     allSharesOption.value = ALL_SHARES_ID;
-    allSharesOption.textContent = 'All Shares'; // Changed from 'Display All Shares' to 'All Shares'
+    allSharesOption.textContent = 'All Shares';
     watchlistSelect.appendChild(allSharesOption);
 
     userWatchlists.forEach(watchlist => {
@@ -768,13 +751,6 @@ function renderWatchlistSelect() {
     }
     console.log("[UI Update] Watchlist select dropdown rendered.");
 }
-
-// Replaces renderWatchlistSelectionModal (removed as per user's provided index.html)
-// function renderWatchlistSelectionModal() { ... }
-
-// handleAllSharesCheckboxChange (removed as per user's provided index.html)
-// function handleIndividualWatchlistCheckboxChange (removed as per user's provided index.html)
-
 
 function renderSortSelect() {
     if (!sortSelect) { console.error("[renderSortSelect] sortSelect element not found."); return; }
@@ -805,9 +781,41 @@ function renderSortSelect() {
         currentSortOrder = ''; // Ensure global variable is reset if no valid option
         console.log("[Sort] No valid saved sort order or not logged in, defaulting to placeholder.");
     }
-    // Removed the recursive call to renderSortSelect() here
     console.log("[UI Update] Sort select rendered. Sort select disabled: ", sortSelect.disabled);
 }
+
+/**
+ * Dynamically renders the table header for the share list.
+ * This ensures the "Dividends" column title is always present and correctly sized.
+ */
+function renderTableHeader() {
+    if (!shareTableHeader) {
+        console.error("[renderTableHeader] shareTableHeader element not found.");
+        return;
+    }
+
+    shareTableHeader.innerHTML = ''; // Clear existing header
+
+    const headerRow = shareTableHeader.insertRow();
+    const headers = [
+        { text: "Code", style: "" },
+        { text: "Live Price", style: "" },
+        { text: "Entered Price", style: "" },
+        { text: "Target Price", style: "" },
+        { text: "Dividends", style: "text-align: center; font-size: 1.2em;" } // Explicit style for Dividends
+    ];
+
+    headers.forEach(headerInfo => {
+        const th = document.createElement('th');
+        th.textContent = headerInfo.text;
+        if (headerInfo.style) {
+            th.style.cssText = headerInfo.style; // Apply inline styles
+        }
+        headerRow.appendChild(th);
+    });
+    console.log("[UI] Table header rendered with Dividends title.");
+}
+
 
 function addShareToTable(share) {
     if (!shareTableBody) { console.error("[addShareToTable] shareTableBody element not found."); return; }
@@ -979,12 +987,6 @@ function addShareToMobileCards(share) {
 
     const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, priceForYield);
     const frankedYield = calculateFrankedYield(dividendAmountNum, priceForYield, frankingCreditsNum);
-
-    // Comments section removed from main watchlist/cards
-    // let commentsSummary = '-';
-    // if (share.comments && Array.isArray(share.comments) && share.comments.length > 0 && share.comments[0].text) {
-    //     commentsSummary = truncateText(share.comments[0].text, 70);
-    // }
 
     const displayTargetPrice = (!isNaN(targetPriceNum) && targetPriceNum !== null) ? targetPriceNum.toFixed(2) : '-';
     const displayDividendAmount = (!isNaN(dividendAmountNum) && dividendAmountNum !== null) ? dividendAmountNum.toFixed(2) : '-';
@@ -1260,44 +1262,29 @@ function estimateDividendIncome(investmentValue, dividendAmountPerShare, current
     return numberOfShares * dividendAmountPerShare;
 }
 
-// Removed standard calculator functions: updateCalculatorDisplay, calculateResult, getOperatorSymbol, resetCalculator
-// function updateCalculatorDisplay() { ... }
-// function calculateResult() { ... }
-// function getOperatorSymbol(op) { ... }
-// function resetCalculator() { ... }
-
 async function applyTheme(themeName) {
     const body = document.body;
+    // Remove all theme classes first
     body.className = body.className.split(' ').filter(c => !c.endsWith('-theme') && !c.startsWith('theme-')).join(' ');
 
     currentActiveTheme = themeName;
 
     if (themeName === 'system-default') {
         body.removeAttribute('data-theme');
-        localStorage.removeItem('selectedTheme');
-        localStorage.removeItem('theme');
+        // Check system preference and apply dark-theme if needed
         const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         if (systemPrefersDark) {
             body.classList.add('dark-theme');
         }
         console.log("[Theme] Reverted to system default theme.");
-        currentCustomThemeIndex = -1;
-    } else if (themeName === 'light' || themeName === 'dark') {
+    } else if (themeName === 'light') {
         body.removeAttribute('data-theme');
-        localStorage.removeItem('selectedTheme');
-        localStorage.setItem('theme', themeName);
-        if (themeName === 'dark') {
-            body.classList.add('dark-theme');
-        }
-        console.log(`[Theme] Applied explicit default theme: ${themeName}`);
-        currentCustomThemeIndex = -1;
-    } else {
-        body.classList.add('theme-' + themeName);
-        body.setAttribute('data-theme', themeName);
-        localStorage.setItem('selectedTheme', themeName);
-        localStorage.removeItem('theme');
-        console.log(`[Theme] Applied custom theme: ${themeName}`);
-        currentCustomThemeIndex = CUSTOM_THEMES.indexOf(themeName);
+        body.classList.remove('dark-theme'); // Ensure light mode
+        console.log(`[Theme] Applied explicit light theme.`);
+    } else if (themeName === 'dark') {
+        body.removeAttribute('data-theme');
+        body.classList.add('dark-theme'); // Ensure dark mode
+        console.log(`[Theme] Applied explicit dark theme.`);
     }
     
     if (currentUserId && db && window.firestore) {
@@ -1309,24 +1296,12 @@ async function applyTheme(themeName) {
             console.error("[Theme] Error saving theme preference to Firestore:", error);
         }
     }
-    updateThemeToggleAndSelector();
 }
 
 function updateThemeToggleAndSelector() {
-    if (colorThemeSelect) {
-        if (currentActiveTheme.startsWith('bold-') || currentActiveTheme.startsWith('subtle-')) {
-            colorThemeSelect.value = currentActiveTheme;
-        } else {
-            colorThemeSelect.value = 'none';
-        }
-        console.log(`[Theme UI] Color theme select updated to: ${colorThemeSelect.value}`);
-    }
-
-    if (currentActiveTheme.startsWith('bold-') || currentActiveTheme.startsWith('subtle-')) {
-        currentCustomThemeIndex = CUSTOM_THEMES.indexOf(currentActiveTheme);
-    } else {
-        currentCustomThemeIndex = -1;
-    }
+    // This function is simplified as colorThemeSelect is removed from HTML
+    // and themeToggleBtn directly toggles light/dark.
+    // No action needed here for the removed elements.
 }
 
 function getDefaultWatchlistId(userId) {
@@ -1448,27 +1423,9 @@ async function loadUserWatchlistsAndSettings() {
         if (savedTheme) {
             applyTheme(savedTheme);
         } else {
-            const localStorageSelectedTheme = localStorage.getItem('selectedTheme');
-            const localStorageTheme = localStorage.getItem('theme');
-
-            if (localStorageSelectedTheme) {
-                applyTheme(localStorageSelectedTheme);
-            } else if (localStorageTheme) {
-                applyTheme(localStorageTheme);
-            } else {
-                applyTheme('system-default');
-            }
+            // If no saved theme in Firestore, default to system preference
+            applyTheme('system-default');
         }
-        updateThemeToggleAndSelector();
-
-        updateMainButtonsState(true); 
-
-        const migratedSomething = await migrateOldSharesToWatchlist();
-        if (!migratedSomething) {
-            console.log("[Watchlist] No old shares to migrate/update, directly setting up shares listener for current watchlist.");
-            await loadShares(); // Now sets up onSnapshot listener
-        }
-
     } catch (error) {
         console.error("[User Settings] Error loading user watchlists and settings:", error);
         showCustomAlert("Error loading user settings: " + error.message);
@@ -1946,8 +1903,6 @@ async function initializeAppLogic() {
     if (addWatchlistModal) addWatchlistModal.style.setProperty('display', 'none', 'important');
     if (manageWatchlistModal) manageWatchlistModal.style.setProperty('display', 'none', 'important');
     if (customDialogModal) customDialogModal.style.setProperty('display', 'none', 'important');
-    // Removed standard calculator modal from initial hiding
-    // if (calculatorModal) calculatorModal.style.setProperty('display', 'none', 'important');
     if (shareContextMenu) shareContextMenu.style.setProperty('display', 'none', 'important');
 
     // Service Worker Registration
@@ -1962,6 +1917,9 @@ async function initializeAppLogic() {
                 });
         });
     }
+
+    // Render the table header initially
+    renderTableHeader();
 
     // Share Name Input to uppercase
     if (shareNameInput) {
@@ -2026,8 +1984,6 @@ async function initializeAppLogic() {
     window.addEventListener('click', (event) => {
         if (event.target === shareDetailModal || event.target === dividendCalculatorModal ||
             event.target === shareFormSection || event.target === customDialogModal ||
-            // Removed standard calculator modal from this list
-            // event.target === calculatorModal || 
             event.target === addWatchlistModal ||
             event.target === manageWatchlistModal) {
             closeModals();
@@ -2244,11 +2200,6 @@ async function initializeAppLogic() {
         });
     }
 
-    // Removed Cancel Form Button event listener as the button is removed from HTML
-    // if (cancelFormBtn) {
-    //     cancelFormBtn.addEventListener('click', () => { console.log("[Form] Form canceled."); clearForm(); hideModal(shareFormSection); });
-    // }
-
     // Delete Share Button (No confirmation as per user request)
     if (deleteShareBtn) {
         deleteShareBtn.addEventListener('click', async () => {
@@ -2416,15 +2367,6 @@ async function initializeAppLogic() {
         });
     }
 
-    // Removed Cancel Add Watchlist Button event listener as the button is removed from HTML
-    // if (cancelAddWatchlistBtn) {
-    //     cancelAddWatchlistBtn.addEventListener('click', () => {
-    //         console.log("[Watchlist] Add Watchlist canceled.");
-    //         hideModal(addWatchlistModal);
-    //         if (newWatchlistNameInput) newWatchlistNameInput.value = '';
-    //     });
-    // }
-
     // Edit Watchlist Button
     if (editWatchlistBtn) {
         editWatchlistBtn.addEventListener('click', () => {
@@ -2548,25 +2490,20 @@ async function initializeAppLogic() {
         });
     }
 
-    // Removed Cancel Manage Watchlist Button event listener as the button is removed from HTML
-    // The element `cancelManageWatchlistBtn` is no longer in the HTML, so this listener is removed.
-    // if (cancelManageWatchlistBtn) {
-    //     cancelManageWatchlistBtn.addEventListener('click', () => {
-    //         console.log("[Watchlist] Manage Watchlist canceled.");
-    //         hideModal(manageWatchlistModal);
-    //         editWatchlistNameInput.value = '';
-    //     });
-    // }
-
     // Dividend Calculator Button
     if (dividendCalcBtn) {
         dividendCalcBtn.addEventListener('click', () => {
             console.log("[UI] Dividend button clicked. Attempting to open modal.");
-            calcDividendAmountInput.value = ''; calcCurrentPriceInput.value = ''; calcFrankingCreditsInput.value = '';
-            calcUnfrankedYieldSpan.textContent = '-'; calcFrankedYieldSpan.textContent = '-'; calcEstimatedDividend.textContent = '-';
-            investmentValueSelect.value = '10000';
+            // Ensure elements exist before trying to set their value
+            if (calcDividendAmountInput) calcDividendAmountInput.value = '';
+            if (calcCurrentPriceInput) calcCurrentPriceInput.value = '';
+            if (calcFrankingCreditsInput) calcFrankingCreditsInput.value = '';
+            if (calcUnfrankedYieldSpan) calcUnfrankedYieldSpan.textContent = '-';
+            if (calcFrankedYieldSpan) calcFrankedYieldSpan.textContent = '-';
+            if (calcEstimatedDividend) calcEstimatedDividend.textContent = '-';
+            if (investmentValueSelect) investmentValueSelect.value = '10000';
             showModal(dividendCalculatorModal);
-            calcCurrentPriceInput.focus(); 
+            if (calcCurrentPriceInput) calcCurrentPriceInput.focus(); 
             console.log("[UI] Dividend Calculator modal opened.");
             toggleAppSidebar(false);
         });
@@ -2590,58 +2527,32 @@ async function initializeAppLogic() {
         const frankedYield = calculateFrankedYield(dividendAmount, currentPrice, frankingCredits);
         const estimatedDividend = estimateDividendIncome(investmentValue, dividendAmount, currentPrice);
         
-        calcUnfrankedYieldSpan.textContent = unfrankedYield !== null ? `${unfrankedYield.toFixed(2)}%` : '-';
-        calcFrankedYieldSpan.textContent = frankedYield !== null ? `${frankedYield.toFixed(2)}%` : '-';
-        calcEstimatedDividend.textContent = estimatedDividend !== null ? `$${estimatedDividend.toFixed(2)}` : '-';
+        if (calcUnfrankedYieldSpan) calcUnfrankedYieldSpan.textContent = unfrankedYield !== null ? `${unfrankedYield.toFixed(2)}%` : '-';
+        if (calcFrankedYieldSpan) calcFrankedYieldSpan.textContent = frankedYield !== null ? `${frankedYield.toFixed(2)}%` : '-';
+        if (calcEstimatedDividend) calcEstimatedDividend.textContent = estimatedDividend !== null ? `$${estimatedDividend.toFixed(2)}` : '-';
     }
-
-    // Removed Standard Calculator Button and related logic
-    // if (standardCalcBtn) { ... }
-    // if (calculatorButtons) { ... }
-    // function appendNumber(num) { ... }
-    // function handleAction(action) { ... }
 
     // Theme Toggle Button
     if (themeToggleBtn) {
         themeToggleBtn.addEventListener('click', () => {
             console.log("[Theme] Theme toggle button clicked.");
-            currentCustomThemeIndex = (currentCustomThemeIndex + 1);
-            if (currentCustomThemeIndex >= CUSTOM_THEMES.length) {
-                currentCustomThemeIndex = -1;
-                applyTheme('system-default');
+            const isDark = document.body.classList.contains('dark-theme');
+            if (isDark) {
+                applyTheme('light'); // Switch to light
             } else {
-                const nextTheme = CUSTOM_THEMES[currentCustomThemeIndex];
-                applyTheme(nextTheme);
+                applyTheme('dark'); // Switch to dark
             }
-            console.log(`[Theme] Cycled to next theme. Current index: ${currentCustomThemeIndex}`);
+            console.log(`[Theme] Toggled theme to: ${document.body.classList.contains('dark-theme') ? 'dark' : 'light'}`);
         });
     }
 
-    // Color Theme Select Dropdown
-    if (colorThemeSelect) {
-        colorThemeSelect.addEventListener('change', (event) => {
-            console.log(`[Theme] Color theme select changed to: ${event.target.value}`);
-            const selectedTheme = event.target.value;
-            if (selectedTheme === 'none') {
-                applyTheme('system-default');
-            } else {
-                applyTheme(selectedTheme);
-            }
-        });
-    }
-
-    // Revert to Default Theme Button
-    if (revertToDefaultThemeBtn) {
-        revertToDefaultThemeBtn.addEventListener('click', (event) => {
-            console.log("[Theme] Revert to default theme button clicked.");
-            event.preventDefault();
-            applyTheme('system-default');
-            console.log("[Theme] Reverted to default light/dark theme via button.");
-        });
-    }
+    // Removed Color Theme Select Dropdown and Revert to Default Theme Button logic
+    // if (colorThemeSelect) { ... }
+    // if (revertToDefaultThemeBtn) { ... }
 
     // System Dark Mode Preference Listener
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+        // Only apply system preference if the theme is currently 'system-default'
         if (currentActiveTheme === 'system-default') {
             if (event.matches) {
                 document.body.classList.add('dark-theme');
@@ -2649,7 +2560,6 @@ async function initializeAppLogic() {
                 document.body.classList.remove('dark-theme');
             }
             console.log("[Theme] System theme preference changed and applied (system-default mode).");
-            updateThemeToggleAndSelector();
         }
     });
 
@@ -2766,7 +2676,7 @@ async function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v161) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v162) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
@@ -2799,7 +2709,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 clearShareList();
                 clearWatchlistUI();
                 if (loadingIndicator) loadingIndicator.style.display = 'none';
-                applyTheme('system-default');
+                applyTheme('system-default'); // Revert to system default on logout
                 if (unsubscribeShares) { // Ensure listener is cleaned up on logout
                     unsubscribeShares();
                     unsubscribeShares = null;
