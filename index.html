@@ -238,7 +238,7 @@
                 <label for="frankingCredits">Franking Credits (%):</label>
                 <input type="number" id="frankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 70 for 70%">
 
-                <!-- Comments section container - MODIFIED STRUCTURE HERE -->
+                <!-- Comments section container -->
                 <div class="comments-form-container">
                     <!-- This H3 and icon are STATIC and will NOT be cleared -->
                     <h3>Comments <span id="addCommentSectionBtn" class="add-section-icon"><i class="fas fa-plus"></i></span></h3>
@@ -400,7 +400,7 @@
                 <button class="calc-btn operator" data-action="add">+</button>
                 
                 <!-- Row 5: 0 (span 2), ., = (span 1) -->
-                <button class="calc-btn zero" data-value="0"></button>
+                <button class="calc-btn zero" data-value="0">0</button> <!-- ADDED "0" HERE -->
                 <button class="calc-btn" data-value=".">.</button>
                 <button class="calc-btn equals" data-action="calculate">=</button>
             </div>
