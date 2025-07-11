@@ -339,6 +339,7 @@ function clearForm() {
     });
     if (commentsFormContainer) {
         commentsFormContainer.innerHTML = '';
+addCommentSection(); // <--- ADD THIS LINE   
     }
     selectedShareDocId = null;
     originalShareData = null;
