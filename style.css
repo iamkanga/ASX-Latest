@@ -729,9 +729,10 @@ h1#mainTitle {
     left: 0; 
 }
 
+/* MODIFIED: Close Menu Button for smaller size */
 .close-menu-btn {
     color: var(--close-sidebar-btn-color);
-    font-size: 2.5em; 
+    font-size: 2em; /* Reduced from 2.5em */
     position: absolute;
     top: 10px;
     right: 15px;
@@ -1684,7 +1685,7 @@ table td.live-price-cell {
 }
 
 .context-menu-item.danger-button:hover {
-    background-color: var(--danger-color);
+    background-color: var(--danger-button-hover-bg);
     color: var(--button-text);
 }
 
