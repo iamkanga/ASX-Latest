@@ -2294,3 +2294,20 @@ table td.live-price-cell {
         font-size: 1em;
     }
 }
+    /* --- DEBUGGING: FORCED VISIBILITY OF ADD COMMENT BUTTON --- */
+    #addCommentSectionBtn {
+        display: flex !important; /* Force display */
+        visibility: visible !important; /* Force visibility */
+        opacity: 1 !important; /* Force full opacity */
+        width: auto !important; /* Allow it to take its natural width */
+        height: auto !important; /* Allow it to take its natural height */
+        padding: 10px !important; /* Give it some space to be seen */
+        background-color: #ff0000 !important; /* Make it red to easily spot it */
+        color: white !important; /* White text for contrast */
+        border-radius: 50% !important; /* Make it round */
+        font-size: 2em !important; /* Make the icon large */
+        z-index: 9999 !important; /* Ensure it's on top of other elements */
+        position: relative !important; /* Ensure positioning context */
+    }
+    /* --- END DEBUGGING CSS --- */
+    
