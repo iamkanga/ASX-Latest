@@ -879,11 +879,11 @@ h1#mainTitle {
     display: block; 
 }
 
-/* Watchlist and Sort Controls */
+/* Watchlist and Sort Controls - MODIFIED for smaller size and centering */
 .watchlist-controls-row {
     display: flex;
     flex-wrap: wrap; 
-    justify-content: center; 
+    justify-content: center; /* Center the group of dropdowns */
     align-items: center;
     gap: 15px 25px; 
     padding: 10px 0;
@@ -900,12 +900,14 @@ h1#mainTitle {
     display: flex;
     align-items: center;
     gap: 8px;
-    flex-basis: calc(50% - 12.5px);
-    max-width: calc(50% - 12.5px);
+    max-width: 180px; /* Make them smaller */
+    flex-basis: auto; /* Let content determine initial size */
+    flex-grow: 0; /* Prevent them from growing */
+    flex-shrink: 1; /* Allow them to shrink if needed */
 }
 
 .dropdown-large {
-    padding: 10px 15px;
+    padding: 8px 12px; /* Smaller padding */
     border: 1px solid var(--input-border);
     border-radius: 8px;
     background-color: var(--input-bg);
@@ -916,13 +918,13 @@ h1#mainTitle {
     -moz-appearance: none;
     cursor: pointer;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    min-width: 150px;
+    min-width: 100px; /* Allow smaller minimum width */
     background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http://www.w3.org/2000/svg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236c757d%22%20d%3D%22M287%2069.9a14.7%2014.7%200%200%200-20.8%200L146.2%20189.9%2026.3%2069.9a14.7%2014.7%200%200%200-20.8%2020.8L135.8%20216.7a14.7%2014.7%200%200%200%2020.8%200L287%2090.7a14.7%2014.7%200%200%200%200-20.8z%22%2F%3E%3C%2Fsvg%3E'); 
     background-repeat: no-repeat;
-    background-position: right 12px top 50%;
-    background-size: 12px auto;
-    padding-right: 30px;
-    max-height: 45px; 
+    background-position: right 10px top 50%; /* Adjust arrow position */
+    background-size: 10px auto; /* Adjust arrow size */
+    padding-right: 25px; /* Adjust padding for smaller arrow */
+    max-height: 40px; /* Slightly smaller height */
     overflow-y: hidden; 
     width: 100%;
 }
