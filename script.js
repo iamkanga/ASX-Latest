@@ -1,5 +1,5 @@
 // File Version: v167
-// Last Updated: 2025-07-10 (Prioritized hamburger menu fix; fixed modal edit/delete buttons; fixed context menu display/functionality; implemented dynamic add/delete comments in modal; fixed watchlist selection modal)
+// Last Updated: 2025-07-11 (Fixed hamburger menu; fixed modal edit/delete buttons; fixed context menu display/functionality; implemented dynamic add/delete comments in modal; re-added custom confirmation dialog)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -69,7 +69,6 @@ const shareFormSection = document.getElementById('shareFormSection');
 const formCloseButton = document.querySelector('.form-close-button');
 const formTitle = document.getElementById('formTitle');
 const saveShareBtn = document.getElementById('saveShareBtn');
-// const cancelFormBtn = document.getElementById('cancelFormBtn'); // This button is removed from HTML
 const deleteShareBtn = document.getElementById('deleteShareBtn');
 const shareNameInput = document.getElementById('shareName');
 const currentPriceInput = document.getElementById('currentPrice');
@@ -127,18 +126,15 @@ const scrollToTopBtn = document.getElementById('scrollToTopBtn');
 const hamburgerBtn = document.getElementById('hamburgerBtn');
 const appSidebar = document.getElementById('appSidebar');
 const closeMenuBtn = document.getElementById('closeMenuBtn');
-// const selectWatchlistsBtn = document.getElementById('selectWatchlistsBtn'); // New sidebar button - removed as per user's provided index.html
 const addWatchlistBtn = document.getElementById('addWatchlistBtn');
 const editWatchlistBtn = document.getElementById('editWatchlistBtn');
 const addWatchlistModal = document.getElementById('addWatchlistModal');
 const newWatchlistNameInput = document.getElementById('newWatchlistName');
 const saveWatchlistBtn = document.getElementById('saveWatchlistBtn'); // Now a span
-// const cancelAddWatchlistBtn = document.getElementById('cancelAddWatchlistBtn'); // Now a span - removed from HTML
 const manageWatchlistModal = document.getElementById('manageWatchlistModal');
 const editWatchlistNameInput = document.getElementById('editWatchlistName');
 const saveWatchlistNameBtn = document.getElementById('saveWatchlistNameBtn'); // Now a span
 const deleteWatchlistInModalBtn = document.getElementById('deleteWatchlistInModalBtn'); // Now a span
-// const cancelManageWatchlistBtn = document.getElementById('cancelManageWatchlistBtn'); // Now a span - removed from HTML
 const shareContextMenu = document.getElementById('shareContextMenu');
 const contextEditShareBtn = document.getElementById('contextEditShareBtn');
 const contextDeleteShareBtn = document.getElementById('contextDeleteShareBtn');
@@ -220,8 +216,54 @@ function showCustomAlert(message, duration = 1000) {
     console.log(`[Alert] Showing alert: "${message}"`);
 }
 
-// Confirmation screen removed as per user request
-// function showCustomConfirm(message, onConfirm, onCancel = null) { ... }
+/**
+ * Shows a custom confirmation dialog.
+ * @param {string} message The message to display.
+ * @param {function} onConfirm Callback function to execute if confirmed.
+ * @param {function} [onCancel=null] Callback function to execute if cancelled.
+ */
+function showCustomConfirm(message, onConfirm, onCancel = null) {
+    if (!customDialogModal || !customDialogMessage || !customDialogConfirmBtn || !customDialogCancelBtn) {
+        console.error("Custom dialog elements not found. Cannot show confirm dialog.");
+        console.log("CONFIRM (fallback):", message);
+        // Fallback to direct execution or simple alert if elements are missing
+        // Using native confirm as a last resort fallback, though generally avoided in iframe.
+        if (confirm(message)) { 
+            onConfirm();
+        } else if (onCancel) {
+            onCancel();
+        }
+        return;
+    }
+
+    customDialogMessage.textContent = message;
+    
+    // Ensure buttons are visible and enabled
+    customDialogConfirmBtn.style.display = 'inline-flex'; 
+    setIconDisabled(customDialogConfirmBtn, false);
+    customDialogCancelBtn.style.display = 'inline-flex';
+    setIconDisabled(customDialogCancelBtn, false);
+
+    // Clear previous listeners to prevent multiple calls
+    customDialogConfirmBtn.onclick = null;
+    customDialogCancelBtn.onclick = null;
+
+    customDialogConfirmBtn.onclick = () => {
+        hideModal(customDialogModal);
+        if (onConfirm) onConfirm();
+        console.log("[Confirm] Confirmed.");
+    };
+
+    customDialogCancelBtn.onclick = () => {
+        hideModal(customDialogModal);
+        if (onCancel) onCancel();
+        console.log("[Confirm] Cancelled.");
+    };
+
+    showModal(customDialogModal);
+    console.log(`[Confirm] Showing confirm dialog: "${message}"`);
+}
+
 
 // Date Formatting Helper Functions (Australian Style)
 function formatDate(dateString) {
@@ -257,7 +299,6 @@ function updateMainButtonsState(enable) {
     if (standardCalcBtn) standardCalcBtn.disabled = !enable;
     if (dividendCalcBtn) dividendCalcBtn.disabled = !enable;
     if (exportWatchlistBtn) exportWatchlistBtn.disabled = !enable;
-    // if (selectWatchlistsBtn) setIconDisabled(selectWatchlistsBtn, !enable); // New watchlist button - removed as per user's provided index.html
     if (addWatchlistBtn) addWatchlistBtn.disabled = !enable;
     // editWatchlistBtn's disabled state is also dependent on userWatchlists.length, handled in loadUserWatchlistsAndSettings
     if (editWatchlistBtn) editWatchlistBtn.disabled = !enable || userWatchlists.length === 0; 
@@ -1066,12 +1107,6 @@ function addShareToMobileCards(share) {
 
     const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, priceForYield);
     const frankedYield = calculateFrankedYield(dividendAmountNum, priceForYield, frankingCreditsNum);
-
-    // Comments section removed from main watchlist/cards
-    // let commentsSummary = '-';
-    // if (share.comments && Array.isArray(share.comments) && share.comments.length > 0 && share.comments[0].text) {
-    //     commentsSummary = truncateText(share.comments[0].text, 70);
-    // }
 
     const displayTargetPrice = (!isNaN(targetPriceNum) && targetPriceNum !== null) ? targetPriceNum.toFixed(2) : '-';
     const displayDividendAmount = (!isNaN(dividendAmountNum) && dividendAmountNum !== null) ? dividendAmountNum.toFixed(2) : '-';
@@ -2354,7 +2389,7 @@ async function initializeAppLogic() {
                     shareData.previousFetchedPrice = existingShare.previousFetchedPrice; // Preserve existing if no change
                     shareData.lastFetchedPrice = existingShare.lastFetchedPrice; // Preserve existing if no change
                 } else { // No change in currentPrice, preserve existing fetched prices
-                    shareData.previousFetchedPrice = existingShare.previousFetchedPrice;
+                    shareData.previousFetchedPrice = existingShare.previousPrice; // Should be previousFetchedPrice
                     shareData.lastFetchedPrice = existingShare.lastFetchedPrice;
                 }
 
@@ -2386,79 +2421,168 @@ async function initializeAppLogic() {
             closeModals();
         });
     }
-}
 
-document.addEventListener('DOMContentLoaded', function() {
-    // Ensure this script only runs its initialization logic once
-    if (window._appLogicInitializedOnce) {
-        console.warn("script.js: initializeAppLogic already executed. Skipping duplicate initialization.");
-        return;
+    // Delete Share Button in Share Form Modal
+    if (deleteShareBtn) {
+        deleteShareBtn.addEventListener('click', () => {
+            if (!selectedShareDocId) { showCustomAlert("No share selected to delete."); return; }
+            showCustomConfirm("Are you sure you want to delete this share?", async () => {
+                try {
+                    const shareDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, selectedShareDocId);
+                    await window.firestore.deleteDoc(shareDocRef);
+                    showCustomAlert("Share deleted successfully!", 1500);
+                    console.log(`[Firestore] Share (ID: ${selectedShareDocId}) deleted.`);
+                    closeModals(); // Close the form modal
+                    deselectCurrentShare(); // Deselect after deletion
+                } catch (error) {
+                    console.error("[Firestore] Error deleting share:", error);
+                    showCustomAlert("Error deleting share: " + error.message);
+                }
+            });
+        });
     }
-    window._appLogicInitializedOnce = true;
 
+    // Edit Share Button from Share Details Modal
+    if (editShareFromDetailBtn) {
+        editShareFromDetailBtn.addEventListener('click', () => {
+            console.log("[UI] Edit Share button (details modal) clicked.");
+            showEditFormForSelectedShare(); // This will use selectedShareDocId
+            closeModals(); // Close the details modal
+        });
+    }
 
-    console.log("script.js (v166) DOMContentLoaded fired."); // Updated version number
-
-    if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
-        db = window.firestoreDb;
-        auth = window.firebaseAuth;
-        currentAppId = window.getFirebaseAppId();
-        console.log("[Firebase Ready] DB, Auth, and AppId assigned from window. Setting up auth state listener.");
-        
-        window.authFunctions.onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                currentUserId = user.uid;
-                updateAuthButtonText(true, user.email || user.displayName);
-                console.log("[AuthState] User signed in:", user.uid);
-                console.log("[AuthState] User email:", user.email); // Log user email for debugging title
-                if (user.email && user.email.toLowerCase() === KANGA_EMAIL) {
-                    mainTitle.textContent = "Kanga's Share Watchlist";
-                    console.log("[AuthState] Main title set to Kanga's Share Watchlist.");
-                } else {
-                    mainTitle.textContent = "My Share Watchlist";
-                    console.log("[AuthState] Main title set to My Share Watchlist.");
+    // Delete Share Button from Share Details Modal
+    if (deleteShareFromDetailBtn) {
+        deleteShareFromDetailBtn.addEventListener('click', () => {
+            if (!selectedShareDocId) { showCustomAlert("No share selected to delete."); return; }
+            showCustomConfirm("Are you sure you want to delete this share?", async () => {
+                try {
+                    const shareDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, selectedShareDocId);
+                    await window.firestore.deleteDoc(shareDocRef);
+                    showCustomAlert("Share deleted successfully!", 1500);
+                    console.log(`[Firestore] Share (ID: ${selectedShareDocId}) deleted from details modal.`);
+                    closeModals(); // Close the details modal
+                    deselectCurrentShare(); // Deselect after deletion
+                } catch (error) {
+                    console.error("[Firestore] Error deleting share from details modal:", error);
+                    showCustomAlert("Error deleting share: " + error.message);
                 }
-                updateMainButtonsState(true);
-                await loadUserWatchlistsAndSettings(); // This will set currentSelectedWatchlistIds and then call loadShares()
-                startLivePriceUpdates(); // Start fetching live prices when user signs in
-            } else {
-                currentUserId = null;
-                updateAuthButtonText(false); // Changed to false for "Google Sign In" text
-                mainTitle.textContent = "Share Watchlist";
-                console.log("[AuthState] User signed out.");
-                updateMainButtonsState(false);
-                clearShareList();
-                clearWatchlistUI();
-                if (loadingIndicator) loadingIndicator.style.display = 'none';
-                applyTheme('system-default');
-                if (unsubscribeShares) { // Ensure listener is cleaned up on logout
-                    unsubscribeShares();
-                    unsubscribeShares = null;
-                    console.log("[Firestore Listener] Unsubscribed from shares listener on logout.");
+            });
+        });
+    }
+
+    // Context Menu Edit Button
+    if (contextEditShareBtn) {
+        contextEditShareBtn.addEventListener('click', () => {
+            console.log("[UI] Context Menu Edit Share button clicked.");
+            showEditFormForSelectedShare(currentContextMenuShareId); // Pass the ID from context menu
+            hideContextMenu();
+        });
+    }
+
+    // Context Menu Delete Button
+    if (contextDeleteShareBtn) {
+        contextDeleteShareBtn.addEventListener('click', () => {
+            if (!currentContextMenuShareId) { showCustomAlert("No share selected to delete."); return; }
+            showCustomConfirm("Are you sure you want to delete this share?", async () => {
+                try {
+                    const shareDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, currentContextMenuShareId);
+                    await window.firestore.deleteDoc(shareDocRef);
+                    showCustomAlert("Share deleted successfully!", 1500);
+                    console.log(`[Firestore] Share (ID: ${currentContextMenuShareId}) deleted from context menu.`);
+                    hideContextMenu();
+                    deselectCurrentShare(); // Deselect after deletion
+                } catch (error) {
+                    console.error("[Firestore] Error deleting share from context menu:", error);
+                    showCustomAlert("Error deleting share: " + error.message);
                 }
-                stopLivePriceUpdates(); // Stop fetching live prices when user signs out
-            }
-            // Ensure initializeAppLogic is only called once after initial auth state is determined
-            if (!window._appLogicInitialized) {
-                initializeAppLogic();
-                window._appLogicInitialized = true;
+            });
+        });
+    }
+
+    // Sidebar Menu Item Click to Close Sidebar (for items with data-action-closes-menu="true")
+    if (appSidebar) {
+        appSidebar.addEventListener('click', (event) => {
+            const targetButton = event.target.closest('.menu-button-item');
+            if (targetButton && targetButton.dataset.actionClosesMenu === 'true') {
+                toggleAppSidebar(false);
             }
         });
-        
-        if (googleAuthBtn) {
-            googleAuthBtn.disabled = false;
-            console.log("[Auth] Google Auth button enabled on DOMContentLoaded.");
-        }
-
-    } else {
-        console.error("[Firebase] Firebase objects (db, auth, appId, firestore, authFunctions) are not available on DOMContentLoaded. Firebase initialization likely failed in index.html.");
-        const errorDiv = document.getElementById('firebaseInitError');
-        if (errorDiv) {
-                errorDiv.style.display = 'block';
-        }
-        updateAuthButtonText(false);
-        updateMainButtonsState(false);
-        if (loadingIndicator) loadingIndicator.style.display = 'none';
-        applyTheme('system-default');
     }
-});
+
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Ensure this script only runs its initialization logic once
+        if (window._appLogicInitializedOnce) {
+            console.warn("script.js: initializeAppLogic already executed. Skipping duplicate initialization.");
+            return;
+        }
+        window._appLogicInitializedOnce = true;
+
+
+        console.log("script.js (v167) DOMContentLoaded fired."); // Updated version number
+
+        if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
+            db = window.firestoreDb;
+            auth = window.firebaseAuth;
+            currentAppId = window.getFirebaseAppId();
+            console.log("[Firebase Ready] DB, Auth, and AppId assigned from window. Setting up auth state listener.");
+            
+            window.authFunctions.onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    currentUserId = user.uid;
+                    updateAuthButtonText(true, user.email || user.displayName);
+                    console.log("[AuthState] User signed in:", user.uid);
+                    console.log("[AuthState] User email:", user.email); // Log user email for debugging title
+                    if (user.email && user.email.toLowerCase() === KANGA_EMAIL) {
+                        mainTitle.textContent = "Kanga's Share Watchlist";
+                        console.log("[AuthState] Main title set to Kanga's Share Watchlist.");
+                    } else {
+                        mainTitle.textContent = "My Share Watchlist";
+                        console.log("[AuthState] Main title set to My Share Watchlist.");
+                    }
+                    updateMainButtonsState(true);
+                    await loadUserWatchlistsAndSettings(); // This will set currentSelectedWatchlistIds and then call loadShares()
+                    startLivePriceUpdates(); // Start fetching live prices when user signs in
+                } else {
+                    currentUserId = null;
+                    updateAuthButtonText(false); // Changed to false for "Google Sign In" text
+                    mainTitle.textContent = "Share Watchlist";
+                    console.log("[AuthState] User signed out.");
+                    updateMainButtonsState(false);
+                    clearShareList();
+                    clearWatchlistUI();
+                    if (loadingIndicator) loadingIndicator.style.display = 'none';
+                    applyTheme('system-default');
+                    if (unsubscribeShares) { // Ensure listener is cleaned up on logout
+                        unsubscribeShares();
+                        unsubscribeShares = null;
+                        console.log("[Firestore Listener] Unsubscribed from shares listener on logout.");
+                    }
+                    stopLivePriceUpdates(); // Stop fetching live prices when user signs out
+                }
+                // Ensure initializeAppLogic is only called once after initial auth state is determined
+                if (!window._appLogicInitialized) {
+                    initializeAppLogic();
+                    window._appLogicInitialized = true;
+                }
+            });
+            
+            if (googleAuthBtn) {
+                googleAuthBtn.disabled = false;
+                console.log("[Auth] Google Auth button enabled on DOMContentLoaded.");
+            }
+
+        } else {
+            console.error("[Firebase] Firebase objects (db, auth, appId, firestore, authFunctions) are not available on DOMContentLoaded. Firebase initialization likely failed in index.html.");
+            const errorDiv = document.getElementById('firebaseInitError');
+            if (errorDiv) {
+                    errorDiv.style.display = 'block';
+            }
+            updateAuthButtonText(false);
+            updateMainButtonsState(false);
+            if (loadingIndicator) loadingIndicator.style.display = 'none';
+            applyTheme('system-default');
+        }
+    });
+}
