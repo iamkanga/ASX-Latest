@@ -338,13 +338,8 @@ function clearForm() {
         if (input) { input.value = ''; }
     });
     if (commentsFormContainer) {
-    commentsFormContainer.innerHTML = '';
-    if (shareToEdit.comments && Array.isArray(shareToEdit.comments) && shareToEdit.comments.length > 0) {
-        shareToEdit.comments.forEach(comment => addCommentSection(comment.title, comment.text));
-    } else {
-        addCommentSection(); // <--- THIS LINE MUST BE HERE
-    }
-}  
+        commentsFormContainer.innerHTML = ''; // Clears all existing comment sections
+        // IMPORTANT: No addCommentSection() call here. It's handled by the modal open triggers.
     }
     selectedShareDocId = null;
     originalShareData = null;
@@ -354,9 +349,9 @@ function clearForm() {
     }
     setIconDisabled(saveShareBtn, true);
     console.log("[Form] Form fields cleared and selectedShareDocId reset. saveShareBtn disabled.");
+}
 
-
-    function showEditFormForSelectedShare(shareIdToEdit = null) {
+function showEditFormForSelectedShare(shareIdToEdit = null) {
     const targetShareId = shareIdToEdit || selectedShareDocId;
 
     if (!targetShareId) {
@@ -378,9 +373,12 @@ function clearForm() {
     frankingCreditsInput.value = Number(shareToEdit.frankingCredits) !== null && !isNaN(Number(shareToEdit.frankingCredits)) ? Number(shareToEdit.frankingCredits).toFixed(1) : '';
     
     if (commentsFormContainer) {
-        commentsFormContainer.innerHTML = '';
+        commentsFormContainer.innerHTML = ''; // Clear existing comments
         if (shareToEdit.comments && Array.isArray(shareToEdit.comments) && shareToEdit.comments.length > 0) {
             shareToEdit.comments.forEach(comment => addCommentSection(comment.title, comment.text));
+        } else {
+            // Add one empty comment section if no existing comments
+            addCommentSection(); 
         }
     }
     if (deleteShareBtn) {
@@ -526,17 +524,19 @@ function showShareDetails() {
 
         if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice) && comparisonPrice !== null) {
             const change = livePrice - comparisonPrice;
+            const priceChangeSpan = document.createElement('span');
+            priceChangeSpan.classList.add('price-change');
             if (change > 0) {
-                modalPriceChange.textContent = `(+$${change.toFixed(2)})`;
-                modalPriceChange.classList.add('positive');
+                priceChangeSpan.textContent = `(+$${change.toFixed(2)})`;
+                priceChangeSpan.classList.add('positive');
             } else if (change < 0) {
-                modalPriceChange.textContent = `(-$${Math.abs(change).toFixed(2)})`;
-                modalPriceChange.classList.add('negative');
+                priceChangeSpan.textContent = `(-$${Math.abs(change).toFixed(2)})`;
+                priceChangeSpan.classList.add('negative');
             } else {
-                modalPriceChange.textContent = `($0.00)`;
-                modalPriceChange.classList.add('neutral');
+                priceChangeSpan.textContent = `($0.00)`;
+                priceChangeSpan.classList.add('neutral');
             }
-            modalPriceChange.style.display = 'inline';
+            modalPriceChange.appendChild(priceChangeSpan);
         } else {
             modalPriceChange.style.display = 'none';
         }
@@ -1826,7 +1826,7 @@ function exportWatchlistToCSV() {
             (!isNaN(dividendAmountNum) && dividendAmountNum !== null) ? dividendAmountNum.toFixed(3) : '',
             (!isNaN(frankingCreditsNum) && frankingCreditsNum !== null) ? frankingCreditsNum.toFixed(1) : '',
             unfrankedYield !== null ? unfrankedYield.toFixed(2) : '',
-            frankedYield !== null ? frankedYield.toFixed(2) : '',
+            frankedYield !== null ? frankedYield.toFixed(2) + '%' : '', // Ensure % is added
             formatDate(share.entryDate) || '',
             allCommentsText
         ];
@@ -2003,7 +2003,8 @@ async function initializeAppLogic() {
                 showCustomAlert("Logged out successfully!", 1500);
                 console.log("[Auth] User successfully logged out.");
                 toggleAppSidebar(false);
-            } catch (error) {
+            }
+            catch (error) {
                 console.error("[Auth] Logout failed:", error);
                 showCustomAlert("Logout failed: " + error.message);
             }
@@ -2032,18 +2033,19 @@ async function initializeAppLogic() {
 
     // New Share Button (from sidebar)
     if (newShareBtn) {
-        newShareBtn.addEventListener('click', () => {addCommentSection(); // <--- ADD THIS LINE
+        newShareBtn.addEventListener('click', () => {
             console.log("[UI] New Share button (sidebar) clicked.");
             clearForm();
             formTitle.textContent = 'Add New Share';
             if (deleteShareBtn) { deleteShareBtn.classList.add('hidden'); }
             showModal(shareFormSection);
             shareNameInput.focus();
-            toggleAppSidebar(false); 
+            toggleAppSidebar(false);
+            addCommentSection(); // ADDED: Add an initial empty comment section for new shares
         });
     }
 
-      // Add Share Header Button (from header)
+    // Add Share Header Button (from header)
     if (addShareHeaderBtn) {
         addShareHeaderBtn.addEventListener('click', () => {
             console.log("[UI] Add Share button (header) clicked.");
@@ -2052,10 +2054,9 @@ async function initializeAppLogic() {
             if (deleteShareBtn) { deleteShareBtn.classList.add('hidden'); }
             showModal(shareFormSection);
             shareNameInput.focus();
-            addCommentSection(); // <--- This is the line that should be added here
+            addCommentSection(); // ADDED: Add an initial empty comment section for new shares
         });
     }
-
 
     // Event listener for shareNameInput to toggle saveShareBtn
     if (shareNameInput && saveShareBtn) {
@@ -2236,6 +2237,7 @@ async function initializeAppLogic() {
                     await window.firestore.deleteDoc(shareDocRef);
                     showCustomAlert("Share deleted successfully!", 1500);
                     console.log(`[Firestore] Share (ID: ${shareToDeleteId}) deleted.`);
+                    closeModals();
                 } catch (error) {
                     console.error("[Firestore] Error deleting share:", error);
                     showCustomAlert("Error deleting share: " + error.message);
