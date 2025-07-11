@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Share Tracker</title>
+    <title>Share Watchlist</title>
     <!-- Favicon: Eggplant emoji -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍆</text></svg>">
 
     <!-- Linking to your separate style.css file -->
-    <link rel="stylesheet" href="style.css?v=108"> <!-- Updated to v107 -->
+    <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -18,12 +18,12 @@
 <body>
     <header>
         <div class="header-top-row">
-            <!-- Hamburger/Sidebar Toggle Button - NOW ON LEFT -->
+            <!-- Hamburger/Sidebar Toggle Button -->
             <button id="hamburgerBtn" class="hamburger-btn header-action-btn-left">
                 <i class="fas fa-bars"></i>
             </button>
-            <h1 id="mainTitle">Share Watchlist</h1> <!-- Default text before login -->
-            <!-- New "Add Share" button on the main screen - NOW ON RIGHT -->
+            <h1 id="mainTitle">Share Watchlist</h1>
+            <!-- Add Share button on the main screen -->
             <button id="addShareHeaderBtn" class="header-action-btn header-action-btn-right">
                 <i class="fas fa-plus"></i>
             </button>
@@ -36,11 +36,11 @@
             <div class="menu-section">
                 <h3>Share Actions</h3>
                 <div class="menu-buttons-group">
-                    <!-- NEW: Refresh Live Prices Button - MOVED TO TOP OF SHARE ACTIONS -->
+                    <!-- Refresh Live Prices Button -->
                     <button id="refreshLivePricesBtn" class="menu-button-item" data-action-closes-menu="false">
                         <i class="fas fa-sync-alt"></i> <span>Refresh Live Prices</span>
                     </button>
-                    <!-- Add New Share - Icon with Text -->
+                    <!-- Add New Share -->
                     <button id="newShareBtn" class="menu-button-item" data-action-closes-menu="true">
                         <i class="fas fa-plus-circle"></i> <span>Add New Share</span>
                     </button>
@@ -50,11 +50,11 @@
             <div class="menu-section">
                 <h3>Watchlists</h3>
                 <div class="menu-buttons-group">
-                    <!-- Add Watchlist - Icon with Text -->
+                    <!-- Add Watchlist -->
                     <button id="addWatchlistBtn" class="menu-button-item" data-action-closes-menu="true">
                         <i class="fas fa-list-ul"></i> <span>Add Watchlist</span>
                     </button>
-                    <!-- Edit Current Watchlist - Icon with Text -->
+                    <!-- Edit Current Watchlist -->
                     <button id="editWatchlistBtn" class="menu-button-item" data-action-closes-menu="true">
                         <i class="fas fa-edit"></i> <span>Edit Current Watchlist</span>
                     </button>
@@ -64,27 +64,17 @@
             <div class="menu-section">
                 <h3>Calculators</h3>
                 <div class="menu-buttons-group">
-                    <!-- Standard Calculator - REMOVED -->
-                    <!-- Dividend Calculator - Icon with Text -->
+                    <!-- Standard Calculator -->
+                    <button id="standardCalcBtn" class="menu-button-item" data-action-closes-menu="true">
+                        <i class="fas fa-calculator"></i> <span>Standard</span>
+                    </button>
+                    <!-- Dividend Calculator -->
                     <button id="dividendCalcBtn" class="menu-button-item" data-action-closes-menu="true">
                         <i class="fas fa-money-bill-wave"></i> <span>Dividend</span>
                     </button>
                 </div>
             </div>
 
-            <div class="menu-section">
-                <h3>Theme</h3>
-                <div class="menu-buttons-group">
-                    <!-- Theme Toggle Button - Icon with Text -->
-                    <button id="themeToggleBtn" class="menu-button-item" data-action-closes-menu="false">
-                        <i class="fas fa-palette"></i> <span>Theme Toggle</span>
-                    </button>
-                    <!-- Removed Theme Selector Dropdown -->
-                    <!-- Removed Revert to Default Theme Button -->
-                </div>
-            </div>
-
-            <!-- Data Actions Section - MOVED TO NEW POSITION -->
             <div class="menu-section">
                 <h3>Data Actions</h3>
                 <div class="menu-buttons-group">
@@ -94,12 +84,56 @@
                     </button>
                 </div>
             </div>
+
+            <div class="menu-section">
+                <h3>Theme</h3>
+                <div class="menu-buttons-group">
+                    <!-- Theme Selector Dropdown -->
+                    <label for="colorThemeSelect" class="theme-select-label">Choose Color Theme:</label>
+                    <select id="colorThemeSelect" class="dropdown-large menu-dropdown" data-action-closes-menu="false">
+                        <option value="none" selected>No Custom Theme</option>
+                        <optgroup label="Bold Themes">
+                            <option value="bold-1">Bold Ocean</option>
+                            <option value="bold-2">Bold Forest</option>
+                            <option value="bold-3">Bold Sunset</option>
+                            <option value="bold-4">Bold Royal</option>
+                            <option value="bold-5">Bold Grape</option>
+                            <option value="bold-6">Bold Fire</option>
+                            <option value="bold-7">Bold Emerald</option>
+                            <option value="bold-8">Bold Plum</option>
+                            <option value="bold-9">Bold Aqua</option>
+                            <option value="bold-10">Bold Ruby</option>
+                        </optgroup>
+                        <optgroup label="Subtle Themes">
+                            <option value="subtle-1">Subtle Sky</option>
+                            <option value="subtle-2">Subtle Earth</option>
+                            <option value="subtle-3">Subtle Rose</option>
+                            <option value="subtle-4">Subtle Lavender</option>
+                            <option value="subtle-5">Subtle Mint</option>
+                            <option value="subtle-6">Subtle Sand</option>
+                            <option value="subtle-7">Subtle Graphite</option>
+                            <option value="subtle-8">Subtle Peach</option>
+                            <option value="subtle-9">Subtle Teal</option>
+                            <option value="subtle-10">Subtle Stone</option>
+                        </optgroup>
+                    </select>
+
+                    <!-- Theme Toggle Button -->
+                    <button id="themeToggleBtn" class="menu-button-item" data-action-closes-menu="false">
+                        <i class="fas fa-palette"></i> <span>Theme Toggle</span>
+                    </button>
+                    
+                    <!-- Revert to Default Theme Button -->
+                    <button id="revertToDefaultThemeBtn" class="menu-button-item secondary-buttons" data-action-closes-menu="false">
+                        <i class="fas fa-sun"></i><i class="fas fa-moon"></i> <span>Default Theme</span>
+                    </button>
+                </div>
+            </div>
             
-            <!-- Logout Button Section - Icon with Text -->
+            <!-- Logout Button Section -->
             <div class="menu-section logout-section">
                 <h3>Account</h3>
                 <div class="menu-buttons-group">
-                    <!-- Changed to span for standalone icon behavior -->
                     <span id="logoutBtn" class="menu-button-item danger-button" data-action-closes-menu="true">
                         <i class="fas fa-sign-out-alt"></i> <span>Log Out</span>
                     </span>
@@ -114,13 +148,13 @@
         <div class="watchlist-controls-row">
             <div class="watchlist-group">
                 <select id="watchlistSelect" class="dropdown-large">
-                    <!-- Options populated by JS, including 'Watchlist' placeholder -->
+                    <!-- Options populated by JS -->
                 </select>
             </div>
 
             <div class="sort-group">
                 <select id="sortSelect" class="dropdown-large">
-                    <option value="" disabled selected>Sort by</option> <!-- Explicit "Sort by" placeholder -->
+                    <option value="" disabled selected>Sort by</option>
                     <option value="entryDate-desc">Date Added (Newest)</option>
                     <option value="entryDate-asc">Date Added (Oldest)</option>
                     <option value="shareName-asc">Code (A-Z)</option>
@@ -152,11 +186,11 @@
                     <thead>
                         <tr>
                             <th>Code</th>
-                            <th>Live Price</th> <!-- MOVED UP -->
-                            <th>Entered Price</th> <!-- MOVED DOWN -->
+                            <th>Live Price</th>
+                            <th>Entered Price</th>
                             <th>Target Price</th>
-                            <th></th> <!-- Placeholder for Dividends, title added by CSS -->
-                            <!-- Comments column header removed -->
+                            <th>Dividends</th>
+                            <th>Comments</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -206,7 +240,6 @@
 
                 <!-- Comments section container -->
                 <div id="commentsFormContainer" class="comments-form-container">
-                    <!-- ADDED PLUS ICON HERE (NOT A BUTTON) -->
                     <h3>Comments <span id="addCommentSectionBtn" class="add-section-icon"><i class="fas fa-plus"></i></span></h3>
                     <!-- Initial comment section will be added here by JS -->
                 </div>
@@ -222,36 +255,39 @@
         </div>
     </div>
 
-    <!-- Share Details Modal (Still needed for double-click on table/card) -->
+    <!-- Share Details Modal -->
     <div id="shareDetailModal" class="modal">
         <div class="modal-content">
             <span class="close-button">&times;</span>
             <h2 id="modalShareName">Share Details</h2>
             
-            <!-- NEW: Scrollable content for share details modal -->
+            <!-- Scrollable content for share details modal -->
             <div class="modal-body-scrollable">
                 <p><strong>Entry Date:</strong> <span id="modalEntryDate"></span></p>
-                <p><strong>Live Price:</strong> <span id="modalLivePrice"></span> <span id="modalPriceChange" class="price-change"></span></p> <!-- MOVED UP -->
-                <p><strong>Entered Price:</strong> <span id="modalEnteredPrice"></span></p> <!-- MOVED DOWN -->
+                <p><strong>Live Price:</strong> <span id="modalLivePrice"></span> <span id="modalPriceChange" class="price-change"></span></p>
+                <p><strong>Entered Price:</strong> <span id="modalEnteredPrice"></span></p>
                 <p><strong>Target Price:</strong> <span id="modalTargetPrice"></span></p>
                 <p><strong>Dividend Amount:</strong> <span id="modalDividendAmount"></span></p>
                 <p><strong>Franking Credits:</strong> <span id="modalFrankingCredits"></span></p>
                 <p><strong>Unfranked Yield:</strong> <span id="modalUnfrankedYield"></span></p>
                 <p><strong>Franked Yield:</strong> <span id="modalFrankedYield"></span></p>
 
-                <!-- External links section moved below comments in script.js, but HTML placeholder remains -->
                 <div class="external-links-section">
                     <h3>External Links</h3>
+                    <!-- News Link -->
                     <p><a id="modalNewsLink" href="#" target="_blank" class="external-link"><i class="fas fa-external-link-alt"></i> View News</a></p>
                     <p><a id="modalMarketIndexLink" href="#" target="_blank" class="external-link"><i class="fas fa-external-link-alt"></i> View on MarketIndex.com.au</a></p>
                     <p><a id="modalFoolLink" href="#" target="_blank" class="external-link"><i class="fas fa-external-link-alt"></i> View on Fool.com.au</a></p>
                     <p><a id="modalCommSecLink" href="#" target="_blank" class="external-link"><i class="fas fa-external-link-alt"></i> View on CommSec.com.au</a></p>
                     <p id="commSecLoginMessage" class="ghosted-text commsec-message">Requires single CommSec login per session</p>
                 </div>
-                <!-- Comments will be dynamically added here by JS in showShareDetails() -->
-                <div id="modalCommentsContainer" style="display:none;"></div> <!-- Placeholder, content added by JS -->
+
+                <div id="modalCommentsContainer" class="modal-comments-sections">
+                    <h3>Comments</h3>
+                    <!-- Comments will be displayed here -->
+                </div>
             </div>
-            <!-- END NEW: Scrollable content for share details modal -->
+            <!-- END Scrollable content for share details modal -->
 
             <div class="modal-action-buttons">
                 <!-- Delete Share icon -->
@@ -275,7 +311,7 @@
         </div>
     </div>
 
-    <!-- Manage Watchlist Modal (New) -->
+    <!-- Manage Watchlist Modal -->
     <div id="manageWatchlistModal" class="modal">
         <div class="modal-content">
             <span class="close-button">&times;</span>
@@ -283,7 +319,7 @@
             <label for="editWatchlistName">Watchlist Name:</label>
             <input type="text" id="editWatchlistName" required>
             <div class="form-action-buttons">
-                <!-- Delete Watchlist icon - NOW STANDALONE ICON -->
+                <!-- Delete Watchlist icon -->
                 <span id="deleteWatchlistInModalBtn" class="modal-action-icon danger" title="Delete Watchlist"><i class="fas fa-trash-alt"></i></span>
                 <span id="saveWatchlistNameBtn" class="modal-action-icon" title="Save Name"><i class="fas fa-save"></i></span>
             </div>
@@ -304,8 +340,8 @@
                 <input type="number" id="calcDividendAmount" step="0.001" placeholder="e.g., 1.250">
             </div>
             <div class="calc-input-group">
-                <label for="frankingCredits">Franking Credits (%):</label>
-                <input type="number" id="frankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 70 for 70%">
+                <label for="calcFrankingCredits">Franking Credits (%):</label>
+                <input type="number" id="calcFrankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 70 for 70%">
             </div>
             <p><strong>Unfranked Yield:</strong> <span id="calcUnfrankedYield">-</span></p>
             <p><strong>Franked Yield:</strong> <span id="calcFrankedYield">-</span></p>
@@ -325,8 +361,8 @@
         </div>
     </div>
 
-    <!-- Standard Calculator Modal - REMOVED -->
-    <!-- <div id="calculatorModal" class="modal">
+    <!-- Standard Calculator Modal -->
+    <div id="calculatorModal" class="modal">
         <div class="modal-content calculator-modal-content">
             <span class="close-button">&times;</span>
             <h2>Standard Calculator</h2>
@@ -335,36 +371,43 @@
                 <div id="calculatorResult" class="calculator-result">0</div>
             </div>
             <div class="calculator-buttons">
+                <!-- Row 1: C, %, ÷ -->
                 <button class="calc-btn clear" data-action="clear">C</button>
                 <button class="calc-btn operator" data-action="percentage">%</button>
                 <button class="calc-btn operator" data-action="divide">÷</button>
+                
+                <!-- Row 2: 7, 8, 9, × -->
                 <button class="calc-btn" data-value="7">7</button>
                 <button class="calc-btn" data-value="8">8</button>
                 <button class="calc-btn" data-value="9">9</button>
                 <button class="calc-btn operator" data-action="multiply">×</button>
+                
+                <!-- Row 3: 4, 5, 6, - -->
                 <button class="calc-btn" data-value="4">4</button>
                 <button class="calc-btn" data-value="5">5</button>
                 <button class="calc-btn" data-value="6">6</button>
                 <button class="calc-btn operator" data-action="subtract">-</button>
+                
+                <!-- Row 4: 1, 2, 3, + -->
                 <button class="calc-btn" data-value="1">1</button>
                 <button class="calc-btn" data-value="2">2</button>
                 <button class="calc-btn" data-value="3">3</button>
                 <button class="calc-btn operator" data-action="add">+</button>
-                <button class="calc-btn zero" data-value="0">0</button>
+                
+                <!-- Row 5: 0 (span 2), ., = (span 1) -->
+                <button class="calc-btn zero" data-value="0"></button>
                 <button class="calc-btn" data-value=".">.</button>
                 <button class="calc-btn equals" data-action="calculate">=</button>
             </div>
         </div>
-    </div> -->
+    </div>
 
     <!-- Custom Dialog Modal for Alerts/Confirms -->
     <div id="customDialogModal" class="modal">
         <div class="modal-content">
             <p id="customDialogMessage"></p>
             <div class="custom-dialog-buttons">
-                <!-- Yes/Confirm Icon - NOW STANDALONE ICON -->
                 <span id="customDialogConfirmBtn" class="modal-action-icon" title="Yes"><i class="fas fa-check-circle"></i></span>
-                <!-- No/Cancel Icon - NOW STANDALONE ICON -->
                 <span id="customDialogCancelBtn" class="modal-action-icon danger" title="No"><i class="fas fa-times-circle"></i></span>
             </div>
         </div>
@@ -376,39 +419,22 @@
         <button id="contextDeleteShareBtn" class="context-menu-item danger-button"><i class="fas fa-trash-alt"></i> Delete Share</button>
     </div>
 
-    <!-- NEW: Watchlist Selection Modal for New Shares -->
-    <div id="selectWatchlistForShareModal" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2>Select Watchlist for New Share</h2>
-            <ul id="watchlistSelectionList" class="watchlist-selection-list">
-                <!-- Watchlist options populated by JS -->
-            </ul>
-            <div class="form-action-buttons">
-                <span id="cancelWatchlistSelectionBtn" class="modal-action-icon secondary" title="Cancel"><i class="fas fa-times-circle"></i></span>
-                <span id="confirmWatchlistSelectionBtn" class="modal-action-icon" title="Confirm"><i class="fas fa-check-circle"></i></span>
-            </div>
-        </div>
-    </div>
-
-
     <!-- Firebase and main script loading -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, FieldValue, deleteField, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; // Added writeBatch
+        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, FieldValue, deleteField, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // YOUR FIREBASE CONFIGURATION - THIS HAS BEEN INSERTED BASED ON YOUR PROVIDED DETAILS
+        // YOUR FIREBASE CONFIGURATION - Replace with your actual Firebase project config
         const firebaseConfig = {
-            apiKey: "AIzaSyAyIWoTYlzTkaSZ9x-ySiHtzATBM9XFrYw",
-            authDomain: "asx-watchlist-app.firebaseapp.com",
-            projectId: "asx-watchlist-app",
-            storageBucket: "asx-watchlist-app.firebasestorage.app",
-            messagingSenderId: "671024168765",
-            appId: "1:671024168765:web:f2b62cd0e77a126c0ecf54",
-            measurementId: "G-J24BTJ34D2"
+            apiKey: "AIzaSyAyIWoTYlzTkaSZ9x-ySiHtzATBM9XFrYw", // Replace with your apiKey
+            authDomain: "asx-watchlist-app.firebaseapp.com", // Replace with your authDomain
+            projectId: "asx-watchlist-app", // Replace with your projectId
+            storageBucket: "asx-watchlist-app.firebasestorage.app", // Replace with your storageBucket
+            messagingSenderId: "671024168765", // Replace with your messagingSenderId
+            appId: "1:671024168765:web:f2b62cd0e77a126c0ecf54", // Replace with your appId
+            measurementId: "G-J24BTJ34D2" // Replace with your measurementId
         };
-        // END OF FIREBASE CONFIGURATION
 
         const currentAppId = firebaseConfig.projectId || 'default-app-id';
 
@@ -437,6 +463,7 @@
             firebaseInitialized = false;
         }
 
+        // Expose Firebase objects globally for script.js
         window.firestoreDb = firebaseInitialized ? db : null;
         window.firebaseAuth = firebaseInitialized ? auth : null;
         window.getFirebaseAppId = () => currentAppId;
@@ -466,10 +493,10 @@
         } : null;
 
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log("index.html (v87) script module loaded and DOMContentLoaded fired."); // Updated version number
+            console.log("index.html script module loaded and DOMContentLoaded fired.");
         }); 
     </script>
     <!-- Linking to your separate script.js file -->
-    <script src="script.js?v=161"></script> <!-- Updated to v161 -->
+    <script src="script.js"></script>
 </body>
 </html>
