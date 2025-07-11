@@ -1,5 +1,5 @@
-/* File Version: v108 */
-/* Last Updated: 2025-07-11 (Fixed calculator button sizing & frames; added Dividends header) */
+/* File Version: v109 */
+/* Last Updated: 2025-07-12 (Fixed calculator button sizing & frames; added Dividends header) */
 
 :root {
     /* Light Theme (Default) */
@@ -1123,7 +1123,7 @@ table th {
     white-space: nowrap;
 }
 
-/* 5. Dividends Column Title */
+/* 3. Add Dividends Column Title */
 table th:nth-child(5) { /* Target the 5th column header (Dividends) */
     text-align: center; /* Center the new title */
     vertical-align: middle; /* Vertically align */

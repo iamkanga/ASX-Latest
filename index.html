@@ -64,10 +64,7 @@
             <div class="menu-section">
                 <h3>Calculators</h3>
                 <div class="menu-buttons-group">
-                    <!-- Standard Calculator - Icon with Text -->
-                    <button id="standardCalcBtn" class="menu-button-item" data-action-closes-menu="true">
-                        <i class="fas fa-calculator"></i> <span>Standard</span>
-                    </button>
+                    <!-- Standard Calculator - REMOVED -->
                     <!-- Dividend Calculator - Icon with Text -->
                     <button id="dividendCalcBtn" class="menu-button-item" data-action-closes-menu="true">
                         <i class="fas fa-money-bill-wave"></i> <span>Dividend</span>
@@ -361,8 +358,8 @@
         </div>
     </div>
 
-    <!-- Standard Calculator Modal -->
-    <div id="calculatorModal" class="modal">
+    <!-- Standard Calculator Modal - REMOVED -->
+    <!-- <div id="calculatorModal" class="modal">
         <div class="modal-content calculator-modal-content">
             <span class="close-button">&times;</span>
             <h2>Standard Calculator</h2>
@@ -371,36 +368,27 @@
                 <div id="calculatorResult" class="calculator-result">0</div>
             </div>
             <div class="calculator-buttons">
-                <!-- Row 1: C, %, ÷ -->
                 <button class="calc-btn clear" data-action="clear">C</button>
                 <button class="calc-btn operator" data-action="percentage">%</button>
                 <button class="calc-btn operator" data-action="divide">÷</button>
-                
-                <!-- Row 2: 7, 8, 9, × -->
                 <button class="calc-btn" data-value="7">7</button>
                 <button class="calc-btn" data-value="8">8</button>
                 <button class="calc-btn" data-value="9">9</button>
                 <button class="calc-btn operator" data-action="multiply">×</button>
-                
-                <!-- Row 3: 4, 5, 6, - -->
                 <button class="calc-btn" data-value="4">4</button>
                 <button class="calc-btn" data-value="5">5</button>
                 <button class="calc-btn" data-value="6">6</button>
                 <button class="calc-btn operator" data-action="subtract">-</button>
-                
-                <!-- Row 4: 1, 2, 3, + -->
                 <button class="calc-btn" data-value="1">1</button>
                 <button class="calc-btn" data-value="2">2</button>
                 <button class="calc-btn" data-value="3">3</button>
                 <button class="calc-btn operator" data-action="add">+</button>
-                
-                <!-- Row 5: 0 (span 2), ., = (span 1) -->
-                <button class="calc-btn zero" data-value="0">0</button> <!-- Added 0 content -->
+                <button class="calc-btn zero" data-value="0">0</button>
                 <button class="calc-btn" data-value=".">.</button>
                 <button class="calc-btn equals" data-action="calculate">=</button>
             </div>
         </div>
-    </div>
+    </div> -->
 
     <!-- Custom Dialog Modal for Alerts/Confirms -->
     <div id="customDialogModal" class="modal">
@@ -511,7 +499,7 @@
         } : null;
 
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log("index.html (v86) script module loaded and DOMContentLoaded fired."); // Updated version number
+            console.log("index.html (v87) script module loaded and DOMContentLoaded fired."); // Updated version number
         }); 
     </script>
     <!-- Linking to your separate script.js file -->

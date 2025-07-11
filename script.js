@@ -1,5 +1,5 @@
-// File Version: v160
-// Last Updated: 2025-07-10 (Fixed shareToToEdit typo, clear input fields on focus, added manual live price refresh button logic)
+// File Version: v161
+// Last Updated: 2025-07-12 (Removed standard calculator, confirmed dividend calculator and dividend header)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -24,10 +24,11 @@ let touchStartX = 0;
 let touchStartY = 0;
 const TOUCH_MOVE_THRESHOLD = 10; // Pixels for touch movement to cancel long press
 const KANGA_EMAIL = 'iamkanga@gmail.com'; // CORRECTED EMAIL ADDRESS
-let currentCalculatorInput = '';
-let operator = null;
-let previousCalculatorInput = '';
-let resultDisplayed = false;
+// Removed standard calculator variables
+// let currentCalculatorInput = '';
+// let operator = null;
+// let previousCalculatorInput = '';
+// let resultDisplayed = false;
 const DEFAULT_WATCHLIST_NAME = 'My Watchlist (Default)';
 const DEFAULT_WATCHLIST_ID_SUFFIX = 'default';
 let userWatchlists = []; // Stores all watchlists for the user
@@ -62,14 +63,13 @@ let unsubscribeShares = null; // Holds the unsubscribe function for the Firestor
 const mainTitle = document.getElementById('mainTitle');
 const addShareHeaderBtn = document.getElementById('addShareHeaderBtn');
 const newShareBtn = document.getElementById('newShareBtn');
-const standardCalcBtn = document.getElementById('standardCalcBtn');
+// Removed standardCalcBtn
 const dividendCalcBtn = document.getElementById('dividendCalcBtn');
 const asxCodeButtonsContainer = document.getElementById('asxCodeButtonsContainer');
 const shareFormSection = document.getElementById('shareFormSection');
 const formCloseButton = document.querySelector('.form-close-button');
 const formTitle = document.getElementById('formTitle');
 const saveShareBtn = document.getElementById('saveShareBtn');
-// const cancelFormBtn = document.getElementById('cancelFormBtn'); // This button is removed from HTML
 const deleteShareBtn = document.getElementById('deleteShareBtn');
 const shareNameInput = document.getElementById('shareName');
 const currentPriceInput = document.getElementById('currentPrice');
@@ -115,10 +115,11 @@ const customDialogModal = document.getElementById('customDialogModal');
 const customDialogMessage = document.getElementById('customDialogMessage');
 const customDialogConfirmBtn = document.getElementById('customDialogConfirmBtn'); // Now a span
 const customDialogCancelBtn = document.getElementById('customDialogCancelBtn'); // Now a span
-const calculatorModal = document.getElementById('calculatorModal');
-const calculatorInput = document.getElementById('calculatorInput');
-const calculatorResult = document.getElementById('calculatorResult');
-const calculatorButtons = document.querySelector('.calculator-buttons');
+// Removed standard calculator modal and button references
+// const calculatorModal = document.getElementById('calculatorModal');
+// const calculatorInput = document.getElementById('calculatorInput');
+// const calculatorResult = document.getElementById('calculatorResult');
+// const calculatorButtons = document.querySelector('.calculator-buttons');
 const watchlistSelect = document.getElementById('watchlistSelect'); // Re-added for now as per user's provided index.html
 const themeToggleBtn = document.getElementById('themeToggleBtn');
 const colorThemeSelect = document.getElementById('colorThemeSelect');
@@ -127,30 +128,21 @@ const scrollToTopBtn = document.getElementById('scrollToTopBtn');
 const hamburgerBtn = document.getElementById('hamburgerBtn');
 const appSidebar = document.getElementById('appSidebar');
 const closeMenuBtn = document.getElementById('closeMenuBtn');
-// const selectWatchlistsBtn = document.getElementById('selectWatchlistsBtn'); // New sidebar button - removed as per user's provided index.html
 const addWatchlistBtn = document.getElementById('addWatchlistBtn');
 const editWatchlistBtn = document.getElementById('editWatchlistBtn');
 const addWatchlistModal = document.getElementById('addWatchlistModal');
 const newWatchlistNameInput = document.getElementById('newWatchlistName');
 const saveWatchlistBtn = document.getElementById('saveWatchlistBtn'); // Now a span
-// const cancelAddWatchlistBtn = document.getElementById('cancelAddWatchlistBtn'); // Now a span - removed from HTML
 const manageWatchlistModal = document.getElementById('manageWatchlistModal');
 const editWatchlistNameInput = document.getElementById('editWatchlistName');
 const saveWatchlistNameBtn = document.getElementById('saveWatchlistNameBtn'); // Now a span
 const deleteWatchlistInModalBtn = document.getElementById('deleteWatchlistInModalBtn'); // Now a span
-// const cancelManageWatchlistBtn = document.getElementById('cancelManageWatchlistBtn'); // Now a span - removed from HTML
 const shareContextMenu = document.getElementById('shareContextMenu');
 const contextEditShareBtn = document.getElementById('contextEditShareBtn');
 const contextDeleteShareBtn = document.getElementById('contextDeleteShareBtn');
 const logoutBtn = document.getElementById('logoutBtn'); // Now a span
 const exportWatchlistBtn = document.getElementById('exportWatchlistBtn'); // Export button
 const refreshLivePricesBtn = document.getElementById('refreshLivePricesBtn'); // NEW
-
-// New elements for multi-select watchlist modal (commented out as per user's provided index.html)
-// const selectWatchlistsModal = document.getElementById('selectWatchlistsModal');
-// const watchlistCheckboxesContainer = document.getElementById('watchlistCheckboxesContainer');
-// const applyWatchlistSelectionBtn = document.getElementById('applyWatchlistSelectionBtn');
-
 
 let sidebarOverlay = document.querySelector('.sidebar-overlay');
 if (!sidebarOverlay) {
@@ -193,7 +185,7 @@ function closeModals() {
             modal.style.setProperty('display', 'none', 'important');
         }
     });
-    resetCalculator();
+    // Removed resetCalculator() call
     deselectCurrentShare();
     if (autoDismissTimeout) { clearTimeout(autoDismissTimeout); autoDismissTimeout = null; }
     hideContextMenu();
@@ -252,10 +244,9 @@ function updateMainButtonsState(enable) {
     console.log(`[UI State] Setting main buttons state to: ${enable ? 'ENABLED' : 'DISABLED'}`);
     // Sidebar buttons (native buttons, use .disabled)
     if (newShareBtn) newShareBtn.disabled = !enable;
-    if (standardCalcBtn) standardCalcBtn.disabled = !enable;
+    // Removed standardCalcBtn.disabled
     if (dividendCalcBtn) dividendCalcBtn.disabled = !enable;
     if (exportWatchlistBtn) exportWatchlistBtn.disabled = !enable;
-    // if (selectWatchlistsBtn) setIconDisabled(selectWatchlistsBtn, !enable); // New watchlist button - removed as per user's provided index.html
     if (addWatchlistBtn) addWatchlistBtn.disabled = !enable;
     // editWatchlistBtn's disabled state is also dependent on userWatchlists.length, handled in loadUserWatchlistsAndSettings
     if (editWatchlistBtn) editWatchlistBtn.disabled = !enable || userWatchlists.length === 0; 
@@ -1186,7 +1177,7 @@ function renderAsxCodeButtons() {
     
     let sharesForButtons = [];
     if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID)) { 
-        sharesForButtons = [...allSharesData]; // Use all shares if "Show All Shares" is active
+        sharesForButtons = [...allSharesData]; // Use all shares if "All Shares" is active
     } else {
         sharesForButtons = allSharesData.filter(share => currentSelectedWatchlistIds.includes(share.watchlistId));
     }
@@ -1269,48 +1260,11 @@ function estimateDividendIncome(investmentValue, dividendAmountPerShare, current
     return numberOfShares * dividendAmountPerShare;
 }
 
-function updateCalculatorDisplay() {
-    calculatorInput.textContent = previousCalculatorInput + (operator ? ` ${getOperatorSymbol(operator)} ` : '') + currentCalculatorInput;
-    if (resultDisplayed) { /* nothing */ }
-    else if (currentCalculatorInput !== '') { calculatorResult.textContent = currentCalculatorInput; }
-    else if (previousCalculatorInput !== '' && operator) { calculatorResult.textContent = previousCalculatorInput; }
-    else { calculatorResult.textContent = '0'; }
-}
-
-function calculateResult() {
-    let prev = parseFloat(previousCalculatorInput);
-    let current = parseFloat(currentCalculatorInput);
-    if (isNaN(prev) || isNaN(current)) return;
-    let res;
-    switch (operator) {
-        case 'add': res = prev + current; break;
-        case 'subtract': res = prev - current; break;
-        case 'multiply': res = prev * current; break;
-        case 'divide':
-            if (current === 0) { showCustomAlert("Cannot divide by zero!"); res = 'Error'; }
-            else { res = prev / current; }
-            break;
-        default: return;
-    }
-    if (typeof res === 'number' && !isNaN(res)) { res = parseFloat(res.toFixed(10)); }
-    calculatorResult.textContent = res;
-    previousCalculatorInput = res.toString();
-    currentCalculatorInput = '';
-}
-
-function getOperatorSymbol(op) {
-    switch (op) {
-        case 'add': return '+'; case 'subtract': return '-';
-        case 'multiply': return '×'; case 'divide': return '÷';
-        default: return '';
-    }
-}
-
-function resetCalculator() {
-    currentCalculatorInput = ''; operator = null; previousCalculatorInput = '';
-    resultDisplayed = false; calculatorInput.textContent = ''; calculatorResult.textContent = '0';
-    console.log("[Calculator] Calculator state reset.");
-}
+// Removed standard calculator functions: updateCalculatorDisplay, calculateResult, getOperatorSymbol, resetCalculator
+// function updateCalculatorDisplay() { ... }
+// function calculateResult() { ... }
+// function getOperatorSymbol(op) { ... }
+// function resetCalculator() { ... }
 
 async function applyTheme(themeName) {
     const body = document.body;
@@ -1992,9 +1946,9 @@ async function initializeAppLogic() {
     if (addWatchlistModal) addWatchlistModal.style.setProperty('display', 'none', 'important');
     if (manageWatchlistModal) manageWatchlistModal.style.setProperty('display', 'none', 'important');
     if (customDialogModal) customDialogModal.style.setProperty('display', 'none', 'important');
-    if (calculatorModal) calculatorModal.style.setProperty('display', 'none', 'important');
+    // Removed standard calculator modal from initial hiding
+    // if (calculatorModal) calculatorModal.style.setProperty('display', 'none', 'important');
     if (shareContextMenu) shareContextMenu.style.setProperty('display', 'none', 'important');
-    // if (selectWatchlistsModal) selectWatchlistsModal.style.setProperty('display', 'none', 'important'); // New modal - removed as per user's provided index.html
 
     // Service Worker Registration
     if ('serviceWorker' in navigator) {
@@ -2072,8 +2026,10 @@ async function initializeAppLogic() {
     window.addEventListener('click', (event) => {
         if (event.target === shareDetailModal || event.target === dividendCalculatorModal ||
             event.target === shareFormSection || event.target === customDialogModal ||
-            event.target === calculatorModal || event.target === addWatchlistModal ||
-            event.target === manageWatchlistModal) { // Removed selectWatchlistsModal
+            // Removed standard calculator modal from this list
+            // event.target === calculatorModal || 
+            event.target === addWatchlistModal ||
+            event.target === manageWatchlistModal) {
             closeModals();
         }
 
@@ -2639,77 +2595,11 @@ async function initializeAppLogic() {
         calcEstimatedDividend.textContent = estimatedDividend !== null ? `$${estimatedDividend.toFixed(2)}` : '-';
     }
 
-    // Standard Calculator Button
-    if (standardCalcBtn) {
-        standardCalcBtn.addEventListener('click', () => {
-            console.log("[UI] Standard Calculator button clicked.");
-            resetCalculator();
-            showModal(calculatorModal);
-            console.log("[UI] Standard Calculator modal opened.");
-            toggleAppSidebar(false);
-        });
-    }
-
-    // Calculator Buttons
-    if (calculatorButtons) {
-        calculatorButtons.addEventListener('click', (event) => {
-            const target = event.target;
-            // Ensure the clicked element is a calculator button and not disabled
-            if (!target.classList.contains('calc-btn') || target.classList.contains('is-disabled-icon')) { return; }
-            const value = target.dataset.value;
-            const action = target.dataset.action;
-            if (value) { appendNumber(value); }
-            else if (action) { handleAction(action); }
-        });
-    }
-
-    function appendNumber(num) {
-        if (resultDisplayed) { currentCalculatorInput = num; resultDisplayed = false; }
-        else { if (num === '.' && currentCalculatorInput.includes('.')) return; currentCalculatorInput += num; }
-        updateCalculatorDisplay();
-    }
-
-    function handleAction(action) {
-        if (action === 'clear') { resetCalculator(); return; }
-        if (action === 'percentage') { 
-            if (currentCalculatorInput === '' && previousCalculatorInput === '') return;
-            let val;
-            if (currentCalculatorInput !== '') {
-                val = parseFloat(currentCalculatorInput);
-            } else if (previousCalculatorInput !== '') {
-                val = parseFloat(previousCalculatorInput);
-            } else {
-                return; // Should not happen if previous checks pass
-            }
-
-            if (isNaN(val)) return;
-
-            if (operator && previousCalculatorInput !== '') {
-                // If there's a pending operation, calculate percentage of the previous number
-                const prevNum = parseFloat(previousCalculatorInput);
-                if (isNaN(prevNum)) return;
-                currentCalculatorInput = (prevNum * (val / 100)).toString();
-            } else {
-                // Otherwise, just divide the current input by 100
-                currentCalculatorInput = (val / 100).toString();
-            }
-            resultDisplayed = false; // A new calculation has started or modified
-            updateCalculatorDisplay();
-            return; 
-        }
-        if (['add', 'subtract', 'multiply', 'divide'].includes(action)) {
-            if (currentCalculatorInput === '' && previousCalculatorInput === '') return;
-            if (currentCalculatorInput !== '') {
-                if (previousCalculatorInput !== '') { calculateResult(); previousCalculatorInput = calculatorResult.textContent; }
-                else { previousCalculatorInput = currentCalculatorInput; }
-            }
-            operator = action; currentCalculatorInput = ''; resultDisplayed = false; updateCalculatorDisplay(); return;
-        }
-        if (action === 'calculate') {
-            if (previousCalculatorInput === '' || currentCalculatorInput === '' || operator === null) { return; }
-            calculateResult(); operator = null; resultDisplayed = true;
-        }
-    }
+    // Removed Standard Calculator Button and related logic
+    // if (standardCalcBtn) { ... }
+    // if (calculatorButtons) { ... }
+    // function appendNumber(num) { ... }
+    // function handleAction(action) { ... }
 
     // Theme Toggle Button
     if (themeToggleBtn) {
@@ -2876,7 +2766,7 @@ async function initializeAppLogic() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js (v160) DOMContentLoaded fired."); // Updated version number
+    console.log("script.js (v161) DOMContentLoaded fired."); // Updated version number
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
