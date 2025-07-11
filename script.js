@@ -1,5 +1,5 @@
-// File Version: v167
-// Last Updated: 2025-07-11 (Fixed hamburger menu; fixed modal edit/delete buttons; fixed context menu display/functionality; implemented dynamic add/delete comments in modal; re-added custom confirmation dialog)
+// File Version: v168
+// Last Updated: 2025-07-11 (Added extensive logging for Google Auth button to diagnose non-functionality)
 
 // This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
@@ -226,7 +226,6 @@ function showCustomConfirm(message, onConfirm, onCancel = null) {
     if (!customDialogModal || !customDialogMessage || !customDialogConfirmBtn || !customDialogCancelBtn) {
         console.error("Custom dialog elements not found. Cannot show confirm dialog.");
         console.log("CONFIRM (fallback):", message);
-        // Fallback to direct execution or simple alert if elements are missing
         // Using native confirm as a last resort fallback, though generally avoided in iframe.
         if (confirm(message)) { 
             onConfirm();
@@ -2212,41 +2211,44 @@ async function initializeAppLogic() {
 
     // Google Auth Button (Sign In/Out)
     if (googleAuthBtn) {
+        console.log("[Auth Debug] Google Auth Button element found.");
         googleAuthBtn.addEventListener('click', async () => {
-            console.log("[Auth] Google Auth Button Clicked.");
+            console.log("[Auth Debug] Google Auth Button Clicked. Inside event listener.");
             const currentAuth = window.firebaseAuth;
             if (!currentAuth || !window.authFunctions) {
-                console.warn("[Auth] Auth service not ready or functions not loaded. Cannot process click.");
+                console.warn("[Auth Debug] Auth service not ready or functions not loaded. Cannot process click.");
                 showCustomAlert("Authentication service not ready. Please try again in a moment.");
                 return;
             }
             if (currentAuth.currentUser) {
-                console.log("[Auth] Current user exists, attempting sign out.");
+                console.log("[Auth Debug] Current user exists, attempting sign out.");
                 try {
                     await window.authFunctions.signOut(currentAuth);
-                    console.log("[Auth] User signed out.");
+                    console.log("[Auth Debug] User signed out.");
                 } catch (error) {
-                    console.error("[Auth] Sign-Out failed:", error);
+                    console.error("[Auth Debug] Sign-Out failed:", error);
                     showCustomAlert("Sign-Out failed: " + error.message);
                 }
             } else {
-                console.log("[Auth] No current user, attempting sign in.");
+                console.log("[Auth Debug] No current user, attempting sign in.");
                 try {
                     const provider = window.authFunctions.GoogleAuthProviderInstance;
                     if (!provider) {
-                        console.error("[Auth] GoogleAuthProvider instance not found. Is Firebase module script loaded?");
+                        console.error("[Auth Debug] GoogleAuthProvider instance not found. Is Firebase module script loaded?");
                         showCustomAlert("Authentication service not ready. Please ensure Firebase module script is loaded.");
                         return;
                     }
                     await window.authFunctions.signInWithPopup(currentAuth, provider);
-                    console.log("[Auth] Google Sign-In successful.");
+                    console.log("[Auth Debug] Google Sign-In successful.");
                 }
                 catch (error) {
-                    console.error("[Auth] Google Sign-In failed:", error); // Log full error object
+                    console.error("[Auth Debug] Google Sign-In failed:", error); // Log full error object
                     showCustomAlert("Google Sign-In failed: " + error.message);
                 }
             }
         });
+    } else {
+        console.warn("[Auth Debug] Google Auth Button element (googleAuthBtn) NOT found on DOMContentLoaded.");
     }
 
     // Logout Button (No confirmation as per user request)
@@ -2389,7 +2391,7 @@ async function initializeAppLogic() {
                     shareData.previousFetchedPrice = existingShare.previousFetchedPrice; // Preserve existing if no change
                     shareData.lastFetchedPrice = existingShare.lastFetchedPrice; // Preserve existing if no change
                 } else { // No change in currentPrice, preserve existing fetched prices
-                    shareData.previousFetchedPrice = existingShare.previousPrice; // Should be previousFetchedPrice
+                    shareData.previousFetchedPrice = existingShare.previousFetchedPrice; // Corrected from previousPrice
                     shareData.lastFetchedPrice = existingShare.lastFetchedPrice;
                 }
 
@@ -2510,79 +2512,111 @@ async function initializeAppLogic() {
         });
     }
 
+    // Hamburger button click listener
+    if (hamburgerBtn) {
+        console.log("[Auth Debug] Hamburger Button element found.");
+        hamburgerBtn.addEventListener('click', () => {
+            console.log("[Auth Debug] Hamburger Button Clicked. Toggling sidebar.");
+            toggleAppSidebar();
+        });
+    } else {
+        console.warn("[Auth Debug] Hamburger Button element (hamburgerBtn) NOT found on DOMContentLoaded.");
+    }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        // Ensure this script only runs its initialization logic once
-        if (window._appLogicInitializedOnce) {
-            console.warn("script.js: initializeAppLogic already executed. Skipping duplicate initialization.");
-            return;
-        }
-        window._appLogicInitializedOnce = true;
+    // Sidebar overlay click listener (to close sidebar)
+    if (sidebarOverlay) {
+        console.log("[Auth Debug] Sidebar Overlay element found.");
+        sidebarOverlay.addEventListener('click', () => {
+            console.log("[Auth Debug] Sidebar Overlay Clicked. Closing sidebar.");
+            toggleAppSidebar(false);
+        });
+    } else {
+        console.warn("[Auth Debug] Sidebar Overlay element (sidebarOverlay) NOT found on DOMContentLoaded.");
+    }
 
-
-        console.log("script.js (v167) DOMContentLoaded fired."); // Updated version number
-
-        if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
-            db = window.firestoreDb;
-            auth = window.firebaseAuth;
-            currentAppId = window.getFirebaseAppId();
-            console.log("[Firebase Ready] DB, Auth, and AppId assigned from window. Setting up auth state listener.");
-            
-            window.authFunctions.onAuthStateChanged(auth, async (user) => {
-                if (user) {
-                    currentUserId = user.uid;
-                    updateAuthButtonText(true, user.email || user.displayName);
-                    console.log("[AuthState] User signed in:", user.uid);
-                    console.log("[AuthState] User email:", user.email); // Log user email for debugging title
-                    if (user.email && user.email.toLowerCase() === KANGA_EMAIL) {
-                        mainTitle.textContent = "Kanga's Share Watchlist";
-                        console.log("[AuthState] Main title set to Kanga's Share Watchlist.");
-                    } else {
-                        mainTitle.textContent = "My Share Watchlist";
-                        console.log("[AuthState] Main title set to My Share Watchlist.");
-                    }
-                    updateMainButtonsState(true);
-                    await loadUserWatchlistsAndSettings(); // This will set currentSelectedWatchlistIds and then call loadShares()
-                    startLivePriceUpdates(); // Start fetching live prices when user signs in
-                } else {
-                    currentUserId = null;
-                    updateAuthButtonText(false); // Changed to false for "Google Sign In" text
-                    mainTitle.textContent = "Share Watchlist";
-                    console.log("[AuthState] User signed out.");
-                    updateMainButtonsState(false);
-                    clearShareList();
-                    clearWatchlistUI();
-                    if (loadingIndicator) loadingIndicator.style.display = 'none';
-                    applyTheme('system-default');
-                    if (unsubscribeShares) { // Ensure listener is cleaned up on logout
-                        unsubscribeShares();
-                        unsubscribeShares = null;
-                        console.log("[Firestore Listener] Unsubscribed from shares listener on logout.");
-                    }
-                    stopLivePriceUpdates(); // Stop fetching live prices when user signs out
-                }
-                // Ensure initializeAppLogic is only called once after initial auth state is determined
-                if (!window._appLogicInitialized) {
-                    initializeAppLogic();
-                    window._appLogicInitialized = true;
-                }
-            });
-            
-            if (googleAuthBtn) {
-                googleAuthBtn.disabled = false;
-                console.log("[Auth] Google Auth button enabled on DOMContentLoaded.");
-            }
-
-        } else {
-            console.error("[Firebase] Firebase objects (db, auth, appId, firestore, authFunctions) are not available on DOMContentLoaded. Firebase initialization likely failed in index.html.");
-            const errorDiv = document.getElementById('firebaseInitError');
-            if (errorDiv) {
-                    errorDiv.style.display = 'block';
-            }
-            updateAuthButtonText(false);
-            updateMainButtonsState(false);
-            if (loadingIndicator) loadingIndicator.style.display = 'none';
-            applyTheme('system-default');
-        }
-    });
+    // Close menu button click listener
+    if (closeMenuBtn) {
+        console.log("[Auth Debug] Close Menu Button element found.");
+        closeMenuBtn.addEventListener('click', () => {
+            console.log("[Auth Debug] Close Menu Button Clicked. Closing sidebar.");
+            toggleAppSidebar(false);
+        });
+    } else {
+        console.warn("[Auth Debug] Close Menu Button element (closeMenuBtn) NOT found on DOMContentLoaded.");
+    }
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Ensure this script only runs its initialization logic once
+    if (window._appLogicInitializedOnce) {
+        console.warn("script.js: initializeAppLogic already executed. Skipping duplicate initialization.");
+        return;
+    }
+    window._appLogicInitializedOnce = true;
+
+
+    console.log("script.js (v168) DOMContentLoaded fired."); // Updated version number
+
+    if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
+        db = window.firestoreDb;
+        auth = window.firebaseAuth;
+        currentAppId = window.getFirebaseAppId();
+        console.log("[Firebase Ready] DB, Auth, and AppId assigned from window. Setting up auth state listener.");
+        
+        window.authFunctions.onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUserId = user.uid;
+                updateAuthButtonText(true, user.email || user.displayName);
+                console.log("[AuthState] User signed in:", user.uid);
+                console.log("[AuthState] User email:", user.email); // Log user email for debugging title
+                if (user.email && user.email.toLowerCase() === KANGA_EMAIL) {
+                    mainTitle.textContent = "Kanga's Share Watchlist";
+                    console.log("[AuthState] Main title set to Kanga's Share Watchlist.");
+                } else {
+                    mainTitle.textContent = "My Share Watchlist";
+                    console.log("[AuthState] Main title set to My Share Watchlist.");
+                }
+                updateMainButtonsState(true);
+                await loadUserWatchlistsAndSettings(); // This will set currentSelectedWatchlistIds and then call loadShares()
+                startLivePriceUpdates(); // Start fetching live prices when user signs in
+            } else {
+                currentUserId = null;
+                updateAuthButtonText(false); // Changed to false for "Google Sign In" text
+                mainTitle.textContent = "Share Watchlist";
+                console.log("[AuthState] User signed out.");
+                updateMainButtonsState(false);
+                clearShareList();
+                clearWatchlistUI();
+                if (loadingIndicator) loadingIndicator.style.display = 'none';
+                applyTheme('system-default');
+                if (unsubscribeShares) { // Ensure listener is cleaned up on logout
+                    unsubscribeShares();
+                    unsubscribeShares = null;
+                    console.log("[Firestore Listener] Unsubscribed from shares listener on logout.");
+                }
+                stopLivePriceUpdates(); // Stop fetching live prices when user signs out
+            }
+            // Ensure initializeAppLogic is only called once after initial auth state is determined
+            if (!window._appLogicInitialized) {
+                initializeAppLogic();
+                window._appLogicInitialized = true;
+            }
+        });
+        
+        if (googleAuthBtn) {
+            googleAuthBtn.disabled = false;
+            console.log("[Auth Debug] Google Auth button enabled after auth state listener setup.");
+        }
+
+    } else {
+        console.error("[Firebase] Firebase objects (db, auth, appId, firestore, authFunctions) are not available on DOMContentLoaded. Firebase initialization likely failed in index.html.");
+        const errorDiv = document.getElementById('firebaseInitError');
+        if (errorDiv) {
+                errorDiv.style.display = 'block';
+        }
+        updateAuthButtonText(false);
+        updateMainButtonsState(false);
+        if (loadingIndicator) loadingIndicator.style.display = 'none';
+        applyTheme('system-default');
+    }
+});
