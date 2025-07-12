@@ -33,7 +33,7 @@ const ALL_SHARES_ID = 'all_shares_option'; // Special ID for the "Show All Share
 let currentSortOrder = 'entryDate-desc'; // Default sort order
 let contextMenuOpen = false; // To track if the custom context menu is open
 let currentContextMenuShareId = null; // Stores the ID of the share that opened the context menu
-let originalShareData = null; // Stores the original share data when editing for dirty state check
+let originalShareData = null; // Stores the original share data when editing for long press detection
 
 // Live Price Data
 // UPDATED: GOOGLE_APPS_SCRIPT_URL to the LATEST provided URL
@@ -1530,7 +1530,8 @@ async function loadUserWatchlistsAndSettings() {
         }
 
         if (currentSelectedWatchlistIds && Array.isArray(currentSelectedWatchlistIds) && currentSelectedWatchlistIds.length > 0) {
-            currentSelectedWatchlistIds = currentSelectedWatchlists.filter(id => 
+            // FIX: Corrected typo from currentSelectedWatchlists to currentSelectedWatchlistIds
+            currentSelectedWatchlistIds = currentSelectedWatchlistIds.filter(id => 
                 id === ALL_SHARES_ID || userWatchlists.some(wl => wl.id === id)
             );
             if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID) && userWatchlists.length === 0) {
