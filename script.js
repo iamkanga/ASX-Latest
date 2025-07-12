@@ -181,20 +181,14 @@ function closeModals() {
         const currentData = getCurrentFormData();
         const isShareNameValid = currentData.shareName.trim() !== '';
         
-        if (selectedShareDocId) { // Existing share
-            if (!areShareDataEqual(originalShareData, currentData)) {
-                console.log("[Auto-Save] Unsaved changes detected for existing share. Attempting silent save.");
-                saveShareData(true); // true indicates silent save
-            } else {
-                console.log("[Auto-Save] No changes detected for existing share.");
-            }
-        } else { // New share
-            if (isShareNameValid) { // Only attempt to save if a share name was entered
-                console.log("[Auto-Save] New share detected with name. Attempting silent save.");
-                saveShareData(true); // true indicates silent save
-            } else {
-                console.log("[Auto-Save] New share has no name. Discarding changes.");
-            }
+        // Only attempt auto-save if a share name is valid AND there are changes
+        if (isShareNameValid && (selectedShareDocId ? !areShareDataEqual(originalShareData, currentData) : true)) {
+            console.log("[Auto-Save] Unsaved changes or new valid share detected. Attempting silent save.");
+            saveShareData(true); // true indicates silent save
+        } else if (!isShareNameValid && !selectedShareDocId) {
+            console.log("[Auto-Save] New share has no name. Discarding changes.");
+        } else {
+            console.log("[Auto-Save] No changes detected for existing share.");
         }
     }
 
@@ -365,6 +359,11 @@ function clearForm() {
     formInputs.forEach(input => {
         if (input) { input.value = ''; }
     });
+    // NEW: Clear shareWatchlistSelect as well
+    if (shareWatchlistSelect) {
+        shareWatchlistSelect.value = ""; 
+    }
+
     if (commentsFormContainer) { // This now refers to #dynamicCommentsArea
         commentsFormContainer.innerHTML = ''; // Clears ONLY the dynamically added comments
     }
@@ -399,7 +398,7 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
     dividendAmountInput.value = Number(shareToEdit.dividendAmount) !== null && !isNaN(Number(shareToEdit.dividendAmount)) ? Number(shareToEdit.dividendAmount).toFixed(3) : '';
     frankingCreditsInput.value = Number(shareToEdit.frankingCredits) !== null && !isNaN(Number(shareToEdit.frankingCredits)) ? Number(shareToEdit.frankingCredits).toFixed(1) : '';
     
-    // NEW: Populate watchlist selector for editing
+    // NEW: Populate watchlist selector for editing - pre-selects existing watchlist
     populateShareWatchlistSelect(shareToEdit.watchlistId);
 
     if (commentsFormContainer) { // This now refers to #dynamicCommentsArea
@@ -501,18 +500,23 @@ function areShareDataEqual(data1, data2) {
 function checkFormDirtyState() {
     const currentData = getCurrentFormData();
     const isShareNameValid = currentData.shareName.trim() !== '';
+    // NEW: Check if a watchlist is selected for new shares when in "All Shares" view
+    const isWatchlistSelected = shareWatchlistSelect && shareWatchlistSelect.value !== "";
+    const isAllSharesView = currentSelectedWatchlistIds.includes(ALL_SHARES_ID);
 
-    if (!isShareNameValid) {
-        setIconDisabled(saveShareBtn, true);
-        return;
-    }
+    let canSave = false;
 
-    if (selectedShareDocId && originalShareData) {
-        const isDirty = !areShareDataEqual(originalShareData, currentData);
-        setIconDisabled(saveShareBtn, !isDirty);
-    } else {
-        setIconDisabled(saveShareBtn, !isShareNameValid);
+    if (selectedShareDocId) { // Editing existing share
+        canSave = isShareNameValid && !areShareDataEqual(originalShareData, currentData);
+    } else { // Adding new share
+        if (isAllSharesView) { // If in "All Shares" view, force watchlist selection
+            canSave = isShareNameValid && isWatchlistSelected;
+        } else { // If in a specific watchlist view, only share name is needed
+            canSave = isShareNameValid;
+        }
     }
+    
+    setIconDisabled(saveShareBtn, !canSave);
 }
 
 /**
@@ -535,11 +539,21 @@ async function saveShareData(isSilent = false) {
         return; 
     }
 
+    // NEW: Validate watchlist selection for new shares when in "All Shares" view
+    const isAllSharesView = currentSelectedWatchlistIds.includes(ALL_SHARES_ID);
+    const selectedWatchlistId = shareWatchlistSelect.value;
+    if (!selectedShareDocId && isAllSharesView && selectedWatchlistId === "") {
+        if (!isSilent) showCustomAlert("Please select a watchlist for the new share.");
+        console.warn("[Save Share] Watchlist not selected for new share in All Shares view. Skipping save.");
+        return;
+    }
+
+
     const currentPrice = parseFloat(currentPriceInput.value);
     const targetPrice = parseFloat(targetPriceInput.value);
     const dividendAmount = parseFloat(dividendAmountInput.value);
     const frankingCredits = parseFloat(frankingCreditsInput.value);
-    const selectedWatchlistId = shareWatchlistSelect.value; // Get selected watchlist ID from the form
+    // const selectedWatchlistId = shareWatchlistSelect.value; // Get selected watchlist ID from the form (already defined above)
 
     const comments = [];
     if (commentsFormContainer) { // This now refers to #dynamicCommentsArea
@@ -593,6 +607,7 @@ async function saveShareData(isSilent = false) {
     } else {
         shareData.entryDate = new Date().toISOString();
         shareData.lastFetchedPrice = shareData.currentPrice;
+        shareData.lastPriceUpdateTime = new Date().toISOString(); // Ensure this is set for new shares
         shareData.previousFetchedPrice = shareData.currentPrice;
 
         try {
@@ -838,15 +853,15 @@ function populateShareWatchlistSelect(selectedWatchlistId = null) {
     shareWatchlistSelect.innerHTML = ''; // Clear existing options
 
     // Add a default "Select Watchlist" option if no watchlist is pre-selected
-    if (!selectedWatchlistId) {
-        const defaultOption = document.createElement('option');
-        defaultOption.value = "";
-        defaultOption.textContent = "Select Watchlist";
-        defaultOption.disabled = true;
-        defaultOption.selected = true;
-        shareWatchlistSelect.appendChild(defaultOption);
-    }
-
+    // This is always added for new shares, or if an existing share's watchlist is invalid
+    const defaultOption = document.createElement('option');
+    defaultOption.value = "";
+    defaultOption.textContent = "Select Watchlist";
+    defaultOption.disabled = true;
+    defaultOption.selected = true;
+    shareWatchlistSelect.appendChild(defaultOption);
+    
+    // Add all user watchlists
     userWatchlists.forEach(watchlist => {
         const option = document.createElement('option');
         option.value = watchlist.id;
@@ -854,27 +869,28 @@ function populateShareWatchlistSelect(selectedWatchlistId = null) {
         shareWatchlistSelect.appendChild(option);
     });
 
-    // Set the selected value if provided
+    // Set the selected value if provided (for editing existing shares)
     if (selectedWatchlistId && userWatchlists.some(wl => wl.id === selectedWatchlistId)) {
         shareWatchlistSelect.value = selectedWatchlistId;
-    } else if (userWatchlists.length > 0) {
-        // If no specific ID, default to the first watchlist (or current if "All Shares")
-        // If "All Shares" is selected in main view, default to the user's actual default watchlist
-        if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID)) {
-            const defaultUserWatchlist = userWatchlists.find(wl => wl.id === getDefaultWatchlistId(currentUserId));
-            if (defaultUserWatchlist) {
-                shareWatchlistSelect.value = defaultUserWatchlist.id;
-            } else {
-                shareWatchlistSelect.value = userWatchlists[0].id;
-            }
-        } else if (currentSelectedWatchlistIds.length > 0) {
+        defaultOption.selected = false; // Deselect the placeholder if a valid watchlist is chosen
+    } else if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID) && !selectedShareDocId) {
+        // If adding a NEW share and main view is "All Shares", force "Select Watchlist" placeholder
+        shareWatchlistSelect.value = "";
+        defaultOption.selected = true;
+    } else if (userWatchlists.length > 0 && !selectedShareDocId) {
+        // If adding a NEW share and NOT in "All Shares" view, default to the currently selected main watchlist
+        // Or if no main watchlist selected, default to the first available watchlist
+        if (currentSelectedWatchlistIds.length > 0 && currentSelectedWatchlistIds[0] !== ALL_SHARES_ID) {
             shareWatchlistSelect.value = currentSelectedWatchlistIds[0];
+            defaultOption.selected = false;
         } else {
-            shareWatchlistSelect.value = userWatchlists[0].id;
+            shareWatchlistSelect.value = userWatchlists[0].id; // Fallback to first watchlist
+            defaultOption.selected = false;
         }
     } else {
         // Fallback if no watchlists exist (should be prevented by default watchlist creation)
         shareWatchlistSelect.value = "";
+        defaultOption.selected = true;
     }
     console.log("[UI Update] Share Watchlist Select dropdown populated.");
 }
@@ -2351,8 +2367,8 @@ async function initializeAppLogic() {
         addWatchlistBtn.addEventListener('click', () => {
             console.log("[UI] Add Watchlist button clicked.");
             if (newWatchlistNameInput) newWatchlistNameInput.value = '';
-            setIconDisabled(saveWatchlistBtn, true); // This saveWatchlistBtn is for the Add Share modal, not the new Watchlist modal.
-            console.log("[Add Watchlist] saveWatchlistBtn disabled initially.");
+            // setIconDisabled(saveWatchlistBtn, true); // This saveWatchlistBtn is for the Add Share modal, not the new Watchlist modal.
+            // console.log("[Add Watchlist] saveWatchlistBtn disabled initially.");
             showModal(addWatchlistModal);
             newWatchlistNameInput.focus();
             toggleAppSidebar(false);
@@ -2694,165 +2710,4 @@ async function initializeAppLogic() {
                 } else {
                     scrollToTopBtn.style.opacity = '0';
                     setTimeout(() => {
-                        scrollToTopBtn.style.display = 'none';
-                    }, 300);
-                }
-            } else {
-                scrollToTopBtn.style.display = 'none';
-            }
-        });
-        if (window.innerWidth > 768) {
-            scrollToTopBtn.style.display = 'none';
-        } else {
-            window.dispatchEvent(new Event('scroll'));
-        }
-        scrollToTopBtn.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); console.log("[UI] Scrolled to top."); });
-    }
-
-    // Hamburger Menu and Sidebar Interactions
-    if (hamburgerBtn && appSidebar && closeMenuBtn && sidebarOverlay) {
-        console.log("[Sidebar Setup] Initializing sidebar event listeners. Elements found:", {
-            hamburgerBtn: !!hamburgerBtn,
-            appSidebar: !!appSidebar,
-            closeMenuBtn: !!closeMenuBtn,
-            sidebarOverlay: !!sidebarOverlay
-        });
-        hamburgerBtn.addEventListener('click', (event) => {
-            console.log("[UI] Hamburger button CLICKED. Event:", event);
-            event.stopPropagation();
-            toggleAppSidebar();
-        });
-        closeMenuBtn.addEventListener('click', () => {
-            console.log("[UI] Close Menu button CLICKED.");
-            toggleAppSidebar(false);
-        });
-        
-        sidebarOverlay.addEventListener('click', (event) => {
-            console.log("[Sidebar Overlay] Clicked overlay. Attempting to close sidebar.");
-            if (appSidebar.classList.contains('open')) {
-                toggleAppSidebar(false);
-            }
-        });
-
-        document.addEventListener('click', (event) => {
-            const isDesktop = window.innerWidth > 768;
-            if (appSidebar.classList.contains('open') && isDesktop &&
-                !appSidebar.contains(event.target) && !hamburgerBtn.contains(event.target)) {
-                console.log("[Global Click] Clicked outside sidebar on desktop. Closing sidebar.");
-                toggleAppSidebar(false);
-            }
-        });
-
-        window.addEventListener('resize', () => {
-            console.log("[Window Resize] Resizing window. Closing sidebar if open.");
-            const isDesktop = window.innerWidth > 768;
-            if (appSidebar.classList.contains('open')) {
-                toggleAppSidebar(false);
-            }
-            if (scrollToTopBtn) {
-                if (window.innerWidth > 768) {
-                    scrollToTopBtn.style.display = 'none';
-                } else {
-                    window.dispatchEvent(new Event('scroll'));
-                }
-            }
-        });
-
-        const menuButtons = appSidebar.querySelectorAll('.menu-button-item');
-        menuButtons.forEach(button => {
-            button.addEventListener('click', (event) => {
-                console.log(`[Sidebar Menu Item Click] Button '${event.currentTarget.textContent.trim()}' clicked.`);
-                const closesMenu = event.currentTarget.dataset.actionClosesMenu !== 'false';
-                if (closesMenu) {
-                    toggleAppSidebar(false);
-                }
-            });
-        });
-    } else {
-        console.warn("[Sidebar Setup] Missing one or more sidebar elements (hamburgerBtn, appSidebar, closeMenuBtn, sidebarOverlay). Sidebar functionality might be impaired.");
-    }
-
-    // Export Watchlist Button Event Listener
-    if (exportWatchlistBtn) {
-        exportWatchlistBtn.addEventListener('click', () => {
-            console.log("[UI] Export Watchlist button clicked.");
-            exportWatchlistToCSV();
-            toggleAppSidebar(false);
-        });
-    }
-
-    // Refresh Live Prices Button Event Listener
-    if (refreshLivePricesBtn) {
-        refreshLivePricesBtn.addEventListener('click', () => {
-            console.log("[UI] Refresh Live Prices button clicked.");
-            fetchLivePrices();
-            showCustomAlert("Refreshing live prices...", 1000);
-        });
-    }
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js DOMContentLoaded fired.");
-
-    if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
-        db = window.firestoreDb;
-        auth = window.firebaseAuth;
-        currentAppId = window.getFirebaseAppId();
-        console.log("[Firebase Ready] DB, Auth, and AppId assigned from window. Setting up auth state listener.");
-        
-        window.authFunctions.onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                currentUserId = user.uid;
-                updateAuthButtonText(true, user.email || user.displayName);
-                console.log("[AuthState] User signed in:", user.uid);
-                console.log("[AuthState] User email:", user.email);
-                if (user.email && user.email.toLowerCase() === KANGA_EMAIL) {
-                    mainTitle.textContent = "Kanga's Share Watchlist";
-                    console.log("[AuthState] Main title set to Kanga's Share Watchlist.");
-                } else {
-                    mainTitle.textContent = "My Share Watchlist";
-                    console.log("[AuthState] Main title set to My Share Watchlist.");
-                }
-                updateMainButtonsState(true);
-                await loadUserWatchlistsAndSettings();
-                startLivePriceUpdates();
-            } else {
-                currentUserId = null;
-                updateAuthButtonText(false);
-                mainTitle.textContent = "Share Watchlist";
-                console.log("[AuthState] User signed out.");
-                updateMainButtonsState(false);
-                clearShareList();
-                clearWatchlistUI();
-                if (loadingIndicator) loadingIndicator.style.display = 'none';
-                applyTheme('system-default');
-                if (unsubscribeShares) {
-                    unsubscribeShares();
-                    unsubscribeShares = null;
-                    console.log("[Firestore Listener] Unsubscribed from shares listener on logout.");
-                }
-                stopLivePriceUpdates();
-            }
-            if (!window._appLogicInitialized) {
-                initializeAppLogic();
-                window._appLogicInitialized = true;
-            }
-        });
-        
-        if (googleAuthBtn) {
-            googleAuthBtn.disabled = false;
-            console.log("[Auth] Google Auth button enabled on DOMContentLoaded.");
-        }
-
-    } else {
-        console.error("[Firebase] Firebase objects (db, auth, appId, firestore, authFunctions) are not available on DOMContentLoaded. Firebase initialization likely failed in index.html.");
-        const errorDiv = document.getElementById('firebaseInitError');
-        if (errorDiv) {
-                errorDiv.style.display = 'block';
-        }
-        updateAuthButtonText(false);
-        updateMainButtonsState(false);
-        if (loadingIndicator) loadingIndicator.style.display = 'none';
-        applyTheme('system-default');
-    }
-});
+                        scrollToTo
