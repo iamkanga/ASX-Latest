@@ -36,8 +36,8 @@ let currentContextMenuShareId = null; // Stores the ID of the share that opened 
 let originalShareData = null; // Stores the original share data when editing for long press detection
 
 // Live Price Data
-// UPDATED: GOOGLE_APPS_SCRIPT_URL to use CORS proxy
-const GOOGLE_APPS_SCRIPT_URL = 'https://corsproxy.io/?https%3A%2F%2Fscript.google.com%2Fmacros%2Fs%2FAKfycbxyxL-InwjKpRzIXLSJz0ib_3slbUyuIhxPg3klWIe0rkEVRSNc3tLaYo8m4rTjBWM%2Fexec';
+// UPDATED: GOOGLE_APPS_SCRIPT_URL to the NEWEST provided URL with CORS proxy
+const GOOGLE_APPS_SCRIPT_URL = 'https://corsproxy.io/?https%3A%2F%2Fscript.google.com%2Fmacros%2Fs%2FAKfycbyPNzQrs4vrLxc7SV13w6buWNSZMvtr7NQgFNJmm5SIGetehCVcGXplJZ_kKLcm9fXx%2Fexec';
 let livePrices = {}; // Stores live price data: {ASX_CODE: price}
 let livePriceFetchInterval = null; // To hold the interval ID for live price updates
 const LIVE_PRICE_FETCH_INTERVAL_MS = 5 * 60 * 1000; // Fetch every 5 minutes
@@ -85,8 +85,8 @@ const modalEnteredPrice = document.getElementById('modalEnteredPrice');
 const modalLivePrice = document.getElementById('modalLivePrice');
 const modalPriceChange = document.getElementById('modalPriceChange');
 const modalTargetPrice = document.getElementById('modalTargetPrice');
-const modalDividendAmount = document.getElementById('dividendAmount');
-const modalFrankingCredits = document.getElementById('frankingCredits');
+const modalDividendAmount = document.getElementById('modalDividendAmount');
+const modalFrankingCredits = document.getElementById('modalFrankingCredits');
 const modalCommentsContainer = document.getElementById('modalCommentsContainer');
 const modalUnfrankedYieldSpan = document.getElementById('modalUnfrankedYield');
 const modalFrankedYieldSpan = document.getElementById('modalFrankedYield');
