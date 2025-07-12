@@ -36,8 +36,8 @@ let currentContextMenuShareId = null; // Stores the ID of the share that opened 
 let originalShareData = null; // Stores the original share data when editing for long press detection
 
 // Live Price Data
-// UPDATED: GOOGLE_APPS_SCRIPT_URL to the NEW direct Google Sheet JSON endpoint
-const GOOGLE_APPS_SCRIPT_URL = 'https://docs.google.com/spreadsheets/d/1FjsaVwQ9M7uHmsrkEZWnAZjfwKwPjPYqEN3jq4Pt9Vg/gviz/tq?tqx=out:json&sheet=Sheet1';
+// UPDATED: GOOGLE_APPS_SCRIPT_URL to the LATEST provided URL
+const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxtLINCnCff6uCpIErA_vCI6wFWPDzsTaqwbi-PWkbAO9PVfEeuBan5EOarEYCG_Msn/exec';
 let livePrices = {}; // Stores live price data: {ASX_CODE: price}
 let livePriceFetchInterval = null; // To hold the interval ID for live price updates
 const LIVE_PRICE_FETCH_INTERVAL_MS = 5 * 60 * 1000; // Fetch every 5 minutes
@@ -85,7 +85,7 @@ const modalEnteredPrice = document.getElementById('modalEnteredPrice');
 const modalLivePrice = document.getElementById('modalLivePrice');
 const modalPriceChange = document.getElementById('modalPriceChange');
 const modalTargetPrice = document.getElementById('modalTargetPrice');
-const modalDividendAmount = document.getElementById('dividendAmount');
+const modalDividendAmount = document.getElementById('modalDividendAmount');
 const modalFrankingCredits = document.getElementById('frankingCredits');
 const modalCommentsContainer = document.getElementById('modalCommentsContainer');
 const modalUnfrankedYieldSpan = document.getElementById('modalUnfrankedYield');
