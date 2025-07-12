@@ -37,7 +37,7 @@ let originalShareData = null; // Stores the original share data when editing for
 
 // Live Price Data
 // UPDATED: GOOGLE_APPS_SCRIPT_URL to the LATEST provided URL
-const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwjuU2ZE1rCe4kiHT7WD-7CALkB0pg-zxkizz0xMIrhKxCBlKEp-YoMiUK85BQ2dHnZ/exec';
+const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwWRS8RbfLasIjWtDpY3HhrxfmdaBA3SQt3CXTtNIFQgJMW-lNdankJtWQn4M0_zP7X/exec';
 let livePrices = {}; // Stores live price data: {ASX_CODE: price}
 let livePriceFetchInterval = null; // To hold the interval ID for live price updates
 const LIVE_PRICE_FETCH_INTERVAL_MS = 5 * 60 * 1000; // Fetch every 5 minutes
