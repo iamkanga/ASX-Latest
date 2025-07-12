@@ -2706,10 +2706,9 @@ async function initializeAppLogic() {
             } else {
                 document.body.classList.remove('dark-theme');
             }
-            console.log("[Theme] System theme preference changed and applied (system-default mode).");
             updateThemeToggleAndSelector();
         }
-    }
+    }); // This line should now be correct and close the listener.}
 
     // Scroll to Top Button
     if (scrollToTopBtn) {
