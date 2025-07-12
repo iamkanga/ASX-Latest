@@ -37,7 +37,7 @@ let originalShareData = null; // Stores the original share data when editing for
 
 // Live Price Data
 // UPDATED: GOOGLE_APPS_SCRIPT_URL to the LATEST provided URL
-const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwWRS8RbfLasIjWtDpY3HhrxfmdaBA3SQt3CXTtNIFQgJMW-lNdankJtWQn4M0_zP7X/exec';
+const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxyxL-InwjKpRzIXLSJz0ib_3slbUyuIhxPg3klWIe0rkEVRSNc3tLaYo8m4rTjBWM/exec';
 let livePrices = {}; // Stores live price data: {ASX_CODE: price}
 let livePriceFetchInterval = null; // To hold the interval ID for live price updates
 const LIVE_PRICE_FETCH_INTERVAL_MS = 5 * 60 * 1000; // Fetch every 5 minutes
@@ -395,7 +395,7 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
     formTitle.textContent = 'Edit Share';
     shareNameInput.value = shareToEdit.shareName || '';
     currentPriceInput.value = Number(shareToEdit.currentPrice) !== null && !isNaN(Number(shareToEdit.currentPrice)) ? Number(shareToEdit.currentPrice).toFixed(2) : '';
-    targetPriceInput.value = Number(shareToEdit.targetPrice) !== null && !isNaN(Number(shareToEdit.targetPrice)) ? Number(shareToEdit.targetPrice).toFixed(2) : '';
+    targetPriceInput.value = Number(shareToEdit.targetPrice) !== null && !isNaN(Number(shareToToEdit.targetPrice)) ? Number(shareToEdit.targetPrice).toFixed(2) : '';
     dividendAmountInput.value = Number(shareToEdit.dividendAmount) !== null && !isNaN(Number(shareToEdit.dividendAmount)) ? Number(shareToEdit.dividendAmount).toFixed(3) : '';
     frankingCreditsInput.value = Number(shareToEdit.frankingCredits) !== null && !isNaN(Number(shareToEdit.frankingCredits)) ? Number(shareToEdit.frankingCredits).toFixed(1) : '';
     
@@ -2708,8 +2708,8 @@ async function initializeAppLogic() {
             }
             console.log("[Theme] System theme preference changed and applied (system-default mode).");
             updateThemeToggleAndSelector();
-        }
-    });
+        });
+    }
 
     // Scroll to Top Button
     if (scrollToTopBtn) {
