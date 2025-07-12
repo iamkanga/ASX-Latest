@@ -788,7 +788,7 @@ function sortShares() {
             if (nameA === '' && nameB === '') return 0;
             if (nameA === '') return order === 'asc' ? 1 : -1;
             if (nameB === '') return order === 'asc' ? -1 : 1;
-            return order === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+            return order === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(a.shareName);
         } else if (field === 'entryDate') {
             const dateA = new Date(valA);
             const dateB = new Date(valB);
@@ -2263,7 +2263,8 @@ async function initializeAppLogic() {
     // Event listener for shareNameInput to toggle saveShareBtn
     if (shareNameInput && saveShareBtn) {
         shareNameInput.addEventListener('input', () => {
-            checkFormDirtyState(); 
+            const isDisabled = shareNameInput.value.trim() === '';
+            setIconDisabled(saveShareBtn, isDisabled);
         });
     }
 
