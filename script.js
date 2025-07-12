@@ -85,8 +85,8 @@ const modalEnteredPrice = document.getElementById('modalEnteredPrice');
 const modalLivePrice = document.getElementById('modalLivePrice');
 const modalPriceChange = document.getElementById('modalPriceChange');
 const modalTargetPrice = document.getElementById('modalTargetPrice');
-const modalDividendAmount = document.getElementById('dividendAmount');
-const modalFrankingCredits = document.getElementById('frankingCredits');
+const modalDividendAmount = document.getElementById('modalDividendAmount');
+const modalFrankingCredits = document.getElementById('modalFrankingCredits');
 const modalCommentsContainer = document.getElementById('modalCommentsContainer');
 const modalUnfrankedYieldSpan = document.getElementById('modalUnfrankedYield');
 const modalFrankedYieldSpan = document.getElementById('modalFrankedYield');
@@ -395,7 +395,7 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
     formTitle.textContent = 'Edit Share';
     shareNameInput.value = shareToEdit.shareName || '';
     currentPriceInput.value = Number(shareToEdit.currentPrice) !== null && !isNaN(Number(shareToEdit.currentPrice)) ? Number(shareToEdit.currentPrice).toFixed(2) : '';
-    targetPriceInput.value = Number(shareToEdit.targetPrice) !== null && !isNaN(Number(shareToToEdit.targetPrice)) ? Number(shareToEdit.targetPrice).toFixed(2) : '';
+    targetPriceInput.value = Number(shareToEdit.targetPrice) !== null && !isNaN(Number(shareToEdit.targetPrice)) ? Number(shareToEdit.targetPrice).toFixed(2) : '';
     dividendAmountInput.value = Number(shareToEdit.dividendAmount) !== null && !isNaN(Number(shareToEdit.dividendAmount)) ? Number(shareToEdit.dividendAmount).toFixed(3) : '';
     frankingCreditsInput.value = Number(shareToEdit.frankingCredits) !== null && !isNaN(Number(shareToEdit.frankingCredits)) ? Number(shareToEdit.frankingCredits).toFixed(1) : '';
     
@@ -1530,7 +1530,7 @@ async function loadUserWatchlistsAndSettings() {
         }
 
         if (currentSelectedWatchlistIds && Array.isArray(currentSelectedWatchlistIds) && currentSelectedWatchlistIds.length > 0) {
-            currentSelectedWatchlistIds = currentSelectedWatchlistIds.filter(id => 
+            currentSelectedWatchlistIds = currentSelectedWatchlists.filter(id => 
                 id === ALL_SHARES_ID || userWatchlists.some(wl => wl.id === id)
             );
             if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID) && userWatchlists.length === 0) {
@@ -1597,17 +1597,25 @@ async function loadUserWatchlistsAndSettings() {
 async function fetchLivePrices() {
     console.log("[Live Price] Attempting to fetch live prices...");
     try {
-        const response = await fetch(GOOGLE_APPS_SCRIPT_URL);
+        // MODIFIED: Added cache: 'no-store' to bypass service worker cache
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, { cache: 'no-store' }); 
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
         console.log("[Live Price] Raw data received:", data);
 
+        // Check if the response is an error object from Apps Script
+        if (data && typeof data === 'object' && data.error) {
+            console.error("[Live Price] Apps Script returned an error:", data.error);
+            showCustomAlert(`Apps Script Error: ${data.error}`, 3000);
+            return; // Stop processing if Apps Script returned an error
+        }
+
         const newLivePrices = {};
         const batch = window.firestore.writeBatch(db); // Prepare a batch write for efficiency
 
-        for (const item of data) {
+        for (const item of data) { // Now 'data' should be an array, not an error object
             const asxCode = String(item.ASX_CODE).toUpperCase();
             const price = parseFloat(item.Price);
             const previousClose = parseFloat(item.PreviousClose);
@@ -2708,7 +2716,7 @@ async function initializeAppLogic() {
             }
             updateThemeToggleAndSelector();
         }
-    }); // This line should now be correct and close the listener.}
+    });
 
     // Scroll to Top Button
     if (scrollToTopBtn) {
