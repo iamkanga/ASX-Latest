@@ -1,7 +1,7 @@
-// Service Worker Version: 1.0.0
+// Service Worker Version: 1.0.1 (UPDATED FOR APPS SCRIPT BYPASS)
 
 // Cache name for the current version of the service worker
-const CACHE_NAME = 'share-watchlist-v1.0.0';
+const CACHE_NAME = 'share-watchlist-v1.0.1'; // Updated cache name to force update
 
 // List of essential application assets to precache
 const CACHED_ASSETS = [
@@ -17,6 +17,9 @@ const CACHED_ASSETS = [
     'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js',
     'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js'
 ];
+
+// The Google Apps Script URL that should bypass the service worker
+const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxyxL-InwjKpRzIXLSJz0ib_3slbUyuIhxPg3klWIe0rkEVRSNc3tLaYo8m4rTjBWM/exec';
 
 // Install event: caches all essential assets
 self.addEventListener('install', (event) => {
@@ -57,6 +60,12 @@ self.addEventListener('activate', (event) => {
 
 // Fetch event: serves cached content or fetches from network
 self.addEventListener('fetch', (event) => {
+    // IMPORTANT: Bypass service worker for the Google Apps Script URL
+    if (event.request.url.startsWith(GOOGLE_APPS_SCRIPT_URL)) {
+        console.log(`Service Worker: Bypassing fetch for Apps Script URL: ${event.request.url}`);
+        return; // Let the request go directly to the network, don't intercept or cache
+    }
+
     // Only handle GET requests, ignore others (like POST, PUT, DELETE)
     if (event.request.method === 'GET') {
         event.respondWith(
