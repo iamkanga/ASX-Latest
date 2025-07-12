@@ -418,7 +418,6 @@ body.theme-bold-7 { /* Emerald */
     --button-hover-bg: #4caf50;
     --input-bg: #228b22;
     --input-border: #3cb371;
-    --input-placeholder-color: #99ffaa;
     --modal-content-bg: #228b22;
     --table-header-bg: #006400;
     --table-row-hover-bg: #3cb371;
@@ -1103,7 +1102,7 @@ h1#mainTitle {
     left: 0; 
 }
 
-/* MODIFIED: Close Menu Button for smaller size */
+/* MODIFIED: Close Menu Button for smaller size and consistency */
 .close-menu-btn {
     color: var(--close-sidebar-btn-color);
     font-size: 1.5em; /* Adjusted from 2em to 1.5em for consistency with other close buttons */
@@ -1508,7 +1507,7 @@ table td.live-price-cell {
     align-items: center;
     justify-content: center;
     gap: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 8px var(--shadow-color);
     width: fit-content;
     max-width: 100%;
 }
@@ -1587,12 +1586,20 @@ table td.live-price-cell {
     flex-shrink: 0; /* Prevent this group from shrinking */
 }
 
-.modal-header-with-icon .close-button {
-    position: static; /* Remove absolute positioning */
-    margin-left: 0; /* Remove auto margin */
-    font-size: 2em;
-    padding: 5px; /* Add some padding for touch target */
-    line-height: 1; /* Ensure icon is vertically centered */
+/* MODIFIED: General Close Button Styling for all modals */
+.close-button {
+    background: none; /* Ensure no background */
+    border: none; /* Ensure no border */
+    color: var(--text-color); /* Use general text color */
+    font-size: 1.8em; /* Consistent size with header action buttons */
+    cursor: pointer;
+    padding: 5px;
+    line-height: 1; /* Vertically center the 'X' */
+    display: block;
+    flex-shrink: 0;
+    /* Removed absolute positioning that was here for some close buttons */
+    position: static; /* Ensure it flows naturally within its flex container */
+    margin-left: 0; /* Remove any auto margins that might be pushing it */
 }
 
 .close-button:hover,
@@ -1601,6 +1608,25 @@ table td.live-price-cell {
     text-decoration: none;
     cursor: pointer;
 }
+
+/* Specific styling for close buttons in modal headers (like Share, Watchlist, Custom Dialog) */
+.modal-header-with-icon .close-button {
+    font-size: 2em; /* Slightly larger for modal headers */
+    padding: 5px;
+}
+
+/* Specific styling for calculator modal close button */
+.calculator-modal-content .close-button {
+    font-size: 2em; /* Consistent with other modal close buttons */
+    position: absolute; /* Keep absolute for calculator modals as they don't have modal-header-with-icon */
+    top: 10px;
+    right: 20px;
+    color: var(--text-color); /* Ensure it uses text color */
+}
+.calculator-modal-content .close-button:hover {
+    color: var(--danger-button-bg);
+}
+
 
 .ghosted-text {
     color: var(--ghosted-text);
