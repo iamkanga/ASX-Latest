@@ -137,6 +137,8 @@ const contextDeleteShareBtn = document.getElementById('contextDeleteShareBtn');
 const logoutBtn = document.getElementById('logoutBtn');
 const exportWatchlistBtn = document.getElementById('exportWatchlistBtn');
 const refreshLivePricesBtn = document.getElementById('refreshLivePricesBtn');
+// NEW: Watchlist selector for the Add/Edit Share modal
+const shareWatchlistSelect = document.getElementById('shareWatchlistSelect');
 
 let sidebarOverlay = document.querySelector('.sidebar-overlay');
 if (!sidebarOverlay) {
@@ -397,6 +399,9 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
     dividendAmountInput.value = Number(shareToEdit.dividendAmount) !== null && !isNaN(Number(shareToEdit.dividendAmount)) ? Number(shareToEdit.dividendAmount).toFixed(3) : '';
     frankingCreditsInput.value = Number(shareToEdit.frankingCredits) !== null && !isNaN(Number(shareToEdit.frankingCredits)) ? Number(shareToEdit.frankingCredits).toFixed(1) : '';
     
+    // NEW: Populate watchlist selector for editing
+    populateShareWatchlistSelect(shareToEdit.watchlistId);
+
     if (commentsFormContainer) { // This now refers to #dynamicCommentsArea
         commentsFormContainer.innerHTML = ''; // Clear existing dynamic comment sections
         if (shareToEdit.comments && Array.isArray(shareToEdit.comments) && shareToEdit.comments.length > 0) {
@@ -445,7 +450,9 @@ function getCurrentFormData() {
         targetPrice: parseFloat(targetPriceInput.value),
         dividendAmount: parseFloat(dividendAmountInput.value),
         frankingCredits: parseFloat(frankingCreditsInput.value),
-        comments: comments
+        comments: comments,
+        // NEW: Include selected watchlist ID from the form
+        watchlistId: shareWatchlistSelect ? shareWatchlistSelect.value : (userWatchlists.length > 0 ? userWatchlists[0].id : getDefaultWatchlistId(currentUserId))
     };
 }
 
@@ -459,7 +466,7 @@ function getCurrentFormData() {
 function areShareDataEqual(data1, data2) {
     if (!data1 || !data2) return false;
 
-    const fields = ['shareName', 'currentPrice', 'targetPrice', 'dividendAmount', 'frankingCredits'];
+    const fields = ['shareName', 'currentPrice', 'targetPrice', 'dividendAmount', 'frankingCredits', 'watchlistId']; // NEW: Include watchlistId in comparison
     for (const field of fields) {
         let val1 = data1[field];
         let val2 = data2[field];
@@ -531,6 +538,7 @@ async function saveShareData(isSilent = false) {
     const targetPrice = parseFloat(targetPriceInput.value);
     const dividendAmount = parseFloat(dividendAmountInput.value);
     const frankingCredits = parseFloat(frankingCreditsInput.value);
+    const selectedWatchlistId = shareWatchlistSelect.value; // NEW: Get selected watchlist ID
 
     const comments = [];
     if (commentsFormContainer) { // This now refers to #dynamicCommentsArea
@@ -553,9 +561,7 @@ async function saveShareData(isSilent = false) {
         frankingCredits: isNaN(frankingCredits) ? null : frankingCredits,
         comments: comments,
         userId: currentUserId,
-        watchlistId: (watchlistSelect && watchlistSelect.value && watchlistSelect.value !== "") 
-                     ? watchlistSelect.value 
-                     : (userWatchlists.length > 0 ? userWatchlists[0].id : getDefaultWatchlistId(currentUserId)),
+        watchlistId: selectedWatchlistId, // NEW: Use selected watchlist ID
         lastPriceUpdateTime: new Date().toISOString()
     };
 
@@ -821,6 +827,57 @@ function renderWatchlistSelect() {
     }
     console.log("[UI Update] Watchlist select dropdown rendered.");
 }
+
+// NEW: Function to populate the watchlist selector in the Add/Edit Share modal
+function populateShareWatchlistSelect(selectedWatchlistId = null) {
+    if (!shareWatchlistSelect) {
+        console.warn("[populateShareWatchlistSelect] shareWatchlistSelect element not found.");
+        return;
+    }
+    shareWatchlistSelect.innerHTML = ''; // Clear existing options
+
+    // Add a default "Select Watchlist" option if no watchlist is pre-selected
+    if (!selectedWatchlistId) {
+        const defaultOption = document.createElement('option');
+        defaultOption.value = "";
+        defaultOption.textContent = "Select Watchlist";
+        defaultOption.disabled = true;
+        defaultOption.selected = true;
+        shareWatchlistSelect.appendChild(defaultOption);
+    }
+
+    userWatchlists.forEach(watchlist => {
+        const option = document.createElement('option');
+        option.value = watchlist.id;
+        option.textContent = watchlist.name;
+        shareWatchlistSelect.appendChild(option);
+    });
+
+    // Set the selected value if provided
+    if (selectedWatchlistId && userWatchlists.some(wl => wl.id === selectedWatchlistId)) {
+        shareWatchlistSelect.value = selectedWatchlistId;
+    } else if (userWatchlists.length > 0) {
+        // If no specific ID, default to the first watchlist (or current if "All Shares")
+        // If "All Shares" is selected in main view, default to the user's actual default watchlist
+        if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID)) {
+            const defaultUserWatchlist = userWatchlists.find(wl => wl.id === getDefaultWatchlistId(currentUserId));
+            if (defaultUserWatchlist) {
+                shareWatchlistSelect.value = defaultUserWatchlist.id;
+            } else {
+                shareWatchlistSelect.value = userWatchlists[0].id;
+            }
+        } else if (currentSelectedWatchlistIds.length > 0) {
+            shareWatchlistSelect.value = currentSelectedWatchlistIds[0];
+        } else {
+            shareWatchlistSelect.value = userWatchlists[0].id;
+        }
+    } else {
+        // Fallback if no watchlists exist (should be prevented by default watchlist creation)
+        shareWatchlistSelect.value = "";
+    }
+    console.log("[UI Update] Share Watchlist Select dropdown populated.");
+}
+
 
 function renderSortSelect() {
     if (!sortSelect) { console.error("[renderSortSelect] sortSelect element not found."); return; }
@@ -2153,7 +2210,8 @@ async function initializeAppLogic() {
             showModal(shareFormSection);
             shareNameInput.focus();
             toggleAppSidebar(false);
-            addCommentSection(); // ADDED: Add an initial empty comment section for new shares
+            addCommentSection(); // Add an initial empty comment section for new shares
+            populateShareWatchlistSelect(); // NEW: Populate watchlist selector for new shares
         });
     }
 
@@ -2166,7 +2224,8 @@ async function initializeAppLogic() {
             if (deleteShareBtn) { deleteShareBtn.classList.add('hidden'); }
             showModal(shareFormSection);
             shareNameInput.focus();
-            addCommentSection(); // ADDED: Add an initial empty comment section for new shares
+            addCommentSection(); // Add an initial empty comment section for new shares
+            populateShareWatchlistSelect(); // NEW: Populate watchlist selector for new shares
         });
     }
 
