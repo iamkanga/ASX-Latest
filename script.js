@@ -36,7 +36,8 @@ let currentContextMenuShareId = null; // Stores the ID of the share that opened 
 let originalShareData = null; // Stores the original share data when editing for dirty state check
 
 // Live Price Data
-const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwjuU2ZE1rCe4kiHT7WD-7CALkB0pg-zxkizz0xMIrhKxCBlKEp-YoMiUK85BQ2dHnZ/exec'; // Placeholder URL
+// UPDATED: GOOGLE_APPS_SCRIPT_URL to the latest provided URL
+const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzKPHYuE2X7X4cfrE3hrd1pCfZnpxqi3RA4lu-ekb_l9sw5D9bjtmGsXhe1M11FA-Q1/exec';
 let livePrices = {}; // Stores live price data: {ASX_CODE: price}
 let livePriceFetchInterval = null; // To hold the interval ID for live price updates
 const LIVE_PRICE_FETCH_INTERVAL_MS = 5 * 60 * 1000; // Fetch every 5 minutes
@@ -160,7 +161,7 @@ const formInputs = [
  * This adds/removes the 'is-disabled-icon' class, which CSS then styles.
  * @param {HTMLElement} element The element to disable/enable.
  * @param {boolean} isDisabled True to disable, false to enable.
- */
+*/
 function setIconDisabled(element, isDisabled) {
     if (!element) {
         console.warn(`[setIconDisabled] Element is null or undefined. Cannot set disabled state.`);
@@ -428,7 +429,7 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
 /**
  * Gathers all current data from the share form inputs.
  * @returns {object} An object representing the current state of the form.
- */
+*/
 function getCurrentFormData() {
     const comments = [];
     if (commentsFormContainer) { // This now refers to #dynamicCommentsArea
@@ -461,7 +462,7 @@ function getCurrentFormData() {
  * @param {object} data1
  * @param {object} data2
  * @returns {boolean} True if data is identical, false otherwise.
- */
+*/
 function areShareDataEqual(data1, data2) {
     if (!data1 || !data2) return false;
 
@@ -496,7 +497,7 @@ function areShareDataEqual(data1, data2) {
 /**
  * Checks the current state of the form against the original data (if editing)
  * and the share name validity, then enables/disables the save button accordingly.
- */
+*/
 function checkFormDirtyState() {
     const currentData = getCurrentFormData();
     const isShareNameValid = currentData.shareName.trim() !== '';
@@ -522,7 +523,7 @@ function checkFormDirtyState() {
 /**
  * Saves share data to Firestore. Can be called silently for auto-save.
  * @param {boolean} isSilent If true, no alert messages are shown on success.
- */
+*/
 async function saveShareData(isSilent = false) {
     console.log("[Share Form] saveShareData called.");
     // Check if the save button would normally be disabled (no valid name or no changes)
@@ -582,13 +583,17 @@ async function saveShareData(isSilent = false) {
 
     if (selectedShareDocId) {
         const existingShare = allSharesData.find(s => s.id === selectedShareDocId);
+        // MODIFIED: Ensure lastFetchedPrice and previousFetchedPrice are handled correctly on manual save
+        // If currentPrice is manually updated, update lastFetchedPrice and set previousFetchedPrice to the old lastFetchedPrice
         if (shareData.currentPrice !== null && existingShare && existingShare.currentPrice !== shareData.currentPrice) {
-            shareData.previousFetchedPrice = existingShare.lastFetchedPrice;
-            shareData.lastFetchedPrice = shareData.currentPrice;
+            shareData.previousFetchedPrice = existingShare.lastFetchedPrice; // Old live price becomes previous
+            shareData.lastFetchedPrice = shareData.currentPrice; // New manual entry becomes current live price
         } else if (!existingShare || existingShare.lastFetchedPrice === undefined) {
+            // For new shares or if lastFetchedPrice was somehow missing, initialize both
             shareData.previousFetchedPrice = shareData.currentPrice;
             shareData.lastFetchedPrice = shareData.currentPrice;
         } else {
+            // If currentPrice wasn't manually changed, preserve existing fetched prices
             shareData.previousFetchedPrice = existingShare.previousFetchedPrice;
             shareData.lastFetchedPrice = existingShare.lastFetchedPrice;
         }
@@ -643,8 +648,9 @@ function showShareDetails() {
     const enteredPriceNum = Number(share.currentPrice);
 
     const livePrice = livePrices[share.shareName.toUpperCase()];
-    const previousFetchedPrice = Number(share.previousFetchedPrice);
-    const lastFetchedPrice = Number(share.lastFetchedPrice);
+    // MODIFIED: Prioritize previousFetchedPrice for comparison in detail modal
+    const comparisonPrice = (!isNaN(Number(share.previousFetchedPrice)) && Number(share.previousFetchedPrice) !== null) ? 
+                            Number(share.previousFetchedPrice) : enteredPriceNum;
 
     if (modalLivePrice) {
         if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) {
@@ -660,14 +666,7 @@ function showShareDetails() {
         modalPriceChange.textContent = '';
         modalPriceChange.classList.remove('positive', 'negative', 'neutral');
 
-        let comparisonPrice = null;
-        if (lastFetchedPrice !== undefined && lastFetchedPrice !== null && !isNaN(lastFetchedPrice)) {
-            comparisonPrice = lastFetchedPrice;
-        } else if (enteredPriceNum !== undefined && enteredPriceNum !== null && !isNaN(enteredPriceNum)) {
-            comparisonPrice = enteredPriceNum;
-        }
-
-        if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice) && comparisonPrice !== null) {
+        if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice) && comparisonPrice !== null && !isNaN(comparisonPrice)) {
             const change = livePrice - comparisonPrice;
             const priceChangeSpan = document.createElement('span');
             priceChangeSpan.classList.add('price-change');
@@ -994,21 +993,15 @@ function addShareToTable(share) {
 
     const livePriceCell = row.insertCell();
     const livePrice = livePrices[share.shareName.toUpperCase()];
-    const previousFetchedPrice = Number(share.previousFetchedPrice);
-    const lastFetchedPrice = Number(share.lastFetchedPrice);
+    // MODIFIED: Prioritize previousFetchedPrice for comparison
+    const comparisonPrice = (!isNaN(Number(share.previousFetchedPrice)) && Number(share.previousFetchedPrice) !== null) ? 
+                            Number(share.previousFetchedPrice) : Number(share.currentPrice);
 
     if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) {
         livePriceCell.textContent = `$${livePrice.toFixed(2)}`;
         livePriceCell.classList.add('live-price-cell');
         
-        let comparisonPrice = null;
-        if (lastFetchedPrice !== undefined && lastFetchedPrice !== null && !isNaN(lastFetchedPrice)) {
-            comparisonPrice = lastFetchedPrice;
-        } else if (Number(share.currentPrice) !== undefined && Number(share.currentPrice) !== null && !isNaN(Number(share.currentPrice))) {
-            comparisonPrice = Number(share.currentPrice);
-        }
-
-        if (comparisonPrice !== null) {
+        if (comparisonPrice !== null && !isNaN(comparisonPrice)) {
             const change = livePrice - comparisonPrice;
             const priceChangeSpan = document.createElement('span');
             priceChangeSpan.classList.add('price-change');
@@ -1041,6 +1034,7 @@ function addShareToTable(share) {
     const dividendCell = row.insertCell();
     const dividendAmountNum = Number(share.dividendAmount);
     const frankingCreditsNum = Number(share.frankingCredits);
+    // MODIFIED: Use livePrice for yield calculation if available, otherwise enteredPriceNum
     const priceForYield = (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) ? livePrice : enteredPriceNum;
 
     const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, priceForYield); 
@@ -1078,8 +1072,9 @@ function addShareToMobileCards(share) {
     const targetPriceNum = Number(share.targetPrice);
     
     const livePrice = livePrices[share.shareName.toUpperCase()];
-    const previousFetchedPrice = Number(share.previousFetchedPrice);
-    const lastFetchedPrice = Number(share.lastFetchedPrice);
+    // MODIFIED: Prioritize previousFetchedPrice for comparison
+    const comparisonPrice = (!isNaN(Number(share.previousFetchedPrice)) && Number(share.previousFetchedPrice) !== null) ? 
+                            Number(share.previousFetchedPrice) : Number(share.currentPrice);
 
     const priceForYield = (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) ? livePrice : enteredPriceNum;
 
@@ -1096,14 +1091,7 @@ function addShareToMobileCards(share) {
     if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) {
         livePriceHtml = `<p><strong>Live Price:</strong> $${livePrice.toFixed(2)}`;
         
-        let comparisonPrice = null;
-        if (lastFetchedPrice !== undefined && lastFetchedPrice !== null && !isNaN(lastFetchedPrice)) {
-            comparisonPrice = lastFetchedPrice;
-        } else if (enteredPriceNum !== undefined && enteredPriceNum !== null && !isNaN(enteredPriceNum)) {
-            comparisonPrice = enteredPriceNum;
-        }
-
-        if (comparisonPrice !== null) {
+        if (comparisonPrice !== null && !isNaN(comparisonPrice)) {
             const change = livePrice - comparisonPrice;
             if (change > 0) {
                 livePriceHtml += ` <span class="price-change positive">(+$${change.toFixed(2)})</span></p>`;
@@ -1604,7 +1592,7 @@ async function loadUserWatchlistsAndSettings() {
 
 /**
  * Fetches live price data from the Google Apps Script Web App.
- * Updates the `livePrices` global object.
+ * Updates the `livePrices` global object and updates shares in Firestore.
  */
 async function fetchLivePrices() {
     console.log("[Live Price] Attempting to fetch live prices...");
@@ -1617,27 +1605,60 @@ async function fetchLivePrices() {
         console.log("[Live Price] Raw data received:", data);
 
         const newLivePrices = {};
-        data.forEach(item => {
-            const asxCodeKey = Object.keys(item).find(key => 
-                key !== 'Price' && key !== 'PreviousClose' && key !== '52 High' && key !== '52 Low'
-            );
-            if (asxCodeKey && item[asxCodeKey] && item['Price'] !== undefined) {
-                const asxCode = String(item[asxCodeKey]).toUpperCase();
-                const price = parseFloat(item['Price']);
-                if (!isNaN(price)) {
-                    newLivePrices[asxCode] = price;
-                } else {
-                    console.warn(`[Live Price] Invalid price for ${asxCode}: ${item['Price']}`);
-                }
+        const batch = window.firestore.writeBatch(db); // Prepare a batch write for efficiency
+
+        for (const item of data) {
+            const asxCode = String(item.ASX_CODE).toUpperCase();
+            const price = parseFloat(item.Price);
+            const previousClose = parseFloat(item.PreviousClose);
+
+            if (!isNaN(price)) {
+                newLivePrices[asxCode] = price;
             } else {
-                console.warn("[Live Price] Skipping item due to missing ASX code key or price:", item);
+                console.warn(`[Live Price] Invalid current price for ${asxCode}: ${item.Price}`);
             }
-        });
-        livePrices = newLivePrices;
-        console.log("[Live Price] Live prices updated:", livePrices);
-        renderWatchlist(); 
+
+            // Find the corresponding share in allSharesData
+            const shareToUpdate = allSharesData.find(s => s.shareName && s.shareName.toUpperCase() === asxCode);
+
+            if (shareToUpdate) {
+                const shareDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, shareToUpdate.id);
+                
+                const updateData = {};
+                // Only update if price is a valid number
+                if (!isNaN(price)) {
+                    updateData.lastFetchedPrice = price; // Current live price
+                    updateData.lastPriceUpdateTime = new Date().toISOString();
+                }
+
+                // Only update previousFetchedPrice if previousClose is a valid number
+                if (!isNaN(previousClose)) {
+                    updateData.previousFetchedPrice = previousClose; // Previous day's close from Apps Script
+                } else if (!isNaN(price) && !shareToUpdate.previousFetchedPrice && shareToUpdate.currentPrice) {
+                    // Fallback for new shares or shares without previousFetchedPrice,
+                    // use their entered price as initial 'previousFetchedPrice' if live price is valid
+                    updateData.previousFetchedPrice = shareToUpdate.currentPrice;
+                }
+
+                if (Object.keys(updateData).length > 0) { // Only commit if there's something to update
+                    batch.update(shareDocRef, updateData);
+                    console.log(`[Firestore Batch] Prepared update for ${asxCode}:`, updateData);
+                }
+            }
+        }
+        
+        // Commit the batch after processing all data from the Apps Script
+        if (Object.keys(newLivePrices).length > 0) {
+            livePrices = newLivePrices; // Update global livePrices object after batch preparation
+            await batch.commit(); // Commit all updates to Firestore
+            console.log("[Live Price] Firestore batch updates committed successfully.");
+        } else {
+            console.log("[Live Price] No valid live prices received to update.");
+        }
+        
+        renderWatchlist(); // Re-render UI with updated data
     } catch (error) {
-        console.error("[Live Price] Error fetching live prices:", error);
+        console.error("[Live Price] Error fetching live prices or updating Firestore:", error);
     }
 }
 
@@ -1967,22 +1988,14 @@ function exportWatchlistToCSV() {
         const targetPriceNum = Number(share.targetPrice);
 
         const livePrice = livePrices[share.shareName.toUpperCase()];
-        const previousFetchedPrice = Number(share.previousFetchedPrice);
-        const lastFetchedPrice = Number(share.lastFetchedPrice);
+        // MODIFIED: Use previousFetchedPrice for CSV export price change calculation
+        const comparisonPrice = (!isNaN(Number(share.previousFetchedPrice)) && Number(share.previousFetchedPrice) !== null) ? 
+                                Number(share.previousFetchedPrice) : enteredPriceNum;
 
         let priceChange = '';
-        if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) {
-            let comparisonPrice = null;
-            if (lastFetchedPrice !== undefined && lastFetchedPrice !== null && !isNaN(lastFetchedPrice)) {
-                comparisonPrice = lastFetchedPrice;
-            } else if (enteredPriceNum !== undefined && enteredPriceNum !== null && !isNaN(enteredPriceNum)) {
-                comparisonPrice = enteredPriceNum;
-            }
-
-            if (comparisonPrice !== null) {
-                const change = livePrice - comparisonPrice;
-                priceChange = change.toFixed(2);
-            }
+        if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice) && comparisonPrice !== null && !isNaN(comparisonPrice)) {
+            const change = livePrice - comparisonPrice;
+            priceChange = change.toFixed(2);
         }
 
         const priceForYield = (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) ? livePrice : enteredPriceNum;
