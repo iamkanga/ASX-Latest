@@ -137,7 +137,7 @@ const contextDeleteShareBtn = document.getElementById('contextDeleteShareBtn');
 const logoutBtn = document.getElementById('logoutBtn');
 const exportWatchlistBtn = document.getElementById('exportWatchlistBtn');
 const refreshLivePricesBtn = document.getElementById('refreshLivePricesBtn');
-// NEW: Watchlist selector for the Add/Edit Share modal
+// Watchlist selector for the Add/Edit Share modal
 const shareWatchlistSelect = document.getElementById('shareWatchlistSelect');
 
 let sidebarOverlay = document.querySelector('.sidebar-overlay');
@@ -559,7 +559,7 @@ async function saveShareData(isSilent = false) {
     if (commentsFormContainer) { // This now refers to #dynamicCommentsArea
         commentsFormContainer.querySelectorAll('.comment-section').forEach(section => {
             const titleInput = section.querySelector('.comment-title-input');
-            const textInput = section.querySelector('.comment-text-input');
+            const textInput = section.querySelector('.comment-text-input'); // CORRECTED: Fixed the malformed line here
             const title = titleInput ? titleInput.value.trim() : '';
             const text = textInput ? textInput.value.trim() : '';
             if (title || text) {
@@ -728,7 +728,6 @@ function showShareDetails() {
         const newsUrl = `https://news.google.com/search?q=${encodeURIComponent(share.shareName)}%20ASX&hl=en-AU&gl=AU&ceid=AU%3Aen`;
         modalNewsLink.href = newsUrl;
         modalNewsLink.textContent = `View ${share.shareName.toUpperCase()} News`;
-        modalNewsLink.style.display = 'inline-flex';
         setIconDisabled(modalNewsLink, false);
     } else if (modalNewsLink) {
         modalNewsLink.style.display = 'none';
@@ -739,7 +738,6 @@ function showShareDetails() {
         const marketIndexUrl = `https://www.marketindex.com.au/asx/${share.shareName.toLowerCase()}`;
         modalMarketIndexLink.href = marketIndexUrl;
         modalMarketIndexLink.textContent = `View ${share.shareName.toUpperCase()} on MarketIndex.com.au`;
-        modalMarketIndexLink.style.display = 'inline-flex';
         setIconDisabled(modalMarketIndexLink, false);
     } else if (modalMarketIndexLink) {
         modalMarketIndexLink.style.display = 'none';
@@ -750,7 +748,6 @@ function showShareDetails() {
         const foolUrl = `https://www.fool.com.au/tickers/asx-${share.shareName.toLowerCase()}/`;
         modalFoolLink.href = foolUrl;
         modalFoolLink.textContent = `View ${share.shareName.toUpperCase()} on Fool.com.au`;
-        modalFoolLink.style.display = 'inline-flex';
         setIconDisabled(modalFoolLink, false);
     } else if (modalFoolLink) {
         modalFoolLink.style.display = 'none';
@@ -765,7 +762,7 @@ function showShareDetails() {
     // Moved to header: setIconDisabled(deleteShareFromDetailBtn, false);
 
     showModal(shareDetailModal);
-    console.log(`[Details] Displayed details for share: ${share.shareName} (ID: ${selectedShareDocId})`);
+    console.log(`[Details] Displayed details for share: ${selectedShareDocId})`);
 }
 
 function sortShares() {
@@ -2710,4 +2707,165 @@ async function initializeAppLogic() {
                 } else {
                     scrollToTopBtn.style.opacity = '0';
                     setTimeout(() => {
-                        scrollToTo
+                        scrollToTopBtn.style.display = 'none';
+                    }, 300);
+                }
+            } else {
+                scrollToTopBtn.style.display = 'none';
+            }
+        });
+        if (window.innerWidth > 768) {
+            scrollToTopBtn.style.display = 'none';
+        } else {
+            window.dispatchEvent(new Event('scroll'));
+        }
+        scrollToTopBtn.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); console.log("[UI] Scrolled to top."); });
+    }
+
+    // Hamburger Menu and Sidebar Interactions
+    if (hamburgerBtn && appSidebar && closeMenuBtn && sidebarOverlay) {
+        console.log("[Sidebar Setup] Initializing sidebar event listeners. Elements found:", {
+            hamburgerBtn: !!hamburgerBtn,
+            appSidebar: !!appSidebar,
+            closeMenuBtn: !!closeMenuBtn,
+            sidebarOverlay: !!sidebarOverlay
+        });
+        hamburgerBtn.addEventListener('click', (event) => {
+            console.log("[UI] Hamburger button CLICKED. Event:", event);
+            event.stopPropagation();
+            toggleAppSidebar();
+        });
+        closeMenuBtn.addEventListener('click', () => {
+            console.log("[UI] Close Menu button CLICKED.");
+            toggleAppSidebar(false);
+        });
+        
+        sidebarOverlay.addEventListener('click', (event) => {
+            console.log("[Sidebar Overlay] Clicked overlay. Attempting to close sidebar.");
+            if (appSidebar.classList.contains('open')) {
+                toggleAppSidebar(false);
+            }
+        });
+
+        document.addEventListener('click', (event) => {
+            const isDesktop = window.innerWidth > 768;
+            if (appSidebar.classList.contains('open') && isDesktop &&
+                !appSidebar.contains(event.target) && !hamburgerBtn.contains(event.target)) {
+                console.log("[Global Click] Clicked outside sidebar on desktop. Closing sidebar.");
+                toggleAppSidebar(false);
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            console.log("[Window Resize] Resizing window. Closing sidebar if open.");
+            const isDesktop = window.innerWidth > 768;
+            if (appSidebar.classList.contains('open')) {
+                toggleAppSidebar(false);
+            }
+            if (scrollToTopBtn) {
+                if (window.innerWidth > 768) {
+                    scrollToTopBtn.style.display = 'none';
+                } else {
+                    window.dispatchEvent(new Event('scroll'));
+                }
+            }
+        });
+
+        const menuButtons = appSidebar.querySelectorAll('.menu-button-item');
+        menuButtons.forEach(button => {
+            button.addEventListener('click', (event) => {
+                console.log(`[Sidebar Menu Item Click] Button '${event.currentTarget.textContent.trim()}' clicked.`);
+                const closesMenu = event.currentTarget.dataset.actionClosesMenu !== 'false';
+                if (closesMenu) {
+                    toggleAppSidebar(false);
+                }
+            });
+        });
+    } else {
+        console.warn("[Sidebar Setup] Missing one or more sidebar elements (hamburgerBtn, appSidebar, closeMenuBtn, sidebarOverlay). Sidebar functionality might be impaired.");
+    }
+
+    // Export Watchlist Button Event Listener
+    if (exportWatchlistBtn) {
+        exportWatchlistBtn.addEventListener('click', () => {
+            console.log("[UI] Export Watchlist button clicked.");
+            exportWatchlistToCSV();
+            toggleAppSidebar(false);
+        });
+    }
+
+    // Refresh Live Prices Button Event Listener
+    if (refreshLivePricesBtn) {
+        refreshLivePricesBtn.addEventListener('click', () => {
+            console.log("[UI] Refresh Live Prices button clicked.");
+            fetchLivePrices();
+            showCustomAlert("Refreshing live prices...", 1000);
+        });
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("script.js DOMContentLoaded fired.");
+
+    if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
+        db = window.firestoreDb;
+        auth = window.firebaseAuth;
+        currentAppId = window.getFirebaseAppId();
+        console.log("[Firebase Ready] DB, Auth, and AppId assigned from window. Setting up auth state listener.");
+        
+        window.authFunctions.onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUserId = user.uid;
+                updateAuthButtonText(true, user.email || user.displayName);
+                console.log("[AuthState] User signed in:", user.uid);
+                console.log("[AuthState] User email:", user.email);
+                if (user.email && user.email.toLowerCase() === KANGA_EMAIL) {
+                    mainTitle.textContent = "Kanga's Share Watchlist";
+                    console.log("[AuthState] Main title set to Kanga's Share Watchlist.");
+                } else {
+                    mainTitle.textContent = "My Share Watchlist";
+                    console.log("[AuthState] Main title set to My Share Watchlist.");
+                }
+                updateMainButtonsState(true);
+                await loadUserWatchlistsAndSettings();
+                startLivePriceUpdates();
+            } else {
+                currentUserId = null;
+                updateAuthButtonText(false);
+                mainTitle.textContent = "Share Watchlist";
+                console.log("[AuthState] User signed out.");
+                updateMainButtonsState(false);
+                clearShareList();
+                clearWatchlistUI();
+                if (loadingIndicator) loadingIndicator.style.display = 'none';
+                applyTheme('system-default');
+                if (unsubscribeShares) {
+                    unsubscribeShares();
+                    unsubscribeShares = null;
+                    console.log("[Firestore Listener] Unsubscribed from shares listener on logout.");
+                }
+                stopLivePriceUpdates();
+            }
+            if (!window._appLogicInitialized) {
+                initializeAppLogic();
+                window._appLogicInitialized = true;
+            }
+        });
+        
+        if (googleAuthBtn) {
+            googleAuthBtn.disabled = false;
+            console.log("[Auth] Google Auth button enabled on DOMContentLoaded.");
+        }
+
+    } else {
+        console.error("[Firebase] Firebase objects (db, auth, appId, firestore, authFunctions) are not available on DOMContentLoaded. Firebase initialization likely failed in index.html.");
+        const errorDiv = document.getElementById('firebaseInitError');
+        if (errorDiv) {
+                errorDiv.style.display = 'block';
+        }
+        updateAuthButtonText(false);
+        updateMainButtonsState(false);
+        if (loadingIndicator) loadingIndicator.style.display = 'none';
+        applyTheme('system-default');
+    }
+});
