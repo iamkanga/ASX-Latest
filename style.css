@@ -1573,7 +1573,7 @@ table td.live-price-cell {
 .calc-btn[data-action="multiply"] { grid-area: multiply; }
 .calc-btn[data-action="subtract"] { grid-area: subtract; }
 .calc-btn[data-action="add"] { grid-area: add; }
-.calc-btn[data-action="calculate"] { grid-area: equals; } /* Equals spans two rows */
+.calc-btn[data-action="calculate"] { grid-area: equals; grid-row: equals-start / span 2; } /* Equals spans two rows */
 
 .calc-btn[data-value="7"] { grid-area: num7; }
 .calc-btn[data-value="8"] { grid-area: num8; }
