@@ -714,7 +714,7 @@ h1#mainTitle {
 /* MODIFIED: Close Menu Button for smaller size */
 .close-menu-btn {
     color: var(--close-sidebar-btn-color);
-    font-size: 2em; /* Reduced from 2.5em to 2em for consistency */
+    font-size: 1.5em; /* Adjusted from 2em to 1.5em for consistency with other close buttons */
     position: absolute;
     top: 10px;
     right: 15px;
@@ -1757,7 +1757,7 @@ table td.live-price-cell {
     }
 
     .google-auth-btn {
-        width: 100%;
+        width: 100%; /* Default to full width on small screens */
         font-size: 1em;
         padding: 10px 15px;
     }
@@ -1838,7 +1838,6 @@ table td.live-price-cell {
 
     .header-action-btn {
         font-size: 1.3em;
-        padding: 5px;
     }
 
     .hamburger-btn {
@@ -1857,6 +1856,11 @@ table td.live-price-cell {
 
     .fixed-footer {
         padding: 8px 10px;
+    }
+    /* MODIFIED: Reduce width of Google Auth button on very small screens */
+    .google-auth-btn {
+        max-width: 200px; /* Limit width on very small screens */
+        margin: 0 auto; /* Center it */
     }
 
     .modal-content {
