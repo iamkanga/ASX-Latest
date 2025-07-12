@@ -36,8 +36,8 @@ let currentContextMenuShareId = null; // Stores the ID of the share that opened 
 let originalShareData = null; // Stores the original share data when editing for long press detection
 
 // Live Price Data
-// UPDATED: GOOGLE_APPS_SCRIPT_URL to the LATEST provided URL
-const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxyxL-InwjKpRzIXLSJz0ib_3slbUyuIhxPg3klWIe0rkEVRSNc3tLaYo8m4rTjBWM/exec';
+// UPDATED: GOOGLE_APPS_SCRIPT_URL to the NEW direct Google Sheet JSON endpoint
+const GOOGLE_APPS_SCRIPT_URL = 'https://docs.google.com/spreadsheets/d/1FjsaVwQ9M7uHmsrkEZWnAZjfwKwPjPYqEN3jq4Pt9Vg/gviz/tq?tqx=out:json&sheet=Sheet1';
 let livePrices = {}; // Stores live price data: {ASX_CODE: price}
 let livePriceFetchInterval = null; // To hold the interval ID for live price updates
 const LIVE_PRICE_FETCH_INTERVAL_MS = 5 * 60 * 1000; // Fetch every 5 minutes
@@ -85,8 +85,8 @@ const modalEnteredPrice = document.getElementById('modalEnteredPrice');
 const modalLivePrice = document.getElementById('modalLivePrice');
 const modalPriceChange = document.getElementById('modalPriceChange');
 const modalTargetPrice = document.getElementById('modalTargetPrice');
-const modalDividendAmount = document.getElementById('modalDividendAmount');
-const modalFrankingCredits = document.getElementById('modalFrankingCredits');
+const modalDividendAmount = document.getElementById('dividendAmount');
+const modalFrankingCredits = document.getElementById('frankingCredits');
 const modalCommentsContainer = document.getElementById('modalCommentsContainer');
 const modalUnfrankedYieldSpan = document.getElementById('modalUnfrankedYield');
 const modalFrankedYieldSpan = document.getElementById('modalFrankedYield');
@@ -1592,39 +1592,64 @@ async function loadUserWatchlistsAndSettings() {
 }
 
 /**
- * Fetches live price data from the Google Apps Script Web App.
+ * Fetches live price data from the Google Sheets JSON endpoint.
  * Updates the `livePrices` global object and updates shares in Firestore.
  */
 async function fetchLivePrices() {
-    console.log("[Live Price] Attempting to fetch live prices...");
+    console.log("[Live Price] Attempting to fetch live prices from Google Sheet JSON endpoint...");
     try {
-        // MODIFIED: Added cache: 'no-store' to bypass service worker cache
-        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, { cache: 'no-store' }); 
+        // Fetch directly from Google Sheets JSON endpoint
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL); 
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        const data = await response.json();
-        console.log("[Live Price] Raw data received:", data);
+        
+        // Google Sheets JSON is wrapped in a callback-like function
+        const text = await response.text();
+        const jsonString = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
+        const parsedData = JSON.parse(jsonString);
 
-        // Check if the response is an error object from Apps Script
-        if (data && typeof data === 'object' && data.error) {
-            console.error("[Live Price] Apps Script returned an error:", data.error);
-            showCustomAlert(`Apps Script Error: ${data.error}`, 3000);
-            return; // Stop processing if Apps Script returned an error
+        if (parsedData.status !== 'ok' || !parsedData.table || !parsedData.table.rows) {
+            console.error("[Live Price] Google Sheets API returned an error or unexpected format:", parsedData);
+            showCustomAlert("Error fetching data from Google Sheet. Check sheet format or sharing permissions.", 3000);
+            return;
+        }
+
+        // Determine column indices based on IDs (A, B, C) which are more stable than dynamic headers
+        const asxCodeColIndex = parsedData.table.cols.findIndex(col => col.id === 'A'); 
+        const previousCloseColIndex = parsedData.table.cols.findIndex(col => col.id === 'B'); 
+        const livePriceColIndex = parsedData.table.cols.findIndex(col => col.id === 'C'); 
+
+        if (asxCodeColIndex === -1 || previousCloseColIndex === -1 || livePriceColIndex === -1) {
+            console.error("[Live Price] Required columns (A, B, C) not found in Google Sheet JSON response.");
+            showCustomAlert("Required columns (A, B, C) not found in Google Sheet. Ensure data is in correct columns.", 3000);
+            return;
         }
 
         const newLivePrices = {};
         const batch = window.firestore.writeBatch(db); // Prepare a batch write for efficiency
 
-        for (const item of data) { // Now 'data' should be an array, not an error object
-            const asxCode = String(item.ASX_CODE).toUpperCase();
-            const price = parseFloat(item.Price);
-            const previousClose = parseFloat(item.PreviousClose);
+        for (const row of parsedData.table.rows) {
+            const cells = row.c;
+            // Ensure row has enough columns before trying to access them
+            if (!cells || cells.length <= Math.max(asxCodeColIndex, previousCloseColIndex, livePriceColIndex)) {
+                console.warn("[Live Price] Skipping row due to insufficient cells:", cells);
+                continue; 
+            }
+
+            const asxCode = String(cells[asxCodeColIndex]?.v || '').toUpperCase().trim();
+            const price = parseFloat(cells[livePriceColIndex]?.v);
+            const previousClose = parseFloat(cells[previousCloseColIndex]?.v);
+
+            if (!asxCode) {
+                console.warn("[Live Price] Skipping row due to missing ASX Code:", cells);
+                continue;
+            }
 
             if (!isNaN(price)) {
                 newLivePrices[asxCode] = price;
             } else {
-                console.warn(`[Live Price] Invalid current price for ${asxCode}: ${item.Price}`);
+                console.warn(`[Live Price] Invalid current price for ${asxCode}: ${cells[livePriceColIndex]?.v}`);
             }
 
             // Find the corresponding share in allSharesData
@@ -1642,7 +1667,7 @@ async function fetchLivePrices() {
 
                 // Only update previousFetchedPrice if previousClose is a valid number
                 if (!isNaN(previousClose)) {
-                    updateData.previousFetchedPrice = previousClose; // Previous day's close from Apps Script
+                    updateData.previousFetchedPrice = previousClose; // Previous day's close from Google Sheet
                 } else if (!isNaN(price) && !shareToUpdate.previousFetchedPrice && shareToUpdate.currentPrice) {
                     // Fallback for new shares or shares without previousFetchedPrice,
                     // use their entered price as initial 'previousFetchedPrice' if live price is valid
@@ -1656,13 +1681,13 @@ async function fetchLivePrices() {
             }
         }
         
-        // Commit the batch after processing all data from the Apps Script
+        // Commit the batch after processing all data from the Google Sheet
         if (Object.keys(newLivePrices).length > 0) {
             livePrices = newLivePrices; // Update global livePrices object after batch preparation
             await batch.commit(); // Commit all updates to Firestore
             console.log("[Live Price] Firestore batch updates committed successfully.");
         } else {
-            console.log("[Live Price] No valid live prices received to update.");
+            console.log("[Live Price] No valid live prices received to update from Google Sheet.");
         }
         
         renderWatchlist(); // Re-render UI with updated data
