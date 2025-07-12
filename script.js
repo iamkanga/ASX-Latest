@@ -36,11 +36,13 @@ let currentContextMenuShareId = null; // Stores the ID of the share that opened 
 let originalShareData = null; // Stores the original share data when editing for long press detection
 
 // Live Price Data
-// UPDATED: GOOGLE_APPS_SCRIPT_URL to the NEWEST provided URL with CORS proxy
-const GOOGLE_APPS_SCRIPT_URL = 'https://corsproxy.io/?https%3A%2F%2Fscript.google.com%2Fmacros%2Fs%2FAKfycbyPNzQrs4vrLxc7SV13w6buWNSZMvtr7NQgFNJmm5SIGetehCVcGXplJZ_kKLcm9fXx%2Fexec';
+// REMOVED: GOOGLE_APPS_SCRIPT_URL as data is now pushed to Firestore
 let livePrices = {}; // Stores live price data: {ASX_CODE: price}
 let livePriceFetchInterval = null; // To hold the interval ID for live price updates
-const LIVE_PRICE_FETCH_INTERVAL_MS = 5 * 60 * 1000; // Fetch every 5 minutes
+const LIVE_PRICE_FETCH_INTERVAL_MS = 5 * 60 * 1000; // No longer fetching, but keeping for consistency if needed
+
+let unsubscribeShares = null; // Holds the unsubscribe function for the Firestore shares listener
+let unsubscribeLivePrices = null; // New listener for live_prices collection
 
 // Theme related variables
 const CUSTOM_THEMES = [
@@ -52,7 +54,6 @@ let currentActiveTheme = 'system-default'; // Tracks the currently applied theme
 let savedSortOrder = null; // GLOBAL: Stores the sort order loaded from user settings
 let savedTheme = null; // GLOBAL: Stores the theme loaded from user settings
 
-let unsubscribeShares = null; // Holds the unsubscribe function for the Firestore shares listener
 
 // --- UI Element References ---
 const mainTitle = document.getElementById('mainTitle');
@@ -1094,12 +1095,13 @@ function addShareToMobileCards(share) {
         if (comparisonPrice !== null && !isNaN(comparisonPrice)) {
             const change = livePrice - comparisonPrice;
             if (change > 0) {
-                livePriceHtml += ` <span class="price-change positive">(+$${change.toFixed(2)})</span></p>`;
+                livePriceHtml += ` <span class="price-change positive">(+$${change.toFixed(2)})`;
             } else if (change < 0) {
-                livePriceHtml += ` <span class="price-change negative">(-$${Math.abs(change).toFixed(2)})</span></p>`;
+                livePriceHtml += ` <span class="price-change negative">(-$${Math.abs(change).toFixed(2)})`;
             } else {
-                livePriceHtml += ` <span class="price-change neutral">($0.00)</span></p>`;
+                livePriceHtml += ` <span class="price-change neutral">($0.00)`;
             }
+            livePriceHtml += `</span></p>`;
         } else {
             livePriceHtml += `</p>`;
         }
