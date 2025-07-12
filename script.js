@@ -466,7 +466,8 @@ function getCurrentFormData() {
 function areShareDataEqual(data1, data2) {
     if (!data1 || !data2) return false;
 
-    const fields = ['shareName', 'currentPrice', 'targetPrice', 'dividendAmount', 'frankingCredits', 'watchlistId']; // NEW: Include watchlistId in comparison
+    // MODIFIED: Include watchlistId in comparison
+    const fields = ['shareName', 'currentPrice', 'targetPrice', 'dividendAmount', 'frankingCredits', 'watchlistId']; 
     for (const field of fields) {
         let val1 = data1[field];
         let val2 = data2[field];
@@ -538,7 +539,7 @@ async function saveShareData(isSilent = false) {
     const targetPrice = parseFloat(targetPriceInput.value);
     const dividendAmount = parseFloat(dividendAmountInput.value);
     const frankingCredits = parseFloat(frankingCreditsInput.value);
-    const selectedWatchlistId = shareWatchlistSelect.value; // NEW: Get selected watchlist ID
+    const selectedWatchlistId = shareWatchlistSelect.value; // Get selected watchlist ID from the form
 
     const comments = [];
     if (commentsFormContainer) { // This now refers to #dynamicCommentsArea
@@ -561,7 +562,7 @@ async function saveShareData(isSilent = false) {
         frankingCredits: isNaN(frankingCredits) ? null : frankingCredits,
         comments: comments,
         userId: currentUserId,
-        watchlistId: selectedWatchlistId, // NEW: Use selected watchlist ID
+        watchlistId: selectedWatchlistId, // Use selected watchlist ID
         lastPriceUpdateTime: new Date().toISOString()
     };
 
@@ -2066,6 +2067,10 @@ async function initializeAppLogic() {
             });
         }
     });
+    // NEW: Add event listener to shareWatchlistSelect for dirty state
+    if (shareWatchlistSelect) {
+        shareWatchlistSelect.addEventListener('change', checkFormDirtyState);
+    }
 
 
     // Form input navigation with Enter key
@@ -2211,7 +2216,7 @@ async function initializeAppLogic() {
             shareNameInput.focus();
             toggleAppSidebar(false);
             addCommentSection(); // Add an initial empty comment section for new shares
-            populateShareWatchlistSelect(); // NEW: Populate watchlist selector for new shares
+            populateShareWatchlistSelect(); // Populate watchlist selector for new shares
         });
     }
 
@@ -2225,7 +2230,7 @@ async function initializeAppLogic() {
             showModal(shareFormSection);
             shareNameInput.focus();
             addCommentSection(); // Add an initial empty comment section for new shares
-            populateShareWatchlistSelect(); // NEW: Populate watchlist selector for new shares
+            populateShareWatchlistSelect(); // Populate watchlist selector for new shares
         });
     }
 
@@ -2454,7 +2459,7 @@ async function initializeAppLogic() {
 
             const newName = editWatchlistNameInput.value.trim();
             if (!newName) {
-                showCustomAlert("Watchlist name cannot be empty!");
+                showCustomAlert("Watchlist name is required!");
                 return;
             }
             if (userWatchlists.some(w => w.name.toLowerCase() === newName.toLowerCase() && w.id !== watchlistToEditId)) {
