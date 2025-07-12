@@ -2708,7 +2708,7 @@ async function initializeAppLogic() {
             }
             console.log("[Theme] System theme preference changed and applied (system-default mode).");
             updateThemeToggleAndSelector();
-        });
+        }
     }
 
     // Scroll to Top Button
