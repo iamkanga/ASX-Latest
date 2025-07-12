@@ -36,8 +36,8 @@ let currentContextMenuShareId = null; // Stores the ID of the share that opened 
 let originalShareData = null; // Stores the original share data when editing for long press detection
 
 // Live Price Data
-// UPDATED: GOOGLE_APPS_SCRIPT_URL to the LATEST provided URL
-const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxtLINCnCff6uCpIErA_vCI6wFWPDzsTaqwbi-PWkbAO9PVfEeuBan5EOarEYCG_Msn/exec';
+// UPDATED: GOOGLE_APPS_SCRIPT_URL to use CORS proxy
+const GOOGLE_APPS_SCRIPT_URL = 'https://corsproxy.io/?https%3A%2F%2Fscript.google.com%2Fmacros%2Fs%2FAKfycbxyxL-InwjKpRzIXLSJz0ib_3slbUyuIhxPg3klWIe0rkEVRSNc3tLaYo8m4rTjBWM%2Fexec';
 let livePrices = {}; // Stores live price data: {ASX_CODE: price}
 let livePriceFetchInterval = null; // To hold the interval ID for live price updates
 const LIVE_PRICE_FETCH_INTERVAL_MS = 5 * 60 * 1000; // Fetch every 5 minutes
@@ -85,7 +85,7 @@ const modalEnteredPrice = document.getElementById('modalEnteredPrice');
 const modalLivePrice = document.getElementById('modalLivePrice');
 const modalPriceChange = document.getElementById('modalPriceChange');
 const modalTargetPrice = document.getElementById('modalTargetPrice');
-const modalDividendAmount = document.getElementById('modalDividendAmount');
+const modalDividendAmount = document.getElementById('dividendAmount');
 const modalFrankingCredits = document.getElementById('frankingCredits');
 const modalCommentsContainer = document.getElementById('modalCommentsContainer');
 const modalUnfrankedYieldSpan = document.getElementById('modalUnfrankedYield');
@@ -1617,8 +1617,8 @@ async function fetchLivePrices() {
 
         // Determine column indices based on IDs (A, B, C) which are more stable than dynamic headers
         const asxCodeColIndex = parsedData.table.cols.findIndex(col => col.id === 'A'); 
-        const previousCloseColIndex = parsedData.table.cols.findIndex(col => col.id === 'B'); 
-        const livePriceColIndex = parsedData.table.cols.findIndex(col => col.id === 'C'); 
+        const previousCloseColIndex = parsedData.table.cols.findIndex(col => col.id === 'C'); // Changed from 'B' to 'C'
+        const livePriceColIndex = parsedData.table.cols.findIndex(col => col.id === 'B'); // Changed from 'C' to 'B'
 
         if (asxCodeColIndex === -1 || previousCloseColIndex === -1 || livePriceColIndex === -1) {
             console.error("[Live Price] Required columns (A, B, C) not found in Google Sheet JSON response.");
