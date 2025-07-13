@@ -293,8 +293,15 @@
             
             <!-- Scrollable content for share details modal -->
             <div class="modal-body-scrollable">
+                <!-- NEW: Dedicated Live Price Section -->
+                <div class="live-price-display-section">
+                    <span id="modalLivePriceLarge" class="live-price-large"></span>
+                    <span id="modalPriceChangeLarge" class="price-change-large"></span>
+                </div>
+
                 <p><strong>Entry Date:</strong> <span id="modalEntryDate"></span></p>
-                <p><strong>Live Price:</strong> <span id="modalLivePrice"></span> <span id="modalPriceChange" class="price-change"></span></p>
+                <!-- Original Live Price/Change removed as it's now in the dedicated section -->
+                <!-- <p><strong>Live Price:</strong> <span id="modalLivePrice"></span> <span id="modalPriceChange" class="price-change"></span></p> -->
                 <p><strong>Entered Price:</strong> <span id="modalEnteredPrice"></span></p>
                 <p><strong>Target Price:</strong> <span id="modalTargetPrice"></span></p>
                 <p><strong>Dividend Amount:</strong> <span id="modalDividendAmount"></span></p>
