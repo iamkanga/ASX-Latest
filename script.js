@@ -832,7 +832,7 @@ function showShareDetails() {
     if (modalNewsLink && share.shareName) {
         const newsUrl = `https://news.google.com/search?q=${encodeURIComponent(share.shareName)}%20ASX&hl=en-AU&gl=AU&ceid=AU%3Aen`;
         modalNewsLink.href = newsUrl;
-        modalNewsLink.textContent = `View ${share.shareName.toUpperCase()} News`;
+        modalNewsLink.innerHTML = `View ${share.shareName.toUpperCase()} News <i class="fas fa-external-link-alt"></i>`; // Set innerHTML to include icon
         modalNewsLink.style.display = 'inline-flex';
         setIconDisabled(modalNewsLink, false);
     } else if (modalNewsLink) {
@@ -843,7 +843,7 @@ function showShareDetails() {
     if (modalMarketIndexLink && share.shareName) {
         const marketIndexUrl = `https://www.marketindex.com.au/asx/${share.shareName.toLowerCase()}`;
         modalMarketIndexLink.href = marketIndexUrl;
-        modalMarketIndexLink.textContent = `View ${share.shareName.toUpperCase()} on MarketIndex.com.au`;
+        modalMarketIndexLink.innerHTML = `View on MarketIndex.com.au <i class="fas fa-external-link-alt"></i>`; // Set innerHTML to include icon
         modalMarketIndexLink.style.display = 'inline-flex';
         setIconDisabled(modalMarketIndexLink, false);
     } else if (modalMarketIndexLink) {
@@ -854,12 +854,23 @@ function showShareDetails() {
     if (modalFoolLink && share.shareName) {
         const foolUrl = `https://www.fool.com.au/tickers/asx-${share.shareName.toLowerCase()}/`;
         modalFoolLink.href = foolUrl;
-        modalFoolLink.textContent = `View ${share.shareName.toUpperCase()} on Fool.com.au`;
+        modalFoolLink.innerHTML = `View on Fool.com.au <i class="fas fa-external-link-alt"></i>`; // Set innerHTML to include icon
         modalFoolLink.style.display = 'inline-flex';
         setIconDisabled(modalFoolLink, false);
     } else if (modalFoolLink) {
         modalFoolLink.style.display = 'none';
         setIconDisabled(modalFoolLink, true);
+    }
+
+    if (modalCommSecLink && share.shareName) {
+        const commSecUrl = `https://www.commsec.com.au/markets/company-research/ASX/${share.shareName.toLowerCase()}`;
+        modalCommSecLink.href = commSecUrl;
+        modalCommSecLink.innerHTML = `View on CommSec.com.au <i class="fas fa-external-link-alt"></i>`; // Set innerHTML to include icon
+        modalCommSecLink.style.display = 'inline-flex';
+        setIconDisabled(modalCommSecLink, false);
+    } else if (modalCommSecLink) {
+        modalCommSecLink.style.display = 'none';
+        setIconDisabled(modalCommSecLink, true);
     }
 
     if (commSecLoginMessage) {
@@ -976,9 +987,6 @@ function renderWatchlistSelect() {
         watchlistSelect.value = ALL_SHARES_ID;
     } else if (currentSelectedWatchlistIds.length === 1) {
         watchlistSelect.value = currentSelectedWatchlistIds[0];
-    } else if (userWatchlists.length > 0) {
-        watchlistSelect.value = userWatchlists[0].id;
-        currentSelectedWatchlistIds = [userWatchlists[0].id];
     } else {
         watchlistSelect.value = '';
     }
@@ -1584,7 +1592,8 @@ async function saveLastSelectedWatchlistIds(watchlistIds) {
     try {
         await window.firestore.setDoc(userProfileDocRef, { lastSelectedWatchlistIds: watchlistIds }, { merge: true });
         console.log(`[Watchlist] Saved last selected watchlist IDs: ${watchlistIds.join(', ')}`);
-    } catch (error) {
+    }
+    catch (error) {
         console.error("[Watchlist] Error saving last selected watchlist IDs:", error);
     }
 }
