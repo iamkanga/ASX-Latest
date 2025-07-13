@@ -904,10 +904,15 @@ function sortShares() {
                 percentageChangeB = ((livePriceB - prevCloseB) / prevCloseB) * 100;
             }
 
-            // Handle null/NaN values for sorting
-            if (percentageChangeA === null && percentageChangeB === null) return 0;
-            if (percentageChangeA === null) return order === 'asc' ? 1 : -1;
-            if (percentageChangeB === null) return order === 'asc' ? -1 : 1;
+            // Inside the percentageChange sorting logic:
+// ... (existing code to calculate percentageChangeA and percentageChangeB) ...
+
+// Add these lines to handle null values, pushing them to the bottom
+if (percentageChangeA === null && percentageChangeB === null) return 0; // Both N/A, keep original order
+if (percentageChangeA === null) return 1; // A is N/A, B is a number, push A down
+if (percentageChangeB === null) return -1; // B is N/A, A is a number, push B down
+
+// ... (then the existing comparison: return order === 'asc' ? percentageChangeA - percentageChangeB : percentageChangeB - percentageChangeA;)
 
             return order === 'asc' ? percentageChangeA - percentageChangeB : percentageChangeB - percentageChangeA;
         }
