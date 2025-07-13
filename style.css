@@ -1337,6 +1337,15 @@ h1#mainTitle {
     width: 100%;
 }
 
+/* Specific adjustment for dropdowns to ensure full text visibility */
+.dropdown-large {
+    /* Increase min-width for better text display */
+    min-width: 130px; /* Adjusted from 100px to give more space */
+    /* Potentially adjust font size if text is still too large for very small screens */
+    /* font-size: 0.95em; */ /* Consider uncommenting this if needed for very tight spaces */
+}
+
+
 .dropdown-large option[value=""][disabled] {
     color: var(--label-color);
     font-weight: 400;
