@@ -282,7 +282,7 @@ function hideModal(modalElement) {
 }
 
 function clearWatchlistUI() {
-    if (watchlistSelect) watchlistSelect.innerHTML = '<option value="" disabled selected>WATCH LIST</option>'; // Updated placeholder
+    if (watchlistSelect) watchlistSelect.innerHTML = '<option value="" disabled selected>Watch List</option>'; // Updated placeholder
     userWatchlists = [];
     currentSelectedWatchlistIds = [];
     console.log("[UI] Watchlist UI cleared.");
@@ -792,8 +792,8 @@ function sortShares() {
 
 function renderWatchlistSelect() {
     if (!watchlistSelect) { console.error("[renderWatchlistSelect] watchlistSelect element not found."); return; }
-    // Set the initial placeholder text to "WATCH LIST"
-    watchlistSelect.innerHTML = '<option value="" disabled selected>WATCH LIST</option>';
+    // Set the initial placeholder text to "Watch List"
+    watchlistSelect.innerHTML = '<option value="" disabled selected>Watch List</option>';
 
     const allSharesOption = document.createElement('option');
     allSharesOption.value = ALL_SHARES_ID;
@@ -822,8 +822,8 @@ function renderWatchlistSelect() {
 
 function renderSortSelect() {
     if (!sortSelect) { console.error("[renderSortSelect] sortSelect element not found."); return; }
-    // Set the initial placeholder text to "SORT LIST"
-    sortSelect.innerHTML = '<option value="" disabled selected>SORT LIST</option>';
+    // Set the initial placeholder text to "Sort List"
+    sortSelect.innerHTML = '<option value="" disabled selected>Sort List</option>';
 
     const options = [
         { value: "entryDate-desc", text: "Date Added (Newest)" },
