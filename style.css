@@ -1272,7 +1272,7 @@ h1#mainTitle {
 .watchlist-controls-row {
     display: flex;
     flex-wrap: nowrap; /* Prevent wrapping on mobile */
-    justify-content: center; /* Center the group of dropdowns */
+    justify-content: center; /* Center the group of dropdowns initially */
     align-items: center;
     gap: 15px; /* Adjust gap for mobile */
     padding: 10px 0;
@@ -1289,11 +1289,30 @@ h1#mainTitle {
     display: flex;
     align-items: center;
     gap: 8px;
-    flex-basis: 50%; /* Each takes 50% of available space */
+    flex-basis: 50%; /* Each takes half the width on mobile */
     flex-grow: 1; /* Allow them to grow */
     flex-shrink: 1; /* Allow them to shrink */
-    max-width: calc(50% - 7.5px); /* Ensure they fit on one line with gap */
+    max-width: calc(50% - 7.5px); /* Account for half the gap on mobile */
 }
+
+/* Desktop specific styles for watchlist and sort dropdowns */
+@media (min-width: 769px) {
+    .watchlist-controls-row {
+        max-width: 400px; /* Limit width on desktop */
+        margin-left: auto; /* Center horizontally */
+        margin-right: auto; /* Center horizontally */
+        justify-content: center; /* Ensure internal centering if max-width is hit */
+        flex-wrap: nowrap; /* Ensure they stay on one line */
+    }
+
+    .watchlist-group,
+    .sort-group {
+        flex-basis: auto; /* Allow content to determine width */
+        max-width: 180px; /* Set a reasonable max-width for each dropdown */
+        flex-grow: 0; /* Prevent them from growing to fill space */
+    }
+}
+
 
 .dropdown-large {
     padding: 8px 12px; /* Smaller padding */
