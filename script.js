@@ -1066,18 +1066,19 @@ function addShareToTable(share) {
         // Calculate daily change using livePrice and prevClosePrice
         if (prevClosePrice !== undefined && prevClosePrice !== null && !isNaN(prevClosePrice)) {
             const change = livePrice - prevClosePrice;
+            const percentageChange = (change / prevClosePrice) * 100; // Calculate percentage change
             const priceChangeSpan = document.createElement('span');
             priceChangeSpan.classList.add('price-change');
             if (change > 0) {
-                priceChangeSpan.textContent = `(+$${change.toFixed(2)})`;
+                priceChangeSpan.textContent = `(+$${change.toFixed(2)} / +${percentageChange.toFixed(2)}%)`; // Include percentage
                 priceChangeSpan.classList.add('positive');
                 livePriceCell.classList.add('positive-change'); // Apply conditional background
             } else if (change < 0) {
-                priceChangeSpan.textContent = `(-$${Math.abs(change).toFixed(2)})`;
+                priceChangeSpan.textContent = `(-$${Math.abs(change).toFixed(2)} / ${percentageChange.toFixed(2)}%)`; // Include percentage
                 priceChangeSpan.classList.add('negative');
                 livePriceCell.classList.add('negative-change'); // Apply conditional background
             } else {
-                priceChangeSpan.textContent = `($0.00)`;
+                priceChangeSpan.textContent = `($0.00 / 0.00%)`; // Include percentage
                 priceChangeSpan.classList.add('neutral');
             }
             livePriceCell.appendChild(priceChangeSpan);
@@ -1172,33 +1173,36 @@ function addShareToMobileCards(share) {
             }
         }
 
-        livePriceHtml = `
+        card.innerHTML = `
+            <h3>${displayShareName}</h3>
             <div class="live-price-display-section ${priceChangeClass}-change-section">
                 <span class="live-price-large">$${livePrice.toFixed(2)}</span>
                 <span class="price-change-large ${priceChangeClass}">${priceChangeText}</span>
             </div>
+            <p><strong>Entry Date:</strong> ${formatDate(share.entryDate) || '-'}</p>
+            <p><strong>Entered Price:</strong> $${displayEnteredPrice}</p>
+            <p><strong>Target:</strong> $${displayTargetPrice}</p>
+            <p><strong>Dividend:</strong> $${displayDividendAmount}</p>
+            <p><strong>Franking:</strong> ${displayFrankingCredits}</p>
+            <p><strong>Unfranked Yield:</strong> ${unfrankedYield !== null ? unfrankedYield.toFixed(2) + '%' : '-'}&#xFE0E;</p>
+            <p><strong>Franked Yield:</strong> ${frankedYield !== null ? frankedYield.toFixed(2) + '%' : '-'}&#xFE0E;</p>
         `;
     } else {
-        livePriceHtml = `
+        card.innerHTML = `
+            <h3>${displayShareName}</h3>
             <div class="live-price-display-section">
                 <span class="live-price-large">N/A</span>
                 <span class="price-change-large"></span>
             </div>
+            <p><strong>Entry Date:</strong> ${formatDate(share.entryDate) || '-'}</p>
+            <p><strong>Entered Price:</strong> $${displayEnteredPrice}</p>
+            <p><strong>Target:</strong> $${displayTargetPrice}</p>
+            <p><strong>Dividend:</strong> $${displayDividendAmount}</p>
+            <p><strong>Franking:</strong> ${displayFrankingCredits}</p>
+            <p><strong>Unfranked Yield:</strong> ${unfrankedYield !== null ? unfrankedYield.toFixed(2) + '%' : '-'}&#xFE0E;</p>
+            <p><strong>Franked Yield:</strong> ${frankedYield !== null ? frankedYield.toFixed(2) + '%' : '-'}&#xFE0E;</p>
         `;
     }
-
-
-    card.innerHTML = `
-        <h3>${displayShareName}</h3>
-        ${livePriceHtml}
-        <p><strong>Entry Date:</strong> ${formatDate(share.entryDate) || '-'}</p>
-        <p><strong>Entered Price:</strong> $${displayEnteredPrice}</p>
-        <p><strong>Target:</strong> $${displayTargetPrice}</p>
-        <p><strong>Dividend:</strong> $${displayDividendAmount}</p>
-        <p><strong>Franking:</strong> ${displayFrankingCredits}</p>
-        <p><strong>Unfranked Yield:</strong> ${unfrankedYield !== null ? unfrankedYield.toFixed(2) + '%' : '-'}&#xFE0E;</p>
-        <p><strong>Franked Yield:</strong> ${frankedYield !== null ? frankedYield.toFixed(2) + '%' : '-'}&#xFE0E;</p>
-    `;
     mobileShareCardsContainer.appendChild(card);
 
     let lastClickTime = 0;
@@ -1915,7 +1919,7 @@ function showContextMenu(event, shareId) {
     }
 
     const menuWidth = shareContextMenu.offsetWidth;
-    const menuHeight = shareContextMenu.offsetHeight; // Corrected to offsetHeight
+    const menuHeight = shareContextMenu.offsetHeight;
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
 
@@ -2044,7 +2048,8 @@ function exportWatchlistToCSV() {
         if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice) && 
             prevClosePrice !== undefined && prevClosePrice !== null && !isNaN(prevClosePrice)) {
             const change = livePrice - prevClosePrice;
-            priceChange = change.toFixed(2);
+            const percentageChange = (change / prevClosePrice) * 100;
+            priceChange = `${change.toFixed(2)} (${percentageChange.toFixed(2)}%)`; // Include percentage in CSV
         }
 
         const priceForYield = (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) ? livePrice : enteredPriceNum;
@@ -2400,6 +2405,7 @@ async function initializeAppLogic() {
             showModal(shareFormSection);
             shareNameInput.focus();
             toggleAppSidebar(false);
+            addCommentSection(); // ADDED: Add an initial empty comment section for new shares
             checkFormDirtyState(); // Check dirty state immediately after opening for new share
         });
     }
