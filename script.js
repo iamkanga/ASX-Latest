@@ -893,26 +893,26 @@ function sortShares() {
             const prevCloseB = livePriceDataB ? livePriceDataB.prevClose : undefined;
 
             let percentageChangeA = null;
+            // Only calculate if both livePriceA and prevCloseA are valid numbers and prevCloseA is not zero
             if (livePriceA !== undefined && livePriceA !== null && !isNaN(livePriceA) &&
                 prevCloseA !== undefined && prevCloseA !== null && !isNaN(prevCloseA) && prevCloseA !== 0) {
                 percentageChangeA = ((livePriceA - prevCloseA) / prevCloseA) * 100;
             }
 
             let percentageChangeB = null;
+            // Only calculate if both livePriceB and prevCloseB are valid numbers and prevCloseB is not zero
             if (livePriceB !== undefined && livePriceB !== null && !isNaN(livePriceB) &&
                 prevCloseB !== undefined && prevCloseB !== null && !isNaN(prevCloseB) && prevCloseB !== 0) {
                 percentageChangeB = ((livePriceB - prevCloseB) / prevCloseB) * 100;
             }
 
-            // Inside the percentageChange sorting logic:
-// ... (existing code to calculate percentageChangeA and percentageChangeB) ...
-
-// Add these lines to handle null values, pushing them to the bottom
-if (percentageChangeA === null && percentageChangeB === null) return 0; // Both N/A, keep original order
-if (percentageChangeA === null) return 1; // A is N/A, B is a number, push A down
-if (percentageChangeB === null) return -1; // B is N/A, A is a number, push B down
-
-// ... (then the existing comparison: return order === 'asc' ? percentageChangeA - percentageChangeB : percentageChangeB - percentageChangeA;)
+            // Handle null/NaN percentage changes to push them to the bottom
+            // If both are null, their relative order doesn't matter (return 0)
+            if (percentageChangeA === null && percentageChangeB === null) return 0;
+            // If A is null but B is a number, A goes to the bottom (return 1)
+            if (percentageChangeA === null) return 1;
+            // If B is null but A is a number, B goes to the bottom (return -1)
+            if (percentageChangeB === null) return -1;
 
             return order === 'asc' ? percentageChangeA - percentageChangeB : percentageChangeB - percentageChangeA;
         }
