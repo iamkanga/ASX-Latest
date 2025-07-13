@@ -274,6 +274,7 @@ body.theme-bold-4 { /* Royal Purple */
     --button-hover-bg: #a842ff;
     --input-bg: #7b2cbf;
     --input-border: #9d4edd;
+    --input-placeholder-color: #e0baff;
     --modal-content-bg: #7b2cbf;
     --table-header-bg: #5a189a;
     --table-row-hover-bg: #9d4edd;
@@ -821,7 +822,7 @@ body.theme-subtle-6 { /* Subtle Sand */
     --icon-danger-color: #e74c3c;
     --icon-danger-hover-color: #c0392b;
     --calc-num-btn-bg: #f2ebe6;
-    --calc-num-btn-text: #6a4a4a;
+    --calc-num-btn-text: #6a5a4a;
     --calc-num-btn-hover-bg: #eeb8a2;
     --google-auth-btn-bg: #FFFFFF;
     --google-auth-btn-hover-bg: #F0F0F0;
@@ -1079,23 +1080,6 @@ h1#mainTitle {
 }
 
 /* Hamburger Menu and Sidebar */
-/* MODIFIED: Hamburger Button for consistency with header-action-btn */
-.hamburger-btn { 
-    background: none; /* No background */
-    border: none; /* No border */
-    color: var(--text-color);
-    font-size: 1.8em; /* Consistent size with header-action-btn */
-    cursor: pointer;
-    padding: 5px 10px; 
-    z-index: 11; 
-    display: block; 
-    flex-shrink: 0; 
-}
-
-.hamburger-btn:hover {
-    color: var(--button-hover-bg);
-}
-
 .app-sidebar {
     position: fixed; 
     top: 0;
@@ -1633,13 +1617,11 @@ table td.live-price-cell {
 
 /* Specific styling for calculator modal close button */
 .calculator-modal-content .close-button {
-    font-size: 1.8em; /* Adjusted to match general close-button size */
+    font-size: 2em; /* Consistent with other modal close buttons */
     position: absolute; /* Keep absolute for calculator modals as they don't have modal-header-with-icon */
     top: 10px;
     right: 20px;
     color: var(--text-color); /* Ensure it uses text color */
-    background: none; /* Explicitly remove background */
-    border: none; /* Explicitly remove border */
 }
 .calculator-modal-content .close-button:hover {
     color: var(--danger-button-bg);
@@ -2150,12 +2132,9 @@ table td.live-price-cell {
         padding: 5px;
     }
 
-    /* MODIFIED: Hamburger button for consistency on mobile */
     .hamburger-btn {
-        font-size: 1.8em; /* Match header-action-btn size */
-        padding: 5px 10px; /* Match header-action-btn padding */
-        background: none; /* No background */
-        border: none; /* No border */
+        font-size: 1.5em;
+        padding: 5px;
     }
 
     .app-sidebar {
@@ -2167,18 +2146,16 @@ table td.live-price-cell {
         width: 100%;
     }
 
-    /* MODIFIED: Watchlist and Sort dropdowns on same line for mobile */
     .watchlist-controls-row {
-        flex-direction: row; /* Arrange horizontally */
-        justify-content: space-around; /* Distribute space evenly */
-        gap: 10px; /* Keep a small gap */
+        flex-direction: column; /* Stack dropdowns vertically */
+        gap: 10px;
         padding: 10px 15px;
     }
 
     .watchlist-group,
     .sort-group {
-        flex-basis: calc(50% - 10px); /* Roughly half width minus gap */
-        max-width: calc(50% - 10px);
+        flex-basis: 100%; /* Full width for each dropdown */
+        max-width: 100%;
     }
 
     .dropdown-large {

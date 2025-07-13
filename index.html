@@ -155,7 +155,7 @@
 
             <div class="sort-group">
                 <select id="sortSelect" class="dropdown-large">
-                    <option value="" disabled selected>Sort</option>
+                    <option value="" disabled selected>Sort</option> <!-- CHANGED: from "Sort by" to "Sort" -->
                     <option value="entryDate-desc">Date Added (Newest)</option>
                     <option value="entryDate-asc">Date Added (Oldest)</option>
                     <option value="shareName-asc">Code (A-Z)</option>
@@ -244,14 +244,6 @@
 
                 <label for="frankingCredits">Franking Credits (%):</label>
                 <input type="number" id="frankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 70 for 70%">
-
-                <!-- NEW: Watchlist Selector for Add/Edit Share Modal -->
-                <div class="input-group">
-                    <label for="shareWatchlistSelect">Watchlist:</label>
-                    <select id="shareWatchlistSelect" class="dropdown-large">
-                        <!-- Options populated by JS -->
-                    </select>
-                </div>
 
                 <!-- Comments section container -->
                 <div class="comments-form-container">
