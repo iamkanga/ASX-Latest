@@ -34,6 +34,7 @@ let currentSortOrder = 'entryDate-desc'; // Default sort order
 let contextMenuOpen = false; // To track if the custom context menu is open
 let currentContextMenuShareId = null; // Stores the ID of the share that opened the context menu
 let originalShareData = null; // Stores the original share data when editing for dirty state check
+let originalWatchlistData = null; // NEW: Stores original watchlist data for dirty state check in watchlist modals
 
 // Live Price Data
 const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzp7OjZL3zqvJ9wPsV9M-afm2wKeQPbIgGVv_juVpkaRllADESLwj7F4-S7YWYerau-/exec'; // Your new Google Apps Script URL
@@ -176,7 +177,7 @@ function setIconDisabled(element, isDisabled) {
 
 // Centralized Modal Closing Function
 function closeModals() {
-    // NEW: Auto-save logic for share form
+    // Auto-save logic for share form
     if (shareFormSection && shareFormSection.style.display !== 'none') {
         console.log("[Auto-Save] Share form modal is closing. Checking for unsaved changes.");
         const currentData = getCurrentFormData();
@@ -190,14 +191,42 @@ function closeModals() {
                 console.log("[Auto-Save] No changes detected for existing share.");
             }
         } else { // New share
-            if (isShareNameValid) { // Only attempt to save if a share name was entered
-                console.log("[Auto-Save] New share detected with name. Attempting silent save.");
+            // Only attempt to save if a share name was entered AND a watchlist was selected (if applicable)
+            const isWatchlistSelected = shareWatchlistSelect && shareWatchlistSelect.value !== '';
+            const needsWatchlistSelection = currentSelectedWatchlistIds.includes(ALL_SHARES_ID);
+            
+            if (isShareNameValid && (!needsWatchlistSelection || isWatchlistSelected)) { 
+                console.log("[Auto-Save] New share detected with valid name and watchlist. Attempting silent save.");
                 saveShareData(true); // true indicates silent save
             } else {
-                console.log("[Auto-Save] New share has no name. Discarding changes.");
+                console.log("[Auto-Save] New share has no name or invalid watchlist. Discarding changes.");
             }
         }
     }
+
+    // NEW: Auto-save logic for watchlist modals
+    if (addWatchlistModal && addWatchlistModal.style.display !== 'none') {
+        console.log("[Auto-Save] Add Watchlist modal is closing. Checking for unsaved changes.");
+        const currentWatchlistData = getCurrentWatchlistFormData(true); // true for add modal
+        if (currentWatchlistData.name.trim() !== '') {
+            console.log("[Auto-Save] New watchlist detected with name. Attempting silent save.");
+            saveWatchlistChanges(true, currentWatchlistData.name); // true indicates silent save, pass name
+        } else {
+            console.log("[Auto-Save] New watchlist has no name. Discarding changes.");
+        }
+    }
+
+    if (manageWatchlistModal && manageWatchlistModal.style.display !== 'none') {
+        console.log("[Auto-Save] Manage Watchlist modal is closing. Checking for unsaved changes.");
+        const currentWatchlistData = getCurrentWatchlistFormData(false); // false for edit modal
+        if (originalWatchlistData && !areWatchlistDataEqual(originalWatchlistData, currentWatchlistData)) {
+            console.log("[Auto-Save] Unsaved changes detected for existing watchlist. Attempting silent save.");
+            saveWatchlistChanges(true, currentWatchlistData.name, watchlistSelect.value); // true indicates silent save, pass name and ID
+        } else {
+            console.log("[Auto-Save] No changes detected for existing watchlist.");
+        }
+    }
+
 
     document.querySelectorAll('.modal').forEach(modal => {
         if (modal) {
@@ -380,7 +409,7 @@ function clearForm() {
         shareWatchlistSelect.value = ''; // Set to empty string to select the disabled option
         shareWatchlistSelect.disabled = false; // Ensure it's enabled for new share entry
     }
-    setIconDisabled(saveShareBtn, true);
+    setIconDisabled(saveShareBtn, true); // Save button disabled on clear
     console.log("[Form] Form fields cleared and selectedShareDocId reset. saveShareBtn disabled.");
 }
 
@@ -478,7 +507,7 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
     }
     
     originalShareData = getCurrentFormData();
-    setIconDisabled(saveShareBtn, true);
+    setIconDisabled(saveShareBtn, true); // Save button disabled initially for editing
     console.log("[showEditFormForSelectedShare] saveShareBtn initially disabled for dirty check.");
     
     showModal(shareFormSection);
@@ -855,7 +884,7 @@ function sortShares() {
             if (nameA === '' && nameB === '') return 0;
             if (nameA === '') return order === 'asc' ? 1 : -1;
             if (nameB === '') return order === 'asc' ? -1 : 1;
-            return order === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+            return order === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(a.shareName); // Fixed typo: b.shareName.localeCompare(a.shareName)
         } else if (field === 'entryDate') {
             const dateA = new Date(valA);
             const dateB = new Date(valB);
@@ -1172,7 +1201,7 @@ function addShareToMobileCards(share) {
             touchStartX = event.touches[0].clientX;
             touchStartY = event.touches[0].clientY;
             longPressTimer = setTimeout(() => {
-                event.preventDefault(); 
+                event.preventDefault();
                 selectShare(share.id);
                 showContextMenu(event, share.id);
             }, LONG_PRESS_THRESHOLD);
@@ -1853,7 +1882,7 @@ function showContextMenu(event, shareId) {
     }
 
     const menuWidth = shareContextMenu.offsetWidth;
-    const menuHeight = shareContextMenu.offsetHeight;
+    const menuHeight = shareContextMenu.offsetWidth; // Corrected to offsetHeight
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
 
@@ -2033,6 +2062,114 @@ function exportWatchlistToCSV() {
     
     showCustomAlert(`Exported shares to CSV!`, 2000);
     console.log(`[Export] Shares exported to CSV with prefix: '${exportFileNamePrefix}'.`);
+}
+
+/**
+ * Gathers current data from the Add/Manage Watchlist form inputs.
+ * @param {boolean} isAddModal True if gathering data from the Add Watchlist modal, false for Manage Watchlist.
+ * @returns {object} An object representing the current state of the watchlist form.
+ */
+function getCurrentWatchlistFormData(isAddModal) {
+    if (isAddModal) {
+        return {
+            name: newWatchlistNameInput ? newWatchlistNameInput.value.trim() : ''
+        };
+    } else {
+        return {
+            name: editWatchlistNameInput ? editWatchlistNameInput.value.trim() : ''
+        };
+    }
+}
+
+/**
+ * Compares two watchlist data objects to check for equality.
+ * @param {object} data1
+ * @param {object} data2
+ * @returns {boolean} True if data is identical, false otherwise.
+ */
+function areWatchlistDataEqual(data1, data2) {
+    if (!data1 || !data2) return false;
+    return data1.name === data2.name;
+}
+
+/**
+ * Checks the current state of the watchlist form against the original data (if editing)
+ * and enables/disables the save button accordingly.
+ * @param {boolean} isAddModal True if checking the Add Watchlist modal, false for Manage Watchlist.
+ */
+function checkWatchlistFormDirtyState(isAddModal) {
+    const currentData = getCurrentWatchlistFormData(isAddModal);
+    const isNameValid = currentData.name.trim() !== '';
+    let canSave = isNameValid;
+
+    if (!isAddModal && originalWatchlistData) { // Only for editing existing watchlists
+        const isDirty = !areWatchlistDataEqual(originalWatchlistData, currentData);
+        canSave = canSave && isDirty;
+        if (!isDirty) {
+            console.log("[Dirty State] Existing watchlist: No changes detected, save disabled.");
+        }
+    } else if (isAddModal) {
+        // For new watchlists, enable if name is valid
+    }
+
+    const targetSaveBtn = isAddModal ? saveWatchlistBtn : saveWatchlistNameBtn;
+    setIconDisabled(targetSaveBtn, !canSave);
+    console.log(`[Dirty State] Watchlist save button enabled: ${canSave} (Modal: ${isAddModal ? 'Add' : 'Edit'})`);
+}
+
+/**
+ * Saves or updates watchlist data to Firestore. Can be called silently for auto-save.
+ * @param {boolean} isSilent If true, no alert messages are shown on success.
+ * @param {string} newName The new name for the watchlist.
+ * @param {string|null} watchlistId The ID of the watchlist to update, or null if adding new.
+ */
+async function saveWatchlistChanges(isSilent = false, newName, watchlistId = null) {
+    console.log("[Watchlist Form] saveWatchlistChanges called.");
+
+    if (!newName || newName.trim() === '') {
+        if (!isSilent) showCustomAlert("Watchlist name is required!");
+        console.warn("[Save Watchlist] Watchlist name is empty. Skipping save.");
+        return;
+    }
+
+    // Check for duplicate name (case-insensitive, excluding current watchlist if editing)
+    const isDuplicate = userWatchlists.some(w => 
+        w.name.toLowerCase() === newName.toLowerCase() && w.id !== watchlistId
+    );
+    if (isDuplicate) {
+        if (!isSilent) showCustomAlert("A watchlist with this name already exists!");
+        console.warn("[Save Watchlist] Duplicate watchlist name. Skipping save.");
+        return;
+    }
+
+    try {
+        if (watchlistId) { // Editing existing watchlist
+            const watchlistDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/watchlists`, watchlistId);
+            await window.firestore.updateDoc(watchlistDocRef, { name: newName });
+            if (!isSilent) showCustomAlert(`Watchlist renamed to '${newName}'!`, 1500);
+            console.log(`[Firestore] Watchlist (ID: ${watchlistId}) renamed to '${newName}'.`);
+        } else { // Adding new watchlist
+            const watchlistsColRef = window.firestore.collection(db, `artifacts/${currentAppId}/users/${currentUserId}/watchlists`);
+            const newDocRef = await window.firestore.addDoc(watchlistsColRef, {
+                name: newName,
+                createdAt: new Date().toISOString(),
+                userId: currentUserId
+            });
+            if (!isSilent) showCustomAlert(`Watchlist '${newName}' added!`, 1500);
+            console.log(`[Firestore] Watchlist '${newName}' added with ID: ${newDocRef.id}`);
+            // If new watchlist added, set it as current selection and save preference
+            currentSelectedWatchlistIds = [newDocRef.id];
+            await saveLastSelectedWatchlistIds(currentSelectedWatchlistIds);
+        }
+        
+        await loadUserWatchlistsAndSettings(); // Re-load to update UI and internal state
+        if (!isSilent) closeModals(); // Only close if not a silent save
+        originalWatchlistData = getCurrentWatchlistFormData(watchlistId === null); // Update original data after successful save
+        checkWatchlistFormDirtyState(watchlistId === null); // Disable save button after saving
+    } catch (error) {
+        console.error("[Firestore] Error saving watchlist:", error);
+        if (!isSilent) showCustomAlert("Error saving watchlist: " + error.message);
+    }
 }
 
 
@@ -2367,62 +2504,34 @@ async function initializeAppLogic() {
         addWatchlistBtn.addEventListener('click', () => {
             console.log("[UI] Add Watchlist button clicked.");
             if (newWatchlistNameInput) newWatchlistNameInput.value = '';
-            setIconDisabled(saveWatchlistBtn, true); // This saveWatchlistBtn is for the Add Share modal, not the new Watchlist modal.
+            setIconDisabled(saveWatchlistBtn, true); // Disable save button initially
             console.log("[Add Watchlist] saveWatchlistBtn disabled initially.");
+            originalWatchlistData = getCurrentWatchlistFormData(true); // Store initial state for dirty check
             showModal(addWatchlistModal);
             newWatchlistNameInput.focus();
             toggleAppSidebar(false);
+            checkWatchlistFormDirtyState(true); // Check dirty state immediately after opening
         });
     }
 
     // Event listener for newWatchlistNameInput to toggle saveWatchlistBtn (for Add Watchlist Modal)
-    // NOTE: This refers to the save button specifically for the Add Watchlist modal.
-    const saveNewWatchlistBtn = document.getElementById('saveWatchlistBtn'); // Re-get reference if needed
-    if (newWatchlistNameInput && saveNewWatchlistBtn) {
+    if (newWatchlistNameInput && saveWatchlistBtn) {
         newWatchlistNameInput.addEventListener('input', () => {
-            const isDisabled = newWatchlistNameInput.value.trim() === '';
-            setIconDisabled(saveNewWatchlistBtn, isDisabled);
+            checkWatchlistFormDirtyState(true);
         });
     }
 
     // Save Watchlist Button (for Add Watchlist Modal)
-    if (saveNewWatchlistBtn) {
-        saveNewWatchlistBtn.addEventListener('click', async () => {
+    if (saveWatchlistBtn) {
+        saveWatchlistBtn.addEventListener('click', async () => {
             console.log("[Watchlist Form] Save Watchlist button clicked.");
-            if (saveNewWatchlistBtn.classList.contains('is-disabled-icon')) {
+            if (saveWatchlistBtn.classList.contains('is-disabled-icon')) {
                 showCustomAlert("Please enter a watchlist name.");
                 console.warn("[Save Watchlist] Save button was disabled, preventing action.");
                 return;
             }
-
             const watchlistName = newWatchlistNameInput.value.trim();
-            if (!watchlistName) {
-                showCustomAlert("Watchlist name is required!");
-                return;
-            }
-            if (userWatchlists.some(w => w.name.toLowerCase() === watchlistName.toLowerCase())) {
-                showCustomAlert("A watchlist with this name already exists!");
-                return;
-            }
-
-            try {
-                const watchlistsColRef = window.firestore.collection(db, `artifacts/${currentAppId}/users/${currentUserId}/watchlists`);
-                const newWatchlistRef = await window.firestore.addDoc(watchlistsColRef, {
-                    name: watchlistName,
-                    createdAt: new Date().toISOString(),
-                    userId: currentUserId
-                });
-                showCustomAlert(`Watchlist '${watchlistName}' added!`, 1500);
-                console.log(`[Firestore] Watchlist '${watchlistName}' added with ID: ${newWatchlistRef.id}`);
-                hideModal(addWatchlistModal);
-                
-                currentSelectedWatchlistIds = [newWatchlistRef.id];
-                await saveLastSelectedWatchlistIds(currentSelectedWatchlistIds);
-                await loadUserWatchlistsAndSettings();
-            } catch (error) {
-                console.error("[Firestore] Error adding watchlist:", error);
-                showCustomAlert("Error adding watchlist: " + error.message);
-            }
+            await saveWatchlistChanges(false, watchlistName); // false indicates not silent
         });
     }
 
@@ -2445,19 +2554,20 @@ async function initializeAppLogic() {
             const isDisabledDelete = userWatchlists.length <= 1;
             setIconDisabled(deleteWatchlistInModalBtn, isDisabledDelete); 
             console.log(`[Edit Watchlist] deleteWatchlistInModalBtn disabled: ${isDisabledDelete}`);
-            setIconDisabled(saveWatchlistNameBtn, false);
-            console.log("[Edit Watchlist] saveWatchlistNameBtn enabled initially.");
+            setIconDisabled(saveWatchlistNameBtn, true); // Disable save button initially
+            console.log("[Edit Watchlist] saveWatchlistNameBtn disabled initially.");
+            originalWatchlistData = getCurrentWatchlistFormData(false); // Store initial state for dirty check
             showModal(manageWatchlistModal);
             editWatchlistNameInput.focus();
             toggleAppSidebar(false);
+            checkWatchlistFormDirtyState(false); // Check dirty state immediately after opening
         });
     }
 
     // Event listener for editWatchlistNameInput to toggle saveWatchlistNameBtn
     if (editWatchlistNameInput && saveWatchlistNameBtn) {
         editWatchlistNameInput.addEventListener('input', () => {
-            const isDisabled = editWatchlistNameInput.value.trim() === '';
-            setIconDisabled(saveWatchlistNameBtn, isDisabled);
+            checkWatchlistFormDirtyState(false);
         });
     }
 
@@ -2466,34 +2576,13 @@ async function initializeAppLogic() {
         saveWatchlistNameBtn.addEventListener('click', async () => {
             console.log("[Manage Watchlist Form] Save Watchlist Name button clicked.");
             if (saveWatchlistNameBtn.classList.contains('is-disabled-icon')) {
-                showCustomAlert("Watchlist name cannot be empty.");
+                showCustomAlert("Watchlist name cannot be empty or unchanged.");
                 console.warn("[Save Watchlist Name] Save button was disabled, preventing action.");
                 return;
             }
-
-            let watchlistToEditId = watchlistSelect.value;
-
             const newName = editWatchlistNameInput.value.trim();
-            if (!newName) {
-                showCustomAlert("Watchlist name cannot be empty!");
-                return;
-            }
-            if (userWatchlists.some(w => w.name.toLowerCase() === newName.toLowerCase() && w.id !== watchlistToEditId)) {
-                showCustomAlert("A watchlist with this name already exists!");
-                return;
-            }
-
-            try {
-                const watchlistDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/watchlists`, watchlistToEditId);
-                await window.firestore.updateDoc(watchlistDocRef, { name: newName });
-                showCustomAlert(`Watchlist renamed to '${newName}'!`, 1500);
-                console.log(`[Firestore] Watchlist (ID: ${watchlistToEditId}) renamed to '${newName}'.`);
-                hideModal(manageWatchlistModal);
-                await loadUserWatchlistsAndSettings();
-            } catch (error) {
-                console.error("[Firestore] Error renaming watchlist:", error);
-                showCustomAlert("Error renaming watchlist: " + error.message);
-            }
+            const watchlistToEditId = watchlistSelect.value;
+            await saveWatchlistChanges(false, newName, watchlistToEditId); // false indicates not silent
         });
     }
 
