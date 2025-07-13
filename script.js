@@ -1,2387 +1,2777 @@
-/* Base Styles */
-:root {
-    /* Light Theme (Default) */
-    --background-color: #eef2f3;
-    --text-color: #333;
-    --header-bg: #d9e2f4;
-    --card-bg: #ffffff;
-    --border-color: #c9d2d4;
-    --button-bg: #007bff;
-    --button-text: #fff;
-    --button-hover-bg: #0056b3;
-    --input-bg: #fff;
-    --input-border: #b0b8bb;
-    --input-placeholder-color: #6c757d;
-    --modal-bg: rgba(0, 0, 0, 0.6);
-    --modal-content-bg: #fff;
-    --table-header-bg: #e6e9eb;
-    --table-row-hover-bg: #f0f4f5;
-    --asx-button-bg: #e2e8ea;
-    --asx-button-hover-bg: #d0d7d9;
-    --asx-button-text: #333;
-    --asx-button-active-bg: #007bff;
-    --asx-button-active-text: #fff;
-    --success-color: #28a745;
-    --danger-color: #dc3545;
-    --warning-color: #ffc107;
-    --info-color: #17a2b8;
-    --link-color: #007bff;
-    --link-hover-color: #0056b3;
-    --sidebar-bg: #f8f9fa;
-    --sidebar-text: #333;
-    --sidebar-border: #c9d2d4;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #e9ecef;
-    --menu-button-active-bg: #007bff;
-    --menu-button-active-text: #fff;
-    --placeholder-text: #6c757d;
-    --ghosted-text: #888;
-    --danger-button-bg: #dc3545;
-    --danger-button-hover-bg: #c82333;
-    --secondary-button-bg: #6c757d;
-    --secondary-button-hover-bg: #545b62;
-    --google-auth-btn-bg: #FFFFFF;
-    --google-auth-btn-hover-bg: #F0F0F0;
-    --google-auth-btn-text: #4285F4;
-    --label-color: #555;
-    --shadow-color: rgba(0, 0, 0, 0.15);
-    --sidebar-width: 280px;
-    --close-sidebar-btn-color: #666;
-    --icon-action-color: #007bff;
-    --icon-action-hover-color: #0056b3;
-    --icon-danger-color: #dc3545;
-    --icon-danger-hover-color: #c82333;
-    --calc-num-btn-bg: #f0f0f0;
-    --calc-num-btn-text: #333;
-    --calc-num-btn-hover-bg: #e0e0e0;
-    --price-up-color: #28a745;
-    --price-down-color: #dc3545;
-    --price-neutral-color: #6c757d;
+// This script interacts with Firebase Firestore for data storage.
+// Firebase app, db, auth instances, and userId are made globally available
+// via window.firestoreDb, window.firebaseAuth, window.getFirebaseAppId(), etc.,
+// from the <script type="module"> block in index.html.
+
+// --- GLOBAL VARIABLES ---
+let db;
+let auth = null;
+let currentUserId = null;
+let currentAppId;
+let selectedShareDocId = null;
+let allSharesData = []; // Kept in sync by the onSnapshot listener
+let currentDialogCallback = null;
+let autoDismissTimeout = null;
+let lastTapTime = 0;
+let tapTimeout;
+let selectedElementForTap = null;
+let longPressTimer;
+const LONG_PRESS_THRESHOLD = 500; // Time in ms for long press detection
+let touchStartX = 0;
+let touchStartY = 0;
+const TOUCH_MOVE_THRESHOLD = 10; // Pixels for touch movement to cancel long press
+const KANGA_EMAIL = 'iamkanga@gmail.com';
+let currentCalculatorInput = '';
+let operator = null;
+let previousCalculatorInput = '';
+let resultDisplayed = false;
+const DEFAULT_WATCHLIST_NAME = 'My Watchlist (Default)';
+const DEFAULT_WATCHLIST_ID_SUFFIX = 'default';
+let userWatchlists = []; // Stores all watchlists for the user
+let currentSelectedWatchlistIds = []; // Stores IDs of currently selected watchlists for display
+const ALL_SHARES_ID = 'all_shares_option'; // Special ID for the "Show All Shares" option
+let currentSortOrder = 'entryDate-desc'; // Default sort order
+let contextMenuOpen = false; // To track if the custom context menu is open
+let currentContextMenuShareId = null; // Stores the ID of the share that opened the context menu
+let originalShareData = null; // Stores the original share data when editing for dirty state check
+
+// Live Price Data
+const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzp7OjZL3zqvJ9wPsV9M-afm2wKeQPbIgGVv_juVpkaRllADESLwj7F4-S7YWYerau-/exec'; // Your new Google Apps Script URL
+let livePrices = {}; // Stores live price data: {ASX_CODE: {live: price, prevClose: price}}
+let livePriceFetchInterval = null; // To hold the interval ID for live price updates
+const LIVE_PRICE_FETCH_INTERVAL_MS = 5 * 60 * 1000; // Fetch every 5 minutes
+
+// Theme related variables
+const CUSTOM_THEMES = [
+    'bold-1', 'bold-2', 'bold-3', 'bold-4', 'bold-5', 'bold-6', 'bold-7', 'bold-8', 'bold-9', 'bold-10',
+    'subtle-1', 'subtle-2', 'subtle-3', 'subtle-4', 'subtle-5', 'subtle-6', 'subtle-7', 'subtle-8', 'subtle-9', 'subtle-10'
+];
+let currentCustomThemeIndex = -1; // To track the current theme in the cycle
+let currentActiveTheme = 'system-default'; // Tracks the currently applied theme string
+let savedSortOrder = null; // GLOBAL: Stores the sort order loaded from user settings
+let savedTheme = null; // GLOBAL: Stores the theme loaded from user settings
+
+let unsubscribeShares = null; // Holds the unsubscribe function for the Firestore shares listener
+
+// --- UI Element References ---
+const mainTitle = document.getElementById('mainTitle');
+const addShareHeaderBtn = document.getElementById('addShareHeaderBtn');
+const newShareBtn = document.getElementById('newShareBtn');
+const standardCalcBtn = document.getElementById('standardCalcBtn');
+const dividendCalcBtn = document.getElementById('dividendCalcBtn');
+const asxCodeButtonsContainer = document.getElementById('asxCodeButtonsContainer');
+const shareFormSection = document.getElementById('shareFormSection');
+const formCloseButton = document.querySelector('.form-close-button');
+const formTitle = document.getElementById('formTitle');
+const saveShareBtn = document.getElementById('saveShareBtn');
+const deleteShareBtn = document.getElementById('deleteShareBtn');
+const shareNameInput = document.getElementById('shareName');
+const currentPriceInput = document.getElementById('currentPrice');
+const targetPriceInput = document.getElementById('targetPrice');
+const dividendAmountInput = document.getElementById('dividendAmount');
+const frankingCreditsInput = document.getElementById('frankingCredits');
+// CORRECTED: This now points to the new dynamicCommentsArea ID
+const commentsFormContainer = document.getElementById('dynamicCommentsArea'); 
+const addCommentSectionBtn = document.getElementById('addCommentSectionBtn');
+const shareTableBody = document.querySelector('#shareTable tbody');
+const mobileShareCardsContainer = document.getElementById('mobileShareCards');
+const loadingIndicator = document.getElementById('loadingIndicator');
+const googleAuthBtn = document.getElementById('googleAuthBtn');
+const shareDetailModal = document.getElementById('shareDetailModal');
+const modalShareName = document.getElementById('modalShareName');
+const modalEntryDate = document.getElementById('modalEntryDate');
+const modalEnteredPrice = document.getElementById('modalEnteredPrice');
+const modalLivePrice = document.getElementById('modalLivePrice');
+const modalPriceChange = document.getElementById('modalPriceChange');
+const modalTargetPrice = document.getElementById('modalTargetPrice');
+const modalDividendAmount = document.getElementById('modalDividendAmount');
+const modalFrankingCredits = document.getElementById('modalFrankingCredits');
+const modalCommentsContainer = document.getElementById('modalCommentsContainer');
+const modalUnfrankedYieldSpan = document.getElementById('modalUnfrankedYield');
+const modalFrankedYieldSpan = document.getElementById('modalFrankedYield');
+const editShareFromDetailBtn = document.getElementById('editShareFromDetailBtn');
+const deleteShareFromDetailBtn = document.getElementById('deleteShareFromDetailBtn');
+const modalNewsLink = document.getElementById('modalNewsLink');
+const modalMarketIndexLink = document.getElementById('modalMarketIndexLink');
+const modalFoolLink = document.getElementById('modalFoolLink');
+const modalCommSecLink = document.getElementById('modalCommSecLink');
+const commSecLoginMessage = document.getElementById('commSecLoginMessage');
+const dividendCalculatorModal = document.getElementById('dividendCalculatorModal');
+const calcCloseButton = document.querySelector('.calc-close-button');
+const calcCurrentPriceInput = document.getElementById('calcCurrentPrice');
+const calcDividendAmountInput = document.getElementById('calcDividendAmount');
+const calcFrankingCreditsInput = document.getElementById('calcFrankingCredits');
+const calcUnfrankedYieldSpan = document.getElementById('calcUnfrankedYield');
+const calcFrankedYieldSpan = document.getElementById('calcFrankedYield');
+const investmentValueSelect = document.getElementById('investmentValueSelect');
+const calcEstimatedDividend = document.getElementById('calcEstimatedDividend');
+const sortSelect = document.getElementById('sortSelect');
+const customDialogModal = document.getElementById('customDialogModal');
+const customDialogMessage = document.getElementById('customDialogMessage');
+const customDialogConfirmBtn = document.getElementById('customDialogConfirmBtn');
+const customDialogCancelBtn = document.getElementById('customDialogCancelBtn');
+const calculatorModal = document.getElementById('calculatorModal');
+const calculatorInput = document.getElementById('calculatorInput');
+const calculatorResult = document.getElementById('calculatorResult');
+const calculatorButtons = document.querySelector('.calculator-buttons');
+const watchlistSelect = document.getElementById('watchlistSelect');
+const themeToggleBtn = document.getElementById('themeToggleBtn');
+const colorThemeSelect = document.getElementById('colorThemeSelect');
+const revertToDefaultThemeBtn = document.getElementById('revertToDefaultThemeBtn');
+const scrollToTopBtn = document.getElementById('scrollToTopBtn');
+const hamburgerBtn = document.getElementById('hamburgerBtn');
+const appSidebar = document.getElementById('appSidebar');
+const closeMenuBtn = document.getElementById('closeMenuBtn');
+const addWatchlistBtn = document.getElementById('addWatchlistBtn');
+const editWatchlistBtn = document.getElementById('editWatchlistBtn');
+const addWatchlistModal = document.getElementById('addWatchlistModal');
+const newWatchlistNameInput = document.getElementById('newWatchlistName');
+const saveWatchlistBtn = document.getElementById('saveWatchlistBtn');
+const manageWatchlistModal = document.getElementById('manageWatchlistModal');
+const editWatchlistNameInput = document.getElementById('editWatchlistName');
+const saveWatchlistNameBtn = document.getElementById('saveWatchlistNameBtn');
+const deleteWatchlistInModalBtn = document.getElementById('deleteWatchlistInModalBtn');
+const shareContextMenu = document.getElementById('shareContextMenu');
+const contextEditShareBtn = document.getElementById('contextEditShareBtn');
+const contextDeleteShareBtn = document.getElementById('contextDeleteShareBtn');
+const logoutBtn = document.getElementById('logoutBtn');
+const exportWatchlistBtn = document.getElementById('exportWatchlistBtn');
+const refreshLivePricesBtn = document.getElementById('refreshLivePricesBtn');
+
+let sidebarOverlay = document.querySelector('.sidebar-overlay');
+if (!sidebarOverlay) {
+    sidebarOverlay = document.createElement('div');
+    sidebarOverlay.classList.add('sidebar-overlay');
+    document.body.appendChild(sidebarOverlay);
 }
 
-/* Dark Theme Variables */
-body.dark-theme {
-    --background-color: #2c3e50;
-    --text-color: #ecf0f1;
-    --header-bg: #34495e;
-    --card-bg: #3b526b;
-    --border-color: #4a627a;
-    --button-bg: #007bff;
-    --button-text: #fff;
-    --button-hover-bg: #0056b3;
-    --input-bg: #4a627a;
-    --input-border: #6c8095;
-    --input-placeholder-color: #bdc3c7;
-    --modal-bg: rgba(0, 0, 0, 0.75);
-    --modal-content-bg: #34495e;
-    --table-header-bg: #4a627a;
-    --table-row-hover-bg: #4a627a;
-    --asx-button-bg: #4a627a;
-    --asx-button-hover-bg: #5c758e;
-    --asx-button-text: #ecf0f1;
-    --asx-button-active-bg: #007bff;
-    --asx-button-active-text: #fff;
-    --success-color: #2ecc71;
-    --danger-color: #e74c3c;
-    --warning-color: #f39c12;
-    --info-color: #3498db;
-    --link-color: #3498db;
-    --link-hover-color: #2980b9;
-    --sidebar-bg: #34495e;
-    --sidebar-text: #ecf0f1;
-    --sidebar-border: #4a627a;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #4a627a;
-    --menu-button-active-bg: #007bff;
-    --menu-button-active-text: #fff;
-    --placeholder-text: #bdc3c7;
-    --ghosted-text: #95a5a6;
-    --danger-button-bg: #e74c3c;
-    --danger-button-hover-bg: #c0392b;
-    --secondary-button-bg: #7f8c8d;
-    --secondary-button-hover-bg: #616e70;
-    --google-auth-btn-bg: #FFFFFF;
-    --google-auth-btn-hover-bg: #F0F0F0;
-    --google-auth-btn-text: #4285F4;
-    --label-color: #bbb;
-    --shadow-color: rgba(0, 0, 0, 0.4);
-    --close-sidebar-btn-color: #bbb;
-    --icon-action-color: #3498db;
-    --icon-action-hover-color: #2980b9;
-    --icon-danger-color: #e74c3c;
-    --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #5a758e;
-    --calc-num-btn-text: #ecf0f1;
-    --calc-num-btn-hover-bg: #6c8095;
-    --price-up-color: #2ecc71;
-    --price-down-color: #e74c3c;
-    --price-neutral-color: #95a5a6;
-}
-
-/* Custom Themes */
-/* Bold Themes */
-body.theme-bold-1 { /* Ocean Blue */
-    --background-color: #1a2a3a;
-    --text-color: #e0f2f7;
-    --header-bg: #005f73;
-    --card-bg: #0a475a;
-    --border-color: #008793;
-    --button-bg: #00b4d8;
-    --button-hover-bg: #0096c7;
-    --input-bg: #0a475a;
-    --input-border: #008793;
-    --input-placeholder-color: #8ecae6;
-    --modal-content-bg: #0a475a;
-    --table-header-bg: #005f73;
-    --table-row-hover-bg: #008793;
-    --asx-button-bg: #005f73;
-    --asx-button-hover-bg: #008793;
-    --asx-button-active-bg: #00b4d8;
-    --sidebar-bg: #0a475a;
-    --sidebar-border: #008793;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #0a475a;
-    --placeholder-text: #8ecae6;
-    --ghosted-text: #a8dadc;
-    --danger-button-bg: #e63946;
-    --danger-button-hover-bg: #c02d38;
-    --icon-action-color: #00b4d8;
-    --icon-action-hover-color: #0096c7;
-    --icon-danger-color: #e63946;
-    --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #007f8c;
-    --calc-num-btn-text: #e0f2f7;
-    --calc-num-btn-hover-bg: #0096c7;
-    color: #fff !important;
-    --text-color: #fff;
-    --asx-button-text: #fff;
-    --sidebar-text: #fff;
-    --label-color: #ccc;
-    --input-placeholder-color: #aaa;
-    --ghosted-text: #bbb;
-    --close-sidebar-btn-color: #ccc;
-    --google-auth-btn-bg: #FFFFFF;
-    --google-auth-btn-hover-bg: #F0F0F0;
-    --google-auth-btn-text: #4285F4;
-    --price-up-color: #2ecc71;
-    --price-down-color: #e74c3c;
-    --price-neutral-color: #a8dadc;
-}
-
-body.theme-bold-2 { /* Forest Green */
-    --background-color: #2d422d;
-    --text-color: #e6ffe6;
-    --header-bg: #386641;
-    --card-bg: #4a754a;
-    --border-color: #6a9955;
-    --button-bg: #a7c957;
-    --button-hover-bg: #8ba84a;
-    --input-bg: #4a754a;
-    --input-border: #6a9955;
-    --input-placeholder-color: #c0d8b6;
-    --modal-content-bg: #4a754a;
-    --table-header-bg: #386641;
-    --table-row-hover-bg: #6a9955;
-    --asx-button-bg: #386641;
-    --asx-button-hover-bg: #6a9955;
-    --asx-button-active-bg: #a7c957;
-    --sidebar-bg: #4a754a;
-    --sidebar-border: #6a9955;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #4a754a;
-    --placeholder-text: #c0d8b6;
-    --ghosted-text: #d4e3c9;
-    --danger-button-bg: #e74c3c;
-    --danger-button-hover-bg: #c0392b;
-    --icon-action-color: #a7c957;
-    --icon-action-hover-color: #8ba84a;
-    --icon-danger-color: #e74c3c;
-    --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #5a855a;
-    --calc-num-btn-text: #e6ffe6;
-    --calc-num-btn-hover-bg: #6a9955;
-    color: #fff !important;
-    --text-color: #fff;
-    --asx-button-text: #fff;
-    --sidebar-text: #fff;
-    --label-color: #ccc;
-    --input-placeholder-color: #aaa;
-    --ghosted-text: #bbb;
-    --close-sidebar-btn-color: #ccc;
-    --google-auth-btn-bg: #FFFFFF;
-    --google-auth-btn-hover-bg: #F0F0F0;
-    --google-auth-btn-text: #4285F4;
-    --price-up-color: #2ecc71;
-    --price-down-color: #e74c3c;
-    --price-neutral-color: #d4e3c9;
-}
-
-body.theme-bold-3 { /* Sunset Orange */
-    --background-color: #3b2a20;
-    --text-color: #fff8e1;
-    --header-bg: #e63946;
-    --card-bg: #f4a261;
-    --border-color: #e76f51;
-    --button-bg: #ffc300;
-    --button-hover-bg: #e0ac00;
-    --input-bg: #f4a261;
-    --input-border: #e76f51;
-    --input-placeholder-color: #ffe5b4;
-    --modal-content-bg: #f4a261;
-    --table-header-bg: #e63946;
-    --table-row-hover-bg: #e76f51;
-    --asx-button-bg: #e63946;
-    --asx-button-hover-bg: #e76f51;
-    --asx-button-active-bg: #ffc300;
-    --sidebar-bg: #f4a261;
-    --sidebar-border: #e76f51;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #f4a261;
-    --placeholder-text: #ffe5b4;
-    --ghosted-text: #ffd790;
-    --danger-button-bg: #e63946;
-    --danger-button-hover-bg: #c02d38;
-    --icon-action-color: #ffc300;
-    --icon-action-hover-color: #e0ac00;
-    --icon-danger-color: #e63946;
-    --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #f7b98d;
-    --calc-num-btn-text: #3b2a20;
-    --calc-num-btn-hover-bg: #f4a261;
-    color: #fff !important;
-    --text-color: #fff;
-    --asx-button-text: #fff;
-    --sidebar-text: #fff;
-    --label-color: #ccc;
-    --input-placeholder-color: #aaa;
-    --ghosted-text: #bbb;
-    --close-sidebar-btn-color: #ccc;
-    --google-auth-btn-bg: #FFFFFF;
-    --google-auth-btn-hover-bg: #F0F0F0;
-    --google-auth-btn-text: #4285F4;
-    --price-up-color: #2ecc71;
-    --price-down-color: #e74c3c;
-    --price-neutral-color: #ffd790;
-}
-
-body.theme-bold-4 { /* Royal Purple */
-    --background-color: #2a1a3a;
-    --text-color: #f0e6ff;
-    --header-bg: #5a189a;
-    --card-bg: #7b2cbf;
-    --border-color: #9d4edd;
-    --button-bg: #c77dff;
-    --button-hover-bg: #a842ff;
-    --input-bg: #7b2cbf;
-    --input-border: #9d4edd;
-    --input-placeholder-color: #e0baff;
-    --modal-content-bg: #7b2cbf;
-    --table-header-bg: #5a189a;
-    --table-row-hover-bg: #9d4edd;
-    --asx-button-bg: #5a189a;
-    --asx-button-hover-bg: #9d4edd;
-    --asx-button-active-bg: #c77dff;
-    --sidebar-bg: #7b2cbf;
-    --sidebar-border: #9d4edd;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #7b2cbf;
-    --placeholder-text: #e0baff;
-    --ghosted-text: #e8d0ff;
-    --danger-button-bg: #e74c3c;
-    --danger-button-hover-bg: #c0392b;
-    --icon-action-color: #c77dff;
-    --icon-action-hover-color: #a842ff;
-    --icon-danger-color: #e74c3c;
-    --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #9d4edd;
-    --calc-num-btn-text: #f0e6ff;
-    --calc-num-btn-hover-bg: #c77dff;
-    color: #fff !important;
-    --text-color: #fff;
-    --asx-button-text: #fff;
-    --sidebar-text: #fff;
-    --label-color: #ccc;
-    --input-placeholder-color: #aaa;
-    --ghosted-text: #bbb;
-    --close-sidebar-btn-color: #ccc;
-    --google-auth-btn-bg: #FFFFFF;
-    --google-auth-btn-hover-bg: #F0F0F0;
-    --google-auth-btn-text: #4285F4;
-    --price-up-color: #2ecc71;
-    --price-down-color: #e74c3c;
-    --price-neutral-color: #e8d0ff;
-}
-
-body.theme-bold-5 { /* Deep Red */
-    --background-color: #3a1a1a;
-    --text-color: #ffe6e6;
-    --header-bg: #8b0000;
-    --card-bg: #a02020;
-    --border-color: #c0392b;
-    --button-bg: #e74c3c;
-    --button-hover-bg: #c0392b;
-    --input-bg: #a02020;
-    --input-border: #c0392b;
-    --input-placeholder-color: #ffbaba;
-    --modal-content-bg: #a02020;
-    --table-header-bg: #8b0000;
-    --table-row-hover-bg: #c0392b;
-    --asx-button-bg: #8b0000;
-    --asx-button-hover-bg: #c0392b;
-    --asx-button-active-bg: #e74c3c;
-    --sidebar-bg: #a02020;
-    --sidebar-border: #c0392b;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #a02020;
-    --placeholder-text: #ffbaba;
-    --ghosted-text: #ffcccc;
-    --danger-button-bg: #e74c3c;
-    --danger-button-hover-bg: #c0392b;
-    --icon-action-color: #e74c3c;
-    --icon-action-hover-color: #c0392b;
-    --icon-danger-color: #e74c3c;
-    --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #c0392b;
-    --calc-num-btn-text: #ffe6e6;
-    --calc-num-btn-hover-bg: #e74c3c;
-    color: #fff !important;
-    --text-color: #fff;
-    --asx-button-text: #fff;
-    --sidebar-text: #fff;
-    --label-color: #ccc;
-    --input-placeholder-color: #aaa;
-    --ghosted-text: #bbb;
-    --close-sidebar-btn-color: #ccc;
-    --google-auth-btn-bg: #FFFFFF;
-    --google-auth-btn-hover-bg: #F0F0F0;
-    --google-auth-btn-text: #4285F4;
-    --price-up-color: #2ecc71;
-    --price-down-color: #e74c3c;
-    --price-neutral-color: #ffcccc;
-}
-
-body.theme-bold-6 { /* Gold */
-    --background-color: #3b301a;
-    --text-color: #fff8e0;
-    --header-bg: #b8860b;
-    --card-bg: #daa520;
-    --border-color: #ffd700;
-    --button-bg: #ffeb3b;
-    --button-hover-bg: #fdd835;
-    --input-bg: #daa520;
-    --input-border: #ffd700;
-    --input-placeholder-color: #ffee99;
-    --modal-content-bg: #daa520;
-    --table-header-bg: #b8860b;
-    --table-row-hover-bg: #ffd700;
-    --asx-button-bg: #b8860b;
-    --asx-button-hover-bg: #ffd700;
-    --asx-button-active-bg: #ffeb3b;
-    --sidebar-bg: #daa520;
-    --sidebar-border: #ffd700;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #daa520;
-    --placeholder-text: #ffee99;
-    --ghosted-text: #fff2c4;
-    --danger-button-bg: #e74c3c;
-    --danger-button-hover-bg: #c0392b;
-    --icon-action-color: #ffeb3b;
-    --icon-action-hover-color: #fdd835;
-    --icon-danger-color: #e74c3c;
-    --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #ffd700;
-    --calc-num-btn-text: #3b301a;
-    --calc-num-btn-hover-bg: #ffeb3b;
-    color: #fff !important;
-    --text-color: #fff;
-    --asx-button-text: #fff;
-    --sidebar-text: #fff;
-    --label-color: #ccc;
-    --input-placeholder-color: #aaa;
-    --ghosted-text: #bbb;
-    --close-sidebar-btn-color: #ccc;
-    --google-auth-btn-bg: #FFFFFF;
-    --google-auth-btn-hover-bg: #F0F0F0;
-    --google-auth-btn-text: #4285F4;
-    --price-up-color: #2ecc71;
-    --price-down-color: #e74c3c;
-    --price-neutral-color: #fff2c4;
-}
-
-body.theme-bold-7 { /* Emerald */
-    --background-color: #1a3a2a;
-    --text-color: #e6fff0;
-    --header-bg: #006400;
-    --card-bg: #228b22;
-    --border-color: #3cb371;
-    --button-bg: #66bb6a;
-    --button-hover-bg: #4caf50;
-    --input-bg: #228b22;
-    --input-border: #3cb371;
-    --modal-content-bg: #228b22;
-    --table-header-bg: #006400;
-    --table-row-hover-bg: #3cb371;
-    --asx-button-bg: #006400;
-    --asx-button-hover-bg: #3cb371;
-    --asx-button-active-bg: #66bb6a;
-    --sidebar-bg: #228b22;
-    --sidebar-border: #3cb371;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #228b22;
-    --placeholder-text: #99ffaa;
-    --ghosted-text: #ccffdd;
-    --danger-button-bg: #e74c3c;
-    --danger-button-hover-bg: #c0392b;
-    --icon-action-color: #66bb6a;
-    --icon-action-hover-color: #4caf50;
-    --icon-danger-color: #e74c3c;
-    --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #3cb371;
-    --calc-num-btn-text: #e6fff0;
-    --calc-num-btn-hover-bg: #66bb6a;
-    color: #fff !important;
-    --text-color: #fff;
-    --asx-button-text: #fff;
-    --sidebar-text: #fff;
-    --label-color: #ccc;
-    --input-placeholder-color: #aaa;
-    --ghosted-text: #bbb;
-    --close-sidebar-btn-color: #ccc;
-    --google-auth-btn-bg: #FFFFFF;
-    --google-auth-btn-hover-bg: #F0F0F0;
-    --google-auth-btn-text: #4285F4;
-    --price-up-color: #2ecc71;
-    --price-down-color: #e74c3c;
-    --price-neutral-color: #ccffdd;
-}
-
-body.theme-bold-8 { /* Plum */
-    --background-color: #3a1a3a;
-    --text-color: #ffe6ff;
-    --header-bg: #800080;
-    --card-bg: #9932cc;
-    --border-color: #ba55d3;
-    --button-bg: #da70d6;
-    --button-hover-bg: #c71585;
-    --input-bg: #9932cc;
-    --input-border: #ba55d3;
-    --modal-content-bg: #9932cc;
-    --table-header-bg: #800080;
-    --table-row-hover-bg: #ba55d3;
-    --asx-button-bg: #800080;
-    --asx-button-hover-bg: #ba55d3;
-    --asx-button-active-bg: #da70d6;
-    --sidebar-bg: #9932cc;
-    --sidebar-border: #ba55d3;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #9932cc;
-    --placeholder-text: #ffb3ff;
-    --ghosted-text: #ffccff;
-    --danger-button-bg: #e74c3c;
-    --danger-button-hover-bg: #c0392b;
-    --icon-action-color: #da70d6;
-    --icon-action-hover-color: #c71585;
-    --icon-danger-color: #e74c3c;
-    --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #ba55d3;
-    --calc-num-btn-text: #ffe6ff;
-    --calc-num-btn-hover-bg: #da70d6;
-    color: #fff !important;
-    --text-color: #fff;
-    --asx-button-text: #fff;
-    --sidebar-text: #fff;
-    --label-color: #ccc;
-    --input-placeholder-color: #aaa;
-    --ghosted-text: #bbb;
-    --close-sidebar-btn-color: #ccc;
-    --google-auth-btn-bg: #FFFFFF;
-    --google-auth-btn-hover-bg: #F0F0F0;
-    --google-auth-btn-text: #4285F4;
-    --price-up-color: #2ecc71;
-    --price-down-color: #e74c3c;
-    --price-neutral-color: #ffccff;
-}
-
-body.theme-bold-9 { /* Aqua */
-    --background-color: #1a3a3a;
-    --text-color: #e6ffff;
-    --header-bg: #008b8b;
-    --card-bg: #00ced1;
-    --border-color: #40e0d0;
-    --button-bg: #20b2aa;
-    --button-hover-bg: #008080;
-    --input-bg: #00ced1;
-    --input-border: #40e0d0;
-    --modal-content-bg: #00ced1;
-    --table-header-bg: #008b8b;
-    --table-row-hover-bg: #40e0d0;
-    --asx-button-bg: #008b8b;
-    --asx-button-hover-bg: #40e0d0;
-    --asx-button-active-bg: #20b2aa;
-    --sidebar-bg: #00ced1;
-    --sidebar-border: #40e0d0;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #00ced1;
-    --placeholder-text: #99ffff;
-    --ghosted-text: #ccffff;
-    --danger-button-bg: #e74c3c;
-    --danger-button-hover-bg: #c0392b;
-    --icon-action-color: #20b2aa;
-    --icon-action-hover-color: #008080;
-    --icon-danger-color: #e74c3c;
-    --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #40e0d0;
-    --calc-num-btn-text: #e6ffff;
-    --calc-num-btn-hover-bg: #20b2aa;
-    color: #fff !important;
-    --text-color: #fff;
-    --asx-button-text: #fff;
-    --sidebar-text: #fff;
-    --label-color: #ccc;
-    --input-placeholder-color: #aaa;
-    --ghosted-text: #bbb;
-    --close-sidebar-btn-color: #ccc;
-    --google-auth-btn-bg: #FFFFFF;
-    --google-auth-btn-hover-bg: #F0F0F0;
-    --google-auth-btn-text: #4285F4;
-    --price-up-color: #2ecc71;
-    --price-down-color: #e74c3c;
-    --price-neutral-color: #ccffff;
-}
-
-body.theme-bold-10 { /* Ruby */
-    --background-color: #3a1a2a;
-    --text-color: #ffe6f0;
-    --header-bg: #8b0000;
-    --card-bg: #a52a2a;
-    --border-color: #cd5c5c;
-    --button-bg: #dc143c;
-    --button-hover-bg: #b22222;
-    --input-bg: #a52a2a;
-    --input-border: #cd5c5c;
-    --modal-content-bg: #a52a2a;
-    --table-header-bg: #8b0000;
-    --table-row-hover-bg: #cd5c5c;
-    --asx-button-bg: #8b0000;
-    --asx-button-hover-bg: #cd5c5c;
-    --asx-button-active-bg: #dc143c;
-    --sidebar-bg: #a52a2a;
-    --sidebar-border: #cd5c5c;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #a52a2a;
-    --placeholder-text: #ffb3c6;
-    --ghosted-text: #ffcce0;
-    --danger-button-bg: #e74c3c;
-    --danger-button-hover-bg: #c0392b;
-    --icon-action-color: #dc143c;
-    --icon-action-hover-color: #b22222;
-    --icon-danger-color: #e74c3c;
-    --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #cd5c5c;
-    --calc-num-btn-text: #ffe6f0;
-    --calc-num-btn-hover-bg: #dc143c;
-    color: #fff !important;
-    --text-color: #fff;
-    --asx-button-text: #fff;
-    --sidebar-text: #fff;
-    --label-color: #ccc;
-    --input-placeholder-color: #aaa;
-    --ghosted-text: #bbb;
-    --close-sidebar-btn-color: #ccc;
-    --google-auth-btn-bg: #FFFFFF;
-    --google-auth-btn-hover-bg: #F0F0F0;
-    --google-auth-btn-text: #4285F4;
-    --price-up-color: #2ecc71;
-    --price-down-color: #e74c3c;
-    --price-neutral-color: #ffcce0;
-}
+const formInputs = [
+    shareNameInput, currentPriceInput, targetPriceInput,
+    dividendAmountInput, frankingCreditsInput
+];
 
 
-/* Subtle Themes - MODIFIED to be more distinct */
-body.theme-subtle-1 { /* Subtle Sky */
-    --background-color: #e6f2ff; /* Lighter blue */
-    --text-color: #334455;
-    --header-bg: #cce0ff; /* Light blue header */
-    --card-bg: #f0f8ff; /* Very light blue card */
-    --border-color: #aaccff; /* Blue border */
-    --button-bg: #6699ff; /* Blue button */
-    --button-hover-bg: #4d7edb;
-    --input-bg: #ffffff;
-    --input-border: #99bbff;
-    --modal-content-bg: #e6f2ff;
-    --table-header-bg: #b3d9ff;
-    --table-row-hover-bg: #d9eaff;
-    --asx-button-bg: #b3d9ff;
-    --asx-button-hover-bg: #99c2ff;
-    --asx-button-active-bg: #6699ff;
-    --sidebar-bg: #e6f2ff;
-    --sidebar-border: #aaccff;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #d9eaff;
-    --placeholder-text: #8899cc;
-    --ghosted-text: #a0b0d0;
-    --danger-button-bg: #e74c3c;
-    --danger-button-hover-bg: #c0392b;
-    --icon-action-color: #6699ff;
-    --icon-action-hover-color: #4d7edb;
-    --icon-danger-color: #e74c3c;
-    --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #b3d9ff;
-    --calc-num-btn-text: #334455;
-    --calc-num-btn-hover-bg: #6699ff;
-    --google-auth-btn-bg: #FFFFFF;
-    --google-auth-btn-hover-bg: #F0F0F0;
-    --google-auth-btn-text: #4285F4;
-    --price-up-color: #28a745;
-    --price-down-color: #dc3545;
-    --price-neutral-color: #6c757d;
-}
+// --- GLOBAL HELPER FUNCTIONS ---
 
-body.theme-subtle-2 { /* Subtle Earth */
-    --background-color: #f7f3ed;
-    --text-color: #5a4a3a;
-    --header-bg: #e0d8cc;
-    --card-bg: #ffffff;
-    --border-color: #d4c8b9;
-    --button-bg: #b8a28f;
-    --button-hover-bg: #a3907e;
-    --input-bg: #ffffff;
-    --input-border: #c2b4a7;
-    --modal-content-bg: #ffffff;
-    --table-header-bg: #ede6df;
-    --table-row-hover-bg: #f2ede7;
-    --asx-button-bg: #ede6df;
-    --asx-button-hover-bg: #e0d8cc;
-    --asx-button-active-bg: #b8a28f;
-    --sidebar-bg: #fcfaf7;
-    --sidebar-border: #d4c8b9;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #f2ede7;
-    --placeholder-text: #a69a8e;
-    --ghosted-text: #b8af9f;
-    --danger-button-bg: #e74c3c;
-    --danger-button-hover-bg: #c0392b;
-    --icon-action-color: #b8a28f;
-    --icon-action-hover-color: #a3907e;
-    --icon-danger-color: #e74c3c;
-    --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #ede6df;
-    --calc-num-btn-text: #5a4a3a;
-    --calc-num-btn-hover-bg: #b8a28f;
-    --google-auth-btn-bg: #FFFFFF;
-    --google-auth-btn-hover-bg: #F0F0F0;
-    --google-auth-btn-text: #4285F4;
-    --price-up-color: #28a745;
-    --price-down-color: #dc3545;
-    --price-neutral-color: #6c757d;
-}
-
-body.theme-subtle-3 { /* Subtle Rose */
-    --background-color: #fff0f5;
-    --text-color: #6a4a5a;
-    --header-bg: #f7e0e6;
-    --card-bg: #ffffff;
-    --border-color: #e6c9d0;
-    --button-bg: #eeb8c6;
-    --button-hover-bg: #d4a2b0;
-    --input-bg: #ffffff;
-    --input-border: #d9b4be;
-    --modal-content-bg: #ffffff;
-    --table-header-bg: #f2e6eb;
-    --table-row-hover-bg: #f7eff2;
-    --asx-button-bg: #f2e6eb;
-    --asx-button-hover-bg: #e6c9d0;
-    --asx-button-active-bg: #eeb8c6;
-    --sidebar-bg: #fffbfd;
-    --sidebar-border: #e6c9d0;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #f7eff2;
-    --placeholder-text: #c6aab3;
-    --ghosted-text: #d9b8c0;
-    --danger-button-bg: #e74c3c;
-    --danger-button-hover-bg: #c0392b;
-    --icon-action-color: #eeb8c6;
-    --icon-action-hover-color: #d4a2b0;
-    --icon-danger-color: #e74c3c;
-    --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #f2e6eb;
-    --calc-num-btn-text: #6a4a5a;
-    --calc-num-btn-hover-bg: #eeb8c6;
-    --google-auth-btn-bg: #FFFFFF;
-    --google-auth-btn-hover-bg: #F0F0F0;
-    --google-auth-btn-text: #4285F4;
-    --price-up-color: #28a745;
-    --price-down-color: #dc3545;
-    --price-neutral-color: #6c757d;
-}
-
-body.theme-subtle-4 { /* Subtle Lavender */
-    --background-color: #f8f0ff;
-    --text-color: #5a4a6a;
-    --header-bg: #e6e0f7;
-    --card-bg: #ffffff;
-    --border-color: #d0c9e6;
-    --button-bg: #c6b8eb;
-    --button-hover-bg: #b0a2d4;
-    --input-bg: #ffffff;
-    --input-border: #bebad9;
-    --modal-content-bg: #ffffff;
-    --table-header-bg: #ede6f2;
-    --table-row-hover-bg: #f2eff7;
-    --asx-button-bg: #ede6f2;
-    --asx-button-hover-bg: #d0c9e6;
-    --asx-button-active-bg: #c6b8eb;
-    --sidebar-bg: #fbf8ff;
-    --sidebar-border: #d0c9e6;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #f2eff7;
-    --placeholder-text: #b3a6c6;
-    --ghosted-text: #c0b8d9;
-    --danger-button-bg: #e74c3c;
-    --danger-button-hover-bg: #c0392b;
-    --icon-action-color: #c6b8eb;
-    --icon-action-hover-color: #b0a2d4;
-    --icon-danger-color: #e74c3c;
-    --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #ede6f2;
-    --calc-num-btn-text: #5a4a6a;
-    --calc-num-btn-hover-bg: #c6b8eb;
-    --google-auth-btn-bg: #FFFFFF;
-    --google-auth-btn-hover-bg: #F0F0F0;
-    --google-auth-btn-text: #4285F4;
-    --price-up-color: #28a745;
-    --price-down-color: #dc3545;
-    --price-neutral-color: #6c757d;
-}
-
-body.theme-subtle-5 { /* Subtle Mint */
-    --background-color: #f0fff5;
-    --text-color: #4a6a5a;
-    --header-bg: #e0f7e6;
-    --card-bg: #ffffff;
-    --border-color: #c9e6d0;
-    --button-bg: #b8eec6;
-    --button-hover-bg: #a2d4b0;
-    --input-bg: #ffffff;
-    --input-border: #b9d9be;
-    --modal-content-bg: #ffffff;
-    --table-header-bg: #e6f2eb;
-    --table-row-hover-bg: #eff7f2;
-    --asx-button-bg: #e6f2eb;
-    --asx-button-hover-bg: #c9e6d0;
-    --asx-button-active-bg: #b8eec6;
-    --sidebar-bg: #f8fffb;
-    --sidebar-border: #c9e6d0;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #eff7f2;
-    --placeholder-text: #a6c6b3;
-    --ghosted-text: #b8d9c0;
-    --danger-button-bg: #e74c3c;
-    --danger-button-hover-bg: #c0392b;
-    --icon-action-color: #b8eec6;
-    --icon-action-hover-color: #a2d4b0;
-    --icon-danger-color: #e74c3c;
-    --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #e6f2eb;
-    --calc-num-btn-text: #4a6a5a;
-    --calc-num-btn-hover-bg: #b8eec6;
-    --google-auth-btn-bg: #FFFFFF;
-    --google-auth-btn-hover-bg: #F0F0F0;
-    --google-auth-btn-text: #4285F4;
-    --price-up-color: #28a745;
-    --price-down-color: #dc3545;
-    --price-neutral-color: #6c757d;
-}
-
-body.theme-subtle-6 { /* Subtle Sand */
-    --background-color: #fffaf0;
-    --text-color: #6a5a4a;
-    --header-bg: #f7e6d0;
-    --card-bg: #ffffff;
-    --border-color: #e6d9c9;
-    --button-bg: #eeb8a2;
-    --button-hover-bg: #d4a28f;
-    --input-bg: #ffffff;
-    --input-border: #d9beaf;
-    --modal-content-bg: #ffffff;
-    --table-header-bg: #f2ebe6;
-    --table-row-hover-bg: #f7f2ef;
-    --asx-button-bg: #f2ebe6;
-    --asx-button-hover-bg: #e6d9c9;
-    --asx-button-active-bg: #eeb8a2;
-    --sidebar-bg: #fffefb;
-    --sidebar-border: #e6d9c9;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #f7f2ef;
-    --placeholder-text: #c6b3a6;
-    --ghosted-text: #d9c0b8;
-    --danger-button-bg: #e74c3c;
-    --danger-button-hover-bg: #c0392b;
-    --icon-action-color: #eeb8a2;
-    --icon-action-hover-color: #d4a28f;
-    --icon-danger-color: #e74c3c;
-    --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #f2ebe6;
-    --calc-num-btn-text: #6a5a4a;
-    --calc-num-btn-hover-bg: #eeb8a2;
-    --google-auth-btn-bg: #FFFFFF;
-    --google-auth-btn-hover-bg: #F0F0F0;
-    --google-auth-btn-text: #4285F4;
-    --price-up-color: #28a745;
-    --price-down-color: #dc3545;
-    --price-neutral-color: #6c757d;
-}
-
-body.theme-subtle-7 { /* Subtle Graphite */
-    --background-color: #f5f5f5;
-    --text-color: #4a4a4a;
-    --header-bg: #e0e0e0;
-    --card-bg: #ffffff;
-    --border-color: #d0d0d0;
-    --button-bg: #b8b8b8;
-    --button-hover-bg: #a2a2a2;
-    --input-bg: #ffffff;
-    --input-border: #c9c9c9;
-    --modal-content-bg: #ffffff;
-    --table-header-bg: #ebebeb;
-    --table-row-hover-bg: #f0f0f0;
-    --asx-button-bg: #ebebeb;
-    --asx-button-hover-bg: #d0d0d0;
-    --asx-button-active-bg: #b8b8b8;
-    --sidebar-bg: #fafafa;
-    --sidebar-border: #d0d0d0;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #f0f0f0;
-    --placeholder-text: #a6a6a6;
-    --ghosted-text: #b8b8b8;
-    --danger-button-bg: #e74c3c;
-    --danger-button-hover-bg: #c0392b;
-    --icon-action-color: #b8b8b8;
-    --icon-action-hover-color: #a2a2a2;
-    --icon-danger-color: #e74c3c;
-    --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #ebebeb;
-    --calc-num-btn-text: #4a4a4a;
-    --calc-num-btn-hover-bg: #b8b8b8;
-    --google-auth-btn-bg: #FFFFFF;
-    --google-auth-btn-hover-bg: #F0F0F0;
-    --google-auth-btn-text: #4285F4;
-    --price-up-color: #28a745;
-    --price-down-color: #dc3545;
-    --price-neutral-color: #6c757d;
-}
-
-body.theme-subtle-8 { /* Subtle Peach */
-    --background-color: #fff5f0;
-    --text-color: #6a4a4a;
-    --header-bg: #f7e6e0;
-    --card-bg: #ffffff;
-    --border-color: #e6d0c9;
-    --button-bg: #eeb8a2;
-    --button-hover-bg: #d4a28f;
-    --input-bg: #ffffff;
-    --input-border: #d9beaf;
-    --modal-content-bg: #ffffff;
-    --table-header-bg: #f2ebe6;
-    --table-row-hover-bg: #f7f2ef;
-    --asx-button-bg: #f2ebe6;
-    --asx-button-hover-bg: #e6d0c9;
-    --asx-button-active-bg: #eeb8a2;
-    --sidebar-bg: #fffbf8;
-    --sidebar-border: #e6d0c9;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #f7f2ef;
-    --placeholder-text: #c6b3a6;
-    --ghosted-text: #d9c0b8;
-    --danger-button-bg: #e74c3c;
-    --danger-button-hover-bg: #c0392b;
-    --icon-action-color: #eeb8a2;
-    --icon-action-hover-color: #d4a28f;
-    --icon-danger-color: #e74c3c;
-    --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #f2ebe6;
-    --calc-num-btn-text: #6a4a4a;
-    --calc-num-btn-hover-bg: #eeb8a2;
-    --google-auth-btn-bg: #FFFFFF;
-    --google-auth-btn-hover-bg: #F0F0F0;
-    --google-auth-btn-text: #4285F4;
-    --price-up-color: #28a745;
-    --price-down-color: #dc3545;
-    --price-neutral-color: #6c757d;
-}
-
-body.theme-subtle-9 { /* Subtle Teal */
-    --background-color: #f0fff8;
-    --text-color: #4a6a6a;
-    --header-bg: #e0f7f2;
-    --card-bg: #ffffff;
-    --border-color: #c9e6d9;
-    --button-bg: #b8eec6;
-    --button-hover-bg: #a2d4b0;
-    --input-bg: #ffffff;
-    --input-border: #b9d9c0;
-    --modal-content-bg: #ffffff;
-    --table-header-bg: #e6f2eb;
-    --table-row-hover-bg: #eff7f2;
-    --asx-button-bg: #e6f2eb;
-    --asx-button-hover-bg: #c9e6d9;
-    --asx-button-active-bg: #b8eec6;
-    --sidebar-bg: #f8fffb;
-    --sidebar-border: #c9e6d9;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #eff7f2;
-    --placeholder-text: #a6c6b3;
-    --ghosted-text: #b8d9c0;
-    --danger-button-bg: #e74c3c;
-    --danger-button-hover-bg: #c0392b;
-    --icon-action-color: #b8eec6;
-    --icon-action-hover-color: #a2d4b0;
-    --icon-danger-color: #e74c3c;
-    --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #e6f2eb;
-    --calc-num-btn-text: #4a6a6a;
-    --calc-num-btn-hover-bg: #b8eec6;
-    --google-auth-btn-bg: #FFFFFF;
-    --google-auth-btn-hover-bg: #F0F0F0;
-    --google-auth-btn-text: #4285F4;
-    --price-up-color: #28a745;
-    --price-down-color: #dc3545;
-    --price-neutral-color: #6c757d;
-}
-
-body.theme-subtle-10 { /* Subtle Stone */
-    --background-color: #f8f8f8;
-    --text-color: #5a5a5a;
-    --header-bg: #e8e8e8;
-    --card-bg: #ffffff;
-    --border-color: #d8d8d8;
-    --button-bg: #c0c0c0;
-    --button-hover-bg: #a8a8a8;
-    --input-bg: #ffffff;
-    --input-border: #b8b8b8;
-    --modal-content-bg: #ffffff;
-    --table-header-bg: #f0f0f0;
-    --table-row-hover-bg: #f5f5f5;
-    --asx-button-bg: #f0f0f0;
-    --asx-button-hover-bg: #d8d8d8;
-    --asx-button-active-bg: #c0c0c0;
-    --sidebar-bg: #fcfcfc;
-    --sidebar-border: #d8d8d8;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #f5f5f5;
-    --placeholder-text: #a6a6a6;
-    --ghosted-text: #b8b8b8;
-    --danger-button-bg: #e74c3c;
-    --danger-button-hover-bg: #c0392b;
-    --icon-action-color: #c0c0c0;
-    --icon-action-hover-color: #a8a8a8;
-    --icon-danger-color: #e74c3c;
-    --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #f0f0f0;
-    --calc-num-btn-text: #5a5a5a;
-    --calc-num-btn-hover-bg: #c0c0c0;
-    --google-auth-btn-bg: #FFFFFF;
-    --google-auth-btn-hover-bg: #F0F0F0;
-    --google-auth-btn-text: #4285F4;
-    --price-up-color: #28a745;
-    --price-down-color: #dc3545;
-    --price-neutral-color: #6c757d;
-}
-
-
-/* General Body and Layout */
-html, body {
-    overflow-x: hidden; 
-}
-body {
-    font-family: 'Inter', sans-serif;
-    margin: 0; 
-    padding: 0; 
-    box-sizing: border-box;
-    background-color: var(--background-color);
-    color: var(--text-color);
-    transition: background-color 0.3s ease, color 0.3s ease, margin-left 0.3s ease, width 0.3s ease;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}
-
-body.sidebar-active {
-    margin-left: var(--sidebar-width);
-    width: calc(100% - var(--sidebar-width));
-}
-
-.container {
-    max-width: 1200px; 
-    margin: 20px auto; 
-    padding: 0 15px;
-    position: relative;
-}
-
-/* Header Styles */
-header {
-    background-color: var(--header-bg);
-    padding: 15px 20px;
-    box-shadow: 0 2px 4px var(--shadow-color);
-    display: flex;
-    flex-direction: column; 
-    gap: 10px;
-    position: relative; 
-    height: auto; 
-}
-
-/* MODIFIED: Header Top Row for Alignment */
-.header-top-row {
-    display: flex;
-    justify-content: space-between; /* Distribute items with space between them */
-    align-items: center;
-    gap: 15px;
-    position: relative; /* Keep relative for absolute positioning of title if needed */
-    width: 100%; 
-    box-sizing: border-box;
-    padding: 0 15px; 
-}
-
-h1#mainTitle {
-    margin: 0;
-    font-size: 1.8em;
-    font-weight: 700;
-    color: var(--text-color);
-    text-align: center; 
-    flex-grow: 1; /* Allow title to take available space */
-    order: 2; /* Place title in the middle */
-}
-
-/* MODIFIED: Header Action Buttons for Alignment and Hamburger Fix */
-.header-action-btn {
-    background: none;
-    border: none;
-    color: var(--text-color);
-    font-size: 1.8em; /* Consistent size for icons */
-    cursor: pointer;
-    padding: 5px 10px;
-    z-index: 11;
-    display: block;
-    flex-shrink: 0; /* Prevent buttons from shrinking */
-}
-
-.header-action-btn:hover {
-    color: var(--button-hover-bg);
-}
-
-.header-action-btn-left { 
-    order: 1; /* Place on the left */
-}
-
-.header-action-btn-right { 
-    order: 3; /* Place on the right */
-}
-
-/* Specific styling for the hamburger button to ensure it matches other header icons */
-.hamburger-btn {
-    background: none; /* Remove background */
-    border: none; /* Remove border */
-    color: var(--text-color); /* Inherit text color from header */
-    font-size: 1.8em; /* Consistent size with other header action buttons */
-    cursor: pointer;
-    padding: 5px 10px; /* Consistent padding */
-    z-index: 11;
-    display: block;
-    flex-shrink: 0;
-}
-
-.hamburger-btn:hover {
-    color: var(--button-hover-bg); /* Consistent hover effect */
-}
-
-
-/* Hamburger Menu and Sidebar */
-.app-sidebar {
-    position: fixed; 
-    top: 0;
-    left: calc(-1 * var(--sidebar-width)); 
-    width: var(--sidebar-width); 
-    height: 100%;
-    background-color: var(--sidebar-bg);
-    box-shadow: 2px 0 5px var(--shadow-color);
-    transition: left 0.3s ease-in-out; 
-    z-index: 1000; 
-    padding: 20px;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto; 
-    border-right: 1px solid var(--sidebar-border);
-}
-
-.app-sidebar.open {
-    left: 0; 
-}
-
-/* MODIFIED: Close Menu Button for smaller size and consistency */
-.close-menu-btn {
-    color: var(--close-sidebar-btn-color);
-    font-size: 1.5em; /* Adjusted from 2em to 1.5em for consistency with other close buttons */
-    position: absolute;
-    top: 10px;
-    right: 15px;
-    cursor: pointer;
-    padding: 5px;
-    line-height: 1; 
-    display: block; 
-    background: none; 
-    border: none; 
-    font-family: sans-serif; 
-}
-
-.close-menu-btn:hover {
-    color: var(--danger-button-bg);
-}
-
-.app-sidebar h3 {
-    color: var(--sidebar-text);
-    margin-top: 20px;
-    margin-bottom: 10px;
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 5px;
-    font-size: 1.1em;
-}
-
-.menu-section {
-    margin-bottom: 20px;
-}
-
-.menu-buttons-group {
-    display: flex;
-    flex-direction: column; 
-    gap: 10px; 
-}
-
-.menu-button-item { 
-    background-color: var(--menu-button-bg);
-    color: var(--sidebar-text);
-    padding: 10px 15px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 1em;
-    font-weight: 400;
-    text-align: left;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    transition: background-color 0.2s ease, transform 0.1s ease;
-    width: 100%; 
-    box-sizing: border-box;
-    justify-content: flex-start; 
-}
-
-.menu-button-item:hover {
-    background-color: var(--menu-button-hover-bg);
-    transform: translateY(-1px);
-}
-
-/* Specific styling for icon-only menu items */
-.menu-button-item.icon-only {
-    justify-content: center;
-    padding: 10px;
-    width: auto;
-    align-self: flex-start;
-    min-width: 40px;
-    max-width: 60px;
-}
-
-.menu-button-item.icon-only i {
-    font-size: 1.5em;
-    margin: 0;
-}
-
-.menu-button-item.icon-only span {
-    display: none;
-}
-
-/* Special case for revert to default theme button with two icons */
-#revertToDefaultThemeBtn.menu-button-item.icon-only {
-    display: flex;
-    gap: 0;
-    justify-content: center;
-}
-#revertToDefaultThemeBtn.menu-button-item.icon-only i {
-    font-size: 1.5em;
-    margin: 0 2px;
-}
-
-/* Logout button styling (now a span) */
-#logoutBtn.menu-button-item {
-    background-color: transparent;
-    color: var(--icon-danger-color);
-    margin-top: auto;
-    border: none !important;
-    box-shadow: none !important;
-}
-#logoutBtn.menu-button-item:hover {
-    background-color: var(--menu-button-hover-bg);
-    color: var(--icon-danger-hover-color);
-}
-
-/* Disabled states */
-.menu-button-item:disabled {
-    background-color: var(--secondary-button-bg);
-    cursor: not-allowed;
-    opacity: 0.5;
-    box-shadow: none;
-    transform: none;
-}
-[disabled], .is-disabled-icon {
-    opacity: 0.5;
-    cursor: not-allowed;
-    box-shadow: none;
-    transform: none;
-    pointer-events: none;
-}
-
-.theme-select-label {
-    color: var(--sidebar-text);
-    font-size: 0.9em;
-    margin-bottom: 5px;
-    display: block;
-    font-weight: 600;
-}
-
-.menu-dropdown { 
-    width: 100%;
-    box-sizing: border-box;
-    margin-bottom: 10px; 
-}
-
-.sidebar-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5); 
-    z-index: 999; 
-    display: none; 
-}
-
-.sidebar-overlay.open {
-    display: block; 
-}
-
-/* Watchlist and Sort Controls - MODIFIED for smaller size and centering */
-.watchlist-controls-row {
-    display: flex;
-    flex-wrap: nowrap; /* Prevent wrapping on mobile */
-    justify-content: center; /* Center the group of dropdowns initially */
-    align-items: center;
-    gap: 15px; /* Adjust gap for mobile */
-    padding: 10px 0;
-    border-top: 1px solid var(--border-color);
-    border-bottom: 1px solid var(--border-color);
-    width: 100%; 
-    box-sizing: border-box;
-    padding-left: 15px; 
-    padding-right: 15px; 
-}
-
-.watchlist-group,
-.sort-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-basis: 50%; /* Each takes half the width on mobile */
-    flex-grow: 1; /* Allow them to grow */
-    flex-shrink: 1; /* Allow them to shrink */
-    max-width: calc(50% - 7.5px); /* Account for half the gap on mobile */
-}
-
-/* Desktop specific styles for watchlist and sort dropdowns */
-@media (min-width: 769px) {
-    .watchlist-controls-row {
-        max-width: 400px; /* Limit width on desktop */
-        margin-left: auto; /* Center horizontally */
-        margin-right: auto; /* Center horizontally */
-        justify-content: center; /* Ensure internal centering if max-width is hit */
-        flex-wrap: nowrap; /* Ensure they stay on one line */
+/**
+ * Helper function to apply/remove a disabled visual state to non-button elements (like spans/icons).
+ * This adds/removes the 'is-disabled-icon' class, which CSS then styles.
+ * @param {HTMLElement} element The element to disable/enable.
+ * @param {boolean} isDisabled True to disable, false to enable.
+ */
+function setIconDisabled(element, isDisabled) {
+    if (!element) {
+        console.warn(`[setIconDisabled] Element is null or undefined. Cannot set disabled state.`);
+        return;
     }
-
-    .watchlist-group,
-    .sort-group {
-        flex-basis: auto; /* Allow content to determine width */
-        max-width: 180px; /* Set a reasonable max-width for each dropdown */
-        flex-grow: 0; /* Prevent them from growing to fill space */
+    if (isDisabled) {
+        element.classList.add('is-disabled-icon');
+    } else {
+        element.classList.remove('is-disabled-icon');
     }
 }
 
-
-.dropdown-large {
-    padding: 8px 12px; /* Smaller padding */
-    border: 1px solid var(--input-border);
-    border-radius: 8px;
-    background-color: var(--input-bg);
-    color: var(--text-color);
-    font-size: 1em;
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    cursor: pointer;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    min-width: 100px; /* Allow smaller minimum width */
-    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http://www.w3.org/2000/svg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236c757d%22%20d%3D%22M287%2069.9a14.7%2014.7%200%200%200-20.8%200L146.2%20189.9%2026.3%2069.9a14.7%2014.7%200%200%200-20.8%2020.8L135.8%20216.7a14.7%2014.7%200%200%200%2020.8%200L287%2090.7a14.7%2014.7%200%200%200%200-20.8z%22%2F%3E%3C%2Fsvg%3E'); 
-    background-repeat: no-repeat;
-    background-position: right 10px top 50%; /* Adjust arrow position */
-    background-size: 10px auto; /* Adjust arrow size */
-    padding-right: 25px; /* Adjust padding for smaller arrow */
-    max-height: 40px; /* Slightly smaller height */
-    overflow-y: hidden; 
-    width: 100%;
-}
-
-.dropdown-large option[value=""][disabled] {
-    color: var(--label-color);
-    font-weight: 400;
-}
-.dropdown-large option:not([value=""]) {
-    color: var(--text-color);
-    font-weight: 600;
-}
-
-.dropdown-large:focus {
-    border-color: var(--button-bg);
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-    outline: none;
-}
-
-/* ASX Code Buttons */
-.asx-code-buttons-container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center; 
-    gap: 8px;
-    padding: 10px 0;
-    width: 100%;
-    box-sizing: border-box;
-    padding-left: 15px; 
-    padding-right: 15px; 
-}
-
-.asx-code-btn {
-    background-color: var(--asx-button-bg);
-    color: var(--asx-button-text);
-    border: 1px solid var(--input-border);
-    border-radius: 20px;
-    padding: 8px 15px;
-    cursor: pointer;
-    font-size: 0.9em;
-    font-weight: 600;
-    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-}
-
-.asx-code-btn:hover {
-    background-color: var(--asx-button-hover-bg);
-}
-
-.asx-code-btn.active {
-    background-color: var(--asx-button-active-bg);
-    color: var(--asx-button-active-text);
-    border-color: var(--asx-button-active-bg);
-}
-
-/* Main Content Area */
-.share-list-section {
-    margin-top: 20px;
-    background-color: var(--card-bg);
-    border-radius: 8px;
-    box-shadow: 0 2px 8px var(--shadow-color);
-    overflow: hidden;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-.table-container {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    color: var(--text-color);
-}
-
-table th, table td {
-    padding: 12px 15px;
-    text-align: left;
-    border-bottom: 1px solid var(--border-color);
-    font-size: 0.9em;
-}
-
-table th {
-    background-color: var(--table-header-bg);
-    font-weight: 600;
-    color: var(--text-color);
-    white-space: nowrap;
-}
-
-table tbody tr {
-    transition: background-color 0.2s ease;
-    cursor: pointer;
-}
-
-table tbody tr.selected {
-    background-color: var(--table-row-hover-bg);
-    font-weight: 600;
-}
-
-table tbody tr:not(.selected):hover {
-    background-color: var(--table-row-hover-bg);
-}
-
-/* Live Price Column Styling */
-table td.live-price-cell {
-    font-weight: 600;
-}
-
-.price-change {
-    font-size: 0.8em;
-    margin-left: 5px;
-    font-weight: 700;
-    white-space: nowrap;
-}
-
-.price-change.positive {
-    color: var(--price-up-color);
-}
-
-.price-change.negative {
-    color: var(--price-down-color);
-}
-
-.price-change.neutral {
-    color: var(--price-neutral-color);
-}
-
-/* Mobile Cards */
-.mobile-share-cards {
-    display: none; 
-    flex-direction: column;
-    gap: 15px;
-    padding: 15px;
-    position: relative; 
-    left: 0; 
-    right: 0;
-    width: 100%; 
-    box-sizing: border-box; 
-}
-
-.mobile-card {
-    background-color: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 15px;
-    box-shadow: 0 2px 5px var(--shadow-color);
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-}
-
-.mobile-card.selected {
-    background-color: var(--table-row-hover-bg);
-    border-color: var(--button-bg);
-    font-weight: 600;
-}
-
-.mobile-card:not(.selected):hover {
-    background-color: var(--table-row-hover-bg);
-}
-
-.mobile-card h3 {
-    margin-top: 0;
-    margin-bottom: 10px;
-    color: var(--text-color);
-    font-size: 1.2em;
-}
-
-.mobile-card p {
-    margin: 5px 0;
-    font-size: 0.9em;
-    color: var(--text-color);
-}
-
-.mobile-card p strong {
-    color: var(--label-color);
-}
-
-/* Footer and Auth Button */
-.fixed-footer {
-    position: sticky;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background-color: var(--header-bg);
-    box-shadow: 0 -2px 4px var(--shadow-color);
-    padding: 10px 20px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 500;
-    transition: margin-left 0.3s ease, width 0.3s ease; 
-}
-
-.google-auth-btn {
-    background-color: var(--google-auth-btn-bg);
-    color: var(--google-auth-btn-text);
-    padding: 12px 25px;
-    border: 1px solid var(--google-auth-btn-text);
-    border-radius: 25px;
-    cursor: pointer;
-    font-size: 1.1em;
-    font-weight: 600;
-    transition: background-color 0.2s ease, transform 0.1s ease, border-color 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    box-shadow: 0 4px 8px var(--shadow-color);
-    width: fit-content;
-    max-width: 100%;
-}
-
-.google-auth-btn:hover {
-    background-color: var(--google-auth-btn-hover-bg);
-    transform: translateY(-2px);
-}
-
-.google-auth-btn:disabled {
-    background-color: var(--secondary-button-bg);
-    color: var(--button-text);
-    border-color: transparent;
-    cursor: not-allowed;
-    opacity: 0.5;
-}
-
-/* Modals - General */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto; 
-    background-color: var(--modal-bg);
-    padding-top: 60px; 
-    padding-bottom: 20px; 
-    box-sizing: border-box; 
-}
-
-.modal-content {
-    background-color: var(--modal-content-bg);
-    margin: 5% auto;
-    padding: 25px;
-    border-radius: 10px;
-    box-shadow: 0 5px 15px var(--shadow-color);
-    position: relative;
-    max-width: 500px;
-    width: 90%;
-    box-sizing: border-box;
-    color: var(--text-color);
-    display: flex;
-    flex-direction: column;
-    max-height: 90vh; 
-}
-
-/* MODIFIED: Modal Header with Icon for Alignment and Buttons */
-.modal-header-with-icon {
-    display: flex;
-    justify-content: space-between; /* Space out title and button group */
-    align-items: center;
-    margin-bottom: 20px;
-    position: relative;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--border-color);
-    flex-wrap: nowrap; /* Prevent wrapping on small screens */
-}
-
-.modal-header-with-icon h2 {
-    margin: 0;
-    flex-grow: 1;
-    text-align: center;
-    font-size: 1.6em;
-    flex-shrink: 1; /* Allow title to shrink if buttons need space */
-    min-width: 0; /* Allow title to shrink below its content size */
-}
-
-/* New group for action buttons and close button */
-.modal-header-action-group {
-    display: flex;
-    align-items: center;
-    gap: 8px; /* Space between icons */
-    flex-shrink: 0; /* Prevent this group from shrinking */
-}
-
-/* MODIFIED: General Close Button Styling for all modals */
-.close-button {
-    background: none; /* Ensure no background */
-    border: none; /* Ensure no border */
-    color: var(--text-color); /* Use general text color */
-    font-size: 1.8em; /* Consistent size with header action buttons */
-    cursor: pointer;
-    padding: 5px;
-    line-height: 1; /* Vertically center the 'X' */
-    display: block;
-    flex-shrink: 0;
-    /* Removed absolute positioning that was here for some close buttons */
-    position: static; /* Ensure it flows naturally within its flex container */
-    margin-left: 0; /* Remove any auto margins that might be pushing it */
-}
-
-.close-button:hover,
-.close-button:focus {
-    color: var(--danger-button-bg);
-    text-decoration: none;
-    cursor: pointer;
-}
-
-/* Specific styling for close buttons in modal headers (like Share, Watchlist, Custom Dialog) */
-.modal-header-with-icon .close-button {
-    font-size: 2em; /* Slightly larger for modal headers */
-    padding: 5px;
-}
-
-/* Specific styling for calculator modal close button */
-.calculator-modal-content .close-button {
-    font-size: 2em; /* Consistent with other modal close buttons */
-    position: absolute; /* Keep absolute for calculator modals as they don't have modal-header-with-icon */
-    top: 10px;
-    right: 20px;
-    color: var(--text-color); /* Ensure it uses text color */
-}
-.calculator-modal-content .close-button:hover {
-    color: var(--danger-button-bg);
-}
-
-
-.ghosted-text {
-    color: var(--ghosted-text);
-    font-size: 0.85em;
-    opacity: 0.8;
-    margin-top: 5px;
-    margin-bottom: 5px;
-    display: block; 
-}
-
-.commsec-message {
-    font-size: 0.75em; 
-    margin-top: 0; 
-    margin-bottom: 0; 
-    line-height: 1.2; 
-}
-
-.modal-body-scrollable {
-    flex-grow: 1; 
-    overflow-y: auto; 
-    padding-right: 10px; 
-    margin-right: -10px; 
-    box-sizing: border-box;
-    overflow-x: hidden; 
-}
-
-.add-share-modal-content .modal-body-scrollable {
-    padding-bottom: 20px;
-}
-
-.modal-content h2 {
-    margin-top: 0;
-    margin-bottom: 20px;
-    text-align: center;
-    color: var(--text-color);
-    font-size: 1.6em;
-}
-
-.modal-content label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 600;
-    color: var(--label-color);
-    font-size: 0.95em;
-}
-
-.modal-content input[type="text"],
-.modal-content input[type="number"],
-.modal-content textarea,
-.calc-input-group input[type="number"],
-.calc-input-group select {
-    width: calc(100% - 22px);
-    padding: 10px;
-    margin-bottom: 15px;
-    border: 1px solid var(--input-border);
-    border-radius: 5px;
-    background-color: var(--input-bg);
-    color: var(--text-color);
-    font-size: 1em;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    -moz-appearance: textfield; /* Firefox */
-}
-
-.modal-content input[type="number"]::-webkit-outer-spin-button,
-.modal-content input[type="number"]::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-
-.modal-content input[type="text"]:focus,
-.modal-content input[type="number"]:focus,
-.modal-content textarea:focus,
-.calc-input-group input[type="number"]:focus,
-.calc-input-group select:focus {
-    border-color: var(--button-bg);
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-    outline: none;
-}
-
-/* Comments Section in Modals */
-.comments-form-container {
-    margin-top: 20px;
-    border-top: 1px solid var(--border-color);
-    padding-top: 15px;
-}
-
-.comments-form-container h3 {
-    display: flex;
-    justify-content: space-between; /* Space out title and icon */
-    align-items: center;
-    margin-top: 0;
-    margin-bottom: 15px;
-    font-size: 1.2em;
-    color: var(--text-color);
-    border-bottom: none; 
-    padding-bottom: 0;
-}
-
-.add-section-icon {
-    background: none;
-    border: none;
-    color: var(--icon-action-color);
-    font-size: 1.5em;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    transition: color 0.2s ease, transform 0.1s ease;
-    flex-shrink: 0; 
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    padding: 0;
-}
-
-.add-section-icon:hover {
-    color: var(--icon-action-hover-color);
-    transform: translateY(-1px);
-}
-
-.comment-section {
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 15px;
-    background-color: var(--card-bg);
-    position: relative;
-}
-
-.comment-section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-}
-
-.comment-section-header .comment-title-input {
-    flex-grow: 1;
-    margin-bottom: 0;
-    margin-right: 10px;
-    font-weight: 600;
-    width: auto; 
-    min-width: 0;
-}
-
-.comment-section .comment-delete-btn {
-    background: none;
-    border: none;
-    color: var(--icon-danger-color);
-    font-size: 1.5em;
-    cursor: pointer;
-    transition: color 0.2s ease;
-    line-height: 1;
-    padding: 0;
-    flex-shrink: 0;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-}
-
-.comment-section .comment-delete-btn:hover {
-    color: var(--icon-danger-hover-color);
-    transform: scale(1.1);
-}
-
-/* REMOVED: Action Buttons in Modals (Save, Delete, etc.) - These are now in the header */
-.form-action-buttons,
-.modal-action-buttons,
-.custom-dialog-buttons { 
-    /* display: flex; */ /* REMOVED */
-    /* flex-wrap: nowrap; */ /* REMOVED */
-    /* justify-content: center; */ /* REMOVED */
-    /* gap: 10px; */ /* REMOVED */
-    /* margin-top: 25px; */ /* REMOVED */
-    /* flex-shrink: 0; */ /* REMOVED */
-    /* padding-top: 15px; */ /* REMOVED */
-    /* border-top: 1px solid var(--border-color); */ /* REMOVED */
-    display: none; /* Hide these old containers */
-}
-
-/* REMOVED: Sticky footer for action icons - These are now in the header */
-.modal-content .sticky-footer {
-    display: none; /* Hide this old container */
-}
-
-/* MODIFIED: Modal Action Icons for positioning in header */
-.modal-action-icon {
-    background: none;
-    border: none;
-    padding: 8px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 1.5em; /* Adjusted size for header */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.2s ease, color 0.2s ease, transform 0.1s ease;
-    flex-shrink: 0; /* Prevent shrinking */
-    width: 40px; /* Fixed width for consistent sizing */
-    height: 40px; /* Fixed height for consistent sizing */
-    color: var(--icon-action-color); /* Default color for action icons */
-}
-
-.modal-action-icon:hover {
-    background-color: var(--menu-button-hover-bg);
-    color: var(--icon-action-hover-color);
-    transform: translateY(-1px);
-}
-
-.modal-action-icon.danger {
-    color: var(--icon-danger-color);
-}
-.modal-action-icon.danger:hover {
-    color: var(--icon-danger-hover-color);
-    background-color: var(--menu-button-hover-bg);
-}
-.modal-action-icon.secondary {
-    color: var(--secondary-button-bg);
-}
-.modal-action-icon.secondary:hover {
-    color: var(--secondary-button-hover-color);
-    background-color: var(--menu-button-hover-bg);
-}
-
-/* Share Details Modal Specifics */
-.modal-comments-sections {
-    margin-top: 25px;
-    border-top: 1px solid var(--border-color);
-    padding-top: 15px;
-}
-
-.modal-comments-sections h3 {
-    margin-top: 0;
-    margin-bottom: 10px;
-    font-size: 1.2em;
-    color: var(--text-color);
-    border-bottom: none; 
-    padding-bottom: 0;
-}
-
-.modal-comment-item {
-    background-color: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 12px;
-    margin-bottom: 10px;
-}
-
-.modal-comment-item p {
-    margin: 0;
-    line-height: 1.5;
-}
-
-.modal-comment-item strong {
-    color: var(--label-color);
-    font-size: 0.95em;
-    display: block;
-    margin-bottom: 5px;
-}
-
-.external-links-section {
-    margin-top: 25px;
-    border-top: 1px solid var(--border-color);
-    padding-top: 15px;
-}
-
-.external-links-section h3 {
-    margin-top: 0;
-    margin-bottom: 10px;
-    font-size: 1.2em;
-    color: var(--text-color);
-    border-bottom: none; 
-    padding-bottom: 0;
-}
-
-.external-link {
-    display: inline-flex; 
-    align-items: center;
-    gap: 8px; 
-    color: var(--link-color);
-    text-decoration: none;
-    font-weight: 600;
-    margin-bottom: 10px;
-    transition: color 0.2s ease;
-}
-
-.external-link:hover {
-    color: var(--link-hover-color);
-    text-decoration: underline;
-}
-
-/* Calculator Modals */
-.calculator-modal-content {
-    /* Specific styles for calculator modals if needed */
-}
-.calc-input-group {
-    margin-bottom: 15px;
-}
-
-.calc-input-group label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 600;
-    color: var(--label-color);
-    font-size: 0.95em;
-}
-
-.calculator-display {
-    background-color: var(--input-bg);
-    border: 1px solid var(--input-border);
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 20px;
-    text-align: right;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    min-height: 80px;
-}
-
-.calculator-input {
-    font-size: 1em;
-    color: var(--ghosted-text);
-    min-height: 20px;
-    white-space: nowrap;
-    overflow-x: auto;
-    direction: rtl; /* For right-to-left scrolling of long input */
-}
-
-.calculator-result {
-    font-size: 2.2em;
-    font-weight: 700;
-    color: var(--text-color);
-    min-height: 30px;
-    white-space: nowrap;
-    overflow-x: auto;
-    direction: rtl;
-}
-
-/* MODIFIED: Calculator Buttons Layout */
-.calculator-buttons {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-    /* Define grid areas for a standard calculator layout */
-    grid-template-areas:
-        "clear   percent divide  multiply"
-        "num7    num8    num9    subtract"
-        "num4    num5    num6    add"
-        "num1    num2    num3    equals"
-        "num0    num0    decimal equals"; /* 0 spans 2 columns, equals spans 2 rows */
-}
-
-/* Assign grid areas to buttons using data-attributes */
-.calc-btn[data-action="clear"] { grid-area: clear; }
-.calc-btn[data-action="percentage"] { grid-area: percent; }
-.calc-btn[data-action="divide"] { grid-area: divide; }
-.calc-btn[data-action="multiply"] { grid-area: multiply; }
-.calc-btn[data-action="subtract"] { grid-area: subtract; }
-.calc-btn[data-action="add"] { grid-area: add; }
-.calc-btn[data-action="calculate"] { grid-area: equals; grid-row: equals-start / span 2; } /* Equals spans two rows */
-
-.calc-btn[data-value="7"] { grid-area: num7; }
-.calc-btn[data-value="8"] { grid-area: num8; }
-.calc-btn[data-value="9"] { grid-area: num9; }
-.calc-btn[data-value="4"] { grid-area: num4; }
-.calc-btn[data-value="5"] { grid-area: num5; }
-.calc-btn[data-value="6"] { grid-area: num6; }
-.calc-btn[data-value="1"] { grid-area: num1; }
-.calc-btn[data-value="2"] { grid-area: num2; }
-.calc-btn[data-value="3"] { grid-area: num3; }
-.calc-btn[data-value="0"] { grid-area: num0; } /* Zero spans two columns */
-.calc-btn[data-value="."] { grid-area: decimal; }
-
-
-.calc-btn {
-    background-color: var(--calc-num-btn-bg);
-    color: var(--calc-num-btn-text);
-    border: none;
-    border-radius: 8px;
-    padding: 15px;
-    font-size: 1.5em;
-    cursor: pointer;
-    transition: background-color 0.2s ease, transform 0.1s ease;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-weight: 600;
-}
-
-.calc-btn:hover {
-    background-color: var(--calc-num-btn-hover-bg);
-    transform: translateY(-1px);
-}
-
-.calc-btn.clear {
-    background-color: var(--danger-button-bg);
-    color: var(--button-text);
-}
-.calc-btn.clear:hover {
-    background-color: var(--danger-button-hover-bg);
-}
-
-.calc-btn.operator,
-.calc-btn.equals {
-    background-color: var(--button-bg);
-    color: var(--button-text);
-}
-.calc-btn.operator:hover,
-.calc-btn.equals:hover {
-    background-color: var(--button-hover-bg);
-}
-
-/* Removed: .calc-btn.zero { grid-column: span 2; } - Handled by grid-area now */
-
-/* Scroll to Top Button */
-#scrollToTopBtn {
-    display: none; /* Hidden by default */
-    position: fixed; /* Fixed/sticky position */
-    bottom: 20px; /* Place the button at the bottom of the page */
-    right: 20px; /* Place the button at the right of the page */
-    z-index: 99; /* Make sure it does not overlap */
-    border: none; /* Remove borders */
-    outline: none; /* Remove outline */
-    background-color: var(--button-bg); /* Set a background color */
-    color: white; /* Text color */
-    cursor: pointer; /* Add a mouse pointer on hover */
-    padding: 15px; /* Some padding */
-    border-radius: 50%; /* Rounded corners */
-    font-size: 1.5em; /* Increase font size */
-    box-shadow: 0 4px 8px var(--shadow-color);
-    transition: opacity 0.3s ease, transform 0.2s ease;
-    opacity: 0; /* Start invisible */
-    width: 60px; /* Fixed width */
-    height: 60px; /* Fixed height */
-    display: flex; /* Use flexbox for centering icon */
-    justify-content: center;
-    align-items: center;
-}
-
-#scrollToTopBtn:hover {
-    background-color: var(--button-hover-bg); /* Add a darker background on hover */
-    transform: translateY(-2px);
-}
-
-/* Context Menu */
-.context-menu {
-    display: none;
-    position: fixed;
-    background-color: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    box-shadow: 0 4px 12px var(--shadow-color);
-    z-index: 1001; /* Above modals */
-    padding: 5px 0;
-    min-width: 180px;
-}
-
-.context-menu-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
-    padding: 10px 15px;
-    background: none;
-    border: none;
-    text-align: left;
-    cursor: pointer;
-    font-size: 0.95em;
-    color: var(--text-color);
-    transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-.context-menu-item:hover {
-    background-color: var(--table-row-hover-bg);
-}
-
-.context-menu-item.danger-button {
-    color: var(--danger-color);
-}
-
-.context-menu-item.danger-button:hover {
-    background-color: var(--danger-color);
-    color: var(--button-text);
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .header-top-row {
-        padding: 0 10px;
+// Centralized Modal Closing Function
+function closeModals() {
+    // NEW: Auto-save logic for share form
+    if (shareFormSection && shareFormSection.style.display !== 'none') {
+        console.log("[Auto-Save] Share form modal is closing. Checking for unsaved changes.");
+        const currentData = getCurrentFormData();
+        const isShareNameValid = currentData.shareName.trim() !== '';
+        
+        if (selectedShareDocId) { // Existing share
+            if (!areShareDataEqual(originalShareData, currentData)) {
+                console.log("[Auto-Save] Unsaved changes detected for existing share. Attempting silent save.");
+                saveShareData(true); // true indicates silent save
+            } else {
+                console.log("[Auto-Save] No changes detected for existing share.");
+            }
+        } else { // New share
+            if (isShareNameValid) { // Only attempt to save if a share name was entered
+                console.log("[Auto-Save] New share detected with name. Attempting silent save.");
+                saveShareData(true); // true indicates silent save
+            } else {
+                console.log("[Auto-Save] New share has no name. Discarding changes.");
+            }
+        }
     }
 
-    h1#mainTitle {
-        font-size: 1.5em;
-    }
+    document.querySelectorAll('.modal').forEach(modal => {
+        if (modal) {
+            modal.style.setProperty('display', 'none', 'important');
+        }
+    });
+    resetCalculator();
+    deselectCurrentShare();
+    if (autoDismissTimeout) { clearTimeout(autoDismissTimeout); autoDismissTimeout = null; }
+    hideContextMenu();
+    console.log("[Modal] All modals closed.");
+}
 
-    .header-action-btn {
-        font-size: 1.5em;
-        padding: 5px;
+// Custom Dialog (Alert) Function
+function showCustomAlert(message, duration = 1000) {
+    if (!customDialogModal || !customDialogMessage || !customDialogConfirmBtn || !customDialogCancelBtn) {
+        console.error("Custom dialog elements not found. Cannot show alert.");
+        console.log("ALERT (fallback):", message);
+        return;
     }
+    customDialogMessage.textContent = message;
+    setIconDisabled(customDialogConfirmBtn, true); // Hide and disable confirm for alert
+    customDialogConfirmBtn.style.display = 'none';
+    setIconDisabled(customDialogCancelBtn, true); // Hide and disable cancel for alert
+    customDialogCancelBtn.style.display = 'none';
+    showModal(customDialogModal);
+    if (autoDismissTimeout) { clearTimeout(autoDismissTimeout); }
+    autoDismissTimeout = setTimeout(() => { hideModal(customDialogModal); autoDismissTimeout = null; }, duration);
+    console.log(`[Alert] Showing alert: "${message}"`);
+}
 
-    /* Adjusted Hamburger button for mobile */
-    .hamburger-btn {
-        font-size: 1.5em; /* Match other header buttons */
-        padding: 5px;
-    }
+// Date Formatting Helper Functions (Australian Style)
+function formatDate(dateString) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '';
+    return date.toLocaleDateString('en-AU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
 
-    .app-sidebar {
-        width: 250px;
-    }
-
-    body.sidebar-active {
-        margin-left: 0; /* No content shift on mobile */
-        width: 100%;
-    }
-
-    .watchlist-controls-row {
-        flex-direction: row; /* Keep as row for side-by-side */
-        flex-wrap: nowrap; /* Prevent wrapping */
-        justify-content: space-around; /* Distribute space evenly */
-        gap: 10px; /* Smaller gap for mobile */
-        padding: 10px 15px;
-    }
-
-    .watchlist-group,
-    .sort-group {
-        flex-basis: 50%; /* Each takes half the width */
-        max-width: calc(50% - 5px); /* Account for half the gap */
-        min-width: 120px; /* Ensure a reasonable minimum width for dropdowns */
-    }
-
-    .dropdown-large {
-        width: 100%; /* Ensure dropdowns fill their allocated space */
-        font-size: 0.9em; /* Slightly smaller font for better fit */
-        padding: 6px 10px; /* Smaller padding */
-        background-position: right 8px top 50%; /* Adjust arrow position */
-        background-size: 8px auto; /* Adjust arrow size */
-        padding-right: 20px; /* Adjust padding for smaller arrow */
-    }
-
-    .table-container {
-        display: none; /* Hide table on small screens */
-    }
-
-    .mobile-share-cards {
-        display: flex; /* Show mobile cards on small screens */
-    }
-
-    .fixed-footer {
-        padding: 10px 15px;
-    }
-
-    .google-auth-btn {
-        width: 100%; /* Default to full width on small screens */
-        font-size: 1em;
-        padding: 10px 15px;
-    }
-
-    .modal-content {
-        margin: 20px auto;
-        padding: 15px;
-        width: 95%;
-    }
-
-    .modal-header-with-icon h2 {
-        font-size: 1.4em;
-    }
-
-    .close-button {
-        font-size: 1.8em;
-        top: 8px;
-        right: 15px;
-    }
-
-    .modal-content input[type="text"],
-    .modal-content input[type="number"],
-    .modal-content textarea,
-    .calc-input-group input[type="number"],
-    .calc-input-group select {
-        width: calc(100% - 20px); /* Adjust for smaller padding */
-        padding: 8px;
-    }
-
-    .form-action-buttons,
-    .modal-action-buttons,
-    .custom-dialog-buttons {
-        flex-direction: row; /* Keep as row for better spacing on mobile */
-        gap: 8px;
-        margin-top: 15px;
-        padding-top: 10px;
-    }
-
-    .modal-content .sticky-footer {
-        bottom: -15px; /* Adjust for smaller modal padding */
-        left: -15px;
-        right: -15px;
-        padding: 15px;
-    }
-
-    .modal-action-icon {
-        font-size: 1.3em;
-        padding: 6px;
-    }
-
-    .calculator-display {
-        padding: 10px;
-        min-height: 70px;
-    }
-
-    .calculator-result {
-        font-size: 1.8em;
-    }
-
-    .calc-btn {
-        padding: 10px;
-        font-size: 1.2em;
-    }
-
-    #scrollToTopBtn {
-        bottom: 70px; /* Above the fixed footer */
+// UI State Management Functions
+function updateAuthButtonText(isSignedIn, userName = 'Sign In') {
+    if (googleAuthBtn) {
+        googleAuthBtn.textContent = isSignedIn ? (userName || 'Signed In') : 'Google Sign In';
+        console.log(`[Auth UI] Auth button text updated to: ${googleAuthBtn.textContent}`);
     }
 }
 
-@media (max-width: 480px) {
-    .header-top-row {
-        padding: 0 5px;
-    }
+function updateMainButtonsState(enable) {
+    console.log(`[UI State] Setting main buttons state to: ${enable ? 'ENABLED' : 'DISABLED'}`);
+    if (newShareBtn) newShareBtn.disabled = !enable;
+    if (standardCalcBtn) standardCalcBtn.disabled = !enable;
+    if (dividendCalcBtn) dividendCalcBtn.disabled = !enable;
+    if (exportWatchlistBtn) exportWatchlistBtn.disabled = !enable;
+    if (addWatchlistBtn) addWatchlistBtn.disabled = !enable;
+    if (editWatchlistBtn) editWatchlistBtn.disabled = !enable || userWatchlists.length === 0; 
+    if (addShareHeaderBtn) addShareHeaderBtn.disabled = !enable;
+    if (logoutBtn) setIconDisabled(logoutBtn, !enable); 
+    if (themeToggleBtn) themeToggleBtn.disabled = !enable;
+    if (colorThemeSelect) colorThemeSelect.disabled = !enable;
+    if (revertToDefaultThemeBtn) revertToDefaultThemeBtn.disabled = !enable;
+    if (sortSelect) sortSelect.disabled = !enable;
+    if (watchlistSelect) watchlistSelect.disabled = !enable;
+    if (refreshLivePricesBtn) refreshLivePricesBtn.disabled = !enable;
+    console.log(`[UI State] Sort Select Disabled: ${sortSelect ? sortSelect.disabled : 'N/A'}`);
+    console.log(`[UI State] Watchlist Select Disabled: ${watchlistSelect ? watchlistSelect.disabled : 'N/A'}`);
+}
 
-    h1#mainTitle {
-        font-size: 1.3em;
-    }
-
-    .header-action-btn {
-        font-size: 1.3em;
-    }
-
-    .hamburger-btn {
-        font-size: 1.3em;
-        padding: 5px;
-    }
-
-    .asx-code-buttons-container {
-        padding: 8px 10px;
-    }
-
-    .asx-code-btn {
-        padding: 6px 10px;
-        font-size: 0.8em;
-    }
-
-    .fixed-footer {
-        padding: 8px 10px;
-    }
-    /* MODIFIED: Reduce width of Google Auth button on very small screens */
-    .google-auth-btn {
-        max-width: 200px; /* Limit width on very small screens */
-        margin: 0 auto; /* Center it */
-    }
-
-    .modal-content {
-        padding: 10px;
-    }
-
-    .modal-header-with-icon h2 {
-        font-size: 1.2em;
-    }
-
-    .close-button {
-        font-size: 1.5em;
-        right: 10px;
-    }
-
-    .modal-content label {
-        font-size: 0.9em;
-    }
-
-    .modal-content input[type="text"],
-    .modal-content input[type="number"],
-    .modal-content textarea,
-    .calc-input-group input[type="number"],
-    .calc-input-group select {
-        width: calc(100% - 16px); /* Adjust for smaller padding */
-        padding: 6px;
-        margin-bottom: 10px;
-    }
-
-    .form-action-buttons,
-    .modal-action-buttons,
-    .custom-dialog-buttons {
-        gap: 5px;
-        margin-top: 10px;
-        padding-top: 8px;
-    }
-
-    .modal-content .sticky-footer {
-        bottom: -10px;
-        left: -10px;
-        right: -10px;
-        padding: 10px;
-    }
-
-    .modal-action-icon {
-        font-size: 1.1em;
-        padding: 4px;
-    }
-
-    .calculator-display {
-        padding: 10px;
-        min-height: 70px;
-    }
-
-    .calculator-result {
-        font-size: 1.5em;
-    }
-
-    .calc-btn {
-        padding: 8px;
-        font-size: 1em;
+function showModal(modalElement) {
+    if (modalElement) {
+        modalElement.style.setProperty('display', 'flex', 'important');
+        modalElement.scrollTop = 0;
+        const scrollableContent = modalElement.querySelector('.modal-body-scrollable');
+        if (scrollableContent) {
+            scrollableContent.scrollTop = 0;
+        }
+        console.log(`[Modal] Showing modal: ${modalElement.id}`);
     }
 }
+
+function hideModal(modalElement) {
+    if (modalElement) {
+        modalElement.style.setProperty('display', 'none', 'important');
+        console.log(`[Modal] Hiding modal: ${modalElement.id}`);
+    }
+}
+
+function clearWatchlistUI() {
+    if (watchlistSelect) watchlistSelect.innerHTML = '<option value="" disabled selected>WATCH LIST</option>'; // Updated placeholder
+    userWatchlists = [];
+    currentSelectedWatchlistIds = [];
+    console.log("[UI] Watchlist UI cleared.");
+}
+
+function clearShareListUI() {
+    if (!shareTableBody) { console.error("[clearShareListUI] shareTableBody element not found."); return; }
+    if (!mobileShareCardsContainer) { console.error("[clearShareListUI] mobileShareCardsContainer element not found."); return; }
+    shareTableBody.innerHTML = '';
+    mobileShareCardsContainer.innerHTML = '';
+    console.log("[UI] Share list UI cleared.");
+}
+
+function clearShareList() {
+    clearShareListUI();
+    if (asxCodeButtonsContainer) asxCodeButtonsContainer.innerHTML = '';
+    deselectCurrentShare();
+    console.log("[UI] Full share list cleared (UI + buttons).");
+}
+
+function selectShare(shareId) {
+    console.log(`[Selection] Attempting to select share with ID: ${shareId}`);
+    deselectCurrentShare();
+
+    const tableRow = document.querySelector(`#shareTable tbody tr[data-doc-id="${shareId}"]`);
+    const mobileCard = document.querySelector(`.mobile-card[data-doc-id="${shareId}"]`);
+
+    if (tableRow) {
+        tableRow.classList.add('selected');
+        console.log(`[Selection] Selected table row for ID: ${shareId}`);
+    }
+    if (mobileCard) {
+        mobileCard.classList.add('selected');
+        console.log(`[Selection] Selected mobile card for ID: ${shareId}`);
+    }
+    selectedShareDocId = shareId;
+}
+
+function deselectCurrentShare() {
+    const currentlySelected = document.querySelectorAll('.share-list-section tr.selected, .mobile-card.selected');
+    console.log(`[Selection] Attempting to deselect ${currentlySelected.length} elements.`);
+    currentlySelected.forEach(el => {
+        el.classList.remove('selected');
+    });
+    selectedShareDocId = null;
+    console.log("[Selection] Share deselected. selectedShareDocId is now null.");
+}
+
+function addCommentSection(title = '', text = '') {
+    // commentsFormContainer now correctly points to #dynamicCommentsArea
+    if (!commentsFormContainer) { console.error("[addCommentSection] commentsFormContainer (dynamicCommentsArea) not found."); return; }
+    const commentSectionDiv = document.createElement('div');
+    commentSectionDiv.className = 'comment-section';
+    // This HTML is for the individual comment input box, NOT the main H3 header
+    commentSectionDiv.innerHTML = `
+        <div class="comment-section-header">
+            <input type="text" class="comment-title-input" placeholder="Comment Title" value="${title}">
+            <button type="button" class="comment-delete-btn">&times;</button>
+        </div>
+        <textarea class="comment-text-input" placeholder="Your comments here...">${text}</textarea>
+    `;
+    commentsFormContainer.appendChild(commentSectionDiv);
+    
+    const commentTitleInput = commentSectionDiv.querySelector('.comment-title-input');
+    const commentTextInput = commentSectionDiv.querySelector('.comment-text-input');
+    if (commentTitleInput) commentTitleInput.addEventListener('input', checkFormDirtyState);
+    if (commentTextInput) commentTextInput.addEventListener('input', checkFormDirtyState);
+
+    commentSectionDiv.querySelector('.comment-delete-btn').addEventListener('click', (event) => {
+        console.log("[Comments] Delete comment button clicked.");
+        event.target.closest('.comment-section').remove();
+        checkFormDirtyState();
+    });
+    console.log("[Comments] Added new comment section.");
+}
+
+function clearForm() {
+    formInputs.forEach(input => {
+        if (input) { input.value = ''; }
+    });
+    if (commentsFormContainer) { // This now refers to #dynamicCommentsArea
+        commentsFormContainer.innerHTML = ''; // Clears ONLY the dynamically added comments
+    }
+    selectedShareDocId = null;
+    originalShareData = null;
+    if (deleteShareBtn) {
+        deleteShareBtn.classList.add('hidden');
+        console.log("[clearForm] deleteShareBtn hidden.");
+    }
+    setIconDisabled(saveShareBtn, true);
+    console.log("[Form] Form fields cleared and selectedShareDocId reset. saveShareBtn disabled.");
+}
+
+function showEditFormForSelectedShare(shareIdToEdit = null) {
+    const targetShareId = shareIdToEdit || selectedShareDocId;
+
+    if (!targetShareId) {
+        showCustomAlert("Please select a share to edit.");
+        return;
+    }
+    const shareToEdit = allSharesData.find(share => share.id === targetShareId);
+    if (!shareToEdit) {
+        showCustomAlert("Selected share not found.");
+        return;
+    }
+    selectedShareDocId = targetShareId; 
+
+    formTitle.textContent = 'Edit Share';
+    shareNameInput.value = shareToEdit.shareName || '';
+    currentPriceInput.value = Number(shareToEdit.currentPrice) !== null && !isNaN(Number(shareToEdit.currentPrice)) ? Number(shareToEdit.currentPrice).toFixed(2) : '';
+    targetPriceInput.value = Number(shareToEdit.targetPrice) !== null && !isNaN(Number(shareToEdit.targetPrice)) ? Number(shareToEdit.targetPrice).toFixed(2) : '';
+    dividendAmountInput.value = Number(shareToEdit.dividendAmount) !== null && !isNaN(Number(shareToEdit.dividendAmount)) ? Number(shareToEdit.dividendAmount).toFixed(3) : '';
+    frankingCreditsInput.value = Number(shareToEdit.frankingCredits) !== null && !isNaN(Number(shareToEdit.frankingCredits)) ? Number(shareToEdit.frankingCredits).toFixed(1) : '';
+    
+    if (commentsFormContainer) { // This now refers to #dynamicCommentsArea
+        commentsFormContainer.innerHTML = ''; // Clear existing dynamic comment sections
+        if (shareToEdit.comments && Array.isArray(shareToEdit.comments) && shareToEdit.comments.length > 0) {
+            shareToEdit.comments.forEach(comment => addCommentSection(comment.title, comment.text));
+        } else {
+            // Add one empty comment section if no existing comments
+            addCommentSection(); 
+        }
+    }
+    if (deleteShareBtn) {
+        deleteShareBtn.classList.add('hidden');
+        setIconDisabled(deleteShareBtn, false);
+        console.log("[showEditFormForSelectedShare] deleteShareBtn shown and enabled.");
+    }
+    
+    originalShareData = getCurrentFormData();
+    setIconDisabled(saveShareBtn, true);
+    console.log("[showEditFormForSelectedShare] saveShareBtn initially disabled for dirty check.");
+    
+    showModal(shareFormSection);
+    shareNameInput.focus();
+    console.log(`[Form] Opened edit form for share: ${shareToEdit.shareName} (ID: ${selectedShareDocId})`);
+}
+
+/**
+ * Gathers all current data from the share form inputs.
+ * @returns {object} An object representing the current state of the form.
+ */
+function getCurrentFormData() {
+    const comments = [];
+    if (commentsFormContainer) { // This now refers to #dynamicCommentsArea
+        commentsFormContainer.querySelectorAll('.comment-section').forEach(section => {
+            const titleInput = section.querySelector('.comment-title-input');
+            const textInput = section.querySelector('.comment-text-input');
+            const title = titleInput ? titleInput.value.trim() : '';
+            const text = textInput ? textInput.value.trim() : '';
+            if (title || text) {
+                comments.push({ title: title, text: text });
+            }
+        });
+    }
+
+    return {
+        shareName: shareNameInput.value.trim().toUpperCase(),
+        currentPrice: parseFloat(currentPriceInput.value),
+        targetPrice: parseFloat(targetPriceInput.value),
+        dividendAmount: parseFloat(dividendAmountInput.value),
+        frankingCredits: parseFloat(frankingCreditsInput.value),
+        comments: comments
+    };
+}
+
+/**
+ * Compares two share data objects (original vs. current form data) to check for equality.
+ * Handles null/NaN for numbers and deep comparison for comments array.
+ * @param {object} data1
+ * @param {object} data2
+ * @returns {boolean} True if data is identical, false otherwise.
+ */
+function areShareDataEqual(data1, data2) {
+    if (!data1 || !data2) return false;
+
+    const fields = ['shareName', 'currentPrice', 'targetPrice', 'dividendAmount', 'frankingCredits'];
+    for (const field of fields) {
+        let val1 = data1[field];
+        let val2 = data2[field];
+
+        if (typeof val1 === 'number' && isNaN(val1)) val1 = null;
+        if (typeof val2 === 'number' && isNaN(val2)) val2 = null;
+
+        if (val1 !== val2) {
+            return false;
+        }
+    }
+
+    if (data1.comments.length !== data2.comments.length) {
+        return false;
+    }
+    for (let i = 0; i < data1.comments.length; i++) {
+        const comment1 = data1.comments[i];
+        const comment2 = data2.comments[i];
+        if (comment1.title !== comment2.title || comment1.text !== comment2.text) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Checks the current state of the form against the original data (if editing)
+ * and the share name validity, then enables/disables the save button accordingly.
+ */
+function checkFormDirtyState() {
+    const currentData = getCurrentFormData();
+    const isShareNameValid = currentData.shareName.trim() !== '';
+
+    if (!isShareNameValid) {
+        setIconDisabled(saveShareBtn, true);
+        return;
+    }
+
+    if (selectedShareDocId && originalShareData) {
+        const isDirty = !areShareDataEqual(originalShareData, currentData);
+        setIconDisabled(saveShareBtn, !isDirty);
+    } else {
+        setIconDisabled(saveShareBtn, !isShareNameValid);
+    }
+}
+
+/**
+ * Saves share data to Firestore. Can be called silently for auto-save.
+ * @param {boolean} isSilent If true, no alert messages are shown on success.
+ */
+async function saveShareData(isSilent = false) {
+    console.log("[Share Form] saveShareData called.");
+    // Check if the save button would normally be disabled (no valid name or no changes)
+    // This prevents saving blank new shares or unchanged existing shares on auto-save.
+    if (saveShareBtn.classList.contains('is-disabled-icon') && isSilent) {
+        console.log("[Auto-Save] Save button is disabled (no changes or no valid name). Skipping silent save.");
+        return;
+    }
+
+    const shareName = shareNameInput.value.trim().toUpperCase();
+    if (!shareName) { 
+        if (!isSilent) showCustomAlert("Code is required!"); 
+        console.warn("[Save Share] Code is required. Skipping save.");
+        return; 
+    }
+
+    const currentPrice = parseFloat(currentPriceInput.value);
+    const targetPrice = parseFloat(targetPriceInput.value);
+    const dividendAmount = parseFloat(dividendAmountInput.value);
+    const frankingCredits = parseFloat(frankingCreditsInput.value);
+
+    const comments = [];
+    if (commentsFormContainer) { // This now refers to #dynamicCommentsArea
+        commentsFormContainer.querySelectorAll('.comment-section').forEach(section => {
+            const titleInput = section.querySelector('.comment-title-input');
+            const textInput = section.querySelector('.comment-text-input');
+            const title = titleInput ? titleInput.value.trim() : '';
+            const text = textInput ? textInput.value.trim() : '';
+            if (title || text) {
+                comments.push({ title: title, text: text });
+            }
+        });
+    }
+
+    const shareData = {
+        shareName: shareName,
+        currentPrice: isNaN(currentPrice) ? null : currentPrice,
+        targetPrice: isNaN(targetPrice) ? null : targetPrice,
+        dividendAmount: isNaN(dividendAmount) ? null : dividendAmount,
+        frankingCredits: isNaN(frankingCredits) ? null : frankingCredits,
+        comments: comments,
+        userId: currentUserId,
+        watchlistId: (watchlistSelect && watchlistSelect.value && watchlistSelect.value !== "") 
+                     ? watchlistSelect.value 
+                     : (userWatchlists.length > 0 ? userWatchlists[0].id : getDefaultWatchlistId(currentUserId)),
+        lastPriceUpdateTime: new Date().toISOString()
+    };
+
+    if (selectedShareDocId) {
+        const existingShare = allSharesData.find(s => s.id === selectedShareDocId);
+        if (shareData.currentPrice !== null && existingShare && existingShare.currentPrice !== shareData.currentPrice) {
+            shareData.previousFetchedPrice = existingShare.lastFetchedPrice;
+            shareData.lastFetchedPrice = shareData.currentPrice;
+        } else if (!existingShare || existingShare.lastFetchedPrice === undefined) {
+            shareData.previousFetchedPrice = shareData.currentPrice;
+            shareData.lastFetchedPrice = shareData.currentPrice;
+        } else {
+            shareData.previousFetchedPrice = existingShare.previousFetchedPrice;
+            shareData.lastFetchedPrice = existingShare.lastFetchedPrice;
+        }
+
+        try {
+            const shareDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, selectedShareDocId);
+            await window.firestore.updateDoc(shareDocRef, shareData);
+            if (!isSilent) showCustomAlert(`Share '${shareName}' updated successfully!`, 1500);
+            console.log(`[Firestore] Share '${shareName}' (ID: ${selectedShareDocId}) updated.`);
+            originalShareData = getCurrentFormData(); // Update original data after successful save
+            setIconDisabled(saveShareBtn, true); // Disable save button after saving
+        } catch (error) {
+            console.error("[Firestore] Error updating share:", error);
+            if (!isSilent) showCustomAlert("Error updating share: " + error.message);
+        }
+    } else {
+        shareData.entryDate = new Date().toISOString();
+        shareData.lastFetchedPrice = shareData.currentPrice;
+        shareData.previousFetchedPrice = shareData.currentPrice;
+
+        try {
+            const sharesColRef = window.firestore.collection(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`);
+            const newDocRef = await window.firestore.addDoc(sharesColRef, shareData);
+            selectedShareDocId = newDocRef.id; // Set selectedShareDocId for the newly added share
+            if (!isSilent) showCustomAlert(`Share '${shareName}' added successfully!`, 1500);
+            console.log(`[Firestore] Share '${shareName}' added with ID: ${newDocRef.id}`);
+            originalShareData = getCurrentFormData(); // Update original data after successful save
+            setIconDisabled(saveShareBtn, true); // Disable save button after saving
+        } catch (error) {
+            console.error("[Firestore] Error adding share:", error);
+            if (!isSilent) showCustomAlert("Error adding share: " + error.message);
+        }
+    }
+    if (!isSilent) closeModals(); // Only close if not a silent save
+}
+
+
+function showShareDetails() {
+    if (!selectedShareDocId) {
+        showCustomAlert("Please select a share to view details.");
+        return;
+    }
+    const share = allSharesData.find(s => s.id === selectedShareDocId);
+    if (!share) {
+        showCustomAlert("Selected share not found.");
+        return;
+    }
+    modalShareName.textContent = share.shareName || 'N/A';
+    modalEntryDate.textContent = formatDate(share.entryDate) || 'N/A';
+    
+    const enteredPriceNum = Number(share.currentPrice);
+
+    // Get live price data from the global livePrices object
+    const livePriceData = livePrices[share.shareName.toUpperCase()];
+    const livePrice = livePriceData ? livePriceData.live : undefined;
+    const prevClosePrice = livePriceData ? livePriceData.prevClose : undefined;
+
+    if (modalLivePrice) {
+        if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) {
+            modalLivePrice.textContent = `$${livePrice.toFixed(2)}`;
+            modalLivePrice.style.display = 'inline';
+        } else {
+            modalLivePrice.textContent = 'N/A';
+            modalLivePrice.style.display = 'inline';
+        }
+    }
+
+    if (modalPriceChange) {
+        modalPriceChange.textContent = '';
+        modalPriceChange.classList.remove('positive', 'negative', 'neutral');
+
+        // Calculate daily change using livePrice and prevClosePrice
+        if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice) && 
+            prevClosePrice !== undefined && prevClosePrice !== null && !isNaN(prevClosePrice)) {
+            const change = livePrice - prevClosePrice;
+            const priceChangeSpan = document.createElement('span');
+            priceChangeSpan.classList.add('price-change');
+            if (change > 0) {
+                priceChangeSpan.textContent = `(+$${change.toFixed(2)})`;
+                priceChangeSpan.classList.add('positive');
+            } else if (change < 0) {
+                priceChangeSpan.textContent = `(-$${Math.abs(change).toFixed(2)})`;
+                priceChangeSpan.classList.add('negative');
+            } else {
+                priceChangeSpan.textContent = `($0.00)`;
+                priceChangeSpan.classList.add('neutral');
+            }
+            modalPriceChange.appendChild(priceChangeSpan);
+            modalPriceChange.style.display = 'inline'; // Ensure it's visible
+        } else {
+            modalPriceChange.style.display = 'none'; // Hide if no valid change can be calculated
+        }
+    }
+
+    modalEnteredPrice.textContent = (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? `$${enteredPriceNum.toFixed(2)}` : 'N/A';
+    const targetPriceNum = Number(share.targetPrice);
+    modalTargetPrice.textContent = (!isNaN(targetPriceNum) && targetPriceNum !== null) ? `$${targetPriceNum.toFixed(2)}` : 'N/A';
+    
+    const dividendAmountNum = Number(share.dividendAmount);
+    modalDividendAmount.textContent = (!isNaN(dividendAmountNum) && dividendAmountNum !== null) ? `$${dividendAmountNum.toFixed(3)}` : 'N/A';
+    
+    const frankingCreditsNum = Number(share.frankingCredits);
+    modalFrankingCredits.textContent = (!isNaN(frankingCreditsNum) && frankingCreditsNum !== null) ? `${frankingCreditsNum.toFixed(1)}%` : 'N/A';
+    
+    const priceForYield = (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) ? livePrice : enteredPriceNum;
+    const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, priceForYield); 
+    modalUnfrankedYieldSpan.textContent = unfrankedYield !== null ? `${unfrankedYield.toFixed(2)}%` : 'N/A';
+    
+    const frankedYield = calculateFrankedYield(dividendAmountNum, priceForYield, frankingCreditsNum);
+    modalFrankedYieldSpan.textContent = frankedYield !== null ? `${frankedYield.toFixed(2)}%` : 'N/A';
+    
+    if (modalCommentsContainer) {
+        modalCommentsContainer.innerHTML = '';
+        if (share.comments && Array.isArray(share.comments) && share.comments.length > 0) {
+            share.comments.forEach(comment => {
+                if (comment.title || comment.text) {
+                    const commentDiv = document.createElement('div');
+                    commentDiv.className = 'modal-comment-item';
+                    commentDiv.innerHTML = `
+                        <strong>${comment.title || 'General Comment'}</strong>
+                        <p>${comment.text || ''}</p>
+                    `;
+                    modalCommentsContainer.appendChild(commentDiv);
+                }
+            });
+        } else {
+            modalCommentsContainer.innerHTML = '<p style="text-align: center; color: var(--label-color);">No comments for this share.</p>';
+        }
+    }
+
+    // External Links
+    if (modalNewsLink && share.shareName) {
+        const newsUrl = `https://news.google.com/search?q=${encodeURIComponent(share.shareName)}%20ASX&hl=en-AU&gl=AU&ceid=AU%3Aen`;
+        modalNewsLink.href = newsUrl;
+        modalNewsLink.textContent = `View ${share.shareName.toUpperCase()} News`;
+        modalNewsLink.style.display = 'inline-flex';
+        setIconDisabled(modalNewsLink, false);
+    } else if (modalNewsLink) {
+        modalNewsLink.style.display = 'none';
+        setIconDisabled(modalNewsLink, true);
+    }
+
+    if (modalMarketIndexLink && share.shareName) {
+        const marketIndexUrl = `https://www.marketindex.com.au/asx/${share.shareName.toLowerCase()}`;
+        modalMarketIndexLink.href = marketIndexUrl;
+        modalMarketIndexLink.textContent = `View ${share.shareName.toUpperCase()} on MarketIndex.com.au`;
+        modalMarketIndexLink.style.display = 'inline-flex';
+        setIconDisabled(modalMarketIndexLink, false);
+    } else if (modalMarketIndexLink) {
+        modalMarketIndexLink.style.display = 'none';
+        setIconDisabled(modalMarketIndexLink, true);
+    }
+
+    if (modalFoolLink && share.shareName) {
+        const foolUrl = `https://www.fool.com.au/tickers/asx-${share.shareName.toLowerCase()}/`;
+        modalFoolLink.href = foolUrl;
+        modalFoolLink.textContent = `View ${share.shareName.toUpperCase()} on Fool.com.au`;
+        modalFoolLink.style.display = 'inline-flex';
+        setIconDisabled(modalFoolLink, false);
+    } else if (modalFoolLink) {
+        modalFoolLink.style.display = 'none';
+        setIconDisabled(modalFoolLink, true);
+    }
+
+    if (commSecLoginMessage) {
+        commSecLoginMessage.style.display = 'block'; 
+    }
+
+    // Moved to header: setIconDisabled(editShareFromDetailBtn, false);
+    // Moved to header: setIconDisabled(deleteShareFromDetailBtn, false);
+
+    showModal(shareDetailModal);
+    console.log(`[Details] Displayed details for share: ${share.shareName} (ID: ${selectedShareDocId})`);
+}
+
+function sortShares() {
+    const sortValue = currentSortOrder;
+    if (!sortValue || sortValue === '') {
+        console.log("[Sort] Sort placeholder selected, no explicit sorting applied.");
+        renderWatchlist(); 
+        return;
+    }
+    const [field, order] = sortValue.split('-');
+    allSharesData.sort((a, b) => {
+        let valA = a[field];
+        let valB = b[field];
+
+        if (field === 'currentPrice' || field === 'targetPrice' || field === 'dividendAmount' || field === 'frankingCredits') {
+            valA = (typeof valA === 'string' && valA.trim() !== '') ? parseFloat(valA) : valA;
+            valB = (typeof valB === 'string' && valB.trim() !== '') ? parseFloat(valB) : valB;
+            valA = (valA === null || valA === undefined || isNaN(valA)) ? (order === 'asc' ? Infinity : -Infinity) : valA;
+            valB = (valB === null || valB === undefined || isNaN(valB)) ? (order === 'asc' ? Infinity : -Infinity) : valB;
+            return order === 'asc' ? valA - valB : valB - valA;
+        } else if (field === 'shareName') {
+            const nameA = (a.shareName || '').toUpperCase().trim();
+            const nameB = (b.shareName || '').toUpperCase().trim();
+            if (nameA === '' && nameB === '') return 0;
+            if (nameA === '') return order === 'asc' ? 1 : -1;
+            if (nameB === '') return order === 'asc' ? -1 : 1;
+            return order === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+        } else if (field === 'entryDate') {
+            const dateA = new Date(valA);
+            const dateB = new Date(valB);
+            valA = isNaN(dateA.getTime()) ? (order === 'asc' ? Infinity : -Infinity) : dateA.getTime();
+            valB = isNaN(dateB.getTime()) ? (order === 'asc' ? Infinity : -Infinity) : dateB.getTime();
+            return order === 'asc' ? valA - valB : valB - valA;
+        } else {
+            if (order === 'asc') {
+                if (valA < valB) return -1;
+                if (valA > valB) return 1;
+                return 0;
+            } else {
+                if (valA > valB) return -1;
+                if (valA < valB) return 1;
+                return 0;
+            }
+        }
+    });
+    console.log("[Sort] Shares sorted. Rendering watchlist.");
+    renderWatchlist(); 
+}
+
+function renderWatchlistSelect() {
+    if (!watchlistSelect) { console.error("[renderWatchlistSelect] watchlistSelect element not found."); return; }
+    // Set the initial placeholder text to "WATCH LIST"
+    watchlistSelect.innerHTML = '<option value="" disabled selected>WATCH LIST</option>';
+
+    const allSharesOption = document.createElement('option');
+    allSharesOption.value = ALL_SHARES_ID;
+    allSharesOption.textContent = 'All Shares';
+    watchlistSelect.appendChild(allSharesOption);
+
+    userWatchlists.forEach(watchlist => {
+        const option = document.createElement('option');
+        option.value = watchlist.id;
+        option.textContent = watchlist.name;
+        watchlistSelect.appendChild(option);
+    });
+
+    if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID)) {
+        watchlistSelect.value = ALL_SHARES_ID;
+    } else if (currentSelectedWatchlistIds.length === 1) {
+        watchlistSelect.value = currentSelectedWatchlistIds[0];
+    } else if (userWatchlists.length > 0) {
+        watchlistSelect.value = userWatchlists[0].id;
+        currentSelectedWatchlistIds = [userWatchlists[0].id];
+    } else {
+        watchlistSelect.value = '';
+    }
+    console.log("[UI Update] Watchlist select dropdown rendered.");
+}
+
+function renderSortSelect() {
+    if (!sortSelect) { console.error("[renderSortSelect] sortSelect element not found."); return; }
+    // Set the initial placeholder text to "SORT LIST"
+    sortSelect.innerHTML = '<option value="" disabled selected>SORT LIST</option>';
+
+    const options = [
+        { value: "entryDate-desc", text: "Date Added (Newest)" },
+        { value: "entryDate-asc", text: "Date Added (Oldest)" },
+        { value: "shareName-asc", text: "Code (A-Z)" },
+        { value: "shareName-desc", text: "Code (Z-A)" },
+        { value: "dividendAmount-desc", text: "Dividend (High-Low)" },
+        { value: "dividendAmount-asc", text: "Dividend (Low-High)" }
+    ];
+    options.forEach(opt => {
+        const optionElement = document.createElement('option');
+        optionElement.value = opt.value;
+        optionElement.textContent = opt.text;
+        sortSelect.appendChild(optionElement);
+    });
+
+    if (currentUserId && savedSortOrder && Array.from(sortSelect.options).some(option => option.value === savedSortOrder)) {
+        sortSelect.value = savedSortOrder;
+        currentSortOrder = savedSortOrder;
+        console.log(`[Sort] Applied saved sort order: ${currentSortOrder}`);
+    } else {
+        sortSelect.value = ''; 
+        currentSortOrder = '';
+        console.log("[Sort] No valid saved sort order or not logged in, defaulting to placeholder.");
+    }
+    console.log("[UI Update] Sort select rendered. Sort select disabled: ", sortSelect.disabled);
+}
+
+function addShareToTable(share) {
+    if (!shareTableBody) { console.error("[addShareToTable] shareTableBody element not found."); return; }
+    const row = shareTableBody.insertRow();
+    row.dataset.docId = share.id;
+    
+    let lastClickTime = 0;
+    row.addEventListener('click', (event) => { 
+        console.log(`[Table Row Click] Share ID: ${share.id}`);
+        if (!contextMenuOpen) {
+            const currentTime = new Date().getTime();
+            const clickDelay = 300;
+            if (currentTime - lastClickTime < clickDelay) {
+                console.log(`[Table Row Double Click] Share ID: ${share.id}`);
+                selectShare(share.id); 
+                showShareDetails();
+            }
+            lastClickTime = currentTime;
+            selectShare(share.id);
+        }
+    });
+
+    row.addEventListener('contextmenu', (event) => {
+        console.log(`[Table Row ContextMenu] Share ID: ${share.id}`);
+        event.preventDefault();
+        selectShare(share.id);
+        showContextMenu(event, share.id);
+    });
+
+    let touchStartTime;
+    row.addEventListener('touchstart', (event) => {
+        console.log(`[Table Row TouchStart] Share ID: ${share.id}`);
+        if (event.touches.length === 1) {
+            touchStartTime = new Date().getTime();
+            touchStartX = event.touches[0].clientX;
+            touchStartY = event.touches[0].clientY;
+            longPressTimer = setTimeout(() => {
+                event.preventDefault();
+                selectShare(share.id);
+                showContextMenu(event, share.id);
+            }, LONG_PRESS_THRESHOLD);
+        }
+    });
+
+    row.addEventListener('touchmove', (event) => {
+        if (longPressTimer) {
+            const currentX = event.touches[0].clientX;
+            const currentY = event.touches[0].clientY;
+            const distance = Math.sqrt(Math.pow(currentX - touchStartX, 2) + Math.pow(currentY - touchStartY, 2));
+            if (distance > TOUCH_MOVE_THRESHOLD) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+                console.log("[Table Row TouchMove] Long press cancelled due to movement.");
+            }
+        }
+    });
+
+    row.addEventListener('touchend', () => {
+        if (longPressTimer) {
+            clearTimeout(longPressTimer);
+            longPressTimer = null;
+            console.log("[Table Row TouchEnd] Long press timer cleared.");
+        }
+    });
+
+
+    const displayShareName = (share.shareName && String(share.shareName).trim() !== '') ? share.shareName : '(No Code)';
+    row.insertCell().textContent = displayShareName;
+
+    const livePriceCell = row.insertCell();
+    // Get live price data from the global livePrices object
+    const livePriceData = livePrices[share.shareName.toUpperCase()];
+    const livePrice = livePriceData ? livePriceData.live : undefined;
+    const prevClosePrice = livePriceData ? livePriceData.prevClose : undefined;
+
+    if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) {
+        livePriceCell.textContent = `$${livePrice.toFixed(2)}`;
+        livePriceCell.classList.add('live-price-cell');
+        
+        // Calculate daily change using livePrice and prevClosePrice
+        if (prevClosePrice !== undefined && prevClosePrice !== null && !isNaN(prevClosePrice)) {
+            const change = livePrice - prevClosePrice;
+            const priceChangeSpan = document.createElement('span');
+            priceChangeSpan.classList.add('price-change');
+            if (change > 0) {
+                priceChangeSpan.textContent = `(+$${change.toFixed(2)})`;
+                priceChangeSpan.classList.add('positive');
+            } else if (change < 0) {
+                priceChangeSpan.textContent = `(-$${Math.abs(change).toFixed(2)})`;
+                priceChangeSpan.classList.add('negative');
+            } else {
+                priceChangeSpan.textContent = `($0.00)`;
+                priceChangeSpan.classList.add('neutral');
+            }
+            livePriceCell.appendChild(priceChangeSpan);
+        }
+    } else {
+        livePriceCell.textContent = 'N/A';
+    }
+
+    const enteredPriceCell = row.insertCell();
+    const enteredPriceNum = Number(share.currentPrice);
+    const displayEnteredPrice = (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? `$${enteredPriceNum.toFixed(2)}` : '-';
+    enteredPriceCell.textContent = displayEnteredPrice;
+
+
+    const targetPriceNum = Number(share.targetPrice);
+    const displayTargetPrice = (!isNaN(targetPriceNum) && targetPriceNum !== null) ? `$${targetPriceNum.toFixed(2)}` : '-';
+    row.insertCell().textContent = displayTargetPrice;
+
+    const dividendCell = row.insertCell();
+    const dividendAmountNum = Number(share.dividendAmount);
+    const frankingCreditsNum = Number(share.frankingCredits);
+    const priceForYield = (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) ? livePrice : enteredPriceNum;
+
+    const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, priceForYield); 
+    const frankedYield = calculateFrankedYield(dividendAmountNum, priceForYield, frankingCreditsNum);
+    const divAmountDisplay = (!isNaN(dividendAmountNum) && dividendAmountNum !== null) ? `$${dividendAmountNum.toFixed(2)}` : '-';
+
+    dividendCell.innerHTML = `
+        <div class="dividend-yield-cell-content">
+            <span>Dividend:</span> <span class="value">${divAmountDisplay}</span>
+        </div>
+        <div class="dividend-yield-cell-content">
+            <span>Unfranked Yield:</span> <span class="value">${unfrankedYield !== null ? unfrankedYield.toFixed(2) + '%' : '-'}&#xFE0E;</span>
+        </div>
+        <div class="dividend-yield-cell-content">
+            <span>Franked Yield:</span> <span class="value">${frankedYield !== null ? frankedYield.toFixed(2) + '%' : '-'}&#xFE0E;</span>
+        </div>
+    `;
+
+    const commentsCell = row.insertCell();
+    commentsCell.textContent = ''; 
+    console.log(`[Render] Added share ${displayShareName} to table.`);
+}
+
+function addShareToMobileCards(share) {
+    if (!mobileShareCardsContainer) { console.error("[addShareToMobileCards] mobileShareCardsContainer element not found."); return; }
+    if (!window.matchMedia("(max-width: 768px)").matches) { return; }
+
+    const card = document.createElement('div');
+    card.className = 'mobile-card';
+    card.dataset.docId = share.id;
+
+    const enteredPriceNum = Number(share.currentPrice);
+    const dividendAmountNum = Number(share.dividendAmount);
+    const frankingCreditsNum = Number(share.frankingCredits);
+    const targetPriceNum = Number(share.targetPrice);
+    
+    // Get live price data from the global livePrices object
+    const livePriceData = livePrices[share.shareName.toUpperCase()];
+    const livePrice = livePriceData ? livePriceData.live : undefined;
+    const prevClosePrice = livePriceData ? livePriceData.prevClose : undefined;
+
+    const priceForYield = (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) ? livePrice : enteredPriceNum;
+
+    const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, priceForYield);
+    const frankedYield = calculateFrankedYield(dividendAmountNum, priceForYield, frankingCreditsNum);
+
+    const displayTargetPrice = (!isNaN(targetPriceNum) && targetPriceNum !== null) ? targetPriceNum.toFixed(2) : '-';
+    const displayDividendAmount = (!isNaN(dividendAmountNum) && dividendAmountNum !== null) ? dividendAmountNum.toFixed(2) : '-';
+    const displayFrankingCredits = (!isNaN(frankingCreditsNum) && frankingCreditsNum !== null) ? `${frankingCreditsNum}%` : '-';
+    const displayShareName = (share.shareName && String(share.shareName).trim() !== '') ? share.shareName : '(No Code)';
+    const displayEnteredPrice = (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? enteredPriceNum.toFixed(2) : '-';
+
+    let livePriceHtml = '';
+    if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) {
+        livePriceHtml = `<p><strong>Live Price:</strong> $${livePrice.toFixed(2)}`;
+        
+        // Calculate daily change using livePrice and prevClosePrice
+        if (prevClosePrice !== undefined && prevClosePrice !== null && !isNaN(prevClosePrice)) {
+            const change = livePrice - prevClosePrice;
+            if (change > 0) {
+                livePriceHtml += ` <span class="price-change positive">(+$${change.toFixed(2)})</span></p>`;
+            } else if (change < 0) {
+                livePriceHtml += ` <span class="price-change negative">(-$${Math.abs(change).toFixed(2)})</span></p>`;
+            } else {
+                livePriceHtml += ` <span class="price-change neutral">($0.00)</span></p>`;
+            }
+        } else {
+            livePriceHtml += `</p>`; // Just display live price if prevClose is not available
+        }
+    } else {
+        livePriceHtml = `<p><strong>Live Price:</strong> N/A</p>`;
+    }
+
+
+    card.innerHTML = `
+        <h3>${displayShareName}</h3>
+        <p><strong>Entry Date:</strong> ${formatDate(share.entryDate) || '-'}</p>
+        ${livePriceHtml}
+        <p><strong>Entered Price:</strong> $${displayEnteredPrice}</p>
+        <p><strong>Target:</strong> $${displayTargetPrice}</p>
+        <p><strong>Dividend:</strong> $${displayDividendAmount}</p>
+        <p><strong>Franking:</strong> ${displayFrankingCredits}</p>
+        <p><strong>Unfranked Yield:</strong> ${unfrankedYield !== null ? unfrankedYield.toFixed(2) + '%' : '-'}&#xFE0E;</p>
+        <p><strong>Franked Yield:</strong> ${frankedYield !== null ? frankedYield.toFixed(2) + '%' : '-'}&#xFE0E;</p>
+    `;
+    mobileShareCardsContainer.appendChild(card);
+
+    let lastClickTime = 0;
+    card.addEventListener('click', function(e) {
+        console.log(`[Mobile Card Click] Share ID: ${share.id}`);
+        if (!contextMenuOpen) {
+            const currentTime = new Date().getTime();
+            const clickDelay = 300;
+            if (currentTime - lastClickTime < clickDelay) {
+                console.log(`[Mobile Card Double Click] Share ID: ${share.id}`);
+                const docId = e.currentTarget.dataset.docId;
+                selectShare(docId);
+                showShareDetails();
+            }
+            lastClickTime = currentTime;
+            const docId = e.currentTarget.dataset.docId;
+            selectShare(docId);
+        }
+    });
+
+    card.addEventListener('contextmenu', (event) => {
+        console.log(`[Mobile Card ContextMenu] Share ID: ${share.id}`);
+        event.preventDefault();
+        selectShare(share.id);
+        showContextMenu(event, share.id);
+    });
+
+    let touchStartTime;
+    card.addEventListener('touchstart', (event) => {
+        console.log(`[Mobile Card TouchStart] Share ID: ${share.id}`);
+        if (event.touches.length === 1) {
+            touchStartTime = new Date().getTime();
+            touchStartX = event.touches[0].clientX;
+            touchStartY = event.touches[0].clientY;
+            longPressTimer = setTimeout(() => {
+                event.preventDefault(); 
+                selectShare(share.id);
+                showContextMenu(event, share.id);
+            }, LONG_PRESS_THRESHOLD);
+        }
+    });
+
+    card.addEventListener('touchmove', (event) => {
+        if (longPressTimer) {
+            const currentX = event.touches[0].clientX;
+            const currentY = event.touches[0].clientY;
+            const distance = Math.sqrt(Math.pow(currentX - touchStartX, 2) + Math.pow(currentY - touchStartY, 2));
+            if (distance > TOUCH_MOVE_THRESHOLD) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+                console.log("[Mobile Card TouchMove] Long press cancelled due to movement.");
+            }
+        }
+    });
+
+    card.addEventListener('touchend', () => {
+        if (longPressTimer) {
+            clearTimeout(longPressTimer);
+            longPressTimer = null;
+            console.log("[Mobile Card TouchEnd] Long press timer cleared.");
+        }
+    });
+
+    console.log(`[Render] Added share ${displayShareName} to mobile cards.`);
+}
+
+/**
+ * Renders the watchlist based on the currentSelectedWatchlistIds.
+ */
+function renderWatchlist() {
+    console.log(`[Render] Rendering shares for selected watchlists: ${currentSelectedWatchlistIds.join(', ')}`);
+    clearShareListUI();
+    
+    let sharesToRender = [];
+
+    if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID)) {
+        sharesToRender = [...allSharesData];
+        mainTitle.textContent = "All My Shares";
+        console.log("[Render] Displaying all shares (from ALL_SHARES_ID in currentSelectedWatchlistIds).");
+    } else if (currentSelectedWatchlistIds.length === 0 && userWatchlists.length > 0) {
+        currentSelectedWatchlistIds = [userWatchlists[0].id];
+        sharesToRender = allSharesData.filter(share => currentSelectedWatchlistIds.includes(share.watchlistId));
+        mainTitle.textContent = userWatchlists[0].name;
+        console.log("[Render] No specific watchlists selected, defaulting to first watchlist.");
+    } else if (currentSelectedWatchlistIds.length > 0) {
+        sharesToRender = allSharesData.filter(share => currentSelectedWatchlistIds.includes(share.watchlistId));
+        const selectedNames = currentSelectedWatchlistIds.map(id => {
+            const wl = userWatchlists.find(w => w.id === id);
+            return wl ? wl.name : 'Unknown Watchlist';
+        });
+        if (selectedNames.length === 1) {
+            mainTitle.textContent = selectedNames[0];
+        } else if (selectedNames.length > 1) {
+            mainTitle.textContent = "Multiple Watchlists Selected";
+        } else {
+            mainTitle.textContent = "No Watchlists Selected";
+        }
+        console.log(`[Render] Displaying shares from watchlists: ${selectedNames.join(', ')}`);
+    } else {
+        mainTitle.textContent = "Share Watchlist";
+        console.log("[Render] No watchlists available for display.");
+    }
+
+
+    if (sharesToRender.length === 0) {
+        const emptyWatchlistMessage = document.createElement('p');
+        emptyWatchlistMessage.textContent = `No shares found for the selected watchlists. Add a new share to get started!`;
+        emptyWatchlistMessage.style.textAlign = 'center';
+        emptyWatchlistMessage.style.padding = '20px';
+        emptyWatchlistMessage.style.color = 'var(--ghosted-text)';
+        const td = document.createElement('td');
+        td.colSpan = 6;
+        td.appendChild(emptyWatchlistMessage);
+        const tr = document.createElement('tr');
+        tr.appendChild(td);
+        shareTableBody.appendChild(tr);
+        mobileShareCardsContainer.appendChild(emptyWatchlistMessage.cloneNode(true));
+    }
+
+    sharesToRender.forEach((share) => {
+        addShareToTable(share);
+        addShareToMobileCards(share); 
+    });
+    if (selectedShareDocId) {
+         const stillExists = sharesToRender.some(share => share.id === selectedShareDocId);
+         if (stillExists) {
+            selectShare(selectedShareDocId);
+         } else {
+            deselectCurrentShare();
+         }
+    }
+    console.log("[Render] Watchlist rendering complete.");
+}
+
+function renderAsxCodeButtons() {
+    if (!asxCodeButtonsContainer) { console.error("[renderAsxCodeButtons] asxCodeButtonsContainer element not found."); return; }
+    asxCodeButtonsContainer.innerHTML = '';
+    const uniqueAsxCodes = new Set();
+    
+    let sharesForButtons = [];
+    if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID)) { 
+        sharesForButtons = [...allSharesData];
+    } else {
+        sharesForButtons = allSharesData.filter(share => currentSelectedWatchlistIds.includes(share.watchlistId));
+    }
+
+    sharesForButtons.forEach(share => {
+        if (share.shareName && typeof share.shareName === 'string' && share.shareName.trim() !== '') {
+                uniqueAsxCodes.add(share.shareName.trim().toUpperCase());
+        }
+    });
+
+    if (uniqueAsxCodes.size === 0) {
+        asxCodeButtonsContainer.style.display = 'none';
+        console.log("[UI] No unique ASX codes found for current view. Hiding ASX buttons container.");
+        return;
+    } else {
+        asxCodeButtonsContainer.style.display = 'flex';
+    }
+    const sortedAsxCodes = Array.from(uniqueAsxCodes).sort();
+    sortedAsxCodes.forEach(asxCode => {
+        const button = document.createElement('button');
+        button.className = 'asx-code-btn';
+        button.textContent = asxCode;
+        button.dataset.asxCode = asxCode;
+        asxCodeButtonsContainer.appendChild(button);
+        button.addEventListener('click', (event) => {
+            console.log(`[ASX Button Click] Button for ${asxCode} clicked.`);
+            const clickedCode = event.target.dataset.asxCode;
+            scrollToShare(clickedCode);
+        });
+    });
+    console.log(`[UI] Rendered ${sortedAsxCodes.length} code buttons.`);
+}
+
+function scrollToShare(asxCode) {
+    console.log(`[UI] Attempting to scroll to/highlight share with Code: ${asxCode}`);
+    const targetShare = allSharesData.find(s => s.shareName && s.shareName.toUpperCase() === asxCode.toUpperCase());
+    if (targetShare) {
+        selectShare(targetShare.id);
+        let elementToScrollTo = document.querySelector(`#shareTable tbody tr[data-doc-id="${targetShare.id}"]`);
+        if (!elementToScrollTo || window.matchMedia("(max-width: 768px)").matches) {
+            elementToScrollTo = document.querySelector(`.mobile-card[data-doc-id="${targetShare.id}"]`);
+        }
+        if (elementToScrollTo) {
+            elementToScrollTo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            console.log(`[UI] Scrolled to element for share ID: ${targetShare.id}`);
+        } else {
+            console.warn(`[UI] Element for share ID: ${targetShare.id} not found for scrolling.`);
+        }
+        showShareDetails(); 
+    } else {
+        showCustomAlert(`Share '${asxCode}' not found.`);
+        console.warn(`[UI] Share '${asxCode}' not found in allSharesData.`);
+    }
+}
+
+const COMPANY_TAX_RATE = 0.30;
+function calculateUnfrankedYield(dividendAmount, currentPrice) {
+    if (typeof dividendAmount !== 'number' || isNaN(dividendAmount) || dividendAmount <= 0) { return null; }
+    if (typeof currentPrice !== 'number' || isNaN(currentPrice) || currentPrice <= 0) { return null; }
+    return (dividendAmount / currentPrice) * 100;
+}
+
+function calculateFrankedYield(dividendAmount, currentPrice, frankingCreditsPercentage) {
+    if (typeof dividendAmount !== 'number' || isNaN(dividendAmount) || dividendAmount <= 0) { return null; }
+    if (typeof currentPrice !== 'number' || isNaN(currentPrice) || currentPrice <= 0) { return null; }
+    if (typeof frankingCreditsPercentage !== 'number' || isNaN(frankingCreditsPercentage) || frankingCreditsPercentage < 0 || frankingCreditsPercentage > 100) { return null; }
+    const unfrankedYield = calculateUnfrankedYield(dividendAmount, currentPrice);
+    if (unfrankedYield === null) return null;
+    const frankingRatio = frankingCreditsPercentage / 100;
+    const frankingCreditPerShare = dividendAmount * (COMPANY_TAX_RATE / (1 - COMPANY_TAX_RATE)) * frankingRatio;
+    const grossedUpDividend = dividendAmount + frankingCreditPerShare;
+    return (grossedUpDividend / currentPrice) * 100;
+}
+
+function estimateDividendIncome(investmentValue, dividendAmountPerShare, currentPricePerShare) {
+    if (typeof investmentValue !== 'number' || isNaN(investmentValue) || investmentValue <= 0) { return null; }
+    if (typeof dividendAmountPerShare !== 'number' || isNaN(dividendAmountPerShare) || dividendAmountPerShare <= 0) { return null; }
+    if (typeof currentPricePerShare !== 'number' || isNaN(currentPricePerShare) || currentPricePerShare <= 0) { return null; }
+    const numberOfShares = investmentValue / currentPricePerShare;
+    return numberOfShares * dividendAmountPerShare;
+}
+
+function updateCalculatorDisplay() {
+    calculatorInput.textContent = previousCalculatorInput + (operator ? ` ${getOperatorSymbol(operator)} ` : '') + currentCalculatorInput;
+    if (resultDisplayed) { /* nothing */ }
+    else if (currentCalculatorInput !== '') { calculatorResult.textContent = currentCalculatorInput; }
+    else if (previousCalculatorInput !== '' && operator) { calculatorResult.textContent = previousCalculatorInput; }
+    else { calculatorResult.textContent = '0'; }
+}
+
+function calculateResult() {
+    let prev = parseFloat(previousCalculatorInput);
+    let current = parseFloat(currentCalculatorInput);
+    if (isNaN(prev) || isNaN(current)) return;
+    let res;
+    switch (operator) {
+        case 'add': res = prev + current; break;
+        case 'subtract': res = prev - current; break;
+        case 'multiply': res = prev * current; break;
+        case 'divide':
+            if (current === 0) { showCustomAlert("Cannot divide by zero!"); res = 'Error'; }
+            else { res = prev / current; }
+            break;
+        default: return;
+    }
+    if (typeof res === 'number' && !isNaN(res)) { res = parseFloat(res.toFixed(10)); }
+    calculatorResult.textContent = res;
+    previousCalculatorInput = res.toString();
+    currentCalculatorInput = '';
+}
+
+function getOperatorSymbol(op) {
+    switch (op) {
+        case 'add': return '+'; case 'subtract': return '-';
+        case 'multiply': return '×'; case 'divide': return '÷';
+        default: return '';
+    }
+}
+
+function resetCalculator() {
+    currentCalculatorInput = ''; operator = null; previousCalculatorInput = '';
+    resultDisplayed = false; calculatorInput.textContent = ''; calculatorResult.textContent = '0';
+    console.log("[Calculator] Calculator state reset.");
+}
+
+async function applyTheme(themeName) {
+    const body = document.body;
+    body.className = body.className.split(' ').filter(c => !c.endsWith('-theme') && !c.startsWith('theme-')).join(' ');
+
+    currentActiveTheme = themeName;
+
+    if (themeName === 'system-default') {
+        body.removeAttribute('data-theme');
+        localStorage.removeItem('selectedTheme');
+        localStorage.removeItem('theme');
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (systemPrefersDark) {
+            body.classList.add('dark-theme');
+        }
+        console.log("[Theme] Reverted to system default theme.");
+        currentCustomThemeIndex = -1;
+    } else if (themeName === 'light' || themeName === 'dark') {
+        body.removeAttribute('data-theme');
+        localStorage.removeItem('selectedTheme');
+        localStorage.setItem('theme', themeName);
+        if (themeName === 'dark') {
+            body.classList.add('dark-theme');
+        }
+        console.log(`[Theme] Applied explicit default theme: ${themeName}`);
+        currentCustomThemeIndex = -1;
+    } else {
+        body.classList.add('theme-' + themeName);
+        body.setAttribute('data-theme', themeName);
+        localStorage.setItem('selectedTheme', themeName);
+        localStorage.removeItem('theme');
+        console.log(`[Theme] Applied custom theme: ${themeName}`);
+        currentCustomThemeIndex = CUSTOM_THEMES.indexOf(themeName);
+    }
+    
+    if (currentUserId && db && window.firestore) {
+        const userProfileDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/profile/settings`);
+        try {
+            await window.firestore.setDoc(userProfileDocRef, { lastTheme: themeName }, { merge: true });
+            console.log(`[Theme] Saved theme preference to Firestore: ${themeName}`);
+        } catch (error) {
+            console.error("[Theme] Error saving theme preference to Firestore:", error);
+        }
+    }
+    updateThemeToggleAndSelector();
+}
+
+function updateThemeToggleAndSelector() {
+    if (colorThemeSelect) {
+        if (currentActiveTheme.startsWith('bold-') || currentActiveTheme.startsWith('subtle-')) {
+            colorThemeSelect.value = currentActiveTheme;
+        } else {
+            colorThemeSelect.value = 'none';
+        }
+        console.log(`[Theme UI] Color theme select updated to: ${colorThemeSelect.value}`);
+    }
+
+    if (currentActiveTheme.startsWith('bold-') || currentActiveTheme.startsWith('subtle-')) {
+        currentCustomThemeIndex = CUSTOM_THEMES.indexOf(currentActiveTheme);
+    } else {
+        currentCustomThemeIndex = -1;
+    }
+}
+
+function getDefaultWatchlistId(userId) {
+    return `${userId}_${DEFAULT_WATCHLIST_ID_SUFFIX}`;
+}
+
+async function saveLastSelectedWatchlistIds(watchlistIds) {
+    if (!db || !currentUserId || !window.firestore) {
+        console.warn("[Watchlist] Cannot save last selected watchlists: DB, User ID, or Firestore functions not available.");
+        return;
+    }
+    const userProfileDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/profile/settings`);
+    try {
+        await window.firestore.setDoc(userProfileDocRef, { lastSelectedWatchlistIds: watchlistIds }, { merge: true });
+        console.log(`[Watchlist] Saved last selected watchlist IDs: ${watchlistIds.join(', ')}`);
+    } catch (error) {
+        console.error("[Watchlist] Error saving last selected watchlist IDs:", error);
+    }
+}
+
+async function saveSortOrderPreference(sortOrder) {
+    console.log(`[Sort Debug] Attempting to save sort order: ${sortOrder}`);
+    console.log(`[Sort Debug] db: ${db ? 'Available' : 'Not Available'}`);
+    console.log(`[Sort Debug] currentUserId: ${currentUserId}`);
+    console.log(`[Sort Debug] window.firestore: ${window.firestore ? 'Available' : 'Not Available'}`);
+
+    if (!db || !currentUserId || !window.firestore) {
+        console.warn("[Sort] Cannot save sort order preference: DB, User ID, or Firestore functions not available. Skipping save.");
+        return;
+    }
+    const userProfileDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/profile/settings`);
+    try {
+        await window.firestore.setDoc(userProfileDocRef, { lastSortOrder: sortOrder }, { merge: true });
+        console.log(`[Sort] Saved sort order preference: ${sortOrder}`);
+    }
+    catch (error) {
+        console.error("[Sort] Error saving sort order preference:", error);
+    }
+}
+
+async function loadUserWatchlistsAndSettings() {
+    if (!db || !currentUserId) {
+        console.warn("[User Settings] Firestore DB or User ID not available for loading settings.");
+        return;
+    }
+    userWatchlists = [];
+    const watchlistsColRef = window.firestore ? window.firestore.collection(db, `artifacts/${currentAppId}/users/${currentUserId}/watchlists`) : null;
+    const userProfileDocRef = window.firestore ? window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/profile/settings`) : null;
+
+    if (!watchlistsColRef || !userProfileDocRef) {
+        console.error("[User Settings] Firestore collection or doc reference is null. Cannot load settings.");
+        showCustomAlert("Firestore services not fully initialized. Cannot load user settings.");
+        return;
+    }
+
+    try {
+        console.log("[User Settings] Fetching user watchlists and profile settings...");
+        const querySnapshot = await window.firestore.getDocs(window.firestore.query(watchlistsColRef));
+        querySnapshot.forEach(doc => { userWatchlists.push({ id: doc.id, name: doc.data().name }); });
+        console.log(`[User Settings] Found ${userWatchlists.length} existing watchlists.`);
+
+        if (userWatchlists.length === 0) {
+            const defaultWatchlistRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/watchlists/${getDefaultWatchlistId(currentUserId)}`);
+            await window.firestore.setDoc(defaultWatchlistRef, { name: DEFAULT_WATCHLIST_NAME, createdAt: new Date().toISOString() });
+            userWatchlists.push({ id: getDefaultWatchlistId(currentUserId), name: DEFAULT_WATCHLIST_NAME });
+            console.log("[User Settings] Created default watchlist.");
+        }
+        userWatchlists.sort((a, b) => a.name.localeCompare(b.name));
+
+        const userProfileSnap = await window.firestore.getDoc(userProfileDocRef);
+        savedSortOrder = null;
+        savedTheme = null;
+
+        if (userProfileSnap.exists()) {
+            savedSortOrder = userProfileSnap.data().lastSortOrder;
+            savedTheme = userProfileSnap.data().lastTheme;
+            currentSelectedWatchlistIds = userProfileSnap.data().lastSelectedWatchlistIds;
+            console.log(`[User Settings] Found last selected watchlists in profile: ${currentSelectedWatchlistIds}`);
+            console.log(`[User Settings] Found saved sort order in profile: ${savedSortOrder}`);
+            console.log(`[User Settings] Found saved theme in profile: ${savedTheme}`);
+        }
+
+        if (currentSelectedWatchlistIds && Array.isArray(currentSelectedWatchlistIds) && currentSelectedWatchlistIds.length > 0) {
+            currentSelectedWatchlistIds = currentSelectedWatchlistIds.filter(id => 
+                id === ALL_SHARES_ID || userWatchlists.some(wl => wl.id === id)
+            );
+            if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID) && userWatchlists.length === 0) {
+                 currentSelectedWatchlistIds = [];
+            }
+            if (currentSelectedWatchlistIds.length === 0) {
+                currentSelectedWatchlistIds = [userWatchlists[0].id];
+                console.warn("[User Settings] Saved watchlist IDs were invalid or empty, defaulting to first watchlist.");
+            }
+        } else {
+            currentSelectedWatchlistIds = [userWatchlists[0].id];
+            console.log("[User Settings] No saved watchlist preference, defaulting to first watchlist.");
+        }
+
+        renderWatchlistSelect();
+        
+        if (currentUserId && savedSortOrder && Array.from(sortSelect.options).some(option => option.value === savedSortOrder)) {
+            sortSelect.value = savedSortOrder;
+            currentSortOrder = savedSortOrder;
+            console.log(`[Sort] Applied saved sort order: ${currentSortOrder}`);
+        } else {
+            sortSelect.value = ''; 
+            currentSortOrder = '';
+            console.log("[Sort] No valid saved sort order or not logged in, defaulting to placeholder.");
+        }
+        renderSortSelect();
+        
+        if (savedTheme) {
+            applyTheme(savedTheme);
+        } else {
+            const localStorageSelectedTheme = localStorage.getItem('selectedTheme');
+            const localStorageTheme = localStorage.getItem('theme');
+
+            if (localStorageSelectedTheme) {
+                applyTheme(localStorageSelectedTheme);
+            } else if (localStorageTheme) {
+                applyTheme(localStorageTheme);
+            } else {
+                applyTheme('system-default');
+            }
+        }
+        updateThemeToggleAndSelector();
+
+        updateMainButtonsState(true); 
+
+        const migratedSomething = await migrateOldSharesToWatchlist();
+        if (!migratedSomething) {
+            console.log("[Watchlist] No old shares to migrate/update, directly setting up shares listener for current watchlist.");
+            await loadShares();
+        }
+
+    } catch (error) {
+        console.error("[User Settings] Error loading user watchlists and settings:", error);
+        showCustomAlert("Error loading user settings: " + error.message);
+    } finally {
+        if (loadingIndicator) loadingIndicator.style.display = 'none';
+    }
+}
+
+/**
+ * Fetches live price data from the Google Apps Script Web App.
+ * Updates the `livePrices` global object.
+ */
+async function fetchLivePrices() {
+    console.log("[Live Price] Attempting to fetch live prices...");
+    try {
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        console.log("[Live Price] Raw data received:", data);
+
+        const newLivePrices = {};
+        data.forEach(item => {
+            // Ensure the keys match what your Google Apps Script is returning exactly.
+            // The Apps Script cleans headers to remove spaces/special chars, so 'ASXCode', 'LivePrice', 'PrevClose'
+            // are the expected keys.
+            const asxCode = String(item.ASXCode).toUpperCase();
+            const livePrice = parseFloat(item.LivePrice);
+            const prevClose = parseFloat(item.PrevClose); // Get previous close here
+
+            if (asxCode && !isNaN(livePrice)) {
+                newLivePrices[asxCode] = {
+                    live: livePrice,
+                    prevClose: isNaN(prevClose) ? null : prevClose // Store prevClose as well
+                };
+            } else {
+                console.warn(`[Live Price] Skipping item due to missing ASX code or invalid price:`, item);
+            }
+        });
+        livePrices = newLivePrices;
+        console.log("[Live Price] Live prices updated:", livePrices);
+        renderWatchlist(); 
+    } catch (error) {
+        console.error("[Live Price] Error fetching live prices:", error);
+    }
+}
+
+/**
+ * Starts the periodic fetching of live prices.
+ */
+function startLivePriceUpdates() {
+    if (livePriceFetchInterval) {
+        clearInterval(livePriceFetchInterval);
+        console.log("[Live Price] Cleared existing live price interval.");
+    }
+    fetchLivePrices(); 
+    livePriceFetchInterval = setInterval(fetchLivePrices, LIVE_PRICE_FETCH_INTERVAL_MS);
+    console.log(`[Live Price] Started live price updates every ${LIVE_PRICE_FETCH_INTERVAL_MS / 1000 / 60} minutes.`);
+}
+
+/**
+ * Stops the periodic fetching of live prices.
+ */
+function stopLivePriceUpdates() {
+    if (livePriceFetchInterval) {
+        clearInterval(livePriceFetchInterval);
+        livePriceFetchInterval = null;
+        console.log("[Live Price] Stopped live price updates.");
+    }
+}
+
+
+/**
+ * Sets up a real-time Firestore listener for shares based on currentSelectedWatchlistIds.
+ * Updates `allSharesData` and re-renders the UI whenever changes occur.
+ */
+async function loadShares() {
+    if (unsubscribeShares) {
+        unsubscribeShares();
+        unsubscribeShares = null;
+        console.log("[Firestore Listener] Unsubscribed from previous shares listener.");
+    }
+
+    if (!db || !currentUserId || !window.firestore) {
+        console.warn("[Shares] Firestore DB, User ID, or Firestore functions not available for loading shares. Clearing list.");
+        clearShareList();
+        return;
+    }
+    if (loadingIndicator) loadingIndicator.style.display = 'block';
+    
+    try {
+        const sharesCol = window.firestore.collection(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`);
+        let q;
+
+        let effectiveWatchlistId = null;
+        if (watchlistSelect && watchlistSelect.value && watchlistSelect.value !== "") {
+            effectiveWatchlistId = watchlistSelect.value;
+        } else if (currentSelectedWatchlistIds.length > 0 && currentSelectedWatchlistIds[0] !== ALL_SHARES_ID) {
+            effectiveWatchlistId = currentSelectedWatchlistIds[0];
+        } else if (userWatchlists.length > 0) {
+            effectiveWatchlistId = userWatchlists[0].id;
+        }
+
+        if (effectiveWatchlistId === ALL_SHARES_ID) {
+            q = window.firestore.query(sharesCol);
+            console.log(`[Shares] Setting up real-time listener for ALL shares for user: ${currentUserId}`);
+        } else if (effectiveWatchlistId) {
+            q = window.firestore.query(sharesCol, window.firestore.where("watchlistId", "==", effectiveWatchlistId));
+            console.log(`[Shares] Setting up real-time listener for shares in watchlist: ${effectiveWatchlistId}`);
+        } else {
+            q = window.firestore.query(sharesCol, window.firestore.where("watchlistId", "==", "NO_WATCHLIST_ID_EXISTS"));
+            console.warn("[Shares] No effective watchlist selected or available. Querying for non-existent ID to get empty results.");
+        }
+        
+        unsubscribeShares = window.firestore.onSnapshot(q, (querySnapshot) => {
+            console.log("[Firestore Listener] Shares snapshot received. Processing changes.");
+            let fetchedShares = [];
+            querySnapshot.forEach((doc) => {
+                const share = { id: doc.id, ...doc.data() };
+                fetchedShares.push(share);
+            });
+
+            allSharesData = fetchedShares;
+            console.log(`[Shares] Shares data updated from snapshot. Total shares: ${allSharesData.length}`);
+            
+            sortShares();
+            renderAsxCodeButtons();
+            
+            if (loadingIndicator) loadingIndicator.style.display = 'none';
+        }, (error) => {
+            console.error("[Firestore Listener] Error listening to shares:", error);
+            showCustomAlert("Error loading shares in real-time: " + error.message);
+            if (loadingIndicator) loadingIndicator.style.display = 'none';
+        });
+
+    } catch (error) {
+        console.error("[Shares] Error setting up shares listener:", error);
+        showCustomAlert("Error setting up real-time share updates: " + error.message);
+        if (loadingIndicator) loadingIndicator.style.display = 'none';
+    }
+}
+
+
+async function migrateOldSharesToWatchlist() {
+    if (!db || !currentUserId || !window.firestore) {
+        console.warn("[Migration] Firestore DB, User ID, or Firestore functions not available for migration.");
+        return false;
+    }
+    const sharesCol = window.firestore.collection(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`);
+    const q = window.firestore.query(sharesCol);
+    let sharesToUpdate = [];
+    let anyMigrationPerformed = false;
+    try {
+        console.log("[Migration] Checking for old shares to migrate/update schema and data types.");
+        const querySnapshot = await window.firestore.getDocs(q);
+        querySnapshot.forEach(doc => {
+            const shareData = doc.data();
+            let updatePayload = {};
+            let needsUpdate = false;
+            if (!shareData.hasOwnProperty('watchlistId')) {
+                needsUpdate = true;
+                updatePayload.watchlistId = getDefaultWatchlistId(currentUserId);
+                console.log(`[Migration] Share '${doc.id}' missing watchlistId. Assigning to default.`);
+            }
+            if ((!shareData.shareName || String(shareData.shareName).trim() === '') && shareData.hasOwnProperty('name') && String(shareData.name).trim() !== '') {
+                needsUpdate = true;
+                updatePayload.shareName = String(shareData.name).trim();
+                updatePayload.name = window.firestore.deleteField();
+                console.log(`[Migration] Share '${doc.id}' missing 'shareName' but has 'name' ('${shareData.name}'). Migrating 'name' to 'shareName'.`);
+            }
+            const fieldsToConvert = ['currentPrice', 'targetPrice', 'dividendAmount', 'frankingCredits', 'entryPrice', 'lastFetchedPrice', 'previousFetchedPrice'];
+            fieldsToConvert.forEach(field => {
+                const value = shareData[field];
+                const originalValueType = typeof value;
+                let parsedValue = value;
+                if (originalValueType === 'string' && value.trim() !== '') {
+                    parsedValue = parseFloat(value);
+                    if (!isNaN(parsedValue)) {
+                        if (originalValueType !== typeof parsedValue || value !== String(parsedValue)) {
+                            needsUpdate = true;
+                            updatePayload[field] = parsedValue;
+                            console.log(`[Migration] Share '${doc.id}': Converted ${field} from string '${value}' (type ${originalValueType}) to number ${parsedValue}.`);
+                        }
+                    } else {
+                        needsUpdate = true;
+                        updatePayload[field] = null;
+                        console.warn(`[Migration] Share '${doc.id}': Field '${field}' was invalid string '${value}', setting to null.`);
+                    }
+                } else if (originalValueType === 'number' && isNaN(value)) {
+                    needsUpdate = true;
+                    updatePayload[field] = null;
+                    console.warn(`[Migration] Share '${doc.id}': Field '${field}' was NaN number, setting to null.`);
+                }
+                if (field === 'frankingCredits' && typeof parsedValue === 'number' && !isNaN(parsedValue)) {
+                    if (parsedValue > 0 && parsedValue < 1) {
+                        needsUpdate = true;
+                        updatePayload.frankingCredits = parsedValue * 100;
+                        console.log(`[Migration] Share '${doc.id}': Converted frankingCredits from decimal ${parsedValue} to percentage ${parsedValue * 100}.`);
+                    }
+                }
+            });
+            const effectiveCurrentPrice = (typeof updatePayload.currentPrice === 'number' && !isNaN(updatePayload.currentPrice)) ? updatePayload.currentPrice :
+                                          ((typeof shareData.currentPrice === 'string' ? parseFloat(shareData.currentPrice) : shareData.currentPrice) || null);
+            if (!shareData.hasOwnProperty('lastFetchedPrice') || (typeof shareData.lastFetchedPrice === 'string' && isNaN(parseFloat(shareData.lastFetchedPrice)))) {
+                needsUpdate = true;
+                updatePayload.lastFetchedPrice = effectiveCurrentPrice;
+                console.log(`[Migration] Share '${doc.id}': Setting missing lastFetchedPrice to ${effectiveCurrentPrice}.`);
+            }
+            if (!shareData.hasOwnProperty('previousFetchedPrice') || (typeof shareData.previousFetchedPrice === 'string' && isNaN(parseFloat(shareData.previousFetchedPrice)))) {
+                needsUpdate = true;
+                updatePayload.previousFetchedPrice = effectiveCurrentPrice;
+                console.log(`[Migration] Share '${doc.id}': Setting missing previousFetchedPrice to ${effectiveCurrentPrice}.`);
+            }
+            if (!shareData.hasOwnProperty('lastPriceUpdateTime')) {
+                needsUpdate = true;
+                updatePayload.lastPriceUpdateTime = new Date().toISOString();
+                console.log(`[Migration] Share '${doc.id}': Setting missing lastPriceUpdateTime.`);
+            }
+            if (needsUpdate) { sharesToUpdate.push({ ref: doc.ref, data: updatePayload }); }
+        });
+        if (sharesToUpdate.length > 0) {
+            console.log(`[Migration] Performing consolidated update for ${sharesToUpdate.length} shares.`);
+            for (const item of sharesToUpdate) { await window.firestore.updateDoc(item.ref, item.data); }
+            showCustomAlert(`Migrated/Updated ${sharesToUpdate.length} old shares.`, 2000);
+            console.log("[Migration] Migration complete. Setting up shares listener.");
+            await loadShares();
+            anyMigrationPerformed = true;
+        } else {
+            console.log("[Migration] No old shares found requiring migration or schema update.");
+        }
+        return anyMigrationPerformed;
+    } catch (error) {
+        console.error("[Migration] Error during migration/schema update:", error);
+        showCustomAlert("Error during data migration: " + error.message);
+        return false;
+    }
+}
+
+function showContextMenu(event, shareId) {
+    if (!shareContextMenu) return;
+    
+    currentContextMenuShareId = shareId;
+    
+    let x = event.clientX;
+    let y = event.clientY;
+
+    if (event.touches && event.touches.length > 0) {
+        x = event.touches[0].clientX;
+        y = event.touches[0].clientY;
+    }
+
+    const menuWidth = shareContextMenu.offsetWidth;
+    const menuHeight = shareContextMenu.offsetHeight;
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    if (x + menuWidth > viewportWidth) {
+        x = viewportWidth - menuWidth - 10;
+    }
+    if (y + menuHeight > viewportHeight) {
+        y = viewportHeight - menuHeight - 10;
+    }
+    if (x < 10) x = 10;
+    if (y < 10) y = 10;
+
+    shareContextMenu.style.left = `${x}px`;
+    shareContextMenu.style.top = `${y}px`;
+    shareContextMenu.style.display = 'block';
+    contextMenuOpen = true;
+    console.log(`[Context Menu] Opened for share ID: ${shareId} at (${x}, ${y})`);
+}
+
+function hideContextMenu() {
+    if (shareContextMenu) {
+        shareContextMenu.style.display = 'none';
+        contextMenuOpen = false;
+        currentContextMenuShareId = null;
+        deselectCurrentShare();
+        console.log("[Context Menu] Hidden.");
+    }
+}
+
+function toggleAppSidebar(forceState = null) {
+    console.log(`[Sidebar] toggleAppSidebar called. Current open state: ${appSidebar.classList.contains('open')}, Force state: ${forceState}`);
+    const isDesktop = window.innerWidth > 768;
+    const isOpen = appSidebar.classList.contains('open');
+
+    if (forceState === true || (forceState === null && !isOpen)) {
+        appSidebar.classList.add('open');
+        sidebarOverlay.classList.add('open');
+        if (isDesktop) {
+            document.body.classList.add('sidebar-active');
+            sidebarOverlay.style.pointerEvents = 'none';
+            console.log("[Sidebar] Desktop: Sidebar opened, body shifted, overlay pointer-events: none.");
+        } else {
+            document.body.classList.remove('sidebar-active');
+            sidebarOverlay.style.pointerEvents = 'auto';
+            console.log("[Sidebar] Mobile: Sidebar opened, body NOT shifted, overlay pointer-events: auto.");
+        }
+        console.log("[Sidebar] Sidebar opened.");
+    } else if (forceState === false || (forceState === null && isOpen)) {
+        appSidebar.classList.remove('open');
+        sidebarOverlay.classList.remove('open');
+        document.body.classList.remove('sidebar-active');
+        sidebarOverlay.style.pointerEvents = 'none';
+        console.log("[Sidebar] Sidebar closed.");
+    }
+}
+
+/**
+ * Escapes a string for CSV by enclosing it in double quotes and doubling any existing double quotes.
+ * @param {any} value The value to escape.
+ * @returns {string} The CSV-escaped string.
+ */
+function escapeCsvValue(value) {
+    if (value === null || value === undefined) {
+        return '';
+    }
+    let stringValue = String(value);
+    if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n') || stringValue.includes('\r')) {
+        stringValue = stringValue.replace(/"/g, '""');
+        return `"${stringValue}"`;
+    }
+    return stringValue;
+}
+
+/**
+ * Exports the current watchlist data to a CSV file.
+ */
+function exportWatchlistToCSV() {
+    if (!currentUserId || currentSelectedWatchlistIds.length === 0) {
+        showCustomAlert("Please sign in and select watchlists to export.");
+        return;
+    }
+    
+    let sharesToExport = [];
+    let exportFileNamePrefix = "selected_watchlists";
+
+    if (currentSelectedWatchlistIds.length === 1) {
+        const selectedWatchlistId = currentSelectedWatchlistIds[0];
+        if (selectedWatchlistId === ALL_SHARES_ID) {
+            sharesToExport = [...allSharesData];
+            exportFileNamePrefix = "all_shares";
+        } else {
+            sharesToExport = allSharesData.filter(share => share.watchlistId === selectedWatchlistId);
+            const wl = userWatchlists.find(w => w.id === selectedWatchlistId);
+            if (wl) { exportFileNamePrefix = wl.name; }
+        }
+    } else {
+        sharesToExport = [...allSharesData];
+        exportFileNamePrefix = "all_shares";
+    }
+
+    if (sharesToExport.length === 0) {
+        showCustomAlert("No shares in the current selection to export.", 2000);
+        return;
+    }
+
+    const headers = [
+        "Code", "Entered Price", "Live Price", "Price Change", "Target Price", "Dividend Amount", "Franking Credits (%)",
+        "Unfranked Yield (%)", "Franked Yield (%)", "Entry Date", "Comments"
+    ];
+
+    const csvRows = [];
+    csvRows.push(headers.map(escapeCsvValue).join(','));
+
+    sharesToExport.forEach(share => {
+        const enteredPriceNum = Number(share.currentPrice);
+        const dividendAmountNum = Number(share.dividendAmount);
+        const frankingCreditsNum = Number(share.frankingCredits);
+        const targetPriceNum = Number(share.targetPrice);
+
+        // Get live price data from the global livePrices object
+        const livePriceData = livePrices[share.shareName.toUpperCase()];
+        const livePrice = livePriceData ? livePriceData.live : undefined;
+        const prevClosePrice = livePriceData ? livePriceData.prevClose : undefined;
+
+        let priceChange = '';
+        if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice) && 
+            prevClosePrice !== undefined && prevClosePrice !== null && !isNaN(prevClosePrice)) {
+            const change = livePrice - prevClosePrice;
+            priceChange = change.toFixed(2);
+        }
+
+        const priceForYield = (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) ? livePrice : enteredPriceNum;
+
+        const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, priceForYield);
+        const frankedYield = calculateFrankedYield(dividendAmountNum, priceForYield, frankingCreditsNum);
+
+        let allCommentsText = '';
+        if (share.comments && Array.isArray(share.comments)) {
+            allCommentsText = share.comments.map(c => {
+                let commentPart = '';
+                if (c.title) commentPart += `${c.title}: `;
+                if (c.text) commentPart += c.text;
+                return commentPart;
+            }).filter(Boolean).join('; ');
+        }
+
+        const row = [
+            share.shareName || '',
+            (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? enteredPriceNum.toFixed(2) : '',
+            (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) ? livePrice.toFixed(2) : '',
+            priceChange, // Now includes the calculated price change
+            (!isNaN(targetPriceNum) && targetPriceNum !== null) ? targetPriceNum.toFixed(2) : '',
+            (!isNaN(dividendAmountNum) && dividendAmountNum !== null) ? dividendAmountNum.toFixed(3) : '',
+            (!isNaN(frankingCreditsNum) && frankingCreditsNum !== null) ? frankingCreditsNum.toFixed(1) : '',
+            unfrankedYield !== null ? unfrankedYield.toFixed(2) : '',
+            frankedYield !== null ? frankedYield.toFixed(2) + '%' : '',
+            formatDate(share.entryDate) || '',
+            allCommentsText
+        ];
+        csvRows.push(row.map(escapeCsvValue).join(','));
+    });
+
+    const csvString = csvRows.join('\n');
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    
+    const formattedDate = new Date().toISOString().slice(0, 10);
+    const safeFileNamePrefix = exportFileNamePrefix.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    link.download = `${safeFileNamePrefix}_watchlist_${formattedDate}.csv`;
+    
+    link.href = URL.createObjectURL(blob);
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+    
+    showCustomAlert(`Exported shares to CSV!`, 2000);
+    console.log(`[Export] Shares exported to CSV with prefix: '${exportFileNamePrefix}'.`);
+}
+
+
+async function initializeAppLogic() {
+    console.log("initializeAppLogic: Firebase is ready. Starting app logic.");
+
+    // Initial modal hiding
+    if (shareFormSection) shareFormSection.style.setProperty('display', 'none', 'important');
+    if (dividendCalculatorModal) dividendCalculatorModal.style.setProperty('display', 'none', 'important');
+    if (shareDetailModal) shareDetailModal.style.setProperty('display', 'none', 'important');
+    if (addWatchlistModal) addWatchlistModal.style.setProperty('display', 'none', 'important');
+    if (manageWatchlistModal) manageWatchlistModal.style.setProperty('display', 'none', 'important');
+    if (customDialogModal) customDialogModal.style.setProperty('display', 'none', 'important');
+    if (calculatorModal) calculatorModal.style.setProperty('display', 'none', 'important');
+    if (shareContextMenu) shareContextMenu.style.setProperty('display', 'none', 'important');
+
+    // Service Worker Registration
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./service-worker.js', { scope: './' }) 
+                .then(registration => {
+                    console.log('Service Worker: Registered with scope:', registration.scope); 
+                })
+                .catch(error => {
+                    console.error('Service Worker: Registration failed:', error);
+                });
+        });
+    }
+
+    // Share Name Input to uppercase
+    if (shareNameInput) {
+        shareNameInput.addEventListener('input', function() { 
+            this.value = this.value.toUpperCase(); 
+            checkFormDirtyState();
+        });
+    }
+
+    // Add event listeners to all form inputs for dirty state checking
+    formInputs.forEach(input => {
+        if (input) {
+            input.addEventListener('input', checkFormDirtyState);
+            input.addEventListener('change', checkFormDirtyState);
+            input.addEventListener('focus', function() {
+                this.select();
+            });
+        }
+    });
+
+
+    // Form input navigation with Enter key
+    formInputs.forEach((input, index) => {
+        if (input) {
+            input.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    if (index === formInputs.length - 1) {
+                        if (addCommentSectionBtn && addCommentSectionBtn.offsetParent !== null && !addCommentSectionBtn.classList.contains('is-disabled-icon')) { 
+                            addCommentSectionBtn.click();
+                            const newCommentTitleInput = commentsFormContainer.lastElementChild?.querySelector('.comment-title-input');
+                            if (newCommentTitleInput) {
+                                newCommentTitleInput.focus();
+                            }
+                        } else if (saveShareBtn && !saveShareBtn.classList.contains('is-disabled-icon')) { 
+                            saveShareBtn.click();
+                        }
+                    } else {
+                        if (formInputs[index + 1]) formInputs[index + 1].focus();
+                    }
+                }
+            });
+        }
+    });
+
+    // Add Comment Section Button
+    if (addCommentSectionBtn) {
+        setIconDisabled(addCommentSectionBtn, false);
+        addCommentSectionBtn.addEventListener('click', () => {
+            addCommentSection();
+            checkFormDirtyState();
+        });
+    }
+
+    // Close buttons for modals
+    document.querySelectorAll('.close-button').forEach(button => { button.addEventListener('click', closeModals); });
+
+    // Global click listener to close modals/context menu if clicked outside
+    window.addEventListener('click', (event) => {
+        if (event.target === shareDetailModal || event.target === dividendCalculatorModal ||
+            event.target === shareFormSection || event.target === customDialogModal ||
+            event.target === calculatorModal || event.target === addWatchlistModal ||
+            event.target === manageWatchlistModal) {
+            closeModals();
+        }
+
+        if (contextMenuOpen && shareContextMenu && !shareContextMenu.contains(event.target)) {
+            hideContextMenu();
+        }
+    });
+
+    // Google Auth Button (Sign In/Out)
+    if (googleAuthBtn) {
+        googleAuthBtn.addEventListener('click', async () => {
+            console.log("[Auth] Google Auth Button Clicked.");
+            const currentAuth = window.firebaseAuth;
+            if (!currentAuth || !window.authFunctions) {
+                console.warn("[Auth] Auth service not ready or functions not loaded. Cannot process click.");
+                showCustomAlert("Authentication service not ready. Please try again in a moment.");
+                return;
+            }
+            if (currentAuth.currentUser) {
+                console.log("[Auth] Current user exists, attempting sign out.");
+                try {
+                    await window.authFunctions.signOut(currentAuth);
+                    console.log("[Auth] User signed out.");
+                } catch (error) {
+                    console.error("[Auth] Sign-Out failed:", error);
+                    showCustomAlert("Sign-Out failed: " + error.message);
+                }
+            } else {
+                console.log("[Auth] No current user, attempting sign in.");
+                try {
+                    const provider = window.authFunctions.GoogleAuthProviderInstance;
+                    if (!provider) {
+                        console.error("[Auth] GoogleAuthProvider instance not found. Is Firebase module script loaded?");
+                        showCustomAlert("Authentication service not ready. Please ensure Firebase module script is loaded.");
+                        return;
+                    }
+                    await window.authFunctions.signInWithPopup(currentAuth, provider);
+                    console.log("[Auth] Google Sign-In successful.");
+                }
+                catch (error) {
+                    console.error("[Auth] Google Sign-In failed: " + error.message);
+                    showCustomAlert("Google Sign-In failed: " + error.message);
+                }
+            }
+        });
+    }
+
+    // Logout Button
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', async () => {
+            console.log("[Auth] Logout Button Clicked (No Confirmation).");
+            const currentAuth = window.firebaseAuth;
+            if (!currentAuth || !window.authFunctions) {
+                console.warn("[Auth] Auth service not ready or functions not loaded. Cannot process logout.");
+                showCustomAlert("Authentication service not ready. Please try again in a moment.");
+                return;
+            }
+            try {
+                await window.authFunctions.signOut(currentAuth);
+                showCustomAlert("Logged out successfully!", 1500);
+                console.log("[Auth] User successfully logged out.");
+                toggleAppSidebar(false);
+            }
+            catch (error) {
+                console.error("[Auth] Logout failed:", error);
+                showCustomAlert("Logout failed: " + error.message);
+            }
+        });
+    }
+
+    // Watchlist Select Change Listener
+    if (watchlistSelect) {
+        watchlistSelect.addEventListener('change', async (event) => {
+            console.log(`[Watchlist Select] Change event fired. New value: ${event.target.value}`);
+            currentSelectedWatchlistIds = [event.target.value];
+            await saveLastSelectedWatchlistIds(currentSelectedWatchlistIds);
+            await loadShares();
+        });
+    }
+
+    // Sort Select Change Listener
+    if (sortSelect) {
+        sortSelect.addEventListener('change', async (event) => {
+            console.log(`[Sort Select] Change event fired. New value: ${event.target.value}`);
+            currentSortOrder = sortSelect.value;
+            sortShares();
+            await saveSortOrderPreference(currentSortOrder);
+        });
+    }
+
+    // New Share Button (from sidebar)
+    if (newShareBtn) {
+        newShareBtn.addEventListener('click', () => {
+            console.log("[UI] New Share button (sidebar) clicked.");
+            clearForm();
+            formTitle.textContent = 'Add New Share';
+            if (deleteShareBtn) { deleteShareBtn.classList.add('hidden'); }
+            showModal(shareFormSection);
+            shareNameInput.focus();
+            toggleAppSidebar(false);
+            addCommentSection(); // ADDED: Add an initial empty comment section for new shares
+        });
+    }
+
+    // Add Share Header Button (from header)
+    if (addShareHeaderBtn) {
+        addShareHeaderBtn.addEventListener('click', () => {
+            console.log("[UI] Add Share button (header) clicked.");
+            clearForm();
+            formTitle.textContent = 'Add New Share';
+            if (deleteShareBtn) { deleteShareBtn.classList.add('hidden'); }
+            showModal(shareFormSection);
+            shareNameInput.focus();
+            addCommentSection(); // ADDED: Add an initial empty comment section for new shares
+        });
+    }
+
+    // Event listener for shareNameInput to toggle saveShareBtn
+    if (shareNameInput && saveShareBtn) {
+        shareNameInput.addEventListener('input', () => {
+            checkFormDirtyState(); 
+        });
+    }
+
+    // Save Share Button
+    if (saveShareBtn) {
+        saveShareBtn.addEventListener('click', async () => {
+            console.log("[Share Form] Save Share button clicked.");
+            // Call the shared save function, not silent
+            saveShareData(false);
+        });
+    }
+
+    // Delete Share Button
+    if (deleteShareBtn) {
+        deleteShareBtn.addEventListener('click', async () => {
+            console.log("[Share Form] Delete Share button clicked (No Confirmation).");
+            if (deleteShareBtn.classList.contains('is-disabled-icon')) {
+                console.warn("[Delete Share] Delete button was disabled, preventing action.");
+                return;
+            }
+            if (selectedShareDocId) {
+                try {
+                    const shareDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, selectedShareDocId);
+                    await window.firestore.deleteDoc(shareDocRef);
+                    showCustomAlert("Share deleted successfully!", 1500);
+                    console.log(`[Firestore] Share (ID: ${selectedShareDocId}) deleted.`);
+                    closeModals();
+                } catch (error) {
+                    console.error("[Firestore] Error deleting share:", error);
+                    showCustomAlert("Error deleting share: " + error.message);
+                }
+            } else { showCustomAlert("No share selected for deletion."); }
+        });
+    }
+
+    // Edit Share From Detail Button
+    if (editShareFromDetailBtn) {
+        editShareFromDetailBtn.addEventListener('click', () => {
+            console.log("[Share Details] Edit Share button clicked.");
+            if (editShareFromDetailBtn.classList.contains('is-disabled-icon')) {
+                console.warn("[Edit Share From Detail] Edit button was disabled, preventing action.");
+                return;
+            }
+            hideModal(shareDetailModal);
+            showEditFormForSelectedShare();
+        });
+    }
+
+    // Delete Share From Detail Button
+    if (deleteShareFromDetailBtn) {
+        deleteShareFromDetailBtn.addEventListener('click', async () => {
+            console.log("[Share Details] Delete Share button clicked (No Confirmation).");
+            if (deleteShareFromDetailBtn.classList.contains('is-disabled-icon')) {
+                console.warn("[Delete Share From Detail] Delete button was disabled, preventing action.");
+                return;
+            }
+            if (selectedShareDocId) {
+                try {
+                    const shareDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, selectedShareDocId);
+                    await window.firestore.deleteDoc(shareDocRef);
+                    showCustomAlert("Share deleted successfully!", 1500);
+                    console.log(`[Firestore] Share (ID: ${selectedShareDocId}) deleted.`);
+                    closeModals();
+                } catch (error) {
+                    console.error("[Firestore] Error deleting share:", error);
+                    showCustomAlert("Error deleting share: " + error.message);
+                }
+            } else { showCustomAlert("No share selected for deletion."); }
+        });
+    }
+
+    // Context Menu Edit Share Button
+    if (contextEditShareBtn) {
+        contextEditShareBtn.addEventListener('click', () => {
+            console.log("[Context Menu] Edit Share button clicked.");
+            if (currentContextMenuShareId) {
+                const shareIdToEdit = currentContextMenuShareId;
+                hideContextMenu();
+                showEditFormForSelectedShare(shareIdToEdit);
+            } else {
+                console.warn("[Context Menu] No share ID found for editing.");
+            }
+        });
+    }
+
+    // Context Menu Delete Share Button
+    if (contextDeleteShareBtn) {
+        contextDeleteShareBtn.addEventListener('click', async () => {
+            console.log("[Context Menu] Delete Share button clicked (No Confirmation).");
+            if (currentContextMenuShareId) {
+                const shareToDeleteId = currentContextMenuShareId;
+                hideContextMenu();
+                try {
+                    const shareDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, shareToDeleteId);
+                    await window.firestore.deleteDoc(shareDocRef);
+                    showCustomAlert("Share deleted successfully!", 1500);
+                    console.log(`[Firestore] Share (ID: ${shareToDeleteId}) deleted.`);
+                } catch (error) {
+                    console.error("[Firestore] Error deleting share:", error);
+                    showCustomAlert("Error deleting share: " + error.message);
+                }
+            } else {
+                showCustomAlert("No share selected for deletion from context menu.");
+                console.warn("[Context Menu] No share ID found for deletion.");
+            }
+        });
+    }
+
+    // Add Watchlist Button
+    if (addWatchlistBtn) {
+        addWatchlistBtn.addEventListener('click', () => {
+            console.log("[UI] Add Watchlist button clicked.");
+            if (newWatchlistNameInput) newWatchlistNameInput.value = '';
+            setIconDisabled(saveWatchlistBtn, true); // This saveWatchlistBtn is for the Add Share modal, not the new Watchlist modal.
+            console.log("[Add Watchlist] saveWatchlistBtn disabled initially.");
+            showModal(addWatchlistModal);
+            newWatchlistNameInput.focus();
+            toggleAppSidebar(false);
+        });
+    }
+
+    // Event listener for newWatchlistNameInput to toggle saveWatchlistBtn (for Add Watchlist Modal)
+    // NOTE: This refers to the save button specifically for the Add Watchlist modal.
+    const saveNewWatchlistBtn = document.getElementById('saveWatchlistBtn'); // Re-get reference if needed
+    if (newWatchlistNameInput && saveNewWatchlistBtn) {
+        newWatchlistNameInput.addEventListener('input', () => {
+            const isDisabled = newWatchlistNameInput.value.trim() === '';
+            setIconDisabled(saveNewWatchlistBtn, isDisabled);
+        });
+    }
+
+    // Save Watchlist Button (for Add Watchlist Modal)
+    if (saveNewWatchlistBtn) {
+        saveNewWatchlistBtn.addEventListener('click', async () => {
+            console.log("[Watchlist Form] Save Watchlist button clicked.");
+            if (saveNewWatchlistBtn.classList.contains('is-disabled-icon')) {
+                showCustomAlert("Please enter a watchlist name.");
+                console.warn("[Save Watchlist] Save button was disabled, preventing action.");
+                return;
+            }
+
+            const watchlistName = newWatchlistNameInput.value.trim();
+            if (!watchlistName) {
+                showCustomAlert("Watchlist name is required!");
+                return;
+            }
+            if (userWatchlists.some(w => w.name.toLowerCase() === watchlistName.toLowerCase())) {
+                showCustomAlert("A watchlist with this name already exists!");
+                return;
+            }
+
+            try {
+                const watchlistsColRef = window.firestore.collection(db, `artifacts/${currentAppId}/users/${currentUserId}/watchlists`);
+                const newWatchlistRef = await window.firestore.addDoc(watchlistsColRef, {
+                    name: watchlistName,
+                    createdAt: new Date().toISOString(),
+                    userId: currentUserId
+                });
+                showCustomAlert(`Watchlist '${watchlistName}' added!`, 1500);
+                console.log(`[Firestore] Watchlist '${watchlistName}' added with ID: ${newWatchlistRef.id}`);
+                hideModal(addWatchlistModal);
+                
+                currentSelectedWatchlistIds = [newWatchlistRef.id];
+                await saveLastSelectedWatchlistIds(currentSelectedWatchlistIds);
+                await loadUserWatchlistsAndSettings();
+            } catch (error) {
+                console.error("[Firestore] Error adding watchlist:", error);
+                showCustomAlert("Error adding watchlist: " + error.message);
+            }
+        });
+    }
+
+    // Edit Watchlist Button
+    if (editWatchlistBtn) {
+        editWatchlistBtn.addEventListener('click', () => {
+            console.log("[UI] Edit Watchlist button clicked.");
+            let watchlistToEditId = watchlistSelect.value;
+
+            if (!watchlistToEditId || !userWatchlists.some(w => w.id === watchlistToEditId)) {
+                showCustomAlert("Please select a watchlist to edit.");
+                return;
+            }
+            const selectedWatchlistObj = userWatchlists.find(w => w.id === watchlistToEditId);
+            const watchlistToEditName = selectedWatchlistObj ? selectedWatchlistObj.name : '';
+
+            console.log(`[Edit Watchlist Button Click] Watchlist to edit ID: ${watchlistToEditId}, Name: ${watchlistToEditName}`);
+
+            editWatchlistNameInput.value = watchlistToEditName;
+            const isDisabledDelete = userWatchlists.length <= 1;
+            setIconDisabled(deleteWatchlistInModalBtn, isDisabledDelete); 
+            console.log(`[Edit Watchlist] deleteWatchlistInModalBtn disabled: ${isDisabledDelete}`);
+            setIconDisabled(saveWatchlistNameBtn, false);
+            console.log("[Edit Watchlist] saveWatchlistNameBtn enabled initially.");
+            showModal(manageWatchlistModal);
+            editWatchlistNameInput.focus();
+            toggleAppSidebar(false);
+        });
+    }
+
+    // Event listener for editWatchlistNameInput to toggle saveWatchlistNameBtn
+    if (editWatchlistNameInput && saveWatchlistNameBtn) {
+        editWatchlistNameInput.addEventListener('input', () => {
+            const isDisabled = editWatchlistNameInput.value.trim() === '';
+            setIconDisabled(saveWatchlistNameBtn, isDisabled);
+        });
+    }
+
+    // Save Watchlist Name Button (for Manage Watchlist Modal)
+    if (saveWatchlistNameBtn) {
+        saveWatchlistNameBtn.addEventListener('click', async () => {
+            console.log("[Manage Watchlist Form] Save Watchlist Name button clicked.");
+            if (saveWatchlistNameBtn.classList.contains('is-disabled-icon')) {
+                showCustomAlert("Watchlist name cannot be empty.");
+                console.warn("[Save Watchlist Name] Save button was disabled, preventing action.");
+                return;
+            }
+
+            let watchlistToEditId = watchlistSelect.value;
+
+            const newName = editWatchlistNameInput.value.trim();
+            if (!newName) {
+                showCustomAlert("Watchlist name cannot be empty!");
+                return;
+            }
+            if (userWatchlists.some(w => w.name.toLowerCase() === newName.toLowerCase() && w.id !== watchlistToEditId)) {
+                showCustomAlert("A watchlist with this name already exists!");
+                return;
+            }
+
+            try {
+                const watchlistDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/watchlists`, watchlistToEditId);
+                await window.firestore.updateDoc(watchlistDocRef, { name: newName });
+                showCustomAlert(`Watchlist renamed to '${newName}'!`, 1500);
+                console.log(`[Firestore] Watchlist (ID: ${watchlistToEditId}) renamed to '${newName}'.`);
+                hideModal(manageWatchlistModal);
+                await loadUserWatchlistsAndSettings();
+            } catch (error) {
+                console.error("[Firestore] Error renaming watchlist:", error);
+                showCustomAlert("Error renaming watchlist: " + error.message);
+            }
+        });
+    }
+
+    // Delete Watchlist In Modal Button (for Manage Watchlist Modal)
+    if (deleteWatchlistInModalBtn) {
+        deleteWatchlistInModalBtn.addEventListener('click', async () => {
+            console.log("[Manage Watchlist Form] Delete Watchlist button clicked (No Confirmation).");
+            if (deleteWatchlistInModalBtn.classList.contains('is-disabled-icon')) {
+                console.warn("[Delete Watchlist In Modal] Delete button was disabled, preventing action.");
+                return;
+            }
+
+            let watchlistToDeleteId = watchlistSelect.value;
+
+            if (!watchlistToDeleteId || userWatchlists.length <= 1) {
+                showCustomAlert("Cannot delete the last watchlist. Please create another watchlist first.");
+                return;
+            }
+            const watchlistToDeleteName = userWatchlists.find(w => w.id === watchlistToDeleteId)?.name || 'Unknown Watchlist';
+            
+            try {
+                const sharesColRef = window.firestore.collection(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`);
+                const q = window.firestore.query(sharesColRef, window.firestore.where("watchlistId", "==", watchlistToDeleteId));
+                const querySnapshot = await window.firestore.getDocs(q);
+
+                const batch = window.firestore.writeBatch(db);
+                querySnapshot.forEach(doc => {
+                    const shareRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, doc.id);
+                    batch.delete(shareRef);
+                });
+                await batch.commit();
+                console.log(`[Firestore] Deleted ${querySnapshot.docs.length} shares from watchlist '${watchlistToDeleteName}'.`);
+
+                const watchlistDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/watchlists`, watchlistToDeleteId);
+                await window.firestore.deleteDoc(watchlistDocRef);
+                console.log(`[Firestore] Watchlist '${watchlistToDeleteName}' (ID: ${watchlistToDeleteId}) deleted.`);
+
+                showCustomAlert(`Watchlist '${watchlistToDeleteName}' and its shares deleted successfully!`, 2000);
+                closeModals();
+
+                await loadUserWatchlistsAndSettings();
+            } catch (error) {
+                console.error("[Firestore] Error deleting watchlist:", error);
+                showCustomAlert("Error deleting watchlist: " + error.message);
+            }
+        });
+    }
+
+    // Dividend Calculator Button
+    if (dividendCalcBtn) {
+        dividendCalcBtn.addEventListener('click', () => {
+            console.log("[UI] Dividend button clicked. Attempting to open modal.");
+            calcDividendAmountInput.value = ''; calcCurrentPriceInput.value = ''; calcFrankingCreditsInput.value = '';
+            calcUnfrankedYieldSpan.textContent = '-'; calcFrankedYieldSpan.textContent = '-'; calcEstimatedDividend.textContent = '-';
+            investmentValueSelect.value = '10000';
+            showModal(dividendCalculatorModal);
+            calcCurrentPriceInput.focus(); 
+            console.log("[UI] Dividend Calculator modal opened.");
+            toggleAppSidebar(false);
+        });
+    }
+
+    // Dividend Calculator Input Listeners
+    [calcDividendAmountInput, calcCurrentPriceInput, calcFrankingCreditsInput, investmentValueSelect].forEach(input => {
+        if (input) {
+            input.addEventListener('input', updateDividendCalculations);
+            input.addEventListener('change', updateDividendCalculations);
+        }
+    });
+
+    function updateDividendCalculations() {
+        const currentPrice = parseFloat(calcCurrentPriceInput.value);
+        const dividendAmount = parseFloat(calcDividendAmountInput.value);
+        const frankingCredits = parseFloat(calcFrankingCreditsInput.value);
+        const investmentValue = parseFloat(investmentValueSelect.value);
+        
+        const unfrankedYield = calculateUnfrankedYield(dividendAmount, currentPrice);
+        const frankedYield = calculateFrankedYield(dividendAmount, currentPrice, frankingCredits);
+        const estimatedDividend = estimateDividendIncome(investmentValue, dividendAmount, currentPrice);
+        
+        calcUnfrankedYieldSpan.textContent = unfrankedYield !== null ? `${unfrankedYield.toFixed(2)}%` : '-';
+        calcFrankedYieldSpan.textContent = frankedYield !== null ? `${frankedYield.toFixed(2)}%` : '-';
+        calcEstimatedDividend.textContent = estimatedDividend !== null ? `$${estimatedDividend.toFixed(2)}` : '-';
+    }
+
+    // Standard Calculator Button
+    if (standardCalcBtn) {
+        standardCalcBtn.addEventListener('click', () => {
+            console.log("[UI] Standard Calculator button clicked.");
+            resetCalculator();
+            showModal(calculatorModal);
+            console.log("[UI] Standard Calculator modal opened.");
+            toggleAppSidebar(false);
+        });
+    }
+
+    // Calculator Buttons
+    if (calculatorButtons) {
+        calculatorButtons.addEventListener('click', (event) => {
+            const target = event.target;
+            if (!target.classList.contains('calc-btn') || target.classList.contains('is-disabled-icon')) { return; }
+            const value = target.dataset.value;
+            const action = target.dataset.action;
+            if (value) { appendNumber(value); }
+            else if (action) { handleAction(action); }
+        });
+    }
+
+    function appendNumber(num) {
+        if (resultDisplayed) { currentCalculatorInput = num; resultDisplayed = false; }
+        else { if (num === '.' && currentCalculatorInput.includes('.')) return; currentCalculatorInput += num; }
+        updateCalculatorDisplay();
+    }
+
+    function handleAction(action) {
+        if (action === 'clear') { resetCalculator(); return; }
+        if (action === 'percentage') { 
+            if (currentCalculatorInput === '' && previousCalculatorInput === '') return;
+            let val;
+            if (currentCalculatorInput !== '') {
+                val = parseFloat(currentCalculatorInput);
+            } else if (previousCalculatorInput !== '') {
+                val = parseFloat(previousCalculatorInput);
+            } else {
+                return;
+            }
+
+            if (isNaN(val)) return;
+
+            if (operator && previousCalculatorInput !== '') {
+                const prevNum = parseFloat(previousCalculatorInput);
+                if (isNaN(prevNum)) return;
+                currentCalculatorInput = (prevNum * (val / 100)).toString();
+            } else {
+                currentCalculatorInput = (val / 100).toString();
+            }
+            resultDisplayed = false;
+            updateCalculatorDisplay();
+            return; 
+        }
+        if (['add', 'subtract', 'multiply', 'divide'].includes(action)) {
+            if (currentCalculatorInput === '' && previousCalculatorInput === '') return;
+            if (currentCalculatorInput !== '') {
+                if (previousCalculatorInput !== '') { calculateResult(); previousCalculatorInput = calculatorResult.textContent; }
+                else { previousCalculatorInput = currentCalculatorInput; }
+            }
+            operator = action; currentCalculatorInput = ''; resultDisplayed = false; updateCalculatorDisplay(); return;
+        }
+        if (action === 'calculate') {
+            if (previousCalculatorInput === '' || currentCalculatorInput === '' || operator === null) { return; }
+            calculateResult(); operator = null; resultDisplayed = true;
+        }
+    }
+
+    // Theme Toggle Button
+    if (themeToggleBtn) {
+        themeToggleBtn.addEventListener('click', () => {
+            console.log("[Theme] Theme toggle button clicked.");
+            currentCustomThemeIndex = (currentCustomThemeIndex + 1);
+            if (currentCustomThemeIndex >= CUSTOM_THEMES.length) {
+                currentCustomThemeIndex = -1;
+                applyTheme('system-default');
+            } else {
+                const nextTheme = CUSTOM_THEMES[currentCustomThemeIndex];
+                applyTheme(nextTheme);
+            }
+            console.log(`[Theme] Cycled to next theme. Current index: ${currentCustomThemeIndex}`);
+        });
+    }
+
+    // Color Theme Select Dropdown
+    if (colorThemeSelect) {
+        colorThemeSelect.addEventListener('change', (event) => {
+            console.log(`[Theme] Color theme select changed to: ${event.target.value}`);
+            const selectedTheme = event.target.value;
+            if (selectedTheme === 'none') {
+                applyTheme('system-default');
+            } else {
+                applyTheme(selectedTheme);
+            }
+        });
+    }
+
+    // Revert to Default Theme Button
+    if (revertToDefaultThemeBtn) {
+        revertToDefaultThemeBtn.addEventListener('click', (event) => {
+            console.log("[Theme] Revert to default theme button clicked.");
+            event.preventDefault();
+            applyTheme('system-default');
+            console.log("[Theme] Reverted to default light/dark theme via button.");
+        });
+    }
+
+    // System Dark Mode Preference Listener
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+        if (currentActiveTheme === 'system-default') {
+            if (event.matches) {
+                document.body.classList.add('dark-theme');
+            } else {
+                document.body.classList.remove('dark-theme');
+            }
+            console.log("[Theme] System theme preference changed and applied (system-default mode).");
+            updateThemeToggleAndSelector();
+        }
+    });
+
+    // Scroll to Top Button
+    if (scrollToTopBtn) {
+        window.addEventListener('scroll', () => {
+            if (window.innerWidth <= 768) {
+                if (window.scrollY > 200) {
+                    scrollToTopBtn.style.display = 'flex';
+                    scrollToTopBtn.style.opacity = '1';
+                } else {
+                    scrollToTopBtn.style.opacity = '0';
+                    setTimeout(() => {
+                        scrollToTopBtn.style.display = 'none';
+                    }, 300);
+                }
+            } else {
+                scrollToTopBtn.style.display = 'none';
+            }
+        });
+        if (window.innerWidth > 768) {
+            scrollToTopBtn.style.display = 'none';
+        } else {
+            window.dispatchEvent(new Event('scroll'));
+        }
+        scrollToTopBtn.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); console.log("[UI] Scrolled to top."); });
+    }
+
+    // Hamburger Menu and Sidebar Interactions
+    if (hamburgerBtn && appSidebar && closeMenuBtn && sidebarOverlay) {
+        console.log("[Sidebar Setup] Initializing sidebar event listeners. Elements found:", {
+            hamburgerBtn: !!hamburgerBtn,
+            appSidebar: !!appSidebar,
+            closeMenuBtn: !!closeMenuBtn,
+            sidebarOverlay: !!sidebarOverlay
+        });
+        hamburgerBtn.addEventListener('click', (event) => {
+            console.log("[UI] Hamburger button CLICKED. Event:", event);
+            event.stopPropagation();
+            toggleAppSidebar();
+        });
+        closeMenuBtn.addEventListener('click', () => {
+            console.log("[UI] Close Menu button CLICKED.");
+            toggleAppSidebar(false);
+        });
+        
+        sidebarOverlay.addEventListener('click', (event) => {
+            console.log("[Sidebar Overlay] Clicked overlay. Attempting to close sidebar.");
+            if (appSidebar.classList.contains('open')) {
+                toggleAppSidebar(false);
+            }
+        });
+
+        document.addEventListener('click', (event) => {
+            const isDesktop = window.innerWidth > 768;
+            if (appSidebar.classList.contains('open') && isDesktop &&
+                !appSidebar.contains(event.target) && !hamburgerBtn.contains(event.target)) {
+                console.log("[Global Click] Clicked outside sidebar on desktop. Closing sidebar.");
+                toggleAppSidebar(false);
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            console.log("[Window Resize] Resizing window. Closing sidebar if open.");
+            const isDesktop = window.innerWidth > 768;
+            if (appSidebar.classList.contains('open')) {
+                toggleAppSidebar(false);
+            }
+            if (scrollToTopBtn) {
+                if (window.innerWidth > 768) {
+                    scrollToTopBtn.style.display = 'none';
+                } else {
+                    window.dispatchEvent(new Event('scroll'));
+                }
+            }
+        });
+
+        const menuButtons = appSidebar.querySelectorAll('.menu-button-item');
+        menuButtons.forEach(button => {
+            button.addEventListener('click', (event) => {
+                console.log(`[Sidebar Menu Item Click] Button '${event.currentTarget.textContent.trim()}' clicked.`);
+                const closesMenu = event.currentTarget.dataset.actionClosesMenu !== 'false';
+                if (closesMenu) {
+                    toggleAppSidebar(false);
+                }
+            });
+        });
+    } else {
+        console.warn("[Sidebar Setup] Missing one or more sidebar elements (hamburgerBtn, appSidebar, closeMenuBtn, sidebarOverlay). Sidebar functionality might be impaired.");
+    }
+
+    // Export Watchlist Button Event Listener
+    if (exportWatchlistBtn) {
+        exportWatchlistBtn.addEventListener('click', () => {
+            console.log("[UI] Export Watchlist button clicked.");
+            exportWatchlistToCSV();
+            toggleAppSidebar(false);
+        });
+    }
+
+    // Refresh Live Prices Button Event Listener
+    if (refreshLivePricesBtn) {
+        refreshLivePricesBtn.addEventListener('click', () => {
+            console.log("[UI] Refresh Live Prices button clicked.");
+            fetchLivePrices();
+            showCustomAlert("Refreshing live prices...", 1000);
+        });
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("script.js DOMContentLoaded fired.");
+
+    if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
+        db = window.firestoreDb;
+        auth = window.firebaseAuth;
+        currentAppId = window.getFirebaseAppId();
+        console.log("[Firebase Ready] DB, Auth, and AppId assigned from window. Setting up auth state listener.");
+        
+        window.authFunctions.onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUserId = user.uid;
+                updateAuthButtonText(true, user.email || user.displayName);
+                console.log("[AuthState] User signed in:", user.uid);
+                console.log("[AuthState] User email:", user.email);
+                if (user.email && user.email.toLowerCase() === KANGA_EMAIL) {
+                    mainTitle.textContent = "Kanga's Share Watchlist";
+                    console.log("[AuthState] Main title set to Kanga's Share Watchlist.");
+                } else {
+                    mainTitle.textContent = "My Share Watchlist";
+                    console.log("[AuthState] Main title set to My Share Watchlist.");
+                }
+                updateMainButtonsState(true);
+                await loadUserWatchlistsAndSettings();
+                startLivePriceUpdates();
+            } else {
+                currentUserId = null;
+                updateAuthButtonText(false);
+                mainTitle.textContent = "Share Watchlist";
+                console.log("[AuthState] User signed out.");
+                updateMainButtonsState(false);
+                clearShareList();
+                clearWatchlistUI();
+                if (loadingIndicator) loadingIndicator.style.display = 'none';
+                applyTheme('system-default');
+                if (unsubscribeShares) {
+                    unsubscribeShares();
+                    unsubscribeShares = null;
+                    console.log("[Firestore Listener] Unsubscribed from shares listener on logout.");
+                }
+                stopLivePriceUpdates();
+            }
+            if (!window._appLogicInitialized) {
+                initializeAppLogic();
+                window._appLogicInitialized = true;
+            }
+        });
+        
+        if (googleAuthBtn) {
+            googleAuthBtn.disabled = false;
+            console.log("[Auth] Google Auth button enabled on DOMContentLoaded.");
+        }
+
+    } else {
+        console.error("[Firebase] Firebase objects (db, auth, appId, firestore, authFunctions) are not available on DOMContentLoaded. Firebase initialization likely failed in index.html.");
+        const errorDiv = document.getElementById('firebaseInitError');
+        if (errorDiv) {
+                errorDiv.style.display = 'block';
+        }
+        updateAuthButtonText(false);
+        updateMainButtonsState(false);
+        if (loadingIndicator) loadingIndicator.style.display = 'none';
+        applyTheme('system-default');
+    }
+});
