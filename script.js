@@ -37,7 +37,7 @@ let originalShareData = null; // Stores the original share data when editing for
 
 // Live Price Data
 const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzp7OjZL3zqvJ9wPsV9M-afm2wKeQPbIgGVv_juVpkaRllADESLwj7F4-S7YWYerau-/exec'; // Your new Google Apps Script URL
-let livePrices = {}; // Stores live price data: {ASX_CODE: price}
+let livePrices = {}; // Stores live price data: {ASX_CODE: {live: price, prevClose: price}}
 let livePriceFetchInterval = null; // To hold the interval ID for live price updates
 const LIVE_PRICE_FETCH_INTERVAL_MS = 5 * 60 * 1000; // Fetch every 5 minutes
 
@@ -620,9 +620,10 @@ function showShareDetails() {
     
     const enteredPriceNum = Number(share.currentPrice);
 
-    const livePrice = livePrices[share.shareName.toUpperCase()];
-    const previousFetchedPrice = Number(share.previousFetchedPrice);
-    const lastFetchedPrice = Number(share.lastFetchedPrice);
+    // Get live price data from the global livePrices object
+    const livePriceData = livePrices[share.shareName.toUpperCase()];
+    const livePrice = livePriceData ? livePriceData.live : undefined;
+    const prevClosePrice = livePriceData ? livePriceData.prevClose : undefined;
 
     if (modalLivePrice) {
         if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) {
@@ -638,15 +639,10 @@ function showShareDetails() {
         modalPriceChange.textContent = '';
         modalPriceChange.classList.remove('positive', 'negative', 'neutral');
 
-        let comparisonPrice = null;
-        if (lastFetchedPrice !== undefined && lastFetchedPrice !== null && !isNaN(lastFetchedPrice)) {
-            comparisonPrice = lastFetchedPrice;
-        } else if (enteredPriceNum !== undefined && enteredPriceNum !== null && !isNaN(enteredPriceNum)) {
-            comparisonPrice = enteredPriceNum;
-        }
-
-        if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice) && comparisonPrice !== null) {
-            const change = livePrice - comparisonPrice;
+        // Calculate daily change using livePrice and prevClosePrice
+        if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice) && 
+            prevClosePrice !== undefined && prevClosePrice !== null && !isNaN(prevClosePrice)) {
+            const change = livePrice - prevClosePrice;
             const priceChangeSpan = document.createElement('span');
             priceChangeSpan.classList.add('price-change');
             if (change > 0) {
@@ -660,8 +656,9 @@ function showShareDetails() {
                 priceChangeSpan.classList.add('neutral');
             }
             modalPriceChange.appendChild(priceChangeSpan);
+            modalPriceChange.style.display = 'inline'; // Ensure it's visible
         } else {
-            modalPriceChange.style.display = 'none';
+            modalPriceChange.style.display = 'none'; // Hide if no valid change can be calculated
         }
     }
 
@@ -922,23 +919,18 @@ function addShareToTable(share) {
     row.insertCell().textContent = displayShareName;
 
     const livePriceCell = row.insertCell();
-    const livePrice = livePrices[share.shareName.toUpperCase()];
-    const previousFetchedPrice = Number(share.previousFetchedPrice);
-    const lastFetchedPrice = Number(share.lastFetchedPrice);
+    // Get live price data from the global livePrices object
+    const livePriceData = livePrices[share.shareName.toUpperCase()];
+    const livePrice = livePriceData ? livePriceData.live : undefined;
+    const prevClosePrice = livePriceData ? livePriceData.prevClose : undefined;
 
     if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) {
         livePriceCell.textContent = `$${livePrice.toFixed(2)}`;
         livePriceCell.classList.add('live-price-cell');
         
-        let comparisonPrice = null;
-        if (lastFetchedPrice !== undefined && lastFetchedPrice !== null && !isNaN(lastFetchedPrice)) {
-            comparisonPrice = lastFetchedPrice;
-        } else if (Number(share.currentPrice) !== undefined && Number(share.currentPrice) !== null && !isNaN(Number(share.currentPrice))) {
-            comparisonPrice = Number(share.currentPrice);
-        }
-
-        if (comparisonPrice !== null) {
-            const change = livePrice - comparisonPrice;
+        // Calculate daily change using livePrice and prevClosePrice
+        if (prevClosePrice !== undefined && prevClosePrice !== null && !isNaN(prevClosePrice)) {
+            const change = livePrice - prevClosePrice;
             const priceChangeSpan = document.createElement('span');
             priceChangeSpan.classList.add('price-change');
             if (change > 0) {
@@ -1006,9 +998,10 @@ function addShareToMobileCards(share) {
     const frankingCreditsNum = Number(share.frankingCredits);
     const targetPriceNum = Number(share.targetPrice);
     
-    const livePrice = livePrices[share.shareName.toUpperCase()];
-    const previousFetchedPrice = Number(share.previousFetchedPrice);
-    const lastFetchedPrice = Number(share.lastFetchedPrice);
+    // Get live price data from the global livePrices object
+    const livePriceData = livePrices[share.shareName.toUpperCase()];
+    const livePrice = livePriceData ? livePriceData.live : undefined;
+    const prevClosePrice = livePriceData ? livePriceData.prevClose : undefined;
 
     const priceForYield = (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) ? livePrice : enteredPriceNum;
 
@@ -1025,15 +1018,9 @@ function addShareToMobileCards(share) {
     if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) {
         livePriceHtml = `<p><strong>Live Price:</strong> $${livePrice.toFixed(2)}`;
         
-        let comparisonPrice = null;
-        if (lastFetchedPrice !== undefined && lastFetchedPrice !== null && !isNaN(lastFetchedPrice)) {
-            comparisonPrice = lastFetchedPrice;
-        } else if (enteredPriceNum !== undefined && enteredPriceNum !== null && !isNaN(enteredPriceNum)) {
-            comparisonPrice = enteredPriceNum;
-        }
-
-        if (comparisonPrice !== null) {
-            const change = livePrice - comparisonPrice;
+        // Calculate daily change using livePrice and prevClosePrice
+        if (prevClosePrice !== undefined && prevClosePrice !== null && !isNaN(prevClosePrice)) {
+            const change = livePrice - prevClosePrice;
             if (change > 0) {
                 livePriceHtml += ` <span class="price-change positive">(+$${change.toFixed(2)})</span></p>`;
             } else if (change < 0) {
@@ -1042,7 +1029,7 @@ function addShareToMobileCards(share) {
                 livePriceHtml += ` <span class="price-change neutral">($0.00)</span></p>`;
             }
         } else {
-            livePriceHtml += `</p>`;
+            livePriceHtml += `</p>`; // Just display live price if prevClose is not available
         }
     } else {
         livePriceHtml = `<p><strong>Live Price:</strong> N/A</p>`;
@@ -1547,19 +1534,20 @@ async function fetchLivePrices() {
 
         const newLivePrices = {};
         data.forEach(item => {
-            const asxCodeKey = Object.keys(item).find(key => 
-                key !== 'Price' && key !== 'PreviousClose' && key !== '52 High' && key !== '52 Low'
-            );
-            if (asxCodeKey && item[asxCodeKey] && item['Price'] !== undefined) {
-                const asxCode = String(item[asxCodeKey]).toUpperCase();
-                const price = parseFloat(item['Price']);
-                if (!isNaN(price)) {
-                    newLivePrices[asxCode] = price;
-                } else {
-                    console.warn(`[Live Price] Invalid price for ${asxCode}: ${item['Price']}`);
-                }
+            // Ensure the keys match what your Google Apps Script is returning exactly.
+            // The Apps Script cleans headers to remove spaces/special chars, so 'ASXCode', 'LivePrice', 'PrevClose'
+            // are the expected keys.
+            const asxCode = String(item.ASXCode).toUpperCase();
+            const livePrice = parseFloat(item.LivePrice);
+            const prevClose = parseFloat(item.PrevClose); // Get previous close here
+
+            if (asxCode && !isNaN(livePrice)) {
+                newLivePrices[asxCode] = {
+                    live: livePrice,
+                    prevClose: isNaN(prevClose) ? null : prevClose // Store prevClose as well
+                };
             } else {
-                console.warn("[Live Price] Skipping item due to missing ASX code key or price:", item);
+                console.warn(`[Live Price] Skipping item due to missing ASX code or invalid price:`, item);
             }
         });
         livePrices = newLivePrices;
@@ -1895,23 +1883,16 @@ function exportWatchlistToCSV() {
         const frankingCreditsNum = Number(share.frankingCredits);
         const targetPriceNum = Number(share.targetPrice);
 
-        const livePrice = livePrices[share.shareName.toUpperCase()];
-        const previousFetchedPrice = Number(share.previousFetchedPrice);
-        const lastFetchedPrice = Number(share.lastFetchedPrice);
+        // Get live price data from the global livePrices object
+        const livePriceData = livePrices[share.shareName.toUpperCase()];
+        const livePrice = livePriceData ? livePriceData.live : undefined;
+        const prevClosePrice = livePriceData ? livePriceData.prevClose : undefined;
 
         let priceChange = '';
-        if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) {
-            let comparisonPrice = null;
-            if (lastFetchedPrice !== undefined && lastFetchedPrice !== null && !isNaN(lastFetchedPrice)) {
-                comparisonPrice = lastFetchedPrice;
-            } else if (enteredPriceNum !== undefined && enteredPriceNum !== null && !isNaN(enteredPriceNum)) {
-                comparisonPrice = enteredPriceNum;
-            }
-
-            if (comparisonPrice !== null) {
-                const change = livePrice - comparisonPrice;
-                priceChange = change.toFixed(2);
-            }
+        if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice) && 
+            prevClosePrice !== undefined && prevClosePrice !== null && !isNaN(prevClosePrice)) {
+            const change = livePrice - prevClosePrice;
+            priceChange = change.toFixed(2);
         }
 
         const priceForYield = (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) ? livePrice : enteredPriceNum;
@@ -1933,7 +1914,7 @@ function exportWatchlistToCSV() {
             share.shareName || '',
             (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? enteredPriceNum.toFixed(2) : '',
             (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) ? livePrice.toFixed(2) : '',
-            priceChange,
+            priceChange, // Now includes the calculated price change
             (!isNaN(targetPriceNum) && targetPriceNum !== null) ? targetPriceNum.toFixed(2) : '',
             (!isNaN(dividendAmountNum) && dividendAmountNum !== null) ? dividendAmountNum.toFixed(3) : '',
             (!isNaN(frankingCreditsNum) && frankingCreditsNum !== null) ? frankingCreditsNum.toFixed(1) : '',
