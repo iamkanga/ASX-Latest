@@ -1051,14 +1051,13 @@ h1#mainTitle {
     order: 2; /* Place title in the middle */
 }
 
-/* MODIFIED: Header Action Buttons for Alignment */
+/* MODIFIED: Header Action Buttons for Alignment and Hamburger Fix */
 .header-action-btn {
     background: none;
     border: none;
     color: var(--text-color);
-    font-size: 1.8em; 
+    font-size: 1.8em; /* Consistent size for icons */
     cursor: pointer;
-    /* REMOVED: position: absolute; top: 50%; transform: translateY(-50%); */
     padding: 5px 10px;
     z-index: 11;
     display: block;
@@ -1071,13 +1070,29 @@ h1#mainTitle {
 
 .header-action-btn-left { 
     order: 1; /* Place on the left */
-    /* REMOVED: left: 0; */
 }
 
 .header-action-btn-right { 
     order: 3; /* Place on the right */
-    /* REMOVED: right: 0; */
 }
+
+/* Specific styling for the hamburger button to ensure it matches other header icons */
+.hamburger-btn {
+    background: none; /* Remove background */
+    border: none; /* Remove border */
+    color: var(--text-color); /* Inherit text color from header */
+    font-size: 1.8em; /* Consistent size with other header action buttons */
+    cursor: pointer;
+    padding: 5px 10px; /* Consistent padding */
+    z-index: 11;
+    display: block;
+    flex-shrink: 0;
+}
+
+.hamburger-btn:hover {
+    color: var(--button-hover-bg); /* Consistent hover effect */
+}
+
 
 /* Hamburger Menu and Sidebar */
 .app-sidebar {
@@ -1256,10 +1271,10 @@ h1#mainTitle {
 /* Watchlist and Sort Controls - MODIFIED for smaller size and centering */
 .watchlist-controls-row {
     display: flex;
-    flex-wrap: wrap; 
+    flex-wrap: nowrap; /* Prevent wrapping on mobile */
     justify-content: center; /* Center the group of dropdowns */
     align-items: center;
-    gap: 15px 25px; 
+    gap: 15px; /* Adjust gap for mobile */
     padding: 10px 0;
     border-top: 1px solid var(--border-color);
     border-bottom: 1px solid var(--border-color);
@@ -1274,10 +1289,10 @@ h1#mainTitle {
     display: flex;
     align-items: center;
     gap: 8px;
-    max-width: 180px; /* Make them smaller */
-    flex-basis: auto; /* Let content determine initial size */
-    flex-grow: 0; /* Prevent them from growing */
-    flex-shrink: 1; /* Allow them to shrink if needed */
+    flex-basis: 50%; /* Each takes 50% of available space */
+    flex-grow: 1; /* Allow them to grow */
+    flex-shrink: 1; /* Allow them to shrink */
+    max-width: calc(50% - 7.5px); /* Ensure they fit on one line with gap */
 }
 
 .dropdown-large {
@@ -2132,8 +2147,9 @@ table td.live-price-cell {
         padding: 5px;
     }
 
+    /* Adjusted Hamburger button for mobile */
     .hamburger-btn {
-        font-size: 1.5em;
+        font-size: 1.5em; /* Match other header buttons */
         padding: 5px;
     }
 
@@ -2147,19 +2163,27 @@ table td.live-price-cell {
     }
 
     .watchlist-controls-row {
-        flex-direction: column; /* Stack dropdowns vertically */
-        gap: 10px;
+        flex-direction: row; /* Keep as row for side-by-side */
+        flex-wrap: nowrap; /* Prevent wrapping */
+        justify-content: space-around; /* Distribute space evenly */
+        gap: 10px; /* Smaller gap for mobile */
         padding: 10px 15px;
     }
 
     .watchlist-group,
     .sort-group {
-        flex-basis: 100%; /* Full width for each dropdown */
-        max-width: 100%;
+        flex-basis: 50%; /* Each takes half the width */
+        max-width: calc(50% - 5px); /* Account for half the gap */
+        min-width: 120px; /* Ensure a reasonable minimum width for dropdowns */
     }
 
     .dropdown-large {
-        width: 100%;
+        width: 100%; /* Ensure dropdowns fill their allocated space */
+        font-size: 0.9em; /* Slightly smaller font for better fit */
+        padding: 6px 10px; /* Smaller padding */
+        background-position: right 8px top 50%; /* Adjust arrow position */
+        background-size: 8px auto; /* Adjust arrow size */
+        padding-right: 20px; /* Adjust padding for smaller arrow */
     }
 
     .table-container {
