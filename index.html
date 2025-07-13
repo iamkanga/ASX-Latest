@@ -121,7 +121,7 @@
                 </div>
             </div>
             
-            <!-- NEW POSITION: Export Watchlist Button Section -->
+            <!-- NEW POSITION: Data Actions section -->
             <div class="menu-section">
                 <h3>Data Actions</h3>
                 <div class="menu-buttons-group">
@@ -149,13 +149,16 @@
         <div class="watchlist-controls-row">
             <div class="watchlist-group">
                 <select id="watchlistSelect" class="dropdown-large">
+                    <!-- Corrected placeholder text directly in HTML -->
+                    <option value="" disabled selected>Watch List</option>
                     <!-- Options populated by JS -->
                 </select>
             </div>
 
             <div class="sort-group">
                 <select id="sortSelect" class="dropdown-large">
-                    <option value="" disabled selected>Sort</option> <!-- CHANGED: from "Sort by" to "Sort" -->
+                    <!-- Corrected placeholder text directly in HTML -->
+                    <option value="" disabled selected>Sort List</option>
                     <option value="entryDate-desc">Date Added (Newest)</option>
                     <option value="entryDate-asc">Date Added (Oldest)</option>
                     <option value="shareName-asc">Code (A-Z)</option>
