@@ -34,7 +34,7 @@ let currentSortOrder = 'entryDate-desc'; // Default sort order
 let contextMenuOpen = false; // To track if the custom context menu is open
 let currentContextMenuShareId = null; // Stores the ID of the share that opened the context menu
 let originalShareData = null; // Stores the original share data when editing for dirty state check
-let originalWatchlistData = null; // NEW: Stores original watchlist data for dirty state check in watchlist modals
+let originalWatchlistData = null; // Stores original watchlist data for dirty state check in watchlist modals
 
 // Live Price Data
 const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzp7OjZL3zqvJ9wPsV9M-afm2wKeQPbIgGVv_juVpkaRllADESLwj7F4-S7YWYerau-/exec'; // Your new Google Apps Script URL
@@ -81,9 +81,9 @@ const googleAuthBtn = document.getElementById('googleAuthBtn');
 const shareDetailModal = document.getElementById('shareDetailModal');
 const modalShareName = document.getElementById('modalShareName');
 const modalEntryDate = document.getElementById('modalEntryDate');
-const modalEnteredPrice = document.getElementById('modalEnteredPrice');
-const modalLivePrice = document.getElementById('modalLivePrice');
-const modalPriceChange = document.getElementById('modalPriceChange');
+// Removed: modalEnteredPrice (original was still here, but now it's in the dedicated section)
+// Removed: modalLivePrice (original was still here, but now it's in the dedicated section)
+// Removed: modalPriceChange (original was still here, but now it's in the dedicated section)
 const modalTargetPrice = document.getElementById('modalTargetPrice');
 const modalDividendAmount = document.getElementById('modalDividendAmount');
 const modalFrankingCredits = document.getElementById('modalFrankingCredits');
@@ -140,6 +140,9 @@ const exportWatchlistBtn = document.getElementById('exportWatchlistBtn');
 const refreshLivePricesBtn = document.getElementById('refreshLivePricesBtn');
 // NEW: Reference for the watchlist select inside the share form modal
 const shareWatchlistSelect = document.getElementById('shareWatchlistSelect');
+// NEW: References for the large live price display in the modal
+const modalLivePriceLarge = document.getElementById('modalLivePriceLarge');
+const modalPriceChangeLarge = document.getElementById('modalPriceChangeLarge');
 
 
 let sidebarOverlay = document.querySelector('.sidebar-overlay');
@@ -742,42 +745,52 @@ function showShareDetails() {
     const livePrice = livePriceData ? livePriceData.live : undefined;
     const prevClosePrice = livePriceData ? livePriceData.prevClose : undefined;
 
-    if (modalLivePrice) {
+    // Display large live price and change in the dedicated section
+    const livePriceDisplaySection = document.querySelector('.live-price-display-section');
+    if (livePriceDisplaySection) {
+        livePriceDisplaySection.classList.remove('positive-change-section', 'negative-change-section'); // Clear previous states
+
         if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) {
-            modalLivePrice.textContent = `$${livePrice.toFixed(2)}`;
-            modalLivePrice.style.display = 'inline';
+            modalLivePriceLarge.textContent = `$${livePrice.toFixed(2)}`;
+            modalLivePriceLarge.style.display = 'inline';
         } else {
-            modalLivePrice.textContent = 'N/A';
-            modalLivePrice.style.display = 'inline';
+            modalLivePriceLarge.textContent = 'N/A';
+            modalLivePriceLarge.style.display = 'inline';
         }
-    }
 
-    if (modalPriceChange) {
-        modalPriceChange.textContent = '';
-        modalPriceChange.classList.remove('positive', 'negative', 'neutral');
-
-        // Calculate daily change using livePrice and prevClosePrice
         if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice) && 
             prevClosePrice !== undefined && prevClosePrice !== null && !isNaN(prevClosePrice)) {
             const change = livePrice - prevClosePrice;
+            const percentageChange = (change / prevClosePrice) * 100;
+
+            modalPriceChangeLarge.textContent = ''; // Clear previous content
             const priceChangeSpan = document.createElement('span');
-            priceChangeSpan.classList.add('price-change');
+            priceChangeSpan.classList.add('price-change'); // Keep base class for coloring
+
             if (change > 0) {
-                priceChangeSpan.textContent = `(+$${change.toFixed(2)})`;
+                priceChangeSpan.textContent = `(+$${change.toFixed(2)} / +${percentageChange.toFixed(2)}%)`;
                 priceChangeSpan.classList.add('positive');
+                livePriceDisplaySection.classList.add('positive-change-section');
             } else if (change < 0) {
-                priceChangeSpan.textContent = `(-$${Math.abs(change).toFixed(2)})`;
+                priceChangeSpan.textContent = `(-$${Math.abs(change).toFixed(2)} / ${percentageChange.toFixed(2)}%)`; // percentageChange is already negative
                 priceChangeSpan.classList.add('negative');
+                livePriceDisplaySection.classList.add('negative-change-section');
             } else {
-                priceChangeSpan.textContent = `($0.00)`;
+                priceChangeSpan.textContent = `($0.00 / 0.00%)`;
                 priceChangeSpan.classList.add('neutral');
             }
-            modalPriceChange.appendChild(priceChangeSpan);
-            modalPriceChange.style.display = 'inline'; // Ensure it's visible
+            modalPriceChangeLarge.appendChild(priceChangeSpan);
+            modalPriceChangeLarge.style.display = 'inline';
         } else {
-            modalPriceChange.style.display = 'none'; // Hide if no valid change can be calculated
+            modalPriceChangeLarge.textContent = '';
+            modalPriceChangeLarge.style.display = 'none';
         }
     }
+    
+    // Original Live Price/Change removed from HTML, so these references are no longer needed
+    // if (modalLivePrice) { /* ... */ }
+    // if (modalPriceChange) { /* ... */ }
+
 
     modalEnteredPrice.textContent = (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? `$${enteredPriceNum.toFixed(2)}` : 'N/A';
     const targetPriceNum = Number(share.targetPrice);
@@ -884,7 +897,7 @@ function sortShares() {
             if (nameA === '' && nameB === '') return 0;
             if (nameA === '') return order === 'asc' ? 1 : -1;
             if (nameB === '') return order === 'asc' ? -1 : 1;
-            return order === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(a.shareName); // Fixed typo: b.shareName.localeCompare(a.shareName)
+            return order === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
         } else if (field === 'entryDate') {
             const dateA = new Date(valA);
             const dateB = new Date(valB);
@@ -1044,8 +1057,11 @@ function addShareToTable(share) {
     const prevClosePrice = livePriceData ? livePriceData.prevClose : undefined;
 
     if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) {
-        livePriceCell.textContent = `$${livePrice.toFixed(2)}`;
-        livePriceCell.classList.add('live-price-cell');
+        // Add a span for the price value itself for more granular styling
+        const priceValueSpan = document.createElement('span');
+        priceValueSpan.classList.add('live-price-value'); // New class for the number
+        priceValueSpan.textContent = `$${livePrice.toFixed(2)}`;
+        livePriceCell.appendChild(priceValueSpan);
         
         // Calculate daily change using livePrice and prevClosePrice
         if (prevClosePrice !== undefined && prevClosePrice !== null && !isNaN(prevClosePrice)) {
@@ -1055,9 +1071,11 @@ function addShareToTable(share) {
             if (change > 0) {
                 priceChangeSpan.textContent = `(+$${change.toFixed(2)})`;
                 priceChangeSpan.classList.add('positive');
+                livePriceCell.classList.add('positive-change'); // Apply conditional background
             } else if (change < 0) {
                 priceChangeSpan.textContent = `(-$${Math.abs(change).toFixed(2)})`;
                 priceChangeSpan.classList.add('negative');
+                livePriceCell.classList.add('negative-change'); // Apply conditional background
             } else {
                 priceChangeSpan.textContent = `($0.00)`;
                 priceChangeSpan.classList.add('neutral');
@@ -1134,31 +1152,46 @@ function addShareToMobileCards(share) {
     const displayEnteredPrice = (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? enteredPriceNum.toFixed(2) : '-';
 
     let livePriceHtml = '';
+    let priceChangeClass = '';
+    let priceChangeText = '';
+
     if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) {
-        livePriceHtml = `<p><strong>Live Price:</strong> $${livePrice.toFixed(2)}`;
-        
-        // Calculate daily change using livePrice and prevClosePrice
+        // Calculate daily change using livePrice and prevClosePrice for mobile cards
         if (prevClosePrice !== undefined && prevClosePrice !== null && !isNaN(prevClosePrice)) {
             const change = livePrice - prevClosePrice;
+            const percentageChange = (change / prevClosePrice) * 100;
             if (change > 0) {
-                livePriceHtml += ` <span class="price-change positive">(+$${change.toFixed(2)})</span></p>`;
+                priceChangeText = `(+$${change.toFixed(2)} / +${percentageChange.toFixed(2)}%)`;
+                priceChangeClass = 'positive';
             } else if (change < 0) {
-                livePriceHtml += ` <span class="price-change negative">(-$${Math.abs(change).toFixed(2)})</span></p>`;
+                priceChangeText = `(-$${Math.abs(change).toFixed(2)} / ${percentageChange.toFixed(2)}%)`;
+                priceChangeClass = 'negative';
             } else {
-                livePriceHtml += ` <span class="price-change neutral">($0.00)</span></p>`;
+                priceChangeText = `($0.00 / 0.00%)`;
+                priceChangeClass = 'neutral';
             }
-        } else {
-            livePriceHtml += `</p>`; // Just display live price if prevClose is not available
         }
+
+        livePriceHtml = `
+            <div class="live-price-display-section ${priceChangeClass}-change-section">
+                <span class="live-price-large">$${livePrice.toFixed(2)}</span>
+                <span class="price-change-large ${priceChangeClass}">${priceChangeText}</span>
+            </div>
+        `;
     } else {
-        livePriceHtml = `<p><strong>Live Price:</strong> N/A</p>`;
+        livePriceHtml = `
+            <div class="live-price-display-section">
+                <span class="live-price-large">N/A</span>
+                <span class="price-change-large"></span>
+            </div>
+        `;
     }
 
 
     card.innerHTML = `
         <h3>${displayShareName}</h3>
-        <p><strong>Entry Date:</strong> ${formatDate(share.entryDate) || '-'}</p>
         ${livePriceHtml}
+        <p><strong>Entry Date:</strong> ${formatDate(share.entryDate) || '-'}</p>
         <p><strong>Entered Price:</strong> $${displayEnteredPrice}</p>
         <p><strong>Target:</strong> $${displayTargetPrice}</p>
         <p><strong>Dividend:</strong> $${displayDividendAmount}</p>
@@ -1201,7 +1234,7 @@ function addShareToMobileCards(share) {
             touchStartX = event.touches[0].clientX;
             touchStartY = event.touches[0].clientY;
             longPressTimer = setTimeout(() => {
-                event.preventDefault();
+                event.preventDefault(); 
                 selectShare(share.id);
                 showContextMenu(event, share.id);
             }, LONG_PRESS_THRESHOLD);
@@ -1882,7 +1915,7 @@ function showContextMenu(event, shareId) {
     }
 
     const menuWidth = shareContextMenu.offsetWidth;
-    const menuHeight = shareContextMenu.offsetWidth; // Corrected to offsetHeight
+    const menuHeight = shareContextMenu.offsetHeight; // Corrected to offsetHeight
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
 
@@ -2367,7 +2400,6 @@ async function initializeAppLogic() {
             showModal(shareFormSection);
             shareNameInput.focus();
             toggleAppSidebar(false);
-            addCommentSection(); // ADDED: Add an initial empty comment section for new shares
             checkFormDirtyState(); // Check dirty state immediately after opening for new share
         });
     }
