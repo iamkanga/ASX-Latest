@@ -57,6 +57,9 @@
     --price-up-color: #28a745;
     --price-down-color: #dc3545;
     --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(0, 123, 255, 0.05); /* Subtle blue tint */
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1); /* Faint green */
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1); /* Faint red */
 }
 
 /* Dark Theme Variables */
@@ -116,6 +119,9 @@ body.dark-theme {
     --price-up-color: #2ecc71;
     --price-down-color: #e74c3c;
     --price-neutral-color: #95a5a6;
+    --live-price-section-bg: rgba(52, 152, 219, 0.1); /* Subtle blue tint */
+    --live-price-positive-bg: rgba(46, 204, 113, 0.15); /* Faint green */
+    --live-price-negative-bg: rgba(231, 76, 60, 0.15); /* Faint red */
 }
 
 /* Custom Themes */
@@ -166,6 +172,9 @@ body.theme-bold-1 { /* Ocean Blue */
     --price-up-color: #2ecc71;
     --price-down-color: #e74c3c;
     --price-neutral-color: #a8dadc;
+    --live-price-section-bg: rgba(0, 180, 216, 0.1);
+    --live-price-positive-bg: rgba(46, 204, 113, 0.15);
+    --live-price-negative-bg: rgba(231, 76, 60, 0.15);
 }
 
 body.theme-bold-2 { /* Forest Green */
@@ -214,6 +223,9 @@ body.theme-bold-2 { /* Forest Green */
     --price-up-color: #2ecc71;
     --price-down-color: #e74c3c;
     --price-neutral-color: #d4e3c9;
+    --live-price-section-bg: rgba(167, 201, 87, 0.1);
+    --live-price-positive-bg: rgba(46, 204, 113, 0.15);
+    --live-price-negative-bg: rgba(231, 76, 60, 0.15);
 }
 
 body.theme-bold-3 { /* Sunset Orange */
@@ -262,6 +274,9 @@ body.theme-bold-3 { /* Sunset Orange */
     --price-up-color: #2ecc71;
     --price-down-color: #e74c3c;
     --price-neutral-color: #ffd790;
+    --live-price-section-bg: rgba(255, 195, 0, 0.1);
+    --live-price-positive-bg: rgba(46, 204, 113, 0.15);
+    --live-price-negative-bg: rgba(231, 76, 60, 0.15);
 }
 
 body.theme-bold-4 { /* Royal Purple */
@@ -310,6 +325,9 @@ body.theme-bold-4 { /* Royal Purple */
     --price-up-color: #2ecc71;
     --price-down-color: #e74c3c;
     --price-neutral-color: #e8d0ff;
+    --live-price-section-bg: rgba(199, 125, 255, 0.1);
+    --live-price-positive-bg: rgba(46, 204, 113, 0.15);
+    --live-price-negative-bg: rgba(231, 76, 60, 0.15);
 }
 
 body.theme-bold-5 { /* Deep Red */
@@ -358,6 +376,9 @@ body.theme-bold-5 { /* Deep Red */
     --price-up-color: #2ecc71;
     --price-down-color: #e74c3c;
     --price-neutral-color: #ffcccc;
+    --live-price-section-bg: rgba(231, 76, 60, 0.1);
+    --live-price-positive-bg: rgba(46, 204, 113, 0.15);
+    --live-price-negative-bg: rgba(231, 76, 60, 0.15);
 }
 
 body.theme-bold-6 { /* Gold */
@@ -406,6 +427,9 @@ body.theme-bold-6 { /* Gold */
     --price-up-color: #2ecc71;
     --price-down-color: #e74c3c;
     --price-neutral-color: #fff2c4;
+    --live-price-section-bg: rgba(255, 235, 59, 0.1);
+    --live-price-positive-bg: rgba(46, 204, 113, 0.15);
+    --live-price-negative-bg: rgba(231, 76, 60, 0.15);
 }
 
 body.theme-bold-7 { /* Emerald */
@@ -453,6 +477,9 @@ body.theme-bold-7 { /* Emerald */
     --price-up-color: #2ecc71;
     --price-down-color: #e74c3c;
     --price-neutral-color: #ccffdd;
+    --live-price-section-bg: rgba(102, 187, 106, 0.1);
+    --live-price-positive-bg: rgba(46, 204, 113, 0.15);
+    --live-price-negative-bg: rgba(231, 76, 60, 0.15);
 }
 
 body.theme-bold-8 { /* Plum */
@@ -500,6 +527,9 @@ body.theme-bold-8 { /* Plum */
     --price-up-color: #2ecc71;
     --price-down-color: #e74c3c;
     --price-neutral-color: #ffccff;
+    --live-price-section-bg: rgba(218, 112, 214, 0.1);
+    --live-price-positive-bg: rgba(46, 204, 113, 0.15);
+    --live-price-negative-bg: rgba(231, 76, 60, 0.15);
 }
 
 body.theme-bold-9 { /* Aqua */
@@ -547,6 +577,9 @@ body.theme-bold-9 { /* Aqua */
     --price-up-color: #2ecc71;
     --price-down-color: #e74c3c;
     --price-neutral-color: #ccffff;
+    --live-price-section-bg: rgba(32, 178, 170, 0.1);
+    --live-price-positive-bg: rgba(46, 204, 113, 0.15);
+    --live-price-negative-bg: rgba(231, 76, 60, 0.15);
 }
 
 body.theme-bold-10 { /* Ruby */
@@ -594,6 +627,9 @@ body.theme-bold-10 { /* Ruby */
     --price-up-color: #2ecc71;
     --price-down-color: #e74c3c;
     --price-neutral-color: #ffcce0;
+    --live-price-section-bg: rgba(220, 20, 60, 0.1);
+    --live-price-positive-bg: rgba(46, 204, 113, 0.15);
+    --live-price-negative-bg: rgba(231, 76, 60, 0.15);
 }
 
 
@@ -635,6 +671,9 @@ body.theme-subtle-1 { /* Subtle Sky */
     --price-up-color: #28a745;
     --price-down-color: #dc3545;
     --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(102, 153, 255, 0.05);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
 }
 
 body.theme-subtle-2 { /* Subtle Earth */
@@ -674,6 +713,9 @@ body.theme-subtle-2 { /* Subtle Earth */
     --price-up-color: #28a745;
     --price-down-color: #dc3545;
     --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(184, 162, 143, 0.05);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
 }
 
 body.theme-subtle-3 { /* Subtle Rose */
@@ -713,6 +755,9 @@ body.theme-subtle-3 { /* Subtle Rose */
     --price-up-color: #28a745;
     --price-down-color: #dc3545;
     --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(238, 184, 198, 0.05);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
 }
 
 body.theme-subtle-4 { /* Subtle Lavender */
@@ -752,6 +797,9 @@ body.theme-subtle-4 { /* Subtle Lavender */
     --price-up-color: #28a745;
     --price-down-color: #dc3545;
     --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(198, 184, 235, 0.05);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
 }
 
 body.theme-subtle-5 { /* Subtle Mint */
@@ -791,6 +839,9 @@ body.theme-subtle-5 { /* Subtle Mint */
     --price-up-color: #28a745;
     --price-down-color: #dc3545;
     --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(184, 238, 198, 0.05);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
 }
 
 body.theme-subtle-6 { /* Subtle Sand */
@@ -830,6 +881,9 @@ body.theme-subtle-6 { /* Subtle Sand */
     --price-up-color: #28a745;
     --price-down-color: #dc3545;
     --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(238, 184, 162, 0.05);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
 }
 
 body.theme-subtle-7 { /* Subtle Graphite */
@@ -869,6 +923,9 @@ body.theme-subtle-7 { /* Subtle Graphite */
     --price-up-color: #28a745;
     --price-down-color: #dc3545;
     --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(184, 184, 184, 0.05);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
 }
 
 body.theme-subtle-8 { /* Subtle Peach */
@@ -908,6 +965,9 @@ body.theme-subtle-8 { /* Subtle Peach */
     --price-up-color: #28a745;
     --price-down-color: #dc3545;
     --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(238, 184, 162, 0.05);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
 }
 
 body.theme-subtle-9 { /* Subtle Teal */
@@ -947,6 +1007,9 @@ body.theme-subtle-9 { /* Subtle Teal */
     --price-up-color: #28a745;
     --price-down-color: #dc3545;
     --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(184, 238, 198, 0.05);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
 }
 
 body.theme-subtle-10 { /* Subtle Stone */
@@ -986,6 +1049,9 @@ body.theme-subtle-10 { /* Subtle Stone */
     --price-up-color: #28a745;
     --price-down-color: #dc3545;
     --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(192, 192, 192, 0.05);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
 }
 
 
@@ -1083,7 +1149,7 @@ h1#mainTitle {
     color: var(--text-color); /* Inherit text color from header */
     font-size: 1.8em; /* Consistent size with other header action buttons */
     cursor: pointer;
-    padding: 5px 10px; /* Consistent padding */
+    padding: 5px 10px;
     z-index: 11;
     display: block;
     flex-shrink: 0;
@@ -1326,7 +1392,7 @@ h1#mainTitle {
     -moz-appearance: none;
     cursor: pointer;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    min-width: 100px; /* Allow smaller minimum width */
+    min-width: 130px; /* Adjusted from 100px to give more space */
     background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http://www.w3.org/2000/svg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236c757d%22%20d%3D%22M287%2069.9a14.7%2014.7%200%200%200-20.8%200L146.2%20189.9%2026.3%2069.9a14.7%2014.7%200%200%200-20.8%2020.8L135.8%20216.7a14.7%2014.7%200%200%200%2020.8%200L287%2090.7a14.7%2014.7%200%200%200%200-20.8z%22%2F%3E%3C%2Fsvg%3E'); 
     background-repeat: no-repeat;
     background-position: right 10px top 50%; /* Adjust arrow position */
@@ -1338,12 +1404,8 @@ h1#mainTitle {
 }
 
 /* Specific adjustment for dropdowns to ensure full text visibility */
-.dropdown-large {
-    /* Increase min-width for better text display */
-    min-width: 130px; /* Adjusted from 100px to give more space */
-    /* Potentially adjust font size if text is still too large for very small screens */
-    /* font-size: 0.95em; */ /* Consider uncommenting this if needed for very tight spaces */
-}
+/* This rule was already present from a previous update, ensuring min-width. */
+/* No further changes needed here for placeholder text. */
 
 
 .dropdown-large option[value=""][disabled] {
@@ -1449,7 +1511,23 @@ table tbody tr:not(.selected):hover {
 /* Live Price Column Styling */
 table td.live-price-cell {
     font-weight: 600;
+    /* Styles for desktop table live price */
+    font-size: 1.1em; /* Slightly larger */
 }
+
+table td.live-price-cell .price-value { /* Added span for the price number */
+    font-weight: 700; /* Bolder */
+}
+
+/* Conditional background highlight for table cells */
+table td.live-price-cell.positive-change {
+    background-color: var(--live-price-positive-bg);
+}
+
+table td.live-price-cell.negative-change {
+    background-color: var(--live-price-negative-bg);
+}
+
 
 .price-change {
     font-size: 0.8em;
@@ -1519,6 +1597,44 @@ table td.live-price-cell {
 .mobile-card p strong {
     color: var(--label-color);
 }
+
+/* NEW: Live Price Display Section for Mobile Cards and Modals */
+.live-price-display-section {
+    background-color: var(--live-price-section-bg);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.05); /* Subtle inner shadow */
+}
+
+.live-price-display-section .live-price-large {
+    font-size: 2.2em; /* Significantly larger */
+    font-weight: 800; /* Much bolder */
+    color: var(--text-color);
+    line-height: 1; /* Prevent extra line height */
+}
+
+.live-price-display-section .price-change-large {
+    font-size: 1.2em; /* Larger than regular price change */
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* Conditional background for the prominent live price section */
+.live-price-display-section.positive-change-section {
+    background-color: var(--live-price-positive-bg);
+}
+
+.live-price-display-section.negative-change-section {
+    background-color: var(--live-price-negative-bg);
+}
+
 
 /* Footer and Auth Button */
 .fixed-footer {
