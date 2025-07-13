@@ -761,7 +761,7 @@ function showShareDetails() {
         if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice) && 
             prevClosePrice !== undefined && prevClosePrice !== null && !isNaN(prevClosePrice)) {
             const change = livePrice - prevClosePrice;
-            const percentageChange = (change / prevClosePrice) * 100;
+            const percentageChange = (prevClosePrice !== 0 && !isNaN(prevClosePrice)) ? (change / prevClosePrice) * 100 : 0; // Handle division by zero
 
             modalPriceChangeLarge.textContent = ''; // Clear previous content
             const priceChangeSpan = document.createElement('span');
@@ -882,6 +882,36 @@ function sortShares() {
     }
     const [field, order] = sortValue.split('-');
     allSharesData.sort((a, b) => {
+        // Handle sorting by percentage change
+        if (field === 'percentageChange') {
+            const livePriceDataA = livePrices[a.shareName.toUpperCase()];
+            const livePriceA = livePriceDataA ? livePriceDataA.live : undefined;
+            const prevCloseA = livePriceDataA ? livePriceDataA.prevClose : undefined;
+
+            const livePriceDataB = livePrices[b.shareName.toUpperCase()];
+            const livePriceB = livePriceDataB ? livePriceDataB.live : undefined;
+            const prevCloseB = livePriceDataB ? livePriceDataB.prevClose : undefined;
+
+            let percentageChangeA = null;
+            if (livePriceA !== undefined && livePriceA !== null && !isNaN(livePriceA) &&
+                prevCloseA !== undefined && prevCloseA !== null && !isNaN(prevCloseA) && prevCloseA !== 0) {
+                percentageChangeA = ((livePriceA - prevCloseA) / prevCloseA) * 100;
+            }
+
+            let percentageChangeB = null;
+            if (livePriceB !== undefined && livePriceB !== null && !isNaN(livePriceB) &&
+                prevCloseB !== undefined && prevCloseB !== null && !isNaN(prevCloseB) && prevCloseB !== 0) {
+                percentageChangeB = ((livePriceB - prevCloseB) / prevCloseB) * 100;
+            }
+
+            // Handle null/NaN values for sorting
+            if (percentageChangeA === null && percentageChangeB === null) return 0;
+            if (percentageChangeA === null) return order === 'asc' ? 1 : -1;
+            if (percentageChangeB === null) return order === 'asc' ? -1 : 1;
+
+            return order === 'asc' ? percentageChangeA - percentageChangeB : percentageChangeB - percentageChangeA;
+        }
+
         let valA = a[field];
         let valB = b[field];
 
@@ -961,7 +991,10 @@ function renderSortSelect() {
         { value: "shareName-asc", text: "Code (A-Z)" },
         { value: "shareName-desc", text: "Code (Z-A)" },
         { value: "dividendAmount-desc", text: "Dividend (High-Low)" },
-        { value: "dividendAmount-asc", text: "Dividend (Low-High)" }
+        { value: "dividendAmount-asc", text: "Dividend (Low-High)" },
+        // NEW: Options for percentage change
+        { value: "percentageChange-desc", text: "Percentage Change (High-Low)" },
+        { value: "percentageChange-asc", text: "Percentage Change (Low-High)" }
     ];
     options.forEach(opt => {
         const optionElement = document.createElement('option');
@@ -1066,7 +1099,7 @@ function addShareToTable(share) {
         // Calculate daily change using livePrice and prevClosePrice
         if (prevClosePrice !== undefined && prevClosePrice !== null && !isNaN(prevClosePrice)) {
             const change = livePrice - prevClosePrice;
-            const percentageChange = (change / prevClosePrice) * 100; // Calculate percentage change
+            const percentageChange = (prevClosePrice !== 0 && !isNaN(prevClosePrice)) ? (change / prevClosePrice) * 100 : 0; // Handle division by zero
             const priceChangeSpan = document.createElement('span');
             priceChangeSpan.classList.add('price-change');
             if (change > 0) {
@@ -1160,7 +1193,7 @@ function addShareToMobileCards(share) {
         // Calculate daily change using livePrice and prevClosePrice for mobile cards
         if (prevClosePrice !== undefined && prevClosePrice !== null && !isNaN(prevClosePrice)) {
             const change = livePrice - prevClosePrice;
-            const percentageChange = (change / prevClosePrice) * 100;
+            const percentageChange = (prevClosePrice !== 0 && !isNaN(prevClosePrice)) ? (change / prevClosePrice) * 100 : 0;
             if (change > 0) {
                 priceChangeText = `(+$${change.toFixed(2)} / +${percentageChange.toFixed(2)}%)`;
                 priceChangeClass = 'positive';
@@ -2048,7 +2081,7 @@ function exportWatchlistToCSV() {
         if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice) && 
             prevClosePrice !== undefined && prevClosePrice !== null && !isNaN(prevClosePrice)) {
             const change = livePrice - prevClosePrice;
-            const percentageChange = (change / prevClosePrice) * 100;
+            const percentageChange = (prevClosePrice !== 0 && !isNaN(prevClosePrice)) ? (change / prevClosePrice) * 100 : 0;
             priceChange = `${change.toFixed(2)} (${percentageChange.toFixed(2)}%)`; // Include percentage in CSV
         }
 
@@ -2405,7 +2438,6 @@ async function initializeAppLogic() {
             showModal(shareFormSection);
             shareNameInput.focus();
             toggleAppSidebar(false);
-            addCommentSection(); // ADDED: Add an initial empty comment section for new shares
             checkFormDirtyState(); // Check dirty state immediately after opening for new share
         });
     }
