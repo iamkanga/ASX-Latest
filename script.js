@@ -150,7 +150,9 @@ const modalPriceChangeLarge = document.getElementById('modalPriceChangeLarge');
 
 // NEW: References for 52-week high/low and P/E in share details modal
 const modalLivePriceDisplaySection = document.querySelector('.live-price-display-section'); // The existing colored section
-// These will be dynamically created, no direct global references needed here.
+let modalFiftyTwoWeekLowSpan; // Will be created dynamically
+let modalFiftyTwoWeekHighSpan; // Will be created dynamically
+let modalPESpan; // Will be created dynamically
 
 
 let sidebarOverlay = document.querySelector('.sidebar-overlay');
@@ -890,19 +892,10 @@ function showShareDetails() {
                 if (comment.title || comment.text) {
                     const commentDiv = document.createElement('div');
                     commentDiv.className = 'modal-comment-item';
-                    
-                    // Conditional Title Bar
-                    if (comment.title && comment.title.trim() !== '') {
-                        const titleBar = document.createElement('div');
-                        titleBar.classList.add('comment-title-bar'); // New class for styling
-                        titleBar.textContent = comment.title;
-                        commentDiv.appendChild(titleBar);
-                    }
-                    
-                    const commentTextP = document.createElement('p');
-                    commentTextP.textContent = comment.text || '';
-                    commentDiv.appendChild(commentTextP);
-
+                    commentDiv.innerHTML = `
+                        <strong>${comment.title || 'General Comment'}</strong>
+                        <p>${comment.text || ''}</p>
+                    `;
                     modalCommentsContainer.appendChild(commentDiv);
                 }
             });

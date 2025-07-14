@@ -61,6 +61,9 @@
     --live-price-positive-bg: rgba(40, 167, 69, 0.1); /* Faint green */
     --live-price-negative-bg: rgba(220, 53, 69, 0.1); /* Faint red */
     --comment-title-bg: rgba(0, 0, 0, 0.05); /* Subtle background for comment titles */
+    --target-alert-bg: #e0f7fa; /* Light blue for target hit alert */
+    --target-alert-text: #0056b3; /* Darker blue for target hit text */
+    --target-alert-border: #007bff;
 }
 
 /* Dark Theme Variables */
@@ -124,6 +127,9 @@ body.dark-theme {
     --live-price-positive-bg: rgba(46, 204, 113, 0.15); /* Faint green */
     --live-price-negative-bg: rgba(231, 76, 60, 0.15); /* Faint red */
     --comment-title-bg: rgba(255, 255, 255, 0.08); /* Subtle background for comment titles in dark mode */
+    --target-alert-bg: #3498db; /* Blue for target hit alert in dark mode */
+    --target-alert-text: #ecf0f1; /* Light text for target hit text in dark mode */
+    --target-alert-border: #2980b9;
 }
 
 /* Custom Themes */
@@ -178,6 +184,9 @@ body.theme-bold-1 { /* Ocean Blue */
     --live-price-positive-bg: rgba(46, 204, 113, 0.15);
     --live-price-negative-bg: rgba(231, 76, 60, 0.15);
     --comment-title-bg: rgba(255, 255, 255, 0.08);
+    --target-alert-bg: #00b4d8;
+    --target-alert-text: #fff;
+    --target-alert-border: #0096c7;
 }
 
 body.theme-bold-2 { /* Forest Green */
@@ -230,6 +239,9 @@ body.theme-bold-2 { /* Forest Green */
     --live-price-positive-bg: rgba(46, 204, 113, 0.15);
     --live-price-negative-bg: rgba(231, 76, 60, 0.15);
     --comment-title-bg: rgba(255, 255, 255, 0.08);
+    --target-alert-bg: #a7c957;
+    --target-alert-text: #fff;
+    --target-alert-border: #8ba84a;
 }
 
 body.theme-bold-3 { /* Sunset Orange */
@@ -282,6 +294,9 @@ body.theme-bold-3 { /* Sunset Orange */
     --live-price-positive-bg: rgba(46, 204, 113, 0.15);
     --live-price-negative-bg: rgba(231, 76, 60, 0.15);
     --comment-title-bg: rgba(255, 255, 255, 0.08);
+    --target-alert-bg: #ffc300;
+    --target-alert-text: #333;
+    --target-alert-border: #e0ac00;
 }
 
 body.theme-bold-4 { /* Royal Purple */
@@ -334,6 +349,9 @@ body.theme-bold-4 { /* Royal Purple */
     --live-price-positive-bg: rgba(46, 204, 113, 0.15);
     --live-price-negative-bg: rgba(231, 76, 60, 0.15);
     --comment-title-bg: rgba(255, 255, 255, 0.08);
+    --target-alert-bg: #c77dff;
+    --target-alert-text: #fff;
+    --target-alert-border: #a842ff;
 }
 
 body.theme-bold-5 { /* Deep Red */
@@ -386,6 +404,9 @@ body.theme-bold-5 { /* Deep Red */
     --live-price-positive-bg: rgba(46, 204, 113, 0.15);
     --live-price-negative-bg: rgba(231, 76, 60, 0.15);
     --comment-title-bg: rgba(255, 255, 255, 0.08);
+    --target-alert-bg: #e74c3c;
+    --target-alert-text: #fff;
+    --target-alert-border: #c0392b;
 }
 
 body.theme-bold-6 { /* Gold */
@@ -438,6 +459,9 @@ body.theme-bold-6 { /* Gold */
     --live-price-positive-bg: rgba(46, 204, 113, 0.15);
     --live-price-negative-bg: rgba(231, 76, 60, 0.15);
     --comment-title-bg: rgba(255, 255, 255, 0.08);
+    --target-alert-bg: #ffeb3b;
+    --target-alert-text: #333;
+    --target-alert-border: #fdd835;
 }
 
 body.theme-bold-7 { /* Emerald */
@@ -489,6 +513,9 @@ body.theme-bold-7 { /* Emerald */
     --live-price-positive-bg: rgba(46, 204, 113, 0.15);
     --live-price-negative-bg: rgba(231, 76, 60, 0.15);
     --comment-title-bg: rgba(255, 255, 255, 0.08);
+    --target-alert-bg: #66bb6a;
+    --target-alert-text: #fff;
+    --target-alert-border: #4caf50;
 }
 
 body.theme-bold-8 { /* Plum */
@@ -540,6 +567,9 @@ body.theme-bold-8 { /* Plum */
     --live-price-positive-bg: rgba(46, 204, 113, 0.15);
     --live-price-negative-bg: rgba(231, 76, 60, 0.15);
     --comment-title-bg: rgba(255, 255, 255, 0.08);
+    --target-alert-bg: #da70d6;
+    --target-alert-text: #fff;
+    --target-alert-border: #c71585;
 }
 
 body.theme-bold-9 { /* Aqua */
@@ -591,6 +621,9 @@ body.theme-bold-9 { /* Aqua */
     --live-price-positive-bg: rgba(46, 204, 113, 0.15);
     --live-price-negative-bg: rgba(231, 76, 60, 0.15);
     --comment-title-bg: rgba(255, 255, 255, 0.08);
+    --target-alert-bg: #20b2aa;
+    --target-alert-text: #fff;
+    --target-alert-border: #008080;
 }
 
 body.theme-bold-10 { /* Ruby */
@@ -642,6 +675,9 @@ body.theme-bold-10 { /* Ruby */
     --live-price-positive-bg: rgba(46, 204, 113, 0.15);
     --live-price-negative-bg: rgba(231, 76, 60, 0.15);
     --comment-title-bg: rgba(255, 255, 255, 0.08);
+    --target-alert-bg: #dc143c;
+    --target-alert-text: #fff;
+    --target-alert-border: #b22222;
 }
 
 
@@ -687,6 +723,9 @@ body.theme-subtle-1 { /* Subtle Sky */
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
     --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #6699ff;
+    --target-alert-text: #fff;
+    --target-alert-border: #4d7edb;
 }
 
 body.theme-subtle-2 { /* Subtle Earth */
@@ -730,6 +769,9 @@ body.theme-subtle-2 { /* Subtle Earth */
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
     --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #b8a28f;
+    --target-alert-text: #fff;
+    --target-alert-border: #a3907e;
 }
 
 body.theme-subtle-3 { /* Subtle Rose */
@@ -773,6 +815,9 @@ body.theme-subtle-3 { /* Subtle Rose */
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
     --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #eeb8c6;
+    --target-alert-text: #333;
+    --target-alert-border: #d4a2b0;
 }
 
 body.theme-subtle-4 { /* Subtle Lavender */
@@ -816,6 +861,9 @@ body.theme-subtle-4 { /* Subtle Lavender */
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
     --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #c6b8eb;
+    --target-alert-text: #333;
+    --target-alert-border: #b0a2d4;
 }
 
 body.theme-subtle-5 { /* Subtle Mint */
@@ -859,6 +907,9 @@ body.theme-subtle-5 { /* Subtle Mint */
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
     --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #b8eec6;
+    --target-alert-text: #333;
+    --target-alert-border: #a2d4b0;
 }
 
 body.theme-subtle-6 { /* Subtle Sand */
@@ -902,6 +953,9 @@ body.theme-subtle-6 { /* Subtle Sand */
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
     --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #eeb8a2;
+    --target-alert-text: #333;
+    --target-alert-border: #d4a28f;
 }
 
 body.theme-subtle-7 { /* Subtle Graphite */
@@ -945,6 +999,9 @@ body.theme-subtle-7 { /* Subtle Graphite */
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
     --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #b8b8b8;
+    --target-alert-text: #333;
+    --target-alert-border: #a2a2a2;
 }
 
 body.theme-subtle-8 { /* Subtle Peach */
@@ -988,6 +1045,9 @@ body.theme-subtle-8 { /* Subtle Peach */
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
     --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #eeb8a2;
+    --target-alert-text: #333;
+    --target-alert-border: #d4a28f;
 }
 
 body.theme-subtle-9 { /* Subtle Teal */
@@ -1031,6 +1091,9 @@ body.theme-subtle-9 { /* Subtle Teal */
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
     --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #b8eec6;
+    --target-alert-text: #333;
+    --target-alert-border: #a2d4b0;
 }
 
 body.theme-subtle-10 { /* Subtle Stone */
@@ -1074,6 +1137,9 @@ body.theme-subtle-10 { /* Subtle Stone */
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
     --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #c0c0c0;
+    --target-alert-text: #333;
+    --target-alert-border: #a8a8a8;
 }
 
 /* NEW MID-RANGE THEMES */
@@ -1119,6 +1185,9 @@ body.theme-mid-1 { /* Muted Blue-Grey */
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
     --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #354f52;
+    --target-alert-text: #eef0eb;
+    --target-alert-border: #2a3d3f;
 }
 
 body.theme-mid-2 { /* Warm Grey-Brown */
@@ -1163,6 +1232,9 @@ body.theme-mid-2 { /* Warm Grey-Brown */
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
     --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #5c4b3d;
+    --target-alert-text: #f5f0eb;
+    --target-alert-border: #4a3c30;
 }
 
 body.theme-mid-3 { /* Dusty Rose */
@@ -1207,6 +1279,9 @@ body.theme-mid-3 { /* Dusty Rose */
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
     --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #523535;
+    --target-alert-text: #f0ebeb;
+    --target-alert-border: #3f2a2a;
 }
 
 body.theme-mid-4 { /* Soft Green-Yellow */
@@ -1251,6 +1326,9 @@ body.theme-mid-4 { /* Soft Green-Yellow */
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
     --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #526b35;
+    --target-alert-text: #f0f5eb;
+    --target-alert-border: #3f522a;
 }
 
 body.theme-mid-5 { /* Muted Purple */
@@ -1295,6 +1373,9 @@ body.theme-mid-5 { /* Muted Purple */
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
     --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #5c356b;
+    --target-alert-text: #f0ebf5;
+    --target-alert-border: #4a2a52;
 }
 
 body.theme-mid-6 { /* Earthy Orange */
@@ -1339,6 +1420,9 @@ body.theme-mid-6 { /* Earthy Orange */
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
     --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #6b5235;
+    --target-alert-text: #f5ebf0;
+    --target-alert-border: #523f2a;
 }
 
 body.theme-mid-7 { /* Soft Teal-Green */
@@ -1383,6 +1467,9 @@ body.theme-mid-7 { /* Soft Teal-Green */
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
     --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #356b52;
+    --target-alert-text: #ebf5f0;
+    --target-alert-border: #2a523f;
 }
 
 body.theme-mid-8 { /* Muted Plum */
@@ -1427,6 +1514,9 @@ body.theme-mid-8 { /* Muted Plum */
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
     --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #5c356b;
+    --target-alert-text: #f0ebf5;
+    --target-alert-border: #4a2a52;
 }
 
 body.theme-mid-9 { /* Soft Gold-Brown */
@@ -1471,6 +1561,9 @@ body.theme-mid-9 { /* Soft Gold-Brown */
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
     --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #6b5235;
+    --target-alert-text: #f5ebf0;
+    --target-alert-border: #523f2a;
 }
 
 body.theme-mid-10 { /* Muted Green-Blue */
@@ -1515,6 +1608,9 @@ body.theme-mid-10 { /* Muted Green-Blue */
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
     --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #35526b;
+    --target-alert-text: #ebf0f5;
+    --target-alert-border: #2a3f52;
 }
 
 
@@ -1578,7 +1674,7 @@ main.container {
     /* Remove position, top, left, z-index, background-color, box-shadow as parent header is fixed */
 }
 
-/* Watchlist and Sort Controls (now part of the fixed header) */
+/* Watchlist and Sort Controls */
 .watchlist-controls-row {
     display: flex;
     flex-wrap: nowrap;
@@ -1596,7 +1692,7 @@ main.container {
     /* This element is now part of the fixed header */
 }
 
-/* ASX Code Buttons (now part of the fixed header) */
+/* ASX Code Buttons */
 .asx-code-buttons-container {
     display: flex;
     flex-wrap: wrap;
@@ -1969,6 +2065,30 @@ table tbody tr.selected {
 table tbody tr:not(.selected):hover {
     background-color: var(--table-row-hover-bg);
 }
+
+/* NEW: Target hit alert styling for table rows and mobile cards */
+table tbody tr.target-hit-alert,
+.mobile-card.target-hit-alert {
+    background-color: var(--target-alert-bg); /* Use the new alert background color */
+    border-color: var(--target-alert-border); /* Use the new alert border color */
+    color: var(--target-alert-text); /* Ensure text is readable on alert background */
+    animation: pulse-alert 1.5s infinite alternate; /* Subtle pulsing animation */
+}
+
+/* Ensure text color applies to children */
+table tbody tr.target-hit-alert td,
+.mobile-card.target-hit-alert h3,
+.mobile-card.target-hit-alert p,
+.mobile-card.target-hit-alert span {
+    color: inherit; /* Inherit text color from parent */
+}
+
+/* Animation for pulsing alert */
+@keyframes pulse-alert {
+    from { opacity: 1; }
+    to { opacity: 0.8; }
+}
+
 
 /* Live Price Column Styling */
 table td.live-price-cell {
@@ -2785,6 +2905,54 @@ table td.live-price-cell.negative-change {
     color: var(--button-text);
 }
 
+/* NEW: Target Hit Notification Banner */
+#targetHitBanner {
+    display: none; /* Hidden by default, shown by JS */
+    position: fixed;
+    bottom: 0; /* Position at the bottom */
+    left: 0;
+    width: 100%;
+    background-color: var(--target-alert-bg);
+    color: var(--target-alert-text);
+    padding: 12px 20px;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.2);
+    z-index: 900; /* Above footer, below modals */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1em;
+    font-weight: 600;
+    border-top: 1px solid var(--target-alert-border);
+    box-sizing: border-box;
+    cursor: pointer; /* Indicate it's clickable */
+}
+
+#targetHitBanner .message-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#targetHitBanner .message-content i {
+    font-size: 1.2em;
+}
+
+#targetHitBanner .dismiss-btn {
+    background: none;
+    border: none;
+    color: inherit; /* Inherit text color */
+    font-size: 1.5em;
+    cursor: pointer;
+    padding: 5px;
+    line-height: 1;
+    transition: transform 0.2s ease;
+}
+
+#targetHitBanner .dismiss-btn:hover {
+    transform: scale(1.2);
+}
+
+
 /* Responsive Design */
 @media (max-width: 768px) {
     header {
@@ -2860,6 +3028,8 @@ table td.live-price-cell.negative-change {
 
     .fixed-footer {
         padding: 10px 15px;
+        /* NEW: Account for banner height if present */
+        padding-bottom: calc(10px + var(--target-banner-height, 0px)); 
     }
 
     .google-auth-btn {
@@ -2931,6 +3101,13 @@ table td.live-price-cell.negative-change {
 
     #scrollToTopBtn {
         bottom: 70px; /* Above the fixed footer */
+    }
+
+    /* Adjust banner position for mobile */
+    #targetHitBanner {
+        bottom: 60px; /* Position above the fixed footer on mobile */
+        font-size: 0.9em;
+        padding: 10px 15px;
     }
 }
 
@@ -3034,5 +3211,11 @@ table td.live-price-cell.negative-change {
     .calc-btn {
         padding: 8px;
         font-size: 1em;
+    }
+
+    #targetHitBanner {
+        bottom: 50px; /* Adjust for smaller footer on very small mobile */
+        padding: 8px 10px;
+        font-size: 0.85em;
     }
 }
