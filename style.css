@@ -1082,9 +1082,8 @@ main.container {
     /* .header-top-row: 15px (top/bottom padding) * 2 + 1.8em (h1 font-size) approx 70px */
     /* .watchlist-controls-row: 10px (top/bottom padding) * 2 + 1em (dropdown font-size) approx 40px */
     /* .asx-code-buttons-container: 10px (top/bottom padding) * 2 + 0.9em (button font-size) approx 35px */
-    /* Total approx: 70px + 40px + 35px = 145px. */
-    /* Let's try to make the padding-top dynamic based on the actual header height */
-    padding-top: var(--header-height-compensation, 160px); /* Use CSS variable for flexibility */
+    /* Total approx: 70px + 40px + 35px = 145px. Adjusted for better fit. */
+    padding-top: 135px; /* Reduced padding-top to bring content up */
     margin-top: 0; /* Ensure no extra margin pushes content down */
 }
 
@@ -1356,7 +1355,7 @@ h1#mainTitle {
     box-sizing: border-box;
     padding-left: 15px; 
     padding-right: 15px; 
-    margin-top: 10px; /* Reduced margin from ASX buttons */
+    margin-top: 0px; /* Reduced margin to remove gap */
 }
 
 .watchlist-group,
@@ -1438,7 +1437,7 @@ h1#mainTitle {
     box-sizing: border-box;
     padding-left: 15px; 
     padding-right: 15px; 
-    margin-top: 5px; /* Reduced margin from watchlist controls */
+    margin-top: 0px; /* Reduced margin to remove gap */
 }
 
 .asx-code-btn {
@@ -2313,8 +2312,8 @@ table td.live-price-cell.negative-change {
         /* .header-top-row height on mobile: 15px (top/bottom padding) * 2 + 1.5em (h1 font-size) approx 60px */
         /* .watchlist-controls-row: 10px (top/bottom padding) * 2 + 0.9em (dropdown font-size) approx 35px */
         /* .asx-code-buttons-container: 10px (top/bottom padding) * 2 + 0.8em (button font-size) approx 30px */
-        /* Total approx: 60px + 35px + 30px = 125px. Add 15px for extra spacing. */
-        padding-top: 140px; /* Adjusted based on estimated total height for mobile */
+        /* Total approx: 60px + 35px + 30px = 125px. Reduced for better fit. */
+        padding-top: 110px; /* Adjusted to reduce gap */
     }
 
     .watchlist-controls-row {
@@ -2323,6 +2322,7 @@ table td.live-price-cell.negative-change {
         justify-content: space-around; /* Distribute space evenly */
         gap: 10px; /* Smaller gap for mobile */
         padding: 10px 15px;
+        margin-top: 0px; /* Ensure no gap here */
     }
 
     .watchlist-group,
