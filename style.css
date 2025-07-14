@@ -1091,8 +1091,12 @@ header {
     display: flex;
     flex-direction: column; 
     gap: 10px;
-    position: relative; 
-    height: auto; 
+    position: sticky; /* Changed to sticky */
+    top: 0;           /* Stick to the top of the viewport */
+    z-index: 500;     /* Ensure it stays on top of other content */
+    height: auto;
+    width: 100%; /* Ensure it spans full width */
+    box-sizing: border-box; /* Include padding in width */
 }
 
 /* Header Top Row for Alignment */
