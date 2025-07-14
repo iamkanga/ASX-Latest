@@ -744,7 +744,6 @@ function showShareDetails() {
         return;
     }
     modalShareName.textContent = share.shareName || 'N/A';
-    modalEntryDate.textContent = formatDate(share.entryDate) || 'N/A';
     
     const enteredPriceNum = Number(share.currentPrice);
 
@@ -816,6 +815,9 @@ function showShareDetails() {
     
     const frankedYield = calculateFrankedYield(dividendAmountNum, priceForYield, frankingCreditsNum);
     modalFrankedYieldSpan.textContent = frankedYield !== null ? `${frankedYield.toFixed(2)}%` : 'N/A';
+
+    // Populate Entry Date after Franked Yield
+    modalEntryDate.textContent = formatDate(share.entryDate) || 'N/A';
     
     if (modalCommentsContainer) {
         modalCommentsContainer.innerHTML = '';
@@ -1423,6 +1425,8 @@ function renderAsxCodeButtons() {
         });
     });
     console.log(`[UI] Rendered ${sortedAsxCodes.length} code buttons.`);
+    // NEW: Adjust padding after rendering buttons, as their presence affects header height
+    adjustMainContentPadding();
 }
 
 function scrollToShare(asxCode) {
@@ -1438,7 +1442,8 @@ function scrollToShare(asxCode) {
             // Get the height of the fixed header
             const fixedHeaderHeight = appHeader ? appHeader.offsetHeight : 0;
             const elementRect = elementToScrollTo.getBoundingClientRect();
-            const scrollY = elementRect.top + window.scrollY - fixedHeaderHeight - 10; // 10px buffer
+            // Calculate scroll position, accounting for the fixed header
+            const scrollY = elementRect.top + window.scrollY - fixedHeaderHeight - 10; // 10px buffer for a little space
             window.scrollTo({ top: scrollY, behavior: 'smooth' });
             console.log(`[UI] Scrolled to element for share ID: ${targetShare.id}`);
         } else {
