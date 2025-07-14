@@ -38,7 +38,7 @@ let originalWatchlistData = null; // Stores original watchlist data for dirty st
 
 // Live Price Data
 const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzp7OjZL3zqvJ9wPsV9M-afm2wKeQPbIgGVv_juVpkaRllADESLwj7F4-S7YWYerau-/exec'; // Your new Google Apps Script URL
-let livePrices = {}; // Stores live price data: {ASX_CODE: {live: price, prevClose: price, PE: value, High52: value, Low52: value}}
+let livePrices = {}; // Stores live price data: {ASX_CODE: {live: price, prevClose: price, PE: value, High52: value, Low52: value, targetHit: boolean}}
 let livePriceFetchInterval = null; // To hold the interval ID for live price updates
 const LIVE_PRICE_FETCH_INTERVAL_MS = 5 * 60 * 1000; // Fetch every 5 minutes
 
@@ -55,6 +55,9 @@ let savedSortOrder = null; // GLOBAL: Stores the sort order loaded from user set
 let savedTheme = null; // GLOBAL: Stores the theme loaded from user settings
 
 let unsubscribeShares = null; // Holds the unsubscribe function for the Firestore shares listener
+
+// NEW: Global variable to store shares that have hit their target price
+let sharesAtTargetPrice = [];
 
 // --- UI Element References ---
 const appHeader = document.getElementById('appHeader'); // Reference to the main header
@@ -150,9 +153,12 @@ const modalPriceChangeLarge = document.getElementById('modalPriceChangeLarge');
 
 // NEW: References for 52-week high/low and P/E in share details modal
 const modalLivePriceDisplaySection = document.querySelector('.live-price-display-section'); // The existing colored section
-let modalFiftyTwoWeekLowSpan; // Will be created dynamically
-let modalFiftyTwoWeekHighSpan; // Will be created dynamically
-let modalPESpan; // Will be created dynamically
+
+// NEW: Reference for the target hit notification banner
+const targetHitBanner = document.getElementById('targetHitBanner');
+const targetHitMessage = document.getElementById('targetHitMessage');
+const targetHitCount = document.getElementById('targetHitCount');
+const targetHitDismissBtn = document.getElementById('targetHitDismissBtn');
 
 
 let sidebarOverlay = document.querySelector('.sidebar-overlay');
@@ -214,8 +220,10 @@ function closeModals() {
         const currentData = getCurrentFormData();
         const isShareNameValid = currentData.shareName.trim() !== '';
         
+        // The cancel button fix means clearForm() is called before closeModals()
+        // For auto-save on clicking outside or other non-cancel closes:
         if (selectedShareDocId) { // Existing share
-            if (!areShareDataEqual(originalShareData, currentData)) {
+            if (originalShareData && !areShareDataEqual(originalShareData, currentData)) { // Check if originalShareData exists and if form is dirty
                 console.log("[Auto-Save] Unsaved changes detected for existing share. Attempting silent save.");
                 saveShareData(true); // true indicates silent save
             } else {
@@ -430,7 +438,7 @@ function clearForm() {
         commentsFormContainer.innerHTML = ''; // Clears ONLY the dynamically added comments
     }
     selectedShareDocId = null;
-    originalShareData = null;
+    originalShareData = null; // IMPORTANT: Reset original data to prevent auto-save of cancelled edits
     if (deleteShareBtn) {
         deleteShareBtn.classList.add('hidden');
         console.log("[clearForm] deleteShareBtn hidden.");
@@ -892,10 +900,19 @@ function showShareDetails() {
                 if (comment.title || comment.text) {
                     const commentDiv = document.createElement('div');
                     commentDiv.className = 'modal-comment-item';
-                    commentDiv.innerHTML = `
-                        <strong>${comment.title || 'General Comment'}</strong>
-                        <p>${comment.text || ''}</p>
-                    `;
+                    
+                    // Conditional Title Bar
+                    if (comment.title && comment.title.trim() !== '') {
+                        const titleBar = document.createElement('div');
+                        titleBar.classList.add('comment-title-bar'); // New class for styling
+                        titleBar.textContent = comment.title;
+                        commentDiv.appendChild(titleBar);
+                    }
+                    
+                    const commentTextP = document.createElement('p');
+                    commentTextP.textContent = comment.text || '';
+                    commentDiv.appendChild(commentTextP);
+
                     modalCommentsContainer.appendChild(commentDiv);
                 }
             });
@@ -1101,6 +1118,15 @@ function addShareToTable(share) {
     const row = shareTableBody.insertRow();
     row.dataset.docId = share.id;
     
+    // NEW: Apply target-hit-alert class if condition met
+    const livePriceData = livePrices[share.shareName.toUpperCase()];
+    const isTargetHit = livePriceData ? livePriceData.targetHit : false;
+    if (isTargetHit) {
+        row.classList.add('target-hit-alert');
+    } else {
+        row.classList.remove('target-hit-alert');
+    }
+
     let lastClickTime = 0;
     row.addEventListener('click', (event) => { 
         console.log(`[Table Row Click] Share ID: ${share.id}`);
@@ -1166,7 +1192,7 @@ function addShareToTable(share) {
 
     const livePriceCell = row.insertCell();
     // Get live price data from the global livePrices object
-    const livePriceData = livePrices[share.shareName.toUpperCase()];
+    // livePriceData is already defined above for targetHit check
     const livePrice = livePriceData ? livePriceData.live : undefined;
     const prevClosePrice = livePriceData ? livePriceData.prevClose : undefined;
 
@@ -1246,13 +1272,22 @@ function addShareToMobileCards(share) {
     card.className = 'mobile-card';
     card.dataset.docId = share.id;
 
+    // NEW: Apply target-hit-alert class if condition met
+    const livePriceData = livePrices[share.shareName.toUpperCase()];
+    const isTargetHit = livePriceData ? livePriceData.targetHit : false;
+    if (isTargetHit) {
+        card.classList.add('target-hit-alert');
+    } else {
+        card.classList.remove('target-hit-alert');
+    }
+
     const enteredPriceNum = Number(share.currentPrice);
     const dividendAmountNum = Number(share.dividendAmount);
     const frankingCreditsNum = Number(share.frankingCredits);
     const targetPriceNum = Number(share.targetPrice);
     
     // Get live price data from the global livePrices object
-    const livePriceData = livePrices[share.shareName.toUpperCase()];
+    // livePriceData is already defined above for targetHit check
     const livePrice = livePriceData ? livePriceData.live : undefined;
     const prevClosePrice = livePriceData ? livePriceData.prevClose : undefined;
 
@@ -1452,6 +1487,7 @@ function renderWatchlist() {
          }
     }
     console.log("[Render] Watchlist rendering complete.");
+    updateTargetHitBanner(); // NEW: Update the banner after rendering the watchlist
 }
 
 function renderAsxCodeButtons() {
@@ -1811,24 +1847,34 @@ async function fetchLivePrices() {
 
         const newLivePrices = {};
         data.forEach(item => {
-            // Ensure the keys match what your Google Apps Script is returning exactly.
-            // The Apps Script cleans headers to remove spaces/special chars, so 'ASXCode', 'LivePrice', 'PrevClose'
-            // are the expected keys.
             const asxCode = String(item.ASXCode).toUpperCase();
             const livePrice = parseFloat(item.LivePrice);
             const prevClose = parseFloat(item.PrevClose); 
-            // NEW: Parse PE, High52, Low52
             const pe = parseFloat(item.PE);
             const high52 = parseFloat(item.High52);
             const low52 = parseFloat(item.Low52);
 
             if (asxCode && !isNaN(livePrice)) {
+                // Find the corresponding share in allSharesData to get its targetPrice
+                const shareData = allSharesData.find(s => s.shareName.toUpperCase() === asxCode);
+                // Ensure targetPrice is parsed as a number, handling null/undefined/NaN
+                const targetPrice = shareData && shareData.targetPrice !== null && !isNaN(parseFloat(shareData.targetPrice)) 
+                                    ? parseFloat(shareData.targetPrice) 
+                                    : undefined;
+
+                const isTargetHit = (targetPrice !== undefined && livePrice <= targetPrice);
+
+                // Debugging log:
+                console.log(`[Target Price Debug] Share: ${asxCode}, Live: ${livePrice}, Target: ${targetPrice}, Is Target Hit: ${isTargetHit}`);
+
+
                 newLivePrices[asxCode] = {
                     live: livePrice,
                     prevClose: isNaN(prevClose) ? null : prevClose,
-                    PE: isNaN(pe) ? null : pe, // Store PE
-                    High52: isNaN(high52) ? null : high52, // Store High52
-                    Low52: isNaN(low52) ? null : low52 // Store Low52
+                    PE: isNaN(pe) ? null : pe, 
+                    High52: isNaN(high52) ? null : high52, 
+                    Low52: isNaN(low52) ? null : low52, 
+                    targetHit: isTargetHit 
                 };
             } else {
                 console.warn(`[Live Price] Skipping item due to missing ASX code or invalid price:`, item);
@@ -1863,6 +1909,30 @@ function stopLivePriceUpdates() {
         clearInterval(livePriceFetchInterval);
         livePriceFetchInterval = null;
         console.log("[Live Price] Stopped live price updates.");
+    }
+}
+
+// NEW: Function to update the target hit notification banner
+function updateTargetHitBanner() {
+    sharesAtTargetPrice = allSharesData.filter(share => {
+        const livePriceData = livePrices[share.shareName.toUpperCase()];
+        // Ensure livePriceData exists and has targetHit property
+        return livePriceData && livePriceData.targetHit;
+    });
+
+    if (!targetHitBanner || !targetHitMessage || !targetHitCount || !targetHitDismissBtn) {
+        console.warn("[Target Alert] Target hit banner elements not found. Cannot update banner.");
+        return;
+    }
+
+    if (sharesAtTargetPrice.length > 0) {
+        targetHitCount.textContent = sharesAtTargetPrice.length;
+        targetHitMessage.textContent = ` shares have hit their target price!`;
+        targetHitBanner.style.display = 'flex'; // Show the banner
+        console.log(`[Target Alert] Showing banner: ${sharesAtTargetPrice.length} shares hit target.`);
+    } else {
+        targetHitBanner.style.display = 'none'; // Hide the banner
+        console.log("[Target Alert] No shares hit target. Hiding banner.");
     }
 }
 
@@ -2353,6 +2423,7 @@ async function initializeAppLogic() {
     if (customDialogModal) customDialogModal.style.setProperty('display', 'none', 'important');
     if (calculatorModal) calculatorModal.style.setProperty('display', 'none', 'important');
     if (shareContextMenu) shareContextMenu.style.setProperty('display', 'none', 'important');
+    if (targetHitBanner) targetHitBanner.style.display = 'none'; // Ensure banner is hidden initially
 
     // Service Worker Registration
     if ('serviceWorker' in navigator) {
@@ -2426,7 +2497,17 @@ async function initializeAppLogic() {
     }
 
     // Close buttons for modals
-    document.querySelectorAll('.close-button').forEach(button => { button.addEventListener('click', closeModals); });
+    document.querySelectorAll('.close-button').forEach(button => {
+        if (button.classList.contains('form-close-button')) { // Specific for the share form's 'X' (Cancel button)
+            button.addEventListener('click', () => {
+                console.log("[Form] Share form close button (X) clicked. Clearing form before closing to cancel edits.");
+                clearForm(); // This will reset originalShareData and selectedShareDocId, preventing auto-save
+                closeModals(); // Now closeModals won't trigger auto-save for this form
+            });
+        } else {
+            button.addEventListener('click', closeModals); // Other modals still close normally
+        }
+    });
 
     // Global click listener to close modals/context menu if clicked outside
     window.addEventListener('click', (event) => {
@@ -3065,6 +3146,30 @@ async function initializeAppLogic() {
             toggleAppSidebar(false); // NEW: Close sidebar on refresh
         });
     }
+
+    // NEW: Target hit banner dismiss button listener
+    if (targetHitDismissBtn) {
+        targetHitDismissBtn.addEventListener('click', () => {
+            if (targetHitBanner) {
+                targetHitBanner.style.display = 'none';
+                console.log("[Target Alert] Banner dismissed by user.");
+            }
+        });
+    }
+
+    // NEW: Target hit banner click (to view alerted shares)
+    if (targetHitBanner) {
+        targetHitBanner.addEventListener('click', (event) => {
+            // Only trigger action if not clicking the dismiss button itself
+            if (!event.target.closest('#targetHitDismissBtn')) {
+                console.log("[Target Alert] Banner clicked. Implementing action to show alerted shares.");
+                // For now, show an alert with names. Later, this can be a filtered view.
+                const alertedShareNames = sharesAtTargetPrice.map(s => s.shareName).join(', ');
+                showCustomAlert(`Shares at target: ${alertedShareNames || 'None'}`, 3000);
+            }
+        });
+    }
+
 
     // Call adjustMainContentPadding initially and on window load/resize
     window.addEventListener('load', adjustMainContentPadding);
