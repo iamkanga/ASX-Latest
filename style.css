@@ -1079,7 +1079,7 @@ body.sidebar-active {
 }
 
 /* Header Styles */
-header {
+#appHeader { /* Target the header by its ID */
     background-color: var(--header-bg);
     box-shadow: 0 2px 4px var(--shadow-color);
     position: fixed; /* Make the entire header fixed */
@@ -1665,7 +1665,7 @@ table td.live-price-cell.negative-change {
     align-items: center;
     justify-content: center;
     gap: 10px;
-    box-shadow: 0 4px 8px var(--shadow-color);
+    box-shadow: 0 44px 8px var(--shadow-color);
     width: fit-content;
     max-width: 100%;
 }

@@ -302,15 +302,19 @@
                     <span id="modalPriceChangeLarge" class="price-change-large"></span>
                 </div>
 
-                <p><strong>Entry Date:</strong> <span id="modalEntryDate"></span></p>
-                <!-- Original Live Price/Change removed as it's now in the dedicated section -->
-                <!-- <p><strong>Live Price:</strong> <span id="modalLivePrice"></span> <span id="modalPriceChange" class="price-change"></span></p> -->
                 <p><strong>Entered Price:</strong> <span id="modalEnteredPrice"></span></p>
                 <p><strong>Target Price:</strong> <span id="modalTargetPrice"></span></p>
                 <p><strong>Dividend Amount:</strong> <span id="modalDividendAmount"></span></p>
                 <p><strong>Franking Credits:</strong> <span id="modalFrankingCredits"></span></p>
                 <p><strong>Unfranked Yield:</strong> <span id="modalUnfrankedYield"></span></p>
                 <p><strong>Franked Yield:</strong> <span id="modalFrankedYield"></span></p>
+                <p><strong>Entry Date:</strong> <span id="modalEntryDate"></span></p>
+
+
+                <div id="modalCommentsContainer" class="modal-comments-sections">
+                    <h3>Comments</h3>
+                    <!-- Comments will be displayed here -->
+                </div>
 
                 <div class="external-links-section">
                     <h3>External Links</h3>
@@ -328,11 +332,6 @@
                         <a id="modalCommSecLink" href="#" target="_blank" class="external-link">View on CommSec.com.au <i class="fas fa-external-link-alt"></i></a>
                     </div>
                     <p id="commSecLoginMessage" class="ghosted-text commsec-message">Requires single CommSec login per session</p>
-                </div>
-
-                <div id="modalCommentsContainer" class="modal-comments-sections">
-                    <h3>Comments</h3>
-                    <!-- Comments will be displayed here -->
                 </div>
             </div>
             <!-- END Scrollable content for share details modal -->
