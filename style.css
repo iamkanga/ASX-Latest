@@ -1095,7 +1095,7 @@ header {
     height: auto; 
 }
 
-/* MODIFIED: Header Top Row for Alignment */
+/* Header Top Row for Alignment */
 .header-top-row {
     display: flex;
     justify-content: space-between; /* Distribute items with space between them */
@@ -1117,7 +1117,7 @@ h1#mainTitle {
     order: 2; /* Place title in the middle */
 }
 
-/* MODIFIED: Header Action Buttons for Alignment and Hamburger Fix */
+/* Header Action Buttons for Alignment and Hamburger Fix */
 .header-action-btn {
     background: none;
     border: none;
@@ -1183,7 +1183,7 @@ h1#mainTitle {
     left: 0; 
 }
 
-/* MODIFIED: Close Menu Button for smaller size and consistency */
+/* Close Menu Button for smaller size and consistency */
 .close-menu-btn {
     color: var(--close-sidebar-btn-color);
     font-size: 1.5em; /* Adjusted from 2em to 1.5em for consistency with other close buttons */
@@ -1334,7 +1334,7 @@ h1#mainTitle {
     display: block; 
 }
 
-/* Watchlist and Sort Controls - MODIFIED for smaller size and centering */
+/* Watchlist and Sort Controls */
 .watchlist-controls-row {
     display: flex;
     flex-wrap: nowrap; /* Prevent wrapping on mobile */
@@ -1598,7 +1598,7 @@ table td.live-price-cell.negative-change {
     color: var(--label-color);
 }
 
-/* NEW: Live Price Display Section for Mobile Cards and Modals */
+/* Live Price Display Section for Mobile Cards and Modals */
 .live-price-display-section {
     background-color: var(--live-price-section-bg);
     border-radius: 8px;
@@ -1716,7 +1716,7 @@ table td.live-price-cell.negative-change {
     max-height: 90vh; 
 }
 
-/* MODIFIED: Modal Header with Icon for Alignment and Buttons */
+/* Modal Header with Icon for Alignment and Buttons */
 .modal-header-with-icon {
     display: flex;
     justify-content: space-between; /* Space out title and button group */
@@ -1728,12 +1728,12 @@ table td.live-price-cell.negative-change {
     flex-wrap: nowrap; /* Prevent wrapping on small screens */
 }
 
-/* MODIFIED: ASX Code prominence and alignment */
+/* ASX Code prominence and alignment */
 .modal-header-with-icon h2 {
     margin: 0;
     flex-grow: 1;
     text-align: center;
-    font-size: 2.2em; /* Increased font size to match live price display */
+    font-size: 2.2em; /* Set to match live price display for all sizes */
     font-weight: 800; /* Made bolder */
     flex-shrink: 1; /* Allow title to shrink if buttons need space */
     min-width: 0; /* Allow title to shrink below its content size */
@@ -1752,7 +1752,7 @@ table td.live-price-cell.negative-change {
     flex-shrink: 0; /* Prevent this group from shrinking */
 }
 
-/* MODIFIED: General Close Button Styling for all modals */
+/* General Close Button Styling for all modals */
 .close-button {
     background: none; /* Ensure no background */
     border: none; /* Ensure no border */
@@ -1763,7 +1763,6 @@ table td.live-price-cell.negative-change {
     line-height: 1; /* Vertically center the 'X' */
     display: block;
     flex-shrink: 0;
-    /* Removed absolute positioning that was here for some close buttons */
     position: static; /* Ensure it flows naturally within its flex container */
     margin-left: 0; /* Remove any auto margins that might be pushing it */
 }
@@ -1828,7 +1827,7 @@ table td.live-price-cell.negative-change {
     margin-bottom: 20px;
     text-align: center;
     color: var(--text-color);
-    font-size: 1.6em;
+    font-size: 1.6em; /* This is for general H2s in modals, not modalShareName specifically */
 }
 
 .modal-content label {
@@ -1965,14 +1964,6 @@ table td.live-price-cell.negative-change {
 .form-action-buttons,
 .modal-action-buttons,
 .custom-dialog-buttons { 
-    /* display: flex; */ /* REMOVED */
-    /* flex-wrap: nowrap; */ /* REMOVED */
-    /* justify-content: center; */ /* REMOVED */
-    /* gap: 10px; */ /* REMOVED */
-    /* margin-top: 25px; */ /* REMOVED */
-    /* flex-shrink: 0; */ /* REMOVED */
-    /* padding-top: 15px; */ /* REMOVED */
-    /* border-top: 1px solid var(--border-color); */ /* REMOVED */
     display: none; /* Hide these old containers */
 }
 
@@ -1981,7 +1972,7 @@ table td.live-price-cell.negative-change {
     display: none; /* Hide this old container */
 }
 
-/* MODIFIED: Modal Action Icons for positioning in header */
+/* Modal Action Icons for positioning in header */
 .modal-action-icon {
     background: none;
     border: none;
@@ -2136,7 +2127,7 @@ table td.live-price-cell.negative-change {
     direction: rtl;
 }
 
-/* MODIFIED: Calculator Buttons Layout */
+/* Calculator Buttons Layout */
 .calculator-buttons {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -2209,8 +2200,6 @@ table td.live-price-cell.negative-change {
 .calc-btn.equals:hover {
     background-color: var(--button-hover-bg);
 }
-
-/* Removed: .calc-btn.zero { grid-column: span 2; } - Handled by grid-area now */
 
 /* Scroll to Top Button */
 #scrollToTopBtn {
@@ -2361,9 +2350,10 @@ table td.live-price-cell.negative-change {
         width: 95%;
     }
 
-    .modal-header-with-icon h2 {
-        font-size: 1.8em; /* Adjusted for mobile view of modal header */
-    }
+    /* Removed font-size override for modal-header-with-icon h2 in mobile media query */
+    /* .modal-header-with-icon h2 {
+        font-size: 1.8em;
+    } */
 
     .close-button {
         font-size: 1.8em;
@@ -2450,7 +2440,7 @@ table td.live-price-cell.negative-change {
     .fixed-footer {
         padding: 8px 10px;
     }
-    /* MODIFIED: Reduce width of Google Auth button on very small screens */
+    /* Reduce width of Google Auth button on very small screens */
     .google-auth-btn {
         max-width: 200px; /* Limit width on very small screens */
         margin: 0 auto; /* Center it */
@@ -2460,9 +2450,10 @@ table td.live-price-cell.negative-change {
         padding: 10px;
     }
 
-    .modal-header-with-icon h2 {
-        font-size: 1.5em; /* Adjusted for very small mobile view of modal header */
-    }
+    /* Removed font-size override for modal-header-with-icon h2 in very small mobile media query */
+    /* .modal-header-with-icon h2 {
+        font-size: 1.5em;
+    } */
 
     .close-button {
         font-size: 1.5em;
