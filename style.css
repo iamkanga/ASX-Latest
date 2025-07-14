@@ -2036,11 +2036,35 @@ table td.live-price-cell.negative-change {
     margin-bottom: 15px;
     text-align: center;
     display: flex;
-    flex-direction: column;
+    flex-direction: column; /* Changed to column to stack elements */
     align-items: center;
     justify-content: center;
     gap: 5px;
     box-shadow: inset 0 0 5px rgba(0,0,0,0.05); /* Subtle inner shadow */
+}
+
+/* New: Row for 52-Week High/Low */
+.fifty-two-week-row {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    font-size: 0.85em; /* Smaller font for high/low */
+    color: var(--text-color);
+    margin-bottom: 5px; /* Space below this row */
+}
+
+.fifty-two-week-value {
+    font-weight: 600;
+    /* Specific colors if desired, e.g., var(--price-up-color) for high, var(--price-down-color) for low */
+}
+
+/* New: Main row for Live Price and Change */
+.live-price-main-row {
+    display: flex;
+    align-items: baseline; /* Align price and change */
+    justify-content: center;
+    width: 100%;
+    margin-bottom: 5px; /* Space below this row */
 }
 
 .live-price-display-section .live-price-large {
@@ -2054,7 +2078,22 @@ table td.live-price-cell.negative-change {
     font-size: 1.2em; /* Larger than regular price change */
     font-weight: 700;
     white-space: nowrap;
+    margin-left: 10px; /* Space between price and change */
 }
+
+/* New: Row for P/E Ratio */
+.pe-ratio-row {
+    width: 100%;
+    text-align: center;
+    font-size: 0.9em; /* Slightly smaller for P/E */
+    color: var(--text-color);
+    margin-top: 5px; /* Space above this row */
+}
+
+.pe-ratio-value {
+    font-weight: 600;
+}
+
 
 /* Conditional background for the prominent live price section */
 .live-price-display-section.positive-change-section {
