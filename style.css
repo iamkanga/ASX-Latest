@@ -1076,39 +1076,37 @@ body.sidebar-active {
     width: calc(100% - var(--sidebar-width));
 }
 
-.container {
-    max-width: 1200px; 
-    margin: 20px auto; 
-    padding: 0 15px;
-    position: relative;
+/* Adjust main content padding to account for fixed header */
+main.container {
+    padding-top: calc(70px + 20px); /* Height of .header-top-row + header's top/bottom padding + some extra for spacing */
+    margin-top: 0; /* Remove previous margin-top */
 }
+
 
 /* Header Styles */
 header {
     background-color: var(--header-bg);
-    padding: 15px 20px;
-    box-shadow: 0 2px 4px var(--shadow-color);
-    display: flex;
-    flex-direction: column; 
-    gap: 10px;
-    position: sticky; /* Changed to sticky */
-    top: 0;           /* Stick to the top of the viewport */
-    z-index: 500;     /* Ensure it stays on top of other content */
-    height: auto;
-    width: 100%; /* Ensure it spans full width */
-    box-sizing: border-box; /* Include padding in width */
+    /* Removed padding, box-shadow, display, flex-direction, gap, position, height as they will be on .header-top-row or adjusted */
+    position: relative; /* Keep relative for containing the sticky child */
+    height: auto; /* Allow height to be determined by content */
+    box-shadow: 0 2px 4px var(--shadow-color); /* Keep shadow on entire header */
+    padding-bottom: 10px; /* Add padding to the bottom of the header for content below top-row */
 }
 
-/* Header Top Row for Alignment */
+/* Header Top Row for Alignment - NOW STICKY */
 .header-top-row {
     display: flex;
     justify-content: space-between; /* Distribute items with space between them */
     align-items: center;
     gap: 15px;
-    position: relative; /* Keep relative for absolute positioning of title if needed */
+    position: sticky; /* Make this row sticky */
+    top: 0;           /* Stick to the top of the viewport */
+    z-index: 501;     /* Ensure it stays on top of other header content and main content */
     width: 100%; 
     box-sizing: border-box;
-    padding: 0 15px; 
+    padding: 15px 20px; /* Moved padding from header to here */
+    background-color: var(--header-bg); /* Ensure background color when sticky */
+    box-shadow: 0 2px 4px var(--shadow-color); /* Add shadow to the sticky part */
 }
 
 h1#mainTitle {
@@ -2274,7 +2272,7 @@ table td.live-price-cell.negative-change {
 /* Responsive Design */
 @media (max-width: 768px) {
     .header-top-row {
-        padding: 0 10px;
+        padding: 15px 10px; /* Adjust padding for mobile */
     }
 
     h1#mainTitle {
@@ -2299,6 +2297,11 @@ table td.live-price-cell.negative-change {
     body.sidebar-active {
         margin-left: 0; /* No content shift on mobile */
         width: 100%;
+    }
+
+    /* Adjust main content padding for mobile */
+    main.container {
+        padding-top: calc(70px + 10px); /* Height of .header-top-row + header's bottom padding */
     }
 
     .watchlist-controls-row {
@@ -2411,7 +2414,7 @@ table td.live-price-cell.negative-change {
 
 @media (max-width: 480px) {
     .header-top-row {
-        padding: 0 5px;
+        padding: 15px 5px; /* Adjust padding for very small mobile */
     }
 
     h1#mainTitle {
