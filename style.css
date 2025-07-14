@@ -1082,8 +1082,9 @@ main.container {
     /* .header-top-row: 15px (top/bottom padding) * 2 + 1.8em (h1 font-size) approx 70px */
     /* .watchlist-controls-row: 10px (top/bottom padding) * 2 + 1em (dropdown font-size) approx 40px */
     /* .asx-code-buttons-container: 10px (top/bottom padding) * 2 + 0.9em (button font-size) approx 35px */
-    /* Total approx: 70px + 40px + 35px = 145px. Add 15px for extra spacing. */
-    padding-top: 160px; /* Adjusted based on estimated total height of fixed elements + spacing */
+    /* Total approx: 70px + 40px + 35px = 145px. */
+    /* Let's try to make the padding-top dynamic based on the actual header height */
+    padding-top: var(--header-height-compensation, 160px); /* Use CSS variable for flexibility */
     margin-top: 0; /* Ensure no extra margin pushes content down */
 }
 
@@ -1437,6 +1438,7 @@ h1#mainTitle {
     box-sizing: border-box;
     padding-left: 15px; 
     padding-right: 15px; 
+    margin-top: 5px; /* Reduced margin from watchlist controls */
 }
 
 .asx-code-btn {
