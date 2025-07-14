@@ -1728,13 +1728,20 @@ table td.live-price-cell.negative-change {
     flex-wrap: nowrap; /* Prevent wrapping on small screens */
 }
 
+/* MODIFIED: ASX Code prominence and alignment */
 .modal-header-with-icon h2 {
     margin: 0;
     flex-grow: 1;
     text-align: center;
-    font-size: 1.6em;
+    font-size: 2.2em; /* Increased font size to match live price display */
+    font-weight: 800; /* Made bolder */
     flex-shrink: 1; /* Allow title to shrink if buttons need space */
     min-width: 0; /* Allow title to shrink below its content size */
+    line-height: 1; /* Ensure vertical alignment by removing extra line height */
+    display: flex; /* Use flex to center text within its own space */
+    align-items: center; /* Vertically center the text */
+    justify-content: center; /* Horizontally center the text */
+    height: 40px; /* Match the height of the action icons for vertical alignment */
 }
 
 /* New group for action buttons and close button */
@@ -2355,7 +2362,7 @@ table td.live-price-cell.negative-change {
     }
 
     .modal-header-with-icon h2 {
-        font-size: 1.4em;
+        font-size: 1.8em; /* Adjusted for mobile view of modal header */
     }
 
     .close-button {
@@ -2454,7 +2461,7 @@ table td.live-price-cell.negative-change {
     }
 
     .modal-header-with-icon h2 {
-        font-size: 1.2em;
+        font-size: 1.5em; /* Adjusted for very small mobile view of modal header */
     }
 
     .close-button {
