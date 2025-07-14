@@ -60,6 +60,7 @@
     --live-price-section-bg: rgba(0, 123, 255, 0.05); /* Subtle blue tint */
     --live-price-positive-bg: rgba(40, 167, 69, 0.1); /* Faint green */
     --live-price-negative-bg: rgba(220, 53, 69, 0.1); /* Faint red */
+    --comment-title-bg: rgba(0, 0, 0, 0.05); /* Subtle background for comment titles */
 }
 
 /* Dark Theme Variables */
@@ -122,6 +123,7 @@ body.dark-theme {
     --live-price-section-bg: rgba(52, 152, 219, 0.1); /* Subtle blue tint */
     --live-price-positive-bg: rgba(46, 204, 113, 0.15); /* Faint green */
     --live-price-negative-bg: rgba(231, 76, 60, 0.15); /* Faint red */
+    --comment-title-bg: rgba(255, 255, 255, 0.08); /* Subtle background for comment titles in dark mode */
 }
 
 /* Custom Themes */
@@ -175,6 +177,7 @@ body.theme-bold-1 { /* Ocean Blue */
     --live-price-section-bg: rgba(0, 180, 216, 0.1);
     --live-price-positive-bg: rgba(46, 204, 113, 0.15);
     --live-price-negative-bg: rgba(231, 76, 60, 0.15);
+    --comment-title-bg: rgba(255, 255, 255, 0.08);
 }
 
 body.theme-bold-2 { /* Forest Green */
@@ -226,6 +229,7 @@ body.theme-bold-2 { /* Forest Green */
     --live-price-section-bg: rgba(167, 201, 87, 0.1);
     --live-price-positive-bg: rgba(46, 204, 113, 0.15);
     --live-price-negative-bg: rgba(231, 76, 60, 0.15);
+    --comment-title-bg: rgba(255, 255, 255, 0.08);
 }
 
 body.theme-bold-3 { /* Sunset Orange */
@@ -277,6 +281,7 @@ body.theme-bold-3 { /* Sunset Orange */
     --live-price-section-bg: rgba(255, 195, 0, 0.1);
     --live-price-positive-bg: rgba(46, 204, 113, 0.15);
     --live-price-negative-bg: rgba(231, 76, 60, 0.15);
+    --comment-title-bg: rgba(255, 255, 255, 0.08);
 }
 
 body.theme-bold-4 { /* Royal Purple */
@@ -328,6 +333,7 @@ body.theme-bold-4 { /* Royal Purple */
     --live-price-section-bg: rgba(199, 125, 255, 0.1);
     --live-price-positive-bg: rgba(46, 204, 113, 0.15);
     --live-price-negative-bg: rgba(231, 76, 60, 0.15);
+    --comment-title-bg: rgba(255, 255, 255, 0.08);
 }
 
 body.theme-bold-5 { /* Deep Red */
@@ -379,6 +385,7 @@ body.theme-bold-5 { /* Deep Red */
     --live-price-section-bg: rgba(231, 76, 60, 0.1);
     --live-price-positive-bg: rgba(46, 204, 113, 0.15);
     --live-price-negative-bg: rgba(231, 76, 60, 0.15);
+    --comment-title-bg: rgba(255, 255, 255, 0.08);
 }
 
 body.theme-bold-6 { /* Gold */
@@ -430,6 +437,7 @@ body.theme-bold-6 { /* Gold */
     --live-price-section-bg: rgba(255, 235, 59, 0.1);
     --live-price-positive-bg: rgba(46, 204, 113, 0.15);
     --live-price-negative-bg: rgba(231, 76, 60, 0.15);
+    --comment-title-bg: rgba(255, 255, 255, 0.08);
 }
 
 body.theme-bold-7 { /* Emerald */
@@ -480,6 +488,7 @@ body.theme-bold-7 { /* Emerald */
     --live-price-section-bg: rgba(102, 187, 106, 0.1);
     --live-price-positive-bg: rgba(46, 204, 113, 0.15);
     --live-price-negative-bg: rgba(231, 76, 60, 0.15);
+    --comment-title-bg: rgba(255, 255, 255, 0.08);
 }
 
 body.theme-bold-8 { /* Plum */
@@ -530,6 +539,7 @@ body.theme-bold-8 { /* Plum */
     --live-price-section-bg: rgba(218, 112, 214, 0.1);
     --live-price-positive-bg: rgba(46, 204, 113, 0.15);
     --live-price-negative-bg: rgba(231, 76, 60, 0.15);
+    --comment-title-bg: rgba(255, 255, 255, 0.08);
 }
 
 body.theme-bold-9 { /* Aqua */
@@ -580,6 +590,7 @@ body.theme-bold-9 { /* Aqua */
     --live-price-section-bg: rgba(32, 178, 170, 0.1);
     --live-price-positive-bg: rgba(46, 204, 113, 0.15);
     --live-price-negative-bg: rgba(231, 76, 60, 0.15);
+    --comment-title-bg: rgba(255, 255, 255, 0.08);
 }
 
 body.theme-bold-10 { /* Ruby */
@@ -630,6 +641,7 @@ body.theme-bold-10 { /* Ruby */
     --live-price-section-bg: rgba(220, 20, 60, 0.1);
     --live-price-positive-bg: rgba(46, 204, 113, 0.15);
     --live-price-negative-bg: rgba(231, 76, 60, 0.15);
+    --comment-title-bg: rgba(255, 255, 255, 0.08);
 }
 
 
@@ -674,6 +686,7 @@ body.theme-subtle-1 { /* Subtle Sky */
     --live-price-section-bg: rgba(102, 153, 255, 0.05);
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
 }
 
 body.theme-subtle-2 { /* Subtle Earth */
@@ -716,6 +729,7 @@ body.theme-subtle-2 { /* Subtle Earth */
     --live-price-section-bg: rgba(184, 162, 143, 0.05);
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
 }
 
 body.theme-subtle-3 { /* Subtle Rose */
@@ -758,6 +772,7 @@ body.theme-subtle-3 { /* Subtle Rose */
     --live-price-section-bg: rgba(238, 184, 198, 0.05);
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
 }
 
 body.theme-subtle-4 { /* Subtle Lavender */
@@ -800,6 +815,7 @@ body.theme-subtle-4 { /* Subtle Lavender */
     --live-price-section-bg: rgba(198, 184, 235, 0.05);
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
 }
 
 body.theme-subtle-5 { /* Subtle Mint */
@@ -842,6 +858,7 @@ body.theme-subtle-5 { /* Subtle Mint */
     --live-price-section-bg: rgba(184, 238, 198, 0.05);
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
 }
 
 body.theme-subtle-6 { /* Subtle Sand */
@@ -884,6 +901,7 @@ body.theme-subtle-6 { /* Subtle Sand */
     --live-price-section-bg: rgba(238, 184, 162, 0.05);
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
 }
 
 body.theme-subtle-7 { /* Subtle Graphite */
@@ -926,6 +944,7 @@ body.theme-subtle-7 { /* Subtle Graphite */
     --live-price-section-bg: rgba(184, 184, 184, 0.05);
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
 }
 
 body.theme-subtle-8 { /* Subtle Peach */
@@ -968,6 +987,7 @@ body.theme-subtle-8 { /* Subtle Peach */
     --live-price-section-bg: rgba(238, 184, 162, 0.05);
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
 }
 
 body.theme-subtle-9 { /* Subtle Teal */
@@ -1010,6 +1030,7 @@ body.theme-subtle-9 { /* Subtle Teal */
     --live-price-section-bg: rgba(184, 238, 198, 0.05);
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
 }
 
 body.theme-subtle-10 { /* Subtle Stone */
@@ -1052,6 +1073,7 @@ body.theme-subtle-10 { /* Subtle Stone */
     --live-price-section-bg: rgba(192, 192, 192, 0.05);
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
 }
 
 /* NEW MID-RANGE THEMES */
@@ -1096,6 +1118,7 @@ body.theme-mid-1 { /* Muted Blue-Grey */
     --live-price-section-bg: rgba(53, 79, 82, 0.05);
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
 }
 
 body.theme-mid-2 { /* Warm Grey-Brown */
@@ -1139,6 +1162,7 @@ body.theme-mid-2 { /* Warm Grey-Brown */
     --live-price-section-bg: rgba(92, 75, 61, 0.05);
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
 }
 
 body.theme-mid-3 { /* Dusty Rose */
@@ -1182,6 +1206,7 @@ body.theme-mid-3 { /* Dusty Rose */
     --live-price-section-bg: rgba(82, 53, 53, 0.05);
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
 }
 
 body.theme-mid-4 { /* Soft Green-Yellow */
@@ -1225,6 +1250,7 @@ body.theme-mid-4 { /* Soft Green-Yellow */
     --live-price-section-bg: rgba(82, 107, 53, 0.05);
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
 }
 
 body.theme-mid-5 { /* Muted Purple */
@@ -1268,6 +1294,7 @@ body.theme-mid-5 { /* Muted Purple */
     --live-price-section-bg: rgba(92, 53, 107, 0.05);
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
 }
 
 body.theme-mid-6 { /* Earthy Orange */
@@ -1311,6 +1338,7 @@ body.theme-mid-6 { /* Earthy Orange */
     --live-price-section-bg: rgba(107, 82, 53, 0.05);
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
 }
 
 body.theme-mid-7 { /* Soft Teal-Green */
@@ -1354,6 +1382,7 @@ body.theme-mid-7 { /* Soft Teal-Green */
     --live-price-section-bg: rgba(53, 107, 82, 0.05);
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
 }
 
 body.theme-mid-8 { /* Muted Plum */
@@ -1397,6 +1426,7 @@ body.theme-mid-8 { /* Muted Plum */
     --live-price-section-bg: rgba(92, 53, 107, 0.05);
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
 }
 
 body.theme-mid-9 { /* Soft Gold-Brown */
@@ -1440,6 +1470,7 @@ body.theme-mid-9 { /* Soft Gold-Brown */
     --live-price-section-bg: rgba(107, 82, 53, 0.05);
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
 }
 
 body.theme-mid-10 { /* Muted Green-Blue */
@@ -1483,6 +1514,7 @@ body.theme-mid-10 { /* Muted Green-Blue */
     --live-price-section-bg: rgba(53, 82, 107, 0.05);
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
 }
 
 
@@ -2384,10 +2416,10 @@ table td.live-price-cell.negative-change {
 .comment-section {
     border: 1px solid var(--border-color);
     border-radius: 8px;
-    padding: 15px;
     margin-bottom: 15px;
     background-color: var(--card-bg);
     position: relative;
+    overflow: hidden; /* Ensure title bar background doesn't overflow */
 }
 
 .comment-section-header {
@@ -2500,16 +2532,28 @@ table td.live-price-cell.negative-change {
     background-color: var(--card-bg);
     border: 1px solid var(--border-color);
     border-radius: 8px;
-    padding: 12px;
     margin-bottom: 10px;
+    overflow: hidden; /* Ensure title bar background doesn't overflow */
+}
+
+/* NEW: Styling for the dynamically created comment title bar */
+.modal-comment-item .comment-title-bar {
+    background-color: var(--comment-title-bg);
+    color: var(--text-color);
+    font-weight: 700;
+    padding: 8px 15px;
+    margin-bottom: 10px; /* Space between title bar and comment text */
+    border-bottom: 1px solid var(--border-color); /* Subtle separator */
+    font-size: 0.95em;
 }
 
 .modal-comment-item p {
     margin: 0;
     line-height: 1.5;
+    padding: 0 15px 15px; /* Add padding to the text part */
 }
 
-.modal-comment-item strong {
+.modal-comment-item strong { /* This styling is for old structure, might not be needed */
     color: var(--label-color);
     font-size: 0.95em;
     display: block;
