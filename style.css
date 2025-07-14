@@ -60,8 +60,6 @@
     --live-price-section-bg: rgba(0, 123, 255, 0.05); /* Subtle blue tint */
     --live-price-positive-bg: rgba(40, 167, 69, 0.1); /* Faint green */
     --live-price-negative-bg: rgba(220, 53, 69, 0.1); /* Faint red */
-    --external-link-item-bg: rgba(0, 0, 0, 0.03); /* Very light background for link box */
-    --external-link-item-hover-bg: rgba(0, 0, 0, 0.06); /* Slightly darker on hover */
 }
 
 /* Dark Theme Variables */
@@ -103,6 +101,14 @@ body.dark-theme {
     --ghosted-text: #95a5a6;
     --danger-button-bg: #e74c3c;
     --danger-button-hover-bg: #c0392b;
+    --secondary-button-bg: #7f8c8d;
+    --secondary-button-hover-bg: #616e70;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --label-color: #bbb;
+    --shadow-color: rgba(0, 0, 0, 0.4);
+    --close-sidebar-btn-color: #bbb;
     --icon-action-color: #3498db;
     --icon-action-hover-color: #2980b9;
     --icon-danger-color: #e74c3c;
@@ -116,8 +122,6 @@ body.dark-theme {
     --live-price-section-bg: rgba(52, 152, 219, 0.1); /* Subtle blue tint */
     --live-price-positive-bg: rgba(46, 204, 113, 0.15); /* Faint green */
     --live-price-negative-bg: rgba(231, 76, 60, 0.15); /* Faint red */
-    --external-link-item-bg: rgba(255, 255, 255, 0.05); /* Darker subtle background for link box */
-    --external-link-item-hover-bg: rgba(255, 255, 255, 0.1); /* Slightly darker on hover */
 }
 
 /* Custom Themes */
@@ -171,8 +175,6 @@ body.theme-bold-1 { /* Ocean Blue */
     --live-price-section-bg: rgba(0, 180, 216, 0.1);
     --live-price-positive-bg: rgba(46, 204, 113, 0.15);
     --live-price-negative-bg: rgba(231, 76, 60, 0.15);
-    --external-link-item-bg: rgba(0, 180, 216, 0.05);
-    --external-link-item-hover-bg: rgba(0, 180, 216, 0.1);
 }
 
 body.theme-bold-2 { /* Forest Green */
@@ -224,8 +226,6 @@ body.theme-bold-2 { /* Forest Green */
     --live-price-section-bg: rgba(167, 201, 87, 0.1);
     --live-price-positive-bg: rgba(46, 204, 113, 0.15);
     --live-price-negative-bg: rgba(231, 76, 60, 0.15);
-    --external-link-item-bg: rgba(167, 201, 87, 0.05);
-    --external-link-item-hover-bg: rgba(167, 201, 87, 0.1);
 }
 
 body.theme-bold-3 { /* Sunset Orange */
@@ -277,8 +277,6 @@ body.theme-bold-3 { /* Sunset Orange */
     --live-price-section-bg: rgba(255, 195, 0, 0.1);
     --live-price-positive-bg: rgba(46, 204, 113, 0.15);
     --live-price-negative-bg: rgba(231, 76, 60, 0.15);
-    --external-link-item-bg: rgba(255, 195, 0, 0.05);
-    --external-link-item-hover-bg: rgba(255, 195, 0, 0.1);
 }
 
 body.theme-bold-4 { /* Royal Purple */
@@ -330,8 +328,6 @@ body.theme-bold-4 { /* Royal Purple */
     --live-price-section-bg: rgba(199, 125, 255, 0.1);
     --live-price-positive-bg: rgba(46, 204, 113, 0.15);
     --live-price-negative-bg: rgba(231, 76, 60, 0.15);
-    --external-link-item-bg: rgba(199, 125, 255, 0.05);
-    --external-link-item-hover-bg: rgba(199, 125, 255, 0.1);
 }
 
 body.theme-bold-5 { /* Deep Red */
@@ -383,8 +379,6 @@ body.theme-bold-5 { /* Deep Red */
     --live-price-section-bg: rgba(231, 76, 60, 0.1);
     --live-price-positive-bg: rgba(46, 204, 113, 0.15);
     --live-price-negative-bg: rgba(231, 76, 60, 0.15);
-    --external-link-item-bg: rgba(231, 76, 60, 0.05);
-    --external-link-item-hover-bg: rgba(231, 76, 60, 0.1);
 }
 
 body.theme-bold-6 { /* Gold */
@@ -436,8 +430,6 @@ body.theme-bold-6 { /* Gold */
     --live-price-section-bg: rgba(255, 235, 59, 0.1);
     --live-price-positive-bg: rgba(46, 204, 113, 0.15);
     --live-price-negative-bg: rgba(231, 76, 60, 0.15);
-    --external-link-item-bg: rgba(255, 235, 59, 0.05);
-    --external-link-item-hover-bg: rgba(255, 235, 59, 0.1);
 }
 
 body.theme-bold-7 { /* Emerald */
@@ -488,8 +480,6 @@ body.theme-bold-7 { /* Emerald */
     --live-price-section-bg: rgba(102, 187, 106, 0.1);
     --live-price-positive-bg: rgba(46, 204, 113, 0.15);
     --live-price-negative-bg: rgba(231, 76, 60, 0.15);
-    --external-link-item-bg: rgba(102, 187, 106, 0.05);
-    --external-link-item-hover-bg: rgba(102, 187, 106, 0.1);
 }
 
 body.theme-bold-8 { /* Plum */
@@ -502,7 +492,6 @@ body.theme-bold-8 { /* Plum */
     --button-hover-bg: #c71585;
     --input-bg: #9932cc;
     --input-border: #ba55d3;
-    --input-placeholder-color: #ffb3ff;
     --modal-content-bg: #9932cc;
     --table-header-bg: #800080;
     --table-row-hover-bg: #ba55d3;
@@ -541,8 +530,6 @@ body.theme-bold-8 { /* Plum */
     --live-price-section-bg: rgba(218, 112, 214, 0.1);
     --live-price-positive-bg: rgba(46, 204, 113, 0.15);
     --live-price-negative-bg: rgba(231, 76, 60, 0.15);
-    --external-link-item-bg: rgba(218, 112, 214, 0.05);
-    --external-link-item-hover-bg: rgba(218, 112, 214, 0.1);
 }
 
 body.theme-bold-9 { /* Aqua */
@@ -593,8 +580,6 @@ body.theme-bold-9 { /* Aqua */
     --live-price-section-bg: rgba(32, 178, 170, 0.1);
     --live-price-positive-bg: rgba(46, 204, 113, 0.15);
     --live-price-negative-bg: rgba(231, 76, 60, 0.15);
-    --external-link-item-bg: rgba(32, 178, 170, 0.05);
-    --external-link-item-hover-bg: rgba(32, 178, 170, 0.1);
 }
 
 body.theme-bold-10 { /* Ruby */
@@ -645,8 +630,6 @@ body.theme-bold-10 { /* Ruby */
     --live-price-section-bg: rgba(220, 20, 60, 0.1);
     --live-price-positive-bg: rgba(46, 204, 113, 0.15);
     --live-price-negative-bg: rgba(231, 76, 60, 0.15);
-    --external-link-item-bg: rgba(220, 20, 60, 0.05);
-    --external-link-item-hover-bg: rgba(220, 20, 60, 0.1);
 }
 
 
@@ -691,8 +674,6 @@ body.theme-subtle-1 { /* Subtle Sky */
     --live-price-section-bg: rgba(102, 153, 255, 0.05);
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
-    --external-link-item-bg: rgba(102, 153, 255, 0.03);
-    --external-link-item-hover-bg: rgba(102, 153, 255, 0.06);
 }
 
 body.theme-subtle-2 { /* Subtle Earth */
@@ -735,8 +716,6 @@ body.theme-subtle-2 { /* Subtle Earth */
     --live-price-section-bg: rgba(184, 162, 143, 0.05);
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
-    --external-link-item-bg: rgba(184, 162, 143, 0.03);
-    --external-link-item-hover-bg: rgba(184, 162, 143, 0.06);
 }
 
 body.theme-subtle-3 { /* Subtle Rose */
@@ -779,8 +758,6 @@ body.theme-subtle-3 { /* Subtle Rose */
     --live-price-section-bg: rgba(238, 184, 198, 0.05);
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
-    --external-link-item-bg: rgba(238, 184, 198, 0.03);
-    --external-link-item-hover-bg: rgba(238, 184, 198, 0.06);
 }
 
 body.theme-subtle-4 { /* Subtle Lavender */
@@ -823,8 +800,6 @@ body.theme-subtle-4 { /* Subtle Lavender */
     --live-price-section-bg: rgba(198, 184, 235, 0.05);
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
-    --external-link-item-bg: rgba(198, 184, 235, 0.03);
-    --external-link-item-hover-bg: rgba(198, 184, 235, 0.06);
 }
 
 body.theme-subtle-5 { /* Subtle Mint */
@@ -867,8 +842,6 @@ body.theme-subtle-5 { /* Subtle Mint */
     --live-price-section-bg: rgba(184, 238, 198, 0.05);
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
-    --external-link-item-bg: rgba(184, 238, 198, 0.03);
-    --external-link-item-hover-bg: rgba(184, 238, 198, 0.06);
 }
 
 body.theme-subtle-6 { /* Subtle Sand */
@@ -911,8 +884,6 @@ body.theme-subtle-6 { /* Subtle Sand */
     --live-price-section-bg: rgba(238, 184, 162, 0.05);
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
-    --external-link-item-bg: rgba(238, 184, 162, 0.03);
-    --external-link-item-hover-bg: rgba(238, 184, 162, 0.06);
 }
 
 body.theme-subtle-7 { /* Subtle Graphite */
@@ -955,8 +926,6 @@ body.theme-subtle-7 { /* Subtle Graphite */
     --live-price-section-bg: rgba(184, 184, 184, 0.05);
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
-    --external-link-item-bg: rgba(184, 184, 184, 0.03);
-    --external-link-item-hover-bg: rgba(184, 184, 184, 0.06);
 }
 
 body.theme-subtle-8 { /* Subtle Peach */
@@ -999,8 +968,6 @@ body.theme-subtle-8 { /* Subtle Peach */
     --live-price-section-bg: rgba(238, 184, 162, 0.05);
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
-    --external-link-item-bg: rgba(238, 184, 162, 0.03);
-    --external-link-item-hover-bg: rgba(238, 184, 162, 0.06);
 }
 
 body.theme-subtle-9 { /* Subtle Teal */
@@ -1043,8 +1010,6 @@ body.theme-subtle-9 { /* Subtle Teal */
     --live-price-section-bg: rgba(184, 238, 198, 0.05);
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
-    --external-link-item-bg: rgba(184, 238, 198, 0.03);
-    --external-link-item-hover-bg: rgba(184, 238, 198, 0.06);
 }
 
 body.theme-subtle-10 { /* Subtle Stone */
@@ -1087,8 +1052,6 @@ body.theme-subtle-10 { /* Subtle Stone */
     --live-price-section-bg: rgba(192, 192, 192, 0.05);
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
-    --external-link-item-bg: rgba(192, 192, 192, 0.03);
-    --external-link-item-hover-bg: rgba(192, 192, 192, 0.06);
 }
 
 
@@ -1186,7 +1149,7 @@ h1#mainTitle {
     color: var(--text-color); /* Inherit text color from header */
     font-size: 1.8em; /* Consistent size with other header action buttons */
     cursor: pointer;
-    padding: 5px 10px; /* Consistent padding */
+    padding: 5px 10px;
     z-index: 11;
     display: block;
     flex-shrink: 0;
@@ -1552,7 +1515,7 @@ table td.live-price-cell {
     font-size: 1.1em; /* Slightly larger */
 }
 
-table td.live-price-cell .live-price-value { /* Added span for the price number */
+table td.live-price-cell .price-value { /* Added span for the price number */
     font-weight: 700; /* Bolder */
 }
 
@@ -1583,6 +1546,56 @@ table td.live-price-cell.negative-change {
 
 .price-change.neutral {
     color: var(--price-neutral-color);
+}
+
+/* Mobile Cards */
+.mobile-share-cards {
+    display: none; 
+    flex-direction: column;
+    gap: 15px;
+    padding: 15px;
+    position: relative; 
+    left: 0; 
+    right: 0;
+    width: 100%; 
+    box-sizing: border-box; 
+}
+
+.mobile-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 5px var(--shadow-color);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.mobile-card.selected {
+    background-color: var(--table-row-hover-bg);
+    border-color: var(--button-bg);
+    font-weight: 600;
+}
+
+.mobile-card:not(.selected):hover {
+    background-color: var(--table-row-hover-bg);
+}
+
+.mobile-card h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: var(--text-color);
+    font-size: 1.2em;
+}
+
+.mobile-card p {
+    margin: 5px 0;
+    font-size: 0.9em;
+    color: var(--text-color);
+}
+
+.mobile-card p strong {
+    color: var(--label-color);
 }
 
 /* NEW: Live Price Display Section for Mobile Cards and Modals */
@@ -1707,7 +1720,7 @@ table td.live-price-cell.negative-change {
 .modal-header-with-icon {
     display: flex;
     justify-content: space-between; /* Space out title and button group */
-    align-items: center; /* Vertically align items in the header */
+    align-items: center;
     margin-bottom: 20px;
     position: relative;
     padding-bottom: 10px;
@@ -1719,14 +1732,9 @@ table td.live-price-cell.negative-change {
     margin: 0;
     flex-grow: 1;
     text-align: center;
-    /* NEW/MODIFIED: Larger font size and bolder for ASX code in modal header */
-    font-size: 1.8em; /* Adjusted size for better balance */
-    font-weight: 700; /* Adjusted boldness */
-    color: var(--text-color);
-    line-height: 1; /* Ensure vertical centering of text itself */
+    font-size: 1.6em;
     flex-shrink: 1; /* Allow title to shrink if buttons need space */
     min-width: 0; /* Allow title to shrink below its content size */
-    padding: 0 10px; /* Add some horizontal padding to prevent text from touching icons */
 }
 
 /* New group for action buttons and close button */
@@ -2056,33 +2064,15 @@ table td.live-price-cell.negative-change {
     padding-bottom: 0;
 }
 
-/* NEW: Styling for individual external link items */
-.external-link-item {
-    background-color: var(--external-link-item-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 10px 15px;
-    margin-bottom: 10px; /* Space between links */
-    transition: background-color 0.2s ease, border-color 0.2s ease;
-}
-
-.external-link-item:hover {
-    background-color: var(--external-link-item-hover-bg);
-    border-color: var(--button-bg); /* Highlight border on hover */
-}
-
 .external-link {
-    display: flex; /* Use flexbox to align text and icon */
+    display: inline-flex; 
     align-items: center;
-    justify-content: space-between; /* Push icon to the right */
     gap: 8px; 
     color: var(--link-color);
     text-decoration: none;
     font-weight: 600;
-    /* Removed margin-bottom from here as it's now on .external-link-item */
+    margin-bottom: 10px;
     transition: color 0.2s ease;
-    width: 100%; /* Ensure link fills its container */
-    box-sizing: border-box;
 }
 
 .external-link:hover {
@@ -2090,23 +2080,433 @@ table td.live-price-cell.negative-change {
     text-decoration: underline;
 }
 
-.external-link i {
-    font-size: 0.9em; /* Smaller icon size */
-    flex-shrink: 0; /* Prevent icon from shrinking */
-    color: var(--ghosted-text); /* Subtle icon color */
-    transition: color 0.2s ease;
+/* Calculator Modals */
+.calculator-modal-content {
+    /* Specific styles for calculator modals if needed */
+}
+.calc-input-group {
+    margin-bottom: 15px;
 }
 
-.external-link:hover i {
-    color: var(--link-hover-color); /* Icon color matches link on hover */
+.calc-input-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--label-color);
+    font-size: 0.95em;
 }
 
-
-.commsec-message {
-    font-size: 0.75em; 
-    margin-top: 0; 
-    margin-bottom: 0; 
-    line-height: 1.2; 
+.calculator-display {
+    background-color: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    text-align: right;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 80px;
 }
 
-.modal-body
+.calculator-input {
+    font-size: 1em;
+    color: var(--ghosted-text);
+    min-height: 20px;
+    white-space: nowrap;
+    overflow-x: auto;
+    direction: rtl; /* For right-to-left scrolling of long input */
+}
+
+.calculator-result {
+    font-size: 2.2em;
+    font-weight: 700;
+    color: var(--text-color);
+    min-height: 30px;
+    white-space: nowrap;
+    overflow-x: auto;
+    direction: rtl;
+}
+
+/* MODIFIED: Calculator Buttons Layout */
+.calculator-buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    /* Define grid areas for a standard calculator layout */
+    grid-template-areas:
+        "clear   percent divide  multiply"
+        "num7    num8    num9    subtract"
+        "num4    num5    num6    add"
+        "num1    num2    num3    equals"
+        "num0    num0    decimal equals"; /* 0 spans 2 columns, equals spans 2 rows */
+}
+
+/* Assign grid areas to buttons using data-attributes */
+.calc-btn[data-action="clear"] { grid-area: clear; }
+.calc-btn[data-action="percentage"] { grid-area: percent; }
+.calc-btn[data-action="divide"] { grid-area: divide; }
+.calc-btn[data-action="multiply"] { grid-area: multiply; }
+.calc-btn[data-action="subtract"] { grid-area: subtract; }
+.calc-btn[data-action="add"] { grid-area: add; }
+.calc-btn[data-action="calculate"] { grid-area: equals; grid-row: equals-start / span 2; } /* Equals spans two rows */
+
+.calc-btn[data-value="7"] { grid-area: num7; }
+.calc-btn[data-value="8"] { grid-area: num8; }
+.calc-btn[data-value="9"] { grid-area: num9; }
+.calc-btn[data-value="4"] { grid-area: num4; }
+.calc-btn[data-value="5"] { grid-area: num5; }
+.calc-btn[data-value="6"] { grid-area: num6; }
+.calc-btn[data-value="1"] { grid-area: num1; }
+.calc-btn[data-value="2"] { grid-area: num2; }
+.calc-btn[data-value="3"] { grid-area: num3; }
+.calc-btn[data-value="0"] { grid-area: num0; } /* Zero spans two columns */
+.calc-btn[data-value="."] { grid-area: decimal; }
+
+
+.calc-btn {
+    background-color: var(--calc-num-btn-bg);
+    color: var(--calc-num-btn-text);
+    border: none;
+    border-radius: 8px;
+    padding: 15px;
+    font-size: 1.5em;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 600;
+}
+
+.calc-btn:hover {
+    background-color: var(--calc-num-btn-hover-bg);
+    transform: translateY(-1px);
+}
+
+.calc-btn.clear {
+    background-color: var(--danger-button-bg);
+    color: var(--button-text);
+}
+.calc-btn.clear:hover {
+    background-color: var(--danger-button-hover-bg);
+}
+
+.calc-btn.operator,
+.calc-btn.equals {
+    background-color: var(--button-bg);
+    color: var(--button-text);
+}
+.calc-btn.operator:hover,
+.calc-btn.equals:hover {
+    background-color: var(--button-hover-bg);
+}
+
+/* Removed: .calc-btn.zero { grid-column: span 2; } - Handled by grid-area now */
+
+/* Scroll to Top Button */
+#scrollToTopBtn {
+    display: none; /* Hidden by default */
+    position: fixed; /* Fixed/sticky position */
+    bottom: 20px; /* Place the button at the bottom of the page */
+    right: 20px; /* Place the button at the right of the page */
+    z-index: 99; /* Make sure it does not overlap */
+    border: none; /* Remove borders */
+    outline: none; /* Remove outline */
+    background-color: var(--button-bg); /* Set a background color */
+    color: white; /* Text color */
+    cursor: pointer; /* Add a mouse pointer on hover */
+    padding: 15px; /* Some padding */
+    border-radius: 50%; /* Rounded corners */
+    font-size: 1.5em; /* Increase font size */
+    box-shadow: 0 4px 8px var(--shadow-color);
+    transition: opacity 0.3s ease, transform 0.2s ease;
+    opacity: 0; /* Start invisible */
+    width: 60px; /* Fixed width */
+    height: 60px; /* Fixed height */
+    display: flex; /* Use flexbox for centering icon */
+    justify-content: center;
+    align-items: center;
+}
+
+#scrollToTopBtn:hover {
+    background-color: var(--button-hover-bg); /* Add a darker background on hover */
+    transform: translateY(-2px);
+}
+
+/* Context Menu */
+.context-menu {
+    display: none;
+    position: fixed;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px var(--shadow-color);
+    z-index: 1001; /* Above modals */
+    padding: 5px 0;
+    min-width: 180px;
+}
+
+.context-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 15px;
+    background: none;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    font-size: 0.95em;
+    color: var(--text-color);
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.context-menu-item:hover {
+    background-color: var(--table-row-hover-bg);
+}
+
+.context-menu-item.danger-button {
+    color: var(--danger-color);
+}
+
+.context-menu-item.danger-button:hover {
+    background-color: var(--danger-color);
+    color: var(--button-text);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .header-top-row {
+        padding: 0 10px;
+    }
+
+    h1#mainTitle {
+        font-size: 1.5em;
+    }
+
+    .header-action-btn {
+        font-size: 1.5em;
+        padding: 5px;
+    }
+
+    /* Adjusted Hamburger button for mobile */
+    .hamburger-btn {
+        font-size: 1.5em; /* Match other header buttons */
+        padding: 5px;
+    }
+
+    .app-sidebar {
+        width: 250px;
+    }
+
+    body.sidebar-active {
+        margin-left: 0; /* No content shift on mobile */
+        width: 100%;
+    }
+
+    .watchlist-controls-row {
+        flex-direction: row; /* Keep as row for side-by-side */
+        flex-wrap: nowrap; /* Prevent wrapping */
+        justify-content: space-around; /* Distribute space evenly */
+        gap: 10px; /* Smaller gap for mobile */
+        padding: 10px 15px;
+    }
+
+    .watchlist-group,
+    .sort-group {
+        flex-basis: 50%; /* Each takes half the width */
+        max-width: calc(50% - 5px); /* Account for half the gap */
+        min-width: 120px; /* Ensure a reasonable minimum width for dropdowns */
+    }
+
+    .dropdown-large {
+        width: 100%; /* Ensure dropdowns fill their allocated space */
+        font-size: 0.9em; /* Slightly smaller font for better fit */
+        padding: 6px 10px; /* Smaller padding */
+        background-position: right 8px top 50%; /* Adjust arrow position */
+        background-size: 8px auto; /* Adjust arrow size */
+        padding-right: 20px; /* Adjust padding for smaller arrow */
+    }
+
+    .table-container {
+        display: none; /* Hide table on small screens */
+    }
+
+    .mobile-share-cards {
+        display: flex; /* Show mobile cards on small screens */
+    }
+
+    .fixed-footer {
+        padding: 10px 15px;
+    }
+
+    .google-auth-btn {
+        width: 100%; /* Default to full width on small screens */
+        font-size: 1em;
+        padding: 10px 15px;
+    }
+
+    .modal-content {
+        margin: 20px auto;
+        padding: 15px;
+        width: 95%;
+    }
+
+    .modal-header-with-icon h2 {
+        font-size: 1.4em;
+    }
+
+    .close-button {
+        font-size: 1.8em;
+        top: 8px;
+        right: 15px;
+    }
+
+    .modal-content input[type="text"],
+    .modal-content input[type="number"],
+    .modal-content textarea,
+    .calc-input-group input[type="number"],
+    .calc-input-group select {
+        width: calc(100% - 20px); /* Adjust for smaller padding */
+        padding: 8px;
+    }
+
+    .form-action-buttons,
+    .modal-action-buttons,
+    .custom-dialog-buttons {
+        flex-direction: row; /* Keep as row for better spacing on mobile */
+        gap: 8px;
+        margin-top: 15px;
+        padding-top: 10px;
+    }
+
+    .modal-content .sticky-footer {
+        bottom: -15px; /* Adjust for smaller modal padding */
+        left: -15px;
+        right: -15px;
+        padding: 15px;
+    }
+
+    .modal-action-icon {
+        font-size: 1.3em;
+        padding: 6px;
+    }
+
+    .calculator-display {
+        padding: 10px;
+        min-height: 70px;
+    }
+
+    .calculator-result {
+        font-size: 1.8em;
+    }
+
+    .calc-btn {
+        padding: 10px;
+        font-size: 1.2em;
+    }
+
+    #scrollToTopBtn {
+        bottom: 70px; /* Above the fixed footer */
+    }
+}
+
+@media (max-width: 480px) {
+    .header-top-row {
+        padding: 0 5px;
+    }
+
+    h1#mainTitle {
+        font-size: 1.3em;
+    }
+
+    .header-action-btn {
+        font-size: 1.3em;
+    }
+
+    .hamburger-btn {
+        font-size: 1.3em;
+        padding: 5px;
+    }
+
+    .asx-code-buttons-container {
+        padding: 8px 10px;
+    }
+
+    .asx-code-btn {
+        padding: 6px 10px;
+        font-size: 0.8em;
+    }
+
+    .fixed-footer {
+        padding: 8px 10px;
+    }
+    /* MODIFIED: Reduce width of Google Auth button on very small screens */
+    .google-auth-btn {
+        max-width: 200px; /* Limit width on very small screens */
+        margin: 0 auto; /* Center it */
+    }
+
+    .modal-content {
+        padding: 10px;
+    }
+
+    .modal-header-with-icon h2 {
+        font-size: 1.2em;
+    }
+
+    .close-button {
+        font-size: 1.5em;
+        right: 10px;
+    }
+
+    .modal-content label {
+        font-size: 0.9em;
+    }
+
+    .modal-content input[type="text"],
+    .modal-content input[type="number"],
+    .modal-content textarea,
+    .calc-input-group input[type="number"],
+    .calc-input-group select {
+        width: calc(100% - 16px); /* Adjust for smaller padding */
+        padding: 6px;
+        margin-bottom: 10px;
+    }
+
+    .form-action-buttons,
+    .modal-action-buttons,
+    .custom-dialog-buttons {
+        gap: 5px;
+        margin-top: 10px;
+        padding-top: 8px;
+    }
+
+    .modal-content .sticky-footer {
+        bottom: -10px;
+        left: -10px;
+        right: -10px;
+        padding: 10px;
+    }
+
+    .modal-action-icon {
+        font-size: 1.1em;
+        padding: 4px;
+    }
+
+    .calculator-display {
+        padding: 10px;
+        min-height: 70px;
+    }
+
+    .calculator-result {
+        font-size: 1.5em;
+    }
+
+    .calc-btn {
+        padding: 8px;
+        font-size: 1em;
+    }
+}
