@@ -45,7 +45,9 @@ const LIVE_PRICE_FETCH_INTERVAL_MS = 5 * 60 * 1000; // Fetch every 5 minutes
 // Theme related variables
 const CUSTOM_THEMES = [
     'bold-1', 'bold-2', 'bold-3', 'bold-4', 'bold-5', 'bold-6', 'bold-7', 'bold-8', 'bold-9', 'bold-10',
-    'subtle-1', 'subtle-2', 'subtle-3', 'subtle-4', 'subtle-5', 'subtle-6', 'subtle-7', 'subtle-8', 'subtle-9', 'subtle-10'
+    'subtle-1', 'subtle-2', 'subtle-3', 'subtle-4', 'subtle-5', 'subtle-6', 'subtle-7', 'subtle-8', 'subtle-9', 'subtle-10',
+    // NEW MID-RANGE THEMES
+    'mid-1', 'mid-2', 'mid-3', 'mid-4', 'mid-5', 'mid-6', 'mid-7', 'mid-8', 'mid-9', 'mid-10'
 ];
 let currentCustomThemeIndex = -1; // To track the current theme in the cycle
 let currentActiveTheme = 'system-default'; // Tracks the currently applied theme string
@@ -1252,7 +1254,8 @@ function addShareToMobileCards(share) {
             <p><strong>Franking:</strong> ${displayFrankingCredits}</p>
             <p><strong>Unfranked Yield:</strong> ${unfrankedYield !== null ? unfrankedYield.toFixed(2) + '%' : '-'}&#xFE0E;</p>
             <p><strong>Franked Yield:</strong> ${frankedYield !== null ? frankedYield.toFixed(2) + '%' : '-'}&#xFE0E;</p>
-            <p><strong>Entry Date:</strong> ${formatDate(share.entryDate) || '-'}</p>
+            <!-- Removed Entry Date from mobile cards -->
+            <!-- <p><strong>Entry Date:</strong> ${formatDate(share.entryDate) || '-'}</p> -->
         `;
     } else {
         card.innerHTML = `
@@ -1267,7 +1270,8 @@ function addShareToMobileCards(share) {
             <p><strong>Franking:</strong> ${displayFrankingCredits}</p>
             <p><strong>Unfranked Yield:</strong> ${unfrankedYield !== null ? unfrankedYield.toFixed(2) + '%' : '-'}&#xFE0E;</p>
             <p><strong>Franked Yield:</strong> ${frankedYield !== null ? frankedYield.toFixed(2) + '%' : '-'}&#xFE0E;</p>
-            <p><strong>Entry Date:</strong> ${formatDate(share.entryDate) || '-'}</p>
+            <!-- Removed Entry Date from mobile cards -->
+            <!-- <p><strong>Entry Date:</strong> ${formatDate(share.entryDate) || '-'}</p> -->
         `;
     }
     mobileShareCardsContainer.appendChild(card);
@@ -1589,7 +1593,7 @@ async function applyTheme(themeName) {
 
 function updateThemeToggleAndSelector() {
     if (colorThemeSelect) {
-        if (currentActiveTheme.startsWith('bold-') || currentActiveTheme.startsWith('subtle-')) {
+        if (currentActiveTheme.startsWith('bold-') || currentActiveTheme.startsWith('subtle-') || currentActiveTheme.startsWith('mid-')) {
             colorThemeSelect.value = currentActiveTheme;
         } else {
             colorThemeSelect.value = 'none';
@@ -1597,7 +1601,7 @@ function updateThemeToggleAndSelector() {
         console.log(`[Theme UI] Color theme select updated to: ${colorThemeSelect.value}`);
     }
 
-    if (currentActiveTheme.startsWith('bold-') || currentActiveTheme.startsWith('subtle-')) {
+    if (currentActiveTheme.startsWith('bold-') || currentActiveTheme.startsWith('subtle-') || currentActiveTheme.startsWith('mid-')) {
         currentCustomThemeIndex = CUSTOM_THEMES.indexOf(currentActiveTheme);
     } else {
         currentCustomThemeIndex = -1;
