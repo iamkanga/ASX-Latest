@@ -2994,13 +2994,17 @@ async function initializeAppLogic() {
 
     // NEW: Function to dynamically adjust main content padding
     function adjustMainContentPadding() {
-        if (appHeader && mainContainer) {
-            const headerHeight = appHeader.offsetHeight;
-            mainContainer.style.paddingTop = `${headerHeight}px`;
-            console.log(`[Layout] Adjusted main content padding-top to: ${headerHeight}px`);
-        } else {
-            console.warn("[Layout] Could not adjust main content padding-top: appHeader or mainContainer not found.");
-        }
+        // Use requestAnimationFrame to ensure the browser has rendered the latest layout
+        // before measuring, which is crucial for dynamic content like wrapped ASX buttons.
+        requestAnimationFrame(() => {
+            if (appHeader && mainContainer) {
+                const headerHeight = appHeader.offsetHeight;
+                mainContainer.style.paddingTop = `${headerHeight}px`;
+                console.log(`[Layout] Adjusted main content padding-top to: ${headerHeight}px`);
+            } else {
+                console.warn("[Layout] Could not adjust main content padding-top: appHeader or mainContainer not found.");
+            }
+        });
     }
 
     // Call adjustMainContentPadding initially and on window load/resize
