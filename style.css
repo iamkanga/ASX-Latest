@@ -1078,35 +1078,35 @@ body.sidebar-active {
 
 /* Adjust main content padding to account for fixed header */
 main.container {
-    padding-top: calc(70px + 20px); /* Height of .header-top-row + header's top/bottom padding + some extra for spacing */
-    margin-top: 0; /* Remove previous margin-top */
+    /* Calculate the height of the sticky header row (approx 70px) and add some margin */
+    padding-top: calc(15px + 15px + 10px); /* Top padding of .header-top-row + bottom padding of .header-top-row + header's padding-bottom */
+    margin-top: 0; /* Ensure no extra margin pushes content down */
 }
 
 
 /* Header Styles */
 header {
     background-color: var(--header-bg);
-    /* Removed padding, box-shadow, display, flex-direction, gap, position, height as they will be on .header-top-row or adjusted */
-    position: relative; /* Keep relative for containing the sticky child */
-    height: auto; /* Allow height to be determined by content */
-    box-shadow: 0 2px 4px var(--shadow-color); /* Keep shadow on entire header */
-    padding-bottom: 10px; /* Add padding to the bottom of the header for content below top-row */
+    box-shadow: 0 2px 4px var(--shadow-color); /* Shadow for the entire header area */
+    position: relative; /* Needed to contain absolutely positioned children if any, and for z-index */
+    z-index: 500; /* Ensure header is above main content */
+    padding-bottom: 10px; /* Space below the watchlist/sort/ASX buttons */
 }
 
 /* Header Top Row for Alignment - NOW STICKY */
 .header-top-row {
     display: flex;
-    justify-content: space-between; /* Distribute items with space between them */
+    justify-content: space-between;
     align-items: center;
     gap: 15px;
     position: sticky; /* Make this row sticky */
     top: 0;           /* Stick to the top of the viewport */
-    z-index: 501;     /* Ensure it stays on top of other header content and main content */
+    z-index: 501;     /* Higher z-index to ensure it's above other header elements when sticky */
     width: 100%; 
     box-sizing: border-box;
-    padding: 15px 20px; /* Moved padding from header to here */
+    padding: 15px 20px; /* Padding for the sticky bar itself */
     background-color: var(--header-bg); /* Ensure background color when sticky */
-    box-shadow: 0 2px 4px var(--shadow-color); /* Add shadow to the sticky part */
+    box-shadow: 0 2px 4px var(--shadow-color); /* Add shadow to the sticky part for separation */
 }
 
 h1#mainTitle {
@@ -1115,8 +1115,8 @@ h1#mainTitle {
     font-weight: 700;
     color: var(--text-color);
     text-align: center; 
-    flex-grow: 1; /* Allow title to take available space */
-    order: 2; /* Place title in the middle */
+    flex-grow: 1; 
+    order: 2; 
 }
 
 /* Header Action Buttons for Alignment and Hamburger Fix */
@@ -1124,12 +1124,12 @@ h1#mainTitle {
     background: none;
     border: none;
     color: var(--text-color);
-    font-size: 1.8em; /* Consistent size for icons */
+    font-size: 1.8em;
     cursor: pointer;
     padding: 5px 10px;
-    z-index: 11;
+    z-index: 11; /* Keep high for interaction */
     display: block;
-    flex-shrink: 0; /* Prevent buttons from shrinking */
+    flex-shrink: 0; 
 }
 
 .header-action-btn:hover {
@@ -1137,19 +1137,19 @@ h1#mainTitle {
 }
 
 .header-action-btn-left { 
-    order: 1; /* Place on the left */
+    order: 1; 
 }
 
 .header-action-btn-right { 
-    order: 3; /* Place on the right */
+    order: 3; 
 }
 
 /* Specific styling for the hamburger button to ensure it matches other header icons */
 .hamburger-btn {
-    background: none; /* Remove background */
-    border: none; /* Remove border */
-    color: var(--text-color); /* Inherit text color from header */
-    font-size: 1.8em; /* Consistent size with other header action buttons */
+    background: none;
+    border: none;
+    color: var(--text-color);
+    font-size: 1.8em;
     cursor: pointer;
     padding: 5px 10px;
     z-index: 11;
@@ -1158,7 +1158,7 @@ h1#mainTitle {
 }
 
 .hamburger-btn:hover {
-    color: var(--button-hover-bg); /* Consistent hover effect */
+    color: var(--button-hover-bg);
 }
 
 
@@ -1188,7 +1188,7 @@ h1#mainTitle {
 /* Close Menu Button for smaller size and consistency */
 .close-menu-btn {
     color: var(--close-sidebar-btn-color);
-    font-size: 1.5em; /* Adjusted from 2em to 1.5em for consistency with other close buttons */
+    font-size: 1.5em; 
     position: absolute;
     top: 10px;
     right: 15px;
@@ -2301,7 +2301,8 @@ table td.live-price-cell.negative-change {
 
     /* Adjust main content padding for mobile */
     main.container {
-        padding-top: calc(70px + 10px); /* Height of .header-top-row + header's bottom padding */
+        /* This calculation needs to match the actual height of the sticky .header-top-row on mobile */
+        padding-top: calc(15px + 15px + 10px); /* Top padding + bottom padding of .header-top-row + header's padding-bottom */
     }
 
     .watchlist-controls-row {
