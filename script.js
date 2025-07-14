@@ -641,10 +641,16 @@ async function saveShareData(isSilent = false) {
 
     const selectedWatchlistIdForSave = shareWatchlistSelect ? shareWatchlistSelect.value : null;
     // For new shares from 'All Shares' view, force watchlist selection
-    if (!selectedShareDocId && currentSelectedWatchlistIds.includes(ALL_SHARES_ID) && !selectedWatchlistIdForSave) {
-        if (!isSilent) showCustomAlert("Please select a watchlist to assign the new share to.");
-        console.warn("[Save Share] New share from All Shares: Watchlist not selected. Skipping save.");
-        return;
+    if (!selectedShareDocId && currentSelectedWatchlistIds.includes(ALL_SHARES_ID)) {
+        if (!selectedWatchlistIdForSave || selectedWatchlistIdForSave === '') { // Check for empty string too
+            if (!isSilent) showCustomAlert("Please select a watchlist to assign the new share to.");
+            console.warn("[Save Share] New share from All Shares: Watchlist not selected. Skipping save.");
+            return;
+        }
+    } else if (!selectedShareDocId && !selectedWatchlistIdForSave) { // New share not from All Shares, but no watchlist selected (shouldn't happen if default exists)
+         if (!isSilent) showCustomAlert("Please select a watchlist to assign the new share to.");
+         console.warn("[Save Share] New share: No watchlist selected. Skipping save.");
+         return;
     }
 
 
@@ -1217,13 +1223,13 @@ function addShareToMobileCards(share) {
                 <span class="live-price-large">$${livePrice.toFixed(2)}</span>
                 <span class="price-change-large ${priceChangeClass}">${priceChangeText}</span>
             </div>
-            <p><strong>Entry Date:</strong> ${formatDate(share.entryDate) || '-'}</p>
             <p><strong>Entered Price:</strong> $${displayEnteredPrice}</p>
             <p><strong>Target:</strong> $${displayTargetPrice}</p>
             <p><strong>Dividend:</strong> $${displayDividendAmount}</p>
             <p><strong>Franking:</strong> ${displayFrankingCredits}</p>
             <p><strong>Unfranked Yield:</strong> ${unfrankedYield !== null ? unfrankedYield.toFixed(2) + '%' : '-'}&#xFE0E;</p>
             <p><strong>Franked Yield:</strong> ${frankedYield !== null ? frankedYield.toFixed(2) + '%' : '-'}&#xFE0E;</p>
+            <p><strong>Entry Date:</strong> ${formatDate(share.entryDate) || '-'}</p>
         `;
     } else {
         card.innerHTML = `
@@ -1232,13 +1238,13 @@ function addShareToMobileCards(share) {
                 <span class="live-price-large">N/A</span>
                 <span class="price-change-large"></span>
             </div>
-            <p><strong>Entry Date:</strong> ${formatDate(share.entryDate) || '-'}</p>
             <p><strong>Entered Price:</strong> $${displayEnteredPrice}</p>
             <p><strong>Target:</strong> $${displayTargetPrice}</p>
             <p><strong>Dividend:</strong> $${displayDividendAmount}</p>
             <p><strong>Franking:</strong> ${displayFrankingCredits}</p>
             <p><strong>Unfranked Yield:</strong> ${unfrankedYield !== null ? unfrankedYield.toFixed(2) + '%' : '-'}&#xFE0E;</p>
             <p><strong>Franked Yield:</strong> ${frankedYield !== null ? frankedYield.toFixed(2) + '%' : '-'}&#xFE0E;</p>
+            <p><strong>Entry Date:</strong> ${formatDate(share.entryDate) || '-'}</p>
         `;
     }
     mobileShareCardsContainer.appendChild(card);
@@ -2443,6 +2449,7 @@ async function initializeAppLogic() {
             showModal(shareFormSection);
             shareNameInput.focus();
             toggleAppSidebar(false);
+            addCommentSection(); // ADDED: Add an initial empty comment section for new shares
             checkFormDirtyState(); // Check dirty state immediately after opening for new share
         });
     }
@@ -2967,6 +2974,7 @@ async function initializeAppLogic() {
             console.log("[UI] Refresh Live Prices button clicked.");
             fetchLivePrices();
             showCustomAlert("Refreshing live prices...", 1000);
+            toggleAppSidebar(false); // NEW: Close sidebar on refresh
         });
     }
 }
