@@ -17,17 +17,54 @@
 </head>
 <body>
     <header>
-        <div class="header-top-row">
-            <!-- Hamburger/Sidebar Toggle Button -->
-            <button id="hamburgerBtn" class="hamburger-btn header-action-btn-left">
-                <i class="fas fa-bars"></i>
-            </button>
-            <h1 id="mainTitle">Share Watchlist</h1>
-            <!-- Add Share button on the main screen -->
-            <button id="addShareHeaderBtn" class="header-action-btn header-action-btn-right">
-                <i class="fas fa-plus"></i>
-            </button>
+        <!-- NEW: Wrapper for the fixed top bar -->
+        <div class="fixed-top-bar">
+            <div class="header-top-row">
+                <!-- Hamburger/Sidebar Toggle Button -->
+                <button id="hamburgerBtn" class="hamburger-btn header-action-btn-left">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1 id="mainTitle">Share Watchlist</h1>
+                <!-- Add Share button on the main screen -->
+                <button id="addShareHeaderBtn" class="header-action-btn header-action-btn-right">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
         </div>
+        <!-- END NEW: Wrapper for the fixed top bar -->
+
+        <!-- NEW: Wrapper for the scrolling header content -->
+        <div class="scrolling-header-content">
+            <!-- Watchlist and Sort controls -->
+            <div class="watchlist-controls-row">
+                <div class="watchlist-group">
+                    <select id="watchlistSelect" class="dropdown-large">
+                        <option value="" disabled selected>Watch List</option>
+                        <!-- Options populated by JS -->
+                    </select>
+                </div>
+
+                <div class="sort-group">
+                    <select id="sortSelect" class="dropdown-large">
+                        <option value="" disabled selected>Sort List</option>
+                        <option value="entryDate-desc">Date Added (Newest)</option>
+                        <option value="entryDate-asc">Date Added (Oldest)</option>
+                        <option value="shareName-asc">Code (A-Z)</option>
+                        <option value="shareName-desc">Code (Z-A)</option>
+                        <option value="dividendAmount-desc">Dividend (High-Low)</option>
+                        <option value="dividendAmount-asc">Dividend (Low-High)</option>
+                        <option value="percentageChange-desc">Percentage Change (High-Low)</option>
+                        <option value="percentageChange-asc">Percentage Change (Low-High)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- ASX Code buttons container -->
+            <div id="asxCodeButtonsContainer" class="asx-code-buttons-container">
+                <!-- ASX code buttons will be dynamically added here -->
+            </div>
+        </div>
+        <!-- END NEW: Wrapper for the scrolling header content -->
 
         <!-- Mobile Menu / Desktop Sidebar Content -->
         <nav id="appSidebar" class="app-sidebar">
@@ -75,7 +112,6 @@
                 </div>
             </div>
 
-            <!-- MOVED: Data Actions section -->
             <div class="menu-section">
                 <h3>Theme</h3>
                 <div class="menu-buttons-group">
@@ -121,7 +157,6 @@
                 </div>
             </div>
             
-            <!-- NEW POSITION: Data Actions section -->
             <div class="menu-section">
                 <h3>Data Actions</h3>
                 <div class="menu-buttons-group">
@@ -144,38 +179,6 @@
 
         <!-- Sidebar overlay for desktop to handle clicks outside -->
         <div id="sidebarOverlay" class="sidebar-overlay"></div>
-
-        <!-- Watchlist and Sort controls -->
-        <div class="watchlist-controls-row">
-            <div class="watchlist-group">
-                <select id="watchlistSelect" class="dropdown-large">
-                    <!-- Corrected placeholder text directly in HTML -->
-                    <option value="" disabled selected>Watch List</option>
-                    <!-- Options populated by JS -->
-                </select>
-            </div>
-
-            <div class="sort-group">
-                <select id="sortSelect" class="dropdown-large">
-                    <!-- Corrected placeholder text directly in HTML -->
-                    <option value="" disabled selected>Sort List</option>
-                    <option value="entryDate-desc">Date Added (Newest)</option>
-                    <option value="entryDate-asc">Date Added (Oldest)</option>
-                    <option value="shareName-asc">Code (A-Z)</option>
-                    <option value="shareName-desc">Code (Z-A)</option>
-                    <option value="dividendAmount-desc">Dividend (High-Low)</option>
-                    <option value="dividendAmount-asc">Dividend (Low-High)</option>
-                    <!-- NEW: Option to sort by percentage change -->
-                    <option value="percentageChange-desc">Percentage Change (High-Low)</option>
-                    <option value="percentageChange-asc">Percentage Change (Low-High)</option>
-                </select>
-            </div>
-        </div>
-        
-        <!-- ASX Code buttons container -->
-        <div id="asxCodeButtonsContainer" class="asx-code-buttons-container">
-            <!-- ASX code buttons will be dynamically added here -->
-        </div>
     </header>
 
     <main class="container">
