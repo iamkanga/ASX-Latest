@@ -229,6 +229,16 @@
         <button id="googleAuthBtn" class="google-auth-btn">Google Sign In</button>
     </footer>
 
+    <!-- NEW: Target Price Notification Banner -->
+    <div id="targetHitBanner" class="target-hit-banner">
+        <div class="message-content">
+            <i class="fas fa-bullseye"></i>
+            <span id="targetHitCount">0</span>
+            <span id="targetHitMessage">shares have hit their target price!</span>
+        </div>
+        <button id="targetHitDismissBtn" class="dismiss-btn">&times;</button>
+    </div>
+
     <!-- Scroll-to-Top Button -->
     <button id="scrollToTopBtn" title="Go to top"><i class="fas fa-arrow-up"></i></button>
 
@@ -312,8 +322,7 @@
             <div class="modal-body-scrollable">
                 <!-- NEW: Dedicated Live Price Section -->
                 <div class="live-price-display-section">
-                    <span id="modalLivePriceLarge" class="live-price-large"></span>
-                    <span id="modalPriceChangeLarge" class="price-change-large"></span>
+                    <!-- Content (52-week high/low, live price, P/E) dynamically added by script.js -->
                 </div>
 
                 <p><strong>Entered Price:</strong> <span id="modalEnteredPrice"></span></p>
