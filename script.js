@@ -163,6 +163,24 @@ const formInputs = [
 // --- GLOBAL HELPER FUNCTIONS ---
 
 /**
+ * Dynamically adjusts the top padding of the main content area
+ * to prevent it from being hidden by the fixed header.
+ */
+function adjustMainContentPadding() {
+    // Ensure both the header and main content container elements exist.
+    if (appHeader && mainContainer) {
+        // Get the current computed height of the fixed header.
+        const headerHeight = appHeader.offsetHeight;
+        // Apply this height as padding to the top of the main content container.
+        // This pushes the content down so it starts exactly below the fixed header.
+        mainContainer.style.paddingTop = `${headerHeight}px`;
+        console.log(`[Layout] Adjusted main content padding-top to: ${headerHeight}px`);
+    } else {
+        console.warn("[Layout] Could not adjust main content padding-top: appHeader or mainContainer not found.");
+    }
+}
+
+/**
  * Helper function to apply/remove a disabled visual state to non-button elements (like spans/icons).
  * This adds/removes the 'is-disabled-icon' class, which CSS then styles.
  * @param {HTMLElement} element The element to disable/enable.
@@ -1407,7 +1425,6 @@ function renderAsxCodeButtons() {
     if (uniqueAsxCodes.size === 0) {
         asxCodeButtonsContainer.style.display = 'none';
         console.log("[UI] No unique ASX codes found for current view. Hiding ASX buttons container.");
-        return;
     } else {
         asxCodeButtonsContainer.style.display = 'flex';
     }
@@ -2992,21 +3009,6 @@ async function initializeAppLogic() {
         });
     }
 
-    // NEW: Function to dynamically adjust main content padding
-    function adjustMainContentPadding() {
-        // Use requestAnimationFrame to ensure the browser has rendered the latest layout
-        // before measuring, which is crucial for dynamic content like wrapped ASX buttons.
-        requestAnimationFrame(() => {
-            if (appHeader && mainContainer) {
-                const headerHeight = appHeader.offsetHeight;
-                mainContainer.style.paddingTop = `${headerHeight}px`;
-                console.log(`[Layout] Adjusted main content padding-top to: ${headerHeight}px`);
-            } else {
-                console.warn("[Layout] Could not adjust main content padding-top: appHeader or mainContainer not found.");
-            }
-        });
-    }
-
     // Call adjustMainContentPadding initially and on window load/resize
     window.addEventListener('load', adjustMainContentPadding);
     // Already added to window.addEventListener('resize') in sidebar section
@@ -3058,6 +3060,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 initializeAppLogic();
                 window._appLogicInitialized = true;
             }
+            // NEW: Call adjustMainContentPadding here to ensure correct spacing after auth state changes
+            adjustMainContentPadding();
         });
         
         if (googleAuthBtn) {
@@ -3075,5 +3079,7 @@ document.addEventListener('DOMContentLoaded', function() {
         updateMainButtonsState(false);
         if (loadingIndicator) loadingIndicator.style.display = 'none';
         applyTheme('system-default');
+        // NEW: Call adjustMainContentPadding even if Firebase fails, to ensure some basic layout
+        adjustMainContentPadding();
     }
 });
