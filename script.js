@@ -148,8 +148,9 @@ const refreshLivePricesBtn = document.getElementById('refreshLivePricesBtn');
 // NEW: Reference for the watchlist select inside the share form modal
 const shareWatchlistSelect = document.getElementById('shareWatchlistSelect');
 // NEW: References for the large live price display in the modal
-const modalLivePriceLarge = document.getElementById('modalLivePriceLarge');
-const modalPriceChangeLarge = document.getElementById('modalPriceChangeLarge');
+// Removed global references for modalLivePriceLarge and modalPriceChangeLarge
+// as they are now created dynamically in showShareDetails()
+
 
 // NEW: References for 52-week high/low and P/E in share details modal
 const modalLivePriceDisplaySection = document.querySelector('.live-price-display-section'); // The existing colored section
@@ -785,7 +786,7 @@ function showShareDetails() {
     const livePriceData = livePrices[share.shareName.toUpperCase()];
     const livePrice = livePriceData ? livePriceData.live : undefined;
     const prevClosePrice = livePriceData ? livePriceData.prevClose : undefined;
-    // NEW: Get PE, High52, Low52
+    // Get PE, High52, Low52
     const peRatio = livePriceData ? livePriceData.PE : undefined;
     const high52Week = livePriceData ? livePriceData.High52 : undefined;
     const low52Week = livePriceData ? livePriceData.Low52 : undefined;
@@ -815,19 +816,24 @@ function showShareDetails() {
 
         modalLivePriceDisplaySection.appendChild(fiftyTwoWeekRow);
 
-        // 2. Add Live Price and Change (existing elements, re-append)
+        // 2. Add Live Price and Change (Dynamically create these elements now)
+        const currentModalLivePriceLarge = document.createElement('span');
+        currentModalLivePriceLarge.classList.add('live-price-large');
+        const currentModalPriceChangeLarge = document.createElement('span');
+        currentModalPriceChangeLarge.classList.add('price-change-large');
+
         const livePriceRow = document.createElement('div');
         livePriceRow.classList.add('live-price-main-row'); // New class for styling
-        livePriceRow.appendChild(modalLivePriceLarge);
-        livePriceRow.appendChild(modalPriceChangeLarge);
+        livePriceRow.appendChild(currentModalLivePriceLarge);
+        livePriceRow.appendChild(currentModalPriceChangeLarge);
         modalLivePriceDisplaySection.appendChild(livePriceRow);
 
         if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) {
-            modalLivePriceLarge.textContent = `$${livePrice.toFixed(2)}`;
-            modalLivePriceLarge.style.display = 'inline';
+            currentModalLivePriceLarge.textContent = `$${livePrice.toFixed(2)}`;
+            currentModalLivePriceLarge.style.display = 'inline';
         } else {
-            modalLivePriceLarge.textContent = 'N/A';
-            modalLivePriceLarge.style.display = 'inline';
+            currentModalLivePriceLarge.textContent = 'N/A';
+            currentModalLivePriceLarge.style.display = 'inline';
         }
 
         if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice) && 
@@ -835,7 +841,7 @@ function showShareDetails() {
             const change = livePrice - prevClosePrice;
             const percentageChange = (prevClosePrice !== 0 && !isNaN(prevClosePrice)) ? (change / prevClosePrice) * 100 : 0; // Handle division by zero
 
-            modalPriceChangeLarge.textContent = ''; // Clear previous content
+            currentModalPriceChangeLarge.textContent = ''; // Clear previous content
             const priceChangeSpan = document.createElement('span');
             priceChangeSpan.classList.add('price-change'); // Keep base class for coloring
 
@@ -851,11 +857,11 @@ function showShareDetails() {
                 priceChangeSpan.textContent = `($0.00 / 0.00%)`;
                 priceChangeSpan.classList.add('neutral');
             }
-            modalPriceChangeLarge.appendChild(priceChangeSpan);
-            modalPriceChangeLarge.style.display = 'inline';
+            currentModalPriceChangeLarge.appendChild(priceChangeSpan);
+            currentModalPriceChangeLarge.style.display = 'inline';
         } else {
-            modalPriceChangeLarge.textContent = '';
-            modalPriceChangeLarge.style.display = 'none';
+            currentModalPriceChangeLarge.textContent = '';
+            currentModalPriceChangeLarge.style.display = 'none';
         }
 
         // 3. Add P/E Ratio below live price
@@ -995,7 +1001,7 @@ function sortShares() {
             let percentageChangeB = null;
             // Only calculate if both livePriceB and prevCloseB are valid numbers and prevCloseB is not zero
             if (livePriceB !== undefined && livePriceB !== null && !isNaN(livePriceB) &&
-                prevCloseB !== undefined && prevCloseB !== null && !isNaN(prevCloseB) && prevCloseB !== 0) {
+                prevCloseB !== undefined && prevCloseB !== null && !isNaN(prevPriceB) && prevCloseB !== 0) {
                 percentageChangeB = ((livePriceB - prevCloseB) / prevCloseB) * 100;
             }
 
