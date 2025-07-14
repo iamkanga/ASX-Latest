@@ -38,7 +38,7 @@ let originalWatchlistData = null; // Stores original watchlist data for dirty st
 
 // Live Price Data
 const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzp7OjZL3zqvJ9wPsV9M-afm2wKeQPbIgGVv_juVpkaRllADESLwj7F4-S7YWYerau-/exec'; // Your new Google Apps Script URL
-let livePrices = {}; // Stores live price data: {ASX_CODE: {live: price, prevClose: price}}
+let livePrices = {}; // Stores live price data: {ASX_CODE: {live: price, prevClose: price, PE: value, High52: value, Low52: value}}
 let livePriceFetchInterval = null; // To hold the interval ID for live price updates
 const LIVE_PRICE_FETCH_INTERVAL_MS = 5 * 60 * 1000; // Fetch every 5 minutes
 
@@ -147,6 +147,12 @@ const shareWatchlistSelect = document.getElementById('shareWatchlistSelect');
 // NEW: References for the large live price display in the modal
 const modalLivePriceLarge = document.getElementById('modalLivePriceLarge');
 const modalPriceChangeLarge = document.getElementById('modalPriceChangeLarge');
+
+// NEW: References for 52-week high/low and P/E in share details modal
+const modalLivePriceDisplaySection = document.querySelector('.live-price-display-section'); // The existing colored section
+let modalFiftyTwoWeekLowSpan; // Will be created dynamically
+let modalFiftyTwoWeekHighSpan; // Will be created dynamically
+let modalPESpan; // Will be created dynamically
 
 
 let sidebarOverlay = document.querySelector('.sidebar-overlay');
@@ -771,11 +777,42 @@ function showShareDetails() {
     const livePriceData = livePrices[share.shareName.toUpperCase()];
     const livePrice = livePriceData ? livePriceData.live : undefined;
     const prevClosePrice = livePriceData ? livePriceData.prevClose : undefined;
+    // NEW: Get PE, High52, Low52
+    const peRatio = livePriceData ? livePriceData.PE : undefined;
+    const high52Week = livePriceData ? livePriceData.High52 : undefined;
+    const low52Week = livePriceData ? livePriceData.Low52 : undefined;
+
 
     // Display large live price and change in the dedicated section
-    const livePriceDisplaySection = document.querySelector('.live-price-display-section');
-    if (livePriceDisplaySection) {
-        livePriceDisplaySection.classList.remove('positive-change-section', 'negative-change-section'); // Clear previous states
+    // The modalLivePriceDisplaySection is already referenced globally
+    if (modalLivePriceDisplaySection) {
+        modalLivePriceDisplaySection.classList.remove('positive-change-section', 'negative-change-section'); // Clear previous states
+
+        // Clear previous dynamic content in the section
+        modalLivePriceDisplaySection.innerHTML = ''; 
+
+        // 1. Add 52-Week Low and High at the top
+        const fiftyTwoWeekRow = document.createElement('div');
+        fiftyTwoWeekRow.classList.add('fifty-two-week-row'); // New class for styling
+        
+        const lowSpan = document.createElement('span');
+        lowSpan.classList.add('fifty-two-week-value', 'low'); // New classes
+        lowSpan.textContent = `Low: ${low52Week !== undefined && low52Week !== null && !isNaN(low52Week) ? '$' + low52Week.toFixed(2) : 'N/A'}`;
+        fiftyTwoWeekRow.appendChild(lowSpan);
+
+        const highSpan = document.createElement('span');
+        highSpan.classList.add('fifty-two-week-value', 'high'); // New classes
+        highSpan.textContent = `High: ${high52Week !== undefined && high52Week !== null && !isNaN(high52Week) ? '$' + high52Week.toFixed(2) : 'N/A'}`;
+        fiftyTwoWeekRow.appendChild(highSpan);
+
+        modalLivePriceDisplaySection.appendChild(fiftyTwoWeekRow);
+
+        // 2. Add Live Price and Change (existing elements, re-append)
+        const livePriceRow = document.createElement('div');
+        livePriceRow.classList.add('live-price-main-row'); // New class for styling
+        livePriceRow.appendChild(modalLivePriceLarge);
+        livePriceRow.appendChild(modalPriceChangeLarge);
+        modalLivePriceDisplaySection.appendChild(livePriceRow);
 
         if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) {
             modalLivePriceLarge.textContent = `$${livePrice.toFixed(2)}`;
@@ -797,11 +834,11 @@ function showShareDetails() {
             if (change > 0) {
                 priceChangeSpan.textContent = `(+$${change.toFixed(2)} / +${percentageChange.toFixed(2)}%)`;
                 priceChangeSpan.classList.add('positive');
-                livePriceDisplaySection.classList.add('positive-change-section');
+                modalLivePriceDisplaySection.classList.add('positive-change-section');
             } else if (change < 0) {
                 priceChangeSpan.textContent = `(-$${Math.abs(change).toFixed(2)} / ${percentageChange.toFixed(2)}%)`; // percentageChange is already negative
                 priceChangeSpan.classList.add('negative');
-                livePriceDisplaySection.classList.add('negative-change-section');
+                modalLivePriceDisplaySection.classList.add('negative-change-section');
             } else {
                 priceChangeSpan.textContent = `($0.00 / 0.00%)`;
                 priceChangeSpan.classList.add('neutral');
@@ -812,6 +849,15 @@ function showShareDetails() {
             modalPriceChangeLarge.textContent = '';
             modalPriceChangeLarge.style.display = 'none';
         }
+
+        // 3. Add P/E Ratio below live price
+        const peRow = document.createElement('div');
+        peRow.classList.add('pe-ratio-row'); // New class for styling
+        const peSpan = document.createElement('span');
+        peSpan.classList.add('pe-ratio-value'); // New class
+        peSpan.textContent = `P/E: ${peRatio !== undefined && peRatio !== null && !isNaN(peRatio) ? peRatio.toFixed(2) : 'N/A'}`;
+        peRow.appendChild(peSpan);
+        modalLivePriceDisplaySection.appendChild(peRow);
     }
     
     // Original Live Price/Change removed from HTML, so these references are no longer needed
@@ -1770,12 +1816,19 @@ async function fetchLivePrices() {
             // are the expected keys.
             const asxCode = String(item.ASXCode).toUpperCase();
             const livePrice = parseFloat(item.LivePrice);
-            const prevClose = parseFloat(item.PrevClose); // Get previous close here
+            const prevClose = parseFloat(item.PrevClose); 
+            // NEW: Parse PE, High52, Low52
+            const pe = parseFloat(item.PE);
+            const high52 = parseFloat(item.High52);
+            const low52 = parseFloat(item.Low52);
 
             if (asxCode && !isNaN(livePrice)) {
                 newLivePrices[asxCode] = {
                     live: livePrice,
-                    prevClose: isNaN(prevClose) ? null : prevClose // Store prevClose as well
+                    prevClose: isNaN(prevClose) ? null : prevClose,
+                    PE: isNaN(pe) ? null : pe, // Store PE
+                    High52: isNaN(high52) ? null : high52, // Store High52
+                    Low52: isNaN(low52) ? null : low52 // Store Low52
                 };
             } else {
                 console.warn(`[Live Price] Skipping item due to missing ASX code or invalid price:`, item);
