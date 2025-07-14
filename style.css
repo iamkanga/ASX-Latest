@@ -1082,37 +1082,40 @@ body.sidebar-active {
 header {
     background-color: var(--header-bg);
     box-shadow: 0 2px 4px var(--shadow-color);
-    /* Removed display: flex, flex-direction, gap, position, height, padding-bottom from here */
-    position: relative; /* Keep relative to contain scrolling children */
-    z-index: 500; /* Ensure header is above main content */
+    position: fixed; /* Make the entire header fixed */
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 500; /* Ensure it's above main content */
+    box-sizing: border-box;
+    display: flex; /* Use flexbox for internal layout */
+    flex-direction: column; /* Stack children vertically */
+    padding: 15px 20px 10px; /* Combined padding for the whole fixed header */
+    gap: 10px; /* Space between header rows */
 }
 
-/* Header Top Row (fixed part) */
+/* Adjust main content padding to account for fixed header */
+main.container {
+    /* This padding-top needs to be dynamically calculated in JS
+       or set to a generous fixed value that covers max header height.
+       For now, setting a fixed value based on visual inspection. */
+    padding-top: 150px; /* Adjusted to accommodate the full fixed header height */
+    margin-top: 0; /* Ensure no extra margin pushes content down */
+}
+
+/* Header Top Row (now part of the fixed header) */
 .header-top-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 15px;
-    position: fixed; /* Make this row fixed */
-    top: 0;
-    left: 0;
-    width: 100%;
+    width: 100%; 
     box-sizing: border-box;
-    padding: 15px 20px; /* This defines the height of the fixed bar */
-    background-color: var(--header-bg); /* Ensure background color */
-    box-shadow: 0 2px 4px var(--shadow-color); /* Add shadow to the fixed part */
-    z-index: 501; /* Higher z-index to ensure it's on top */
+    padding: 0; /* No individual padding, handled by parent header */
+    /* Remove position, top, left, z-index, background-color, box-shadow as parent header is fixed */
 }
 
-/* Adjust main content padding to account for fixed header */
-main.container {
-    /* Calculate the height of the fixed .header-top-row */
-    /* Assuming .header-top-row height is approx 70px (15px top/bottom padding + 1.8em h1 font-size) */
-    padding-top: 70px; /* This pushes down the main content */
-    margin-top: 0; /* Ensure no extra margin pushes content down */
-}
-
-/* Watchlist and Sort Controls */
+/* Watchlist and Sort Controls (now part of the fixed header) */
 .watchlist-controls-row {
     display: flex;
     flex-wrap: nowrap;
@@ -1126,11 +1129,11 @@ main.container {
     box-sizing: border-box;
     padding-left: 15px;
     padding-right: 15px;
-    margin-top: 0; /* Ensure no top margin here */
-    /* This element will scroll with the page */
+    margin-top: 0; /* No top margin here, gap handled by parent header's gap */
+    /* This element is now part of the fixed header */
 }
 
-/* ASX Code Buttons */
+/* ASX Code Buttons (now part of the fixed header) */
 .asx-code-buttons-container {
     display: flex;
     flex-wrap: wrap;
@@ -1141,8 +1144,8 @@ main.container {
     box-sizing: border-box;
     padding-left: 15px;
     padding-right: 15px;
-    margin-top: 0; /* Ensure no top margin here */
-    /* This element will scroll with the page */
+    margin-top: 0; /* No top margin here, gap handled by parent header's gap */
+    /* This element is now part of the fixed header */
 }
 
 /* The rest of the CSS remains the same as your original file,
@@ -2270,8 +2273,12 @@ table td.live-price-cell.negative-change {
 
 /* Responsive Design */
 @media (max-width: 768px) {
+    header {
+        padding: 15px 10px 10px; /* Adjusted padding for mobile */
+    }
+
     .header-top-row {
-        padding: 0 10px;
+        padding: 0; /* No individual padding, handled by parent header */
     }
 
     h1#mainTitle {
@@ -2298,12 +2305,19 @@ table td.live-price-cell.negative-change {
         width: 100%;
     }
 
+    /* Adjust main content padding to account for fixed header */
+    main.container {
+        /* Calculated height of the fixed header on mobile */
+        padding-top: 130px; /* Adjusted for mobile fixed header height */
+    }
+
     .watchlist-controls-row {
         flex-direction: row; /* Keep as row for side-by-side */
         flex-wrap: nowrap; /* Prevent wrapping */
         justify-content: space-around; /* Distribute space evenly */
         gap: 10px; /* Smaller gap for mobile */
         padding: 10px 15px;
+        margin-top: 0; /* No top margin here, gap handled by parent header's gap */
     }
 
     .watchlist-group,
@@ -2407,8 +2421,12 @@ table td.live-price-cell.negative-change {
 }
 
 @media (max-width: 480px) {
+    header {
+        padding: 15px 5px 10px; /* Adjusted padding for very small mobile */
+    }
+
     .header-top-row {
-        padding: 0 5px;
+        padding: 0; /* No individual padding, handled by parent header */
     }
 
     h1#mainTitle {
