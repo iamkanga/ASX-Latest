@@ -633,7 +633,7 @@ body.theme-bold-10 { /* Ruby */
 }
 
 
-/* Subtle Themes - MODIFIED to be more distinct */
+/* Subtle Themes */
 body.theme-subtle-1 { /* Subtle Sky */
     --background-color: #e6f2ff; /* Lighter blue */
     --text-color: #334455;
@@ -1403,11 +1403,6 @@ h1#mainTitle {
     width: 100%;
 }
 
-/* Specific adjustment for dropdowns to ensure full text visibility */
-/* This rule was already present from a previous update, ensuring min-width. */
-/* No further changes needed here for placeholder text. */
-
-
 .dropdown-large option[value=""][disabled] {
     color: var(--label-color);
     font-weight: 400;
@@ -1511,12 +1506,11 @@ table tbody tr:not(.selected):hover {
 /* Live Price Column Styling */
 table td.live-price-cell {
     font-weight: 600;
-    /* Styles for desktop table live price */
-    font-size: 1.1em; /* Slightly larger */
+    font-size: 1.1em;
 }
 
-table td.live-price-cell .price-value { /* Added span for the price number */
-    font-weight: 700; /* Bolder */
+table td.live-price-cell .price-value {
+    font-weight: 700;
 }
 
 /* Conditional background highlight for table cells */
@@ -1719,7 +1713,7 @@ table td.live-price-cell.negative-change {
 /* Modal Header with Icon for Alignment and Buttons */
 .modal-header-with-icon {
     display: flex;
-    justify-content: space-between; /* Space out title and button group */
+    justify-content: space-between; /* Distribute items with space between them */
     align-items: center;
     margin-bottom: 20px;
     position: relative;
@@ -1729,19 +1723,18 @@ table td.live-price-cell.negative-change {
 }
 
 /* ASX Code prominence and alignment */
-.modal-header-with-icon h2 {
+#modalShareName { /* Directly target the ASX code element */
     margin: 0;
     flex-grow: 1;
     text-align: center;
-    font-size: 2.2em; /* Set to match live price display for all sizes */
-    font-weight: 800; /* Made bolder */
-    flex-shrink: 1; /* Allow title to shrink if buttons need space */
-    min-width: 0; /* Allow title to shrink below its content size */
+    font-size: 2.2em !important; /* Set to match live price display for all sizes */
+    font-weight: 800 !important; /* Made bolder */
     line-height: 1; /* Ensure vertical alignment by removing extra line height */
     display: flex; /* Use flex to center text within its own space */
     align-items: center; /* Vertically center the text */
     justify-content: center; /* Horizontally center the text */
     height: 40px; /* Match the height of the action icons for vertical alignment */
+    min-width: 0; /* Allow text to shrink if necessary */
 }
 
 /* New group for action buttons and close button */
@@ -1822,12 +1815,13 @@ table td.live-price-cell.negative-change {
     padding-bottom: 20px;
 }
 
+/* General H2s in modals (not the specific modalShareName) */
 .modal-content h2 {
     margin-top: 0;
     margin-bottom: 20px;
     text-align: center;
     color: var(--text-color);
-    font-size: 1.6em; /* This is for general H2s in modals, not modalShareName specifically */
+    font-size: 1.6em; 
 }
 
 .modal-content label {
@@ -1960,16 +1954,16 @@ table td.live-price-cell.negative-change {
     transform: scale(1.1);
 }
 
-/* REMOVED: Action Buttons in Modals (Save, Delete, etc.) - These are now in the header */
+/* REMOVED: Old action button containers */
 .form-action-buttons,
 .modal-action-buttons,
 .custom-dialog-buttons { 
-    display: none; /* Hide these old containers */
+    display: none; 
 }
 
-/* REMOVED: Sticky footer for action icons - These are now in the header */
+/* REMOVED: Old sticky footer for action icons */
 .modal-content .sticky-footer {
-    display: none; /* Hide this old container */
+    display: none; 
 }
 
 /* Modal Action Icons for positioning in header */
@@ -2350,11 +2344,6 @@ table td.live-price-cell.negative-change {
         width: 95%;
     }
 
-    /* Removed font-size override for modal-header-with-icon h2 in mobile media query */
-    /* .modal-header-with-icon h2 {
-        font-size: 1.8em;
-    } */
-
     .close-button {
         font-size: 1.8em;
         top: 8px;
@@ -2449,11 +2438,6 @@ table td.live-price-cell.negative-change {
     .modal-content {
         padding: 10px;
     }
-
-    /* Removed font-size override for modal-header-with-icon h2 in very small mobile media query */
-    /* .modal-header-with-icon h2 {
-        font-size: 1.5em;
-    } */
 
     .close-button {
         font-size: 1.5em;
