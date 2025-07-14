@@ -1078,58 +1078,75 @@ body.sidebar-active {
     width: calc(100% - var(--sidebar-width));
 }
 
-/* Adjust main content padding to account for fixed header */
-main.container {
-    /* Calculate the total height of the fixed .fixed-top-bar */
-    /* .fixed-top-bar height: 15px (top/bottom padding) * 2 + 1.8em (h1 font-size) approx 70px */
-    padding-top: 70px; /* Only needs to account for the fixed top bar */
-    margin-top: 0; /* Ensure no extra margin pushes content down */
-}
-
-
 /* Header Styles */
 header {
     background-color: var(--header-bg);
-    box-shadow: 0 2px 4px var(--shadow-color); /* Shadow for the entire header area */
-    position: relative; /* Needed to contain absolutely positioned children if any, and for z-index */
+    box-shadow: 0 2px 4px var(--shadow-color);
+    /* Removed display: flex, flex-direction, gap, position, height, padding-bottom from here */
+    position: relative; /* Keep relative to contain scrolling children */
     z-index: 500; /* Ensure header is above main content */
-    padding-bottom: 0; /* Remove padding from header itself, spacing handled by children */
-    /* Removed display: flex, flex-direction, gap from here */
 }
 
-/* NEW: Fixed Top Bar Wrapper */
-.fixed-top-bar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    background-color: var(--header-bg); /* Ensure background color when fixed */
-    box-shadow: 0 2px 4px var(--shadow-color); /* Add shadow to the fixed part */
-    z-index: 501; /* Higher z-index to ensure it's above other header elements */
-    box-sizing: border-box;
-    padding: 0; /* No padding here, let header-top-row handle it */
-}
-
-/* Header Top Row (now inside fixed-top-bar) */
+/* Header Top Row (fixed part) */
 .header-top-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 15px;
-    width: 100%; 
+    position: fixed; /* Make this row fixed */
+    top: 0;
+    left: 0;
+    width: 100%;
     box-sizing: border-box;
-    padding: 15px 20px; /* This padding defines the height of the fixed bar */
+    padding: 15px 20px; /* This defines the height of the fixed bar */
+    background-color: var(--header-bg); /* Ensure background color */
+    box-shadow: 0 2px 4px var(--shadow-color); /* Add shadow to the fixed part */
+    z-index: 501; /* Higher z-index to ensure it's on top */
 }
 
-/* NEW: Scrolling Header Content Wrapper */
-.scrolling-header-content {
-    /* This div will naturally flow below the fixed-top-bar */
-    /* It needs to inherit the header's background and shadow if desired, or have its own */
-    background-color: var(--header-bg); /* Inherit header background */
-    /* No shadow here, as the main header already has one */
-    padding-bottom: 10px; /* Add some padding below the scrolling content */
+/* Adjust main content padding to account for fixed header */
+main.container {
+    /* Calculate the height of the fixed .header-top-row */
+    /* Assuming .header-top-row height is approx 70px (15px top/bottom padding + 1.8em h1 font-size) */
+    padding-top: 70px; /* This pushes down the main content */
+    margin-top: 0; /* Ensure no extra margin pushes content down */
 }
 
+/* Watchlist and Sort Controls */
+.watchlist-controls-row {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    padding: 10px 0;
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+    width: 100%;
+    box-sizing: border-box;
+    padding-left: 15px;
+    padding-right: 15px;
+    margin-top: 0; /* Ensure no top margin here */
+    /* This element will scroll with the page */
+}
+
+/* ASX Code Buttons */
+.asx-code-buttons-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 0;
+    width: 100%;
+    box-sizing: border-box;
+    padding-left: 15px;
+    padding-right: 15px;
+    margin-top: 0; /* Ensure no top margin here */
+    /* This element will scroll with the page */
+}
+
+/* The rest of the CSS remains the same as your original file,
+   with previous fixes for modalShareName, etc. */
 
 h1#mainTitle {
     margin: 0;
@@ -1358,34 +1375,6 @@ h1#mainTitle {
     display: block; 
 }
 
-/* Watchlist and Sort Controls */
-.watchlist-controls-row {
-    display: flex;
-    flex-wrap: nowrap; /* Prevent wrapping on mobile */
-    justify-content: center; /* Center the group of dropdowns initially */
-    align-items: center;
-    gap: 15px; /* Adjust gap for mobile */
-    padding: 10px 0;
-    border-top: 1px solid var(--border-color);
-    border-bottom: 1px solid var(--border-color);
-    width: 100%; 
-    box-sizing: border-box;
-    padding-left: 15px; 
-    padding-right: 15px; 
-    margin-top: 0; /* No margin-top here, let the scrolling-header-content handle spacing */
-}
-
-.watchlist-group,
-.sort-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-basis: 50%; /* Each takes half the width on mobile */
-    flex-grow: 1; /* Allow them to grow */
-    flex-shrink: 1; /* Allow them to shrink */
-    max-width: calc(50% - 7.5px); /* Account for half the gap on mobile */
-}
-
 /* Desktop specific styles for watchlist and sort dropdowns */
 @media (min-width: 769px) {
     .watchlist-controls-row {
@@ -1441,20 +1430,6 @@ h1#mainTitle {
     border-color: var(--button-bg);
     box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
     outline: none;
-}
-
-/* ASX Code Buttons */
-.asx-code-buttons-container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center; 
-    gap: 8px;
-    padding: 10px 0;
-    width: 100%;
-    box-sizing: border-box;
-    padding-left: 15px; 
-    padding-right: 15px; 
-    margin-top: 0; /* No margin-top here, let the scrolling-header-content handle spacing */
 }
 
 .asx-code-btn {
@@ -2296,7 +2271,7 @@ table td.live-price-cell.negative-change {
 /* Responsive Design */
 @media (max-width: 768px) {
     .header-top-row {
-        padding: 15px 10px; /* Adjust padding for mobile */
+        padding: 0 10px;
     }
 
     h1#mainTitle {
@@ -2323,19 +2298,12 @@ table td.live-price-cell.negative-change {
         width: 100%;
     }
 
-    /* Adjust main content padding to account for fixed header */
-    main.container {
-        /* .fixed-top-bar height on mobile: 15px (top/bottom padding) * 2 + 1.5em (h1 font-size) approx 60px */
-        padding-top: 60px; /* Only needs to account for the fixed top bar */
-    }
-
     .watchlist-controls-row {
         flex-direction: row; /* Keep as row for side-by-side */
         flex-wrap: nowrap; /* Prevent wrapping */
         justify-content: space-around; /* Distribute space evenly */
         gap: 10px; /* Smaller gap for mobile */
         padding: 10px 15px;
-        margin-top: 5px; /* Ensure a small gap here */
     }
 
     .watchlist-group,
@@ -2440,7 +2408,7 @@ table td.live-price-cell.negative-change {
 
 @media (max-width: 480px) {
     .header-top-row {
-        padding: 15px 5px; /* Adjust padding for very small mobile */
+        padding: 0 5px;
     }
 
     h1#mainTitle {

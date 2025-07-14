@@ -673,6 +673,7 @@ async function saveShareData(isSilent = false) {
         dividendAmount: isNaN(dividendAmount) ? null : dividendAmount,
         frankingCredits: isNaN(frankingCredits) ? null : frankingCredits,
         comments: comments,
+        userId: currentUserId,
         // Use the selected watchlist from the modal dropdown
         watchlistId: selectedWatchlistIdForSave,
         lastPriceUpdateTime: new Date().toISOString()
@@ -735,7 +736,7 @@ function showShareDetails() {
         return;
     }
     modalShareName.textContent = share.shareName || 'N/A';
-    // Entry Date is now moved below yields in index.html, so it's populated there.
+    modalEntryDate.textContent = formatDate(share.entryDate) || 'N/A';
     
     const enteredPriceNum = Number(share.currentPrice);
 
@@ -807,9 +808,6 @@ function showShareDetails() {
     
     const frankedYield = calculateFrankedYield(dividendAmountNum, priceForYield, frankingCreditsNum);
     modalFrankedYieldSpan.textContent = frankedYield !== null ? `${frankedYield.toFixed(2)}%` : 'N/A';
-
-    // Populate Entry Date after Franked Yield
-    modalEntryDate.textContent = formatDate(share.entryDate) || 'N/A';
     
     if (modalCommentsContainer) {
         modalCommentsContainer.innerHTML = '';
@@ -1219,13 +1217,13 @@ function addShareToMobileCards(share) {
                 <span class="live-price-large">$${livePrice.toFixed(2)}</span>
                 <span class="price-change-large ${priceChangeClass}">${priceChangeText}</span>
             </div>
+            <p><strong>Entry Date:</strong> ${formatDate(share.entryDate) || '-'}</p>
             <p><strong>Entered Price:</strong> $${displayEnteredPrice}</p>
             <p><strong>Target:</strong> $${displayTargetPrice}</p>
             <p><strong>Dividend:</strong> $${displayDividendAmount}</p>
             <p><strong>Franking:</strong> ${displayFrankingCredits}</p>
             <p><strong>Unfranked Yield:</strong> ${unfrankedYield !== null ? unfrankedYield.toFixed(2) + '%' : '-'}&#xFE0E;</p>
             <p><strong>Franked Yield:</strong> ${frankedYield !== null ? frankedYield.toFixed(2) + '%' : '-'}&#xFE0E;</p>
-            <p><strong>Entry Date:</strong> ${formatDate(share.entryDate) || '-'}</p>
         `;
     } else {
         card.innerHTML = `
@@ -1234,13 +1232,13 @@ function addShareToMobileCards(share) {
                 <span class="live-price-large">N/A</span>
                 <span class="price-change-large"></span>
             </div>
+            <p><strong>Entry Date:</strong> ${formatDate(share.entryDate) || '-'}</p>
             <p><strong>Entered Price:</strong> $${displayEnteredPrice}</p>
             <p><strong>Target:</strong> $${displayTargetPrice}</p>
             <p><strong>Dividend:</strong> $${displayDividendAmount}</p>
             <p><strong>Franking:</strong> ${displayFrankingCredits}</p>
             <p><strong>Unfranked Yield:</strong> ${unfrankedYield !== null ? unfrankedYield.toFixed(2) + '%' : '-'}&#xFE0E;</p>
             <p><strong>Franked Yield:</strong> ${frankedYield !== null ? frankedYield.toFixed(2) + '%' : '-'}&#xFE0E;</p>
-            <p><strong>Entry Date:</strong> ${formatDate(share.entryDate) || '-'}</p>
         `;
     }
     mobileShareCardsContainer.appendChild(card);
@@ -1603,13 +1601,13 @@ async function saveSortOrderPreference(sortOrder) {
     }
     const userProfileDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/profile/settings`);
     try {
-            await window.firestore.setDoc(userProfileDocRef, { lastSortOrder: sortOrder }, { merge: true });
-            console.log(`[Sort] Saved sort order preference: ${sortOrder}`);
-        }
-        catch (error) {
-            console.error("[Sort] Error saving sort order preference:", error);
-        }
+        await window.firestore.setDoc(userProfileDocRef, { lastSortOrder: sortOrder }, { merge: true });
+        console.log(`[Sort] Saved sort order preference: ${sortOrder}`);
     }
+    catch (error) {
+        console.error("[Sort] Error saving sort order preference:", error);
+    }
+}
 
 async function loadUserWatchlistsAndSettings() {
     if (!db || !currentUserId) {
@@ -2445,7 +2443,6 @@ async function initializeAppLogic() {
             showModal(shareFormSection);
             shareNameInput.focus();
             toggleAppSidebar(false);
-            addCommentSection(); // ADDED: Add an initial empty comment section for new shares
             checkFormDirtyState(); // Check dirty state immediately after opening for new share
         });
     }
