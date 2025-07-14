@@ -1057,7 +1057,9 @@ body.theme-subtle-10 { /* Subtle Stone */
 
 /* General Body and Layout */
 html, body {
-    overflow-x: hidden; 
+    height: 100%;
+    overflow-x: hidden; /* Prevent horizontal scroll */
+    overflow-y: auto; /* Allow vertical scroll */
 }
 body {
     font-family: 'Inter', sans-serif;
@@ -1078,12 +1080,11 @@ body.sidebar-active {
 
 /* Adjust main content padding to account for fixed header */
 main.container {
-    /* Calculate the total height of the fixed .header-top-row + .watchlist-controls-row + .asx-code-buttons-container + desired spacing */
-    /* .header-top-row: 15px (top/bottom padding) * 2 + 1.8em (h1 font-size) approx 70px */
-    /* .watchlist-controls-row: 10px (top/bottom padding) * 2 + 1em (dropdown font-size) approx 40px */
-    /* .asx-code-buttons-container: 10px (top/bottom padding) * 2 + 0.9em (button font-size) approx 35px */
-    /* Total approx: 70px + 40px + 35px = 145px. Adjusted for better fit. */
-    padding-top: 135px; /* Reduced padding-top to bring content up */
+    /* Calculated height of fixed .header-top-row (~60px desktop, ~55px mobile) */
+    /* Plus height of .watchlist-controls-row (~40px) */
+    /* Plus height of .asx-code-buttons-container (~35px) */
+    /* Total approx: 60 + 40 + 35 = 135px. Add a small buffer. */
+    padding-top: 140px; /* Adjusted for overall spacing */
     margin-top: 0; /* Ensure no extra margin pushes content down */
 }
 
@@ -1094,7 +1095,7 @@ header {
     box-shadow: 0 2px 4px var(--shadow-color); /* Shadow for the entire header area */
     position: relative; /* Needed to contain absolutely positioned children if any, and for z-index */
     z-index: 500; /* Ensure header is above main content */
-    /* No padding-bottom here, as padding for spacing will be on the elements themselves */
+    padding-bottom: 0; /* Remove padding from header itself, spacing handled by children */
 }
 
 /* Header Top Row for Alignment - NOW FIXED */
@@ -1355,7 +1356,7 @@ h1#mainTitle {
     box-sizing: border-box;
     padding-left: 15px; 
     padding-right: 15px; 
-    margin-top: 0px; /* Reduced margin to remove gap */
+    margin-top: 0px; /* Ensure no gap here */
 }
 
 .watchlist-group,
@@ -2308,7 +2309,7 @@ table td.live-price-cell.negative-change {
 
     /* Adjust main content padding for mobile */
     main.container {
-        /* This calculation needs to match the actual height of the fixed .header-top-row + scrolling elements on mobile */
+        /* Calculate the total height of the fixed .header-top-row + scrolling elements on mobile */
         /* .header-top-row height on mobile: 15px (top/bottom padding) * 2 + 1.5em (h1 font-size) approx 60px */
         /* .watchlist-controls-row: 10px (top/bottom padding) * 2 + 0.9em (dropdown font-size) approx 35px */
         /* .asx-code-buttons-container: 10px (top/bottom padding) * 2 + 0.8em (button font-size) approx 30px */
