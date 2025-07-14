@@ -55,6 +55,8 @@ let savedTheme = null; // GLOBAL: Stores the theme loaded from user settings
 let unsubscribeShares = null; // Holds the unsubscribe function for the Firestore shares listener
 
 // --- UI Element References ---
+const appHeader = document.getElementById('appHeader'); // Reference to the main header
+const mainContainer = document.querySelector('main.container'); // Reference to the main content container
 const mainTitle = document.getElementById('mainTitle');
 const addShareHeaderBtn = document.getElementById('addShareHeaderBtn');
 const newShareBtn = document.getElementById('newShareBtn');
@@ -938,7 +940,7 @@ function sortShares() {
             if (nameA === '' && nameB === '') return 0;
             if (nameA === '') return order === 'asc' ? 1 : -1;
             if (nameB === '') return order === 'asc' ? -1 : 1;
-            return order === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+            return order === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(a);
         } else if (field === 'entryDate') {
             const dateA = new Date(valA);
             const dateB = new Date(valB);
@@ -1162,8 +1164,9 @@ function addShareToTable(share) {
         </div>
     `;
 
-    const commentsCell = row.insertCell();
-    commentsCell.textContent = ''; 
+    // Removed comments cell as per instruction
+    // const commentsCell = row.insertCell();
+    // commentsCell.textContent = ''; 
     console.log(`[Render] Added share ${displayShareName} to table.`);
 }
 
@@ -1358,7 +1361,7 @@ function renderWatchlist() {
         emptyWatchlistMessage.style.padding = '20px';
         emptyWatchlistMessage.style.color = 'var(--ghosted-text)';
         const td = document.createElement('td');
-        td.colSpan = 6;
+        td.colSpan = 5; // Updated colspan to 5 as Comments column is removed
         td.appendChild(emptyWatchlistMessage);
         const tr = document.createElement('tr');
         tr.appendChild(td);
@@ -1432,7 +1435,11 @@ function scrollToShare(asxCode) {
             elementToScrollTo = document.querySelector(`.mobile-card[data-doc-id="${targetShare.id}"]`);
         }
         if (elementToScrollTo) {
-            elementToScrollTo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Get the height of the fixed header
+            const fixedHeaderHeight = appHeader ? appHeader.offsetHeight : 0;
+            const elementRect = elementToScrollTo.getBoundingClientRect();
+            const scrollY = elementRect.top + window.scrollY - fixedHeaderHeight - 10; // 10px buffer
+            window.scrollTo({ top: scrollY, behavior: 'smooth' });
             console.log(`[UI] Scrolled to element for share ID: ${targetShare.id}`);
         } else {
             console.warn(`[UI] Element for share ID: ${targetShare.id} not found for scrolling.`);
@@ -1474,9 +1481,7 @@ function estimateDividendIncome(investmentValue, dividendAmountPerShare, current
 function updateCalculatorDisplay() {
     calculatorInput.textContent = previousCalculatorInput + (operator ? ` ${getOperatorSymbol(operator)} ` : '') + currentCalculatorInput;
     if (resultDisplayed) { /* nothing */ }
-    else if (currentCalculatorInput !== '') { calculatorResult.textContent = currentCalculatorInput; }
-    else if (previousCalculatorInput !== '' && operator) { calculatorResult.textContent = previousCalculatorInput; }
-    else { calculatorResult.textContent = '0'; }
+    else { calculatorResult.textContent = currentCalculatorInput === '' ? '0' : currentCalculatorInput; }
 }
 
 function calculateResult() {
@@ -2071,7 +2076,8 @@ function exportWatchlistToCSV() {
 
     const headers = [
         "Code", "Entered Price", "Live Price", "Price Change", "Target Price", "Dividend Amount", "Franking Credits (%)",
-        "Unfranked Yield (%)", "Franked Yield (%)", "Entry Date", "Comments"
+        "Unfranked Yield (%)", "Franked Yield (%)", "Entry Date"
+        // Removed "Comments" from headers
     ];
 
     const csvRows = [];
@@ -2101,15 +2107,16 @@ function exportWatchlistToCSV() {
         const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, priceForYield);
         const frankedYield = calculateFrankedYield(dividendAmountNum, priceForYield, frankingCreditsNum);
 
-        let allCommentsText = '';
-        if (share.comments && Array.isArray(share.comments)) {
-            allCommentsText = share.comments.map(c => {
-                let commentPart = '';
-                if (c.title) commentPart += `${c.title}: `;
-                if (c.text) commentPart += c.text;
-                return commentPart;
-            }).filter(Boolean).join('; ');
-        }
+        // Comments are no longer exported
+        // let allCommentsText = '';
+        // if (share.comments && Array.isArray(share.comments)) {
+        //     allCommentsText = share.comments.map(c => {
+        //         let commentPart = '';
+        //         if (c.title) commentPart += `${c.title}: `;
+        //         if (c.text) commentPart += c.text;
+        //         return commentPart;
+        //     }).filter(Boolean).join('; ');
+        // }
 
         const row = [
             share.shareName || '',
@@ -2121,8 +2128,8 @@ function exportWatchlistToCSV() {
             (!isNaN(frankingCreditsNum) && frankingCreditsNum !== null) ? frankingCreditsNum.toFixed(1) : '',
             unfrankedYield !== null ? unfrankedYield.toFixed(2) : '',
             frankedYield !== null ? frankedYield.toFixed(2) + '%' : '',
-            formatDate(share.entryDate) || '',
-            allCommentsText
+            formatDate(share.entryDate) || ''
+            // Removed allCommentsText from row
         ];
         csvRows.push(row.map(escapeCsvValue).join(','));
     });
@@ -2943,6 +2950,8 @@ async function initializeAppLogic() {
                     window.dispatchEvent(new Event('scroll'));
                 }
             }
+            // NEW: Recalculate header height on resize
+            adjustMainContentPadding();
         });
 
         const menuButtons = appSidebar.querySelectorAll('.menu-button-item');
@@ -2977,6 +2986,21 @@ async function initializeAppLogic() {
             toggleAppSidebar(false); // NEW: Close sidebar on refresh
         });
     }
+
+    // NEW: Function to dynamically adjust main content padding
+    function adjustMainContentPadding() {
+        if (appHeader && mainContainer) {
+            const headerHeight = appHeader.offsetHeight;
+            mainContainer.style.paddingTop = `${headerHeight}px`;
+            console.log(`[Layout] Adjusted main content padding-top to: ${headerHeight}px`);
+        } else {
+            console.warn("[Layout] Could not adjust main content padding-top: appHeader or mainContainer not found.");
+        }
+    }
+
+    // Call adjustMainContentPadding initially and on window load/resize
+    window.addEventListener('load', adjustMainContentPadding);
+    // Already added to window.addEventListener('resize') in sidebar section
 }
 
 document.addEventListener('DOMContentLoaded', function() {
