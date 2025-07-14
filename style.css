@@ -1078,8 +1078,9 @@ body.sidebar-active {
 
 /* Adjust main content padding to account for fixed header */
 main.container {
-    /* Calculate the height of the sticky header row (approx 70px) and add some margin */
-    padding-top: calc(15px + 15px + 10px); /* Top padding of .header-top-row + bottom padding of .header-top-row + header's padding-bottom */
+    /* Calculate the height of the fixed .header-top-row */
+    /* Assuming .header-top-row has 15px top/bottom padding + its content height */
+    padding-top: calc(15px + 15px + 1.8em + 10px); /* Top padding + bottom padding + h1 font-size + some extra */
     margin-top: 0; /* Ensure no extra margin pushes content down */
 }
 
@@ -1093,20 +1094,21 @@ header {
     padding-bottom: 10px; /* Space below the watchlist/sort/ASX buttons */
 }
 
-/* Header Top Row for Alignment - NOW STICKY */
+/* Header Top Row for Alignment - NOW FIXED */
 .header-top-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 15px;
-    position: sticky; /* Make this row sticky */
+    position: fixed; /* Changed to fixed */
     top: 0;           /* Stick to the top of the viewport */
-    z-index: 501;     /* Higher z-index to ensure it's above other header elements when sticky */
-    width: 100%; 
-    box-sizing: border-box;
-    padding: 15px 20px; /* Padding for the sticky bar itself */
-    background-color: var(--header-bg); /* Ensure background color when sticky */
-    box-shadow: 0 2px 4px var(--shadow-color); /* Add shadow to the sticky part for separation */
+    left: 0;          /* Align to the left edge of the viewport */
+    width: 100%;      /* Span full width of the viewport */
+    z-index: 501;     /* Higher z-index to ensure it's above other header elements when fixed */
+    box-sizing: border-box; /* Include padding in width */
+    padding: 15px 20px; /* Padding for the fixed bar itself */
+    background-color: var(--header-bg); /* Ensure background color when fixed */
+    box-shadow: 0 2px 4px var(--shadow-color); /* Add shadow to the fixed part for separation */
 }
 
 h1#mainTitle {
@@ -2301,8 +2303,8 @@ table td.live-price-cell.negative-change {
 
     /* Adjust main content padding for mobile */
     main.container {
-        /* This calculation needs to match the actual height of the sticky .header-top-row on mobile */
-        padding-top: calc(15px + 15px + 10px); /* Top padding + bottom padding of .header-top-row + header's padding-bottom */
+        /* This calculation needs to match the actual height of the fixed .header-top-row on mobile */
+        padding-top: calc(15px + 15px + 1.5em + 10px); /* Top padding + bottom padding + h1 font-size + some extra */
     }
 
     .watchlist-controls-row {
