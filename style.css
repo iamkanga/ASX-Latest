@@ -64,7 +64,7 @@
     --target-alert-bg: #e0f7fa; /* Light blue for target hit alert */
     --target-alert-text: #0056b3; /* Darker blue for target hit text */
     --target-alert-border: #007bff;
-    --target-banner-height: 40px; /* NEW: Define banner height */
+    --target-banner-height: 40px;
 }
 
 /* Dark Theme Variables */
@@ -1156,7 +1156,7 @@ body.theme-subtle-10 { /* Subtle Stone */
 
 
 /* Mid-Range Themes - Adjusted for better visual distinction */
-body.theme-mid-1 { /* Mid-Blue */
+body.theme-mid-1 { /* Muted Blue-Grey */
     --background-color: #a2c2d9;
     --text-color: #2a3a4a;
     --header-bg: #6699cc;
@@ -1204,125 +1204,173 @@ body.theme-mid-1 { /* Mid-Blue */
     --target-banner-height: 40px;
 }
 
-body.theme-mid-2 { /* Mid-Green */
-    --background-color: #a2d9c2;
-    --text-color: #2a4a3a;
-    --header-bg: #66cc99;
-    --card-bg: #c9f2e0;
-    --border-color: #7de0b3;
-    --button-bg: #339966;
-    --button-hover-bg: #2a8a5a;
-    --input-bg: #e0ffe6;
-    --input-border: #a2d9c2;
-    --input-placeholder-color: #5a997a;
-    --modal-content-bg: #c9f2e0;
-    --table-header-bg: #8ed9b3;
-    --table-row-hover-bg: #b3e6d0;
-    --asx-button-bg: #8ed9b3;
-    --asx-button-hover-bg: #66cc99;
-    --asx-button-active-bg: #339966;
-    --sidebar-bg: #a2d9c2;
-    --sidebar-border: #7de0b3;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #b3e6d0;
-    --placeholder-text: #5a997a;
-    --ghosted-text: #7a998a;
-    --danger-button-bg: #e74c3c;
-    --danger-button-hover-bg: #c0392b;
-    --icon-action-color: #339966;
-    --icon-action-hover-color: #2a8a5a;
-    --icon-danger-color: #e74c3c;
-    --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #8ed9b3;
-    --calc-num-btn-text: #2a4a3a;
-    --calc-num-btn-hover-bg: #339966;
-    --google-auth-btn-bg: #FFFFFF;
-    --google-auth-btn-hover-bg: #F0F0F0;
-    --google-auth-btn-text: #4285F4;
-    --price-up-color: #28a745;
-    --price-down-color: #dc3545;
-    --price-neutral-color: #6c757d;
-    --live-price-section-bg: rgba(51, 153, 102, 0.1);
-    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
-    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
-    --comment-title-bg: rgba(0, 0, 0, 0.05);
-    --target-alert-bg: #339966;
-    --target-alert-text: #fff;
-    --target-alert-border: #2a8a5a;
-    --target-banner-height: 40px;
-}
-
-body.theme-mid-3 { /* Mid-Orange */
-    --background-color: #d9c2a2;
+body.theme-mid-2 { /* Warm Grey-Brown */
+    --background-color: #b3a291;
     --text-color: #4a3a2a;
-    --header-bg: #cc9966;
-    --card-bg: #f2e0c9;
-    --border-color: #e0b37d;
-    --button-bg: #996633;
-    --button-hover-bg: #8a5a2a;
-    --input-bg: #ffe6d9;
-    --input-border: #d9c2a2;
-    --input-placeholder-color: #997a5a;
-    --modal-content-bg: #f2e0c9;
-    --table-header-bg: #b3a28e;
-    --table-row-hover-bg: #e6d0b3;
-    --asx-button-bg: #b3a28e;
-    --asx-button-hover-bg: #cc9966;
-    --asx-button-active-bg: #996633;
-    --sidebar-bg: #d9c2a2;
-    --sidebar-border: #e0b37d;
+    --header-bg: #8a7a6c;
+    --card-bg: #e0d9c9;
+    --border-color: #918877;
+    --button-bg: #665a4a;
+    --button-hover-bg: #5a4a3a;
+    --input-bg: #f2ebdb;
+    --input-border: #b3a291;
+    --input-placeholder-color: #7a6a5a;
+    --modal-content-bg: #e0d9c9;
+    --table-header-bg: #a29180;
+    --table-row-hover-bg: #c9beb3;
+    --asx-button-bg: #a29180;
+    --asx-button-hover-bg: #8a7a6c;
+    --asx-button-active-bg: #665a4a;
+    --sidebar-bg: #b3a291;
+    --sidebar-border: #918877;
     --menu-button-bg: transparent;
-    --menu-button-hover-bg: #e6d0b3;
-    --placeholder-text: #997a5a;
-    --ghosted-text: #b3997a;
+    --menu-button-hover-bg: #c9beb3;
+    --placeholder-text: #7a6a5a;
+    --ghosted-text: #918877;
     --danger-button-bg: #e74c3c;
     --danger-button-hover-bg: #c0392b;
-    --icon-action-color: #996633;
-    --icon-action-hover-color: #8a5a2a;
+    --icon-action-color: #665a4a;
+    --icon-action-hover-color: #5a4a3a;
     --icon-danger-color: #e74c3c;
     --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #b3a28e;
+    --calc-num-btn-bg: #a29180;
     --calc-num-btn-text: #4a3a2a;
-    --calc-num-btn-hover-bg: #996633;
+    --calc-num-btn-hover-bg: #665a4a;
     --google-auth-btn-bg: #FFFFFF;
     --google-auth-btn-hover-bg: #F0F0F0;
     --google-auth-btn-text: #4285F4;
     --price-up-color: #28a745;
     --price-down-color: #dc3545;
     --price-neutral-color: #6c757d;
-    --live-price-section-bg: rgba(153, 102, 51, 0.1);
+    --live-price-section-bg: rgba(102, 90, 74, 0.1);
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
     --comment-title-bg: rgba(0, 0, 0, 0.05);
-    --target-alert-bg: #996633;
+    --target-alert-bg: #665a4a;
     --target-alert-text: #fff;
-    --target-alert-border: #8a5a2a;
+    --target-alert-border: #5a4a3a;
     --target-banner-height: 40px;
 }
 
-body.theme-mid-4 { /* Mid-Purple */
-    --background-color: #c2a2d9;
-    --text-color: #3a2a4a;
+body.theme-mid-3 { /* Dusty Rose */
+    --background-color: #d9a2af;
+    --text-color: #4a2a3a;
+    --header-bg: #cc667a;
+    --card-bg: #f2c9d0;
+    --border-color: #e07d8e;
+    --button-bg: #99334a;
+    --button-hover-bg: #8a2a3a;
+    --input-bg: #ffe0e6;
+    --input-border: #d9a2af;
+    --input-placeholder-color: #995a6a;
+    --modal-content-bg: #f2c9d0;
+    --table-header-bg: #b38e99;
+    --table-row-hover-bg: #e6d0d9;
+    --asx-button-bg: #b38e99;
+    --asx-button-hover-bg: #cc667a;
+    --asx-button-active-bg: #99334a;
+    --sidebar-bg: #d9a2af;
+    --sidebar-border: #e07d8e;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #e6d0d9;
+    --placeholder-text: #995a6a;
+    --ghosted-text: #b37a8a;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #99334a;
+    --icon-action-hover-color: #8a2a3a;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #b38e99;
+    --calc-num-btn-text: #4a2a3a;
+    --calc-num-btn-hover-bg: #99334a;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(153, 51, 74, 0.1);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #99334a;
+    --target-alert-text: #fff;
+    --target-alert-border: #8a2a3a;
+    --target-banner-height: 40px;
+}
+
+body.theme-mid-4 { /* Soft Green-Yellow */
+    --background-color: #d0d9a2;
+    --text-color: #3a4a2a;
+    --header-bg: #aacc66;
+    --card-bg: #ebf2c9;
+    --border-color: #c2e07d;
+    --button-bg: #7a9933;
+    --button-hover-bg: #6a8a2a;
+    --input-bg: #f7ffe0;
+    --input-border: #d0d9a2;
+    --input-placeholder-color: #8a995a;
+    --modal-content-bg: #ebf2c9;
+    --table-header-bg: #c2d98e;
+    --table-row-hover-bg: #d9e6b3;
+    --asx-button-bg: #c2d98e;
+    --asx-button-hover-bg: #aacc66;
+    --asx-button-active-bg: #7a9933;
+    --sidebar-bg: #d0d9a2;
+    --sidebar-border: #c2e07d;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #d9e6b3;
+    --placeholder-text: #8a995a;
+    --ghosted-text: #a2b37a;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #7a9933;
+    --icon-action-hover-color: #6a8a2a;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #c2d98e;
+    --calc-num-btn-text: #3a4a2a;
+    --calc-num-btn-hover-bg: #7a9933;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(122, 153, 51, 0.1);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #7a9933;
+    --target-alert-text: #fff;
+    --target-alert-border: #6a8a2a;
+    --target-banner-height: 40px;
+}
+
+body.theme-mid-5 { /* Muted Purple */
+    --background-color: #c9a2d9;
+    --text-color: #4a2a4a;
     --header-bg: #9966cc;
-    --card-bg: #e0c9f2;
+    --card-bg: #e6c9f2;
     --border-color: #b37de0;
     --button-bg: #663399;
     --button-hover-bg: #5a2a8a;
-    --input-bg: #e6d9ff;
-    --input-border: #c2a2d9;
-    --input-placeholder-color: #7a5a99;
-    --modal-content-bg: #e0c9f2;
+    --input-bg: #f2e0ff;
+    --input-border: #c9a2d9;
+    --input-placeholder-color: #8a5a99;
+    --modal-content-bg: #e6c9f2;
     --table-header-bg: #b38ed9;
     --table-row-hover-bg: #d0b3e6;
     --asx-button-bg: #b38ed9;
     --asx-button-hover-bg: #9966cc;
     --asx-button-active-bg: #663399;
-    --sidebar-bg: #c2a2d9;
+    --sidebar-bg: #c9a2d9;
     --sidebar-border: #b37de0;
     --menu-button-bg: transparent;
     --menu-button-hover-bg: #d0b3e6;
-    --placeholder-text: #7a5a99;
-    --ghosted-text: #997aab;
+    --placeholder-text: #8a5a99;
+    --ghosted-text: #a27ab3;
     --danger-button-bg: #e74c3c;
     --danger-button-hover-bg: #c0392b;
     --icon-action-color: #663399;
@@ -1330,7 +1378,7 @@ body.theme-mid-4 { /* Mid-Purple */
     --icon-danger-color: #e74c3c;
     --icon-danger-hover-color: #c0392b;
     --calc-num-btn-bg: #b38ed9;
-    --calc-num-btn-text: #3a2a4a;
+    --calc-num-btn-text: #4a2a4a;
     --calc-num-btn-hover-bg: #663399;
     --google-auth-btn-bg: #FFFFFF;
     --google-auth-btn-hover-bg: #F0F0F0;
@@ -1348,152 +1396,104 @@ body.theme-mid-4 { /* Mid-Purple */
     --target-banner-height: 40px;
 }
 
-body.theme-mid-5 { /* Mid-Red */
-    --background-color: #d9a2a2;
-    --text-color: #4a2a2a;
-    --header-bg: #cc6666;
-    --card-bg: #f2c9c9;
-    --border-color: #e07d7d;
-    --button-bg: #993333;
-    --button-hover-bg: #8a2a2a;
-    --input-bg: #ffe0e0;
-    --input-border: #d9a2a2;
-    --input-placeholder-color: #995a5a;
-    --modal-content-bg: #f2c9c9;
-    --table-header-bg: #b38e8e;
-    --table-row-hover-bg: #e6d0d0;
-    --asx-button-bg: #b38e8e;
-    --asx-button-hover-bg: #cc6666;
-    --asx-button-active-bg: #993333;
-    --sidebar-bg: #d9a2a2;
-    --sidebar-border: #e07d7d;
+body.theme-mid-6 { /* Earthy Orange */
+    --background-color: #d9b3a2;
+    --text-color: #4a3a2a;
+    --header-bg: #cc8a66;
+    --card-bg: #f2d9c9;
+    --border-color: #e0a27d;
+    --button-bg: #995a33;
+    --button-hover-bg: #8a4a2a;
+    --input-bg: #ffe6db;
+    --input-border: #d9b3a2;
+    --input-placeholder-color: #997a5a;
+    --modal-content-bg: #f2d9c9;
+    --table-header-bg: #b39180;
+    --table-row-hover-bg: #e6c2b3;
+    --asx-button-bg: #b39180;
+    --asx-button-hover-bg: #cc8a66;
+    --asx-button-active-bg: #995a33;
+    --sidebar-bg: #d9b3a2;
+    --sidebar-border: #e0a27d;
     --menu-button-bg: transparent;
-    --menu-button-hover-bg: #e6d0d0;
-    --placeholder-text: #995a5a;
-    --ghosted-text: #b37a7a;
+    --menu-button-hover-bg: #e6c2b3;
+    --placeholder-text: #997a5a;
+    --ghosted-text: #b3917a;
     --danger-button-bg: #e74c3c;
     --danger-button-hover-bg: #c0392b;
-    --icon-action-color: #993333;
-    --icon-action-hover-color: #8a2a2a;
+    --icon-action-color: #995a33;
+    --icon-action-hover-color: #8a4a2a;
     --icon-danger-color: #e74c3c;
     --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #b38e8e;
-    --calc-num-btn-text: #4a2a2a;
-    --calc-num-btn-hover-bg: #993333;
+    --calc-num-btn-bg: #b39180;
+    --calc-num-btn-text: #4a3a2a;
+    --calc-num-btn-hover-bg: #995a33;
     --google-auth-btn-bg: #FFFFFF;
     --google-auth-btn-hover-bg: #F0F0F0;
     --google-auth-btn-text: #4285F4;
     --price-up-color: #28a745;
     --price-down-color: #dc3545;
     --price-neutral-color: #6c757d;
-    --live-price-section-bg: rgba(153, 51, 51, 0.1);
+    --live-price-section-bg: rgba(153, 90, 51, 0.1);
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
     --comment-title-bg: rgba(0, 0, 0, 0.05);
-    --target-alert-bg: #993333;
+    --target-alert-bg: #995a33;
     --target-alert-text: #fff;
-    --target-alert-border: #8a2a2a;
+    --target-alert-border: #8a4a2a;
     --target-banner-height: 40px;
 }
 
-body.theme-mid-6 { /* Mid-Yellow */
-    --background-color: #d9d0a2;
-    --text-color: #4a4a2a;
-    --header-bg: #ccbe66;
-    --card-bg: #f2ebc9;
-    --border-color: #e0d07d;
-    --button-bg: #999933;
-    --button-hover-bg: #8a8a2a;
-    --input-bg: #ffffe0;
-    --input-border: #d9d0a2;
-    --input-placeholder-color: #99995a;
-    --modal-content-bg: #f2ebc9;
-    --table-header-bg: #b3b38e;
-    --table-row-hover-bg: #e6e6d0;
-    --asx-button-bg: #b3b38e;
-    --asx-button-hover-bg: #ccbe66;
-    --asx-button-active-bg: #999933;
-    --sidebar-bg: #d9d0a2;
-    --sidebar-border: #e0d07d;
+body.theme-mid-7 { /* Soft Teal-Green */
+    --background-color: #a2d9c9;
+    --text-color: #2a4a3a;
+    --header-bg: #66ccb3;
+    --card-bg: #c9f2eb;
+    --border-color: #7de0d9;
+    --button-bg: #33998a;
+    --button-hover-bg: #2a8a7a;
+    --input-bg: #e0fff7;
+    --input-border: #a2d9c9;
+    --input-placeholder-color: #5a998a;
+    --modal-content-bg: #c9f2eb;
+    --table-header-bg: #8ed9b3;
+    --table-row-hover-bg: #b3e6d9;
+    --asx-button-bg: #8ed9b3;
+    --asx-button-hover-bg: #66ccb3;
+    --asx-button-active-bg: #33998a;
+    --sidebar-bg: #a2d9c9;
+    --sidebar-border: #7de0d9;
     --menu-button-bg: transparent;
-    --menu-button-hover-bg: #e6e6d0;
-    --placeholder-text: #99995a;
-    --ghosted-text: #b3b37a;
+    --menu-button-hover-bg: #b3e6d9;
+    --placeholder-text: #5a998a;
+    --ghosted-text: #7a998a;
     --danger-button-bg: #e74c3c;
     --danger-button-hover-bg: #c0392b;
-    --icon-action-color: #999933;
-    --icon-action-hover-color: #8a8a2a;
+    --icon-action-color: #33998a;
+    --icon-action-hover-color: #2a8a7a;
     --icon-danger-color: #e74c3c;
     --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #b3b38e;
-    --calc-num-btn-text: #4a4a2a;
-    --calc-num-btn-hover-bg: #999933;
+    --calc-num-btn-bg: #8ed9b3;
+    --calc-num-btn-text: #2a4a3a;
+    --calc-num-btn-hover-bg: #33998a;
     --google-auth-btn-bg: #FFFFFF;
     --google-auth-btn-hover-bg: #F0F0F0;
     --google-auth-btn-text: #4285F4;
     --price-up-color: #28a745;
     --price-down-color: #dc3545;
     --price-neutral-color: #6c757d;
-    --live-price-section-bg: rgba(153, 153, 51, 0.1);
+    --live-price-section-bg: rgba(51, 153, 138, 0.1);
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
     --comment-title-bg: rgba(0, 0, 0, 0.05);
-    --target-alert-bg: #999933;
-    --target-alert-text: #333;
-    --target-alert-border: #8a8a2a;
-    --target-banner-height: 40px;
-}
-
-body.theme-mid-7 { /* Mid-Cyan */
-    --background-color: #a2d0d9;
-    --text-color: #2a4a4a;
-    --header-bg: #66ccbe;
-    --card-bg: #c9ebf2;
-    --border-color: #7de0d0;
-    --button-bg: #339999;
-    --button-hover-bg: #2a8a8a;
-    --input-bg: #e0ffff;
-    --input-border: #a2d0d9;
-    --input-placeholder-color: #5a9999;
-    --modal-content-bg: #c9ebf2;
-    --table-header-bg: #8ed9d9;
-    --table-row-hover-bg: #b3e6e6;
-    --asx-button-bg: #8ed9d9;
-    --asx-button-hover-bg: #66ccbe;
-    --asx-button-active-bg: #339999;
-    --sidebar-bg: #a2d0d9;
-    --sidebar-border: #7de0d0;
-    --menu-button-bg: transparent;
-    --menu-button-hover-bg: #b3e6e6;
-    --placeholder-text: #5a9999;
-    --ghosted-text: #7a9999;
-    --danger-button-bg: #e74c3c;
-    --danger-button-hover-bg: #c0392b;
-    --icon-action-color: #339999;
-    --icon-action-hover-color: #2a8a8a;
-    --icon-danger-color: #e74c3c;
-    --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #8ed9d9;
-    --calc-num-btn-text: #2a4a4a;
-    --calc-num-btn-hover-bg: #339999;
-    --google-auth-btn-bg: #FFFFFF;
-    --google-auth-btn-hover-bg: #F0F0F0;
-    --google-auth-btn-text: #4285F4;
-    --price-up-color: #28a745;
-    --price-down-color: #dc3545;
-    --price-neutral-color: #6c757d;
-    --live-price-section-bg: rgba(51, 153, 153, 0.1);
-    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
-    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
-    --comment-title-bg: rgba(0, 0, 0, 0.05);
-    --target-alert-bg: #339999;
+    --target-alert-bg: #33998a;
     --target-alert-text: #fff;
-    --target-alert-border: #2a8a8a;
+    --target-alert-border: #2a8a7a;
     --target-banner-height: 40px;
 }
 
-body.theme-mid-8 { /* Mid-Pink */
-    --background-color: #d9a2c2;
+body.theme-mid-8 { /* Muted Plum */
+    --background-color: #d9a2c9;
     --text-color: #4a2a3a;
     --header-bg: #cc6699;
     --card-bg: #f2c9e0;
@@ -1501,7 +1501,7 @@ body.theme-mid-8 { /* Mid-Pink */
     --button-bg: #993366;
     --button-hover-bg: #8a2a5a;
     --input-bg: #ffe0eb;
-    --input-border: #d9a2c2;
+    --input-border: #d9a2c9;
     --input-placeholder-color: #995a7a;
     --modal-content-bg: #f2c9e0;
     --table-header-bg: #b38ed9;
@@ -1509,7 +1509,7 @@ body.theme-mid-8 { /* Mid-Pink */
     --asx-button-bg: #b38ed9;
     --asx-button-hover-bg: #cc6699;
     --asx-button-active-bg: #993366;
-    --sidebar-bg: #d9a2c2;
+    --sidebar-bg: #d9a2c9;
     --sidebar-border: #e07db3;
     --menu-button-bg: transparent;
     --menu-button-hover-bg: #e6d0eb;
@@ -1540,99 +1540,99 @@ body.theme-mid-8 { /* Mid-Pink */
     --target-banner-height: 40px;
 }
 
-body.theme-mid-9 { /* Mid-Brown */
-    --background-color: #c2d9a2;
-    --text-color: #3a4a2a;
-    --header-bg: #99cc66;
-    --card-bg: #e0f2c9;
-    --border-color: #b3e07d;
-    --button-bg: #669933;
-    --button-hover-bg: #5a8a2a;
-    --input-bg: #ebffe0;
-    --input-border: #c2d9a2;
-    --input-placeholder-color: #7a995a;
-    --modal-content-bg: #e0f2c9;
-    --table-header-bg: #b3d98e;
-    --table-row-hover-bg: #d0e6b3;
-    --asx-button-bg: #b3d98e;
-    --asx-button-hover-bg: #99cc66;
-    --asx-button-active-bg: #669933;
-    --sidebar-bg: #c2d9a2;
-    --sidebar-border: #b3e07d;
+body.theme-mid-9 { /* Soft Gold-Brown */
+    --background-color: #d9c9a2;
+    --text-color: #4a3a2a;
+    --header-bg: #ccb366;
+    --card-bg: #f2ebc9;
+    --border-color: #e0d07d;
+    --button-bg: #998a33;
+    --button-hover-bg: #8a7a2a;
+    --input-bg: #fff7e0;
+    --input-border: #d9c9a2;
+    --input-placeholder-color: #998a5a;
+    --modal-content-bg: #f2ebc9;
+    --table-header-bg: #b3a28e;
+    --table-row-hover-bg: #e6d9b3;
+    --asx-button-bg: #b3a28e;
+    --asx-button-hover-bg: #ccb366;
+    --asx-button-active-bg: #998a33;
+    --sidebar-bg: #d9c9a2;
+    --sidebar-border: #e0d07d;
     --menu-button-bg: transparent;
-    --menu-button-hover-bg: #d0e6b3;
-    --placeholder-text: #7a995a;
-    --ghosted-text: #99b37a;
+    --menu-button-hover-bg: #e6d9b3;
+    --placeholder-text: #998a5a;
+    --ghosted-text: #b3a27a;
     --danger-button-bg: #e74c3c;
     --danger-button-hover-bg: #c0392b;
-    --icon-action-color: #669933;
-    --icon-action-hover-color: #5a8a2a;
+    --icon-action-color: #998a33;
+    --icon-action-hover-color: #8a7a2a;
     --icon-danger-color: #e74c3c;
     --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #b3d98e;
-    --calc-num-btn-text: #3a4a2a;
-    --calc-num-btn-hover-bg: #669933;
+    --calc-num-btn-bg: #b3a28e;
+    --calc-num-btn-text: #4a3a2a;
+    --calc-num-btn-hover-bg: #998a33;
     --google-auth-btn-bg: #FFFFFF;
     --google-auth-btn-hover-bg: #F0F0F0;
     --google-auth-btn-text: #4285F4;
     --price-up-color: #28a745;
     --price-down-color: #dc3545;
     --price-neutral-color: #6c757d;
-    --live-price-section-bg: rgba(102, 153, 51, 0.1);
+    --live-price-section-bg: rgba(153, 138, 51, 0.1);
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
     --comment-title-bg: rgba(0, 0, 0, 0.05);
-    --target-alert-bg: #669933;
+    --target-alert-bg: #998a33;
     --target-alert-text: #fff;
-    --target-alert-border: #5a8a2a;
+    --target-alert-border: #8a7a2a;
     --target-banner-height: 40px;
 }
 
-body.theme-mid-10 { /* Mid-Grey */
-    --background-color: #c2c2c2;
-    --text-color: #3a3a3a;
-    --header-bg: #999999;
-    --card-bg: #e0e0e0;
-    --border-color: #b3b3b3;
-    --button-bg: #666666;
-    --button-hover-bg: #5a5a5a;
-    --input-bg: #ebebeb;
-    --input-border: #c2c2c2;
-    --input-placeholder-color: #7a7a7a;
-    --modal-content-bg: #e0e0e0;
-    --table-header-bg: #b3b3b3;
-    --table-row-hover-bg: #d0d0d0;
-    --asx-button-bg: #b3b3b3;
-    --asx-button-hover-bg: #999999;
-    --asx-button-active-bg: #666666;
-    --sidebar-bg: #c2c2c2;
-    --sidebar-border: #b3b3b3;
+body.theme-mid-10 { /* Muted Green-Blue */
+    --background-color: #a2d9b3;
+    --text-color: #2a4a3a;
+    --header-bg: #66cc8a;
+    --card-bg: #c9f2d9;
+    --border-color: #7de0a2;
+    --button-bg: #339966;
+    --button-hover-bg: #2a8a5a;
+    --input-bg: #e0ffe6;
+    --input-border: #a2d9b3;
+    --input-placeholder-color: #5a997a;
+    --modal-content-bg: #c9f2d9;
+    --table-header-bg: #8ed9a2;
+    --table-row-hover-bg: #b3e6c9;
+    --asx-button-bg: #8ed9a2;
+    --asx-button-hover-bg: #66cc8a;
+    --asx-button-active-bg: #339966;
+    --sidebar-bg: #a2d9b3;
+    --sidebar-border: #7de0a2;
     --menu-button-bg: transparent;
-    --menu-button-hover-bg: #d0d0d0;
-    --placeholder-text: #7a7a7a;
-    --ghosted-text: #999999;
+    --menu-button-hover-bg: #b3e6c9;
+    --placeholder-text: #5a997a;
+    --ghosted-text: #7a998a;
     --danger-button-bg: #e74c3c;
     --danger-button-hover-bg: #c0392b;
-    --icon-action-color: #666666;
-    --icon-action-hover-color: #5a5a5a;
+    --icon-action-color: #339966;
+    --icon-action-hover-color: #2a8a5a;
     --icon-danger-color: #e74c3c;
     --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #b3b3b3;
-    --calc-num-btn-text: #3a3a3a;
-    --calc-num-btn-hover-bg: #666666;
+    --calc-num-btn-bg: #8ed9a2;
+    --calc-num-btn-text: #2a4a3a;
+    --calc-num-btn-hover-bg: #339966;
     --google-auth-btn-bg: #FFFFFF;
     --google-auth-btn-hover-bg: #F0F0F0;
     --google-auth-btn-text: #4285F4;
     --price-up-color: #28a745;
     --price-down-color: #dc3545;
     --price-neutral-color: #6c757d;
-    --live-price-section-bg: rgba(102, 102, 102, 0.1);
+    --live-price-section-bg: rgba(51, 153, 102, 0.1);
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
     --comment-title-bg: rgba(0, 0, 0, 0.05);
-    --target-alert-bg: #666666;
+    --target-alert-bg: #339966;
     --target-alert-text: #fff;
-    --target-alert-border: #5a5a5a;
+    --target-alert-border: #2a8a5a;
     --target-banner-height: 40px;
 }
 
@@ -2546,6 +2546,17 @@ table td.live-price-cell.negative-change {
     width: auto; 
     min-width: 0;
 }
+
+.comment-section .comment-text-input {
+    min-height: 120px; /* Increased height for easier scrolling */
+    resize: vertical; /* Allow vertical resizing */
+    overflow-y: auto; /* Ensure vertical scrollbar appears when content overflows */
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    touch-action: pan-y; /* Prioritize vertical scrolling for touch */
+    padding-right: 25px; /* Add extra padding to make space for resize handle/scrollbar */
+    box-sizing: border-box; /* Include padding in width calculation */
+}
+
 
 .comment-section .comment-delete-btn {
     background: none;
