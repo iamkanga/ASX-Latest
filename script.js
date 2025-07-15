@@ -87,7 +87,7 @@ const addCommentSectionBtn = document.getElementById('addCommentSectionBtn');
 const shareTableBody = document.querySelector('#shareTable tbody');
 const mobileShareCardsContainer = document.getElementById('mobileShareCards');
 const loadingIndicator = document.getElementById('loadingIndicator');
-const googleAuthBtn = document.getElementById('googleAuthBtn');
+const googleAuthBtn = document.getElementById('googleAuthBtn'); // This is the button in the footer
 const shareDetailModal = document.getElementById('shareDetailModal');
 const modalShareName = document.getElementById('modalShareName');
 const modalEntryDate = document.getElementById('modalEntryDate');
@@ -169,6 +169,11 @@ const targetHitDismissBtn = document.getElementById('targetHitDismissBtn');
 const toggleCompactViewBtn = document.getElementById('toggleCompactViewBtn');
 // DEBUG: Log if the button element is found at script load time
 console.log('toggleCompactViewBtn element found: ' + !!toggleCompactViewBtn);
+
+// NEW: Splash Screen Elements
+const splashScreen = document.getElementById('splashScreen');
+const splashKangarooIcon = document.getElementById('splashKangarooIcon');
+const splashSignInBtn = document.getElementById('splashSignInBtn');
 
 
 let sidebarOverlay = document.querySelector('.sidebar-overlay');
@@ -317,6 +322,7 @@ function formatDate(dateString) {
 
 // UI State Management Functions
 function updateAuthButtonText(isSignedIn, userName = 'Sign In') {
+    // This function is for the footer button, not the splash screen button
     if (googleAuthBtn) {
         googleAuthBtn.textContent = isSignedIn ? (userName || 'Signed In') : 'Google Sign In';
         console.log('Auth UI: Auth button text updated to: ' + googleAuthBtn.textContent);
@@ -1926,9 +1932,15 @@ async function loadUserWatchlistsAndSettings() {
             await loadShares();
         }
 
+        // NEW: Indicate that data loading is complete for splash screen
+        window._appDataLoaded = true;
+        hideSplashScreenIfReady();
+
     } catch (error) {
         console.error('User Settings: Error loading user watchlists and settings:', error);
         showCustomAlert('Error loading user settings: ' + error.message);
+        // NEW: Hide splash screen on error
+        hideSplashScreen();
     } finally {
         if (loadingIndicator) loadingIndicator.style.display = 'none';
     }
@@ -1986,8 +1998,13 @@ async function fetchLivePrices() {
         livePrices = newLivePrices;
         console.log('Live Price: Live prices updated:', livePrices);
         renderWatchlist(); 
+        // NEW: Indicate that live prices are loaded for splash screen
+        window._livePricesLoaded = true;
+        hideSplashScreenIfReady();
     } catch (error) {
         console.error('Live Price: Error fetching live prices:', error);
+        // NEW: Hide splash screen on error
+        hideSplashScreen();
     }
 }
 
@@ -2067,6 +2084,48 @@ function toggleMobileViewMode() {
     renderWatchlist(); // Re-render to apply new card styling and layout
 }
 
+// NEW: Splash Screen Functions
+let splashScreenReady = false; // Flag to ensure splash screen is ready before hiding
+
+/**
+ * Hides the splash screen with a fade-out effect.
+ */
+function hideSplashScreen() {
+    if (splashScreen) {
+        splashScreen.classList.add('hidden'); // Start fade-out
+        splashKangarooIcon.classList.remove('pulsing'); // Stop animation
+        // Remove splash screen from DOM after transition to prevent interaction issues
+        splashScreen.addEventListener('transitionend', () => {
+            if (splashScreen.parentNode) {
+                splashScreen.parentNode.removeChild(splashScreen);
+                console.log('Splash Screen: Removed from DOM.');
+            }
+        }, { once: true });
+        console.log('Splash Screen: Hiding.');
+    }
+}
+
+/**
+ * Checks if all necessary app data is loaded and hides the splash screen if ready.
+ * This function is called after each major data loading step.
+ */
+function hideSplashScreenIfReady() {
+    // Only hide if Firebase is initialized, user is authenticated, and all data flags are true
+    if (window._firebaseInitialized && window._userAuthenticated && window._appDataLoaded && window._livePricesLoaded) {
+        if (splashScreenReady) { // Ensure splash screen itself is ready to be hidden
+            console.log('Splash Screen: All data loaded and ready. Hiding splash screen.');
+            hideSplashScreen();
+        } else {
+            console.log('Splash Screen: Data loaded, but splash screen not yet marked as ready. Will hide when ready.');
+        }
+    } else {
+        console.log('Splash Screen: Not all data loaded yet. Current state: ' +
+            'Firebase Init: ' + window._firebaseInitialized +
+            ', User Auth: ' + window._userAuthenticated +
+            ', App Data: ' + window._appDataLoaded +
+            ', Live Prices: ' + window._livePricesLoaded);
+    }
+}
 
 /**
  * Sets up a real-time Firestore listener for shares based on currentSelectedWatchlistIds.
@@ -2082,6 +2141,9 @@ async function loadShares() {
     if (!db || !currentUserId || !window.firestore) {
         console.warn('Shares: Firestore DB, User ID, or Firestore functions not available for loading shares. Clearing list.');
         clearShareList();
+        // NEW: Indicate data loading failure for splash screen
+        window._appDataLoaded = false;
+        hideSplashScreen(); // Hide splash screen on critical failure
         return;
     }
     if (loadingIndicator) loadingIndicator.style.display = 'block';
@@ -2125,16 +2187,26 @@ async function loadShares() {
             renderAsxCodeButtons();
             
             if (loadingIndicator) loadingIndicator.style.display = 'none';
+            // NEW: Indicate that app data is loaded for splash screen
+            window._appDataLoaded = true;
+            hideSplashScreenIfReady();
+
         }, (error) => {
             console.error('Firestore Listener: Error listening to shares:', error);
             showCustomAlert('Error loading shares in real-time: ' + error.message);
             if (loadingIndicator) loadingIndicator.style.display = 'none';
+            // NEW: Indicate data loading failure for splash screen
+            window._appDataLoaded = false;
+            hideSplashScreen(); // Hide splash screen on critical failure
         });
 
     } catch (error) {
         console.error('Shares: Error setting up shares listener:', error);
         showCustomAlert('Error setting up real-time share updates: ' + error.message);
         if (loadingIndicator) loadingIndicator.style.display = 'none';
+        // NEW: Indicate data loading failure for splash screen
+        window._appDataLoaded = false;
+        hideSplashScreen(); // Hide splash screen on critical failure
     }
 }
 
@@ -2230,6 +2302,8 @@ async function migrateOldSharesToWatchlist() {
     } catch (error) {
         console.error('Migration: Error during data migration: ' + error.message);
         showCustomAlert('Error during data migration: ' + error.message);
+        // NEW: Hide splash screen on error
+        hideSplashScreen();
         return false;
     }
 }
@@ -2574,16 +2648,18 @@ async function initializeAppLogic() {
     const savedMobileViewMode = localStorage.getItem('currentMobileViewMode');
     if (savedMobileViewMode && (savedMobileViewMode === 'default' || savedMobileViewMode === 'compact')) {
         currentMobileViewMode = savedMobileViewMode;
-        if (currentMobileViewMode === 'compact' && mobileShareCardsContainer) {
-            mobileShareCardsContainer.classList.add('compact-view');
-            console.log('View Mode: Loaded saved preference: ' + currentMobileViewMode + ' view.');
-        } else {
-             console.log('View Mode: Loaded saved preference: ' + currentMobileViewMode + ' view.');
+        if (mobileShareCardsContainer) { // Check if element exists before adding class
+            if (currentMobileViewMode === 'compact') {
+                mobileShareCardsContainer.classList.add('compact-view');
+            } else {
+                mobileShareCardsContainer.classList.remove('compact-view');
+            }
         }
+        console.log('View Mode: Loaded saved preference: ' + currentMobileViewMode + ' view.');
     } else {
         console.log('View Mode: No saved mobile view preference, defaulting to \'default\'.');
         currentMobileViewMode = 'default'; // Ensure it's explicitly set if nothing saved
-        if (mobileShareCardsContainer) {
+        if (mobileShareCardsContainer) { // Check if element exists before removing class
              mobileShareCardsContainer.classList.remove('compact-view');
         }
     }
@@ -2674,10 +2750,10 @@ async function initializeAppLogic() {
         }
     });
 
-    // Google Auth Button (Sign In/Out)
+    // Google Auth Button (Sign In/Out) - Footer Button
     if (googleAuthBtn) {
         googleAuthBtn.addEventListener('click', async () => {
-            console.log('Auth: Google Auth Button Clicked.');
+            console.log('Auth: Google Auth Button (footer) Clicked.');
             const currentAuth = window.firebaseAuth;
             if (!currentAuth || !window.authFunctions) {
                 console.warn('Auth: Auth service not ready or functions not loaded. Cannot process click.');
@@ -2712,6 +2788,46 @@ async function initializeAppLogic() {
             }
         });
     }
+
+    // NEW: Splash Screen Sign-In Button
+    if (splashSignInBtn) {
+        splashSignInBtn.addEventListener('click', async () => {
+            console.log('Auth: Splash Screen Sign-In Button Clicked.');
+            const currentAuth = window.firebaseAuth;
+            if (!currentAuth || !window.authFunctions) {
+                console.warn('Auth: Auth service not ready or functions not loaded. Cannot process splash sign-in.');
+                showCustomAlert('Authentication service not ready. Please try again in a moment.');
+                return;
+            }
+            try {
+                // Start pulsing animation immediately on click
+                if (splashKangarooIcon) {
+                    splashKangarooIcon.classList.add('pulsing');
+                    console.log('Splash Screen: Started pulsing animation on sign-in click.');
+                }
+                splashSignInBtn.disabled = true; // Disable button to prevent multiple clicks
+                
+                const provider = window.authFunctions.GoogleAuthProviderInstance;
+                if (!provider) {
+                    console.error('Auth: GoogleAuthProvider instance not found. Is Firebase module script loaded?');
+                    showCustomAlert('Authentication service not ready. Please ensure Firebase module script is loaded.');
+                    splashSignInBtn.disabled = false; // Re-enable on error
+                    if (splashKangarooIcon) splashKangarooIcon.classList.remove('pulsing'); // Stop animation on error
+                    return;
+                }
+                await window.authFunctions.signInWithPopup(currentAuth, provider);
+                console.log('Auth: Google Sign-In successful from splash screen.');
+                // The onAuthStateChanged listener will handle hiding the splash screen
+            }
+            catch (error) {
+                console.error('Auth: Google Sign-In failed from splash screen: ' + error.message);
+                showCustomAlert('Google Sign-In failed: ' + error.message);
+                splashSignInBtn.disabled = false; // Re-enable on error
+                if (splashKangarooIcon) splashKangarooIcon.classList.remove('pulsing'); // Stop animation on error
+            }
+        });
+    }
+
 
     // Logout Button
     if (logoutBtn) {
@@ -3352,10 +3468,32 @@ async function initializeAppLogic() {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('script.js DOMContentLoaded fired.');
 
+    // NEW: Initialize splash screen related flags
+    window._firebaseInitialized = false;
+    window._userAuthenticated = false;
+    window._appDataLoaded = false;
+    window._livePricesLoaded = false;
+
+    // Show splash screen immediately on DOMContentLoaded
+    if (splashScreen) {
+        splashScreen.style.display = 'flex'; // Ensure it's visible
+        splashScreenReady = true; // Mark splash screen as ready
+        console.log('Splash Screen: Displayed on DOMContentLoaded.');
+    } else {
+        console.warn('Splash Screen: Splash screen element not found. App will start without it.');
+        // If splash screen isn't found, assume everything is "loaded" to proceed
+        window._firebaseInitialized = true;
+        window._userAuthenticated = false; // Will be set by onAuthStateChanged
+        window._appDataLoaded = true;
+        window._livePricesLoaded = true;
+    }
+
+
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
         auth = window.firebaseAuth;
         currentAppId = window.getFirebaseAppId();
+        window._firebaseInitialized = true; // Mark Firebase as initialized
         console.log('Firebase Ready: DB, Auth, and AppId assigned from window. Setting up auth state listener.');
         
         window.authFunctions.onAuthStateChanged(auth, async (user) => {
@@ -3372,8 +3510,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.log('AuthState: Main title set to My Share Watchlist.');
                 }
                 updateMainButtonsState(true);
-                await loadUserWatchlistsAndSettings();
-                startLivePriceUpdates();
+                window._userAuthenticated = true; // Mark user as authenticated
+                
+                // Start pulsing animation on icon after successful sign-in
+                if (splashKangarooIcon) {
+                    splashKangarooIcon.classList.add('pulsing');
+                    console.log('Splash Screen: Started pulsing animation after sign-in.');
+                }
+                
+                // Load data and then hide splash screen
+                await loadUserWatchlistsAndSettings(); // This now sets _appDataLoaded and calls hideSplashScreenIfReady
+                startLivePriceUpdates(); // This now sets _livePricesLoaded and calls hideSplashScreenIfReady
+
             } else {
                 currentUserId = null;
                 updateAuthButtonText(false);
@@ -3390,6 +3538,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.log('Firestore Listener: Unsubscribed from shares listener on logout.');
                 }
                 stopLivePriceUpdates();
+                
+                window._userAuthenticated = false; // Mark user as not authenticated
+                // If signed out, ensure splash screen is hidden or not shown
+                hideSplashScreen();
             }
             if (!window._appLogicInitialized) {
                 initializeAppLogic();
@@ -3427,5 +3579,7 @@ document.addEventListener('DOMContentLoaded', function() {
         applyTheme('system-default');
         // NEW: Call adjustMainContentPadding even if Firebase fails, to ensure some basic layout
         adjustMainContentPadding();
+        // NEW: Hide splash screen if Firebase fails to initialize
+        hideSplashScreen();
     }
 });
