@@ -64,7 +64,9 @@
     --target-alert-bg: #e0f7fa; /* Light blue for target hit alert */
     --target-alert-text: #0056b3; /* Darker blue for target hit text */
     --target-alert-border: #007bff;
-    --target-banner-height: 40px;
+    --notification-bubble-bg: #ffc107; /* Warning yellow for notifications */
+    --notification-bubble-text: #333;
+    --notification-bubble-border: #e0a800;
 }
 
 /* Dark Theme Variables */
@@ -120,7 +122,9 @@ body.dark-theme {
     --target-alert-bg: #3498db;
     --target-alert-text: #ecf0f1;
     --target-alert-border: #2980b9;
-    --target-banner-height: 40px;
+    --notification-bubble-bg: #f39c12; /* Warning orange for notifications */
+    --notification-bubble-text: #ecf0f1;
+    --notification-bubble-border: #e67e22;
 }
 
 /* Custom Themes */
@@ -178,7 +182,6 @@ body.theme-bold-1 { /* Ocean Blue */
     --target-alert-bg: #00b4d8;
     --target-alert-text: #fff;
     --target-alert-border: #0096c7;
-    --target-banner-height: 40px;
 }
 
 body.theme-bold-2 { /* Forest Green */
@@ -234,7 +237,6 @@ body.theme-bold-2 { /* Forest Green */
     --target-alert-bg: #a7c957;
     --target-alert-text: #fff;
     --target-alert-border: #8ba84a;
-    --target-banner-height: 40px;
 }
 
 body.theme-bold-3 { /* Sunset Orange */
@@ -290,7 +292,6 @@ body.theme-bold-3 { /* Sunset Orange */
     --target-alert-bg: #ffc300;
     --target-alert-text: #333;
     --target-alert-border: #e0ac00;
-    --target-banner-height: 40px;
 }
 
 body.theme-bold-4 { /* Royal Purple */
@@ -346,7 +347,6 @@ body.theme-bold-4 { /* Royal Purple */
     --target-alert-bg: #c77dff;
     --target-alert-text: #fff;
     --target-alert-border: #a842ff;
-    --target-banner-height: 40px;
 }
 
 body.theme-bold-5 { /* Deep Red */
@@ -402,7 +402,6 @@ body.theme-bold-5 { /* Deep Red */
     --target-alert-bg: #e74c3c;
     --target-alert-text: #fff;
     --target-alert-border: #c0392b;
-    --target-banner-height: 40px;
 }
 
 body.theme-bold-6 { /* Gold */
@@ -458,7 +457,6 @@ body.theme-bold-6 { /* Gold */
     --target-alert-bg: #ffeb3b;
     --target-alert-text: #333;
     --target-alert-border: #fdd835;
-    --target-banner-height: 40px;
 }
 
 body.theme-bold-7 { /* Emerald */
@@ -513,7 +511,6 @@ body.theme-bold-7 { /* Emerald */
     --target-alert-bg: #66bb6a;
     --target-alert-text: #fff;
     --target-alert-border: #4caf50;
-    --target-banner-height: 40px;
 }
 
 body.theme-bold-8 { /* Plum */
@@ -569,7 +566,6 @@ body.theme-bold-8 { /* Plum */
     --target-alert-bg: #da70d6;
     --target-alert-text: #fff;
     --target-alert-border: #c71585;
-    --target-banner-height: 40px;
 }
 
 body.theme-bold-9 { /* Aqua */
@@ -624,7 +620,6 @@ body.theme-bold-9 { /* Aqua */
     --target-alert-bg: #20b2aa;
     --target-alert-text: #fff;
     --target-alert-border: #008080;
-    --target-banner-height: 40px;
 }
 
 body.theme-bold-10 { /* Ruby */
@@ -679,7 +674,6 @@ body.theme-bold-10 { /* Ruby */
     --target-alert-bg: #dc143c;
     --target-alert-text: #fff;
     --target-alert-border: #b22222;
-    --target-banner-height: 40px;
 }
 
 
@@ -728,7 +722,6 @@ body.theme-subtle-1 { /* Subtle Sky */
     --target-alert-bg: #6699cc;
     --target-alert-text: #fff;
     --target-alert-border: #4d7eb3;
-    --target-banner-height: 40px;
 }
 
 body.theme-subtle-2 { /* Subtle Earth */
@@ -775,7 +768,6 @@ body.theme-subtle-2 { /* Subtle Earth */
     --target-alert-bg: #a8937d;
     --target-alert-text: #fff;
     --target-alert-border: #917e6c;
-    --target-banner-height: 40px;
 }
 
 body.theme-subtle-3 { /* Subtle Rose */
@@ -822,7 +814,6 @@ body.theme-subtle-3 { /* Subtle Rose */
     --target-alert-bg: #e099a8;
     --target-alert-text: #333;
     --target-alert-border: #c98899;
-    --target-banner-height: 40px;
 }
 
 body.theme-subtle-4 { /* Subtle Lavender */
@@ -869,7 +860,6 @@ body.theme-subtle-4 { /* Subtle Lavender */
     --target-alert-bg: #a899e0;
     --target-alert-text: #333;
     --target-alert-border: #9188c9;
-    --target-banner-height: 40px;
 }
 
 body.theme-subtle-5 { /* Subtle Mint */
@@ -916,7 +906,6 @@ body.theme-subtle-5 { /* Subtle Mint */
     --target-alert-bg: #99e0a8;
     --target-alert-text: #333;
     --target-alert-border: #88c991;
-    --target-banner-height: 40px;
 }
 
 body.theme-subtle-6 { /* Subtle Sand */
@@ -963,7 +952,6 @@ body.theme-subtle-6 { /* Subtle Sand */
     --target-alert-bg: #e09988;
     --target-alert-text: #333;
     --target-alert-border: #c98877;
-    --target-banner-height: 40px;
 }
 
 body.theme-subtle-7 { /* Subtle Graphite */
@@ -1010,7 +998,6 @@ body.theme-subtle-7 { /* Subtle Graphite */
     --target-alert-bg: #999999;
     --target-alert-text: #333;
     --target-alert-border: #888888;
-    --target-banner-height: 40px;
 }
 
 body.theme-subtle-8 { /* Subtle Peach */
@@ -1057,7 +1044,6 @@ body.theme-subtle-8 { /* Subtle Peach */
     --target-alert-bg: #e09988;
     --target-alert-text: #333;
     --target-alert-border: #c98877;
-    --target-banner-height: 40px;
 }
 
 body.theme-subtle-9 { /* Subtle Teal */
@@ -1104,7 +1090,6 @@ body.theme-subtle-9 { /* Subtle Teal */
     --target-alert-bg: #99e0cc;
     --target-alert-text: #333;
     --target-alert-border: #88c9b3;
-    --target-banner-height: 40px;
 }
 
 body.theme-subtle-10 { /* Subtle Stone */
@@ -1151,12 +1136,11 @@ body.theme-subtle-10 { /* Subtle Stone */
     --target-alert-bg: #999999;
     --target-alert-text: #333;
     --target-alert-border: #888888;
-    --target-banner-height: 40px;
 }
 
 
 /* Mid-Range Themes - Adjusted for better visual distinction */
-body.theme-mid-1 { /* Muted Blue-Grey */
+body.theme-mid-1 { /* Muted Blue */
     --background-color: #a2c2d9;
     --text-color: #2a3a4a;
     --header-bg: #6699cc;
@@ -1201,10 +1185,9 @@ body.theme-mid-1 { /* Muted Blue-Grey */
     --target-alert-bg: #336699;
     --target-alert-text: #fff;
     --target-alert-border: #2a5a8a;
-    --target-banner-height: 40px;
 }
 
-body.theme-mid-2 { /* Warm Grey-Brown */
+body.theme-mid-2 { /* Muted Brown */
     --background-color: #b3a291;
     --text-color: #4a3a2a;
     --header-bg: #8a7a6c;
@@ -1249,10 +1232,9 @@ body.theme-mid-2 { /* Warm Grey-Brown */
     --target-alert-bg: #665a4a;
     --target-alert-text: #fff;
     --target-alert-border: #5a4a3a;
-    --target-banner-height: 40px;
 }
 
-body.theme-mid-3 { /* Dusty Rose */
+body.theme-mid-3 { /* Muted Pink */
     --background-color: #d9a2af;
     --text-color: #4a2a3a;
     --header-bg: #cc667a;
@@ -1297,10 +1279,9 @@ body.theme-mid-3 { /* Dusty Rose */
     --target-alert-bg: #99334a;
     --target-alert-text: #fff;
     --target-alert-border: #8a2a3a;
-    --target-banner-height: 40px;
 }
 
-body.theme-mid-4 { /* Soft Green-Yellow */
+body.theme-mid-4 { /* Muted Green */
     --background-color: #d0d9a2;
     --text-color: #3a4a2a;
     --header-bg: #aacc66;
@@ -1345,7 +1326,6 @@ body.theme-mid-4 { /* Soft Green-Yellow */
     --target-alert-bg: #7a9933;
     --target-alert-text: #fff;
     --target-alert-border: #6a8a2a;
-    --target-banner-height: 40px;
 }
 
 body.theme-mid-5 { /* Muted Purple */
@@ -1393,10 +1373,9 @@ body.theme-mid-5 { /* Muted Purple */
     --target-alert-bg: #663399;
     --target-alert-text: #fff;
     --target-alert-border: #5a2a8a;
-    --target-banner-height: 40px;
 }
 
-body.theme-mid-6 { /* Earthy Orange */
+body.theme-mid-6 { /* Muted Orange */
     --background-color: #d9b3a2;
     --text-color: #4a3a2a;
     --header-bg: #cc8a66;
@@ -1441,10 +1420,9 @@ body.theme-mid-6 { /* Earthy Orange */
     --target-alert-bg: #995a33;
     --target-alert-text: #fff;
     --target-alert-border: #8a4a2a;
-    --target-banner-height: 40px;
 }
 
-body.theme-mid-7 { /* Soft Teal-Green */
+body.theme-mid-7 { /* Muted Cyan */
     --background-color: #a2d9c9;
     --text-color: #2a4a3a;
     --header-bg: #66ccb3;
@@ -1489,10 +1467,9 @@ body.theme-mid-7 { /* Soft Teal-Green */
     --target-alert-bg: #33998a;
     --target-alert-text: #fff;
     --target-alert-border: #2a8a7a;
-    --target-banner-height: 40px;
 }
 
-body.theme-mid-8 { /* Muted Plum */
+body.theme-mid-8 { /* Muted Magenta */
     --background-color: #d9a2c9;
     --text-color: #4a2a3a;
     --header-bg: #cc6699;
@@ -1537,10 +1514,9 @@ body.theme-mid-8 { /* Muted Plum */
     --target-alert-bg: #993366;
     --target-alert-text: #fff;
     --target-alert-border: #8a2a5a;
-    --target-banner-height: 40px;
 }
 
-body.theme-mid-9 { /* Soft Gold-Brown */
+body.theme-mid-9 { /* Muted Gold */
     --background-color: #d9c9a2;
     --text-color: #4a3a2a;
     --header-bg: #ccb366;
@@ -1585,55 +1561,53 @@ body.theme-mid-9 { /* Soft Gold-Brown */
     --target-alert-bg: #998a33;
     --target-alert-text: #fff;
     --target-alert-border: #8a7a2a;
-    --target-banner-height: 40px;
 }
 
-body.theme-mid-10 { /* Muted Green-Blue */
-    --background-color: #a2d9b3;
-    --text-color: #2a4a3a;
-    --header-bg: #66cc8a;
-    --card-bg: #c9f2d9;
-    --border-color: #7de0a2;
-    --button-bg: #339966;
-    --button-hover-bg: #2a8a5a;
-    --input-bg: #e0ffe6;
-    --input-border: #a2d9b3;
-    --input-placeholder-color: #5a997a;
-    --modal-content-bg: #c9f2d9;
-    --table-header-bg: #8ed9a2;
-    --table-row-hover-bg: #b3e6c9;
-    --asx-button-bg: #8ed9a2;
-    --asx-button-hover-bg: #66cc8a;
-    --asx-button-active-bg: #339966;
-    --sidebar-bg: #a2d9b3;
-    --sidebar-border: #7de0a2;
+body.theme-mid-10 { /* Muted Grey */
+    --background-color: #a2b3d9;
+    --text-color: #2a3a4a;
+    --header-bg: #668acc;
+    --card-bg: #c9d9f2;
+    --border-color: #7da2e0;
+    --button-bg: #335a99;
+    --button-hover-bg: #2a4a8a;
+    --input-bg: #e0ebff;
+    --input-border: #a2b3d9;
+    --input-placeholder-color: #5a7a99;
+    --modal-content-bg: #c9d9f2;
+    --table-header-bg: #8eb3d9;
+    --table-row-hover-bg: #b3c9e6;
+    --asx-button-bg: #8eb3d9;
+    --asx-button-hover-bg: #668acc;
+    --asx-button-active-bg: #335a99;
+    --sidebar-bg: #a2b3d9;
+    --sidebar-border: #7da2e0;
     --menu-button-bg: transparent;
-    --menu-button-hover-bg: #b3e6c9;
-    --placeholder-text: #5a997a;
-    --ghosted-text: #7a998a;
+    --menu-button-hover-bg: #b3c9e6;
+    --placeholder-text: #5a7a99;
+    --ghosted-text: #7a99b3;
     --danger-button-bg: #e74c3c;
     --danger-button-hover-bg: #c0392b;
-    --icon-action-color: #339966;
-    --icon-action-hover-color: #2a8a5a;
+    --icon-action-color: #335a99;
+    --icon-action-hover-color: #2a4a8a;
     --icon-danger-color: #e74c3c;
     --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #8ed9a2;
-    --calc-num-btn-text: #2a4a3a;
-    --calc-num-btn-hover-bg: #339966;
+    --calc-num-btn-bg: #8eb3d9;
+    --calc-num-btn-text: #2a3a4a;
+    --calc-num-btn-hover-bg: #335a99;
     --google-auth-btn-bg: #FFFFFF;
     --google-auth-btn-hover-bg: #F0F0F0;
     --google-auth-btn-text: #4285F4;
     --price-up-color: #28a745;
     --price-down-color: #dc3545;
     --price-neutral-color: #6c757d;
-    --live-price-section-bg: rgba(51, 153, 102, 0.1);
+    --live-price-section-bg: rgba(51, 90, 153, 0.1);
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
     --comment-title-bg: rgba(0, 0, 0, 0.05);
-    --target-alert-bg: #339966;
+    --target-alert-bg: #335a99;
     --target-alert-text: #fff;
-    --target-alert-border: #2a8a5a;
-    --target-banner-height: 40px;
+    --target-alert-border: #2a4a8a;
 }
 
 
@@ -1694,7 +1668,7 @@ main.container {
     width: 100%; 
     box-sizing: border-box;
     padding: 0; /* No individual padding, handled by parent header */
-    /* Remove position, top, left, z-index, background-color, box-shadow as parent header is fixed */
+    position: relative; /* Needed for positioning the bubble */
 }
 
 /* Watchlist and Sort Controls */
@@ -2905,59 +2879,158 @@ table td.live-price-cell.negative-change {
     color: var(--button-text);
 }
 
-/* NEW: Target Hit Notification Banner (moved to top) */
-#targetHitBanner {
+/* NEW: Target Price Notification Bubble */
+.target-notification-bubble {
+    position: absolute;
+    top: 50%; /* Vertically center with header action buttons */
+    right: 10px; /* Position relative to the right edge of header-top-row */
+    transform: translateY(-50%);
+    background-color: var(--notification-bubble-bg);
+    color: var(--notification-bubble-text);
+    border: 1px solid var(--notification-bubble-border);
+    border-radius: 20px; /* Pill shape */
+    padding: 5px 10px;
+    font-size: 0.8em;
+    font-weight: 600;
+    cursor: pointer;
+    z-index: 501; /* Above header, below modals */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 30px; /* Ensure it's always a visible size */
+    height: 30px; /* Ensure it's always a visible size */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    transition: all 0.3s ease-in-out;
+    overflow: hidden; /* Hide overflow content when collapsed */
+    white-space: nowrap; /* Prevent text wrapping in collapsed state */
+}
+
+.target-notification-bubble.hidden {
     display: none; /* Hidden by default, shown by JS */
-    position: fixed;
-    top: 0; /* Position at the top */
-    left: 0;
-    width: 100%;
-    background-color: var(--target-alert-bg);
-    color: var(--target-alert-text);
-    padding: 12px 20px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2); /* Shadow below */
-    z-index: 900; /* Above header, below modals */
+}
+
+.target-notification-bubble .bubble-count {
+    display: block; /* Always show count when visible */
+}
+
+.target-notification-bubble .bubble-details {
+    display: none; /* Hidden by default */
+    position: absolute;
+    top: calc(100% + 10px); /* Position below the bubble */
+    right: 0;
+    background-color: var(--modal-content-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px var(--shadow-color);
+    z-index: 1002; /* Above other elements */
+    width: 250px; /* Fixed width for details pop-up */
+    max-height: 300px;
+    overflow-y: auto;
+    flex-direction: column;
+    padding: 15px;
+    box-sizing: border-box;
+}
+
+.target-notification-bubble.expanded {
+    border-radius: 8px; /* Square corners when expanded */
+    padding: 0; /* Remove padding from outer bubble when expanded */
+    width: 250px; /* Match width of details for smooth transition */
+    height: auto; /* Allow height to adjust to content */
+    align-items: flex-start; /* Align content to top-left */
+    justify-content: flex-start;
+    top: 0; /* Align to top of header-top-row */
+    transform: translateY(0); /* Remove vertical centering */
+}
+
+.target-notification-bubble.expanded .bubble-count {
+    display: none; /* Hide count when expanded */
+}
+
+.target-notification-bubble.expanded .bubble-details {
+    display: flex; /* Show details when expanded */
+    position: static; /* Flow naturally within the expanded bubble */
+    width: auto; /* Take full width of parent */
+    max-height: none; /* Let parent control max height if needed */
+    overflow-y: visible; /* Let parent control overflow */
+    border: none;
+    box-shadow: none;
+    padding: 0; /* Details handle their own padding */
+}
+
+.bubble-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 1em;
-    font-weight: 600;
-    border-bottom: 1px solid var(--target-alert-border); /* Border at bottom */
-    box-sizing: border-box;
-    cursor: pointer; /* Indicate it's clickable */
-    height: var(--target-banner-height); /* Use defined height */
-    transition: top 0.3s ease-in-out; /* Smooth transition for showing/hiding */
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
 }
 
-#targetHitBanner .message-content {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+.bubble-header h3 {
+    margin: 0;
+    font-size: 1.1em;
+    color: var(--text-color);
 }
 
-#targetHitBanner .message-content i {
-    font-size: 1.2em;
-}
-
-#targetHitBanner .dismiss-btn {
+.bubble-close-btn {
     background: none;
     border: none;
-    color: inherit; /* Inherit text color */
+    color: var(--text-color);
     font-size: 1.5em;
     cursor: pointer;
-    padding: 5px;
+    padding: 0;
     line-height: 1;
-    transition: transform 0.2s ease;
 }
 
-#targetHitBanner .dismiss-btn:hover {
-    transform: scale(1.2);
+.bubble-close-btn:hover {
+    color: var(--danger-color);
 }
 
-/* Adjust main content padding to account for fixed header and banner */
-body.target-banner-active main.container {
-    padding-top: calc(150px + var(--target-banner-height)); /* Header height + banner height */
+.bubble-share-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
 }
+
+.bubble-share-list li {
+    padding: 8px 0;
+    border-bottom: 1px dashed var(--border-color);
+    font-size: 0.9em;
+    color: var(--text-color);
+    cursor: pointer;
+}
+
+.bubble-share-list li:last-child {
+    border-bottom: none;
+}
+
+.bubble-share-list li:hover {
+    background-color: var(--table-row-hover-bg);
+}
+
+.bubble-dismiss-all-btn {
+    background-color: var(--button-bg);
+    color: var(--button-text);
+    border: none;
+    border-radius: 5px;
+    padding: 8px 15px;
+    margin-top: 15px;
+    width: 100%;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 600;
+    transition: background-color 0.2s ease;
+}
+
+.bubble-dismiss-all-btn:hover {
+    background-color: var(--button-hover-bg);
+}
+
+/* Adjust main content padding when the bubble is expanded, if it pushes content */
+/* This might not be needed if the bubble details are positioned absolutely */
+/* body.target-bubble-expanded main.container {
+    padding-top: calc(150px + var(--target-banner-height)); 
+} */
 
 
 /* Responsive Design */
@@ -3000,10 +3073,10 @@ body.target-banner-active main.container {
         padding-top: 130px; /* Adjusted for mobile fixed header height */
     }
 
-    /* Adjust main content padding to account for fixed header and banner */
-    body.target-banner-active main.container {
-        padding-top: calc(130px + var(--target-banner-height)); /* Mobile header height + banner height */
-    }
+    /* Adjust main content padding to account for fixed header and bubble (if needed) */
+    /* body.target-bubble-expanded main.container {
+        padding-top: calc(130px + var(--target-banner-height)); 
+    } */
 
 
     .watchlist-controls-row {
@@ -3042,7 +3115,7 @@ body.target-banner-active main.container {
     .fixed-footer {
         padding: 10px 15px;
         /* NEW: Account for banner height if present */
-        padding-bottom: calc(10px + var(--target-banner-height, 0px)); 
+        /* padding-bottom: calc(10px + var(--target-banner-height, 0px)); */ 
     }
 
     .google-auth-btn {
@@ -3130,12 +3203,18 @@ body.target-banner-active main.container {
         bottom: 70px; /* Above the fixed footer */
     }
 
-    /* Adjust banner position for mobile */
-    #targetHitBanner {
-        bottom: auto; /* Remove bottom positioning */
-        top: 0; /* Position at the top for mobile */
-        font-size: 0.9em;
-        padding: 10px 15px;
+    /* Adjust bubble position for mobile */
+    .target-notification-bubble {
+        right: 5px; /* Adjust position slightly for smaller screens */
+        font-size: 0.7em;
+        padding: 4px 8px;
+        min-width: 25px;
+        height: 25px;
+    }
+
+    .target-notification-bubble .bubble-details {
+        width: 200px; /* Smaller width for mobile details pop-up */
+        right: -5px; /* Adjust to align with the bubble */
     }
 }
 
@@ -3252,10 +3331,14 @@ body.target-banner-active main.container {
         font-size: 1em;
     }
 
-    #targetHitBanner {
-        bottom: auto; /* Remove bottom positioning */
-        top: 0; /* Keep at top for very small mobile */
-        padding: 8px 10px;
-        font-size: 0.85em;
+    .target-notification-bubble {
+        right: 5px; /* Keep position for very small mobile */
+        font-size: 0.6em;
+        padding: 3px 6px;
+        min-width: 20px;
+        height: 20px;
+    }
+    .target-notification-bubble .bubble-details {
+        width: 180px; /* Even smaller width for very small mobile */
     }
 }
