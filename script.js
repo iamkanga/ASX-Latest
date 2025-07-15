@@ -143,7 +143,7 @@ const deleteWatchlistInModalBtn = document.getElementById('deleteWatchlistInModa
 const shareContextMenu = document.getElementById('shareContextMenu');
 const contextEditShareBtn = document.getElementById('contextEditShareBtn');
 const contextDeleteShareBtn = document.getElementById('contextDeleteShareBtn');
-const logoutBtn = document.getElementById('logoutBtn');
+const logoutBtn = document.getElementById('logout'); // Changed to match ID in HTML
 const exportWatchlistBtn = document.getElementById('exportWatchlistBtn');
 const refreshLivePricesBtn = document.getElementById('refreshLivePricesBtn');
 // NEW: Reference for the watchlist select inside the share form modal
@@ -1070,7 +1070,7 @@ function sortShares() {
 function renderWatchlistSelect() {
     if (!watchlistSelect) { console.error("[renderWatchlistSelect] watchlistSelect element not found."); return; }
     // Set the initial placeholder text to "Watch List"
-    watchlistSelect.innerHTML = '<option value="" disabled selected>Select a Watchlist</option>';
+    watchlistSelect.innerHTML = '<option value="" disabled selected>Watch List</option>';
 
     const allSharesOption = document.createElement('option');
     allSharesOption.value = ALL_SHARES_ID;
@@ -1085,7 +1085,7 @@ function renderWatchlistSelect() {
     });
 
     if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID)) {
-        watchlistSelect.value = ALL_SHARES_ID;
+        watchlistSelect.value = ALL_shares_ID;
     } else if (currentSelectedWatchlistIds.length === 1) {
         watchlistSelect.value = currentSelectedWatchlistIds[0];
     } else if (userWatchlists.length > 0) {
@@ -1665,7 +1665,7 @@ async function applyTheme(themeName) {
             body.classList.add('dark-theme');
         }
         console.log("[Theme] Reverted to system default theme.");
-        currentCustomThemeIndex = -1;
+        currentCustomThemeIndex = -1; // Reset index when going to system default
     } else if (themeName === 'light' || themeName === 'dark') {
         body.removeAttribute('data-theme');
         localStorage.removeItem('selectedTheme');
@@ -1674,14 +1674,14 @@ async function applyTheme(themeName) {
             body.classList.add('dark-theme');
         }
         console.log(`[Theme] Applied explicit default theme: ${themeName}`);
-        currentCustomThemeIndex = -1;
+        currentCustomThemeIndex = -1; // Reset index when going to explicit light/dark
     } else {
         body.classList.add('theme-' + themeName);
         body.setAttribute('data-theme', themeName);
         localStorage.setItem('selectedTheme', themeName);
         localStorage.removeItem('theme');
         console.log(`[Theme] Applied custom theme: ${themeName}`);
-        currentCustomThemeIndex = CUSTOM_THEMES.indexOf(themeName);
+        currentCustomThemeIndex = CUSTOM_THEMES.indexOf(themeName); // Set index to current theme
     }
     
     if (currentUserId && db && window.firestore) {
@@ -3016,15 +3016,20 @@ async function initializeAppLogic() {
     if (themeToggleBtn) {
         themeToggleBtn.addEventListener('click', () => {
             console.log("[Theme] Theme toggle button clicked.");
-            currentCustomThemeIndex = (currentCustomThemeIndex + 1);
-            if (currentCustomThemeIndex >= CUSTOM_THEMES.length) {
-                currentCustomThemeIndex = -1;
-                applyTheme('system-default');
+            // Find the index of the current active theme in the CUSTOM_THEMES array
+            let currentIndex = CUSTOM_THEMES.indexOf(currentActiveTheme);
+            
+            // Increment the index, and loop back to the start if it exceeds the array length
+            currentIndex = (currentIndex + 1) % CUSTOM_THEMES.length;
+            
+            // If we've looped past the end, go to system-default, otherwise apply the next theme
+            if (currentIndex === 0 && currentActiveTheme === CUSTOM_THEMES[CUSTOM_THEMES.length -1]) { // If it was the last custom theme, go to system-default
+                 applyTheme('system-default');
             } else {
-                const nextTheme = CUSTOM_THEMES[currentCustomThemeIndex];
+                const nextTheme = CUSTOM_THEMES[currentIndex];
                 applyTheme(nextTheme);
             }
-            console.log(`[Theme] Cycled to next theme. Current index: ${currentCustomThemeIndex}`);
+            console.log(`[Theme] Cycled to next theme. Current index: ${currentIndex}`);
         });
     }
 
