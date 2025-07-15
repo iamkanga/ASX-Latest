@@ -2266,6 +2266,16 @@ table td.live-price-cell.negative-change {
     transition: margin-left 0.3s ease, width 0.3s ease; 
 }
 
+.splash-footer { /* Specific styling for the footer on the splash screen */
+    position: absolute; /* Position relative to splash screen */
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: transparent; /* Transparent background */
+    box-shadow: none; /* No shadow */
+    z-index: 2001; /* Above splash image */
+}
+
 .google-auth-btn {
     background-color: var(--google-auth-btn-bg);
     color: var(--google-auth-btn-text);
@@ -2796,567 +2806,1844 @@ table td.live-price-cell.negative-change {
 .calc-btn[data-value="1"] { grid-area: num1; }
 .calc-btn[data-value="2"] { grid-area: num2; }
 .calc-btn[data-value="3"] { grid-area: num3; }
-.calc-btn[data-value="0"] { grid-area: num0; } /* Zero spans two columns */
-.calc-btn[data-value="."] { grid-area: decimal; }
-
-
-.calc-btn {
-    background-color: var(--calc-num-btn-bg);
-    color: var(--calc-num-btn-text);
-    border: none;
-    border-radius: 8px;
-    padding: 15px;
-    font-size: 1.5em;
-    cursor: pointer;
-    transition: background-color 0.2s ease, transform 0.1s ease;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-weight: 600;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --price-up-color: #2ecc71;
+    --price-down-color: #e74c3c;
+    --price-neutral-color: #95a5a6;
+    --live-price-section-bg: rgba(52, 152, 219, 0.1); /* Subtle blue tint */
+    --live-price-positive-bg: rgba(46, 204, 113, 0.15); /* Faint green */
+    --live-price-negative-bg: rgba(231, 76, 60, 0.15); /* Faint red */
+    --comment-title-bg: rgba(255, 255, 255, 0.08); /* Subtle background for comment titles in dark mode */
+    --target-alert-bg: #3498db;
+    --target-alert-text: #ecf0f1;
+    --target-alert-border: #2980b9;
+    --notification-bubble-bg: #f39c12; /* Warning orange for notifications */
+    --notification-bubble-text: #ecf0f1;
+    --notification-bubble-border: #e67e22;
 }
 
-.calc-btn:hover {
-    background-color: var(--calc-num-btn-hover-bg);
-    transform: translateY(-1px);
+/* Custom Themes */
+/* Bold Themes */
+body.theme-bold-1 { /* Ocean Blue */
+    --background-color: #1a2a3a;
+    --text-color: #e0f2f7;
+    --header-bg: #005f73;
+    --card-bg: #0a475a;
+    --border-color: #008793;
+    --button-bg: #00b4d8;
+    --button-hover-bg: #0096c7;
+    --input-bg: #0a475a;
+    --input-border: #008793;
+    --input-placeholder-color: #8ecae6;
+    --modal-content-bg: #0a475a;
+    --table-header-bg: #005f73;
+    --table-row-hover-bg: #008793;
+    --asx-button-bg: #005f73;
+    --asx-button-hover-bg: #008793;
+    --asx-button-active-bg: #00b4d8;
+    --sidebar-bg: #0a475a;
+    --sidebar-border: #008793;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #0a475a;
+    --placeholder-text: #8ecae6;
+    --ghosted-text: #a8dadc;
+    --danger-button-bg: #e63946;
+    --danger-button-hover-bg: #c02d38;
+    --icon-action-color: #00b4d8;
+    --icon-action-hover-color: #0096c7;
+    --icon-danger-color: #e63946;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #007f8c;
+    --calc-num-btn-text: #e0f2f7;
+    --calc-num-btn-hover-bg: #0096c7;
+    color: #fff !important;
+    --text-color: #fff;
+    --asx-button-text: #fff;
+    --sidebar-text: #fff;
+    --label-color: #ccc;
+    --input-placeholder-color: #aaa;
+    --ghosted-text: #bbb;
+    --close-sidebar-btn-color: #ccc;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --price-up-color: #2ecc71;
+    --price-down-color: #e74c3c;
+    --price-neutral-color: #a8dadc;
+    --live-price-section-bg: rgba(0, 180, 216, 0.1);
+    --live-price-positive-bg: rgba(46, 204, 113, 0.15);
+    --live-price-negative-bg: rgba(231, 76, 60, 0.15);
+    --comment-title-bg: rgba(255, 255, 255, 0.08);
+    --target-alert-bg: #00b4d8;
+    --target-alert-text: #fff;
+    --target-alert-border: #0096c7;
 }
 
-.calc-btn.clear {
-    background-color: var(--danger-button-bg);
-    color: var(--button-text);
-}
-.calc-btn.clear:hover {
-    background-color: var(--danger-button-hover-bg);
-}
-
-.calc-btn.operator,
-.calc-btn.equals {
-    background-color: var(--button-bg);
-    color: var(--button-text);
-}
-.calc-btn.operator:hover,
-.calc-btn.equals:hover {
-    background-color: var(--button-hover-bg);
-}
-
-/* Scroll to Top Button */
-#scrollToTopBtn {
-    display: none; /* Hidden by default */
-    position: fixed; /* Fixed/sticky position */
-    bottom: 20px; /* Place the button at the bottom of the page */
-    right: 20px; /* Place the button at the right of the page */
-    z-index: 99; /* Make sure it does not overlap */
-    border: none; /* Remove borders */
-    outline: none; /* Remove outline */
-    background-color: var(--button-bg); /* Set a background color */
-    color: white; /* Text color */
-    cursor: pointer; /* Add a mouse pointer on hover */
-    padding: 15px; /* Some padding */
-    border-radius: 50%; /* Rounded corners */
-    font-size: 1.5em; /* Increase font size */
-    box-shadow: 0 4px 8px var(--shadow-color);
-    transition: opacity 0.3s ease, transform 0.2s ease;
-    opacity: 0; /* Start invisible */
-    width: 60px; /* Fixed width */
-    height: 60px; /* Fixed height */
-    display: flex; /* Use flexbox for centering icon */
-    justify-content: center;
-    align-items: center;
-}
-
-#scrollToTopBtn:hover {
-    background-color: var(--button-hover-bg); /* Add a darker background on hover */
-    transform: translateY(-2px);
-}
-
-/* Context Menu */
-.context-menu {
-    display: none;
-    position: fixed;
-    background-color: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    box-shadow: 0 4px 12px var(--shadow-color);
-    z-index: 1001; /* Above modals */
-    padding: 5px 0;
-    min-width: 180px;
+body.theme-bold-2 { /* Forest Green */
+    --background-color: #2d422d;
+    --text-color: #e6ffe6;
+    --header-bg: #386641;
+    --card-bg: #4a754a;
+    --border-color: #6a9955;
+    --button-bg: #a7c957;
+    --button-hover-bg: #8ba84a;
+    --input-bg: #4a754a;
+    --input-border: #6a9955;
+    --input-placeholder-color: #c0d8b6;
+    --modal-content-bg: #4a754a;
+    --table-header-bg: #386641;
+    --table-row-hover-bg: #6a9955;
+    --asx-button-bg: #386641;
+    --asx-button-hover-bg: #6a9955;
+    --asx-button-active-bg: #a7c957;
+    --sidebar-bg: #4a754a;
+    --sidebar-border: #6a9955;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #4a754a;
+    --placeholder-text: #c0d8b6;
+    --ghosted-text: #d4e3c9;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #a7c957;
+    --icon-action-hover-color: #8ba84a;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #5a855a;
+    --calc-num-btn-text: #e6ffe6;
+    --calc-num-btn-hover-bg: #6a9955;
+    color: #fff !important;
+    --text-color: #fff;
+    --asx-button-text: #fff;
+    --sidebar-text: #fff;
+    --label-color: #ccc;
+    --input-placeholder-color: #aaa;
+    --ghosted-text: #bbb;
+    --close-sidebar-btn-color: #ccc;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --price-up-color: #2ecc71;
+    --price-down-color: #e74c3c;
+    --price-neutral-color: #d4e3c9;
+    --live-price-section-bg: rgba(167, 201, 87, 0.1);
+    --live-price-positive-bg: rgba(46, 204, 113, 0.15);
+    --live-price-negative-bg: rgba(231, 76, 60, 0.15);
+    --comment-title-bg: rgba(255, 255, 255, 0.08);
+    --target-alert-bg: #a7c957;
+    --target-alert-text: #fff;
+    --target-alert-border: #8ba84a;
 }
 
-.context-menu-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
-    padding: 10px 15px;
-    background: none;
-    border: none;
-    text-align: left;
-    cursor: pointer;
-    font-size: 0.95em;
-    color: var(--text-color);
-    transition: background-color 0.2s ease, color 0.2s ease;
+body.theme-bold-3 { /* Sunset Orange */
+    --background-color: #3b2a20;
+    --text-color: #fff8e1;
+    --header-bg: #e63946;
+    --card-bg: #f4a261;
+    --border-color: #e76f51;
+    --button-bg: #ffc300;
+    --button-hover-bg: #e0ac00;
+    --input-bg: #f4a261;
+    --input-border: #e76f51;
+    --input-placeholder-color: #ffe5b4;
+    --modal-content-bg: #f4a261;
+    --table-header-bg: #e63946;
+    --table-row-hover-bg: #e76f51;
+    --asx-button-bg: #e63946;
+    --asx-button-hover-bg: #e76f51;
+    --asx-button-active-bg: #ffc300;
+    --sidebar-bg: #f4a261;
+    --sidebar-border: #e76f51;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #f4a261;
+    --placeholder-text: #ffe5b4;
+    --ghosted-text: #ffd790;
+    --danger-button-bg: #e63946;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #ffc300;
+    --icon-action-hover-color: #e0ac00;
+    --icon-danger-color: #e63946;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #f7b98d;
+    --calc-num-btn-text: #3b2a20;
+    --calc-num-btn-hover-bg: #f4a261;
+    color: #fff !important;
+    --text-color: #fff;
+    --asx-button-text: #fff;
+    --sidebar-text: #fff;
+    --label-color: #ccc;
+    --input-placeholder-color: #aaa;
+    --ghosted-text: #bbb;
+    --close-sidebar-btn-color: #ccc;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --price-up-color: #2ecc71;
+    --price-down-color: #e74c3c;
+    --price-neutral-color: #ffd790;
+    --live-price-section-bg: rgba(255, 195, 0, 0.1);
+    --live-price-positive-bg: rgba(46, 204, 113, 0.15);
+    --live-price-negative-bg: rgba(231, 76, 60, 0.15);
+    --comment-title-bg: rgba(255, 255, 255, 0.08);
+    --target-alert-bg: #ffc300;
+    --target-alert-text: #333;
+    --target-alert-border: #e0ac00;
 }
 
-.context-menu-item:hover {
-    background-color: var(--table-row-hover-bg);
+body.theme-bold-4 { /* Royal Purple */
+    --background-color: #2a1a3a;
+    --text-color: #f0e6ff;
+    --header-bg: #5a189a;
+    --card-bg: #7b2cbf;
+    --border-color: #9d4edd;
+    --button-bg: #c77dff;
+    --button-hover-bg: #a842ff;
+    --input-bg: #7b2cbf;
+    --input-border: #9d4edd;
+    --input-placeholder-color: #e0baff;
+    --modal-content-bg: #7b2cbf;
+    --table-header-bg: #5a189a;
+    --table-row-hover-bg: #9d4edd;
+    --asx-button-bg: #5a189a;
+    --asx-button-hover-bg: #9d4edd;
+    --asx-button-active-bg: #c77dff;
+    --sidebar-bg: #7b2cbf;
+    --sidebar-border: #9d4edd;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #7b2cbf;
+    --placeholder-text: #e0baff;
+    --ghosted-text: #e8d0ff;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #c77dff;
+    --icon-action-hover-color: #a842ff;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #9d4edd;
+    --calc-num-btn-text: #f0e6ff;
+    --calc-num-btn-hover-bg: #c77dff;
+    color: #fff !important;
+    --text-color: #fff;
+    --asx-button-text: #fff;
+    --sidebar-text: #fff;
+    --label-color: #ccc;
+    --input-placeholder-color: #aaa;
+    --ghosted-text: #bbb;
+    --close-sidebar-btn-color: #ccc;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --price-up-color: #2ecc71;
+    --price-down-color: #e74c3c;
+    --price-neutral-color: #e8d0ff;
+    --live-price-section-bg: rgba(199, 125, 255, 0.1);
+    --live-price-positive-bg: rgba(46, 204, 113, 0.15);
+    --live-price-negative-bg: rgba(231, 76, 60, 0.15);
+    --comment-title-bg: rgba(255, 255, 255, 0.08);
+    --target-alert-bg: #c77dff;
+    --target-alert-text: #fff;
+    --target-alert-border: #a842ff;
 }
 
-.context-menu-item.danger-button {
-    color: var(--danger-color);
+body.theme-bold-5 { /* Deep Red */
+    --background-color: #3a1a1a;
+    --text-color: #ffe6e6;
+    --header-bg: #8b0000;
+    --card-bg: #a02020;
+    --border-color: #c0392b;
+    --button-bg: #e74c3c;
+    --button-hover-bg: #c0392b;
+    --input-bg: #a02020;
+    --input-border: #c0392b;
+    --input-placeholder-color: #ffbaba;
+    --modal-content-bg: #a02020;
+    --table-header-bg: #8b0000;
+    --table-row-hover-bg: #c0392b;
+    --asx-button-bg: #8b0000;
+    --asx-button-hover-bg: #c0392b;
+    --asx-button-active-bg: #e74c3c;
+    --sidebar-bg: #a02020;
+    --sidebar-border: #c0392b;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #a02020;
+    --placeholder-text: #ffbaba;
+    --ghosted-text: #ffcccc;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #e74c3c;
+    --icon-action-hover-color: #c0392b;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #c0392b;
+    --calc-num-btn-text: #ffe6e6;
+    --calc-num-btn-hover-bg: #e74c3c;
+    color: #fff !important;
+    --text-color: #fff;
+    --asx-button-text: #fff;
+    --sidebar-text: #fff;
+    --label-color: #ccc;
+    --input-placeholder-color: #aaa;
+    --ghosted-text: #bbb;
+    --close-sidebar-btn-color: #ccc;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --price-up-color: #2ecc71;
+    --price-down-color: #e74c3c;
+    --price-neutral-color: #ffcccc;
+    --live-price-section-bg: rgba(231, 76, 60, 0.1);
+    --live-price-positive-bg: rgba(46, 204, 113, 0.15);
+    --live-price-negative-bg: rgba(231, 76, 60, 0.15);
+    --comment-title-bg: rgba(255, 255, 255, 0.08);
+    --target-alert-bg: #e74c3c;
+    --target-alert-text: #fff;
+    --target-alert-border: #c0392b;
 }
 
-.context-menu-item.danger-button:hover {
-    background-color: var(--danger-color);
-    color: var(--button-text);
+body.theme-bold-6 { /* Gold */
+    --background-color: #3b301a;
+    --text-color: #fff8e0;
+    --header-bg: #b8860b;
+    --card-bg: #daa520;
+    --border-color: #ffd700;
+    --button-bg: #ffeb3b;
+    --button-hover-bg: #fdd835;
+    --input-bg: #daa520;
+    --input-border: #ffd700;
+    --input-placeholder-color: #ffee99;
+    --modal-content-bg: #daa520;
+    --table-header-bg: #b8860b;
+    --table-row-hover-bg: #ffd700;
+    --asx-button-bg: #b8860b;
+    --asx-button-hover-bg: #ffd700;
+    --asx-button-active-bg: #ffeb3b;
+    --sidebar-bg: #daa520;
+    --sidebar-border: #ffd700;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #daa520;
+    --placeholder-text: #ffee99;
+    --ghosted-text: #fff2c4;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #ffeb3b;
+    --icon-action-hover-color: #fdd835;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #ffd700;
+    --calc-num-btn-text: #3b301a;
+    --calc-num-btn-hover-bg: #ffeb3b;
+    color: #fff !important;
+    --text-color: #fff;
+    --asx-button-text: #fff;
+    --sidebar-text: #fff;
+    --label-color: #ccc;
+    --input-placeholder-color: #aaa;
+    --ghosted-text: #bbb;
+    --close-sidebar-btn-color: #ccc;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --price-up-color: #2ecc71;
+    --price-down-color: #e74c3c;
+    --price-neutral-color: #fff2c4;
+    --live-price-section-bg: rgba(255, 235, 59, 0.1);
+    --live-price-positive-bg: rgba(46, 204, 113, 0.15);
+    --live-price-negative-bg: rgba(231, 76, 60, 0.15);
+    --comment-title-bg: rgba(255, 255, 255, 0.08);
+    --target-alert-bg: #ffeb3b;
+    --target-alert-text: #333;
+    --target-alert-border: #fdd835;
 }
 
-/* NEW: Target Price Notification Bubble */
-.target-notification-bubble {
-    position: absolute;
-    top: 50%; /* Vertically center with header action buttons */
-    right: 10px; /* Position relative to the right edge of header-top-row */
-    transform: translateY(-50%);
-    background-color: var(--notification-bubble-bg);
-    color: var(--notification-bubble-text);
-    border: 1px solid var(--notification-bubble-border);
-    border-radius: 20px; /* Pill shape */
-    padding: 5px 10px;
-    font-size: 0.8em;
-    font-weight: 600;
-    cursor: pointer;
-    z-index: 501; /* Above header, below modals */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 30px; /* Ensure it's always a visible size */
-    height: 30px; /* Ensure it's always a visible size */
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    transition: all 0.3s ease-in-out;
-    overflow: hidden; /* Hide overflow content when collapsed */
-    white-space: nowrap; /* Prevent text wrapping in collapsed state */
+body.theme-bold-7 { /* Emerald */
+    --background-color: #1a3a2a;
+    --text-color: #e6fff0;
+    --header-bg: #006400;
+    --card-bg: #228b22;
+    --border-color: #3cb371;
+    --button-bg: #66bb6a;
+    --button-hover-bg: #4caf50;
+    --input-bg: #228b22;
+    --input-border: #3cb371;
+    --modal-content-bg: #228b22;
+    --table-header-bg: #006400;
+    --table-row-hover-bg: #3cb371;
+    --asx-button-bg: #006400;
+    --asx-button-hover-bg: #3cb371;
+    --asx-button-active-bg: #66bb6a;
+    --sidebar-bg: #228b22;
+    --sidebar-border: #3cb371;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #228b22;
+    --placeholder-text: #99ffaa;
+    --ghosted-text: #ccffdd;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #66bb6a;
+    --icon-action-hover-color: #4caf50;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #3cb371;
+    --calc-num-btn-text: #e6fff0;
+    --calc-num-btn-hover-bg: #66bb6a;
+    color: #fff !important;
+    --text-color: #fff;
+    --asx-button-text: #fff;
+    --sidebar-text: #fff;
+    --label-color: #ccc;
+    --input-placeholder-color: #aaa;
+    --ghosted-text: #bbb;
+    --close-sidebar-btn-color: #ccc;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --price-up-color: #2ecc71;
+    --price-down-color: #e74c3c;
+    --price-neutral-color: #ccffdd;
+    --live-price-section-bg: rgba(102, 187, 106, 0.1);
+    --live-price-positive-bg: rgba(46, 204, 113, 0.15);
+    --live-price-negative-bg: rgba(231, 76, 60, 0.15);
+    --comment-title-bg: rgba(255, 255, 255, 0.08);
+    --target-alert-bg: #66bb6a;
+    --target-alert-text: #fff;
+    --target-alert-border: #4caf50;
 }
 
-.target-notification-bubble.hidden {
-    display: none; /* Hidden by default, shown by JS */
+body.theme-bold-8 { /* Plum */
+    --background-color: #3a1a3a;
+    --text-color: #ffe6ff;
+    --header-bg: #800080;
+    --card-bg: #9932cc;
+    --border-color: #ba55d3;
+    --button-bg: #da70d6;
+    --button-hover-bg: #c71585;
+    --input-bg: #9932cc;
+    --input-border: #ba55d3;
+    --input-placeholder-color: #e0baff;
+    --modal-content-bg: #9932cc;
+    --table-header-bg: #800080;
+    --table-row-hover-bg: #ba55d3;
+    --asx-button-bg: #800080;
+    --asx-button-hover-bg: #ba55d3;
+    --asx-button-active-bg: #da70d6;
+    --sidebar-bg: #9932cc;
+    --sidebar-border: #ba55d3;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #9932cc;
+    --placeholder-text: #ffb3ff;
+    --ghosted-text: #ffccff;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #da70d6;
+    --icon-action-hover-color: #c71585;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #ba55d3;
+    --calc-num-btn-text: #ffe6ff;
+    --calc-num-btn-hover-bg: #da70d6;
+    color: #fff !important;
+    --text-color: #fff;
+    --asx-button-text: #fff;
+    --sidebar-text: #fff;
+    --label-color: #ccc;
+    --input-placeholder-color: #aaa;
+    --ghosted-text: #bbb;
+    --close-sidebar-btn-color: #ccc;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --price-up-color: #2ecc71;
+    --price-down-color: #e74c3c;
+    --price-neutral-color: #ffccff;
+    --live-price-section-bg: rgba(218, 112, 214, 0.1);
+    --live-price-positive-bg: rgba(46, 204, 113, 0.15);
+    --live-price-negative-bg: rgba(231, 76, 60, 0.15);
+    --comment-title-bg: rgba(255, 255, 255, 0.08);
+    --target-alert-bg: #da70d6;
+    --target-alert-text: #fff;
+    --target-alert-border: #c71585;
 }
 
-.target-notification-bubble .bubble-count {
-    display: block; /* Always show count when visible */
+body.theme-bold-9 { /* Aqua */
+    --background-color: #1a3a3a;
+    --text-color: #e6ffff;
+    --header-bg: #008b8b;
+    --card-bg: #00ced1;
+    --border-color: #40e0d0;
+    --button-bg: #20b2aa;
+    --button-hover-bg: #008080;
+    --input-bg: #00ced1;
+    --input-border: #40e0d0;
+    --modal-content-bg: #00ced1;
+    --table-header-bg: #008b8b;
+    --table-row-hover-bg: #40e0d0;
+    --asx-button-bg: #008b8b;
+    --asx-button-hover-bg: #40e0d0;
+    --asx-button-active-bg: #20b2aa;
+    --sidebar-bg: #00ced1;
+    --sidebar-border: #40e0d0;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #00ced1;
+    --placeholder-text: #99ffff;
+    --ghosted-text: #ccffff;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #20b2aa;
+    --icon-action-hover-color: #008080;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #40e0d0;
+    --calc-num-btn-text: #e6ffff;
+    --calc-num-btn-hover-bg: #20b2aa;
+    color: #fff !important;
+    --text-color: #fff;
+    --asx-button-text: #fff;
+    --sidebar-text: #fff;
+    --label-color: #ccc;
+    --input-placeholder-color: #aaa;
+    --ghosted-text: #bbb;
+    --close-sidebar-btn-color: #ccc;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --price-up-color: #2ecc71;
+    --price-down-color: #e74c3c;
+    --price-neutral-color: #ccffff;
+    --live-price-section-bg: rgba(32, 178, 170, 0.1);
+    --live-price-positive-bg: rgba(46, 204, 113, 0.15);
+    --live-price-negative-bg: rgba(231, 76, 60, 0.15);
+    --comment-title-bg: rgba(255, 255, 255, 0.08);
+    --target-alert-bg: #20b2aa;
+    --target-alert-text: #fff;
+    --target-alert-border: #008080;
 }
 
-.target-notification-bubble .bubble-details {
-    display: none; /* Hidden by default */
-    position: absolute;
-    top: calc(100% + 10px); /* Position below the bubble */
-    right: 0;
-    background-color: var(--modal-content-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    box-shadow: 0 4px 12px var(--shadow-color);
-    z-index: 1002; /* Above other elements */
-    width: 250px; /* Fixed width for details pop-up */
-    max-height: 300px;
-    overflow-y: auto;
-    flex-direction: column;
-    padding: 15px;
+body.theme-bold-10 { /* Ruby */
+    --background-color: #3a1a2a;
+    --text-color: #ffe6f0;
+    --header-bg: #8b0000;
+    --card-bg: #a52a2a;
+    --border-color: #cd5c5c;
+    --button-bg: #dc143c;
+    --button-hover-bg: #b22222;
+    --input-bg: #a52a2a;
+    --input-border: #cd5c5c;
+    --modal-content-bg: #a52a2a;
+    --table-header-bg: #8b0000;
+    --table-row-hover-bg: #cd5c5c;
+    --asx-button-bg: #8b0000;
+    --asx-button-hover-bg: #cd5c5c;
+    --asx-button-active-bg: #dc143c;
+    --sidebar-bg: #a52a2a;
+    --sidebar-border: #cd5c5c;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #a52a2a;
+    --placeholder-text: #ffb3c6;
+    --ghosted-text: #ffcce0;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #dc143c;
+    --icon-action-hover-color: #b22222;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #cd5c5c;
+    --calc-num-btn-text: #ffe6f0;
+    --calc-num-btn-hover-bg: #dc143c;
+    color: #fff !important;
+    --text-color: #fff;
+    --asx-button-text: #fff;
+    --sidebar-text: #fff;
+    --label-color: #ccc;
+    --input-placeholder-color: #aaa;
+    --ghosted-text: #bbb;
+    --close-sidebar-btn-color: #ccc;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --price-up-color: #2ecc71;
+    --price-down-color: #e74c3c;
+    --price-neutral-color: #ffcce0;
+    --live-price-section-bg: rgba(220, 20, 60, 0.1);
+    --live-price-positive-bg: rgba(46, 204, 113, 0.15);
+    --live-price-negative-bg: rgba(231, 76, 60, 0.15);
+    --comment-title-bg: rgba(255, 255, 255, 0.08);
+    --target-alert-bg: #dc143c;
+    --target-alert-text: #fff;
+    --target-alert-border: #b22222;
+}
+
+
+/* Subtle Themes - Adjusted for better visual distinction */
+body.theme-subtle-1 { /* Subtle Sky */
+    --background-color: #e0eaf2; /* Lighter blue */
+    --text-color: #334455;
+    --header-bg: #c9dceb; /* Light blue header */
+    --card-bg: #f5faff; /* Very light blue card */
+    --border-color: #a2c2d9; /* Blue border */
+    --button-bg: #6699cc; /* Blue button */
+    --button-hover-bg: #4d7eb3;
+    --input-bg: #ffffff;
+    --input-border: #99b3cc;
+    --modal-content-bg: #e0eaf2;
+    --table-header-bg: #b3d0e6;
+    --table-row-hover-bg: #d9e6f2;
+    --asx-button-bg: #b3d0e6;
+    --asx-button-hover-bg: #99b3cc;
+    --asx-button-active-bg: #6699cc;
+    --sidebar-bg: #e0eaf2;
+    --sidebar-border: #a2c2d9;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #d9e6f2;
+    --placeholder-text: #8899b3;
+    --ghosted-text: #a0b0c9;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #6699cc;
+    --icon-action-hover-color: #4d7eb3;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #b3d0e6;
+    --calc-num-btn-text: #334455;
+    --calc-num-btn-hover-bg: #6699cc;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(102, 153, 204, 0.08);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #6699cc;
+    --target-alert-text: #fff;
+    --target-alert-border: #4d7eb3;
+}
+
+body.theme-subtle-2 { /* Subtle Earth */
+    --background-color: #f0ebe5; /* Lighter brown/beige */
+    --text-color: #5a4a3a;
+    --header-bg: #d9d0c2; /* Light brown header */
+    --card-bg: #ffffff;
+    --border-color: #c2b3a2; /* Brown border */
+    --button-bg: #a8937d; /* Brown button */
+    --button-hover-bg: #917e6c;
+    --input-bg: #ffffff;
+    --input-border: #b3a291;
+    --modal-content-bg: #ffffff;
+    --table-header-bg: #e6e0d9;
+    --table-row-hover-bg: #ebe5e0;
+    --asx-button-bg: #e6e0d9;
+    --asx-button-hover-bg: #d9d0c2;
+    --asx-button-active-bg: #a8937d;
+    --sidebar-bg: #f7f3ed;
+    --sidebar-border: #c2b3a2;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #ebe5e0;
+    --placeholder-text: #998877;
+    --ghosted-text: #b3a291;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #a8937d;
+    --icon-action-hover-color: #917e6c;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #e6e0d9;
+    --calc-num-btn-text: #5a4a3a;
+    --calc-num-btn-hover-bg: #a8937d;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(168, 147, 125, 0.08);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #a8937d;
+    --target-alert-text: #fff;
+    --target-alert-border: #917e6c;
+}
+
+body.theme-subtle-3 { /* Subtle Rose */
+    --background-color: #ffe0e6; /* Lighter pink */
+    --text-color: #6a4a5a;
+    --header-bg: #f2c9d0; /* Light pink header */
+    --card-bg: #ffffff;
+    --border-color: #e6b3be; /* Pink border */
+    --button-bg: #e099a8; /* Pink button */
+    --button-hover-bg: #c98899;
+    --input-bg: #ffffff;
+    --input-border: #d9a2af;
+    --modal-content-bg: #ffe0e6;
+    --table-header-bg: #f7d9e0;
+    --table-row-hover-bg: #ffebe5;
+    --asx-button-bg: #f7d9e0;
+    --asx-button-hover-bg: #e6b3be;
+    --asx-button-active-bg: #e099a8;
+    --sidebar-bg: #ffe0e6;
+    --sidebar-border: #e6b3be;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #ffebe5;
+    --placeholder-text: #cc99a6;
+    --ghosted-text: #e0b3be;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #e099a8;
+    --icon-action-hover-color: #c98899;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #f7d9e0;
+    --calc-num-btn-text: #6a4a5a;
+    --calc-num-btn-hover-bg: #e099a8;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(224, 153, 168, 0.08);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #e099a8;
+    --target-alert-text: #333;
+    --target-alert-border: #c98899;
+}
+
+body.theme-subtle-4 { /* Subtle Lavender */
+    --background-color: #f0e0f2; /* Lighter purple */
+    --text-color: #5a4a6a;
+    --header-bg: #d9c9e6; /* Light purple header */
+    --card-bg: #ffffff;
+    --border-color: #c2b3d9; /* Purple border */
+    --button-bg: #a899e0; /* Purple button */
+    --button-hover-bg: #9188c9;
+    --input-bg: #ffffff;
+    --input-border: #b3a2cc;
+    --modal-content-bg: #f0e0f2;
+    --table-header-bg: #e6d9f2;
+    --table-row-hover-bg: #ebe0f7;
+    --asx-button-bg: #e6d9f2;
+    --asx-button-hover-bg: #d9c9e6;
+    --asx-button-active-bg: #a899e0;
+    --sidebar-bg: #f7f0fb;
+    --sidebar-border: #c2b3d9;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #ebe0f7;
+    --placeholder-text: #cc99b3;
+    --ghosted-text: #e0b3cc;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #a899e0;
+    --icon-action-hover-color: #9188c9;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #e6d9f2;
+    --calc-num-btn-text: #5a4a6a;
+    --calc-num-btn-hover-bg: #a899e0;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(168, 153, 224, 0.08);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #a899e0;
+    --target-alert-text: #333;
+    --target-alert-border: #9188c9;
+}
+
+body.theme-subtle-5 { /* Subtle Mint */
+    --background-color: #e0f2e6; /* Lighter green */
+    --text-color: #4a6a5a;
+    --header-bg: #c9ebd0; /* Light green header */
+    --card-bg: #ffffff;
+    --border-color: #b3d9be; /* Green border */
+    --button-bg: #99e0a8; /* Green button */
+    --button-hover-bg: #88c991;
+    --input-bg: #ffffff;
+    --input-border: #a2ccb3;
+    --modal-content-bg: #e0f2e6;
+    --table-header-bg: #d9ebd9;
+    --table-row-hover-bg: #e6f2eb;
+    --asx-button-bg: #d9ebd9;
+    --asx-button-hover-bg: #c9ebd0;
+    --asx-button-active-bg: #99e0a8;
+    --sidebar-bg: #f0fbf2;
+    --sidebar-border: #b3d9be;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #e6f2eb;
+    --placeholder-text: #99ccb3;
+    --ghosted-text: #b3e0be;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #99e0a8;
+    --icon-action-hover-color: #88c991;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #d9ebd9;
+    --calc-num-btn-text: #4a6a5a;
+    --calc-num-btn-hover-bg: #99e0a8;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(153, 224, 168, 0.08);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #99e0a8;
+    --target-alert-text: #333;
+    --target-alert-border: #88c991;
+}
+
+body.theme-subtle-6 { /* Subtle Sand */
+    --background-color: #fff0e0; /* Lighter orange/brown */
+    --text-color: #6a5a4a;
+    --header-bg: #f2d9c9; /* Light orange/brown header */
+    --card-bg: #ffffff;
+    --border-color: #e6b3a2; /* Orange/brown border */
+    --button-bg: #e09988; /* Orange/brown button */
+    --button-hover-bg: #c98877;
+    --input-bg: #ffffff;
+    --input-border: #d9a291;
+    --modal-content-bg: #fff0e0;
+    --table-header-bg: #f7e6d9;
+    --table-row-hover-bg: #ffebe0;
+    --asx-button-bg: #f7e6d9;
+    --asx-button-hover-bg: #f2d9c9;
+    --asx-button-active-bg: #e09988;
+    --sidebar-bg: #fff7f0;
+    --sidebar-border: #e6b3a2;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #ffebe0;
+    --placeholder-text: #cc9988;
+    --ghosted-text: #e0b3a2;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #e09988;
+    --icon-action-hover-color: #c98877;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #f7e6d9;
+    --calc-num-btn-text: #6a5a4a;
+    --calc-num-btn-hover-bg: #e09988;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(224, 153, 136, 0.08);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #e09988;
+    --target-alert-text: #333;
+    --target-alert-border: #c98877;
+}
+
+body.theme-subtle-7 { /* Subtle Graphite */
+    --background-color: #e6e6e6; /* Lighter grey */
+    --text-color: #4a4a4a;
+    --header-bg: #d0d0d0; /* Light grey header */
+    --card-bg: #ffffff;
+    --border-color: #b3b3b3; /* Grey border */
+    --button-bg: #999999; /* Grey button */
+    --button-hover-bg: #888888;
+    --input-bg: #ffffff;
+    --input-border: #a2a2a2;
+    --modal-content-bg: #e6e6e6;
+    --table-header-bg: #d9d9d9;
+    --table-row-hover-bg: #ebebeb;
+    --asx-button-bg: #d9d9d9;
+    --asx-button-hover-bg: #d0d0d0;
+    --asx-button-active-bg: #999999;
+    --sidebar-bg: #f0f0f0;
+    --sidebar-border: #b3b3b3;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #ebebeb;
+    --placeholder-text: #999999;
+    --ghosted-text: #b3b3b3;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #999999;
+    --icon-action-hover-color: #888888;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #d9d9d9;
+    --calc-num-btn-text: #4a4a4a;
+    --calc-num-btn-hover-bg: #999999;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(153, 153, 153, 0.08);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #999999;
+    --target-alert-text: #333;
+    --target-alert-border: #888888;
+}
+
+body.theme-subtle-8 { /* Subtle Peach */
+    --background-color: #ffebe0; /* Lighter peach */
+    --text-color: #6a5a4a;
+    --header-bg: #f2d9c9; /* Light peach header */
+    --card-bg: #ffffff;
+    --border-color: #e6b3a2; /* Peach border */
+    --button-bg: #e09988; /* Peach button */
+    --button-hover-bg: #c98877;
+    --input-bg: #ffffff;
+    --input-border: #d9a291;
+    --modal-content-bg: #ffebe0;
+    --table-header-bg: #f7e6d9;
+    --table-row-hover-bg: #fff0e5;
+    --asx-button-bg: #f7e6d9;
+    --asx-button-hover-bg: #f2d9c9;
+    --asx-button-active-bg: #e09988;
+    --sidebar-bg: #fff7f0;
+    --sidebar-border: #e6b3a2;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #fff0e5;
+    --placeholder-text: #cc9988;
+    --ghosted-text: #e0b3a2;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #e09988;
+    --icon-action-hover-color: #c98877;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #f7e6d9;
+    --calc-num-btn-text: #6a5a4a;
+    --calc-num-btn-hover-bg: #e09988;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(224, 153, 136, 0.08);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #e09988;
+    --target-alert-text: #333;
+    --target-alert-border: #c98877;
+}
+
+body.theme-subtle-9 { /* Subtle Teal */
+    --background-color: #e0f2f0; /* Lighter teal */
+    --text-color: #4a6a6a;
+    --header-bg: #c9ebd9; /* Light teal header */
+    --card-bg: #ffffff;
+    --border-color: #b3d9c2; /* Teal border */
+    --button-bg: #99e0cc; /* Teal button */
+    --button-hover-bg: #88c9b3;
+    --input-bg: #ffffff;
+    --input-border: #a2ccb3;
+    --modal-content-bg: #e0f2f0;
+    --table-header-bg: #d9ebe6;
+    --table-row-hover-bg: #e6f2eb;
+    --asx-button-bg: #d9ebe6;
+    --asx-button-hover-bg: #c9ebd9;
+    --asx-button-active-bg: #99e0cc;
+    --sidebar-bg: #f0fbf7;
+    --sidebar-border: #b3d9c2;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #e6f2eb;
+    --placeholder-text: #99ccb3;
+    --ghosted-text: #b3e0cc;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #99e0cc;
+    --icon-action-hover-color: #88c9b3;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #d9ebe6;
+    --calc-num-btn-text: #4a6a6a;
+    --calc-num-btn-hover-bg: #99e0cc;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(153, 224, 204, 0.08);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #99e0cc;
+    --target-alert-text: #333;
+    --target-alert-border: #88c9b3;
+}
+
+body.theme-subtle-10 { /* Subtle Stone */
+    --background-color: #e6e6e6; /* Lighter grey */
+    --text-color: #5a5a5a;
+    --header-bg: #d0d0d0; /* Light grey header */
+    --card-bg: #ffffff;
+    --border-color: #b3b3b3; /* Grey border */
+    --button-bg: #999999; /* Grey button */
+    --button-hover-bg: #888888;
+    --input-bg: #ffffff;
+    --input-border: #a2a2a2;
+    --modal-content-bg: #e6e6e6;
+    --table-header-bg: #d9d9d9;
+    --table-row-hover-bg: #ebebeb;
+    --asx-button-bg: #d9d9d9;
+    --asx-button-hover-bg: #d0d0d0;
+    --asx-button-active-bg: #999999;
+    --sidebar-bg: #f0f0f0;
+    --sidebar-border: #b3b3b3;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #ebebeb;
+    --placeholder-text: #999999;
+    --ghosted-text: #b3b3b3;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #999999;
+    --icon-action-hover-color: #888888;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #d9d9d9;
+    --calc-num-btn-text: #5a5a5a;
+    --calc-num-btn-hover-bg: #999999;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(153, 153, 153, 0.08);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #999999;
+    --target-alert-text: #333;
+    --target-alert-border: #888888;
+}
+
+
+/* Mid-Range Themes - Adjusted for better visual distinction */
+body.theme-mid-1 { /* Muted Blue */
+    --background-color: #a2c2d9;
+    --text-color: #2a3a4a;
+    --header-bg: #6699cc;
+    --card-bg: #c9e0f2;
+    --border-color: #7db3e0;
+    --button-bg: #336699;
+    --button-hover-bg: #2a5a8a;
+    --input-bg: #e0f2ff;
+    --input-border: #a2c2d9;
+    --input-placeholder-color: #5a7a99;
+    --modal-content-bg: #c9e0f2;
+    --table-header-bg: #8eb3d9;
+    --table-row-hover-bg: #b3d0e6;
+    --asx-button-bg: #8eb3d9;
+    --asx-button-hover-bg: #6699cc;
+    --asx-button-active-bg: #336699;
+    --sidebar-bg: #a2c2d9;
+    --sidebar-border: #7db3e0;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #b3d0e6;
+    --placeholder-text: #5a7a99;
+    --ghosted-text: #7a99b3;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #336699;
+    --icon-action-hover-color: #2a5a8a;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #8eb3d9;
+    --calc-num-btn-text: #2a3a4a;
+    --calc-num-btn-hover-bg: #336699;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(51, 102, 153, 0.1);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #336699;
+    --target-alert-text: #fff;
+    --target-alert-border: #2a5a8a;
+}
+
+body.theme-mid-2 { /* Muted Brown */
+    --background-color: #b3a291;
+    --text-color: #4a3a2a;
+    --header-bg: #8a7a6c;
+    --card-bg: #e0d9c9;
+    --border-color: #918877;
+    --button-bg: #665a4a;
+    --button-hover-bg: #5a4a3a;
+    --input-bg: #f2ebdb;
+    --input-border: #b3a291;
+    --input-placeholder-color: #7a6a5a;
+    --modal-content-bg: #e0d9c9;
+    --table-header-bg: #a29180;
+    --table-row-hover-bg: #c9beb3;
+    --asx-button-bg: #a29180;
+    --asx-button-hover-bg: #8a7a6c;
+    --asx-button-active-bg: #665a4a;
+    --sidebar-bg: #b3a291;
+    --sidebar-border: #918877;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #c9beb3;
+    --placeholder-text: #7a6a5a;
+    --ghosted-text: #918877;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #665a4a;
+    --icon-action-hover-color: #5a4a3a;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #a29180;
+    --calc-num-btn-text: #4a3a2a;
+    --calc-num-btn-hover-bg: #665a4a;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(102, 90, 74, 0.1);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #665a4a;
+    --target-alert-text: #fff;
+    --target-alert-border: #5a4a3a;
+}
+
+body.theme-mid-3 { /* Muted Pink */
+    --background-color: #d9a2af;
+    --text-color: #4a2a3a;
+    --header-bg: #cc667a;
+    --card-bg: #f2c9d0;
+    --border-color: #e07d8e;
+    --button-bg: #99334a;
+    --button-hover-bg: #8a2a3a;
+    --input-bg: #ffe0e6;
+    --input-border: #d9a2af;
+    --input-placeholder-color: #995a6a;
+    --modal-content-bg: #f2c9d0;
+    --table-header-bg: #b38e99;
+    --table-row-hover-bg: #e6d0d9;
+    --asx-button-bg: #b38e99;
+    --asx-button-hover-bg: #cc667a;
+    --asx-button-active-bg: #99334a;
+    --sidebar-bg: #d9a2af;
+    --sidebar-border: #e07d8e;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #e6d0d9;
+    --placeholder-text: #995a6a;
+    --ghosted-text: #b37a8a;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #99334a;
+    --icon-action-hover-color: #8a2a3a;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #b38e99;
+    --calc-num-btn-text: #4a2a3a;
+    --calc-num-btn-hover-bg: #99334a;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(153, 51, 74, 0.1);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #99334a;
+    --target-alert-text: #fff;
+    --target-alert-border: #8a2a3a;
+}
+
+body.theme-mid-4 { /* Muted Green */
+    --background-color: #d0d9a2;
+    --text-color: #3a4a2a;
+    --header-bg: #aacc66;
+    --card-bg: #ebf2c9;
+    --border-color: #c2e07d;
+    --button-bg: #7a9933;
+    --button-hover-bg: #6a8a2a;
+    --input-bg: #f7ffe0;
+    --input-border: #d0d9a2;
+    --input-placeholder-color: #8a995a;
+    --modal-content-bg: #ebf2c9;
+    --table-header-bg: #c2d98e;
+    --table-row-hover-bg: #d9e6b3;
+    --asx-button-bg: #c2d98e;
+    --asx-button-hover-bg: #aacc66;
+    --asx-button-active-bg: #7a9933;
+    --sidebar-bg: #d0d9a2;
+    --sidebar-border: #c2e07d;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #d9e6b3;
+    --placeholder-text: #8a995a;
+    --ghosted-text: #a2b37a;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #7a9933;
+    --icon-action-hover-color: #6a8a2a;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #c2d98e;
+    --calc-num-btn-text: #3a4a2a;
+    --calc-num-btn-hover-bg: #7a9933;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(122, 153, 51, 0.1);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #7a9933;
+    --target-alert-text: #fff;
+    --target-alert-border: #6a8a2a;
+}
+
+body.theme-mid-5 { /* Muted Purple */
+    --background-color: #c9a2d9;
+    --text-color: #4a2a4a;
+    --header-bg: #9966cc;
+    --card-bg: #e6c9f2;
+    --border-color: #b37de0;
+    --button-bg: #663399;
+    --button-hover-bg: #5a2a8a;
+    --input-bg: #f2e0ff;
+    --input-border: #c9a2d9;
+    --input-placeholder-color: #8a5a99;
+    --modal-content-bg: #e6c9f2;
+    --table-header-bg: #b38ed9;
+    --table-row-hover-bg: #d0b3e6;
+    --asx-button-bg: #b38ed9;
+    --asx-button-hover-bg: #9966cc;
+    --asx-button-active-bg: #663399;
+    --sidebar-bg: #c9a2d9;
+    --sidebar-border: #b37de0;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #d0b3e6;
+    --placeholder-text: #8a5a99;
+    --ghosted-text: #a27ab3;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #663399;
+    --icon-action-hover-color: #5a2a8a;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #b38ed9;
+    --calc-num-btn-text: #4a2a4a;
+    --calc-num-btn-hover-bg: #663399;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(102, 51, 153, 0.1);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #663399;
+    --target-alert-text: #fff;
+    --target-alert-border: #5a2a8a;
+}
+
+body.theme-mid-6 { /* Muted Orange */
+    --background-color: #d9b3a2;
+    --text-color: #4a3a2a;
+    --header-bg: #cc8a66;
+    --card-bg: #f2d9c9;
+    --border-color: #e0a27d;
+    --button-bg: #995a33;
+    --button-hover-bg: #8a4a2a;
+    --input-bg: #ffe6db;
+    --input-border: #d9b3a2;
+    --input-placeholder-color: #997a5a;
+    --modal-content-bg: #f2d9c9;
+    --table-header-bg: #b39180;
+    --table-row-hover-bg: #e6c2b3;
+    --asx-button-bg: #b39180;
+    --asx-button-hover-bg: #cc8a66;
+    --asx-button-active-bg: #995a33;
+    --sidebar-bg: #d9b3a2;
+    --sidebar-border: #e0a27d;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #e6c2b3;
+    --placeholder-text: #997a5a;
+    --ghosted-text: #b3917a;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #995a33;
+    --icon-action-hover-color: #8a4a2a;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #b39180;
+    --calc-num-btn-text: #4a3a2a;
+    --calc-num-btn-hover-bg: #995a33;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(153, 90, 51, 0.1);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #995a33;
+    --target-alert-text: #fff;
+    --target-alert-border: #8a4a2a;
+}
+
+body.theme-mid-7 { /* Muted Cyan */
+    --background-color: #a2d9c9;
+    --text-color: #2a4a3a;
+    --header-bg: #66ccb3;
+    --card-bg: #c9f2eb;
+    --border-color: #7de0d9;
+    --button-bg: #33998a;
+    --button-hover-bg: #2a8a7a;
+    --input-bg: #e0fff7;
+    --input-border: #a2d9c9;
+    --input-placeholder-color: #5a998a;
+    --modal-content-bg: #c9f2eb;
+    --table-header-bg: #8ed9b3;
+    --table-row-hover-bg: #b3e6d9;
+    --asx-button-bg: #8ed9b3;
+    --asx-button-hover-bg: #66ccb3;
+    --asx-button-active-bg: #33998a;
+    --sidebar-bg: #a2d9c9;
+    --sidebar-border: #7de0d9;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #b3e6d9;
+    --placeholder-text: #5a998a;
+    --ghosted-text: #7a998a;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #33998a;
+    --icon-action-hover-color: #2a8a7a;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #8ed9b3;
+    --calc-num-btn-text: #2a4a3a;
+    --calc-num-btn-hover-bg: #33998a;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(51, 153, 138, 0.1);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #33998a;
+    --target-alert-text: #fff;
+    --target-alert-border: #2a8a7a;
+}
+
+body.theme-mid-8 { /* Muted Magenta */
+    --background-color: #d9a2c9;
+    --text-color: #4a2a3a;
+    --header-bg: #cc6699;
+    --card-bg: #f2c9e0;
+    --border-color: #e07db3;
+    --button-bg: #993366;
+    --button-hover-bg: #8a2a5a;
+    --input-bg: #ffe0eb;
+    --input-border: #d9a2c9;
+    --input-placeholder-color: #995a7a;
+    --modal-content-bg: #f2c9e0;
+    --table-header-bg: #b38ed9;
+    --table-row-hover-bg: #e6d0eb;
+    --asx-button-bg: #b38ed9;
+    --asx-button-hover-bg: #cc6699;
+    --asx-button-active-bg: #993366;
+    --sidebar-bg: #d9a2c9;
+    --sidebar-border: #e07db3;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #e6d0eb;
+    --placeholder-text: #995a7a;
+    --ghosted-text: #b37a99;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #993366;
+    --icon-action-hover-color: #8a2a5a;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #b38ed9;
+    --calc-num-btn-text: #4a2a3a;
+    --calc-num-btn-hover-bg: #993366;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(153, 51, 102, 0.1);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #993366;
+    --target-alert-text: #fff;
+    --target-alert-border: #8a2a5a;
+}
+
+body.theme-mid-9 { /* Muted Gold */
+    --background-color: #d9c9a2;
+    --text-color: #4a3a2a;
+    --header-bg: #ccb366;
+    --card-bg: #f2ebc9;
+    --border-color: #e0d07d;
+    --button-bg: #998a33;
+    --button-hover-bg: #8a7a2a;
+    --input-bg: #fff7e0;
+    --input-border: #d9c9a2;
+    --input-placeholder-color: #998a5a;
+    --modal-content-bg: #f2ebc9;
+    --table-header-bg: #b3a28e;
+    --table-row-hover-bg: #e6d9b3;
+    --asx-button-bg: #b3a28e;
+    --asx-button-hover-bg: #ccb366;
+    --asx-button-active-bg: #998a33;
+    --sidebar-bg: #d9c9a2;
+    --sidebar-border: #e0d07d;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #e6d9b3;
+    --placeholder-text: #998a5a;
+    --ghosted-text: #b3a27a;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #998a33;
+    --icon-action-hover-color: #8a7a2a;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #b3a28e;
+    --calc-num-btn-text: #4a3a2a;
+    --calc-num-btn-hover-bg: #998a33;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(153, 138, 51, 0.1);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #998a33;
+    --target-alert-text: #fff;
+    --target-alert-border: #8a7a2a;
+}
+
+body.theme-mid-10 { /* Muted Grey */
+    --background-color: #a2b3d9;
+    --text-color: #2a3a4a;
+    --header-bg: #668acc;
+    --card-bg: #c9d9f2;
+    --border-color: #7da2e0;
+    --button-bg: #335a99;
+    --button-hover-bg: #2a4a8a;
+    --input-bg: #e0ebff;
+    --input-border: #a2b3d9;
+    --input-placeholder-color: #5a7a99;
+    --modal-content-bg: #c9d9f2;
+    --table-header-bg: #8eb3d9;
+    --table-row-hover-bg: #b3c9e6;
+    --asx-button-bg: #8eb3d9;
+    --asx-button-hover-bg: #668acc;
+    --asx-button-active-bg: #335a99;
+    --sidebar-bg: #a2b3d9;
+    --sidebar-border: #7da2e0;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #b3c9e6;
+    --placeholder-text: #5a7a99;
+    --ghosted-text: #7a99b3;
+    --danger-button-bg: #e74c3c;
+    --danger-button-hover-bg: #c0392b;
+    --icon-action-color: #335a99;
+    --icon-action-hover-color: #2a4a8a;
+    --icon-danger-color: #e74c3c;
+    --icon-danger-hover-color: #c0392b;
+    --calc-num-btn-bg: #8eb3d9;
+    --calc-num-btn-text: #2a3a4a;
+    --calc-num-btn-hover-bg: #335a99;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(51, 90, 153, 0.1);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #335a99;
+    --target-alert-text: #fff;
+    --target-alert-border: #2a4a8a;
+}
+
+
+/* General Body and Layout */
+html, body {
+    height: 100%;
+    overflow-x: hidden; /* Prevent horizontal scroll */
+    overflow-y: auto; /* Allow vertical scroll */
+}
+body {
+    font-family: 'Inter', sans-serif;
+    margin: 0; 
+    padding: 0; 
     box-sizing: border-box;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    transition: background-color 0.3s ease, color 0.3s ease, margin-left 0.3s ease, width 0.3s ease;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
-.target-notification-bubble.expanded {
-    border-radius: 8px; /* Square corners when expanded */
-    padding: 0; /* Remove padding from outer bubble when expanded */
-    width: 250px; /* Match width of details for smooth transition */
-    height: auto; /* Allow height to adjust to content */
-    align-items: flex-start; /* Align content to top-left */
-    justify-content: flex-start;
-    top: 0; /* Align to top of header-top-row */
-    transform: translateY(0); /* Remove vertical centering */
+body.sidebar-active {
+    margin-left: var(--sidebar-width);
+    width: calc(100% - var(--sidebar-width));
 }
 
-.target-notification-bubble.expanded .bubble-count {
-    display: none; /* Hide count when expanded */
+/* Splash Screen Styles */
+#splashScreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #000; /* Black background for the image */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000; /* Ensure it's on top of everything */
+    flex-direction: column; /* To stack image and button */
 }
 
-.target-notification-bubble.expanded .bubble-details {
-    display: flex; /* Show details when expanded */
-    position: static; /* Flow naturally within the expanded bubble */
-    width: auto; /* Take full width of parent */
-    max-height: none; /* Let parent control max height if needed */
-    overflow-y: visible; /* Let parent control overflow */
-    border: none;
-    box-shadow: none;
-    padding: 0; /* Details handle their own padding */
+#splashScreen.hidden {
+    display: none;
 }
 
-.bubble-header {
+#splashImage {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain; /* Ensure the image fits within the screen */
+    transition: transform 0.5s ease-in-out; /* For animation */
+}
+
+#splashImage.animating {
+    transform: scale(1.05); /* Example zoom effect */
+}
+
+/* Header Styles */
+#appHeader { /* Target the header by its ID */
+    background-color: var(--header-bg);
+    box-shadow: 0 2px 4px var(--shadow-color);
+    position: fixed; /* Make the entire header fixed */
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 500; /* Ensure it's above main content */
+    box-sizing: border-box;
+    display: flex; /* Use flexbox for internal layout */
+    flex-direction: column; /* Stack children vertically */
+    padding: 15px 20px 10px; /* Combined padding for the whole fixed header */
+    gap: 10px; /* Space between header rows */
+}
+
+/* Adjust main content padding to account for fixed header */
+main.container {
+    /* This padding-top needs to be dynamically calculated in JS
+       or set to a generous fixed value that covers max header height.
+       For now, setting a fixed value based on visual inspection. */
+    padding-top: 150px; /* Adjusted to accommodate the full fixed header height */
+    margin-top: 0; /* Ensure no extra margin pushes content down */
+}
+
+/* Header Top Row (now part of the fixed header) */
+.header-top-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 10px;
-    padding: 15px 15px 10px; /* Added padding for header inside bubble details */
+    gap: 15px;
+    width: 100%; 
+    box-sizing: border-box;
+    padding: 0; /* No individual padding, handled by parent header */
+    position: relative; /* Needed for positioning the bubble */
+}
+
+/* Watchlist and Sort Controls */
+.watchlist-controls-row {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    padding: 10px 0;
+    border-top: 1px solid var(--border-color);
     border-bottom: 1px solid var(--border-color);
+    width: 100%;
+    box-sizing: border-box;
+    padding-left: 15px;
+    padding-right: 15px;
+    margin-top: 0; /* No top margin here, gap handled by parent header's gap */
+    /* This element is now part of the fixed header */
 }
 
-.bubble-header h3 {
+/* ASX Code Buttons */
+.asx-code-buttons-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 0;
+    width: 100%;
+    box-sizing: border-box;
+    padding-left: 15px;
+    padding-right: 15px;
+    margin-top: 0; /* No top margin here, gap handled by parent header's gap */
+    /* This element is now part of the fixed header */
+}
+
+/* The rest of the CSS remains the same as your original file,
+   with previous fixes for modalShareName, etc. */
+
+h1#mainTitle {
     margin: 0;
-    font-size: 1.1em;
+    font-size: 1.8em;
+    font-weight: 700;
     color: var(--text-color);
+    text-align: center; 
+    flex-grow: 1; 
+    order: 2; 
 }
 
-.bubble-close-btn {
+/* Header Action Buttons for Alignment and Hamburger Fix */
+.header-action-btn {
     background: none;
     border: none;
     color: var(--text-color);
-    font-size: 1.5em;
+    font-size: 1.8em;
     cursor: pointer;
-    padding: 0;
-    line-height: 1;
+    padding: 5px 10px;
+    z-index: 11; /* Keep high for interaction */
+    display: block;
+    flex-shrink: 0; 
 }
 
-.bubble-close-btn:hover {
-    color: var(--danger-color);
+.header-action-btn:hover {
+    color: var(--button-hover-bg);
 }
 
-.bubble-share-list {
-    list-style: none;
-    padding: 0 15px; /* Added horizontal padding */
-    margin: 0;
-    max-height: 200px; /* Limit height for scrollability */
-    overflow-y: auto; /* Enable scrolling for the list */
+.header-action-btn-left { 
+    order: 1; 
 }
 
-.bubble-share-list li {
-    padding: 8px 0;
-    border-bottom: 1px dashed var(--border-color);
-    font-size: 0.9em;
-    color: var(--text-color);
-    cursor: pointer;
+.header-action-btn-right { 
+    order: 3; 
 }
 
-.bubble-share-list li:last-child {
-    border-bottom: none;
-}
-
-.bubble-share-list li:hover {
-    background-color: var(--table-row-hover-bg);
-}
-
-.bubble-dismiss-all-btn {
-    background-color: var(--button-bg);
-    color: var(--button-text);
+/* Specific styling for the hamburger button to ensure it matches other header icons */
+.hamburger-btn {
+    background: none;
     border: none;
-    border-radius: 5px;
-    padding: 8px 15px;
-    margin: 15px; /* Added margin for button */
-    width: calc(100% - 30px); /* Adjust width for margin */
+    color: var(--text-color);
+    font-size: 1.8em;
     cursor: pointer;
+    padding: 5px 10px;
+    z-index: 11;
+    display: block;
+    flex-shrink: 0;
+}
+
+.hamburger-btn:hover {
+    color: var(--button-hover-bg);
+}
+
+
+/* Hamburger Menu and Sidebar */
+.app-sidebar {
+    position: fixed; 
+    top: 0;
+    left: calc(-1 * var(--sidebar-width)); 
+    width: var(--sidebar-width); 
+    height: 100%;
+    background-color: var(--sidebar-bg);
+    box-shadow: 2px 0 5px var(--shadow-color);
+    transition: left 0.3s ease-in-out; 
+    z-index: 1000; 
+    padding: 20px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto; 
+    border-right: 1px solid var(--sidebar-border);
+}
+
+.app-sidebar.open {
+    left: 0; 
+}
+
+/* Close Menu Button for smaller size and consistency */
+.close-menu-btn {
+    color: var(--close-sidebar-btn-color);
+    font-size: 1.5em; 
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    cursor: pointer;
+    padding: 5px;
+    line-height: 1; 
+    display: block; 
+    background: none; 
+    border: none; 
+    font-family: sans-serif; 
+}
+
+.close-menu-btn:hover {
+    color: var(--danger-button-bg);
+}
+
+.app-sidebar h3 {
+    color: var(--sidebar-text);
+    margin-top: 20px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 5px;
+    font-size: 1.1em;
+}
+
+.menu-section {
+    margin-bottom: 20px;
+}
+
+.menu-buttons-group {
+    display: flex;
+    flex-direction: column; 
+    gap: 10px; 
+}
+
+.menu-button-item { 
+    background-color: var(--menu-button-bg);
+    color: var(--sidebar-text);
+    padding: 10px 15px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 400;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    width: 100%; 
+    box-sizing: border-box;
+    justify-content: flex-start; 
+}
+
+.menu-button-item:hover {
+    background-color: var(--menu-button-hover-bg);
+    transform: translateY(-1px);
+}
+
+/* Specific styling for icon-only menu items */
+.menu-button-item.icon-only {
+    justify-content: center;
+    padding: 10px;
+    width: auto;
+    align-self: flex-start;
+    min-width: 40px;
+    max-width: 60px;
+}
+
+.menu-button-item.icon-only i {
+    font-size: 1.5em;
+    margin: 0;
+}
+
+.menu-button-item.icon-only span {
+    display: none;
+}
+
+/* Special case for revert to default theme button with two icons */
+#revertToDefaultThemeBtn.menu-button-item.icon-only {
+    display: flex;
+    gap: 0;
+    justify-content: center;
+}
+#revertToDefaultThemeBtn.menu-button-item.icon-only i {
+    font-size: 1.5em;
+    margin: 0 2px;
+}
+
+/* Logout button styling (now a span) */
+#logoutBtn.menu-button-item {
+    background-color: transparent;
+    color: var(--icon-danger-color);
+    margin-top: auto;
+    border: none !important;
+    box-shadow: none !important;
+}
+#logoutBtn.menu-button-item:hover {
+    background-color: var(--menu-button-hover-bg);
+    color: var(--icon-danger-hover-color);
+}
+
+/* Disabled states */
+.menu-button-item:disabled {
+    background-color: var(--secondary-button-bg);
+    cursor: not-allowed;
+    opacity: 0.5;
+    box-shadow: none;
+    transform: none;
+}
+[disabled], .is-disabled-icon {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+    pointer-events: none;
+}
+
+.theme-select-label {
+    color: var(--sidebar-text);
     font-size: 0.9em;
+    margin-bottom: 5px;
+    display: block;
     font-weight: 600;
-    transition: background-color 0.2s ease;
 }
 
-.bubble-dismiss-all-btn:hover {
-    background-color: var(--button-hover-bg);
+.menu-dropdown { 
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 10px; 
 }
 
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    header {
-        padding: 15px 10px 10px; /* Adjusted padding for mobile */
-    }
-
-    .header-top-row {
-        padding: 0; /* No individual padding, handled by parent header */
-    }
-
-    h1#mainTitle {
-        font-size: 1.5em;
-    }
-
-    .header-action-btn {
-        font-size: 1.5em;
-        padding: 5px;
-    }
-
-    /* Adjusted Hamburger button for mobile */
-    .hamburger-btn {
-        font-size: 1.5em; /* Match other header buttons */
-        padding: 5px;
-    }
-
-    .app-sidebar {
-        width: 250px;
-    }
-
-    body.sidebar-active {
-        margin-left: 0; /* No content shift on mobile */
-        width: 100%;
-    }
-
-    /* Adjust main content padding to account for fixed header */
-    main.container {
-        /* Calculated height of the fixed header on mobile */
-        padding-top: 130px; /* Adjusted for mobile fixed header height */
-    }
-
-    .watchlist-controls-row {
-        flex-direction: row; /* Keep as row for side-by-side */
-        flex-wrap: nowrap; /* Prevent wrapping */
-        justify-content: space-around; /* Distribute space evenly */
-        gap: 10px; /* Smaller gap for mobile */
-        padding: 10px 15px;
-        margin-top: 0; /* No top margin here, gap handled by parent header's gap */
-    }
-
-    .watchlist-group,
-    .sort-group {
-        flex-basis: 50%; /* Each takes half the width */
-        max-width: calc(50% - 5px); /* Account for half the gap */
-        min-width: 120px; /* Ensure a reasonable minimum width for dropdowns */
-    }
-
-    .dropdown-large {
-        width: 100%; /* Ensure dropdowns fill their allocated space */
-        font-size: 0.9em; /* Slightly smaller font for better fit */
-        padding: 6px 10px; /* Smaller padding */
-        background-position: right 8px top 50%; /* Adjust arrow position */
-        background-size: 8px auto; /* Adjust arrow size */
-        padding-right: 20px; /* Adjust padding for smaller arrow */
-    }
-
-    .table-container {
-        display: none; /* Hide table on small screens */
-    }
-
-    .mobile-share-cards {
-        display: flex; /* Show mobile cards on small screens */
-    }
-
-    .fixed-footer {
-        padding: 10px 15px;
-    }
-
-    .google-auth-btn {
-        width: 100%; /* Default to full width on small screens */
-        font-size: 1em;
-        padding: 10px 15px;
-    }
-
-    .modal-content {
-        margin: 20px auto;
-        padding: 15px;
-        width: 95%;
-    }
-
-    /* Ensure modalShareName retains its large font size on mobile */
-    #modalShareName {
-        font-size: 2.2em; /* Keep it consistent with desktop and live price */
-    }
-
-    .close-button {
-        font-size: 1.8em;
-        top: 8px;
-        right: 15px;
-    }
-
-    .modal-content input[type="text"],
-    .modal-content input[type="number"],
-    .modal-content textarea,
-    .calc-input-group input[type="number"],
-    .calc-input-group select {
-        /* Increased font size for better readability on mobile */
-        font-size: 1.1em; 
-        width: calc(100% - 20px); /* Adjusted for padding */
-        padding: 10px; /* Increased padding */
-        margin-bottom: 15px; /* Consistent margin */
-    }
-
-    /* Specific adjustments for comments textarea on mobile */
-    .comment-section .comment-text-input {
-        min-height: 100px; /* Make it taller by default */
-        resize: vertical; /* Allow vertical resizing */
-        /* Ensure resize handle is visible and scrollbar is usable */
-        padding-right: 25px; /* Add extra padding to make space for resize handle/scrollbar */
-        box-sizing: border-box; /* Include padding in width calculation */
-        overflow-y: auto; /* Ensure vertical scrollbar appears when content overflows */
-    }
-
-
-    .form-action-buttons,
-    .modal-action-buttons,
-    .custom-dialog-buttons {
-        flex-direction: row; /* Keep as row for better spacing on mobile */
-        gap: 8px;
-        margin-top: 15px;
-        padding-top: 10px;
-    }
-
-    .modal-content .sticky-footer {
-        bottom: -15px; /* Adjust for smaller modal padding */
-        left: -15px;
-        right: -15px;
-        padding: 15px;
-    }
-
-    .modal-action-icon {
-        font-size: 1.3em;
-        padding: 6px;
-    }
-
-    .calculator-display {
-        padding: 10px;
-        min-height: 70px;
-    }
-
-    .calculator-result {
-        font-size: 1.8em;
-    }
-
-    .calc-btn {
-        padding: 10px;
-        font-size: 1.2em;
-    }
-
-    #scrollToTopBtn {
-        bottom: 70px; /* Above the fixed footer */
-    }
-
-    /* Adjust bubble position for mobile */
-    .target-notification-bubble {
-        right: 5px; /* Adjust position slightly for smaller screens */
-        font-size: 0.7em;
-        padding: 4px 8px;
-        min-width: 25px;
-        height: 25px;
-    }
-
-    .target-notification-bubble .bubble-details {
-        width: 200px; /* Smaller width for mobile details pop-up */
-        right: -5px; /* Adjust to align with the bubble */
-    }
-}
-
-@media (max-width: 480px) {
-    header {
-        padding: 15px 5px 10px; /* Adjusted padding for very small mobile */
-    }
-
-    .header-top-row {
-        padding: 0; /* No individual padding, handled by parent header */
-    }
-
-    h1#mainTitle {
-        font-size: 1.3em;
-    }
-
-    .header-action-btn {
-        font-size: 1.3em;
-    }
-
-    .hamburger-btn {
-        font-size: 1.3em;
-        padding: 5px;
-    }
-
-    .asx-code-buttons-container {
-        padding: 8px 10px;
-    }
-
-    .asx-code-btn {
-        padding: 6px 10px;
-        font-size: 0.8em;
-    }
-
-    .fixed-footer {
-        padding: 8px 10px;
-    }
-    /* Reduce width of Google Auth button on very small screens */
-    .google-auth-btn {
-        max-width: 200px; /* Limit width on very small screens */
-        margin: 0 auto; /* Center it */
-    }
-
-    .modal-content {
-        padding: 10px;
-    }
-
-    /* Ensure modalShareName retains its large font size on very small mobile */
-    #modalShareName {
-        font-size: 2.2em; /* Keep it consistent with desktop and live price */
-    }
-
-    .close-button {
-        font-size: 1.5em;
-        right: 10px;
-    }
-
-    .modal-content label {
-        font-size: 0.9em;
-    }
-
-    .modal-content input[type="text"],
-    .modal-content input[type="number"],
-    .modal-content textarea,
-    .calc-input-group input[type="number"],
-    .calc-input-group select {
-        width: calc(100% - 16px); /* Adjust for smaller padding */
-        padding: 8px; /* Slightly larger padding */
-        font-size: 1em; /* Keep it readable */
-        margin-bottom: 12px; /* Slight adjustment */
-    }
-
-    /* Specific adjustments for comments textarea on mobile */
-    .comment-section .comment-text-input {
-        min-height: 100px; /* Make it taller by default */
-        resize: vertical; /* Allow vertical resizing */
-        /* Ensure resize handle is visible and scrollbar is usable */
-        padding-right: 25px; /* Add extra padding to make space for resize handle/scrollbar */
-        box-sizing: border-box; /* Include padding in width calculation */
-        overflow-y: auto; /* Ensure vertical scrollbar appears when content overflows */
-    }
-
-    .form-action-buttons,
-    .modal-action-buttons,
-    .custom-dialog-buttons {
-        gap: 5px;
-        margin-top: 10px;
-        padding-top: 8px;
-    }
-
-    .modal-content .sticky-footer {
-        bottom: -10px;
-        left: -10px;
-        right: -10px;
-        padding: 10px;
-    }
-
-    .modal-action-icon {
-        font-size: 1.1em;
-        padding: 4px;
-    }
-
-    .calculator-display {
-        padding: 10px;
-        min-height: 70px;
-    }
-
-    .calculator-result {
-        font-size: 1.5em;
-    }
-
-    .calc-btn {
-        padding: 8px;
-        font-size: 1em;
-    }
-
-    .target-notification-bubble {
-        right: 5px; /* Keep position for very small mobile */
-        font-size: 0.6em;
-        padding: 3px 6px;
-        min-width: 20px;
-        height: 20px;
-    }
-    .target-notification-bubble .bubble-details {
-        width: 180px; /* Even smaller width for very small mobile */
-    }
-}
+.dropdown-larg
