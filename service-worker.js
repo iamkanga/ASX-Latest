@@ -15,7 +15,9 @@ const CACHED_ASSETS = [
     // if not explicitly requested by the main app. However, if they are, it's good to list them.
     'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js',
     'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js',
-    'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js'
+    'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js',
+    // NEW: Add the splash screen image to cache
+    'https://placehold.co/1000x1000/000000/FFFFFF?text=ASX%20Tracker%0AKangaroo'
 ];
 
 // Install event: caches all essential assets
