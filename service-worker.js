@@ -15,7 +15,9 @@ const CACHED_ASSETS = [
     // if not explicitly requested by the main app. However, if they are, it's good to list them.
     'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js',
     'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js',
-    'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js'
+    'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js',
+    // NEW: Add the splash screen image to cache
+    'viber_image_2025-07-15_15-17-29-737.jpg'
 ];
 
 // Install event: caches all essential assets
