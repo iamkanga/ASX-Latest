@@ -2621,7 +2621,7 @@ body.target-banner-active main.container {
 }
 
 .splash-icon.pulsing {
-    animation: pulsing-fade 2s ease-in-out infinite; /* Apply the animation */
+    animation: pulsing-fade 6s ease-in-out infinite; /* Apply the animation, now 6 seconds */
 }
 
 /* Adjust the sign-in button on the splash screen */
