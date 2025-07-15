@@ -167,6 +167,8 @@ const targetHitDismissBtn = document.getElementById('targetHitDismissBtn');
 
 // NEW: Reference for the Toggle Compact View button
 const toggleCompactViewBtn = document.getElementById('toggleCompactViewBtn');
+// DEBUG: Log if the button element is found at script load time
+console.log(`[DEBUG] toggleCompactViewBtn element found: ${!!toggleCompactViewBtn}`);
 
 
 let sidebarOverlay = document.querySelector('.sidebar-overlay');
@@ -1081,7 +1083,7 @@ function renderWatchlistSelect() {
     });
 
     if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID)) {
-        watchlistSelect.value = ALL_SHAres_ID;
+        watchlistSelect.value = ALL_SHARES_ID;
     } else if (currentSelectedWatchlistIds.length === 1) {
         watchlistSelect.value = currentSelectedWatchlistIds[0];
     } else if (userWatchlists.length > 0) {
@@ -1600,6 +1602,33 @@ function renderAsxCodeButtons() {
     console.log(`[UI] Rendered ${sortedAsxCodes.length} code buttons.`);
     // NEW: Adjust padding after rendering buttons, as their presence affects header height
     adjustMainContentPadding();
+}
+
+function scrollToShare(asxCode) {
+    console.log(`[UI] Attempting to scroll to/highlight share with Code: ${asxCode}`);
+    const targetShare = allSharesData.find(s => s.shareName && s.shareName.toUpperCase() === asxCode.toUpperCase());
+    if (targetShare) {
+        selectShare(targetShare.id);
+        let elementToScrollTo = document.querySelector(`#shareTable tbody tr[data-doc-id="${targetShare.id}"]`);
+        if (!elementToScrollTo || window.matchMedia("(max-width: 768px)").matches) {
+            elementToScrollTo = document.querySelector(`.mobile-card[data-doc-id="${targetShare.id}"]`);
+        }
+        if (elementToScrollTo) {
+            // Get the height of the fixed header
+            const fixedHeaderHeight = appHeader ? appHeader.offsetHeight : 0;
+            const elementRect = elementToScrollTo.getBoundingClientRect();
+            // Calculate scroll position, accounting for the fixed header
+            const scrollY = elementRect.top + window.scrollY - fixedHeaderHeight - 10; // 10px buffer for a little space
+            window.scrollTo({ top: scrollY, behavior: 'smooth' });
+            console.log(`[UI] Scrolled to element for share ID: ${targetShare.id}`);
+        } else {
+            console.warn(`[UI] Element for share ID: ${targetShare.id} not found for scrolling.`);
+        }
+        showShareDetails(); 
+    } else {
+        showCustomAlert(`Share '${asxCode}' not found.`);
+        console.warn(`[UI] Share '${asxCode}' not found in allSharesData.`);
+    }
 }
 
 const COMPANY_TAX_RATE = 0.30;
@@ -2498,6 +2527,7 @@ async function saveWatchlistChanges(isSilent = false, newName, watchlistId = nul
 
 
 async function initializeAppLogic() {
+    // DEBUG: Log when initializeAppLogic starts
     console.log("initializeAppLogic: Firebase is ready. Starting app logic.");
 
     // Initial modal hiding
@@ -3260,6 +3290,16 @@ async function initializeAppLogic() {
             toggleAppSidebar(false); // NEW: Close sidebar on refresh
         });
     }
+
+    // NEW: Toggle Compact View Button Listener
+    if (toggleCompactViewBtn) {
+        toggleCompactViewBtn.addEventListener('click', () => {
+            console.log("[UI] Toggle Compact View button clicked.");
+            toggleMobileViewMode();
+            toggleAppSidebar(false); // Close sidebar after action
+        });
+    }
+
 
     // NEW: Target hit banner dismiss button listener
     if (targetHitDismissBtn) {
