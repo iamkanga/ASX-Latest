@@ -891,10 +891,12 @@ function showShareDetails() {
     
     const priceForYield = (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) ? livePrice : enteredPriceNum;
     const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, priceForYield); 
-    modalUnfrankedYieldSpan.textContent = unfrankedYield !== null ? `${unfrankedYield.toFixed(2)}%` : 'N/A';
+    // NEW: Display "0.00%" if unfrankedYield is null or NaN, otherwise format
+    modalUnfrankedYieldSpan.textContent = unfrankedYield !== null && !isNaN(unfrankedYield) ? `${unfrankedYield.toFixed(2)}%` : '0.00%';
     
     const frankedYield = calculateFrankedYield(dividendAmountNum, priceForYield, frankingCreditsNum);
-    modalFrankedYieldSpan.textContent = frankedYield !== null ? `${frankedYield.toFixed(2)}%` : 'N/A';
+    // NEW: Display "0.00%" if frankedYield is null or NaN, otherwise format
+    modalFrankedYieldSpan.textContent = frankedYield !== null && !isNaN(frankedYield) ? `${frankedYield.toFixed(2)}%` : '0.00%';
 
     // Populate Entry Date after Franked Yield
     modalEntryDate.textContent = formatDate(share.entryDate) || 'N/A';
@@ -1034,9 +1036,11 @@ function sortShares() {
             const nameA = (a.shareName || '').toUpperCase().trim();
             const nameB = (b.shareName || '').toUpperCase().trim();
             if (nameA === '' && nameB === '') return 0;
-            if (nameA === '') return order === 'asc' ? 1 : -1;
-            if (nameB === '') return order === 'asc' ? -1 : 1;
-            return order === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(a);
+            // NEW: Corrected logic for Z-A sort for empty strings
+            if (nameA === '') return 1; // Empty string A goes to bottom
+            if (nameB === '') return -1; // Empty string B goes to bottom
+
+            return order === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
         } else if (field === 'entryDate') {
             const dateA = new Date(valA);
             const dateB = new Date(valB);
@@ -1254,18 +1258,22 @@ function addShareToTable(share) {
     const priceForYield = (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) ? livePrice : enteredPriceNum;
 
     const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, priceForYield); 
+    // NEW: Display "0.00%" if unfrankedYield is null or NaN, otherwise format
+    const displayUnfrankedYield = unfrankedYield !== null && !isNaN(unfrankedYield) ? `${unfrankedYield.toFixed(2)}%` : '0.00%';
+    
     const frankedYield = calculateFrankedYield(dividendAmountNum, priceForYield, frankingCreditsNum);
-    const divAmountDisplay = (!isNaN(dividendAmountNum) && dividendAmountNum !== null) ? `$${dividendAmountNum.toFixed(2)}` : '-';
+    // NEW: Display "0.00%" if frankedYield is null or NaN, otherwise format
+    const displayFrankedYield = frankedYield !== null && !isNaN(frankedYield) ? `${frankedYield.toFixed(2)}%` : '0.00%';
 
     dividendCell.innerHTML = `
         <div class="dividend-yield-cell-content">
             <span>Dividend:</span> <span class="value">${divAmountDisplay}</span>
         </div>
         <div class="dividend-yield-cell-content">
-            <span>Unfranked Yield:</span> <span class="value">${unfrankedYield !== null ? unfrankedYield.toFixed(2) + '%' : '-'}&#xFE0E;</span>
+            <span>Unfranked Yield:</span> <span class="value">${displayUnfrankedYield}&#xFE0E;</span>
         </div>
         <div class="dividend-yield-cell-content">
-            <span>Franked Yield:</span> <span class="value">${frankedYield !== null ? frankedYield.toFixed(2) + '%' : '-'}&#xFE0E;</span>
+            <span>Franked Yield:</span> <span class="value">${displayFrankedYield}&#xFE0E;</span>
         </div>
     `;
 
@@ -1344,8 +1352,8 @@ function addShareToMobileCards(share) {
             <p><strong>Target:</strong> $${displayTargetPrice}</p>
             <p><strong>Dividend:</strong> $${displayDividendAmount}</p>
             <p><strong>Franking:</strong> ${displayFrankingCredits}</p>
-            <p><strong>Unfranked Yield:</strong> ${unfrankedYield !== null ? unfrankedYield.toFixed(2) + '%' : '-'}&#xFE0E;</p>
-            <p><strong>Franked Yield:</strong> ${frankedYield !== null ? frankedYield.toFixed(2) + '%' : '-'}&#xFE0E;</p>
+            <p><strong>Unfranked Yield:</strong> ${unfrankedYield !== null && !isNaN(unfrankedYield) ? unfrankedYield.toFixed(2) + '%' : '0.00%'}&#xFE0E;</p>
+            <p><strong>Franked Yield:</strong> ${frankedYield !== null && !isNaN(frankedYield) ? frankedYield.toFixed(2) + '%' : '0.00%'}&#xFE0E;</p>
             <!-- Removed Entry Date from mobile cards -->
             <!-- <p><strong>Entry Date:</strong> ${formatDate(share.entryDate) || '-'}</p> -->
         `;
@@ -1360,8 +1368,8 @@ function addShareToMobileCards(share) {
             <p><strong>Target:</strong> $${displayTargetPrice}</p>
             <p><strong>Dividend:</strong> $${displayDividendAmount}</p>
             <p><strong>Franking:</strong> ${displayFrankingCredits}</p>
-            <p><strong>Unfranked Yield:</strong> ${unfrankedYield !== null ? unfrankedYield.toFixed(2) + '%' : '-'}&#xFE0E;</p>
-            <p><strong>Franked Yield:</strong> ${frankedYield !== null ? frankedYield.toFixed(2) + '%' : '-'}&#xFE0E;</p>
+            <p><strong>Unfranked Yield:</strong> ${unfrankedYield !== null && !isNaN(unfrankedYield) ? unfrankedYield.toFixed(2) + '%' : '0.00%'}&#xFE0E;</p>
+            <p><strong>Franked Yield:</strong> ${frankedYield !== null && !isNaN(frankedYield) ? frankedYield.toFixed(2) + '%' : '0.00%'}&#xFE0E;</p>
             <!-- Removed Entry Date from mobile cards -->
             <!-- <p><strong>Entry Date:</strong> ${formatDate(share.entryDate) || '-'}</p> -->
         `;
@@ -1714,7 +1722,8 @@ async function saveLastSelectedWatchlistIds(watchlistIds) {
     try {
         await window.firestore.setDoc(userProfileDocRef, { lastSelectedWatchlistIds: watchlistIds }, { merge: true });
         console.log(`[Watchlist] Saved last selected watchlist IDs: ${watchlistIds.join(', ')}`);
-    } catch (error) {
+    }
+    catch (error) {
         console.error("[Watchlist] Error saving last selected watchlist IDs:", error);
     }
 }
@@ -2288,8 +2297,8 @@ function exportWatchlistToCSV() {
             (!isNaN(targetPriceNum) && targetPriceNum !== null) ? targetPriceNum.toFixed(2) : '',
             (!isNaN(dividendAmountNum) && dividendAmountNum !== null) ? dividendAmountNum.toFixed(3) : '',
             (!isNaN(frankingCreditsNum) && frankingCreditsNum !== null) ? frankingCreditsNum.toFixed(1) : '',
-            unfrankedYield !== null ? unfrankedYield.toFixed(2) : '',
-            frankedYield !== null ? frankedYield.toFixed(2) + '%' : '',
+            unfrankedYield !== null && !isNaN(unfrankedYield) ? unfrankedYield.toFixed(2) : '0.00', // Ensure numerical output
+            frankedYield !== null && !isNaN(frankedYield) ? frankedYield.toFixed(2) : '0.00', // Ensure numerical output
             formatDate(share.entryDate) || ''
             // Removed allCommentsText from row
         ];
@@ -2307,7 +2316,6 @@ function exportWatchlistToCSV() {
     link.href = URL.createObjectURL(blob);
     link.style.display = 'none';
     document.body.appendChild(link);
-    link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(link.href);
     
