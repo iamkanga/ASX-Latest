@@ -323,6 +323,8 @@ function formatDate(dateString) {
 // UI State Management Functions
 function updateAuthButtonText(isSignedIn, userName = 'Sign In') {
     // This function is for the footer button, not the splash screen button
+    // The footer button has been removed from index.html, so this will no longer affect the UI
+    // It's kept here in case the footer button is re-added in the future.
     if (googleAuthBtn) {
         googleAuthBtn.textContent = isSignedIn ? (userName || 'Signed In') : 'Google Sign In';
         console.log('Auth UI: Auth button text updated to: ' + googleAuthBtn.textContent);
@@ -557,7 +559,7 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
         }
     }
     if (deleteShareBtn) {
-        deleteShareBtn.classList.remove('hidden');
+        deleteShareBtn.classList.add('hidden');
         setIconDisabled(deleteShareBtn, false);
         console.log('showEditFormForSelectedShare: deleteShareBtn shown and enabled.');
     }
@@ -1840,6 +1842,9 @@ async function saveSortOrderPreference(sortOrder) {
 async function loadUserWatchlistsAndSettings() {
     if (!db || !currentUserId) {
         console.warn('User Settings: Firestore DB or User ID not available for loading settings.');
+        // NEW: Indicate data loading failure for splash screen
+        window._appDataLoaded = false;
+        hideSplashScreenIfReady(); // Attempt to hide even if this part fails
         return;
     }
     userWatchlists = [];
@@ -1849,6 +1854,9 @@ async function loadUserWatchlistsAndSettings() {
     if (!watchlistsColRef || !userProfileDocRef) {
         console.error('User Settings: Firestore collection or doc reference is null. Cannot load settings.');
         showCustomAlert('Firestore services not fully initialized. Cannot load user settings.');
+        // NEW: Indicate data loading failure for splash screen
+        window._appDataLoaded = false;
+        hideSplashScreen(); // Hide splash screen on critical failure
         return;
     }
 
@@ -1929,7 +1937,7 @@ async function loadUserWatchlistsAndSettings() {
         const migratedSomething = await migrateOldSharesToWatchlist();
         if (!migratedSomething) {
             console.log('Watchlist: No old shares to migrate/update, directly setting up shares listener for current watchlist.');
-            await loadShares();
+            await loadShares(); // This now sets _appDataLoaded and calls hideSplashScreenIfReady
         }
 
         // NEW: Indicate that data loading is complete for splash screen
@@ -2093,7 +2101,16 @@ let splashScreenReady = false; // Flag to ensure splash screen is ready before h
 function hideSplashScreen() {
     if (splashScreen) {
         splashScreen.classList.add('hidden'); // Start fade-out
-        splashKangarooIcon.classList.remove('pulsing'); // Stop animation
+        if (splashKangarooIcon) {
+            splashKangarooIcon.classList.remove('pulsing'); // Stop animation
+        }
+        // Show main app content
+        if (mainContainer) {
+            mainContainer.classList.remove('app-hidden');
+        }
+        if (appHeader) { // Assuming header is part of the main app content that needs to be revealed
+            appHeader.classList.remove('app-hidden');
+        }
         // Remove splash screen from DOM after transition to prevent interaction issues
         splashScreen.addEventListener('transitionend', () => {
             if (splashScreen.parentNode) {
@@ -2751,6 +2768,8 @@ async function initializeAppLogic() {
     });
 
     // Google Auth Button (Sign In/Out) - Footer Button
+    // This button is removed from index.html. Its functionality is now handled by splashSignInBtn.
+    // Keeping this block in case it's re-added or for debugging purposes.
     if (googleAuthBtn) {
         googleAuthBtn.addEventListener('click', async () => {
             console.log('Auth: Google Auth Button (footer) Clicked.');
@@ -3488,6 +3507,14 @@ document.addEventListener('DOMContentLoaded', function() {
         window._livePricesLoaded = true;
     }
 
+    // Initially hide main app content and footer
+    if (mainContainer) {
+        mainContainer.classList.add('app-hidden');
+    }
+    if (appHeader) { // Assuming header is part of the main app content that needs to be hidden
+        appHeader.classList.add('app-hidden');
+    }
+
 
     if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
         db = window.firestoreDb;
@@ -3541,7 +3568,29 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 window._userAuthenticated = false; // Mark user as not authenticated
                 // If signed out, ensure splash screen is hidden or not shown
-                hideSplashScreen();
+                // However, if no user, we want the splash screen to remain visible for sign-in
+                if (splashScreen) {
+                    splashScreen.style.display = 'flex'; // Ensure splash screen is visible
+                    splashScreen.classList.remove('hidden'); // Ensure it's not hidden
+                    if (splashKangarooIcon) {
+                        splashKangarooIcon.classList.remove('pulsing'); // Stop animation if signed out
+                    }
+                    if (splashSignInBtn) {
+                        splashSignInBtn.disabled = false; // Enable sign-in button
+                        splashSignInBtn.textContent = 'Google Sign In'; // Reset button text
+                    }
+                    // Hide main app content
+                    if (mainContainer) {
+                        mainContainer.classList.add('app-hidden');
+                    }
+                    if (appHeader) {
+                        appHeader.classList.add('app-hidden');
+                    }
+                    console.log('Splash Screen: User signed out, splash screen remains visible for sign-in.');
+                } else {
+                    // Fallback if splash screen element not found
+                    console.warn('Splash Screen: User signed out, but splash screen element not found. App content might be visible.');
+                }
             }
             if (!window._appLogicInitialized) {
                 initializeAppLogic();
@@ -3562,6 +3611,10 @@ document.addEventListener('DOMContentLoaded', function() {
             renderWatchlist();
         });
         
+        // The splashSignInBtn now handles the initial sign-in.
+        // The googleAuthBtn (footer) is removed from HTML.
+        // This block is no longer strictly needed for the footer button's direct action,
+        // but keeping it for context if googleAuthBtn were to be re-added.
         if (googleAuthBtn) {
             googleAuthBtn.disabled = false;
             console.log('Auth: Google Auth button enabled on DOMContentLoaded.');

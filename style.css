@@ -1178,6 +1178,12 @@ body.sidebar-active {
     width: calc(100% - var(--sidebar-width));
 }
 
+/* Class to hide main app content initially */
+.app-hidden {
+    display: none !important;
+}
+
+
 /* Header Styles */
 #appHeader { /* Target the header by its ID */
     background-color: var(--header-bg);

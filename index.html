@@ -19,6 +19,7 @@
     <!-- NEW: Splash Screen Container -->
     <div id="splashScreen" class="splash-screen">
         <img id="splashKangarooIcon" src="Kangaicon.jpg" alt="Kangaroo App Icon" class="splash-icon">
+        <!-- The sign-in button on the splash screen -->
         <button id="splashSignInBtn" class="google-auth-btn">Google Sign In</button>
     </div>
 
@@ -201,7 +202,7 @@
     <!-- Sidebar overlay for desktop to handle clicks outside -->
     <div id="sidebarOverlay" class="sidebar-overlay"></div>
 
-    <main class="container">
+    <main class="container app-hidden"> <!-- Added app-hidden class -->
         <!-- Message for Firebase initialization errors -->
         <div id="firebaseInitError" class="error-message" style="display: none;">
             <p><strong>Error:</strong> Firebase failed to initialize.</p>
@@ -235,9 +236,10 @@
         </div>
     </main>
 
-    <footer class="fixed-footer">
+    <!-- Removed the footer Google Sign-In button as it's now on the splash screen -->
+    <!-- <footer class="fixed-footer">
         <button id="googleAuthBtn" class="google-auth-btn">Google Sign In</button>
-    </footer>
+    </footer> -->
 
     <!-- NEW: Target Price Notification Banner -->
     <div id="targetHitBanner" class="target-hit-banner">
@@ -430,11 +432,11 @@
                 <input type="number" id="dividendAmount" step="0.001" placeholder="e.g., 1.250">
             </div>
             <div class="calc-input-group">
-                <label for="calcFrankingCredits">Franking Credits (%):</label>
-                <input type="number" id="calcFrankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 70 for 70%">
+                <label for="frankingCredits">Franking Credits (%):</label>
+                <input type="number" id="frankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 70 for 70%">
             </div>
-            <p><strong>Unfranked Yield:</strong> <span id="calcUnfrankedYield">-</span></p>
-            <p><strong>Franked Yield:</strong> <span id="calcFrankedYield">-</span></p>
+            <p><strong>Unfranked Yield:</strong> <span id="calcUnfrankedYield"></span></p>
+            <p><strong>Franked Yield:</strong> <span id="calcFrankedYield"></span></p>
             <hr>
             <div class="calc-input-group">
                 <label for="investmentValueSelect">Investment Value:</label>
@@ -447,7 +449,7 @@
                     <option value="100000">$100,000</option>
                 </select>
             </div>
-            <p><strong>Estimated Annual Dividend:</strong> <span id="calcEstimatedDividend">-</span></p>
+            <p><strong>Estimated Annual Dividend:</strong> <span id="calcEstimatedDividend"></span></p>
         </div>
     </div>
 
