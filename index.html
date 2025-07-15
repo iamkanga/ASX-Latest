@@ -27,6 +27,20 @@
             <button id="addShareHeaderBtn" class="header-action-btn header-action-btn-right">
                 <i class="fas fa-plus"></i>
             </button>
+            <!-- NEW: Target Price Notification Bubble -->
+            <div id="targetNotificationBubble" class="target-notification-bubble hidden">
+                <span id="bubbleCount" class="bubble-count">0</span>
+                <div id="bubbleDetails" class="bubble-details">
+                    <div class="bubble-header">
+                        <h3>Shares at Target</h3>
+                        <button class="bubble-close-btn">&times;</button>
+                    </div>
+                    <ul id="bubbleShareList" class="bubble-share-list">
+                        <!-- Shares will be dynamically added here -->
+                    </ul>
+                    <button id="bubbleDismissAllBtn" class="bubble-dismiss-all-btn">Dismiss All</button>
+                </div>
+            </div>
         </div>
 
         <!-- Watchlist and Sort controls -->
@@ -228,16 +242,6 @@
     <footer class="fixed-footer">
         <button id="googleAuthBtn" class="google-auth-btn">Google Sign In</button>
     </footer>
-
-    <!-- NEW: Target Price Notification Banner -->
-    <div id="targetHitBanner" class="target-hit-banner">
-        <div class="message-content">
-            <i class="fas fa-bullseye"></i>
-            <span id="targetHitCount">0</span>
-            <span id="targetHitMessage">shares have hit their target price!</span>
-        </div>
-        <button id="targetHitDismissBtn" class="dismiss-btn">&times;</button>
-    </div>
 
     <!-- Scroll-to-Top Button -->
     <button id="scrollToTopBtn" title="Go to top"><i class="fas fa-arrow-up"></i></button>
