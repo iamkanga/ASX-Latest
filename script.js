@@ -92,8 +92,8 @@ const modalEntryDate = document.getElementById('modalEntryDate');
 // Removed: modalLivePrice (original was still here, but now it's in the dedicated section)
 // Removed: modalPriceChange (original was still here, but now it's in the dedicated section)
 const modalTargetPrice = document.getElementById('modalTargetPrice');
-const modalDividendAmount = document.getElementById('modalDividendAmount');
-const modalFrankingCredits = document.getElementById('frankingCredits');
+const modalDividendAmount = document.getElementById('dividendAmount'); // Corrected
+const modalFrankingCredits = document.getElementById('frankingCredits'); // Corrected
 const modalCommentsContainer = document.getElementById('modalCommentsContainer');
 const modalUnfrankedYieldSpan = document.getElementById('modalUnfrankedYield');
 const modalFrankedYieldSpan = document.getElementById('modalFrankedYield');
@@ -1036,9 +1036,10 @@ function sortShares() {
             const nameA = (a.shareName || '').toUpperCase().trim();
             const nameB = (b.shareName || '').toUpperCase().trim();
             if (nameA === '' && nameB === '') return 0;
-            // NEW: Corrected logic for Z-A sort for empty strings
-            if (nameA === '') return 1; // Empty string A goes to bottom
-            if (nameB === '') return -1; // Empty string B goes to bottom
+            // If A is empty, it comes after B (push to bottom)
+            if (nameA === '') return 1; 
+            // If B is empty, it comes after A (push to bottom)
+            if (nameB === '') return -1; 
 
             return order === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
         } else if (field === 'entryDate') {
@@ -1321,28 +1322,7 @@ function addShareToMobileCards(share) {
     const displayShareName = (share.shareName && String(share.shareName).trim() !== '') ? share.shareName : '(No Code)';
     const displayEnteredPrice = (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? enteredPriceNum.toFixed(2) : '-';
 
-    let livePriceHtml = '';
-    let priceChangeClass = '';
-    let priceChangeText = '';
-
-    if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) {
-        // Calculate daily change using livePrice and prevClosePrice for mobile cards
-        if (prevClosePrice !== undefined && prevClosePrice !== null && !isNaN(prevClosePrice)) {
-            const change = livePrice - prevClosePrice;
-            const percentageChange = (prevClosePrice !== 0 && !isNaN(prevClosePrice)) ? (change / prevClosePrice) * 100 : 0;
-            if (change > 0) {
-                priceChangeText = `(+$${change.toFixed(2)} / +${percentageChange.toFixed(2)}%)`;
-                priceChangeClass = 'positive';
-            } else if (change < 0) {
-                priceChangeText = `(-$${Math.abs(change).toFixed(2)} / ${percentageChange.toFixed(2)}%)`;
-                priceChangeClass = 'negative';
-            } else {
-                priceChangeText = `($0.00 / 0.00%)`;
-                priceChangeClass = 'neutral';
-            }
-        }
-
-        card.innerHTML = `
+    card.innerHTML = `
             <h3>${displayShareName}</h3>
             <div class="live-price-display-section ${priceChangeClass}-change-section">
                 <span class="live-price-large">$${livePrice.toFixed(2)}</span>
@@ -1354,26 +1334,7 @@ function addShareToMobileCards(share) {
             <p><strong>Franking:</strong> ${displayFrankingCredits}</p>
             <p><strong>Unfranked Yield:</strong> ${unfrankedYield !== null && !isNaN(unfrankedYield) ? unfrankedYield.toFixed(2) + '%' : '0.00%'}&#xFE0E;</p>
             <p><strong>Franked Yield:</strong> ${frankedYield !== null && !isNaN(frankedYield) ? frankedYield.toFixed(2) + '%' : '0.00%'}&#xFE0E;</p>
-            <!-- Removed Entry Date from mobile cards -->
-            <!-- <p><strong>Entry Date:</strong> ${formatDate(share.entryDate) || '-'}</p> -->
-        `;
-    } else {
-        card.innerHTML = `
-            <h3>${displayShareName}</h3>
-            <div class="live-price-display-section">
-                <span class="live-price-large">N/A</span>
-                <span class="price-change-large"></span>
-            </div>
-            <p><strong>Entered Price:</strong> $${displayEnteredPrice}</p>
-            <p><strong>Target:</strong> $${displayTargetPrice}</p>
-            <p><strong>Dividend:</strong> $${displayDividendAmount}</p>
-            <p><strong>Franking:</strong> ${displayFrankingCredits}</p>
-            <p><strong>Unfranked Yield:</strong> ${unfrankedYield !== null && !isNaN(unfrankedYield) ? unfrankedYield.toFixed(2) + '%' : '0.00%'}&#xFE0E;</p>
-            <p><strong>Franked Yield:</strong> ${frankedYield !== null && !isNaN(frankedYield) ? frankedYield.toFixed(2) + '%' : '0.00%'}&#xFE0E;</p>
-            <!-- Removed Entry Date from mobile cards -->
-            <!-- <p><strong>Entry Date:</strong> ${formatDate(share.entryDate) || '-'}</p> -->
-        `;
-    }
+            `;
     mobileShareCardsContainer.appendChild(card);
 
     let lastClickTime = 0;
@@ -2316,6 +2277,7 @@ function exportWatchlistToCSV() {
     link.href = URL.createObjectURL(blob);
     link.style.display = 'none';
     document.body.appendChild(link);
+    link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(link.href);
     
