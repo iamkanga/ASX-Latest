@@ -1085,7 +1085,7 @@ function renderWatchlistSelect() {
     });
 
     if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID)) {
-        watchlistSelect.value = ALL_shares_ID;
+        watchlistSelect.value = ALL_SHARES_ID;
     } else if (currentSelectedWatchlistIds.length === 1) {
         watchlistSelect.value = currentSelectedWatchlistIds[0];
     } else if (userWatchlists.length > 0) {
@@ -1652,8 +1652,10 @@ function resetCalculator() {
 
 async function applyTheme(themeName) {
     const body = document.body;
+    // Remove all existing theme classes
     body.className = body.className.split(' ').filter(c => !c.endsWith('-theme') && !c.startsWith('theme-')).join(' ');
 
+    console.log(`[Theme Debug] Attempting to apply theme: ${themeName}`);
     currentActiveTheme = themeName;
 
     if (themeName === 'system-default') {
@@ -1664,7 +1666,7 @@ async function applyTheme(themeName) {
         if (systemPrefersDark) {
             body.classList.add('dark-theme');
         }
-        console.log("[Theme] Reverted to system default theme.");
+        console.log("[Theme Debug] Reverted to system default theme.");
         currentCustomThemeIndex = -1; // Reset index when going to system default
     } else if (themeName === 'light' || themeName === 'dark') {
         body.removeAttribute('data-theme');
@@ -1673,17 +1675,20 @@ async function applyTheme(themeName) {
         if (themeName === 'dark') {
             body.classList.add('dark-theme');
         }
-        console.log(`[Theme] Applied explicit default theme: ${themeName}`);
+        console.log(`[Theme Debug] Applied explicit default theme: ${themeName}`);
         currentCustomThemeIndex = -1; // Reset index when going to explicit light/dark
     } else {
         body.classList.add('theme-' + themeName);
         body.setAttribute('data-theme', themeName);
         localStorage.setItem('selectedTheme', themeName);
         localStorage.removeItem('theme');
-        console.log(`[Theme] Applied custom theme: ${themeName}`);
+        console.log(`[Theme Debug] Applied custom theme: ${themeName}`);
         currentCustomThemeIndex = CUSTOM_THEMES.indexOf(themeName); // Set index to current theme
     }
     
+    console.log(`[Theme Debug] Body classes after applying: ${body.className}`);
+    console.log(`[Theme Debug] currentCustomThemeIndex after applying: ${currentCustomThemeIndex}`);
+
     if (currentUserId && db && window.firestore) {
         const userProfileDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/profile/settings`);
         try {
@@ -1706,11 +1711,14 @@ function updateThemeToggleAndSelector() {
         console.log(`[Theme UI] Color theme select updated to: ${colorThemeSelect.value}`);
     }
 
-    if (currentActiveTheme.startsWith('bold-') || currentActiveTheme.startsWith('subtle-') || currentActiveTheme.startsWith('mid-')) {
+    // This part ensures currentCustomThemeIndex is correctly set based on the currentActiveTheme
+    // regardless of whether it was set by toggle or dropdown/load.
+    if (CUSTOM_THEMES.includes(currentActiveTheme)) {
         currentCustomThemeIndex = CUSTOM_THEMES.indexOf(currentActiveTheme);
     } else {
-        currentCustomThemeIndex = -1;
+        currentCustomThemeIndex = -1; // Not a custom theme, so reset index
     }
+    console.log(`[Theme UI] currentCustomThemeIndex after updateThemeToggleAndSelector: ${currentCustomThemeIndex}`);
 }
 
 function getDefaultWatchlistId(userId) {
@@ -3015,21 +3023,29 @@ async function initializeAppLogic() {
     // Theme Toggle Button
     if (themeToggleBtn) {
         themeToggleBtn.addEventListener('click', () => {
-            console.log("[Theme] Theme toggle button clicked.");
-            // Find the index of the current active theme in the CUSTOM_THEMES array
-            let currentIndex = CUSTOM_THEMES.indexOf(currentActiveTheme);
+            console.log("[Theme Debug] Theme toggle button clicked.");
+            console.log(`[Theme Debug] currentActiveTheme before toggle: ${currentActiveTheme}`);
             
-            // Increment the index, and loop back to the start if it exceeds the array length
-            currentIndex = (currentIndex + 1) % CUSTOM_THEMES.length;
-            
-            // If we've looped past the end, go to system-default, otherwise apply the next theme
-            if (currentIndex === 0 && currentActiveTheme === CUSTOM_THEMES[CUSTOM_THEMES.length -1]) { // If it was the last custom theme, go to system-default
-                 applyTheme('system-default');
+            let nextIndex;
+            // If currentActiveTheme is a custom theme, find its index
+            if (CUSTOM_THEMES.includes(currentActiveTheme)) {
+                let currentIndex = CUSTOM_THEMES.indexOf(currentActiveTheme);
+                nextIndex = (currentIndex + 1);
             } else {
-                const nextTheme = CUSTOM_THEMES[currentIndex];
-                applyTheme(nextTheme);
+                // If not a custom theme (system-default, light, dark), start from the first custom theme
+                nextIndex = 0;
             }
-            console.log(`[Theme] Cycled to next theme. Current index: ${currentIndex}`);
+
+            let nextThemeName;
+            if (nextIndex < CUSTOM_THEMES.length) {
+                nextThemeName = CUSTOM_THEMES[nextIndex];
+            } else {
+                // If we've cycled past the last custom theme, go to system-default
+                nextThemeName = 'system-default';
+            }
+            
+            console.log(`[Theme Debug] Calculated nextIndex: ${nextIndex}, nextThemeName: ${nextThemeName}`);
+            applyTheme(nextThemeName);
         });
     }
 
@@ -3038,11 +3054,7 @@ async function initializeAppLogic() {
         colorThemeSelect.addEventListener('change', (event) => {
             console.log(`[Theme] Color theme select changed to: ${event.target.value}`);
             const selectedTheme = event.target.value;
-            if (selectedTheme === 'none') {
-                applyTheme('system-default');
-            } else {
-                applyTheme(selectedTheme);
-            }
+            applyTheme(selectedTheme);
         });
     }
 
@@ -3079,201 +3091,4 @@ async function initializeAppLogic() {
                 } else {
                     scrollToTopBtn.style.opacity = '0';
                     setTimeout(() => {
-                        scrollToTopBtn.style.display = 'none';
-                    }, 300);
-                }
-            } else {
-                scrollToTopBtn.style.display = 'none';
-            }
-        });
-        if (window.innerWidth > 768) {
-            scrollToTopBtn.style.display = 'none';
-        } else {
-            window.dispatchEvent(new Event('scroll'));
-        }
-        scrollToTopBtn.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); console.log("[UI] Scrolled to top."); });
-    }
-
-    // Hamburger Menu and Sidebar Interactions
-    if (hamburgerBtn && appSidebar && closeMenuBtn && sidebarOverlay) {
-        console.log("[Sidebar Setup] Initializing sidebar event listeners. Elements found:", {
-            hamburgerBtn: !!hamburgerBtn,
-            appSidebar: !!appSidebar,
-            closeMenuBtn: !!closeMenuBtn,
-            sidebarOverlay: !!sidebarOverlay
-        });
-        hamburgerBtn.addEventListener('click', (event) => {
-            console.log("[UI] Hamburger button CLICKED. Event:", event);
-            event.stopPropagation();
-            toggleAppSidebar();
-        });
-        closeMenuBtn.addEventListener('click', () => {
-            console.log("[UI] Close Menu button CLICKED.");
-            toggleAppSidebar(false);
-        });
-        
-        sidebarOverlay.addEventListener('click', (event) => {
-            console.log("[Sidebar Overlay] Clicked overlay. Attempting to close sidebar.");
-            if (appSidebar.classList.contains('open')) {
-                toggleAppSidebar(false);
-            }
-        });
-
-        document.addEventListener('click', (event) => {
-            const isDesktop = window.innerWidth > 768;
-            if (appSidebar.classList.contains('open') && isDesktop &&
-                !appSidebar.contains(event.target) && !hamburgerBtn.contains(event.target)) {
-                console.log("[Global Click] Clicked outside sidebar on desktop. Closing sidebar.");
-                toggleAppSidebar(false);
-            }
-        });
-
-        window.addEventListener('resize', () => {
-            console.log("[Window Resize] Resizing window. Closing sidebar if open.");
-            const isDesktop = window.innerWidth > 768;
-            if (appSidebar.classList.contains('open')) {
-                toggleAppSidebar(false);
-            }
-            if (scrollToTopBtn) {
-                if (window.innerWidth > 768) {
-                    scrollToTopBtn.style.display = 'none';
-                } else {
-                    window.dispatchEvent(new Event('scroll'));
-                }
-            }
-            // NEW: Recalculate header height on resize
-            adjustMainContentPadding();
-        });
-
-        const menuButtons = appSidebar.querySelectorAll('.menu-button-item');
-        menuButtons.forEach(button => {
-            button.addEventListener('click', (event) => {
-                console.log(`[Sidebar Menu Item Click] Button '${event.currentTarget.textContent.trim()}' clicked.`);
-                const closesMenu = event.currentTarget.dataset.actionClosesMenu !== 'false';
-                if (closesMenu) {
-                    toggleAppSidebar(false);
-                }
-            });
-        });
-    } else {
-        console.warn("[Sidebar Setup] Missing one or more sidebar elements (hamburgerBtn, appSidebar, closeMenuBtn, sidebarOverlay). Sidebar functionality might be impaired.");
-    }
-
-    // Export Watchlist Button Event Listener
-    if (exportWatchlistBtn) {
-        exportWatchlistBtn.addEventListener('click', () => {
-            console.log("[UI] Export Watchlist button clicked.");
-            exportWatchlistToCSV();
-            toggleAppSidebar(false);
-        });
-    }
-
-    // Refresh Live Prices Button Event Listener
-    if (refreshLivePricesBtn) {
-        refreshLivePricesBtn.addEventListener('click', () => {
-            console.log("[UI] Refresh Live Prices button clicked.");
-            fetchLivePrices();
-            showCustomAlert("Refreshing live prices...", 1000);
-            toggleAppSidebar(false); // NEW: Close sidebar on refresh
-        });
-    }
-
-    // NEW: Target hit banner dismiss button listener
-    if (targetHitDismissBtn) {
-        targetHitDismissBtn.addEventListener('click', () => {
-            if (targetHitBanner) {
-                targetHitBanner.style.display = 'none';
-                document.body.classList.remove('target-banner-active'); // Remove class from body on dismiss
-                console.log("[Target Alert] Banner dismissed by user.");
-            }
-        });
-    }
-
-    // NEW: Target hit banner click (to view alerted shares)
-    if (targetHitBanner) {
-        targetHitBanner.addEventListener('click', (event) => {
-            // Only trigger action if not clicking the dismiss button itself
-            if (!event.target.closest('#targetHitDismissBtn')) {
-                console.log("[Target Alert] Banner clicked. Implementing action to show alerted shares.");
-                // For now, show an alert with names. Later, this can be a filtered view.
-                const alertedShareNames = sharesAtTargetPrice.map(s => s.shareName).join(', ');
-                showCustomAlert(`Shares at target: ${alertedShareNames || 'None'}`, 3000);
-            }
-        });
-    }
-
-
-    // Call adjustMainContentPadding initially and on window load/resize
-    window.addEventListener('load', adjustMainContentPadding);
-    // Already added to window.addEventListener('resize') in sidebar section
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    console.log("script.js DOMContentLoaded fired.");
-
-    if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
-        db = window.firestoreDb;
-        auth = window.firebaseAuth;
-        currentAppId = window.getFirebaseAppId();
-        console.log("[Firebase Ready] DB, Auth, and AppId assigned from window. Setting up auth state listener.");
-        
-        window.authFunctions.onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                currentUserId = user.uid;
-                updateAuthButtonText(true, user.email || user.displayName);
-                console.log("[AuthState] User signed in:", user.uid);
-                console.log("[AuthState] User email:", user.email);
-                if (user.email && user.email.toLowerCase() === KANGA_EMAIL) {
-                    mainTitle.textContent = "Kanga's Share Watchlist";
-                    console.log("[AuthState] Main title set to Kanga's Share Watchlist.");
-                } else {
-                    mainTitle.textContent = "My Share Watchlist";
-                    console.log("[AuthState] Main title set to My Share Watchlist.");
-                }
-                updateMainButtonsState(true);
-                await loadUserWatchlistsAndSettings();
-                startLivePriceUpdates();
-            } else {
-                currentUserId = null;
-                updateAuthButtonText(false);
-                mainTitle.textContent = "Share Watchlist";
-                console.log("[AuthState] User signed out.");
-                updateMainButtonsState(false);
-                clearShareList();
-                clearWatchlistUI();
-                if (loadingIndicator) loadingIndicator.style.display = 'none';
-                applyTheme('system-default');
-                if (unsubscribeShares) {
-                    unsubscribeShares();
-                    unsubscribeShares = null;
-                    console.log("[Firestore Listener] Unsubscribed from shares listener on logout.");
-                }
-                stopLivePriceUpdates();
-            }
-            if (!window._appLogicInitialized) {
-                initializeAppLogic();
-                window._appLogicInitialized = true;
-            }
-            // NEW: Call adjustMainContentPadding here to ensure correct spacing after auth state changes
-            adjustMainContentPadding();
-        });
-        
-        if (googleAuthBtn) {
-            googleAuthBtn.disabled = false;
-            console.log("[Auth] Google Auth button enabled on DOMContentLoaded.");
-        }
-
-    } else {
-        console.error("[Firebase] Firebase objects (db, auth, appId, firestore, authFunctions) are not available on DOMContentLoaded. Firebase initialization likely failed in index.html.");
-        const errorDiv = document.getElementById('firebaseInitError');
-        if (errorDiv) {
-                errorDiv.style.display = 'block';
-        }
-        updateAuthButtonText(false);
-        updateMainButtonsState(false);
-        if (loadingIndicator) loadingIndicator.style.display = 'none';
-        applyTheme('system-default');
-        // NEW: Call adjustMainContentPadding even if Firebase fails, to ensure some basic layout
-        adjustMainContentPadding();
-    }
-});
+                        scrollT
