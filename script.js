@@ -36,8 +36,9 @@ let currentContextMenuShareId = null; // Stores the ID of the share that opened 
 let originalShareData = null; // Stores the original share data when editing for dirty state check
 let originalWatchlistData = null; // Stores original watchlist data for dirty state check in watchlist modals
 
-// Live Price Data
-const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzp7OjZL3zqvJ9wPsV9M-afm2wKeQPbIgGVv_juVpkaRllADESLwj7F-S7YWYerau-/exec'; // Your new Google Apps Script URL
+// Live Price Data - CORRECTED URL
+const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzp7OjZL3zqvJ9wPsV9M-afm2wKeQPbIgGVv_juVpkaRllADESLwj7F-S7YWYerau-/exec'; 
+let livePrices = {}; // Stores live price data: {ASX_CODE: {live: price, prevClose: price, PE: value, High52: value, Low52: value, targetHit: boolean}}
 let livePriceFetchInterval = null; // To hold the interval ID for live price updates
 const LIVE_PRICE_FETCH_INTERVAL_MS = 5 * 60 * 1000; // Fetch every 5 minutes
 
@@ -1695,8 +1696,7 @@ async function applyTheme(themeName) {
         try {
             await window.firestore.setDoc(userProfileDocRef, { lastTheme: themeName }, { merge: true });
             console.log(`[Theme] Saved theme preference to Firestore: ${themeName}`);
-        }
-        catch (error) {
+        } catch (error) {
             console.error("[Theme] Error saving theme preference to Firestore:", error);
         }
     }
