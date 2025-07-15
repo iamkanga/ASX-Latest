@@ -93,7 +93,7 @@ const modalEntryDate = document.getElementById('modalEntryDate');
 // Removed: modalPriceChange (original was still here, but now it's in the dedicated section)
 const modalTargetPrice = document.getElementById('modalTargetPrice');
 const modalDividendAmount = document.getElementById('modalDividendAmount');
-const modalFrankingCredits = document.getElementById('modalFrankingCredits');
+const modalFrankingCredits = document.getElementById('frankingCredits');
 const modalCommentsContainer = document.getElementById('modalCommentsContainer');
 const modalUnfrankedYieldSpan = document.getElementById('modalUnfrankedYield');
 const modalFrankedYieldSpan = document.getElementById('modalFrankedYield');
@@ -1012,10 +1012,10 @@ function sortShares() {
             // Handle null/NaN percentage changes to push them to the bottom
             // If both are null, their relative order doesn't matter (return 0)
             if (percentageChangeA === null && percentageChangeB === null) return 0;
-            // If A is null but B is a number, A goes to the bottom (return 1 for asc, -1 for desc)
-            if (percentageChangeA === null) return order === 'asc' ? 1 : -1;
-            // If B is null but A is a number, B goes to the bottom (return -1 for asc, 1 for desc)
-            if (percentageChangeB === null) return order === 'asc' ? -1 : 1;
+            // If A is null but B is a number, A goes to the bottom (return 1 for asc, 1 for desc)
+            if (percentageChangeA === null) return 1; // Always push null to bottom
+            // If B is null but A is a number, B goes to the bottom (return -1 for asc, -1 for desc)
+            if (percentageChangeB === null) return -1; // Always push null to bottom
 
             return order === 'asc' ? percentageChangeA - percentageChangeB : percentageChangeB - percentageChangeA;
         }
@@ -1228,7 +1228,7 @@ function addShareToTable(share) {
                 priceChangeSpan.classList.add('negative');
                 livePriceCell.classList.add('negative-change'); // Apply conditional background
             } else {
-                priceChangeSpan.textContent = `($0.00 / 0.00%)`; // Include percentage
+                priceChangeSpan.textContent = `($0.00 / 0.00%)`;
                 priceChangeSpan.classList.add('neutral');
             }
             livePriceCell.appendChild(priceChangeSpan);
