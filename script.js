@@ -544,7 +544,7 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
     currentPriceInput.value = Number(shareToEdit.currentPrice) !== null && !isNaN(Number(shareToEdit.currentPrice)) ? Number(shareToEdit.currentPrice).toFixed(2) : '';
     targetPriceInput.value = Number(shareToEdit.targetPrice) !== null && !isNaN(Number(shareToEdit.targetPrice)) ? Number(shareToEdit.targetPrice).toFixed(2) : '';
     dividendAmountInput.value = Number(shareToEdit.dividendAmount) !== null && !isNaN(Number(shareToEdit.dividendAmount)) ? Number(shareToEdit.dividendAmount).toFixed(3) : '';
-    frankingCreditsInput.value = Number(shareToEdit.frankingCredits) !== null && !isNaN(Number(shareToTo.frankingCredits)) ? Number(shareToEdit.frankingCredits).toFixed(1) : '';
+    frankingCreditsInput.value = Number(shareToEdit.frankingCredits) !== null && !isNaN(Number(shareToEdit.frankingCredits)) ? Number(shareToEdit.frankingCredits).toFixed(1) : '';
     
     // Populate and set selection for the watchlist dropdown
     populateShareWatchlistSelect(shareToEdit.watchlistId, false); // false indicates not a new share
@@ -2680,7 +2680,7 @@ async function initializeAppLogic() {
         console.log('View Mode: No saved mobile view preference, defaulting to \'default\'.');
         currentMobileViewMode = 'default'; // Ensure it's explicitly set if nothing saved
         if (mobileShareCardsContainer) { // Check if element exists before removing class
-             mobileShareCardsContainer.classList.remove('compact');
+             mobileShareCardsContainer.classList.remove('compact-view'); // Corrected class name
         }
     }
 
@@ -3173,9 +3173,9 @@ async function initializeAppLogic() {
     if (dividendCalcBtn) {
         dividendCalcBtn.addEventListener('click', () => {
             console.log('UI: Dividend button clicked. Attempting to open modal.');
-            calcDividendAmountInput.value = ''; calcCurrentPriceInput.value = ''; calcFrankingCreditsInput.value = '';
-            calcUnfrankedYieldSpan.textContent = '-'; calcFrankedYieldSpan.textContent = '-'; calcEstimatedDividend.textContent = '-';
-            investmentValueSelect.value = '10000';
+            calcCurrentPriceInput.value = ''; calcDividendAmountInput.value = ''; calcFrankingCreditsInput.value = ''; // Clear inputs
+            calcUnfrankedYieldSpan.textContent = '-'; calcFrankedYieldSpan.textContent = '-'; calcEstimatedDividend.textContent = '-'; // Clear results
+            investmentValueSelect.value = '10000'; // Reset dropdown
             showModal(dividendCalculatorModal);
             calcCurrentPriceInput.focus(); 
             console.log('UI: Dividend Calculator modal opened.');
@@ -3511,11 +3511,11 @@ document.addEventListener('DOMContentLoaded', function() {
         window._livePricesLoaded = true;
     }
 
-    // Initially hide main app content and footer
+    // Initially hide main app content and header
     if (mainContainer) {
         mainContainer.classList.add('app-hidden');
     }
-    if (appHeader) { // Assuming header is part of the main app content that needs to be hidden
+    if (appHeader) {
         appHeader.classList.add('app-hidden');
     }
 

@@ -149,7 +149,7 @@ body.theme-bold-1 { /* Ocean Blue */
     --placeholder-text: #8ecae6;
     --ghosted-text: #a8dadc;
     --danger-button-bg: #e63946;
-    --danger-button-hover-bg: #c02d38;
+    --danger-button-hover-bg: #c0392b;
     --icon-action-color: #00b4d8;
     --icon-action-hover-color: #0096c7;
     --icon-danger-color: #e63946;
@@ -2085,6 +2085,8 @@ table td.live-price-cell.negative-change {
     touch-action: pan-y; /* Prioritize vertical scrolling for touch */
     padding-right: 25px; /* Add extra padding to make space for resize handle/scrollbar */
     box-sizing: border-box; /* Include padding in width calculation */
+    overflow-y: auto; /* Ensure vertical scrollbar appears when content overflows */
+    white-space: pre-wrap; /* Preserve whitespace and line breaks */
 }
 
 
@@ -2201,6 +2203,7 @@ table td.live-price-cell.negative-change {
     margin: 0;
     line-height: 1.5;
     padding: 0 15px 15px; /* Add padding to the text part */
+    white-space: pre-wrap; /* Preserve whitespace and line breaks */
 }
 
 .modal-comment-item strong { /* This styling is for old structure, might not be needed */
@@ -2604,8 +2607,8 @@ body.target-banner-active main.container {
 }
 
 .splash-icon {
-    max-width: 160%; /* Ensure it fits on smaller screens */
-    max-height: 160%; /* Ensure it fits vertically */
+    max-width: 80%; /* Ensure it fits on smaller screens */
+    max-height: 80%; /* Ensure it fits vertically */
     height: auto;
     width: auto;
     object-fit: contain; /* Maintain aspect ratio */
@@ -2766,6 +2769,7 @@ body.target-banner-active main.container {
         padding-right: 25px; /* Add extra padding to make space for resize handle/scrollbar */
         box-sizing: border-box; /* Include padding in width calculation */
         overflow-y: auto; /* Ensure vertical scrollbar appears when content overflows */
+        white-space: pre-wrap; /* Preserve whitespace and line breaks */
     }
 
 
@@ -2894,6 +2898,7 @@ body.target-banner-active main.container {
         padding-right: 25px; /* Add extra padding to make space for resize handle/scrollbar */
         box-sizing: border-box; /* Include padding in width calculation */
         overflow-y: auto; /* Ensure vertical scrollbar appears when content overflows */
+        white-space: pre-wrap; /* Preserve whitespace and line breaks */
     }
 
     .form-action-buttons,
