@@ -1012,11 +1012,12 @@ function sortShares() {
             // Handle null/NaN percentage changes to push them to the bottom
             // If both are null, their relative order doesn't matter (return 0)
             if (percentageChangeA === null && percentageChangeB === null) return 0;
-            // If A is null but B is a number, A goes to the bottom (return 1 for asc, 1 for desc)
-            if (percentageChangeA === null) return 1; // Always push null to bottom
-            // If B is null but A is a number, B goes to the bottom (return -1 for asc, -1 for desc)
-            if (percentageChangeB === null) return -1; // Always push null to bottom
+            // If A is null but B is a number, A goes to the bottom
+            if (percentageChangeA === null) return 1; 
+            // If B is null but A is a number, B goes to the bottom
+            if (percentageChangeB === null) return -1; 
 
+            // Now perform numerical comparison for non-null values
             return order === 'asc' ? percentageChangeA - percentageChangeB : percentageChangeB - percentageChangeA;
         }
 
