@@ -64,6 +64,7 @@
     --target-alert-bg: #e0f7fa; /* Light blue for target hit alert */
     --target-alert-text: #0056b3; /* Darker blue for target hit text */
     --target-alert-border: #007bff;
+    --target-banner-height: 40px; /* NEW: Define banner height */
 }
 
 /* Dark Theme Variables */
@@ -130,6 +131,7 @@ body.dark-theme {
     --target-alert-bg: #3498db; /* Blue for target hit alert in dark mode */
     --target-alert-text: #ecf0f1; /* Light text for target hit text in dark mode */
     --target-alert-border: #2980b9;
+    --target-banner-height: 40px; /* NEW: Define banner height */
 }
 
 /* Custom Themes */
@@ -187,6 +189,7 @@ body.theme-bold-1 { /* Ocean Blue */
     --target-alert-bg: #00b4d8;
     --target-alert-text: #fff;
     --target-alert-border: #0096c7;
+    --target-banner-height: 40px;
 }
 
 body.theme-bold-2 { /* Forest Green */
@@ -242,6 +245,7 @@ body.theme-bold-2 { /* Forest Green */
     --target-alert-bg: #a7c957;
     --target-alert-text: #fff;
     --target-alert-border: #8ba84a;
+    --target-banner-height: 40px;
 }
 
 body.theme-bold-3 { /* Sunset Orange */
@@ -297,6 +301,7 @@ body.theme-bold-3 { /* Sunset Orange */
     --target-alert-bg: #ffc300;
     --target-alert-text: #333;
     --target-alert-border: #e0ac00;
+    --target-banner-height: 40px;
 }
 
 body.theme-bold-4 { /* Royal Purple */
@@ -352,6 +357,7 @@ body.theme-bold-4 { /* Royal Purple */
     --target-alert-bg: #c77dff;
     --target-alert-text: #fff;
     --target-alert-border: #a842ff;
+    --target-banner-height: 40px;
 }
 
 body.theme-bold-5 { /* Deep Red */
@@ -407,6 +413,7 @@ body.theme-bold-5 { /* Deep Red */
     --target-alert-bg: #e74c3c;
     --target-alert-text: #fff;
     --target-alert-border: #c0392b;
+    --target-banner-height: 40px;
 }
 
 body.theme-bold-6 { /* Gold */
@@ -462,6 +469,7 @@ body.theme-bold-6 { /* Gold */
     --target-alert-bg: #ffeb3b;
     --target-alert-text: #333;
     --target-alert-border: #fdd835;
+    --target-banner-height: 40px;
 }
 
 body.theme-bold-7 { /* Emerald */
@@ -516,6 +524,7 @@ body.theme-bold-7 { /* Emerald */
     --target-alert-bg: #66bb6a;
     --target-alert-text: #fff;
     --target-alert-border: #4caf50;
+    --target-banner-height: 40px;
 }
 
 body.theme-bold-8 { /* Plum */
@@ -570,6 +579,7 @@ body.theme-bold-8 { /* Plum */
     --target-alert-bg: #da70d6;
     --target-alert-text: #fff;
     --target-alert-border: #c71585;
+    --target-banner-height: 40px;
 }
 
 body.theme-bold-9 { /* Aqua */
@@ -624,6 +634,7 @@ body.theme-bold-9 { /* Aqua */
     --target-alert-bg: #20b2aa;
     --target-alert-text: #fff;
     --target-alert-border: #008080;
+    --target-banner-height: 40px;
 }
 
 body.theme-bold-10 { /* Ruby */
@@ -678,6 +689,7 @@ body.theme-bold-10 { /* Ruby */
     --target-alert-bg: #dc143c;
     --target-alert-text: #fff;
     --target-alert-border: #b22222;
+    --target-banner-height: 40px;
 }
 
 
@@ -726,6 +738,7 @@ body.theme-subtle-1 { /* Subtle Sky */
     --target-alert-bg: #6699ff;
     --target-alert-text: #fff;
     --target-alert-border: #4d7edb;
+    --target-banner-height: 40px;
 }
 
 body.theme-subtle-2 { /* Subtle Earth */
@@ -772,6 +785,7 @@ body.theme-subtle-2 { /* Subtle Earth */
     --target-alert-bg: #b8a28f;
     --target-alert-text: #fff;
     --target-alert-border: #a3907e;
+    --target-banner-height: 40px;
 }
 
 body.theme-subtle-3 { /* Subtle Rose */
@@ -818,6 +832,7 @@ body.theme-subtle-3 { /* Subtle Rose */
     --target-alert-bg: #eeb8c6;
     --target-alert-text: #333;
     --target-alert-border: #d4a2b0;
+    --target-banner-height: 40px;
 }
 
 body.theme-subtle-4 { /* Subtle Lavender */
@@ -864,6 +879,7 @@ body.theme-subtle-4 { /* Subtle Lavender */
     --target-alert-bg: #c6b8eb;
     --target-alert-text: #333;
     --target-alert-border: #b0a2d4;
+    --target-banner-height: 40px;
 }
 
 body.theme-subtle-5 { /* Subtle Mint */
@@ -910,6 +926,7 @@ body.theme-subtle-5 { /* Subtle Mint */
     --target-alert-bg: #b8eec6;
     --target-alert-text: #333;
     --target-alert-border: #a2d4b0;
+    --target-banner-height: 40px;
 }
 
 body.theme-subtle-6 { /* Subtle Sand */
@@ -956,6 +973,7 @@ body.theme-subtle-6 { /* Subtle Sand */
     --target-alert-bg: #eeb8a2;
     --target-alert-text: #333;
     --target-alert-border: #d4a28f;
+    --target-banner-height: 40px;
 }
 
 body.theme-subtle-7 { /* Subtle Graphite */
@@ -1002,6 +1020,7 @@ body.theme-subtle-7 { /* Subtle Graphite */
     --target-alert-bg: #b8b8b8;
     --target-alert-text: #333;
     --target-alert-border: #a2a2a2;
+    --target-banner-height: 40px;
 }
 
 body.theme-subtle-8 { /* Subtle Peach */
@@ -1048,6 +1067,7 @@ body.theme-subtle-8 { /* Subtle Peach */
     --target-alert-bg: #eeb8a2;
     --target-alert-text: #333;
     --target-alert-border: #d4a28f;
+    --target-banner-height: 40px;
 }
 
 body.theme-subtle-9 { /* Subtle Teal */
@@ -1094,6 +1114,7 @@ body.theme-subtle-9 { /* Subtle Teal */
     --target-alert-bg: #b8eec6;
     --target-alert-text: #333;
     --target-alert-border: #a2d4b0;
+    --target-banner-height: 40px;
 }
 
 body.theme-subtle-10 { /* Subtle Stone */
@@ -1140,6 +1161,7 @@ body.theme-subtle-10 { /* Subtle Stone */
     --target-alert-bg: #c0c0c0;
     --target-alert-text: #333;
     --target-alert-border: #a8a8a8;
+    --target-banner-height: 40px;
 }
 
 /* NEW MID-RANGE THEMES */
@@ -1188,6 +1210,7 @@ body.theme-mid-1 { /* Muted Blue-Grey */
     --target-alert-bg: #354f52;
     --target-alert-text: #eef0eb;
     --target-alert-border: #2a3d3f;
+    --target-banner-height: 40px;
 }
 
 body.theme-mid-2 { /* Warm Grey-Brown */
@@ -1235,6 +1258,7 @@ body.theme-mid-2 { /* Warm Grey-Brown */
     --target-alert-bg: #5c4b3d;
     --target-alert-text: #f5f0eb;
     --target-alert-border: #4a3c30;
+    --target-banner-height: 40px;
 }
 
 body.theme-mid-3 { /* Dusty Rose */
@@ -1282,6 +1306,7 @@ body.theme-mid-3 { /* Dusty Rose */
     --target-alert-bg: #523535;
     --target-alert-text: #f0ebeb;
     --target-alert-border: #3f2a2a;
+    --target-banner-height: 40px;
 }
 
 body.theme-mid-4 { /* Soft Green-Yellow */
@@ -1329,6 +1354,7 @@ body.theme-mid-4 { /* Soft Green-Yellow */
     --target-alert-bg: #526b35;
     --target-alert-text: #f0f5eb;
     --target-alert-border: #3f522a;
+    --target-banner-height: 40px;
 }
 
 body.theme-mid-5 { /* Muted Purple */
@@ -1376,6 +1402,7 @@ body.theme-mid-5 { /* Muted Purple */
     --target-alert-bg: #5c356b;
     --target-alert-text: #f0ebf5;
     --target-alert-border: #4a2a52;
+    --target-banner-height: 40px;
 }
 
 body.theme-mid-6 { /* Earthy Orange */
@@ -1423,6 +1450,7 @@ body.theme-mid-6 { /* Earthy Orange */
     --target-alert-bg: #6b5235;
     --target-alert-text: #f5ebf0;
     --target-alert-border: #523f2a;
+    --target-banner-height: 40px;
 }
 
 body.theme-mid-7 { /* Soft Teal-Green */
@@ -1470,6 +1498,7 @@ body.theme-mid-7 { /* Soft Teal-Green */
     --target-alert-bg: #356b52;
     --target-alert-text: #ebf5f0;
     --target-alert-border: #2a523f;
+    --target-banner-height: 40px;
 }
 
 body.theme-mid-8 { /* Muted Plum */
@@ -1517,6 +1546,7 @@ body.theme-mid-8 { /* Muted Plum */
     --target-alert-bg: #5c356b;
     --target-alert-text: #f0ebf5;
     --target-alert-border: #4a2a52;
+    --target-banner-height: 40px;
 }
 
 body.theme-mid-9 { /* Soft Gold-Brown */
@@ -1564,6 +1594,7 @@ body.theme-mid-9 { /* Soft Gold-Brown */
     --target-alert-bg: #6b5235;
     --target-alert-text: #f5ebf0;
     --target-alert-border: #523f2a;
+    --target-banner-height: 40px;
 }
 
 body.theme-mid-10 { /* Muted Green-Blue */
@@ -1611,6 +1642,7 @@ body.theme-mid-10 { /* Muted Green-Blue */
     --target-alert-bg: #35526b;
     --target-alert-text: #ebf0f5;
     --target-alert-border: #2a3f52;
+    --target-banner-height: 40px;
 }
 
 
@@ -2905,26 +2937,28 @@ table td.live-price-cell.negative-change {
     color: var(--button-text);
 }
 
-/* NEW: Target Hit Notification Banner */
+/* NEW: Target Hit Notification Banner (moved to top) */
 #targetHitBanner {
     display: none; /* Hidden by default, shown by JS */
     position: fixed;
-    bottom: 0; /* Position at the bottom */
+    top: 0; /* Position at the top */
     left: 0;
     width: 100%;
     background-color: var(--target-alert-bg);
     color: var(--target-alert-text);
     padding: 12px 20px;
-    box-shadow: 0 -2px 8px rgba(0,0,0,0.2);
-    z-index: 900; /* Above footer, below modals */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2); /* Shadow below */
+    z-index: 900; /* Above header, below modals */
     display: flex;
     justify-content: space-between;
     align-items: center;
     font-size: 1em;
     font-weight: 600;
-    border-top: 1px solid var(--target-alert-border);
+    border-bottom: 1px solid var(--target-alert-border); /* Border at bottom */
     box-sizing: border-box;
     cursor: pointer; /* Indicate it's clickable */
+    height: var(--target-banner-height); /* Use defined height */
+    transition: top 0.3s ease-in-out; /* Smooth transition for showing/hiding */
 }
 
 #targetHitBanner .message-content {
@@ -2950,6 +2984,11 @@ table td.live-price-cell.negative-change {
 
 #targetHitBanner .dismiss-btn:hover {
     transform: scale(1.2);
+}
+
+/* Adjust main content padding to account for fixed header and banner */
+body.target-banner-active main.container {
+    padding-top: calc(150px + var(--target-banner-height)); /* Header height + banner height */
 }
 
 
@@ -2992,6 +3031,12 @@ table td.live-price-cell.negative-change {
         /* Calculated height of the fixed header on mobile */
         padding-top: 130px; /* Adjusted for mobile fixed header height */
     }
+
+    /* Adjust main content padding to account for fixed header and banner */
+    body.target-banner-active main.container {
+        padding-top: calc(130px + var(--target-banner-height)); /* Mobile header height + banner height */
+    }
+
 
     .watchlist-controls-row {
         flex-direction: row; /* Keep as row for side-by-side */
@@ -3105,7 +3150,8 @@ table td.live-price-cell.negative-change {
 
     /* Adjust banner position for mobile */
     #targetHitBanner {
-        bottom: 60px; /* Position above the fixed footer on mobile */
+        bottom: auto; /* Remove bottom positioning */
+        top: 0; /* Position at the top for mobile */
         font-size: 0.9em;
         padding: 10px 15px;
     }
@@ -3214,7 +3260,8 @@ table td.live-price-cell.negative-change {
     }
 
     #targetHitBanner {
-        bottom: 50px; /* Adjust for smaller footer on very small mobile */
+        bottom: auto; /* Remove bottom positioning */
+        top: 0; /* Keep at top for very small mobile */
         padding: 8px 10px;
         font-size: 0.85em;
     }
