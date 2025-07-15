@@ -65,6 +65,8 @@ let isBubbleExpanded = false;
 
 
 // --- UI Element References ---
+const splashScreen = document.getElementById('splashScreen'); // NEW: Reference to the splash screen
+const splashImage = document.getElementById('splashImage'); // NEW: Reference to the splash image
 const appHeader = document.getElementById('appHeader'); // Reference to the main header
 const mainContainer = document.querySelector('main.container'); // Reference to the main content container
 const mainTitle = document.getElementById('mainTitle');
@@ -1230,7 +1232,7 @@ function addShareToTable(share) {
                 priceChangeSpan.classList.add('positive');
                 livePriceCell.classList.add('positive-change'); // Apply conditional background
             } else if (change < 0) {
-                priceChangeSpan.textContent = `(-$${Math.abs(change).toFixed(2)} / ${percentageChange.toFixed(2)}%)`; // Include percentage
+                priceChangeSpan.textContent = `(-$${Math.abs(change).toFixed(2)} / ${percentageChange.toFixed(2)}%)`; // percentageChange is already negative
                 priceChangeSpan.classList.add('negative');
                 livePriceCell.classList.add('negative-change'); // Apply conditional background
             } else {
@@ -2727,6 +2729,12 @@ async function initializeAppLogic() {
                 showCustomAlert("Authentication service not ready. Please try again in a moment.");
                 return;
             }
+            // NEW: Start splash image animation on login attempt
+            if (splashImage) {
+                splashImage.classList.add('animating');
+                console.log("[Splash] Starting splash image animation.");
+            }
+
             if (currentAuth.currentUser) {
                 console.log("[Auth] Current user exists, attempting sign out.");
                 try {
@@ -3411,25 +3419,38 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log("[Firebase Ready] DB, Auth, and AppId assigned from window. Setting up auth state listener.");
         
         window.authFunctions.onAuthStateChanged(auth, async (user) => {
+            // NEW: Stop splash image animation after auth state changes
+            if (splashImage) {
+                splashImage.classList.remove('animating');
+                console.log("[Splash] Stopping splash image animation.");
+            }
+
             if (user) {
                 currentUserId = user.uid;
                 updateAuthButtonText(true, user.email || user.displayName);
                 console.log("[AuthState] User signed in:", user.uid);
                 console.log("[AuthState] User email:", user.email);
                 if (user.email && user.email.toLowerCase() === KANGA_EMAIL) {
-                    mainTitle.textContent = "Kanga's Share Watchlist";
-                    console.log("[AuthState] Main title set to Kanga's Share Watchlist.");
+                    mainTitle.textContent = "Kanga's ASX Tracker"; // Updated title
+                    console.log("[AuthState] Main title set to Kanga's ASX Tracker.");
                 } else {
-                    mainTitle.textContent = "My Share Watchlist";
-                    console.log("[AuthState] Main title set to My Share Watchlist.");
+                    mainTitle.textContent = "My ASX Tracker"; // Updated title
+                    console.log("[AuthState] Main title set to My ASX Tracker.");
                 }
                 updateMainButtonsState(true);
                 await loadUserWatchlistsAndSettings(); // This will now also load dismissedTargetHits
                 startLivePriceUpdates();
+                // Hide splash screen and show main app content
+                if (splashScreen) splashScreen.classList.add('hidden');
+                if (appHeader) appHeader.classList.remove('hidden');
+                if (mainContainer) mainContainer.classList.remove('hidden');
+                if (appSidebar) appSidebar.classList.remove('hidden'); // Show sidebar if needed
+                console.log("[UI] User logged in. Hiding splash, showing main app.");
+
             } else {
                 currentUserId = null;
                 updateAuthButtonText(false);
-                mainTitle.textContent = "Share Watchlist";
+                mainTitle.textContent = "ASX Tracker"; // Updated title
                 console.log("[AuthState] User signed out.");
                 updateMainButtonsState(false);
                 clearShareList();
@@ -3445,6 +3466,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Clear dismissed target hits when logged out
                 dismissedTargetHits = [];
                 updateTargetHitBubble(); // Hide bubble on logout
+                // Show splash screen and hide main app content
+                if (splashScreen) splashScreen.classList.remove('hidden');
+                if (appHeader) appHeader.classList.add('hidden');
+                if (mainContainer) mainContainer.classList.add('hidden');
+                if (appSidebar) appSidebar.classList.add('hidden'); // Hide sidebar on logout
+                console.log("[UI] User logged out. Showing splash, hiding main app.");
             }
             if (!window._appLogicInitialized) {
                 initializeAppLogic();
