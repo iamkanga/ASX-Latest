@@ -694,7 +694,6 @@ body.theme-subtle-1 { /* Subtle Sky */
     --button-hover-bg: #4d7eb3;
     --input-bg: #ffffff;
     --input-border: #99b3cc;
-    --input-placeholder-color: #5a7a99;
     --modal-content-bg: #e0eaf2;
     --table-header-bg: #b3d0e6;
     --table-row-hover-bg: #d9e6f2;
@@ -1581,7 +1580,7 @@ body.theme-mid-9 { /* Soft Gold-Brown */
     --price-neutral-color: #6c757d;
     --live-price-section-bg: rgba(153, 138, 51, 0.1);
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
-    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --live-price-negative-bg: rgba(231, 76, 60, 0.15);
     --comment-title-bg: rgba(0, 0, 0, 0.05);
     --target-alert-bg: #998a33;
     --target-alert-text: #fff;
@@ -1730,6 +1729,12 @@ main.container {
     margin-top: 0; /* No top margin here, gap handled by parent header's gap */
     /* This element is now part of the fixed header */
 }
+
+/* NEW: Hide ASX code buttons when compact view is active */
+.mobile-share-cards.compact-view + .asx-code-buttons-container {
+    display: none !important;
+}
+
 
 /* The rest of the CSS remains the same as your original file,
    with previous fixes for modalShareName, etc. */
@@ -3024,10 +3029,21 @@ body.target-banner-active main.container {
 }
 
 /* Inherit text color for compact view price/change elements */
-.mobile-share-cards.compact-view .mobile-card .live-price-large,
-.mobile-share-cards.compact-view .mobile-card .price-change-large {
-    color: inherit; /* Ensure they inherit the text color of the card/theme */
+.mobile-share-cards.compact-view .mobile-card .live-price-large.positive,
+.mobile-share-cards.compact-view .mobile-card .price-change-large.positive {
+    color: var(--price-up-color);
 }
+
+.mobile-share-cards.compact-view .mobile-card .live-price-large.negative,
+.mobile-share-cards.compact-view .mobile-card .price-change-large.negative {
+    color: var(--price-down-color);
+}
+
+.mobile-share-cards.compact-view .mobile-card .live-price-large.neutral,
+.mobile-share-cards.compact-view .mobile-card .price-change-large.neutral {
+    color: var(--price-neutral-color);
+}
+
 
 /* Keep the target hit alert styling on the card itself */
 .mobile-share-cards.compact-view .mobile-card.target-hit-alert {

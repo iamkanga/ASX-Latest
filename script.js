@@ -1106,7 +1106,7 @@ function renderSortSelect() {
         { value: "shareName-asc", text: "Code (A-Z)" },
         { value: "shareName-desc", text: "Code (Z-A)" },
         { value: "dividendAmount-desc", text: "Dividend (High-Low)" },
-        { value: "dividendAmount-asc", text: "Dividend (Low-High)" },
+        { value="dividendAmount-asc", text: "Dividend (Low-High)" },
         // NEW: Options for percentage change
         { value: "percentageChange-desc", text: "Percentage Change (High-Low)" },
         { value: "percentageChange-asc", text: "Percentage Change (Low-High)" }
@@ -1231,7 +1231,7 @@ function addShareToTable(share) {
                 priceChangeSpan.classList.add('positive');
                 livePriceCell.classList.add('positive-change'); // Apply conditional background
             } else if (change < 0) {
-                priceChangeSpan.textContent = `(-$${Math.abs(change).toFixed(2)} / ${percentageChange.toFixed(2)}%)`; // Include percentage
+                priceChangeSpan.textContent = `(-$${Math.abs(change).toFixed(2)} / ${percentageChange.toFixed(2)}%)`; // percentageChange is already negative
                 priceChangeSpan.classList.add('negative');
                 livePriceCell.classList.add('negative-change'); // Apply conditional background
             } else {
@@ -1355,7 +1355,7 @@ function addShareToMobileCards(share) {
             card.innerHTML = `
                 <h3>${displayShareName}</h3>
                 <div class="live-price-display-section ${priceChangeClass}-change-section">
-                    <span class="live-price-large">$${livePrice.toFixed(2)}</span>
+                    <span class="live-price-large ${priceChangeClass}">$${livePrice.toFixed(2)}</span>
                     <span class="price-change-large ${priceChangeClass}">${priceChangeText}</span>
                     <!-- 52-week high/low and P/E are hidden by CSS in compact view -->
                     <div class="fifty-two-week-row"></div>
@@ -1530,6 +1530,17 @@ function renderWatchlist() {
         }
     }
 
+    // NEW: Hide/Show ASX code buttons based on currentMobileViewMode
+    if (asxCodeButtonsContainer) {
+        if (currentMobileViewMode === 'compact') {
+            asxCodeButtonsContainer.style.display = 'none';
+            console.log("[UI] Hiding ASX code buttons in compact view.");
+        } else {
+            asxCodeButtonsContainer.style.display = 'flex'; // Or whatever its default display is
+            console.log("[UI] Showing ASX code buttons in default view.");
+        }
+    }
+
 
     if (sharesToRender.length === 0) {
         const emptyWatchlistMessage = document.createElement('p');
@@ -1584,7 +1595,12 @@ function renderAsxCodeButtons() {
         asxCodeButtonsContainer.style.display = 'none';
         console.log("[UI] No unique ASX codes found for current view. Hiding ASX buttons container.");
     } else {
-        asxCodeButtonsContainer.style.display = 'flex';
+        // Only show if not in compact view mode
+        if (currentMobileViewMode !== 'compact') {
+            asxCodeButtonsContainer.style.display = 'flex';
+        } else {
+            asxCodeButtonsContainer.style.display = 'none';
+        }
     }
     const sortedAsxCodes = Array.from(uniqueAsxCodes).sort();
     sortedAsxCodes.forEach(asxCode => {
@@ -3293,6 +3309,8 @@ async function initializeAppLogic() {
 
     // NEW: Toggle Compact View Button Listener
     if (toggleCompactViewBtn) {
+        // DEBUG: Log that the event listener is being attached
+        console.log("[DEBUG] Attaching click listener to toggleCompactViewBtn.");
         toggleCompactViewBtn.addEventListener('click', () => {
             console.log("[UI] Toggle Compact View button clicked.");
             toggleMobileViewMode();
@@ -3403,7 +3421,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (errorDiv) {
                 errorDiv.style.display = 'block';
         }
-        updateAuthButtonText(false);
+        updateAuthButtonState(false);
         updateMainButtonsState(false);
         if (loadingIndicator) loadingIndicator.style.display = 'none';
         applyTheme('system-default');
