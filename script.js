@@ -1001,17 +1001,21 @@ function sortShares() {
             let percentageChangeB = null;
             // Only calculate if both livePriceB and prevCloseB are valid numbers and prevCloseB is not zero
             if (livePriceB !== undefined && livePriceB !== null && !isNaN(livePriceB) &&
-                prevCloseB !== undefined && prevCloseB !== null && !isNaN(prevPriceB) && prevCloseB !== 0) {
+                prevCloseB !== undefined && prevCloseB !== null && !isNaN(prevCloseB) && prevCloseB !== 0) {
                 percentageChangeB = ((livePriceB - prevCloseB) / prevCloseB) * 100;
             }
+
+            // Debugging log for percentage sort
+            console.log(`[Sort Debug - Percentage] Comparing ${a.shareName} (Change: ${percentageChangeA}) vs ${b.shareName} (Change: ${percentageChangeB})`);
+
 
             // Handle null/NaN percentage changes to push them to the bottom
             // If both are null, their relative order doesn't matter (return 0)
             if (percentageChangeA === null && percentageChangeB === null) return 0;
-            // If A is null but B is a number, A goes to the bottom (return 1)
-            if (percentageChangeA === null) return 1;
-            // If B is null but A is a number, B goes to the bottom (return -1)
-            if (percentageChangeB === null) return -1;
+            // If A is null but B is a number, A goes to the bottom (return 1 for asc, -1 for desc)
+            if (percentageChangeA === null) return order === 'asc' ? 1 : -1;
+            // If B is null but A is a number, B goes to the bottom (return -1 for asc, 1 for desc)
+            if (percentageChangeB === null) return order === 'asc' ? -1 : 1;
 
             return order === 'asc' ? percentageChangeA - percentageChangeB : percentageChangeB - percentageChangeA;
         }
@@ -1935,9 +1939,11 @@ function updateTargetHitBanner() {
         targetHitCount.textContent = sharesAtTargetPrice.length;
         targetHitMessage.textContent = ` shares have hit their target price!`;
         targetHitBanner.style.display = 'flex'; // Show the banner
+        document.body.classList.add('target-banner-active'); // Add class to body for padding adjustment
         console.log(`[Target Alert] Showing banner: ${sharesAtTargetPrice.length} shares hit target.`);
     } else {
         targetHitBanner.style.display = 'none'; // Hide the banner
+        document.body.classList.remove('target-banner-active'); // Remove class from body
         console.log("[Target Alert] No shares hit target. Hiding banner.");
     }
 }
@@ -3158,6 +3164,7 @@ async function initializeAppLogic() {
         targetHitDismissBtn.addEventListener('click', () => {
             if (targetHitBanner) {
                 targetHitBanner.style.display = 'none';
+                document.body.classList.remove('target-banner-active'); // Remove class from body on dismiss
                 console.log("[Target Alert] Banner dismissed by user.");
             }
         });
