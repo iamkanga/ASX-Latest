@@ -886,7 +886,7 @@ function showShareDetails() {
     
     const dividendAmountNum = Number(share.dividendAmount);
     // Corrected declaration of divAmountDisplay
-    const divAmountDisplay = (!isNaN(dividendAmountNum) && dividendAmountNum !== null) ? `$${dividendAmountNum.toFixed(3)}` : 'N/A';
+    const modalDividendAmountText = (!isNaN(dividendAmountNum) && dividendAmountNum !== null) ? `$${dividendAmountNum.toFixed(3)}` : 'N/A';
     
     const frankingCreditsNum = Number(share.frankingCredits);
     // Corrected declaration of modalFrankingCredits.textContent
@@ -953,17 +953,6 @@ function showShareDetails() {
     } else if (modalMarketIndexLink) {
         modalMarketIndexLink.style.display = 'none';
         setIconDisabled(modalMarketIndexLink, true);
-    }
-
-    if (modalFoolLink && share.shareName) {
-        const foolUrl = `https://www.fool.com.au/tickers/asx-${share.shareName.toLowerCase()}/`;
-        modalFoolLink.href = foolUrl;
-        modalFoolLink.textContent = `View ${share.shareName.toUpperCase()} on Fool.com.au`;
-        modalFoolLink.style.display = 'inline-flex';
-        setIconDisabled(modalFoolLink, false);
-    } else if (modalFoolLink) {
-        modalFoolLink.style.display = 'none';
-        setIconDisabled(modalFoolLink, true);
     }
 
     if (commSecLoginMessage) {
@@ -1667,7 +1656,8 @@ async function applyTheme(themeName) {
             body.classList.add('dark-theme');
         }
         console.log("[Theme Debug] Reverted to system default theme.");
-        currentCustomThemeIndex = -1; // Reset index when going to system default
+        // When reverting to system-default, ensure currentCustomThemeIndex is reset to -1
+        currentCustomThemeIndex = -1; 
     } else if (themeName === 'light' || themeName === 'dark') {
         body.removeAttribute('data-theme');
         localStorage.removeItem('selectedTheme');
@@ -1676,14 +1666,16 @@ async function applyTheme(themeName) {
             body.classList.add('dark-theme');
         }
         console.log(`[Theme Debug] Applied explicit default theme: ${themeName}`);
-        currentCustomThemeIndex = -1; // Reset index when going to explicit light/dark
+        // When applying explicit light/dark, ensure currentCustomThemeIndex is reset to -1
+        currentCustomThemeIndex = -1; 
     } else {
         body.classList.add('theme-' + themeName);
         body.setAttribute('data-theme', themeName);
         localStorage.setItem('selectedTheme', themeName);
         localStorage.removeItem('theme');
         console.log(`[Theme Debug] Applied custom theme: ${themeName}`);
-        currentCustomThemeIndex = CUSTOM_THEMES.indexOf(themeName); // Set index to current theme
+        // When applying a custom theme, set currentCustomThemeIndex to its position
+        currentCustomThemeIndex = CUSTOM_THEMES.indexOf(themeName); 
     }
     
     console.log(`[Theme Debug] Body classes after applying: ${body.className}`);
@@ -1703,9 +1695,11 @@ async function applyTheme(themeName) {
 
 function updateThemeToggleAndSelector() {
     if (colorThemeSelect) {
-        if (currentActiveTheme.startsWith('bold-') || currentActiveTheme.startsWith('subtle-') || currentActiveTheme.startsWith('mid-')) {
+        // Set the dropdown value to the current active theme if it's a custom theme
+        if (CUSTOM_THEMES.includes(currentActiveTheme)) {
             colorThemeSelect.value = currentActiveTheme;
         } else {
+            // If not a custom theme, set dropdown to 'none' (System Default)
             colorThemeSelect.value = 'none';
         }
         console.log(`[Theme UI] Color theme select updated to: ${colorThemeSelect.value}`);
@@ -1713,6 +1707,7 @@ function updateThemeToggleAndSelector() {
 
     // This part ensures currentCustomThemeIndex is correctly set based on the currentActiveTheme
     // regardless of whether it was set by toggle or dropdown/load.
+    // This is crucial for the toggle button to know where it is in the cycle.
     if (CUSTOM_THEMES.includes(currentActiveTheme)) {
         currentCustomThemeIndex = CUSTOM_THEMES.indexOf(currentActiveTheme);
     } else {
@@ -3091,4 +3086,201 @@ async function initializeAppLogic() {
                 } else {
                     scrollToTopBtn.style.opacity = '0';
                     setTimeout(() => {
-                        scrollT
+                        scrollToTopBtn.style.display = 'none';
+                    }, 300);
+                }
+            } else {
+                scrollToTopBtn.style.display = 'none';
+            }
+        });
+        if (window.innerWidth > 768) {
+            scrollToTopBtn.style.display = 'none';
+        } else {
+            window.dispatchEvent(new Event('scroll'));
+        }
+        scrollToTopBtn.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); console.log("[UI] Scrolled to top."); });
+    }
+
+    // Hamburger Menu and Sidebar Interactions
+    if (hamburgerBtn && appSidebar && closeMenuBtn && sidebarOverlay) {
+        console.log("[Sidebar Setup] Initializing sidebar event listeners. Elements found:", {
+            hamburgerBtn: !!hamburgerBtn,
+            appSidebar: !!appSidebar,
+            closeMenuBtn: !!closeMenuBtn,
+            sidebarOverlay: !!sidebarOverlay
+        });
+        hamburgerBtn.addEventListener('click', (event) => {
+            console.log("[UI] Hamburger button CLICKED. Event:", event);
+            event.stopPropagation();
+            toggleAppSidebar();
+        });
+        closeMenuBtn.addEventListener('click', () => {
+            console.log("[UI] Close Menu button CLICKED.");
+            toggleAppSidebar(false);
+        });
+        
+        sidebarOverlay.addEventListener('click', (event) => {
+            console.log("[Sidebar Overlay] Clicked overlay. Attempting to close sidebar.");
+            if (appSidebar.classList.contains('open')) {
+                toggleAppSidebar(false);
+            }
+        });
+
+        document.addEventListener('click', (event) => {
+            const isDesktop = window.innerWidth > 768;
+            if (appSidebar.classList.contains('open') && isDesktop &&
+                !appSidebar.contains(event.target) && !hamburgerBtn.contains(event.target)) {
+                console.log("[Global Click] Clicked outside sidebar on desktop. Closing sidebar.");
+                toggleAppSidebar(false);
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            console.log("[Window Resize] Resizing window. Closing sidebar if open.");
+            const isDesktop = window.innerWidth > 768;
+            if (appSidebar.classList.contains('open')) {
+                toggleAppSidebar(false);
+            }
+            if (scrollToTopBtn) {
+                if (window.innerWidth > 768) {
+                    scrollToTopBtn.style.display = 'none';
+                } else {
+                    window.dispatchEvent(new Event('scroll'));
+                }
+            }
+            // NEW: Recalculate header height on resize
+            adjustMainContentPadding();
+        });
+
+        const menuButtons = appSidebar.querySelectorAll('.menu-button-item');
+        menuButtons.forEach(button => {
+            button.addEventListener('click', (event) => {
+                console.log(`[Sidebar Menu Item Click] Button '${event.currentTarget.textContent.trim()}' clicked.`);
+                const closesMenu = event.currentTarget.dataset.actionClosesMenu !== 'false';
+                if (closesMenu) {
+                    toggleAppSidebar(false);
+                }
+            });
+        });
+    } else {
+        console.warn("[Sidebar Setup] Missing one or more sidebar elements (hamburgerBtn, appSidebar, closeMenuBtn, sidebarOverlay). Sidebar functionality might be impaired.");
+    }
+
+    // Export Watchlist Button Event Listener
+    if (exportWatchlistBtn) {
+        exportWatchlistBtn.addEventListener('click', () => {
+            console.log("[UI] Export Watchlist button clicked.");
+            exportWatchlistToCSV();
+            toggleAppSidebar(false);
+        });
+    }
+
+    // Refresh Live Prices Button Event Listener
+    if (refreshLivePricesBtn) {
+        refreshLivePricesBtn.addEventListener('click', () => {
+            console.log("[UI] Refresh Live Prices button clicked.");
+            fetchLivePrices();
+            showCustomAlert("Refreshing live prices...", 1000);
+            toggleAppSidebar(false); // NEW: Close sidebar on refresh
+        });
+    }
+
+    // NEW: Target hit banner dismiss button listener
+    if (targetHitDismissBtn) {
+        targetHitDismissBtn.addEventListener('click', () => {
+            if (targetHitBanner) {
+                targetHitBanner.style.display = 'none';
+                document.body.classList.remove('target-banner-active'); // Remove class from body on dismiss
+                console.log("[Target Alert] Banner dismissed by user.");
+            }
+        });
+    }
+
+    // NEW: Target hit banner click (to view alerted shares)
+    if (targetHitBanner) {
+        targetHitBanner.addEventListener('click', (event) => {
+            // Only trigger action if not clicking the dismiss button itself
+            if (!event.target.closest('#targetHitDismissBtn')) {
+                console.log("[Target Alert] Banner clicked. Implementing action to show alerted shares.");
+                // For now, show an alert with names. Later, this can be a filtered view.
+                const alertedShareNames = sharesAtTargetPrice.map(s => s.shareName).join(', ');
+                showCustomAlert(`Shares at target: ${alertedShareNames || 'None'}`, 3000);
+            }
+        });
+    }
+
+
+    // Call adjustMainContentPadding initially and on window load/resize
+    window.addEventListener('load', adjustMainContentPadding);
+    // Already added to window.addEventListener('resize') in sidebar section
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("script.js DOMContentLoaded fired.");
+
+    if (window.firestoreDb && window.firebaseAuth && window.getFirebaseAppId && window.firestore && window.authFunctions) {
+        db = window.firestoreDb;
+        auth = window.firebaseAuth;
+        currentAppId = window.getFirebaseAppId();
+        console.log("[Firebase Ready] DB, Auth, and AppId assigned from window. Setting up auth state listener.");
+        
+        window.authFunctions.onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUserId = user.uid;
+                updateAuthButtonText(true, user.email || user.displayName);
+                console.log("[AuthState] User signed in:", user.uid);
+                console.log("[AuthState] User email:", user.email);
+                if (user.email && user.email.toLowerCase() === KANGA_EMAIL) {
+                    mainTitle.textContent = "Kanga's Share Watchlist";
+                    console.log("[AuthState] Main title set to Kanga's Share Watchlist.");
+                } else {
+                    mainTitle.textContent = "My Share Watchlist";
+                    console.log("[AuthState] Main title set to My Share Watchlist.");
+                }
+                updateMainButtonsState(true);
+                await loadUserWatchlistsAndSettings();
+                startLivePriceUpdates();
+            } else {
+                currentUserId = null;
+                updateAuthButtonText(false);
+                mainTitle.textContent = "Share Watchlist";
+                console.log("[AuthState] User signed out.");
+                updateMainButtonsState(false);
+                clearShareList();
+                clearWatchlistUI();
+                if (loadingIndicator) loadingIndicator.style.display = 'none';
+                applyTheme('system-default');
+                if (unsubscribeShares) {
+                    unsubscribeShares();
+                    unsubscribeShares = null;
+                    console.log("[Firestore Listener] Unsubscribed from shares listener on logout.");
+                }
+                stopLivePriceUpdates();
+            }
+            if (!window._appLogicInitialized) {
+                initializeAppLogic();
+                window._appLogicInitialized = true;
+            }
+            // NEW: Call adjustMainContentPadding here to ensure correct spacing after auth state changes
+            adjustMainContentPadding();
+        });
+        
+        if (googleAuthBtn) {
+            googleAuthBtn.disabled = false;
+            console.log("[Auth] Google Auth button enabled on DOMContentLoaded.");
+        }
+
+    } else {
+        console.error("[Firebase] Firebase objects (db, auth, appId, firestore, authFunctions) are not available on DOMContentLoaded. Firebase initialization likely failed in index.html.");
+        const errorDiv = document.getElementById('firebaseInitError');
+        if (errorDiv) {
+                errorDiv.style.display = 'block';
+        }
+        updateAuthButtonText(false);
+        updateMainButtonsState(false);
+        if (loadingIndicator) loadingIndicator.style.display = 'none';
+        applyTheme('system-default');
+        // NEW: Call adjustMainContentPadding even if Firebase fails, to ensure some basic layout
+        adjustMainContentPadding();
+    }
+});
