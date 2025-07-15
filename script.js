@@ -59,6 +59,9 @@ let unsubscribeShares = null; // Holds the unsubscribe function for the Firestor
 // NEW: Global variable to store shares that have hit their target price
 let sharesAtTargetPrice = [];
 
+// NEW: Global variable to track the current mobile view mode ('default' or 'compact')
+let currentMobileViewMode = 'default'; 
+
 // --- UI Element References ---
 const appHeader = document.getElementById('appHeader'); // Reference to the main header
 const mainContainer = document.querySelector('main.container'); // Reference to the main content container
@@ -143,7 +146,7 @@ const deleteWatchlistInModalBtn = document.getElementById('deleteWatchlistInModa
 const shareContextMenu = document.getElementById('shareContextMenu');
 const contextEditShareBtn = document.getElementById('contextEditShareBtn');
 const contextDeleteShareBtn = document.getElementById('contextDeleteShareBtn');
-const logoutBtn = document.getElementById('logout'); // Changed to match ID in HTML
+const logoutBtn = document.getElementById('logoutBtn'); // Corrected to match ID in HTML
 const exportWatchlistBtn = document.getElementById('exportWatchlistBtn');
 const refreshLivePricesBtn = document.getElementById('refreshLivePricesBtn');
 // NEW: Reference for the watchlist select inside the share form modal
@@ -161,6 +164,9 @@ const targetHitBanner = document.getElementById('targetHitBanner');
 const targetHitMessage = document.getElementById('targetHitMessage');
 const targetHitCount = document.getElementById('targetHitCount');
 const targetHitDismissBtn = document.getElementById('targetHitDismissBtn');
+
+// NEW: Reference for the Toggle Compact View button
+const toggleCompactViewBtn = document.getElementById('toggleCompactViewBtn');
 
 
 let sidebarOverlay = document.querySelector('.sidebar-overlay');
@@ -331,6 +337,7 @@ function updateMainButtonsState(enable) {
     if (sortSelect) sortSelect.disabled = !enable;
     if (watchlistSelect) watchlistSelect.disabled = !enable;
     if (refreshLivePricesBtn) refreshLivePricesBtn.disabled = !enable;
+    if (toggleCompactViewBtn) toggleCompactViewBtn.disabled = !enable; // NEW: Disable compact view toggle
     console.log(`[UI State] Sort Select Disabled: ${sortSelect ? sortSelect.disabled : 'N/A'}`);
     console.log(`[UI State] Watchlist Select Disabled: ${watchlistSelect ? watchlistSelect.disabled : 'N/A'}`);
 }
@@ -1074,7 +1081,7 @@ function renderWatchlistSelect() {
     });
 
     if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID)) {
-        watchlistSelect.value = ALL_SHARES_ID;
+        watchlistSelect.value = ALL_SHAres_ID;
     } else if (currentSelectedWatchlistIds.length === 1) {
         watchlistSelect.value = currentSelectedWatchlistIds[0];
     } else if (userWatchlists.length > 0) {
@@ -1284,6 +1291,13 @@ function addShareToMobileCards(share) {
     card.className = 'mobile-card';
     card.dataset.docId = share.id;
 
+    // Apply compact-view class if active
+    if (currentMobileViewMode === 'compact') {
+        card.classList.add('compact-view-item'); // Add a specific class for individual cards in compact view
+    } else {
+        card.classList.remove('compact-view-item');
+    }
+
     // NEW: Apply target-hit-alert class if condition met
     const livePriceData = livePrices[share.shareName.toUpperCase()];
     const isTargetHit = livePriceData ? livePriceData.targetHit : false;
@@ -1314,7 +1328,6 @@ function addShareToMobileCards(share) {
     const displayShareName = (share.shareName && String(share.shareName).trim() !== '') ? share.shareName : '(No Code)';
     const displayEnteredPrice = (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? enteredPriceNum.toFixed(2) : '-';
 
-    let livePriceHtml = '';
     let priceChangeClass = '';
     let priceChangeText = '';
 
@@ -1335,37 +1348,73 @@ function addShareToMobileCards(share) {
             }
         }
 
-        card.innerHTML = `
-            <h3>${displayShareName}</h3>
-            <div class="live-price-display-section ${priceChangeClass}-change-section">
-                <span class="live-price-large">$${livePrice.toFixed(2)}</span>
-                <span class="price-change-large ${priceChangeClass}">${priceChangeText}</span>
-            </div>
-            <p><strong>Entered Price:</strong> $${displayEnteredPrice}</p>
-            <p><strong>Target:</strong> $${displayTargetPrice}</p>
-            <p><strong>Dividend:</strong> $${displayDividendAmount}</p>
-            <p><strong>Franking:</strong> ${displayFrankingCredits}</p>
-            <p><strong>Unfranked Yield:</strong> ${unfrankedYield !== null && !isNaN(unfrankedYield) ? unfrankedYield.toFixed(2) + '%' : '0.00%'}&#xFE0E;</p>
-            <p><strong>Franked Yield:</strong> ${frankedYield !== null && !isNaN(frankedYield) ? frankedYield.toFixed(2) + '%' : '0.00%'}&#xFE0E;</p>
-            <!-- Removed Entry Date from mobile cards -->
-            <!-- <p><strong>Entry Date:</strong> ${formatDate(share.entryDate) || '-'}</p> -->
-        `;
+        // Conditionally render content based on view mode
+        if (currentMobileViewMode === 'compact') {
+            card.innerHTML = `
+                <h3>${displayShareName}</h3>
+                <div class="live-price-display-section ${priceChangeClass}-change-section">
+                    <span class="live-price-large">$${livePrice.toFixed(2)}</span>
+                    <span class="price-change-large ${priceChangeClass}">${priceChangeText}</span>
+                    <!-- 52-week high/low and P/E are hidden by CSS in compact view -->
+                    <div class="fifty-two-week-row"></div>
+                    <div class="pe-ratio-row"></div>
+                </div>
+                <!-- Other details are hidden by CSS for compact view -->
+                <p><strong>Entered Price:</strong> $${displayEnteredPrice}</p>
+                <p><strong>Target:</strong> $${displayTargetPrice}</p>
+                <p><strong>Dividend:</strong> $${displayDividendAmount}</p>
+                <p><strong>Franking:</strong> ${displayFrankingCredits}</p>
+                <p><strong>Unfranked Yield:</strong> ${unfrankedYield !== null && !isNaN(unfrankedYield) ? unfrankedYield.toFixed(2) + '%' : '0.00%'}&#xFE0E;</p>
+                <p><strong>Franked Yield:</strong> ${frankedYield !== null && !isNaN(frankedYield) ? frankedYield.toFixed(2) + '%' : '0.00%'}&#xFE0E;</p>
+            `;
+        } else {
+            card.innerHTML = `
+                <h3>${displayShareName}</h3>
+                <div class="live-price-display-section ${priceChangeClass}-change-section">
+                    <span class="live-price-large">$${livePrice.toFixed(2)}</span>
+                    <span class="price-change-large ${priceChangeClass}">${priceChangeText}</span>
+                </div>
+                <p><strong>Entered Price:</strong> $${displayEnteredPrice}</p>
+                <p><strong>Target:</strong> $${displayTargetPrice}</p>
+                <p><strong>Dividend:</strong> $${displayDividendAmount}</p>
+                <p><strong>Franking:</strong> ${displayFrankingCredits}</p>
+                <p><strong>Unfranked Yield:</strong> ${unfrankedYield !== null && !isNaN(unfrankedYield) ? unfrankedYield.toFixed(2) + '%' : '0.00%'}&#xFE0E;</p>
+                <p><strong>Franked Yield:</strong> ${frankedYield !== null && !isNaN(frankedYield) ? frankedYield.toFixed(2) + '%' : '0.00%'}&#xFE0E;</p>
+            `;
+        }
     } else {
-        card.innerHTML = `
-            <h3>${displayShareName}</h3>
-            <div class="live-price-display-section">
-                <span class="live-price-large">N/A</span>
-                <span class="price-change-large"></span>
-            </div>
-            <p><strong>Entered Price:</strong> $${displayEnteredPrice}</p>
-            <p><strong>Target:</strong> $${displayTargetPrice}</p>
-            <p><strong>Dividend:</strong> $${displayDividendAmount}</p>
-            <p><strong>Franking:</strong> ${displayFrankingCredits}</p>
-            <p><strong>Unfranked Yield:</strong> ${unfrankedYield !== null && !isNaN(unfrankedYield) ? unfrankedYield.toFixed(2) + '%' : '0.00%'}&#xFE0E;</p>
-            <p><strong>Franked Yield:</strong> ${frankedYield !== null && !isNaN(frankedYield) ? frankedYield.toFixed(2) + '%' : '0.00%'}&#xFE0E;</p>
-            <!-- Removed Entry Date from mobile cards -->
-            <!-- <p><strong>Entry Date:</strong> ${formatDate(share.entryDate) || '-'}</p> -->
-        `;
+        // Conditionally render content for N/A prices
+        if (currentMobileViewMode === 'compact') {
+            card.innerHTML = `
+                <h3>${displayShareName}</h3>
+                <div class="live-price-display-section">
+                    <span class="live-price-large">N/A</span>
+                    <span class="price-change-large"></span>
+                    <div class="fifty-two-week-row"></div>
+                    <div class="pe-ratio-row"></div>
+                </div>
+                <p><strong>Entered Price:</strong> $${displayEnteredPrice}</p>
+                <p><strong>Target:</strong> $${displayTargetPrice}</p>
+                <p><strong>Dividend:</strong> $${displayDividendAmount}</p>
+                <p><strong>Franking:</strong> ${displayFrankingCredits}</p>
+                <p><strong>Unfranked Yield:</strong> ${unfrankedYield !== null && !isNaN(unfrankedYield) ? unfrankedYield.toFixed(2) + '%' : '0.00%'}&#xFE0E;</p>
+                <p><strong>Franked Yield:</strong> ${frankedYield !== null && !isNaN(frankedYield) ? frankedYield.toFixed(2) + '%' : '0.00%'}&#xFE0E;</p>
+            `;
+        } else {
+            card.innerHTML = `
+                <h3>${displayShareName}</h3>
+                <div class="live-price-display-section">
+                    <span class="live-price-large">N/A</span>
+                    <span class="price-change-large"></span>
+                </div>
+                <p><strong>Entered Price:</strong> $${displayEnteredPrice}</p>
+                <p><strong>Target:</strong> $${displayTargetPrice}</p>
+                <p><strong>Dividend:</strong> $${displayDividendAmount}</p>
+                <p><strong>Franking:</strong> ${displayFrankingCredits}</p>
+                <p><strong>Unfranked Yield:</strong> ${unfrankedYield !== null && !isNaN(unfrankedYield) ? unfrankedYield.toFixed(2) + '%' : '0.00%'}&#xFE0E;</p>
+                <p><strong>Franked Yield:</strong> ${frankedYield !== null && !isNaN(frankedYield) ? frankedYield.toFixed(2) + '%' : '0.00%'}&#xFE0E;</p>
+            `;
+        }
     }
     mobileShareCardsContainer.appendChild(card);
 
@@ -1470,6 +1519,15 @@ function renderWatchlist() {
         console.log("[Render] No watchlists available for display.");
     }
 
+    // Apply or remove the 'compact-view' class from the mobileShareCardsContainer
+    if (mobileShareCardsContainer) {
+        if (currentMobileViewMode === 'compact') {
+            mobileShareCardsContainer.classList.add('compact-view');
+        } else {
+            mobileShareCardsContainer.classList.remove('compact-view');
+        }
+    }
+
 
     if (sharesToRender.length === 0) {
         const emptyWatchlistMessage = document.createElement('p');
@@ -1542,33 +1600,6 @@ function renderAsxCodeButtons() {
     console.log(`[UI] Rendered ${sortedAsxCodes.length} code buttons.`);
     // NEW: Adjust padding after rendering buttons, as their presence affects header height
     adjustMainContentPadding();
-}
-
-function scrollToShare(asxCode) {
-    console.log(`[UI] Attempting to scroll to/highlight share with Code: ${asxCode}`);
-    const targetShare = allSharesData.find(s => s.shareName && s.shareName.toUpperCase() === asxCode.toUpperCase());
-    if (targetShare) {
-        selectShare(targetShare.id);
-        let elementToScrollTo = document.querySelector(`#shareTable tbody tr[data-doc-id="${targetShare.id}"]`);
-        if (!elementToScrollTo || window.matchMedia("(max-width: 768px)").matches) {
-            elementToScrollTo = document.querySelector(`.mobile-card[data-doc-id="${targetShare.id}"]`);
-        }
-        if (elementToScrollTo) {
-            // Get the height of the fixed header
-            const fixedHeaderHeight = appHeader ? appHeader.offsetHeight : 0;
-            const elementRect = elementToScrollTo.getBoundingClientRect();
-            // Calculate scroll position, accounting for the fixed header
-            const scrollY = elementRect.top + window.scrollY - fixedHeaderHeight - 10; // 10px buffer for a little space
-            window.scrollTo({ top: scrollY, behavior: 'smooth' });
-            console.log(`[UI] Scrolled to element for share ID: ${targetShare.id}`);
-        } else {
-            console.warn(`[UI] Element for share ID: ${targetShare.id} not found for scrolling.`);
-        }
-        showShareDetails(); 
-    } else {
-        showCustomAlert(`Share '${asxCode}' not found.`);
-        console.warn(`[UI] Share '${asxCode}' not found in allSharesData.`);
-    }
 }
 
 const COMPANY_TAX_RATE = 0.30;
@@ -1963,6 +1994,32 @@ function updateTargetHitBanner() {
         document.body.classList.remove('target-banner-active'); // Remove class from body
         console.log("[Target Alert] No shares hit target. Hiding banner.");
     }
+}
+
+/**
+ * Toggles the mobile view mode between default (single column) and compact (two columns).
+ * Updates the UI to reflect the new mode and saves preference to local storage.
+ */
+function toggleMobileViewMode() {
+    if (!mobileShareCardsContainer) {
+        console.error("[toggleMobileViewMode] mobileShareCardsContainer not found.");
+        return;
+    }
+
+    if (currentMobileViewMode === 'default') {
+        currentMobileViewMode = 'compact';
+        mobileShareCardsContainer.classList.add('compact-view');
+        showCustomAlert("Switched to Compact View!", 1000);
+        console.log("[View Mode] Switched to Compact View.");
+    } else {
+        currentMobileViewMode = 'default';
+        mobileShareCardsContainer.classList.remove('compact-view');
+        showCustomAlert("Switched to Default View!", 1000);
+        console.log("[View Mode] Switched to Default View.");
+    }
+    
+    localStorage.setItem('currentMobileViewMode', currentMobileViewMode); // Save preference
+    renderWatchlist(); // Re-render to apply new card styling and layout
 }
 
 
@@ -2466,6 +2523,25 @@ async function initializeAppLogic() {
                 });
         });
     }
+
+    // NEW: Load saved mobile view mode preference
+    const savedMobileViewMode = localStorage.getItem('currentMobileViewMode');
+    if (savedMobileViewMode && (savedMobileViewMode === 'default' || savedMobileViewMode === 'compact')) {
+        currentMobileViewMode = savedMobileViewMode;
+        if (currentMobileViewMode === 'compact' && mobileShareCardsContainer) {
+            mobileShareCardsContainer.classList.add('compact-view');
+            console.log(`[View Mode] Loaded saved preference: ${currentMobileViewMode} view.`);
+        } else {
+             console.log(`[View Mode] Loaded saved preference: ${currentMobileViewMode} view.`);
+        }
+    } else {
+        console.log("[View Mode] No saved mobile view preference, defaulting to 'default'.");
+        currentMobileViewMode = 'default'; // Ensure it's explicitly set if nothing saved
+        if (mobileShareCardsContainer) {
+             mobileShareCardsContainer.classList.remove('compact-view');
+        }
+    }
+
 
     // Share Name Input to uppercase
     if (shareNameInput) {
@@ -3260,9 +3336,20 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!window._appLogicInitialized) {
                 initializeAppLogic();
                 window._appLogicInitialized = true;
+            } else {
+                // If app logic already initialized, ensure view mode is applied after auth.
+                // This handles cases where user signs out and then signs back in,
+                // and we need to re-apply the correct mobile view class.
+                if (currentMobileViewMode === 'compact' && mobileShareCardsContainer) {
+                    mobileShareCardsContainer.classList.add('compact-view');
+                } else if (mobileShareCardsContainer) {
+                    mobileShareCardsContainer.classList.remove('compact-view');
+                }
             }
             // NEW: Call adjustMainContentPadding here to ensure correct spacing after auth state changes
             adjustMainContentPadding();
+            // Call renderWatchlist here to ensure correct mobile card rendering after auth state is set
+            renderWatchlist();
         });
         
         if (googleAuthBtn) {

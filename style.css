@@ -694,6 +694,7 @@ body.theme-subtle-1 { /* Subtle Sky */
     --button-hover-bg: #4d7eb3;
     --input-bg: #ffffff;
     --input-border: #99b3cc;
+    --input-placeholder-color: #5a7a99;
     --modal-content-bg: #e0eaf2;
     --table-header-bg: #b3d0e6;
     --table-row-hover-bg: #d9e6f2;
@@ -2957,6 +2958,86 @@ table td.live-price-cell.negative-change {
 /* Adjust main content padding to account for fixed header and banner */
 body.target-banner-active main.container {
     padding-top: calc(150px + var(--target-banner-height)); /* Header height + banner height */
+}
+
+/* --- NEW: Compact Mobile View Specific Styles --- */
+.mobile-share-cards.compact-view {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Two equal columns */
+    gap: 10px; /* Space between the cards */
+    padding: 10px; /* Adjust padding for grid layout */
+}
+
+/* Style for individual cards in compact view */
+.mobile-share-cards.compact-view .mobile-card {
+    display: flex;
+    flex-direction: column; /* Stack content vertically within the card */
+    align-items: center; /* Center content horizontally */
+    justify-content: center; /* Center content vertically */
+    padding: 8px; /* Reduce padding for smaller cards */
+    min-height: 80px; /* Ensure a minimum height for consistency */
+    text-align: center;
+}
+
+/* Hide most <p> tags in compact view to only show live price and change */
+.mobile-share-cards.compact-view .mobile-card p {
+    display: none; /* Hide paragraphs like Entered Price, Target, Dividend etc. */
+}
+
+/* Ensure the live price display section remains visible and formatted */
+.mobile-share-cards.compact-view .mobile-card .live-price-display-section {
+    background-color: transparent; /* Remove background in compact view */
+    box-shadow: none; /* Remove shadow */
+    padding: 0; /* Remove padding */
+    margin-bottom: 0; /* Remove margin */
+    flex-direction: column; /* Keep content stacked */
+    gap: 0; /* Reduce gap */
+}
+
+/* Adjust font sizes for compact live price and change */
+.mobile-share-cards.compact-view .mobile-card .live-price-display-section .live-price-large {
+    font-size: 1.4em; /* Smaller font for compact view */
+    line-height: 1.2;
+}
+
+.mobile-share-cards.compact-view .mobile-card .live-price-display-section .price-change-large {
+    font-size: 0.8em; /* Even smaller for percentage change */
+    margin-left: 0; /* Remove margin from main price */
+    margin-top: 2px; /* Small space below price */
+    line-height: 1;
+}
+
+/* Ensure the share name (h3) is concise and always visible */
+.mobile-share-cards.compact-view .mobile-card h3 {
+    font-size: 1em; /* Smaller font for share code */
+    margin-bottom: 5px; /* Adjust margin */
+    white-space: nowrap; /* Prevent wrapping */
+    overflow: hidden;
+    text-overflow: ellipsis; /* Add ellipsis for long names */
+    width: 100%;
+}
+
+/* Adjust specific change section styling for compact view */
+.mobile-share-cards.compact-view .mobile-card .live-price-display-section.positive-change-section,
+.mobile-share-cards.compact-view .mobile-card .live-price-display-section.negative-change-section {
+    background-color: transparent; /* Remove background on the price section itself */
+}
+
+/* Inherit text color for compact view price/change elements */
+.mobile-share-cards.compact-view .mobile-card .live-price-large,
+.mobile-share-cards.compact-view .mobile-card .price-change-large {
+    color: inherit; /* Ensure they inherit the text color of the card/theme */
+}
+
+/* Keep the target hit alert styling on the card itself */
+.mobile-share-cards.compact-view .mobile-card.target-hit-alert {
+    animation: pulse-alert 1.5s infinite alternate;
+}
+
+/* Hide 52-week high/low and P/E from compact view */
+.mobile-share-cards.compact-view .mobile-card .fifty-two-week-row,
+.mobile-share-cards.compact-view .mobile-card .pe-ratio-row {
+    display: none;
 }
 
 
