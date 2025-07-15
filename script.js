@@ -36,8 +36,8 @@ let currentContextMenuShareId = null; // Stores the ID of the share that opened 
 let originalShareData = null; // Stores the original share data when editing for dirty state check
 let originalWatchlistData = null; // Stores original watchlist data for dirty state check in watchlist modals
 
-// Live Price Data - CORRECTED URL
-const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzp7OjZL3zqvJ9wPsV9M-afm2wKeQPbIgGVv_juVpkaRllADESLwj7F-S7YWYerau-/exec'; 
+// Live Price Data
+const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzp7OjZL3zqvJ9wPsV9M-afm2wKeQPbIgGVv_juVpkaRllADESLwj7F4-S7YWYerau-/exec'; // Your new Google Apps Script URL
 let livePrices = {}; // Stores live price data: {ASX_CODE: {live: price, prevClose: price, PE: value, High52: value, Low52: value, targetHit: boolean}}
 let livePriceFetchInterval = null; // To hold the interval ID for live price updates
 const LIVE_PRICE_FETCH_INTERVAL_MS = 5 * 60 * 1000; // Fetch every 5 minutes
@@ -56,17 +56,10 @@ let savedTheme = null; // GLOBAL: Stores the theme loaded from user settings
 
 let unsubscribeShares = null; // Holds the unsubscribe function for the Firestore shares listener
 
-// NEW: Global variable to store shares that have hit their target price (and not dismissed)
+// NEW: Global variable to store shares that have hit their target price
 let sharesAtTargetPrice = [];
-// NEW: Global variable to store IDs of target hits that the user has dismissed
-let dismissedTargetHits = [];
-// NEW: Global variable to track the expansion state of the notification bubble
-let isBubbleExpanded = false;
-
 
 // --- UI Element References ---
-const splashScreen = document.getElementById('splashScreen'); // NEW: Reference to the splash screen
-const splashImage = document.getElementById('splashImage'); // NEW: Reference to the splash image
 const appHeader = document.getElementById('appHeader'); // Reference to the main header
 const mainContainer = document.querySelector('main.container'); // Reference to the main content container
 const mainTitle = document.getElementById('mainTitle');
@@ -150,7 +143,7 @@ const deleteWatchlistInModalBtn = document.getElementById('deleteWatchlistInModa
 const shareContextMenu = document.getElementById('shareContextMenu');
 const contextEditShareBtn = document.getElementById('contextEditShareBtn');
 const contextDeleteShareBtn = document.getElementById('contextDeleteShareBtn');
-const logoutBtn = document.getElementById('logoutBtn'); // Changed to match ID in HTML
+const logoutBtn = document.getElementById('logout'); // Changed to match ID in HTML
 const exportWatchlistBtn = document.getElementById('exportWatchlistBtn');
 const refreshLivePricesBtn = document.getElementById('refreshLivePricesBtn');
 // NEW: Reference for the watchlist select inside the share form modal
@@ -163,13 +156,11 @@ const shareWatchlistSelect = document.getElementById('shareWatchlistSelect');
 // NEW: References for 52-week high/low and P/E in share details modal
 const modalLivePriceDisplaySection = document.querySelector('.live-price-display-section'); // The existing colored section
 
-// NEW: References for the target hit notification bubble
-const targetNotificationBubble = document.getElementById('targetNotificationBubble');
-const bubbleCount = document.getElementById('bubbleCount');
-const bubbleDetails = document.getElementById('bubbleDetails');
-const bubbleShareList = document.getElementById('bubbleShareList');
-const bubbleCloseBtn = document.querySelector('.bubble-close-btn');
-const bubbleDismissAllBtn = document.getElementById('bubbleDismissAllBtn');
+// NEW: Reference for the target hit notification banner
+const targetHitBanner = document.getElementById('targetHitBanner');
+const targetHitMessage = document.getElementById('targetHitMessage');
+const targetHitCount = document.getElementById('targetHitCount');
+const targetHitDismissBtn = document.getElementById('targetHitDismissBtn');
 
 
 let sidebarOverlay = document.querySelector('.sidebar-overlay');
@@ -287,7 +278,6 @@ function closeModals() {
     deselectCurrentShare();
     if (autoDismissTimeout) { clearTimeout(autoDismissTimeout); autoDismissTimeout = null; }
     hideContextMenu();
-    collapseBubble(); // Ensure bubble is collapsed when any modal is closed
     console.log("[Modal] All modals closed.");
 }
 
@@ -1232,7 +1222,7 @@ function addShareToTable(share) {
                 priceChangeSpan.classList.add('positive');
                 livePriceCell.classList.add('positive-change'); // Apply conditional background
             } else if (change < 0) {
-                priceChangeSpan.textContent = `(-$${Math.abs(change).toFixed(2)} / ${percentageChange.toFixed(2)}%)`; // percentageChange is already negative
+                priceChangeSpan.textContent = `(-$${Math.abs(change).toFixed(2)} / ${percentageChange.toFixed(2)}%)`; // Include percentage
                 priceChangeSpan.classList.add('negative');
                 livePriceCell.classList.add('negative-change'); // Apply conditional background
             } else {
@@ -1509,7 +1499,7 @@ function renderWatchlist() {
          }
     }
     console.log("[Render] Watchlist rendering complete.");
-    updateTargetHitBubble(); // NEW: Update the bubble after rendering the watchlist
+    updateTargetHitBanner(); // NEW: Update the banner after rendering the watchlist
 }
 
 function renderAsxCodeButtons() {
@@ -1797,17 +1787,11 @@ async function loadUserWatchlistsAndSettings() {
         const userProfileSnap = await window.firestore.getDoc(userProfileDocRef);
         savedSortOrder = null;
         savedTheme = null;
-        dismissedTargetHits = []; // Initialize to empty array before loading
 
         if (userProfileSnap.exists()) {
             savedSortOrder = userProfileSnap.data().lastSortOrder;
             savedTheme = userProfileSnap.data().lastTheme;
             currentSelectedWatchlistIds = userProfileSnap.data().lastSelectedWatchlistIds;
-            // NEW: Load dismissedTargetHits
-            if (userProfileSnap.data().dismissedTargetHits) {
-                dismissedTargetHits = userProfileSnap.data().dismissedTargetHits;
-                console.log(`[User Settings] Loaded dismissed target hits: ${dismissedTargetHits.length} items.`);
-            }
             console.log(`[User Settings] Found last selected watchlists in profile: ${currentSelectedWatchlistIds}`);
             console.log(`[User Settings] Found saved sort order in profile: ${savedSortOrder}`);
             console.log(`[User Settings] Found saved theme in profile: ${savedTheme}`);
@@ -1955,174 +1939,29 @@ function stopLivePriceUpdates() {
     }
 }
 
-/**
- * Updates the target hit notification bubble.
- * Filters shares that are at target and not dismissed, then updates the UI.
- */
-function updateTargetHitBubble() {
-    // Filter shares that are at target and not dismissed
+// NEW: Function to update the target hit notification banner
+function updateTargetHitBanner() {
     sharesAtTargetPrice = allSharesData.filter(share => {
         const livePriceData = livePrices[share.shareName.toUpperCase()];
-        const isTargetHit = livePriceData && livePriceData.targetHit;
-        const isDismissed = dismissedTargetHits.includes(share.id);
-        return isTargetHit && !isDismissed;
+        // Ensure livePriceData exists and has targetHit property
+        return livePriceData && livePriceData.targetHit;
     });
 
-    if (!targetNotificationBubble || !bubbleCount || !bubbleDetails || !bubbleShareList) {
-        console.warn("[Target Bubble] Notification bubble elements not found. Cannot update bubble.");
+    if (!targetHitBanner || !targetHitMessage || !targetHitCount || !targetHitDismissBtn) {
+        console.warn("[Target Alert] Target hit banner elements not found. Cannot update banner.");
         return;
     }
 
     if (sharesAtTargetPrice.length > 0) {
-        bubbleCount.textContent = sharesAtTargetPrice.length;
-        targetNotificationBubble.classList.remove('hidden'); // Show the bubble
-        // Ensure it's collapsed by default when it first appears or updates
-        targetNotificationBubble.classList.remove('expanded');
-        isBubbleExpanded = false;
-        populateBubbleShareList(); // Populate details even if collapsed, for quick expansion
-        console.log(`[Target Bubble] Showing bubble: ${sharesAtTargetPrice.length} shares hit target.`);
+        targetHitCount.textContent = sharesAtTargetPrice.length;
+        targetHitMessage.textContent = ` shares have hit their target price!`;
+        targetHitBanner.style.display = 'flex'; // Show the banner
+        document.body.classList.add('target-banner-active'); // Add class to body for padding adjustment
+        console.log(`[Target Alert] Showing banner: ${sharesAtTargetPrice.length} shares hit target.`);
     } else {
-        targetNotificationBubble.classList.add('hidden'); // Hide the bubble
-        targetNotificationBubble.classList.remove('expanded'); // Ensure it's collapsed
-        isBubbleExpanded = false;
-        console.log("[Target Bubble] No shares hit target or all dismissed. Hiding bubble.");
-    }
-}
-
-/**
- * Populates the list of shares within the expanded target notification bubble.
- */
-function populateBubbleShareList() {
-    if (!bubbleShareList) return;
-    bubbleShareList.innerHTML = ''; // Clear existing list
-
-    if (sharesAtTargetPrice.length === 0) {
-        const li = document.createElement('li');
-        li.textContent = "No shares currently at target.";
-        li.style.textAlign = 'center';
-        li.style.color = 'var(--ghosted-text)';
-        li.style.cursor = 'default';
-        li.style.borderBottom = 'none';
-        bubbleShareList.appendChild(li);
-        if (bubbleDismissAllBtn) bubbleDismissAllBtn.style.display = 'none';
-        return;
-    }
-    if (bubbleDismissAllBtn) bubbleDismissAllBtn.style.display = 'block';
-
-    sharesAtTargetPrice.forEach(share => {
-        const li = document.createElement('li');
-        li.dataset.shareId = share.id;
-        li.textContent = share.shareName;
-        // Optionally add live price to the list item
-        const livePriceData = livePrices[share.shareName.toUpperCase()];
-        if (livePriceData && livePriceData.live !== undefined && livePriceData.live !== null && !isNaN(livePriceData.live)) {
-            const priceSpan = document.createElement('span');
-            priceSpan.textContent = ` ($${livePriceData.live.toFixed(2)})`;
-            priceSpan.style.fontWeight = 'normal';
-            priceSpan.style.fontSize = '0.9em';
-            priceSpan.style.color = 'var(--ghosted-text)';
-            li.appendChild(priceSpan);
-        }
-        bubbleShareList.appendChild(li);
-    });
-}
-
-/**
- * Toggles the expanded/collapsed state of the target notification bubble.
- */
-function toggleBubbleExpansion() {
-    if (!targetNotificationBubble) return;
-    isBubbleExpanded = !isBubbleExpanded;
-    if (isBubbleExpanded) {
-        targetNotificationBubble.classList.add('expanded');
-        // Ensure details are populated when expanding
-        populateBubbleShareList();
-        console.log("[Target Bubble] Expanded.");
-    } else {
-        targetNotificationBubble.classList.remove('expanded');
-        console.log("[Target Bubble] Collapsed.");
-    }
-}
-
-/**
- * Forces the target notification bubble to collapse.
- */
-function collapseBubble() {
-    if (targetNotificationBubble) {
-        targetNotificationBubble.classList.remove('expanded');
-        isBubbleExpanded = false;
-        console.log("[Target Bubble] Forcibly collapsed.");
-    }
-}
-
-/**
- * Adds a share ID to the dismissedTargetHits array and saves it to Firestore.
- * @param {string} shareId The ID of the share to dismiss.
- */
-async function dismissTargetHit(shareId) {
-    if (!dismissedTargetHits.includes(shareId)) {
-        dismissedTargetHits.push(shareId);
-        await saveDismissedTargetHits();
-        console.log(`[Target Bubble] Dismissed share ID: ${shareId}`);
-        updateTargetHitBubble(); // Re-render bubble after dismissal
-    }
-}
-
-/**
- * Dismisses all currently active target hit notifications.
- */
-async function dismissAllTargetHits() {
-    if (sharesAtTargetPrice.length > 0) {
-        sharesAtTargetPrice.forEach(share => {
-            if (!dismissedTargetHits.includes(share.id)) {
-                dismissedTargetHits.push(share.id);
-            }
-        });
-        await saveDismissedTargetHits();
-        console.log("[Target Bubble] Dismissed all current target hits.");
-        updateTargetHitBubble(); // Re-render bubble after dismissal
-        collapseBubble(); // Collapse after dismissing all
-    }
-}
-
-/**
- * Saves the current `dismissedTargetHits` array to Firestore.
- */
-async function saveDismissedTargetHits() {
-    if (!db || !currentUserId || !window.firestore) {
-        console.warn("[Firestore] Cannot save dismissed target hits: DB, User ID, or Firestore functions not available.");
-        return;
-    }
-    const userProfileDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/profile/settings`);
-    try {
-        await window.firestore.setDoc(userProfileDocRef, { dismissedTargetHits: dismissedTargetHits }, { merge: true });
-        console.log(`[Firestore] Saved dismissed target hits: ${dismissedTargetHits.length} items.`);
-    } catch (error) {
-        console.error("[Firestore] Error saving dismissed target hits:", error);
-    }
-}
-
-/**
- * Loads the `dismissedTargetHits` array from Firestore.
- */
-async function loadDismissedTargetHits() {
-    if (!db || !currentUserId || !window.firestore) {
-        console.warn("[Firestore] Cannot load dismissed target hits: DB, User ID, or Firestore functions not available.");
-        return;
-    }
-    const userProfileDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/profile/settings`);
-    try {
-        const docSnap = await window.firestore.getDoc(userProfileDocRef);
-        if (docSnap.exists() && docSnap.data().dismissedTargetHits) {
-            dismissedTargetHits = docSnap.data().dismissedTargetHits;
-            console.log(`[Firestore] Loaded dismissed target hits: ${dismissedTargetHits.length} items.`);
-        } else {
-            dismissedTargetHits = [];
-            console.log("[Firestore] No dismissed target hits found in profile.");
-        }
-    } catch (error) {
-        console.error("[Firestore] Error loading dismissed target hits:", error);
-        dismissedTargetHits = []; // Default to empty on error
+        targetHitBanner.style.display = 'none'; // Hide the banner
+        document.body.classList.remove('target-banner-active'); // Remove class from body
+        console.log("[Target Alert] No shares hit target. Hiding banner.");
     }
 }
 
@@ -2613,8 +2452,7 @@ async function initializeAppLogic() {
     if (customDialogModal) customDialogModal.style.setProperty('display', 'none', 'important');
     if (calculatorModal) calculatorModal.style.setProperty('display', 'none', 'important');
     if (shareContextMenu) shareContextMenu.style.setProperty('display', 'none', 'important');
-    // NEW: Ensure notification bubble is hidden initially
-    if (targetNotificationBubble) targetNotificationBubble.classList.add('hidden');
+    if (targetHitBanner) targetHitBanner.style.display = 'none'; // Ensure banner is hidden initially
 
     // Service Worker Registration
     if ('serviceWorker' in navigator) {
@@ -2700,7 +2538,7 @@ async function initializeAppLogic() {
         }
     });
 
-    // Global click listener to close modals/context menu/bubble details if clicked outside
+    // Global click listener to close modals/context menu if clicked outside
     window.addEventListener('click', (event) => {
         if (event.target === shareDetailModal || event.target === dividendCalculatorModal ||
             event.target === shareFormSection || event.target === customDialogModal ||
@@ -2711,11 +2549,6 @@ async function initializeAppLogic() {
 
         if (contextMenuOpen && shareContextMenu && !shareContextMenu.contains(event.target)) {
             hideContextMenu();
-        }
-
-        // NEW: Collapse bubble details if clicked outside
-        if (isBubbleExpanded && targetNotificationBubble && !targetNotificationBubble.contains(event.target)) {
-            collapseBubble();
         }
     });
 
@@ -2729,12 +2562,6 @@ async function initializeAppLogic() {
                 showCustomAlert("Authentication service not ready. Please try again in a moment.");
                 return;
             }
-            // NEW: Start splash image animation on login attempt
-            if (splashImage) {
-                splashImage.classList.add('animating');
-                console.log("[Splash] Starting splash image animation.");
-            }
-
             if (currentAuth.currentUser) {
                 console.log("[Auth] Current user exists, attempting sign out.");
                 try {
@@ -3358,47 +3185,26 @@ async function initializeAppLogic() {
         });
     }
 
-    // NEW: Target notification bubble click listener (to toggle expansion)
-    if (targetNotificationBubble) {
-        targetNotificationBubble.addEventListener('click', (event) => {
-            // Prevent click from propagating to global window listener immediately
-            event.stopPropagation(); 
-            // Only toggle expansion if not clicking inside the details pop-up itself
-            if (!bubbleDetails.contains(event.target)) {
-                toggleBubbleExpansion();
+    // NEW: Target hit banner dismiss button listener
+    if (targetHitDismissBtn) {
+        targetHitDismissBtn.addEventListener('click', () => {
+            if (targetHitBanner) {
+                targetHitBanner.style.display = 'none';
+                document.body.classList.remove('target-banner-active'); // Remove class from body on dismiss
+                console.log("[Target Alert] Banner dismissed by user.");
             }
         });
     }
 
-    // NEW: Bubble close button listener
-    if (bubbleCloseBtn) {
-        bubbleCloseBtn.addEventListener('click', (event) => {
-            event.stopPropagation(); // Prevent click from propagating to bubble toggle
-            collapseBubble();
-        });
-    }
-
-    // NEW: Bubble dismiss all button listener
-    if (bubbleDismissAllBtn) {
-        bubbleDismissAllBtn.addEventListener('click', (event) => {
-            event.stopPropagation(); // Prevent click from propagating to bubble toggle
-            dismissAllTargetHits();
-        });
-    }
-
-    // NEW: Bubble share list item click listener (event delegation)
-    if (bubbleShareList) {
-        bubbleShareList.addEventListener('click', (event) => {
-            const listItem = event.target.closest('li');
-            if (listItem && listItem.dataset.shareId) {
-                const shareId = listItem.dataset.shareId;
-                console.log(`[Target Bubble] Clicked share in list: ${listItem.textContent.trim()} (ID: ${shareId})`);
-                // Optionally dismiss the specific share, or view its details
-                // For now, let's view its details and dismiss it from the bubble
-                dismissTargetHit(shareId); // Dismiss from bubble
-                collapseBubble(); // Collapse the bubble
-                selectShare(shareId); // Select the share in the main list
-                showShareDetails(); // Show its details modal
+    // NEW: Target hit banner click (to view alerted shares)
+    if (targetHitBanner) {
+        targetHitBanner.addEventListener('click', (event) => {
+            // Only trigger action if not clicking the dismiss button itself
+            if (!event.target.closest('#targetHitDismissBtn')) {
+                console.log("[Target Alert] Banner clicked. Implementing action to show alerted shares.");
+                // For now, show an alert with names. Later, this can be a filtered view.
+                const alertedShareNames = sharesAtTargetPrice.map(s => s.shareName).join(', ');
+                showCustomAlert(`Shares at target: ${alertedShareNames || 'None'}`, 3000);
             }
         });
     }
@@ -3419,38 +3225,25 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log("[Firebase Ready] DB, Auth, and AppId assigned from window. Setting up auth state listener.");
         
         window.authFunctions.onAuthStateChanged(auth, async (user) => {
-            // NEW: Stop splash image animation after auth state changes
-            if (splashImage) {
-                splashImage.classList.remove('animating');
-                console.log("[Splash] Stopping splash image animation.");
-            }
-
             if (user) {
                 currentUserId = user.uid;
                 updateAuthButtonText(true, user.email || user.displayName);
                 console.log("[AuthState] User signed in:", user.uid);
                 console.log("[AuthState] User email:", user.email);
                 if (user.email && user.email.toLowerCase() === KANGA_EMAIL) {
-                    mainTitle.textContent = "Kanga's ASX Tracker"; // Updated title
-                    console.log("[AuthState] Main title set to Kanga's ASX Tracker.");
+                    mainTitle.textContent = "Kanga's Share Watchlist";
+                    console.log("[AuthState] Main title set to Kanga's Share Watchlist.");
                 } else {
-                    mainTitle.textContent = "My ASX Tracker"; // Updated title
-                    console.log("[AuthState] Main title set to My ASX Tracker.");
+                    mainTitle.textContent = "My Share Watchlist";
+                    console.log("[AuthState] Main title set to My Share Watchlist.");
                 }
                 updateMainButtonsState(true);
-                await loadUserWatchlistsAndSettings(); // This will now also load dismissedTargetHits
+                await loadUserWatchlistsAndSettings();
                 startLivePriceUpdates();
-                // Hide splash screen and show main app content
-                if (splashScreen) splashScreen.classList.add('hidden');
-                if (appHeader) appHeader.classList.remove('hidden');
-                if (mainContainer) mainContainer.classList.remove('hidden');
-                if (appSidebar) appSidebar.classList.remove('hidden'); // Show sidebar if needed
-                console.log("[UI] User logged in. Hiding splash, showing main app.");
-
             } else {
                 currentUserId = null;
                 updateAuthButtonText(false);
-                mainTitle.textContent = "ASX Tracker"; // Updated title
+                mainTitle.textContent = "Share Watchlist";
                 console.log("[AuthState] User signed out.");
                 updateMainButtonsState(false);
                 clearShareList();
@@ -3463,15 +3256,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.log("[Firestore Listener] Unsubscribed from shares listener on logout.");
                 }
                 stopLivePriceUpdates();
-                // Clear dismissed target hits when logged out
-                dismissedTargetHits = [];
-                updateTargetHitBubble(); // Hide bubble on logout
-                // Show splash screen and hide main app content
-                if (splashScreen) splashScreen.classList.remove('hidden');
-                if (appHeader) appHeader.classList.add('hidden');
-                if (mainContainer) mainContainer.classList.add('hidden');
-                if (appSidebar) appSidebar.classList.add('hidden'); // Hide sidebar on logout
-                console.log("[UI] User logged out. Showing splash, hiding main app.");
             }
             if (!window._appLogicInitialized) {
                 initializeAppLogic();

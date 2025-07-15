@@ -1,6 +1,6 @@
 {
-    "name": "ASX Tracker",
-    "short_name": "ASX Tracker",
+    "name": "Kangas Share Watchlist",
+    "short_name": "Kangas Watchlist",
     "description": "Your personal share watchlist application.",
     "start_url": "./",
     "display": "standalone",
@@ -8,12 +8,12 @@
     "theme_color": "#28a745",
     "icons": [
         {
-            "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext x='5' y='.9em' font-size='65'%3E%F0%9F%A6%99%3C/text%3E%3Ctext x='45' y='.9em' font-size='65'%3E%F0%9F%92%B0%3C/text%3E%3C/svg%3E",
+            "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext x='5' y='.9em' font-size='65'%3E%F0%9F%8D%BA%3C/text%3E%3Ctext x='45' y='.9em' font-size='65'%3E%F0%9F%92%B0%3C/text%3E%3C/svg%3E",
             "sizes": "192x192",
             "type": "image/svg+xml"
         },
         {
-            "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext x='5' y='.9em' font-size='65'%3E%F0%9F%A6%99%3C/text%3E%3Ctext x='45' y='.9em' font-size='65'%3E%F0%9F%92%B0%3C/text%3E%3C/svg%3E",
+            "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext x='5' y='.9em' font-size='65'%3E%F0%9F%8D%BA%3C/text%3E%3Ctext x='45' y='.9em' font-size='65'%3E%F0%9F%92%B0%3C/text%3E%3C/svg%3E",
             "sizes": "512x512",
             "type": "image/svg+xml"
         }
