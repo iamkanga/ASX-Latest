@@ -2604,8 +2604,8 @@ body.target-banner-active main.container {
 }
 
 .splash-icon {
-    max-width: 80%; /* Ensure it fits on smaller screens */
-    max-height: 80%; /* Ensure it fits vertically */
+    max-width: 110%; /* Ensure it fits on smaller screens */
+    max-height: 110%; /* Ensure it fits vertically */
     height: auto;
     width: auto;
     object-fit: contain; /* Maintain aspect ratio */
