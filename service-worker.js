@@ -17,7 +17,7 @@ const CACHED_ASSETS = [
     'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js',
     'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js',
     // NEW: Add the splash screen image to cache
-    'https://placehold.co/1000x1000/000000/FFFFFF?text=ASX%20Tracker%0AKangaroo'
+    'viber_image_2025-07-15_15-17-29-737.jpg'
 ];
 
 // Install event: caches all essential assets
