@@ -544,7 +544,7 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
     currentPriceInput.value = Number(shareToEdit.currentPrice) !== null && !isNaN(Number(shareToEdit.currentPrice)) ? Number(shareToEdit.currentPrice).toFixed(2) : '';
     targetPriceInput.value = Number(shareToEdit.targetPrice) !== null && !isNaN(Number(shareToEdit.targetPrice)) ? Number(shareToEdit.targetPrice).toFixed(2) : '';
     dividendAmountInput.value = Number(shareToEdit.dividendAmount) !== null && !isNaN(Number(shareToEdit.dividendAmount)) ? Number(shareToEdit.dividendAmount).toFixed(3) : '';
-    frankingCreditsInput.value = Number(shareToEdit.frankingCredits) !== null && !isNaN(Number(shareToEdit.frankingCredits)) ? Number(shareToEdit.frankingCredits).toFixed(1) : '';
+    frankingCreditsInput.value = Number(shareToEdit.frankingCredits) !== null && !isNaN(Number(shareToTo.frankingCredits)) ? Number(shareToEdit.frankingCredits).toFixed(1) : '';
     
     // Populate and set selection for the watchlist dropdown
     populateShareWatchlistSelect(shareToEdit.watchlistId, false); // false indicates not a new share
@@ -2111,6 +2111,9 @@ function hideSplashScreen() {
         if (appHeader) { // Assuming header is part of the main app content that needs to be revealed
             appHeader.classList.remove('app-hidden');
         }
+        // Temporarily remove overflow hidden from body
+        document.body.style.overflow = ''; 
+
         // Remove splash screen from DOM after transition to prevent interaction issues
         splashScreen.addEventListener('transitionend', () => {
             if (splashScreen.parentNode) {
@@ -2677,7 +2680,7 @@ async function initializeAppLogic() {
         console.log('View Mode: No saved mobile view preference, defaulting to \'default\'.');
         currentMobileViewMode = 'default'; // Ensure it's explicitly set if nothing saved
         if (mobileShareCardsContainer) { // Check if element exists before removing class
-             mobileShareCardsContainer.classList.remove('compact-view');
+             mobileShareCardsContainer.classList.remove('compact');
         }
     }
 
@@ -3497,7 +3500,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (splashScreen) {
         splashScreen.style.display = 'flex'; // Ensure it's visible
         splashScreenReady = true; // Mark splash screen as ready
-        console.log('Splash Screen: Displayed on DOMContentLoaded.');
+        document.body.style.overflow = 'hidden'; // Prevent scrolling of underlying content
+        console.log('Splash Screen: Displayed on DOMContentLoaded, body overflow hidden.');
     } else {
         console.warn('Splash Screen: Splash screen element not found. App will start without it.');
         // If splash screen isn't found, assume everything is "loaded" to proceed
@@ -3526,7 +3530,7 @@ document.addEventListener('DOMContentLoaded', function() {
         window.authFunctions.onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUserId = user.uid;
-                updateAuthButtonText(true, user.email || user.displayName);
+                // updateAuthButtonText(true, user.email || user.displayName); // This function is for the removed footer button
                 console.log('AuthState: User signed in: ' + user.uid);
                 console.log('AuthState: User email: ' + user.email);
                 if (user.email && user.email.toLowerCase() === KANGA_EMAIL) {
@@ -3551,7 +3555,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             } else {
                 currentUserId = null;
-                updateAuthButtonText(false);
+                // updateAuthButtonText(false); // This function is for the removed footer button
                 mainTitle.textContent = 'Share Watchlist';
                 console.log('AuthState: User signed out.');
                 updateMainButtonsState(false);
@@ -3567,11 +3571,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 stopLivePriceUpdates();
                 
                 window._userAuthenticated = false; // Mark user as not authenticated
-                // If signed out, ensure splash screen is hidden or not shown
-                // However, if no user, we want the splash screen to remain visible for sign-in
+                // If signed out, ensure splash screen is visible for sign-in
                 if (splashScreen) {
                     splashScreen.style.display = 'flex'; // Ensure splash screen is visible
                     splashScreen.classList.remove('hidden'); // Ensure it's not hidden
+                    document.body.style.overflow = 'hidden'; // Re-apply overflow hidden
                     if (splashKangarooIcon) {
                         splashKangarooIcon.classList.remove('pulsing'); // Stop animation if signed out
                     }

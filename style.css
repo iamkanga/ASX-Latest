@@ -2585,8 +2585,8 @@ body.target-banner-active main.container {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
+    width: 100vw; /* Use viewport width */
+    height: 100vh; /* Use viewport height */
     background-color: #000; /* Solid black background for the splash screen */
     display: flex;
     flex-direction: column;
@@ -2595,6 +2595,7 @@ body.target-banner-active main.container {
     z-index: 2000; /* Ensure it's on top of everything */
     transition: opacity 0.5s ease-out; /* Smooth fade-out transition */
     opacity: 1; /* Initially fully visible */
+    overflow: hidden; /* Prevent scrolling on the splash screen itself */
 }
 
 .splash-screen.hidden {
@@ -2621,7 +2622,7 @@ body.target-banner-active main.container {
 }
 
 .splash-icon.pulsing {
-    animation: pulsing-fade 7s ease-in-out infinite; /* Apply the animation, now 6 seconds */
+    animation: pulsing-fade 6s ease-in-out infinite; /* Apply the animation, now 6 seconds */
 }
 
 /* Adjust the sign-in button on the splash screen */
