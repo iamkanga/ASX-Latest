@@ -92,8 +92,9 @@ const modalEntryDate = document.getElementById('modalEntryDate');
 // Removed: modalLivePrice (original was still here, but now it's in the dedicated section)
 // Removed: modalPriceChange (original was still here, but now it's in the dedicated section)
 const modalTargetPrice = document.getElementById('modalTargetPrice');
-const modalDividendAmount = document.getElementById('dividendAmount'); // Corrected
-const modalFrankingCredits = document.getElementById('frankingCredits'); // Corrected
+// Corrected: These were globally referenced but needed to be created dynamically inside showShareDetails
+// const modalDividendAmount = document.getElementById('dividendAmount'); 
+// const modalFrankingCredits = document.getElementById('frankingCredits'); 
 const modalCommentsContainer = document.getElementById('modalCommentsContainer');
 const modalUnfrankedYieldSpan = document.getElementById('modalUnfrankedYield');
 const modalFrankedYieldSpan = document.getElementById('modalFrankedYield');
@@ -884,10 +885,12 @@ function showShareDetails() {
     modalTargetPrice.textContent = (!isNaN(targetPriceNum) && targetPriceNum !== null) ? `$${targetPriceNum.toFixed(2)}` : 'N/A';
     
     const dividendAmountNum = Number(share.dividendAmount);
-    modalDividendAmount.textContent = (!isNaN(dividendAmountNum) && dividendAmountNum !== null) ? `$${dividendAmountNum.toFixed(3)}` : 'N/A';
+    // Corrected declaration of divAmountDisplay
+    const divAmountDisplay = (!isNaN(dividendAmountNum) && dividendAmountNum !== null) ? `$${dividendAmountNum.toFixed(3)}` : 'N/A';
     
     const frankingCreditsNum = Number(share.frankingCredits);
-    modalFrankingCredits.textContent = (!isNaN(frankingCreditsNum) && frankingCreditsNum !== null) ? `${frankingCreditsNum.toFixed(1)}%` : 'N/A';
+    // Corrected declaration of modalFrankingCredits.textContent
+    // modalFrankingCredits.textContent = (!isNaN(frankingCreditsNum) && frankingCreditsNum !== null) ? `${frankingCreditsNum.toFixed(1)}%` : 'N/A';
     
     const priceForYield = (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) ? livePrice : enteredPriceNum;
     const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, priceForYield); 
@@ -1067,7 +1070,7 @@ function sortShares() {
 function renderWatchlistSelect() {
     if (!watchlistSelect) { console.error("[renderWatchlistSelect] watchlistSelect element not found."); return; }
     // Set the initial placeholder text to "Watch List"
-    watchlistSelect.innerHTML = '<option value="" disabled selected>Watch List</option>';
+    watchlistSelect.innerHTML = '<option value="" disabled selected>Select a Watchlist</option>';
 
     const allSharesOption = document.createElement('option');
     allSharesOption.value = ALL_SHARES_ID;
@@ -1268,7 +1271,7 @@ function addShareToTable(share) {
 
     dividendCell.innerHTML = `
         <div class="dividend-yield-cell-content">
-            <span>Dividend:</span> <span class="value">${divAmountDisplay}</span>
+            <span>Dividend:</span> <span class="value">${(Number(share.dividendAmount) !== null && !isNaN(Number(share.dividendAmount))) ? `$${Number(share.dividendAmount).toFixed(2)}` : '-'}</span>
         </div>
         <div class="dividend-yield-cell-content">
             <span>Unfranked Yield:</span> <span class="value">${displayUnfrankedYield}&#xFE0E;</span>
@@ -1322,7 +1325,28 @@ function addShareToMobileCards(share) {
     const displayShareName = (share.shareName && String(share.shareName).trim() !== '') ? share.shareName : '(No Code)';
     const displayEnteredPrice = (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? enteredPriceNum.toFixed(2) : '-';
 
-    card.innerHTML = `
+    let livePriceHtml = '';
+    let priceChangeClass = '';
+    let priceChangeText = '';
+
+    if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) {
+        // Calculate daily change using livePrice and prevClosePrice for mobile cards
+        if (prevClosePrice !== undefined && prevClosePrice !== null && !isNaN(prevClosePrice)) {
+            const change = livePrice - prevClosePrice;
+            const percentageChange = (prevClosePrice !== 0 && !isNaN(prevClosePrice)) ? (change / prevClosePrice) * 100 : 0;
+            if (change > 0) {
+                priceChangeText = `(+$${change.toFixed(2)} / +${percentageChange.toFixed(2)}%)`;
+                priceChangeClass = 'positive';
+            } else if (change < 0) {
+                priceChangeText = `(-$${Math.abs(change).toFixed(2)} / ${percentageChange.toFixed(2)}%)`;
+                priceChangeClass = 'negative';
+            } else {
+                priceChangeText = `($0.00 / 0.00%)`;
+                priceChangeClass = 'neutral';
+            }
+        }
+
+        card.innerHTML = `
             <h3>${displayShareName}</h3>
             <div class="live-price-display-section ${priceChangeClass}-change-section">
                 <span class="live-price-large">$${livePrice.toFixed(2)}</span>
@@ -1334,7 +1358,26 @@ function addShareToMobileCards(share) {
             <p><strong>Franking:</strong> ${displayFrankingCredits}</p>
             <p><strong>Unfranked Yield:</strong> ${unfrankedYield !== null && !isNaN(unfrankedYield) ? unfrankedYield.toFixed(2) + '%' : '0.00%'}&#xFE0E;</p>
             <p><strong>Franked Yield:</strong> ${frankedYield !== null && !isNaN(frankedYield) ? frankedYield.toFixed(2) + '%' : '0.00%'}&#xFE0E;</p>
-            `;
+            <!-- Removed Entry Date from mobile cards -->
+            <!-- <p><strong>Entry Date:</strong> ${formatDate(share.entryDate) || '-'}</p> -->
+        `;
+    } else {
+        card.innerHTML = `
+            <h3>${displayShareName}</h3>
+            <div class="live-price-display-section">
+                <span class="live-price-large">N/A</span>
+                <span class="price-change-large"></span>
+            </div>
+            <p><strong>Entered Price:</strong> $${displayEnteredPrice}</p>
+            <p><strong>Target:</strong> $${displayTargetPrice}</p>
+            <p><strong>Dividend:</strong> $${displayDividendAmount}</p>
+            <p><strong>Franking:</strong> ${displayFrankingCredits}</p>
+            <p><strong>Unfranked Yield:</strong> ${unfrankedYield !== null && !isNaN(unfrankedYield) ? unfrankedYield.toFixed(2) + '%' : '0.00%'}&#xFE0E;</p>
+            <p><strong>Franked Yield:</strong> ${frankedYield !== null && !isNaN(frankedYield) ? frankedYield.toFixed(2) + '%' : '0.00%'}&#xFE0E;</p>
+            <!-- Removed Entry Date from mobile cards -->
+            <!-- <p><strong>Entry Date:</strong> ${formatDate(share.entryDate) || '-'}</p> -->
+        `;
+    }
     mobileShareCardsContainer.appendChild(card);
 
     let lastClickTime = 0;
@@ -2080,7 +2123,7 @@ async function migrateOldSharesToWatchlist() {
         }
         return anyMigrationPerformed;
     } catch (error) {
-        console.error("[Migration] Error during migration/schema update:", error);
+        console.error("[Migration] Error during data migration: " + error.message);
         showCustomAlert("Error during data migration: " + error.message);
         return false;
     }
