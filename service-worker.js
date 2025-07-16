@@ -93,7 +93,7 @@ self.addEventListener('fetch', (event) => {
     }
 });
 
-// Message event: allows the app to send messages to the service worker (e.g., to skip waiting)
+//  Message event: allows the app to send messages to the service worker (e.g., to skip waiting)
 self.addEventListener('message', (event) => {
     if (event.data && event.data.type === 'SKIP_WAITING') {
         self.skipWaiting();
