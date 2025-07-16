@@ -37,7 +37,7 @@ let originalShareData = null; // Stores the original share data when editing for
 let originalWatchlistData = null; // Stores original watchlist data for dirty state check in watchlist modals
 
 // Live Price Data
-const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzp7OjZL3zqvJ9wPsV9M-afm2wKeQPbIgGVv_juVpkaRllADESLwj7F4-S7YWYerau-/exec'; // Your new Google Apps Script URL
+const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzp7OjZL3zqvJ9wPsV9M-afm2wKeQPbIgGVv_juVpkaRllADESLwj7F4-S7YWYWYerau-/exec'; // Your new Google Apps Script URL
 let livePrices = {}; // Stores live price data: {ASX_CODE: {live: price, prevClose: price, PE: value, High52: value, Low52: value, targetHit: boolean}}
 let livePriceFetchInterval = null; // To hold the interval ID for live price updates
 const LIVE_PRICE_FETCH_INTERVAL_MS = 5 * 60 * 1000; // Fetch every 5 minutes
@@ -1092,7 +1092,7 @@ function renderWatchlistSelect() {
     });
 
     if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID)) {
-        watchlistSelect.value = ALL_SHAres_ID;
+        watchlistSelect.value = ALL_SHARES_ID; // Corrected typo here
     } else if (currentSelectedWatchlistIds.length === 1) {
         watchlistSelect.value = currentSelectedWatchlistIds[0];
     } else {
@@ -1753,7 +1753,7 @@ async function applyTheme(themeName) {
         currentCustomThemeIndex = -1; 
     } else {
         // For custom themes, apply the class and set data-theme attribute
-        // The class name is 'theme-' followed by the themeName (e.g., 'theme-bold-1', 'theme-Muted Blue')
+        // The class name is 'theme-' followed by the themeName (e.g., 'theme-bold-1', 'theme-muted-blue')
         body.classList.add('theme-' + themeName.toLowerCase().replace(/\s/g, '-')); // Convert "Muted Blue" to "muted-blue" for class
         body.setAttribute('data-theme', themeName); // Keep the full name in data-theme
         localStorage.setItem('selectedTheme', themeName);
@@ -2392,7 +2392,7 @@ function toggleAppSidebar(forceState = null) {
             console.log('Sidebar: Desktop: Sidebar opened, body shifted, overlay pointer-events: none.');
         } else {
             document.body.classList.remove('sidebar-active');
-            sidebarOverlay.style.pointerEvents = 'auto';
+            sidebarOverlay.style.pointerEvents = 'auto'; // Ensure overlay is clickable on mobile
             console.log('Sidebar: Mobile: Sidebar opened, body NOT shifted, overlay pointer-events: auto.');
         }
         console.log('Sidebar: Sidebar opened.');
@@ -2401,7 +2401,7 @@ function toggleAppSidebar(forceState = null) {
         sidebarOverlay.classList.remove('open');
         document.body.classList.remove('sidebar-active');
         document.body.style.overflow = ''; // Restore scrolling
-        sidebarOverlay.style.pointerEvents = 'none';
+        sidebarOverlay.style.pointerEvents = 'none'; // Reset pointer-events when closed
         console.log('Sidebar: Sidebar closed.');
     }
 }
@@ -2652,7 +2652,7 @@ async function initializeAppLogic() {
     if (dividendCalculatorModal) dividendCalculatorModal.style.setProperty('display', 'none', 'important');
     if (shareDetailModal) shareDetailModal.style.setProperty('display', 'none', 'important');
     if (addWatchlistModal) addWatchlistModal.style.setProperty('display', 'none', 'important');
-    if (manageWatchlistModal) manageWatchlistModal.style.setProperty('display', 'none', 'important');
+    if (manageWatchlistModal) manageWatchListModal.style.setProperty('display', 'none', 'important');
     if (customDialogModal) customDialogModal.style.setProperty('display', 'none', 'important');
     if (calculatorModal) calculatorModal.style.setProperty('display', 'none', 'important');
     if (shareContextMenu) shareContextMenu.style.setProperty('display', 'none', 'important');
