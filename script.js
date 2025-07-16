@@ -175,11 +175,18 @@ function adjustMainContentPadding() {
     // Ensure both the header and main content container elements exist.
     if (appHeader && mainContainer) {
         // Get the current computed height of the fixed header.
-        const headerHeight = appHeader.offsetHeight;
-        // Apply this height as padding to the top of the main content container.
+        let headerHeight = appHeader.offsetHeight;
+
+        // If the target hit banner is currently displayed, add its height
+        // Check computed style for display, as style.display might not reflect CSS rules
+        if (targetHitBanner && window.getComputedStyle(targetHitBanner).display !== 'none') {
+            headerHeight += targetHitBanner.offsetHeight;
+        }
+
+        // Apply this total height as padding to the top of the main content container.
         // This pushes the content down so it starts exactly below the fixed header.
         mainContainer.style.paddingTop = `${headerHeight}px`;
-        console.log('Layout: Adjusted main content padding-top to: ' + headerHeight + 'px');
+        console.log('Layout: Adjusted main content padding-top to: ' + headerHeight + 'px (Header: ' + appHeader.offsetHeight + ', Banner: ' + (targetHitBanner && window.getComputedStyle(targetHitBanner).display !== 'none' ? targetHitBanner.offsetHeight : 0) + ')' );
     } else {
         console.warn('Layout: Could not adjust main content padding-top: appHeader or mainContainer not found.');
     }
@@ -1045,7 +1052,7 @@ function renderWatchlistSelect() {
     });
 
     if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID)) {
-        watchlistSelect.value = ALL_SHARES_ID; // Corrected typo here
+        watchlistSelect.value = ALL_SHARES_ID;
     } else if (currentSelectedWatchlistIds.length === 1) {
         watchlistSelect.value = currentSelectedWatchlistIds[0];
     } else {
@@ -1528,6 +1535,7 @@ function renderWatchlist() {
     }
     console.log('Render: Watchlist rendering complete.');
     updateTargetHitBanner(); // NEW: Update the banner after rendering the watchlist
+    adjustMainContentPadding(); // Ensure padding is adjusted after rendering, as button visibility changes header height
 }
 
 function renderAsxCodeButtons() {
@@ -1957,7 +1965,8 @@ async function fetchLivePrices() {
         livePrices = newLivePrices;
         console.log('Live Price: Live prices updated:', livePrices);
         renderWatchlist(); 
-        adjustMainContentPadding(); // NEW: Ensure padding is adjusted after live prices update 
+        // Call adjustMainContentPadding here as live price data might affect targetHitBanner visibility
+        adjustMainContentPadding(); 
         // NEW: Indicate that live prices are loaded for splash screen
         window._livePricesLoaded = true;
         hideSplashScreenIfReady();
@@ -2016,6 +2025,8 @@ function updateTargetHitBanner() {
         document.body.classList.remove('target-banner-active'); // Remove class from body
         console.log('Target Alert: No shares hit target. Hiding banner.');
     }
+    // Crucial: Call adjustMainContentPadding after banner visibility changes
+    adjustMainContentPadding();
 }
 
 /**
@@ -3387,6 +3398,8 @@ async function initializeAppLogic() {
                 document.body.classList.remove('target-banner-active'); // Remove class from body on dismiss
                 console.log('Target Alert: Banner dismissed by user.');
             }
+            // Crucial: Call adjustMainContentPadding after banner visibility changes
+            adjustMainContentPadding();
         });
     }
 
@@ -3406,7 +3419,7 @@ async function initializeAppLogic() {
 
     // Call adjustMainContentPadding initially and on window load/resize
     window.addEventListener('load', adjustMainContentPadding);
-    // Already added to window.addEventListener('resize') in sidebar section
+    window.addEventListener('resize', adjustMainContentPadding); // Ensure padding adjusts on resize
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -3531,7 +3544,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             // Call renderWatchlist here to ensure correct mobile card rendering after auth state is set
             renderWatchlist();
-            adjustMainContentPadding(); // NEW: Ensure padding is adjusted after initial render
+            // Crucial: Call adjustMainContentPadding after auth state changes, as header content might change
+            adjustMainContentPadding();
         });
     } else {
         console.error('Firebase: Firebase objects (db, auth, appId, firestore, authFunctions) are not available on DOMContentLoaded. Firebase initialization likely failed in index.html.');
