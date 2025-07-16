@@ -1361,7 +1361,7 @@ function addShareToMobileCards(share) {
         // Conditionally render content based on view mode
         if (currentMobileViewMode === 'compact') {
             card.innerHTML = `
-                <h3>${displayShareName}</h3>
+                <h3 class="${priceChangeClass}">${displayShareName}</h3>
                 <div class="live-price-display-section ${priceChangeClass}-change-section">
                     <span class="live-price-large ${priceChangeClass}">$${livePrice.toFixed(2)}</span>
                     <span class="price-change-large ${priceChangeClass}">${priceChangeText}</span>
@@ -2380,6 +2380,11 @@ function toggleAppSidebar(forceState = null) {
     if (forceState === true || (forceState === null && !isOpen)) {
         appSidebar.classList.add('open');
         sidebarOverlay.classList.add('open');
+        // Prevent scrolling of main content when sidebar is open on mobile
+        if (!isDesktop) {
+            document.body.style.overflow = 'hidden';
+            console.log('Sidebar: Mobile: Body overflow hidden.');
+        }
         if (isDesktop) {
             document.body.classList.add('sidebar-active');
             sidebarOverlay.style.pointerEvents = 'none';
@@ -2394,6 +2399,7 @@ function toggleAppSidebar(forceState = null) {
         appSidebar.classList.remove('open');
         sidebarOverlay.classList.remove('open');
         document.body.classList.remove('sidebar-active');
+        document.body.style.overflow = ''; // Restore scrolling
         sidebarOverlay.style.pointerEvents = 'none';
         console.log('Sidebar: Sidebar closed.');
     }
@@ -3393,11 +3399,14 @@ async function initializeAppLogic() {
 
         document.addEventListener('click', (event) => {
             const isDesktop = window.innerWidth > 768;
+            // Only close sidebar on clicks outside if it's desktop and the click isn't on the sidebar or hamburger button
             if (appSidebar.classList.contains('open') && isDesktop &&
                 !appSidebar.contains(event.target) && !hamburgerBtn.contains(event.target)) {
                 console.log('Global Click: Clicked outside sidebar on desktop. Closing sidebar.');
                 toggleAppSidebar(false);
             }
+            // For mobile, the sidebarOverlay handles clicks outside, and its pointer-events are managed.
+            // No additional document click listener needed for mobile sidebar dismissal.
         });
 
         window.addEventListener('resize', () => {
@@ -3622,7 +3631,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // The splashSignInBtn now handles the initial sign-in.
         // The googleAuthBtn (footer) is removed from HTML.
-        // This  block is no longer strictly needed for the footer button's direct action,
+        // This block is no longer strictly needed for the footer button's direct action,
         // but keeping it for context if googleAuthBtn were to be re-added.
         if (googleAuthBtn) {
             googleAuthBtn.disabled = false;

@@ -1,7 +1,7 @@
-// Service Worker Version: 1.0.0
+// Service Worker Version: 1.0.1
 
 // Cache name for the current version of the service worker
-const CACHE_NAME = 'share-watchlist-v1.0.0';
+const CACHE_NAME = 'share-watchlist-v1.0.1'; // Version incremented
 
 // List of essential application assets to precache
 const CACHED_ASSETS = [
@@ -93,7 +93,7 @@ self.addEventListener('fetch', (event) => {
     }
 });
 
-//  Message  event: allows the app to send messages to the service worker (e.g., to skip waiting)
+// Message event: allows the app to send messages to the service worker (e.g., to skip waiting)
 self.addEventListener('message', (event) => {
     if (event.data && event.data.type === 'SKIP_WAITING') {
         self.skipWaiting();

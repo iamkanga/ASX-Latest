@@ -1,6 +1,6 @@
 {
     "name": "Kangas Share Watchlist",
-    "short_name": "Kangas Watchlist",
+    "short_name": "Kangas Watchlist v1.0.1",
     "description": "Your personal share watchlist application.",
     "start_url": "./",
     "display": "standalone",
