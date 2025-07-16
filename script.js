@@ -2652,7 +2652,7 @@ async function initializeAppLogic() {
     if (dividendCalculatorModal) dividendCalculatorModal.style.setProperty('display', 'none', 'important');
     if (shareDetailModal) shareDetailModal.style.setProperty('display', 'none', 'important');
     if (addWatchlistModal) addWatchlistModal.style.setProperty('display', 'none', 'important');
-    if (manageWatchlistModal) manageWatchListModal.style.setProperty('display', 'none', 'important');
+    if (manageWatchlistModal) manageWatchlistModal.style.setProperty('display', 'none', 'important');
     if (customDialogModal) customDialogModal.style.setProperty('display', 'none', 'important');
     if (calculatorModal) calculatorModal.style.setProperty('display', 'none', 'important');
     if (shareContextMenu) shareContextMenu.style.setProperty('display', 'none', 'important');
