@@ -230,14 +230,25 @@
         </div>
     </main>
 
-    <!-- Target Price Notification Banner -->
-    <div id="targetHitBanner" class="target-hit-banner">
-        <div class="message-content">
-            <i class="fas fa-bullseye"></i>
-            <span id="targetHitCount">0</span>
-            <span id="targetHitMessage">shares have hit their target price!</span>
+    <!-- NEW: Floating Price Alert Icon -->
+    <div id="priceAlertIcon" class="price-alert-icon">
+        <i class="fas fa-bell"></i>
+        <span id="alertCount" class="alert-count">0</span>
+    </div>
+
+    <!-- NEW: Price Alert Panel (slides up from bottom-right) -->
+    <div id="priceAlertPanel" class="price-alert-panel">
+        <div class="panel-header">
+            <h3>Price Alerts <span id="panelAlertCount" class="alert-count">0</span></h3>
+            <button id="closeAlertPanelBtn" class="close-button">&times;</button>
         </div>
-        <button id="targetHitDismissBtn" class="dismiss-btn">&times;</button>
+        <div id="alertList" class="alert-list">
+            <!-- Alert items will be dynamically added here -->
+            <p class="no-alerts-message">No new price alerts.</p>
+        </div>
+        <div class="panel-footer">
+            <button id="dismissAllAlertsBtn" class="action-button secondary-buttons">Dismiss All</button>
+        </div>
     </div>
 
     <!-- Scroll-to-Top Button -->
