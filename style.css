@@ -2588,8 +2588,8 @@ body.target-banner-active main.container {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw; /* Use viewport width */
-    height: 100vh; /* Use viewport height */
+    width: 160vw; /* Use viewport width */
+    height: 160vh; /* Use viewport height */
     background-color: #000; /* Solid black background for the splash screen */
     display: flex;
     flex-direction: column;
