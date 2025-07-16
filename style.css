@@ -1984,7 +1984,7 @@ h1#mainTitle {
 /* Ensure it covers the whole viewport and is clickable */
 .sidebar-overlay {
     display: none; /* Hidden by default */
-    position: fixed;
+    position: fixed; /* Use fixed positioning relative to the viewport */
     top: 0;
     left: 0;
     width: 100vw; /* Cover full viewport width */
