@@ -372,7 +372,8 @@ function hideModal(modalElement) {
 }
 
 function clearWatchlistUI() {
-    if (watchlistSelect) watchlistSelect.innerHTML = '<option value="" disabled selected>Watch List</option>'; // Updated placeholder
+    if (!watchlistSelect) { console.error('clearWatchlistUI: watchlistSelect element not found.'); return; }
+    watchlistSelect.innerHTML = '<option value="" disabled selected>Watch List</option>'; // Updated placeholder
     userWatchlists = [];
     currentSelectedWatchlistIds = [];
     console.log('UI: Watchlist UI cleared.');
