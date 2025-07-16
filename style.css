@@ -2085,7 +2085,6 @@ table td.live-price-cell.negative-change {
     touch-action: pan-y; /* Prioritize vertical scrolling for touch */
     padding-right: 25px; /* Add extra padding to make space for resize handle/scrollbar */
     box-sizing: border-box; /* Include padding in width calculation */
-    overflow-y: auto; /* Ensure vertical scrollbar appears when content overflows */
     white-space: pre-wrap; /* Preserve whitespace and line breaks */
 }
 
@@ -2588,8 +2587,8 @@ body.target-banner-active main.container {
     position: fixed;
     top: 0;
     left: 0;
-    width: 160vw; /* Use viewport width */
-    height: 160vh; /* Use viewport height */
+    width: 100vw; /* Use viewport width */
+    height: 100vh; /* Use viewport height */
     background-color: #000; /* Solid black background for the splash screen */
     display: flex;
     flex-direction: column;
@@ -2772,134 +2771,6 @@ body.target-banner-active main.container {
         white-space: pre-wrap; /* Preserve whitespace and line breaks */
     }
 
-
-    .form-action-buttons,
-    .modal-action-buttons,
-    .custom-dialog-buttons {
-        flex-direction: row; /* Keep as row for better spacing on mobile */
-        gap: 8px;
-        margin-top: 15px;
-        padding-top: 10px;
-    }
-
-    .modal-content .sticky-footer {
-        bottom: -15px; /* Adjust for smaller modal padding */
-        left: -15px;
-        right: -15px;
-        padding: 15px;
-    }
-
-    .modal-action-icon {
-        font-size: 1.3em;
-        padding: 6px;
-    }
-
-    .calculator-display {
-        padding: 10px;
-        min-height: 70px;
-    }
-
-    .calculator-result {
-        font-size: 1.8em;
-    }
-
-    .calc-btn {
-        padding: 10px;
-        font-size: 1.2em;
-    }
-
-    #scrollToTopBtn {
-        bottom: 70px; /* Above the fixed footer */
-    }
-
-    /* Adjust banner position for mobile */
-    #targetHitBanner {
-        bottom: auto; /* Remove bottom positioning */
-        top: 0; /* Position at the top for mobile */
-        font-size: 0.9em;
-        padding: 10px 15px;
-    }
-}
-
-@media (max-width: 480px) {
-    header {
-        padding: 15px 5px 10px; /* Adjusted padding for very small mobile */
-    }
-
-    .header-top-row {
-        padding: 0; /* No individual padding, handled by parent header */
-    }
-
-    h1#mainTitle {
-        font-size: 1.3em;
-    }
-
-    .header-action-btn {
-        font-size: 1.3em;
-    }
-
-    .hamburger-btn {
-        font-size: 1.3em;
-        padding: 5px;
-    }
-
-    .asx-code-buttons-container {
-        padding: 8px 10px;
-    }
-
-    .asx-code-btn {
-        padding: 6px 10px;
-        font-size: 0.8em;
-    }
-
-    .fixed-footer {
-        padding: 8px 10px;
-    }
-    /* Reduce width of Google Auth button on very small screens */
-    .google-auth-btn {
-        max-width: 200px; /* Limit width on very small screens */
-        margin: 0 auto; /* Center it */
-    }
-
-    .modal-content {
-        padding: 10px;
-    }
-
-    /* Ensure modalShareName retains its large font size on very small mobile */
-    #modalShareName {
-        font-size: 2.2em; /* Keep it consistent with desktop and live price */
-    }
-
-    .close-button {
-        font-size: 1.5em;
-        right: 10px;
-    }
-
-    .modal-content label {
-        font-size: 0.9em;
-    }
-
-    .modal-content input[type="text"],
-    .modal-content input[type="number"],
-    .modal-content textarea,
-    .calc-input-group input[type="number"],
-    .calc-input-group select {
-        width: calc(100% - 16px); /* Adjust for smaller padding */
-        padding: 8px; /* Slightly larger padding */
-        font-size: 1em; /* Keep it readable */
-        margin-bottom: 12px; /* Slight adjustment */
-    }
-
-    /* Specific adjustments for comments textarea on mobile */
-    .comment-section .comment-text-input {
-        min-height: 100px; /* Make it taller by default */
-        resize: vertical; /* Allow vertical resizing */
-        /* Ensure resize handle is visible and scrollbar is usable */
-        padding-right: 25px; /* Add extra padding to make space for resize handle/scrollbar */
-        box-sizing: border-box; /* Include padding in width calculation */
-        overflow-y: auto; /* Ensure vertical scrollbar appears when content overflows */
-        white-space: pre-wrap; /* Preserve whitespace and line breaks */
-    }
 
     .form-action-buttons,
     .modal-action-buttons,

@@ -9,7 +9,7 @@
 
     <!-- Linking to your separate style.css file -->
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">\
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <!-- PWA Manifest Link -->
@@ -429,11 +429,11 @@
             </div>
             <div class="calc-input-group">
                 <label for="calcDividendAmount">Dividend Amount (per share, annual $):</label>
-                <input type="number" id="dividendAmount" step="0.001" placeholder="e.g., 1.250">
+                <input type="number" id="calcDividendAmount" step="0.001" placeholder="e.g., 1.250"> <!-- ID changed -->
             </div>
             <div class="calc-input-group">
-                <label for="frankingCredits">Franking Credits (%):</label>
-                <input type="number" id="frankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 70 for 70%">
+                <label for="calcFrankingCredits">Franking Credits (%):</label>
+                <input type="number" id="calcFrankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 70 for 70%"> <!-- ID changed -->
             </div>
             <p><strong>Unfranked Yield:</strong> <span id="calcUnfrankedYield"></span></p>
             <p><strong>Franked Yield:</strong> <span id="calcFrankedYield"></span></p>
