@@ -46,8 +46,8 @@ const LIVE_PRICE_FETCH_INTERVAL_MS = 5 * 60 * 1000; // Fetch every 5 minutes
 const CUSTOM_THEMES = [
     'bold-1', 'bold-2', 'bold-3', 'bold-4', 'bold-5', 'bold-6', 'bold-7', 'bold-8', 'bold-9', 'bold-10',
     'subtle-1', 'subtle-2', 'subtle-3', 'subtle-4', 'subtle-5', 'subtle-6', 'subtle-7', 'subtle-8', 'subtle-9', 'subtle-10',
-    // NEW MID-RANGE THEMES
-    'mid-1', 'mid-2', 'mid-3', 'mid-4', 'mid-5', 'mid-6', 'mid-7', 'mid-8', 'mid-9', 'mid-10'
+    // UPDATED: Muted Theme names to match display text in index.html
+    'Muted Blue', 'Muted Brown', 'Muted Pink', 'Muted Green', 'Muted Purple', 'Muted Orange', 'Muted Cyan', 'Muted Magenta', 'Muted Gold', 'Muted Grey'
 ];
 let currentCustomThemeIndex = -1; // To track the current theme in the cycle
 let currentActiveTheme = 'system-default'; // Tracks the currently applied theme string
@@ -1092,7 +1092,7 @@ function renderWatchlistSelect() {
     });
 
     if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID)) {
-        watchlistSelect.value = ALL_SHARES_ID;
+        watchlistSelect.value = ALL_SHAres_ID;
     } else if (currentSelectedWatchlistIds.length === 1) {
         watchlistSelect.value = currentSelectedWatchlistIds[0];
     } else {
@@ -1378,7 +1378,7 @@ function addShareToMobileCards(share) {
         } else {
             card.innerHTML = `
                 <h3 class="${priceChangeClass}">${displayShareName}</h3>
-                <div class="live-price-display-section ${priceChangeClass}-change-section">
+                <div class="live-price-display-section">
                     <span class="live-price-large">$${livePrice.toFixed(2)}</span>
                     <span class="price-change-large ${priceChangeClass}">${priceChangeText}</span>
                 </div>
@@ -1501,7 +1501,8 @@ function renderWatchlist() {
 
     if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID)) {
         sharesToRender = [...allSharesData];
-        mainTitle.textContent = 'All My Shares';
+        // UPDATED: Main title for "All Shares"
+        mainTitle.textContent = 'All Shares'; 
         console.log('Render: Displaying all shares (from ALL_SHARES_ID in currentSelectedWatchlistIds).');
     } else if (currentSelectedWatchlistIds.length === 0 && userWatchlists.length > 0) {
         currentSelectedWatchlistIds = [userWatchlists[0].id];
@@ -1751,8 +1752,10 @@ async function applyTheme(themeName) {
         // When applying explicit light/dark, ensure currentCustomThemeIndex is reset to -1
         currentCustomThemeIndex = -1; 
     } else {
-        body.classList.add('theme-' + themeName);
-        body.setAttribute('data-theme', themeName);
+        // For custom themes, apply the class and set data-theme attribute
+        // The class name is 'theme-' followed by the themeName (e.g., 'theme-bold-1', 'theme-Muted Blue')
+        body.classList.add('theme-' + themeName.toLowerCase().replace(/\s/g, '-')); // Convert "Muted Blue" to "muted-blue" for class
+        body.setAttribute('data-theme', themeName); // Keep the full name in data-theme
         localStorage.setItem('selectedTheme', themeName);
         localStorage.removeItem('theme');
         console.log('Theme Debug: Applied custom theme: ' + themeName);
@@ -1781,7 +1784,7 @@ function updateThemeToggleAndSelector() {
         if (CUSTOM_THEMES.includes(currentActiveTheme)) {
             colorThemeSelect.value = currentActiveTheme;
         } else {
-            // If not a custom theme, set dropdown to 'none' (System Default)
+            // If not a custom theme (system-default, light, dark), set dropdown to 'none' (No Custom Theme)
             colorThemeSelect.value = 'none';
         }
         console.log('Theme UI: Color theme select updated to: ' + colorThemeSelect.value);
@@ -3318,7 +3321,12 @@ async function initializeAppLogic() {
         colorThemeSelect.addEventListener('change', (event) => {
             console.log('Theme: Color theme select changed to: ' + event.target.value);
             const selectedTheme = event.target.value;
-            applyTheme(selectedTheme);
+            // If "No Custom Theme" is selected, apply system-default
+            if (selectedTheme === 'none') {
+                applyTheme('system-default');
+            } else {
+                applyTheme(selectedTheme);
+            }
         });
     }
 
