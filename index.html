@@ -4,26 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Share Watchlist</title>
-    <!-- Favicon: Updated to Favicn.png -->
+    <!-- Favicon -->
     <link rel="icon" href="Favicn.png" type="image/png">
 
     <!-- Linking to your separate style.css file -->
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">\
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <!-- PWA Manifest Link -->
     <link rel="manifest" href="./manifest.json">
 </head>
 <body>
-    <!-- NEW: Splash Screen Container -->
+    <!-- Splash Screen Container -->
     <div id="splashScreen" class="splash-screen">
         <img id="splashKangarooIcon" src="Kangaicon.jpg" alt="Kangaroo App Icon" class="splash-icon">
         <!-- The sign-in button on the splash screen -->
         <button id="splashSignInBtn" class="google-auth-btn">Google Sign In</button>
     </div>
 
-    <header id="appHeader" class="app-hidden"> <!-- Added app-hidden class -->
+    <header id="appHeader" class="app-hidden">
         <div class="header-top-row">
             <!-- Hamburger/Sidebar Toggle Button -->
             <button id="hamburgerBtn" class="hamburger-btn header-action-btn-left">
@@ -40,7 +40,6 @@
         <div class="watchlist-controls-row">
             <div class="watchlist-group">
                 <select id="watchlistSelect" class="dropdown-large">
-                    <!-- Corrected placeholder text directly in HTML -->
                     <option value="" disabled selected>Watch List</option>
                     <!-- Options populated by JS -->
                 </select>
@@ -48,7 +47,6 @@
 
             <div class="sort-group">
                 <select id="sortSelect" class="dropdown-large">
-                    <!-- Corrected placeholder text directly in HTML -->
                     <option value="" disabled selected>Sort List</option>
                     <option value="entryDate-desc">Date Added (Newest)</option>
                     <option value="entryDate-asc">Date Added (Oldest)</option>
@@ -56,7 +54,6 @@
                     <option value="shareName-desc">Code (Z-A)</option>
                     <option value="dividendAmount-desc">Dividend (High-Low)</option>
                     <option value="dividendAmount-asc">Dividend (Low-High)</option>
-                    <!-- NEW: Option to sort by percentage change -->
                     <option value="percentageChange-desc">Percentage Change (High-Low)</option>
                     <option value="percentageChange-asc">Percentage Change (Low-High)</option>
                 </select>
@@ -76,7 +73,7 @@
         <div class="menu-section">
             <h3>Share Actions</h3>
             <div class="menu-buttons-group">
-                <!-- NEW: Compact View Toggle Button -->
+                <!-- Compact View Toggle Button -->
                 <button id="toggleCompactViewBtn" class="menu-button-item" data-action-closes-menu="false">
                     <i class="fas fa-th-large"></i> <span>Toggle Compact View</span>
                 </button>
@@ -119,7 +116,7 @@
             </div>
         </div>
 
-        <!-- MOVED: Data Actions section -->
+        <!-- Data Actions section -->
         <div class="menu-section">
             <h3>Theme</h3>
             <div class="menu-buttons-group">
@@ -151,7 +148,6 @@
                         <option value="subtle-9">Subtle Teal</option>
                         <option value="subtle-10">Subtle Stone</option>
                     </optgroup>
-                    <!-- UPDATED: Muted Themes Optgroup - Corrected display names and values -->
                     <optgroup label="Muted Themes">
                         <option value="Muted Blue">Muted Blue</option>
                         <option value="Muted Brown">Muted Brown</option>
@@ -178,7 +174,7 @@
             </div>
         </div>
         
-        <!-- NEW POSITION: Data Actions section -->
+        <!-- Data Actions section -->
         <div class="menu-section">
             <h3>Data Actions</h3>
             <div class="menu-buttons-group">
@@ -202,7 +198,7 @@
     <!-- Sidebar overlay for desktop to handle clicks outside -->
     <div id="sidebarOverlay" class="sidebar-overlay"></div>
 
-    <main class="container app-hidden"> <!-- Added app-hidden class -->
+    <main class="container app-hidden">
         <!-- Message for Firebase initialization errors -->
         <div id="firebaseInitError" class="error-message" style="display: none;">
             <p><strong>Error:</strong> Firebase failed to initialize.</p>
@@ -221,8 +217,6 @@
                             <th>Entered Price</th>
                             <th>Target Price</th>
                             <th>Dividends</th>
-                            <!-- REMOVED: Comments column header -->
-                            <!-- <th>Comments</th> -->
                         </tr>
                     </thead>
                     <tbody>
@@ -236,12 +230,7 @@
         </div>
     </main>
 
-    <!--  Removed the footer Google Sign-In button as it's now on the splash screen -->
-    <!-- <footer class="fixed-footer">
-        <button id="googleAuthBtn" class="google-auth-btn">Google Sign In</button>
-    </footer> -->
-
-    <!-- NEW: Target Price Notification Banner -->
+    <!-- Target Price Notification Banner -->
     <div id="targetHitBanner" class="target-hit-banner">
         <div class="message-content">
             <i class="fas fa-bullseye"></i>
@@ -258,21 +247,19 @@
     <!-- Share Form Modal -->
     <div id="shareFormSection" class="modal">
         <div class="modal-content add-share-modal-content">
-            <!-- Header with close button and title - MODIFIED -->
             <div class="modal-header-with-icon">
                 <h2 id="formTitle">Add New Share</h2>
                 <div class="modal-header-action-group">
-                    <!-- Delete Icon - MOVED TO TOP RIGHT -->
+                    <!-- Delete Icon -->
                     <span id="deleteShareBtn" class="modal-action-icon danger hidden" title="Delete"><i class="fas fa-trash-alt"></i></span>
-                    <!-- Save Icon - MOVED TO TOP RIGHT -->
+                    <!-- Save Icon -->
                     <span id="saveShareBtn" class="modal-action-icon" title="Save Share"><i class="fas fa-save"></i></span>
                     <span class="close-button form-close-button">&times;</span>
                 </div>
             </div>
             
-            <!-- Scrollable content area for the form inputs and comments -->
             <div class="modal-body-scrollable">
-                <!-- NEW: Watchlist selection dropdown for shares -->
+                <!-- Watchlist selection dropdown for shares -->
                 <label for="shareWatchlistSelect">Assign to Watchlist:</label>
                 <select id="shareWatchlistSelect" class="dropdown-large" required>
                     <option value="" disabled selected>Select a Watchlist</option>
@@ -296,7 +283,6 @@
 
                 <!-- Comments section container -->
                 <div class="comments-form-container">
-                    <!-- This H3 and icon are STATIC and will NOT be cleared -->
                     <h3>Comments <span id="addCommentSectionBtn" class="add-section-icon"><i class="fas fa-plus"></i></span></h3>
                     
                     <!-- This is the container for dynamically added comment sections -->
@@ -305,34 +291,25 @@
                     </div>
                 </div>
             </div>
-            <!-- END Scrollable content area -->
-
-            <!-- REMOVED: Old sticky footer for action icons -->
-            <!-- <div class="form-action-buttons modal-form-buttons sticky-footer">
-                <span id="deleteShareBtn" class="modal-action-icon danger hidden" title="Delete"><i class="fas fa-trash-alt"></i></span>
-                <span id="saveShareBtn" class="modal-action-icon" title="Save Share"><i class="fas fa-save"></i></span>
-            </div> -->
         </div>
     </div>
 
     <!-- Share Details Modal -->
     <div id="shareDetailModal" class="modal">
         <div class="modal-content">
-            <!-- Header with close button and title - MODIFIED -->
             <div class="modal-header-with-icon">
                 <h2 id="modalShareName">Share Details</h2>
                 <div class="modal-header-action-group">
-                    <!-- Delete Share icon - MOVED TO TOP RIGHT -->
+                    <!-- Delete Share icon -->
                     <span id="deleteShareFromDetailBtn" class="modal-action-icon danger" title="Delete Share"><i class="fas fa-trash-alt"></i></span>
-                    <!-- Edit Share icon - MOVED TO TOP RIGHT -->
+                    <!-- Edit Share icon -->
                     <span id="editShareFromDetailBtn" class="modal-action-icon" title="Edit Share"><i class="fas fa-edit"></i></span>
                     <span class="close-button">&times;</span>
                 </div>
             </div>
             
-            <!-- Scrollable content for share details modal -->
             <div class="modal-body-scrollable">
-                <!-- NEW: Dedicated Live Price Section -->
+                <!-- Dedicated Live Price Section -->
                 <div class="live-price-display-section">
                     <!-- Content (52-week high/low, live price, P/E) dynamically added by script.js -->
                 </div>
@@ -345,7 +322,6 @@
                 <p><strong>Franked Yield:</strong> <span id="modalFrankedYield"></span></p>
                 <p><strong>Entry Date:</strong> <span id="modalEntryDate"></span></p>
 
-
                 <div id="modalCommentsContainer" class="modal-comments-sections">
                     <h3>Comments</h3>
                     <!-- Comments will be displayed here -->
@@ -353,7 +329,6 @@
 
                 <div class="external-links-section">
                     <h3>External Links</h3>
-                    <!-- Each link wrapped in a div for consistent styling -->
                     <div class="external-link-item">
                         <a id="modalNewsLink" href="#" target="_blank" class="external-link">View News <i class="fas fa-external-link-alt"></i></a>
                     </div>
@@ -369,17 +344,10 @@
                     <p id="commSecLoginMessage" class="ghosted-text commsec-message">Requires single CommSec login per session</p>
                 </div>
             </div>
-            <!-- END Scrollable content for share details modal -->
-
-            <!-- REMOVED: Old action buttons -->
-            <!-- <div class="modal-action-buttons">
-                <span id="deleteShareFromDetailBtn" class="modal-action-icon danger" title="Delete Share"><i class="fas fa-trash-alt"></i></span>
-                <span id="editShareFromDetailBtn" class="modal-action-icon" title="Edit Share"><i class="fas fa-edit"></i></span>
-            </div> -->
         </div>
     </div>
 
-    <!-- Add Watchlist Modal - MODIFIED -->
+    <!-- Add Watchlist Modal -->
     <div id="addWatchlistModal" class="modal">
         <div class="modal-content">
             <div class="modal-header-with-icon">
@@ -391,14 +359,10 @@
             </div>
             <label for="newWatchlistName">Watchlist Name:</label>
             <input type="text" id="newWatchlistName" placeholder="e.g., Tech Stocks" required>
-            <!-- REMOVED: Old form-action-buttons -->
-            <!-- <div class="form-action-buttons">
-                <span id="saveWatchlistBtn" class="modal-action-icon" title="Save Watchlist"><i class="fas fa-save"></i></span>
-            </div> -->
         </div>
     </div>
 
-    <!-- Manage Watchlist Modal - MODIFIED -->
+    <!-- Manage Watchlist Modal -->
     <div id="manageWatchlistModal" class="modal">
         <div class="modal-content">
             <div class="modal-header-with-icon">
@@ -411,10 +375,6 @@
             </div>
             <label for="editWatchlistName">Watchlist Name:</label>
             <input type="text" id="editWatchlistName" required>
-            <!-- REMOVED: Old form-action-buttons -->
-            <!-- <div class="form-action-buttons">
-                <span id="saveWatchlistBtn" class="modal-action-icon" title="Save Watchlist"><i class="fas fa-save"></i></span>
-            </div> -->
         </div>
     </div>
 
@@ -429,11 +389,11 @@
             </div>
             <div class="calc-input-group">
                 <label for="calcDividendAmount">Dividend Amount (per share, annual $):</label>
-                <input type="number" id="calcDividendAmount" step="0.001" placeholder="e.g., 1.250"> <!-- ID changed -->
+                <input type="number" id="calcDividendAmount" step="0.001" placeholder="e.g., 1.250">
             </div>
             <div class="calc-input-group">
                 <label for="calcFrankingCredits">Franking Credits (%):</label>
-                <input type="number" id="calcFrankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 70 for 70%"> <!-- ID changed -->
+                <input type="number" id="calcFrankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 70 for 70%">
             </div>
             <p><strong>Unfranked Yield:</strong> <span id="calcUnfrankedYield"></span></p>
             <p><strong>Franked Yield:</strong> <span id="calcFrankedYield"></span></p>
@@ -487,9 +447,9 @@
                 <button class="calc-btn operator" data-action="add">+</button>
                 
                 <!-- Row 5: 0 (span 2), ., = (span 1) -->
-                <button class="calc-btn zero" data-value="0"></button>
-                <button class="calc-btn" data-value="."></button>
-                <button class="calc-btn equals" data-action="calculate"></button>
+                <button class="calc-btn zero" data-value="0">0</button>
+                <button class="calc-btn" data-value=".">.</button>
+                <button class="calc-btn equals" data-action="calculate">=</button>
             </div>
         </div>
     </div>

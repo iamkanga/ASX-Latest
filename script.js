@@ -46,7 +46,6 @@ const LIVE_PRICE_FETCH_INTERVAL_MS = 5 * 60 * 1000; // Fetch every 5 minutes
 const CUSTOM_THEMES = [
     'bold-1', 'bold-2', 'bold-3', 'bold-4', 'bold-5', 'bold-6', 'bold-7', 'bold-8', 'bold-9', 'bold-10',
     'subtle-1', 'subtle-2', 'subtle-3', 'subtle-4', 'subtle-5', 'subtle-6', 'subtle-7', 'subtle-8', 'subtle-9', 'subtle-10',
-    // UPDATED: Muted Theme names to match display text in index.html
     'Muted Blue', 'Muted Brown', 'Muted Pink', 'Muted Green', 'Muted Purple', 'Muted Orange', 'Muted Cyan', 'Muted Magenta', 'Muted Gold', 'Muted Grey'
 ];
 let currentCustomThemeIndex = -1; // To track the current theme in the cycle
@@ -81,23 +80,15 @@ const currentPriceInput = document.getElementById('currentPrice');
 const targetPriceInput = document.getElementById('targetPrice');
 const dividendAmountInput = document.getElementById('dividendAmount');
 const frankingCreditsInput = document.getElementById('frankingCredits');
-// CORRECTED: This now points to the new dynamicCommentsArea ID
 const commentsFormContainer = document.getElementById('dynamicCommentsArea'); 
 const addCommentSectionBtn = document.getElementById('addCommentSectionBtn');
 const shareTableBody = document.querySelector('#shareTable tbody');
 const mobileShareCardsContainer = document.getElementById('mobileShareCards');
 const loadingIndicator = document.getElementById('loadingIndicator');
-const googleAuthBtn = document.getElementById('googleAuthBtn'); // This is the button in the footer
 const shareDetailModal = document.getElementById('shareDetailModal');
 const modalShareName = document.getElementById('modalShareName');
 const modalEntryDate = document.getElementById('modalEntryDate');
-// Removed: modalEnteredPrice (original was still here, but now it's in the dedicated section)
-// Removed: modalLivePrice (original was still here, but now it's in the dedicated section)
-// Removed: modalPriceChange (original was still here, but now it's in the dedicated section)
 const modalTargetPrice = document.getElementById('modalTargetPrice');
-// Corrected: These were globally referenced but needed to be created dynamically inside showShareDetails
-// const modalDividendAmount = document.getElementById('dividendAmount'); 
-// const modalFrankingCredits = document.getElementById('frankingCredits'); 
 const modalCommentsContainer = document.getElementById('modalCommentsContainer');
 const modalUnfrankedYieldSpan = document.getElementById('modalUnfrankedYield');
 const modalFrankedYieldSpan = document.getElementById('modalFrankedYield');
@@ -146,31 +137,16 @@ const deleteWatchlistInModalBtn = document.getElementById('deleteWatchlistInModa
 const shareContextMenu = document.getElementById('shareContextMenu');
 const contextEditShareBtn = document.getElementById('contextEditShareBtn');
 const contextDeleteShareBtn = document.getElementById('contextDeleteShareBtn');
-const logoutBtn = document.getElementById('logoutBtn'); // Corrected to match ID in HTML
+const logoutBtn = document.getElementById('logoutBtn');
 const exportWatchlistBtn = document.getElementById('exportWatchlistBtn');
 const refreshLivePricesBtn = document.getElementById('refreshLivePricesBtn');
-// NEW: Reference for the watchlist select inside the share form modal
 const shareWatchlistSelect = document.getElementById('shareWatchlistSelect');
-// NEW: References for the large live price display in the modal
-// Removed global references for modalLivePriceLarge and modalPriceChangeLarge
-// as they are now created dynamically in showShareDetails()
-
-
-// NEW: References for 52-week high/low and P/E in share details modal
-const modalLivePriceDisplaySection = document.querySelector('.live-price-display-section'); // The existing colored section
-
-// NEW: Reference for the target hit notification banner
+const modalLivePriceDisplaySection = document.querySelector('.live-price-display-section'); 
 const targetHitBanner = document.getElementById('targetHitBanner');
 const targetHitMessage = document.getElementById('targetHitMessage');
 const targetHitCount = document.getElementById('targetHitCount');
 const targetHitDismissBtn = document.getElementById('targetHitDismissBtn');
-
-// NEW: Reference for the Toggle Compact View button
 const toggleCompactViewBtn = document.getElementById('toggleCompactViewBtn');
-// DEBUG: Log if the button element is found at script load time
-console.log('toggleCompactViewBtn element found: ' + !!toggleCompactViewBtn);
-
-// NEW: Splash Screen Elements
 const splashScreen = document.getElementById('splashScreen');
 const splashKangarooIcon = document.getElementById('splashKangarooIcon');
 const splashSignInBtn = document.getElementById('splashSignInBtn');
@@ -321,16 +297,6 @@ function formatDate(dateString) {
 }
 
 // UI State Management Functions
-function updateAuthButtonText(isSignedIn, userName = 'Sign In') {
-    // This function is for the footer button, not the splash screen button
-    // The footer button has been removed from index.html, so this will no longer affect the UI
-    // It's kept here in case the footer button is re-added in the future.
-    if (googleAuthBtn) {
-        googleAuthBtn.textContent = isSignedIn ? (userName || 'Signed In') : 'Google Sign In';
-        console.log('Auth UI: Auth button text updated to: ' + googleAuthBtn.textContent);
-    }
-}
-
 function updateMainButtonsState(enable) {
     console.log('UI State: Setting main buttons state to: ' + (enable ? 'ENABLED' : 'DISABLED'));
     if (newShareBtn) newShareBtn.disabled = !enable;
@@ -893,30 +859,20 @@ function showShareDetails() {
         modalLivePriceDisplaySection.appendChild(peRow);
     }
     
-    // Original Live Price/Change removed from HTML, so these references are no longer needed
-    // if (modalLivePrice) { /* ... */ }
-    // if (modalPriceChange) { /* ... */ }
-
-
     modalEnteredPrice.textContent = (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? '$' + enteredPriceNum.toFixed(2) : 'N/A';
     const targetPriceNum = Number(share.targetPrice);
     modalTargetPrice.textContent = (!isNaN(targetPriceNum) && targetPriceNum !== null) ? '$' + targetPriceNum.toFixed(2) : 'N/A';
     
     const dividendAmountNum = Number(share.dividendAmount);
-    // Corrected declaration of divAmountDisplay
     const modalDividendAmountText = (!isNaN(dividendAmountNum) && dividendAmountNum !== null) ? '$' + dividendAmountNum.toFixed(3) : 'N/A';
     
     const frankingCreditsNum = Number(share.frankingCredits);
-    // Corrected declaration of modalFrankingCredits.textContent
-    // modalFrankingCredits.textContent = (!isNaN(frankingCreditsNum) && frankingCreditsNum !== null) ? `${frankingCreditsNum.toFixed(1)}%` : 'N/A';
     
     const priceForYield = (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) ? livePrice : enteredPriceNum;
     const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, priceForYield); 
-    // NEW: Display "0.00%" if unfrankedYield is null or NaN, otherwise format
     modalUnfrankedYieldSpan.textContent = unfrankedYield !== null && !isNaN(unfrankedYield) ? unfrankedYield.toFixed(2) + '%' : '0.00%';
     
     const frankedYield = calculateFrankedYield(dividendAmountNum, priceForYield, frankingCreditsNum);
-    // NEW: Display "0.00%" if frankedYield is null or NaN, otherwise format
     modalFrankedYieldSpan.textContent = frankedYield !== null && !isNaN(frankedYield) ? frankedYield.toFixed(2) + '%' : '0.00%';
 
     // Populate Entry Date after Franked Yield
@@ -976,9 +932,6 @@ function showShareDetails() {
     if (commSecLoginMessage) {
         commSecLoginMessage.style.display = 'block'; 
     }
-
-    // Moved to header: setIconDisabled(editShareFromDetailBtn, false);
-    // Moved to header: setIconDisabled(deleteShareFromDetailBtn, false);
 
     showModal(shareDetailModal);
     console.log('Details: Displayed details for share: ' + share.shareName + ' (ID: ' + selectedShareDocId + ')');
@@ -1285,9 +1238,6 @@ function addShareToTable(share) {
         </div>
     `;
 
-    // Removed comments cell as per instruction
-    // const commentsCell = row.insertCell();
-    // commentsCell.textContent = ''; 
     console.log('Render: Added share ' + displayShareName + ' to table.');
 }
 
@@ -2459,7 +2409,6 @@ function exportWatchlistToCSV() {
     const headers = [
         'Code', 'Entered Price', 'Live Price', 'Price Change', 'Target Price', 'Dividend Amount', 'Franking Credits (%)',
         'Unfranked Yield (%)', 'Franked Yield (%)', 'Entry Date'
-        // Removed "Comments" from headers
     ];
 
     const csvRows = [];
@@ -2489,17 +2438,6 @@ function exportWatchlistToCSV() {
         const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, priceForYield);
         const frankedYield = calculateFrankedYield(dividendAmountNum, priceForYield, frankingCreditsNum);
 
-        // Comments are no longer exported
-        // let allCommentsText = '';
-        // if (share.comments && Array.isArray(share.comments)) {
-        //     allCommentsText = share.comments.map(c => {
-        //         let commentPart = '';
-        //         if (c.title) commentPart += `${c.title}: `;
-        //         if (c.text) commentPart += c.text;
-        //         return commentPart;
-        //     }).filter(Boolean).join('; ');
-        // }
-
         const row = [
             share.shareName || '',
             (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? enteredPriceNum.toFixed(2) : '',
@@ -2511,7 +2449,6 @@ function exportWatchlistToCSV() {
             unfrankedYield !== null && !isNaN(unfrankedYield) ? unfrankedYield.toFixed(2) : '0.00', // Ensure numerical output
             frankedYield !== null && !isNaN(frankedYield) ? frankedYield.toFixed(2) : '0.00', // Ensure numerical output
             formatDate(share.entryDate) || ''
-            // Removed allCommentsText from row
         ];
         csvRows.push(row.map(escapeCsvValue).join(','));
     });
@@ -2778,46 +2715,8 @@ async function initializeAppLogic() {
         }
     });
 
-    // Google Auth Button (Sign In/Out) - Footer Button
-    // This button is removed from index.html. Its functionality is now handled by splashSignInBtn.
-    // Keeping this block in case it's re-added or for debugging purposes.
-    if (googleAuthBtn) {
-        googleAuthBtn.addEventListener('click', async () => {
-            console.log('Auth: Google Auth Button (footer) Clicked.');
-            const currentAuth = window.firebaseAuth;
-            if (!currentAuth || !window.authFunctions) {
-                console.warn('Auth: Auth service not ready or functions not loaded. Cannot process click.');
-                showCustomAlert('Authentication service not ready. Please try again in a moment.');
-                return;
-            }
-            if (currentAuth.currentUser) {
-                console.log('Auth: Current user exists, attempting sign out.');
-                try {
-                    await window.authFunctions.signOut(currentAuth);
-                    console.log('Auth: User signed out.');
-                } catch (error) {
-                    console.error('Auth: Sign-Out failed:', error);
-                    showCustomAlert('Sign-Out failed: ' + error.message);
-                }
-            } else {
-                console.log('Auth: No current user, attempting sign in.');
-                try {
-                    const provider = window.authFunctions.GoogleAuthProviderInstance;
-                    if (!provider) {
-                        console.error('Auth: GoogleAuthProvider instance not found. Is Firebase module script loaded?');
-                        showCustomAlert('Authentication service not ready. Please ensure Firebase module script is loaded.');
-                        return;
-                    }
-                    await window.authFunctions.signInWithPopup(currentAuth, provider);
-                    console.log('Auth: Google Sign-In successful.');
-                }
-                catch (error) {
-                    console.error('Auth: Google Sign-In failed: ' + error.message);
-                    showCustomAlert('Google Sign-In failed: ' + error.message);
-                }
-            }
-        });
-    }
+    // Google Auth Button (Sign In/Out) - This button is removed from index.html.
+    // Its functionality is now handled by splashSignInBtn.
 
     // NEW: Splash Screen Sign-In Button
     if (splashSignInBtn) {
@@ -3553,7 +3452,6 @@ document.addEventListener('DOMContentLoaded', function() {
         window.authFunctions.onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUserId = user.uid;
-                // updateAuthButtonText(true, user.email || user.displayName); // This function is for the removed footer button
                 console.log('AuthState: User signed in: ' + user.uid);
                 console.log('AuthState: User email: ' + user.email);
                 if (user.email && user.email.toLowerCase() === KANGA_EMAIL) {
@@ -3578,7 +3476,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
             } else {
                 currentUserId = null;
-                // updateAuthButtonText(false); // This function is for the removed footer button
                 mainTitle.textContent = 'Share Watchlist';
                 console.log('AuthState: User signed out.');
                 updateMainButtonsState(false);
@@ -3632,31 +3529,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     mobileShareCardsContainer.classList.remove('compact-view');
                 }
             }
-            // ... other code in the if (user) block ...
-
             // Call renderWatchlist here to ensure correct mobile card rendering after auth state is set
             renderWatchlist();
             adjustMainContentPadding(); // NEW: Ensure padding is adjusted after initial render
-
-            // ... rest of the code in the if (user) block ...
         });
-        
-        // The splashSignInBtn now handles the initial sign-in.
-        // The googleAuthBtn (footer) is removed from HTML.
-        // This block is no longer strictly needed for the footer button's direct action,
-        // but keeping it for context if googleAuthBtn were to be re-added.
-        if (googleAuthBtn) {
-            googleAuthBtn.disabled = false;
-            console.log('Auth: Google Auth button enabled on DOMContentLoaded.');
-        }
-
     } else {
         console.error('Firebase: Firebase objects (db, auth, appId, firestore, authFunctions) are not available on DOMContentLoaded. Firebase initialization likely failed in index.html.');
         const errorDiv = document.getElementById('firebaseInitError');
         if (errorDiv) {
                 errorDiv.style.display = 'block';
         }
-        updateAuthButtonText(false);
         updateMainButtonsState(false);
         if (loadingIndicator) loadingIndicator.style.display = 'none';
         applyTheme('system-default');
