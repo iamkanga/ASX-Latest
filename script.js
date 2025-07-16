@@ -1094,9 +1094,6 @@ function renderWatchlistSelect() {
         watchlistSelect.value = ALL_SHARES_ID;
     } else if (currentSelectedWatchlistIds.length === 1) {
         watchlistSelect.value = currentSelectedWatchlistIds[0];
-    } else if (userWatchlists.length > 0) {
-        watchlistSelect.value = userWatchlists[0].id;
-        currentSelectedWatchlistIds = [userWatchlists[0].id];
     } else {
         watchlistSelect.value = '';
     }
@@ -1379,7 +1376,7 @@ function addShareToMobileCards(share) {
             `;
         } else {
             card.innerHTML = `
-                <h3>${displayShareName}</h3>
+                <h3 class="${priceChangeClass}">${displayShareName}</h3>
                 <div class="live-price-display-section ${priceChangeClass}-change-section">
                     <span class="live-price-large">$${livePrice.toFixed(2)}</span>
                     <span class="price-change-large ${priceChangeClass}">${priceChangeText}</span>
@@ -3390,9 +3387,11 @@ async function initializeAppLogic() {
             toggleAppSidebar(false);
         });
         
+        // Corrected sidebar overlay dismissal logic for mobile
         sidebarOverlay.addEventListener('click', (event) => {
             console.log('Sidebar Overlay: Clicked overlay. Attempting to close sidebar.');
-            if (appSidebar.classList.contains('open')) {
+            // Ensure the click is actually on the overlay and not bubbling from inside the sidebar
+            if (appSidebar.classList.contains('open') && event.target === sidebarOverlay) {
                 toggleAppSidebar(false);
             }
         });
