@@ -3622,7 +3622,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // The splashSignInBtn now handles the initial sign-in.
         // The googleAuthBtn (footer) is removed from HTML.
-        // This block is no longer strictly needed for the footer button's direct action,
+        // This  block is no longer strictly needed for the footer button's direct action,
         // but keeping it for context if googleAuthBtn were to be re-added.
         if (googleAuthBtn) {
             googleAuthBtn.disabled = false;
