@@ -3173,11 +3173,16 @@ async function initializeAppLogic() {
     if (dividendCalcBtn) {
         dividendCalcBtn.addEventListener('click', () => {
             console.log('UI: Dividend button clicked. Attempting to open modal.');
-            calcCurrentPriceInput.value = ''; calcDividendAmountInput.value = ''; calcFrankingCreditsInput.value = ''; // Clear inputs
-            calcUnfrankedYieldSpan.textContent = '-'; calcFrankedYieldSpan.textContent = '-'; calcEstimatedDividend.textContent = '-'; // Clear results
-            investmentValueSelect.value = '10000'; // Reset dropdown
+            // Corrected references to use unique IDs for dividend calculator inputs
+            if (calcDividendAmountInput) calcDividendAmountInput.value = ''; 
+            if (calcCurrentPriceInput) calcCurrentPriceInput.value = ''; 
+            if (calcFrankingCreditsInput) calcFrankingCreditsInput.value = ''; 
+            if (calcUnfrankedYieldSpan) calcUnfrankedYieldSpan.textContent = '-'; 
+            if (calcFrankedYieldSpan) calcFrankedYieldSpan.textContent = '-'; 
+            if (calcEstimatedDividend) calcEstimatedDividend.textContent = '-'; 
+            if (investmentValueSelect) investmentValueSelect.value = '10000'; // Reset dropdown
             showModal(dividendCalculatorModal);
-            calcCurrentPriceInput.focus(); 
+            if (calcCurrentPriceInput) calcCurrentPriceInput.focus(); 
             console.log('UI: Dividend Calculator modal opened.');
             toggleAppSidebar(false);
         });
