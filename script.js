@@ -178,28 +178,32 @@ const formInputs = [
 /**
  * Dynamically adjusts the top padding of the main content area
  * to prevent it from being hidden by the fixed header.
- * This function is debounced for resize events.
+ * This function uses requestAnimationFrame for accurate timing and includes a retry mechanism.
  */
 function adjustMainContentPadding() {
-    // Clear any existing timeout to debounce the function
-    clearTimeout(resizeTimeout);
-
-    // Set a new timeout to execute the padding adjustment after a short delay
-    // This ensures the DOM has settled after layout changes (e.g., ASX buttons appear/disappear)
-    resizeTimeout = setTimeout(() => {
+    // Use requestAnimationFrame for more accurate layout measurements
+    requestAnimationFrame(() => {
         // Ensure both the header and main content container elements exist.
         if (appHeader && mainContainer) {
-            // Get the current computed height of the fixed header.
             let headerHeight = appHeader.offsetHeight;
 
+            // If headerHeight is 0, it means the header might not be fully rendered yet.
+            // Re-queue the adjustment after a short delay to give the browser time.
+            if (headerHeight === 0 && appHeader.classList.contains('app-hidden') === false) {
+                console.warn('Layout: Header height is 0, re-queuing adjustment.');
+                // Clear any existing timeout to prevent multiple re-queues
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(adjustMainContentPadding, 100); // Retry after 100ms
+                return; // Exit current execution
+            }
+
             // Apply this total height as padding to the top of the main content container.
-            // This pushes the content down so it starts exactly below the fixed header.
             mainContainer.style.paddingTop = `${headerHeight}px`;
             console.log('Layout: Adjusted main content padding-top to: ' + headerHeight + 'px (Header: ' + appHeader.offsetHeight + ')');
         } else {
             console.warn('Layout: Could not adjust main content padding-top: appHeader or mainContainer not found.');
         }
-    }, 50); // Small debounce delay (e.g., 50ms)
+    });
 }
 
 /**
