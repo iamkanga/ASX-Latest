@@ -37,8 +37,7 @@ let originalShareData = null; // Stores the original share data when editing for
 let originalWatchlistData = null; // Stores original watchlist data for dirty state check in watchlist modals
 
 // Live Price Data
-// IMPORTANT: This URL is preserved as per user instruction. DO NOT MODIFY.
-const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzp7OjZL3zqvJ9wPsV9M-afm2wKeQPbIgGVv_juVpkaRllADESLwj7F4-S7YWYerau-/exec'; // Your Google Apps Script URL
+const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzp7OjZL3zqvJ9wPsV9M-afm2wKeQPbIgGVv_juVpkaRllADESLwj7F4-S7YWYerau-/exec'; // Your new Google Apps Script URL
 let livePrices = {}; // Stores live price data: {ASX_CODE: {live: price, prevClose: price, PE: value, High52: value, Low52: value, targetHit: boolean}}
 let livePriceFetchInterval = null; // To hold the interval ID for live price updates
 const LIVE_PRICE_FETCH_INTERVAL_MS = 5 * 60 * 1000; // Fetch every 5 minutes
@@ -58,13 +57,9 @@ let unsubscribeShares = null; // Holds the unsubscribe function for the Firestor
 
 // NEW: Global variable to store shares that have hit their target price
 let sharesAtTargetPrice = [];
-// NEW: Store acknowledged/snoozed alerts (shareId -> snoozeUntilTimestamp)
-let acknowledgedAlerts = {}; 
-let currentMobileViewMode = 'default'; // 'default' or 'compact'
 
-// --- MutationObserver for Header Height Adjustment ---
-let headerObserver = null;
-let resizeTimeout; // Used for debouncing and retry logic in adjustMainContentPadding
+// NEW: Global variable to track the current mobile view mode ('default' or 'compact')
+let currentMobileViewMode = 'default'; 
 
 // --- UI Element References ---
 const appHeader = document.getElementById('appHeader'); // Reference to the main header
@@ -92,7 +87,6 @@ const mobileShareCardsContainer = document.getElementById('mobileShareCards');
 const loadingIndicator = document.getElementById('loadingIndicator');
 const shareDetailModal = document.getElementById('shareDetailModal');
 const modalShareName = document.getElementById('modalShareName');
-const modalEnteredPrice = document.getElementById('modalEnteredPrice'); 
 const modalEntryDate = document.getElementById('modalEntryDate');
 const modalTargetPrice = document.getElementById('modalTargetPrice');
 const modalCommentsContainer = document.getElementById('modalCommentsContainer');
@@ -148,20 +142,14 @@ const exportWatchlistBtn = document.getElementById('exportWatchlistBtn');
 const refreshLivePricesBtn = document.getElementById('refreshLivePricesBtn');
 const shareWatchlistSelect = document.getElementById('shareWatchlistSelect');
 const modalLivePriceDisplaySection = document.querySelector('.live-price-display-section'); 
+const targetHitBanner = document.getElementById('targetHitBanner');
+const targetHitMessage = document.getElementById('targetHitMessage');
+const targetHitCount = document.getElementById('targetHitCount');
+const targetHitDismissBtn = document.getElementById('targetHitDismissBtn');
+const toggleCompactViewBtn = document.getElementById('toggleCompactViewBtn');
 const splashScreen = document.getElementById('splashScreen');
 const splashKangarooIcon = document.getElementById('splashKangarooIcon');
 const splashSignInBtn = document.getElementById('splashSignInBtn');
-const toggleCompactViewBtn = document.getElementById('toggleCompactViewBtn');
-
-
-// NEW: Price Alert Notification Elements
-const priceAlertIcon = document.getElementById('priceAlertIcon');
-const alertCount = document.getElementById('alertCount');
-const priceAlertPanel = document.getElementById('priceAlertPanel');
-const panelAlertCount = document.getElementById('panelAlertCount');
-const alertList = document.getElementById('alertList');
-const closeAlertPanelBtn = document.getElementById('closeAlertPanelBtn');
-const dismissAllAlertsBtn = document.getElementById('dismissAllAlertsBtn');
 
 
 let sidebarOverlay = document.querySelector('.sidebar-overlay');
@@ -176,445 +164,25 @@ const formInputs = [
     dividendAmountInput, frankingCreditsInput
 ];
 
-/**
- * Dynamically adjusts the top padding of the main content area
- * to prevent it from being hidden by the fixed header.
- * This function uses requestAnimationFrame for accurate timing and includes a retry mechanism.
- */
-function adjustMainContentPadding() {
-    // Use requestAnimationFrame for more accurate layout measurements
-    requestAnimationFrame(() => {
-        // Ensure both the header and main content container elements exist.
-        if (appHeader && mainContainer) {
-            let headerHeight = appHeader.offsetHeight;
 
-            // If headerHeight is 0, it means the header might not be fully rendered yet.
-            // Re-queue the adjustment after a short delay to give the browser time.
-            // Check appHeader.classList.contains('app-hidden') === false to ensure it's supposed to be visible.
-            if (headerHeight === 0 && appHeader.classList.contains('app-hidden') === false) {
-                console.warn('Layout: Header height is 0, re-queuing adjustment.');
-                // Clear any existing timeout to prevent multiple re-queues
-                clearTimeout(resizeTimeout);
-                resizeTimeout = setTimeout(adjustMainContentPadding, 100); // Retry after 100ms
-                return; // Exit current execution
-            }
-
-            // Apply this total height as padding to the top of the main content container.
-            mainContainer.style.paddingTop = `${headerHeight}px`;
-            console.log('Layout: Adjusted main content padding-top to: ' + headerHeight + 'px (Header: ' + appHeader.offsetHeight + ')');
-        } else {
-            console.warn('Layout: Could not adjust main content padding-top: appHeader or mainContainer not found.');
-        }
-    });
-}
-
-/**
- * Initializes the MutationObserver to watch the appHeader for changes
- * that might affect its height, triggering padding adjustments.
- */
-function setupHeaderMutationObserver() {
-    if (!appHeader || !mainContainer) {
-        console.warn('MutationObserver: Cannot set up observer, appHeader or mainContainer not found.');
-        return;
-    }
-
-    // Disconnect any existing observer to prevent duplicates
-    if (headerObserver) {
-        headerObserver.disconnect();
-        console.log('MutationObserver: Disconnected existing header observer.');
-    }
-
-    // Create a new MutationObserver instance
-    headerObserver = new MutationObserver((mutationsList, observer) => {
-        // Check if any mutation occurred that might affect layout
-        // We are interested in childList changes (elements added/removed, like ASX buttons)
-        // or attribute changes (like style changes that affect height/display)
-        let layoutMightChange = false;
-        for (const mutation of mutationsList) {
-            if (mutation.type === 'childList' || 
-                (mutation.type === 'attributes' && (mutation.attributeName === 'style' || mutation.attributeName === 'class'))) {
-                layoutMightChange = true;
-                break;
-            }
-        }
-
-        if (layoutMightChange) {
-            console.log('MutationObserver: Header content changed. Triggering padding adjustment.');
-            adjustMainContentPadding();
-        }
-    });
-
-    // Start observing the appHeader for changes
-    // subtree: true to observe changes in descendants (e.g., ASX buttons container)
-    // childList: true to detect additions/removals of child nodes
-    // attributes: true to detect changes to attributes (like 'style' or 'class')
-    headerObserver.observe(appHeader, { childList: true, subtree: true, attributes: true });
-    console.log('MutationObserver: Header observer setup and started.');
-}
-
-
-// --- CORE APPLICATION FUNCTIONS (HOISTED FOR AVAILABILITY) ---
-
-/**
- * Hides the splash screen with a fade-out effect.
- * Declared as a function declaration to ensure hoisting.
- */
-function hideSplashScreen() {
-    if (splashScreen) {
-        splashScreen.classList.add('hidden'); // Start fade-out
-        if (splashKangarooIcon) {
-            splashKangarooIcon.classList.remove('pulsing'); // Stop animation
-        }
-        // Show main app content
-        if (mainContainer) {
-            mainContainer.classList.remove('app-hidden');
-        }
-        if (appHeader) { // Assuming header is part of the main app content that needs to be revealed
-            appHeader.classList.remove('app-hidden');
-        }
-        // Temporarily remove overflow hidden from body
-        document.body.style.overflow = ''; 
-
-        // Remove splash screen from DOM after transition to prevent interaction issues
-        splashScreen.addEventListener('transitionend', () => {
-            if (splashScreen.parentNode) {
-                splashScreen.parentNode.removeChild(splashScreen);
-                console.log('Splash Screen: Removed from DOM.');
-            }
-        }, { once: true });
-        console.log('Splash Screen: Hiding.');
-    }
-}
-
-/**
- * Checks if all necessary app data is loaded and hides the splash screen if ready.
- * This function is called after each major data loading step.
- * Declared as a function declaration to ensure hoisting.
- */
-function hideSplashScreenIfReady() {
-    // Only hide if Firebase is initialized, user is authenticated, and all data flags are true
-    if (window._firebaseInitialized && window._userAuthenticated && window._appDataLoaded && window._livePricesLoaded) {
-        // Ensure splash screen itself is ready to be hidden (e.g., DOMContentLoaded has fired)
-        if (splashScreen && !splashScreen.classList.contains('hidden')) { 
-            console.log('Splash Screen: All data loaded and ready. Hiding splash screen.');
-            hideSplashScreen();
-        } else {
-            console.log('Splash Screen: Data loaded, but splash screen already hidden or not yet ready to be hidden.');
-        }
-    } else {
-        console.log('Splash Screen: Not all data loaded yet. Current state: ' +
-            'Firebase Init: ' + window._firebaseInitialized +
-            ', User Auth: ' + window._userAuthenticated +
-            ', App Data: ' + window._appDataLoaded +
-            ', Live Prices: ' + window._livePricesLoaded);
-    }
-}
-
-/**
- * Saves acknowledged alerts to Firestore.
- * Declared as a function declaration to ensure hoisting.
- */
-async function saveAcknowledgedAlerts() {
-    if (!db || !currentUserId || !window.firestore) {
-        console.warn('Alerts: Cannot save acknowledged alerts: DB, User ID, or Firestore functions not available.');
-        return;
-    }
-    const userProfileDocRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/profile/settings');
-    try {
-        await window.firestore.setDoc(userProfileDocRef, { acknowledgedAlerts: acknowledgedAlerts }, { merge: true });
-        console.log('Alerts: Saved acknowledged alerts to Firestore:', acknowledgedAlerts);
-    } catch (error) {
-        console.error('Alerts: Error saving acknowledged alerts to Firestore:', error);
-    }
-}
-
-/**
- * Updates the floating price alert icon and panel based on current alerts.
- * Declared as a function declaration to ensure hoisting.
- */
-function updatePriceAlertUI() {
-    // Filter shares that have hit their target and are not acknowledged/snoozed
-    sharesAtTargetPrice = allSharesData.filter(share => {
-        const livePriceData = livePrices[share.shareName.toUpperCase()];
-        const isTargetHit = livePriceData && livePriceData.targetHit;
-        
-        // Check if acknowledgedAlerts has this shareId and if snooze time has passed
-        const snoozeUntil = acknowledgedAlerts[share.id];
-        const isSnoozed = snoozeUntil && (Date.now() < snoozeUntil);
-
-        return isTargetHit && !isSnoozed;
-    });
-
-    if (!priceAlertIcon || !alertCount || !priceAlertPanel || !panelAlertCount || !alertList || !dismissAllAlertsBtn) {
-        console.warn('Alerts: Price alert UI elements not found. Cannot update alerts.');
-        return;
-    }
-
-    // Update floating icon count
-    alertCount.textContent = sharesAtTargetPrice.length;
-    if (sharesAtTargetPrice.length > 0) {
-        priceAlertIcon.style.display = 'flex'; // Show icon
-        priceAlertIcon.classList.add('active'); // Add active state for styling (e.g., pulsing)
-        console.log('Alerts: Showing floating icon with ' + sharesAtTargetPrice.length + ' alerts.');
-    } else {
-        priceAlertIcon.style.display = 'none'; // Hide icon
-        priceAlertIcon.classList.remove('active');
-        hideAlertPanel(); // Hide panel if no active alerts
-        console.log('Alerts: No active alerts. Hiding floating icon.');
-    }
-
-    // Update panel content
-    panelAlertCount.textContent = sharesAtTargetPrice.length;
-    alertList.innerHTML = ''; // Clear previous alerts
-
-    if (sharesAtTargetPrice.length === 0) {
-        const noAlertsMessage = document.createElement('p');
-        noAlertsMessage.classList.add('no-alerts-message');
-        noAlertsMessage.textContent = 'No new price alerts.';
-        alertList.appendChild(noAlertsMessage);
-        setIconDisabled(dismissAllAlertsBtn, true); // Disable dismiss all button
-    } else {
-        setIconDisabled(dismissAllAlertsBtn, false); // Enable dismiss all button
-        sharesAtTargetPrice.forEach(share => {
-            const alertItem = document.createElement('div');
-            alertItem.classList.add('alert-item');
-            alertItem.dataset.shareId = share.id;
-            alertItem.innerHTML = `
-                <span class="alert-message"><strong>${share.shareName}</strong> Target Hit!</span>
-                <div class="alert-actions">
-                    <button class="dismiss-alert-btn" title="Dismiss Alert"><i class="fas fa-check"></i></button>
-                    <div class="snooze-dropdown-container">
-                        <button class="snooze-alert-btn" title="Snooze Alert"><i class="fas fa-clock"></i></button>
-                        <div class="snooze-options">
-                            <button data-snooze-time="3600000">1 Hour</button>
-                            <button data-snooze-time="14400000">4 Hours</button>
-                            <button data-snooze-time="86400000">24 Hours</button>
-                            <button data-snooze-time="session">Until Next Session</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            alertList.appendChild(alertItem);
-
-            // Add event listeners for dismiss and snooze buttons
-            alertItem.querySelector('.dismiss-alert-btn').addEventListener('click', () => {
-                dismissAlert(share.id);
-            });
-
-            const snoozeBtn = alertItem.querySelector('.snooze-alert-btn');
-            const snoozeOptions = alertItem.querySelector('.snooze-options');
-            snoozeBtn.addEventListener('click', (event) => {
-                event.stopPropagation(); // Prevent panel from closing when opening dropdown
-                snoozeOptions.classList.toggle('active');
-            });
-
-            snoozeOptions.querySelectorAll('button').forEach(optionBtn => {
-                optionBtn.addEventListener('click', (event) => {
-                    event.stopPropagation(); // Prevent panel from closing when selecting option
-                    const snoozeTime = event.target.dataset.snoozeTime;
-                    snoozeAlert(share.id, snoozeTime);
-                    snoozeOptions.classList.remove('active'); // Hide dropdown after selection
-                });
-            });
-        });
-    }
-}
-
-/**
- * Shows the price alert panel.
- * Declared as a function declaration to ensure hoisting.
- */
-function showAlertPanel() {
-    if (priceAlertPanel) {
-        priceAlertPanel.classList.add('open');
-        console.log('Alerts: Price alert panel opened.');
-    }
-}
-
-/**
- * Hides the price alert panel.
- * Declared as a function declaration to ensure hoisting.
- */
-function hideAlertPanel() {
-    if (priceAlertPanel) {
-        priceAlertPanel.classList.remove('open');
-        console.log('Alerts: Price alert panel closed.');
-    }
-}
-
-/**
- * Dismisses a single alert.
- * @param {string} shareId The ID of the share whose alert is to be dismissed.
- * Declared as a function declaration to ensure hoisting.
- */
-function dismissAlert(shareId) {
-    acknowledgedAlerts[shareId] = Date.now() + (100 * 365 * 24 * 60 * 60 * 1000); // A very long time (effectively permanent for session)
-    saveAcknowledgedAlerts();
-    updatePriceAlertUI();
-    console.log('Alerts: Dismissed alert for share ID: ' + shareId);
-}
-
-/**
- * Snoozes a single alert for a specified duration.
- * @param {string} shareId The ID of the share whose alert is to be snoozed.
- * @param {string} snoozeTime The snooze duration ('1 Hour', '4 Hours', '24 Hours', 'session').
- * Declared as a function declaration to ensure hoisting.
- */
-function snoozeAlert(shareId, snoozeTime) {
-    let snoozeUntil;
-    const now = Date.now();
-    switch (snoozeTime) {
-        case '1 Hour':
-            snoozeUntil = now + 3600000; // 1 hour in ms
-            break;
-        case '4 Hours':
-            snoozeUntil = now + 14400000; // 4 hours in ms
-            break;
-        case '24 Hours':
-            snoozeUntil = now + 86400000; // 24 hours in ms
-            break;
-        case 'session':
-            snoozeUntil = now + (100 * 365 * 24 * 60 * 60 * 1000); // Effectively until next session/long time
-            break;
-        default:
-            snoozeUntil = now; // Snooze immediately if invalid
-    }
-    acknowledgedAlerts[shareId] = snoozeUntil;
-    saveAcknowledgedAlerts();
-    updatePriceAlertUI();
-    console.log('Alerts: Snoozed alert for share ID: ' + shareId + ' until ' + new Date(snoozeUntil).toLocaleString());
-}
-
-/**
- * Dismisses all active alerts.
- * Declared as a function declaration to ensure hoisting.
- */
-function dismissAllAlerts() {
-    sharesAtTargetPrice.forEach(share => {
-        acknowledgedAlerts[share.id] = Date.now() + (100 * 365 * 24 * 60 * 60 * 1000); // Effectively permanent for session
-    });
-    saveAcknowledgedAlerts();
-    updatePriceAlertUI();
-    console.log('Alerts: Dismissed all active alerts.');
-}
-
-/**
- * Sets up a real-time Firestore listener for shares based on currentSelectedWatchlistIds.
- * Updates `allSharesData` and re-renders the UI whenever changes occur.
- * Declared as a function declaration to ensure hoisting.
- */
-async function loadShares() {
-    if (unsubscribeShares) {
-        unsubscribeShares();
-        unsubscribeShares = null;
-        console.log('Firestore Listener: Unsubscribed from previous shares listener.');
-    }
-
-    if (!db || !currentUserId || !window.firestore) {
-        console.warn('Shares: Firestore DB, User ID, or Firestore functions not available for loading shares. Clearing list.');
-        clearShareList();
-        // NEW: Indicate data loading failure for splash screen
-        window._appDataLoaded = false;
-        hideSplashScreen(); // Hide splash screen on critical failure
-        return;
-    }
-    if (loadingIndicator) loadingIndicator.style.display = 'block';
-    
-    try {
-        const sharesCol = window.firestore.collection(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/shares');
-        let q;
-
-        let effectiveWatchlistId = null;
-        if (watchlistSelect && watchlistSelect.value && watchlistSelect.value !== '') {
-            effectiveWatchlistId = watchlistSelect.value;
-        } else if (currentSelectedWatchlistIds.length > 0 && currentSelectedWatchlistIds[0] !== ALL_SHARES_ID) {
-            effectiveWatchlistId = currentSelectedWatchlistIds[0];
-        } else if (userWatchlists.length > 0) {
-            effectiveWatchlistId = userWatchlists[0].id;
-        }
-
-        if (effectiveWatchlistId === ALL_SHARES_ID) {
-            q = window.firestore.query(sharesCol);
-            console.log('Shares: Setting up real-time listener for ALL shares for user: ' + currentUserId);
-        } else if (effectiveWatchlistId) {
-            q = window.firestore.query(sharesCol, window.firestore.where('watchlistId', '==', effectiveWatchlistId));
-            console.log('Shares: Setting up real-time listener for shares in watchlist: ' + effectiveWatchlistId);
-        } else {
-            q = window.firestore.query(sharesCol, window.firestore.where('watchlistId', '==', 'NO_WATCHLIST_ID_EXISTS'));
-            console.warn('Shares: No effective watchlist selected or available. Querying for non-existent ID to get empty results.');
-        }
-        
-        unsubscribeShares = window.firestore.onSnapshot(q, (querySnapshot) => {
-            console.log('Firestore Listener: Shares snapshot received. Processing changes.');
-            let fetchedShares = [];
-            querySnapshot.forEach((doc) => {
-                const share = { id: doc.id, ...doc.data() };
-                fetchedShares.push(share);
-            });
-
-            allSharesData = fetchedShares;
-            console.log('Shares: Shares data updated from snapshot. Total shares: ' + allSharesData.length);
-            
-            sortShares();
-            renderAsxCodeButtons();
-            
-            if (loadingIndicator) loadingIndicator.style.display = 'none';
-            // NEW: Indicate that app data is loaded for splash screen
-            window._appDataLoaded = true;
-            hideSplashScreenIfReady();
-
-        }, (error) => {
-            console.error('Firestore Listener: Error listening to shares:', error);
-            showCustomAlert('Error loading shares in real-time: ' + error.message);
-            if (loadingIndicator) loadingIndicator.style.display = 'none';
-            // NEW: Indicate data loading failure for splash screen
-            window._appDataLoaded = false;
-            hideSplashScreen(); // Hide splash screen on critical failure
-        });
-
-    } catch (error) {
-        console.error('Shares: Error setting up shares listener:', error);
-        showCustomAlert('Error setting up real-time share updates: ' + error.message);
-        if (loadingIndicator) loadingIndicator.style.display = 'none';
-        // NEW: Indicate data loading failure for splash screen
-        window._appDataLoaded = false;
-        hideSplashScreen(); // Hide splash screen on critical failure
-    }
-}
-
-
-// --- GLOBAL HELPER FUNCTIONS (NOT HOISTED, CALLED AFTER CORE FUNCTIONS) ---
+// --- GLOBAL HELPER FUNCTIONS ---
 
 /**
  * Dynamically adjusts the top padding of the main content area
  * to prevent it from being hidden by the fixed header.
- * This function uses requestAnimationFrame for accurate timing and includes a retry mechanism.
  */
 function adjustMainContentPadding() {
-    // Use requestAnimationFrame for more accurate layout measurements
-    requestAnimationFrame(() => {
-        // Ensure both the header and main content container elements exist.
-        if (appHeader && mainContainer) {
-            let headerHeight = appHeader.offsetHeight;
-
-            // If headerHeight is 0, it means the header might not be fully rendered yet.
-            // Re-queue the adjustment after a short delay to give the browser time.
-            // Check appHeader.classList.contains('app-hidden') === false to ensure it's supposed to be visible.
-            if (headerHeight === 0 && appHeader.classList.contains('app-hidden') === false) {
-                console.warn('Layout: Header height is 0, re-queuing adjustment.');
-                // Clear any existing timeout to prevent multiple re-queues
-                clearTimeout(resizeTimeout);
-                resizeTimeout = setTimeout(adjustMainContentPadding, 100); // Retry after 100ms
-                return; // Exit current execution
-            }
-
-            // Apply this total height as padding to the top of the main content container.
-            mainContainer.style.paddingTop = `${headerHeight}px`;
-            console.log('Layout: Adjusted main content padding-top to: ' + headerHeight + 'px (Header: ' + appHeader.offsetHeight + ')');
-        } else {
-            console.warn('Layout: Could not adjust main content padding-top: appHeader or mainContainer not found.');
-        }
-    });
+    // Ensure both the header and main content container elements exist.
+    if (appHeader && mainContainer) {
+        // Get the current computed height of the fixed header.
+        const headerHeight = appHeader.offsetHeight;
+        // Apply this height as padding to the top of the main content container.
+        // This pushes the content down so it starts exactly below the fixed header.
+        mainContainer.style.paddingTop = `${headerHeight}px`;
+        console.log('Layout: Adjusted main content padding-top to: ' + headerHeight + 'px');
+    } else {
+        console.warn('Layout: Could not adjust main content padding-top: appHeader or mainContainer not found.');
+    }
 }
 
 /**
@@ -699,8 +267,6 @@ function closeModals() {
     deselectCurrentShare();
     if (autoDismissTimeout) { clearTimeout(autoDismissTimeout); autoDismissTimeout = null; }
     hideContextMenu();
-    // NEW: Close alert panel if open
-    hideAlertPanel();
     console.log('Modal: All modals closed.');
 }
 
@@ -748,8 +314,6 @@ function updateMainButtonsState(enable) {
     if (watchlistSelect) watchlistSelect.disabled = !enable;
     if (refreshLivePricesBtn) refreshLivePricesBtn.disabled = !enable;
     if (toggleCompactViewBtn) toggleCompactViewBtn.disabled = !enable; // NEW: Disable compact view toggle
-    // NEW: Enable/disable price alert icon
-    if (priceAlertIcon) setIconDisabled(priceAlertIcon, !enable);
     console.log('UI State: Sort Select Disabled: ' + (sortSelect ? sortSelect.disabled : 'N/A'));
     console.log('UI State: Watchlist Select Disabled: ' + (watchlistSelect ? watchlistSelect.disabled : 'N/A'));
 }
@@ -935,7 +499,7 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
         showCustomAlert('Please select a share to edit.');
         return;
     }
-    const shareToEdit = allSharesData.find(s => s.id === targetShareId);
+    const shareToEdit = allSharesData.find(share => share.id === targetShareId);
     if (!shareToEdit) {
         showCustomAlert('Selected share not found.');
         return;
@@ -1338,7 +902,7 @@ function showShareDetails() {
                 }
             });
         } else {
-            modalCommentsContainer.innerHTML = '<p style="text-align: center; color: var(--ghosted-text);">No comments for this share.</p>';
+            modalCommentsContainer.innerHTML = '<p style="text-align: center; color: var(--label-color);">No comments for this share.</p>';
         }
     }
 
@@ -1481,7 +1045,7 @@ function renderWatchlistSelect() {
     });
 
     if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID)) {
-        watchlistSelect.value = ALL_SHARES_ID;
+        watchlistSelect.value = ALL_SHARES_ID; // Corrected typo here
     } else if (currentSelectedWatchlistIds.length === 1) {
         watchlistSelect.value = currentSelectedWatchlistIds[0];
     } else {
@@ -1530,27 +1094,8 @@ function addShareToTable(share) {
     const row = shareTableBody.insertRow();
     row.dataset.docId = share.id;
     
-    // Get live price data and determine overall price change class for this share
+    // NEW: Apply target-hit-alert class if condition met
     const livePriceData = livePrices[share.shareName.toUpperCase()];
-    const livePrice = livePriceData ? livePriceData.live : undefined;
-    const prevClosePrice = livePriceData ? livePriceData.prevClose : undefined;
-
-    let priceChangeClass = 'neutral'; // Default to neutral
-    let change = 0;
-    let percentageChange = 0;
-
-    if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice) && 
-        prevClosePrice !== undefined && prevClosePrice !== null && !isNaN(prevClosePrice)) {
-        change = livePrice - prevClosePrice;
-        percentageChange = (prevClosePrice !== 0 && !isNaN(prevClosePrice)) ? (change / prevClosePrice) * 100 : 0;
-        if (change > 0) {
-            priceChangeClass = 'positive';
-        } else if (change < 0) {
-            priceChangeClass = 'negative';
-        }
-    }
-
-    // Apply target-hit-alert class if condition met
     const isTargetHit = livePriceData ? livePriceData.targetHit : false;
     if (isTargetHit) {
         row.classList.add('target-hit-alert');
@@ -1617,35 +1162,41 @@ function addShareToTable(share) {
         }
     });
 
-    const displayShareName = (share.shareName && String(share.shareName).trim() !== '') ? share.shareName : '(No Code)';
-    const shareNameCell = row.insertCell(); // Create the cell for the share name
 
-    const asxCodeSpan = document.createElement('span');
-    asxCodeSpan.textContent = displayShareName;
-    asxCodeSpan.classList.add('price-change', priceChangeClass); // Apply both price-change and color class
-    shareNameCell.appendChild(asxCodeSpan); // Append the styled span to the cell
+    const displayShareName = (share.shareName && String(share.shareName).trim() !== '') ? share.shareName : '(No Code)';
+    row.insertCell().textContent = displayShareName;
 
     const livePriceCell = row.insertCell();
-    
+    // Get live price data from the global livePrices object
+    // livePriceData is already defined above for targetHit check
+    const livePrice = livePriceData ? livePriceData.live : undefined;
+    const prevClosePrice = livePriceData ? livePriceData.prevClose : undefined;
+
     if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) {
+        // Add a span for the price value itself for more granular styling
         const priceValueSpan = document.createElement('span');
-        priceValueSpan.classList.add('live-price-value', priceChangeClass); // Apply color class to the value
+        priceValueSpan.classList.add('live-price-value'); // New class for the number
         priceValueSpan.textContent = '$' + livePrice.toFixed(2);
         livePriceCell.appendChild(priceValueSpan);
         
-        // Only add change span if change data is valid
+        // Calculate daily change using livePrice and prevClosePrice
         if (prevClosePrice !== undefined && prevClosePrice !== null && !isNaN(prevClosePrice)) {
+            const change = livePrice - prevClosePrice;
+            const percentageChange = (prevClosePrice !== 0 && !isNaN(prevClosePrice)) ? (change / prevClosePrice) * 100 : 0; // Handle division by zero
             const priceChangeSpan = document.createElement('span');
-            priceChangeSpan.classList.add('price-change', priceChangeClass); // Apply both price-change and color class
-            let priceChangeText = '';
+            priceChangeSpan.classList.add('price-change');
             if (change > 0) {
-                priceChangeText = '(+$' + change.toFixed(2) + ' / +' + percentageChange.toFixed(2) + '%)';
+                priceChangeSpan.textContent = '(+$' + change.toFixed(2) + ' / +' + percentageChange.toFixed(2) + '%)'; // Include percentage
+                priceChangeSpan.classList.add('positive');
+                livePriceCell.classList.add('positive-change'); // Apply conditional background
             } else if (change < 0) {
-                priceChangeText = '(-$' + Math.abs(change).toFixed(2) + ' / ' + percentageChange.toFixed(2) + '%)';
+                priceChangeSpan.textContent = '(-$' + Math.abs(change).toFixed(2) + ' / ' + percentageChange.toFixed(2) + '%)'; // percentageChange is already negative
+                priceChangeSpan.classList.add('negative');
+                livePriceCell.classList.add('negative-change'); // Apply conditional background
             } else {
-                priceChangeText = '($0.00 / 0.00%)';
+                priceChangeSpan.textContent = '($0.00 / 0.00%)';
+                priceChangeSpan.classList.add('neutral');
             }
-            priceChangeSpan.textContent = priceChangeText;
             livePriceCell.appendChild(priceChangeSpan);
         }
     } else {
@@ -1698,26 +1249,6 @@ function addShareToMobileCards(share) {
     card.className = 'mobile-card';
     card.dataset.docId = share.id;
 
-    // Get live price data and determine overall price change class for this share
-    const livePriceData = livePrices[share.shareName.toUpperCase()];
-    const livePrice = livePriceData ? livePriceData.live : undefined;
-    const prevClosePrice = livePriceData ? livePriceData.prevClose : undefined;
-
-    let priceChangeClass = 'neutral'; // Default to neutral
-    let change = 0;
-    let percentageChange = 0;
-
-    if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice) && 
-        prevClosePrice !== undefined && prevClosePrice !== null && !isNaN(prevClosePrice)) {
-        change = livePrice - prevClosePrice;
-        percentageChange = (prevClosePrice !== 0 && !isNaN(prevClosePrice)) ? (change / prevClosePrice) * 100 : 0;
-        if (change > 0) {
-            priceChangeClass = 'positive';
-        } else if (change < 0) {
-            priceChangeClass = 'negative';
-        }
-    }
-
     // Apply compact-view class if active
     if (currentMobileViewMode === 'compact') {
         card.classList.add('compact-view-item'); // Add a specific class for individual cards in compact view
@@ -1726,6 +1257,7 @@ function addShareToMobileCards(share) {
     }
 
     // NEW: Apply target-hit-alert class if condition met
+    const livePriceData = livePrices[share.shareName.toUpperCase()];
     const isTargetHit = livePriceData ? livePriceData.targetHit : false;
     if (isTargetHit) {
         card.classList.add('target-hit-alert');
@@ -1738,7 +1270,11 @@ function addShareToMobileCards(share) {
     const frankingCreditsNum = Number(share.frankingCredits);
     const targetPriceNum = Number(share.targetPrice);
     
-    // priceForYield is already defined above
+    // Get live price data from the global livePrices object
+    // livePriceData is already defined above for targetHit check
+    const livePrice = livePriceData ? livePriceData.live : undefined;
+    const prevClosePrice = livePriceData ? livePriceData.prevClose : undefined;
+
     const priceForYield = (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) ? livePrice : enteredPriceNum;
 
     const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, priceForYield);
@@ -1750,52 +1286,93 @@ function addShareToMobileCards(share) {
     const displayShareName = (share.shareName && String(share.shareName).trim() !== '') ? share.shareName : '(No Code)';
     const displayEnteredPrice = (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? enteredPriceNum.toFixed(2) : '-';
 
+    let priceChangeClass = '';
     let priceChangeText = '';
-    if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice) && 
-        prevClosePrice !== undefined && prevClosePrice !== null && !isNaN(prevClosePrice)) {
-        if (change > 0) { // 'change' and 'percentageChange' are already calculated at the top
-            priceChangeText = '(+$' + change.toFixed(2) + ' / +' + percentageChange.toFixed(2) + '%)';
-        } else if (change < 0) {
-            priceChangeText = '(-$' + Math.abs(change).toFixed(2) + ' / ' + percentageChange.toFixed(2) + '%)';
-        } else {
-            priceChangeText = '($0.00 / 0.00%)';
+
+    if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) {
+        // Calculate daily change using livePrice and prevClosePrice for mobile cards
+        if (prevClosePrice !== undefined && prevClosePrice !== null && !isNaN(prevClosePrice)) {
+            const change = livePrice - prevClosePrice;
+            const percentageChange = (prevClosePrice !== 0 && !isNaN(prevClosePrice)) ? (change / prevClosePrice) * 100 : 0;
+            if (change > 0) {
+                priceChangeText = '(+$' + change.toFixed(2) + ' / +' + percentageChange.toFixed(2) + '%)';
+                priceChangeClass = 'positive';
+            } else if (change < 0) {
+                priceChangeText = '(-$' + Math.abs(change).toFixed(2) + ' / ' + percentageChange.toFixed(2) + '%)';
+                priceChangeClass = 'negative';
+            } else {
+                priceChangeText = '($0.00 / 0.00%)';
+                priceChangeClass = 'neutral';
+            }
         }
-    }
 
-
-    // Conditionally render content based on view mode
-    if (currentMobileViewMode === 'compact') {
-        card.innerHTML = `
-            <h3 class="${priceChangeClass}">${displayShareName}</h3>
-            <div class="live-price-display-section ${priceChangeClass}-change-section">
-                <span class="live-price-large ${priceChangeClass}">$${livePrice !== undefined && livePrice !== null && !isNaN(livePrice) ? livePrice.toFixed(2) : 'N/A'}</span>
-                <span class="price-change-large ${priceChangeClass}">${priceChangeText}</span>
-                <!-- 52-week high/low and P/E are hidden by CSS in compact view -->
-                <div class="fifty-two-week-row"></div>
-                <div class="pe-ratio-row"></div>
-            </div>
-            <!-- Other details are hidden by CSS for compact view -->
-            <p><strong>Entered Price:</strong> $${displayEnteredPrice}</p>
-            <p><strong>Target:</strong> $${displayTargetPrice}</p>
-            <p><strong>Dividend:</strong> $${displayDividendAmount}</p>
-            <p><strong>Franking:</strong> ${displayFrankingCredits}</p>
-            <p><strong>Unfranked Yield:</strong> ${unfrankedYield !== null && !isNaN(unfrankedYield) ? unfrankedYield.toFixed(2) + '%' : '0.00%'}&#xFE0E;</p>
-            <p><strong>Franked Yield:</strong> ${frankedYield !== null && !isNaN(frankedYield) ? frankedYield.toFixed(2) + '%' : '0.00%'}&#xFE0E;</p>
-        `;
+        // Conditionally render content based on view mode
+        if (currentMobileViewMode === 'compact') {
+            card.innerHTML = `
+                <h3 class="${priceChangeClass}">${displayShareName}</h3>
+                <div class="live-price-display-section ${priceChangeClass}-change-section">
+                    <span class="live-price-large ${priceChangeClass}">$${livePrice.toFixed(2)}</span>
+                    <span class="price-change-large ${priceChangeClass}">${priceChangeText}</span>
+                    <!-- 52-week high/low and P/E are hidden by CSS in compact view -->
+                    <div class="fifty-two-week-row"></div>
+                    <div class="pe-ratio-row"></div>
+                </div>
+                <!-- Other details are hidden by CSS for compact view -->
+                <p><strong>Entered Price:</strong> $${displayEnteredPrice}</p>
+                <p><strong>Target:</strong> $${displayTargetPrice}</p>
+                <p><strong>Dividend:</strong> $${displayDividendAmount}</p>
+                <p><strong>Franking:</strong> ${displayFrankingCredits}</p>
+                <p><strong>Unfranked Yield:</strong> ${unfrankedYield !== null && !isNaN(unfrankedYield) ? unfrankedYield.toFixed(2) + '%' : '0.00%'}&#xFE0E;</p>
+                <p><strong>Franked Yield:</strong> ${frankedYield !== null && !isNaN(frankedYield) ? frankedYield.toFixed(2) + '%' : '0.00%'}&#xFE0E;</p>
+            `;
+        } else {
+            card.innerHTML = `
+                <h3 class="${priceChangeClass}">${displayShareName}</h3>
+                <div class="live-price-display-section">
+                    <span class="live-price-large">$${livePrice.toFixed(2)}</span>
+                    <span class="price-change-large ${priceChangeClass}">${priceChangeText}</span>
+                </div>
+                <p><strong>Entered Price:</strong> $${displayEnteredPrice}</p>
+                <p><strong>Target:</strong> $${displayTargetPrice}</p>
+                <p><strong>Dividend:</strong> $${displayDividendAmount}</p>
+                <p><strong>Franking:</strong> ${displayFrankingCredits}</p>
+                <p><strong>Unfranked Yield:</strong> ${unfrankedYield !== null && !isNaN(unfrankedYield) ? unfrankedYield.toFixed(2) + '%' : '0.00%'}&#xFE0E;</p>
+                <p><strong>Franked Yield:</strong> ${frankedYield !== null && !isNaN(frankedYield) ? frankedYield.toFixed(2) + '%' : '0.00%'}&#xFE0E;</p>
+            `;
+        }
     } else {
-        card.innerHTML = `
-            <h3 class="${priceChangeClass}">${displayShareName}</h3>
-            <div class="live-price-display-section">
-                <span class="live-price-large ${priceChangeClass}">$${livePrice !== undefined && livePrice !== null && !isNaN(livePrice) ? livePrice.toFixed(2) : 'N/A'}</span>
-                <span class="price-change-large ${priceChangeClass}">${priceChangeText}</span>
-            </div>
-            <p><strong>Entered Price:</strong> $${displayEnteredPrice}</p>
-            <p><strong>Target:</strong> $${displayTargetPrice}</p>
-            <p><strong>Dividend:</strong> $${displayDividendAmount}</p>
-            <p><strong>Franking:</strong> ${displayFrankingCredits}</p>
-            <p><strong>Unfranked Yield:</strong> ${unfrankedYield !== null && !isNaN(unfrankedYield) ? unfrankedYield.toFixed(2) + '%' : '0.00%'}&#xFE0E;</p>
-            <p><strong>Franked Yield:</strong> ${frankedYield !== null && !isNaN(frankedYield) ? frankedYield.toFixed(2) + '%' : '0.00%'}&#xFE0E;</p>
-        `;
+        // Conditionally render content for N/A prices
+        if (currentMobileViewMode === 'compact') {
+            card.innerHTML = `
+                <h3>${displayShareName}</h3>
+                <div class="live-price-display-section">
+                    <span class="live-price-large">N/A</span>
+                    <span class="price-change-large"></span>
+                    <div class="fifty-two-week-row"></div>
+                    <div class="pe-ratio-row"></div>
+                </div>
+                <p><strong>Entered Price:</strong> $${displayEnteredPrice}</p>
+                <p><strong>Target:</strong> $${displayTargetPrice}</p>
+                <p><strong>Dividend:</strong> $${displayDividendAmount}</p>
+                <p><strong>Franking:</strong> ${displayFrankingCredits}</p>
+                <p><strong>Unfranked Yield:</strong> ${unfrankedYield !== null && !isNaN(unfrankedYield) ? unfrankedYield.toFixed(2) + '%' : '0.00%'}&#xFE0E;</p>
+                <p><strong>Franked Yield:</strong> ${frankedYield !== null && !isNaN(frankedYield) ? frankedYield.toFixed(2) + '%' : '0.00%'}&#xFE0E;</p>
+            `;
+        } else {
+            card.innerHTML = `
+                <h3>${displayShareName}</h3>
+                <div class="live-price-display-section">
+                    <span class="live-price-large">N/A</span>
+                    <span class="price-change-large"></span>
+                </div>
+                <p><strong>Entered Price:</strong> $${displayEnteredPrice}</p>
+                <p><strong>Target:</strong> $${displayTargetPrice}</p>
+                <p><strong>Dividend:</strong> $${displayDividendAmount}</p>
+                <p><strong>Franking:</strong> ${displayFrankingCredits}</p>
+                <p><strong>Unfranked Yield:</strong> ${unfrankedYield !== null && !isNaN(unfrankedYield) ? unfrankedYield.toFixed(2) + '%' : '0.00%'}&#xFE0E;</p>
+                <p><strong>Franked Yield:</strong> ${frankedYield !== null && !isNaN(frankedYield) ? frankedYield.toFixed(2) + '%' : '0.00%'}&#xFE0E;</p>
+            `;
+        }
     }
     mobileShareCardsContainer.appendChild(card);
 
@@ -1862,19 +1439,6 @@ function addShareToMobileCards(share) {
 
     console.log('Render: Added share ' + displayShareName + ' to mobile cards.');
 }
-
-/**
- * Toggles the mobile view mode between 'default' and 'compact'.
- * Saves the preference to local storage and re-renders the watchlist.
- */
-function toggleMobileViewMode() {
-    currentMobileViewMode = (currentMobileViewMode === 'default') ? 'compact' : 'default';
-    localStorage.setItem('currentMobileViewMode', currentMobileViewMode);
-    console.log('View Mode: Toggled to ' + currentMobileViewMode + ' view.');
-    renderWatchlist(); // Re-render to apply new view mode
-    adjustMainContentPadding(); // Ensure padding is correct after view mode change
-}
-
 
 /**
  * Renders the watchlist based on the currentSelectedWatchlistIds.
@@ -1963,8 +1527,7 @@ function renderWatchlist() {
          }
     }
     console.log('Render: Watchlist rendering complete.');
-    updatePriceAlertUI(); // NEW: Update the new price alert UI after rendering the watchlist
-    adjustMainContentPadding(); // Ensure padding is adjusted after rendering, as button visibility changes header height
+    updateTargetHitBanner(); // NEW: Update the banner after rendering the watchlist
 }
 
 function renderAsxCodeButtons() {
@@ -2270,12 +1833,9 @@ async function loadUserWatchlistsAndSettings() {
             savedSortOrder = userProfileSnap.data().lastSortOrder;
             savedTheme = userProfileSnap.data().lastTheme;
             currentSelectedWatchlistIds = userProfileSnap.data().lastSelectedWatchlistIds;
-            // NEW: Load acknowledged alerts from user profile
-            acknowledgedAlerts = userProfileSnap.data().acknowledgedAlerts || {};
             console.log('User Settings: Found last selected watchlists in profile: ' + currentSelectedWatchlistIds);
             console.log('User Settings: Found saved sort order in profile: ' + savedSortOrder);
             console.log('User Settings: Found saved theme in profile: ' + savedTheme);
-            console.log('User Settings: Loaded acknowledged alerts:', acknowledgedAlerts);
         }
 
         if (currentSelectedWatchlistIds && Array.isArray(currentSelectedWatchlistIds) && currentSelectedWatchlistIds.length > 0) {
@@ -2363,7 +1923,7 @@ async function fetchLivePrices() {
         data.forEach(item => {
             const asxCode = String(item.ASXCode).toUpperCase();
             const livePrice = parseFloat(item.LivePrice);
-            const prevClose = parseFloat(item.C_Price); // Use C_Price for Previous Close
+            const prevClose = parseFloat(item.PrevClose); 
             const pe = parseFloat(item.PE);
             const high52 = parseFloat(item.High52);
             const low52 = parseFloat(item.Low52);
@@ -2397,8 +1957,7 @@ async function fetchLivePrices() {
         livePrices = newLivePrices;
         console.log('Live Price: Live prices updated:', livePrices);
         renderWatchlist(); 
-        // Call adjustMainContentPadding here as live price data might affect targetHitBanner visibility
-        adjustMainContentPadding(); 
+        adjustMainContentPadding(); // NEW: Ensure padding is adjusted after live prices update 
         // NEW: Indicate that live prices are loaded for splash screen
         window._livePricesLoaded = true;
         hideSplashScreenIfReady();
@@ -2430,6 +1989,196 @@ function stopLivePriceUpdates() {
         clearInterval(livePriceFetchInterval);
         livePriceFetchInterval = null;
         console.log('Live Price: Stopped live price updates.');
+    }
+}
+
+// NEW: Function to update the target hit notification banner
+function updateTargetHitBanner() {
+    sharesAtTargetPrice = allSharesData.filter(share => {
+        const livePriceData = livePrices[share.shareName.toUpperCase()];
+        // Ensure livePriceData exists and has targetHit property
+        return livePriceData && livePriceData.targetHit;
+    });
+
+    if (!targetHitBanner || !targetHitMessage || !targetHitCount || !targetHitDismissBtn) {
+        console.warn('Target Alert: Target hit banner elements not found. Cannot update banner.');
+        return;
+    }
+
+    if (sharesAtTargetPrice.length > 0) {
+        targetHitCount.textContent = sharesAtTargetPrice.length;
+        targetHitMessage.textContent = ' shares have hit their target price!';
+        targetHitBanner.style.display = 'flex'; // Show the banner
+        document.body.classList.add('target-banner-active'); // Add class to body for padding adjustment
+        console.log('Target Alert: Showing banner: ' + sharesAtTargetPrice.length + ' shares hit target.');
+    } else {
+        targetHitBanner.style.display = 'none'; // Hide the banner
+        document.body.classList.remove('target-banner-active'); // Remove class from body
+        console.log('Target Alert: No shares hit target. Hiding banner.');
+    }
+}
+
+/**
+ * Toggles the mobile view mode between default (single column) and compact (two columns).
+ * Updates the UI to reflect the new mode and saves preference to local storage.
+ */
+function toggleMobileViewMode() {
+    if (!mobileShareCardsContainer) {
+        console.error('toggleMobileViewMode: mobileShareCardsContainer not found.');
+        return;
+    }
+
+    if (currentMobileViewMode === 'default') {
+        currentMobileViewMode = 'compact';
+        mobileShareCardsContainer.classList.add('compact-view');
+        showCustomAlert('Switched to Compact View!', 1000);
+        console.log('View Mode: Switched to Compact View.');
+    } else {
+        currentMobileViewMode = 'default';
+        mobileShareCardsContainer.classList.remove('compact-view');
+        showCustomAlert('Switched to Default View!', 1000);
+        console.log('View Mode: Switched to Default View.');
+    }
+    
+    localStorage.setItem('currentMobileViewMode', currentMobileViewMode); // Save preference
+    renderWatchlist(); // Re-render to apply new card styling and layout
+}
+
+// NEW: Splash Screen Functions
+let splashScreenReady = false; // Flag to ensure splash screen is ready before hiding
+
+/**
+ * Hides the splash screen with a fade-out effect.
+ */
+function hideSplashScreen() {
+    if (splashScreen) {
+        splashScreen.classList.add('hidden'); // Start fade-out
+        if (splashKangarooIcon) {
+            splashKangarooIcon.classList.remove('pulsing'); // Stop animation
+        }
+        // Show main app content
+        if (mainContainer) {
+            mainContainer.classList.remove('app-hidden');
+        }
+        if (appHeader) { // Assuming header is part of the main app content that needs to be revealed
+            appHeader.classList.remove('app-hidden');
+        }
+        // Temporarily remove overflow hidden from body
+        document.body.style.overflow = ''; 
+
+        // Remove splash screen from DOM after transition to prevent interaction issues
+        splashScreen.addEventListener('transitionend', () => {
+            if (splashScreen.parentNode) {
+                splashScreen.parentNode.removeChild(splashScreen);
+                console.log('Splash Screen: Removed from DOM.');
+            }
+        }, { once: true });
+        console.log('Splash Screen: Hiding.');
+    }
+}
+
+/**
+ * Checks if all necessary app data is loaded and hides the splash screen if ready.
+ * This function is called after each major data loading step.
+ */
+function hideSplashScreenIfReady() {
+    // Only hide if Firebase is initialized, user is authenticated, and all data flags are true
+    if (window._firebaseInitialized && window._userAuthenticated && window._appDataLoaded && window._livePricesLoaded) {
+        if (splashScreenReady) { // Ensure splash screen itself is ready to be hidden
+            console.log('Splash Screen: All data loaded and ready. Hiding splash screen.');
+            hideSplashScreen();
+        } else {
+            console.log('Splash Screen: Data loaded, but splash screen not yet marked as ready. Will hide when ready.');
+        }
+    } else {
+        console.log('Splash Screen: Not all data loaded yet. Current state: ' +
+            'Firebase Init: ' + window._firebaseInitialized +
+            ', User Auth: ' + window._userAuthenticated +
+            ', App Data: ' + window._appDataLoaded +
+            ', Live Prices: ' + window._livePricesLoaded);
+    }
+}
+
+/**
+ * Sets up a real-time Firestore listener for shares based on currentSelectedWatchlistIds.
+ * Updates `allSharesData` and re-renders the UI whenever changes occur.
+ */
+async function loadShares() {
+    if (unsubscribeShares) {
+        unsubscribeShares();
+        unsubscribeShares = null;
+        console.log('Firestore Listener: Unsubscribed from previous shares listener.');
+    }
+
+    if (!db || !currentUserId || !window.firestore) {
+        console.warn('Shares: Firestore DB, User ID, or Firestore functions not available for loading shares. Clearing list.');
+        clearShareList();
+        // NEW: Indicate data loading failure for splash screen
+        window._appDataLoaded = false;
+        hideSplashScreen(); // Hide splash screen on critical failure
+        return;
+    }
+    if (loadingIndicator) loadingIndicator.style.display = 'block';
+    
+    try {
+        const sharesCol = window.firestore.collection(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/shares');
+        let q;
+
+        let effectiveWatchlistId = null;
+        if (watchlistSelect && watchlistSelect.value && watchlistSelect.value !== '') {
+            effectiveWatchlistId = watchlistSelect.value;
+        } else if (currentSelectedWatchlistIds.length > 0 && currentSelectedWatchlistIds[0] !== ALL_SHARES_ID) {
+            effectiveWatchlistId = currentSelectedWatchlistIds[0];
+        } else if (userWatchlists.length > 0) {
+            effectiveWatchlistId = userWatchlists[0].id;
+        }
+
+        if (effectiveWatchlistId === ALL_SHARES_ID) {
+            q = window.firestore.query(sharesCol);
+            console.log('Shares: Setting up real-time listener for ALL shares for user: ' + currentUserId);
+        } else if (effectiveWatchlistId) {
+            q = window.firestore.query(sharesCol, window.firestore.where('watchlistId', '==', effectiveWatchlistId));
+            console.log('Shares: Setting up real-time listener for shares in watchlist: ' + effectiveWatchlistId);
+        } else {
+            q = window.firestore.query(sharesCol, window.firestore.where('watchlistId', '==', 'NO_WATCHLIST_ID_EXISTS'));
+            console.warn('Shares: No effective watchlist selected or available. Querying for non-existent ID to get empty results.');
+        }
+        
+        unsubscribeShares = window.firestore.onSnapshot(q, (querySnapshot) => {
+            console.log('Firestore Listener: Shares snapshot received. Processing changes.');
+            let fetchedShares = [];
+            querySnapshot.forEach((doc) => {
+                const share = { id: doc.id, ...doc.data() };
+                fetchedShares.push(share);
+            });
+
+            allSharesData = fetchedShares;
+            console.log('Shares: Shares data updated from snapshot. Total shares: ' + allSharesData.length);
+            
+            sortShares();
+            renderAsxCodeButtons();
+            
+            if (loadingIndicator) loadingIndicator.style.display = 'none';
+            // NEW: Indicate that app data is loaded for splash screen
+            window._appDataLoaded = true;
+            hideSplashScreenIfReady();
+
+        }, (error) => {
+            console.error('Firestore Listener: Error listening to shares:', error);
+            showCustomAlert('Error loading shares in real-time: ' + error.message);
+            if (loadingIndicator) loadingIndicator.style.display = 'none';
+            // NEW: Indicate data loading failure for splash screen
+            window._appDataLoaded = false;
+            hideSplashScreen(); // Hide splash screen on critical failure
+        });
+
+    } catch (error) {
+        console.error('Shares: Error setting up shares listener:', error);
+        showCustomAlert('Error setting up real-time share updates: ' + error.message);
+        if (loadingIndicator) loadingIndicator.style.display = 'none';
+        // NEW: Indicate data loading failure for splash screen
+        window._appDataLoaded = false;
+        hideSplashScreen(); // Hide splash screen on critical failure
     }
 }
 
@@ -2845,8 +2594,7 @@ async function initializeAppLogic() {
     if (customDialogModal) customDialogModal.style.setProperty('display', 'none', 'important');
     if (calculatorModal) calculatorModal.style.setProperty('display', 'none', 'important');
     if (shareContextMenu) shareContextMenu.style.setProperty('display', 'none', 'important');
-    // NEW: Hide price alert panel initially
-    if (priceAlertPanel) priceAlertPanel.style.display = 'none';
+    if (targetHitBanner) targetHitBanner.style.display = 'none'; // Ensure banner is hidden initially
 
     // Service Worker Registration
     if ('serviceWorker' in navigator) {
@@ -2964,11 +2712,6 @@ async function initializeAppLogic() {
 
         if (contextMenuOpen && shareContextMenu && !shareContextMenu.contains(event.target)) {
             hideContextMenu();
-        }
-        // NEW: Close alert panel if click outside and it's open
-        if (priceAlertPanel && priceAlertPanel.classList.contains('open') && 
-            !priceAlertPanel.contains(event.target) && !priceAlertIcon.contains(event.target)) {
-            hideAlertPanel();
         }
     });
 
@@ -3635,28 +3378,35 @@ async function initializeAppLogic() {
         });
     }
 
-    // NEW: Price Alert Icon and Panel Event Listeners
-    if (priceAlertIcon) {
-        priceAlertIcon.addEventListener('click', (event) => {
-            event.stopPropagation(); // Prevent global click from closing it immediately
-            showAlertPanel();
+
+    // NEW: Target hit banner dismiss button listener
+    if (targetHitDismissBtn) {
+        targetHitDismissBtn.addEventListener('click', () => {
+            if (targetHitBanner) {
+                targetHitBanner.style.display = 'none';
+                document.body.classList.remove('target-banner-active'); // Remove class from body on dismiss
+                console.log('Target Alert: Banner dismissed by user.');
+            }
         });
     }
-    if (closeAlertPanelBtn) {
-        closeAlertPanelBtn.addEventListener('click', hideAlertPanel);
-    }
-    if (dismissAllAlertsBtn) {
-        dismissAllAlertsBtn.addEventListener('click', dismissAllAlerts);
+
+    // NEW: Target hit banner click (to view alerted shares)
+    if (targetHitBanner) {
+        targetHitBanner.addEventListener('click', (event) => {
+            // Only trigger action if not clicking the dismiss button itself
+            if (!event.target.closest('#targetHitDismissBtn')) {
+                console.log('Target Alert: Banner clicked. Implementing action to show alerted shares.');
+                // For now, show an alert with names. Later, this can be a filtered view.
+                const alertedShareNames = sharesAtTargetPrice.map(s => s.shareName).join(', ');
+                showCustomAlert('Shares at target: ' + (alertedShareNames || 'None'), 3000);
+            }
+        });
     }
 
 
     // Call adjustMainContentPadding initially and on window load/resize
-    // Initial call to set padding correctly on first load
-    adjustMainContentPadding(); 
-    // Set up MutationObserver to watch for header changes
-    setupHeaderMutationObserver();
-    // Keep resize listener for general window resize, but it will be debounced by adjustMainContentPadding
-    window.addEventListener('resize', adjustMainContentPadding); 
+    window.addEventListener('load', adjustMainContentPadding);
+    // Already added to window.addEventListener('resize') in sidebar section
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -3671,7 +3421,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Show splash screen immediately on DOMContentLoaded
     if (splashScreen) {
         splashScreen.style.display = 'flex'; // Ensure it's visible
-        // splashScreenReady is no longer needed as part of the new splash screen logic
+        splashScreenReady = true; // Mark splash screen as ready
         document.body.style.overflow = 'hidden'; // Prevent scrolling of underlying content
         console.log('Splash Screen: Displayed on DOMContentLoaded, body overflow hidden.');
     } else {
@@ -3781,8 +3531,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             // Call renderWatchlist here to ensure correct mobile card rendering after auth state is set
             renderWatchlist();
-            // Crucial: Call adjustMainContentPadding after auth state changes, as header content might change
-            adjustMainContentPadding();
+            adjustMainContentPadding(); // NEW: Ensure padding is adjusted after initial render
         });
     } else {
         console.error('Firebase: Firebase objects (db, auth, appId, firestore, authFunctions) are not available on DOMContentLoaded. Firebase initialization likely failed in index.html.');
