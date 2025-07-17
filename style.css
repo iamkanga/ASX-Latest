@@ -3303,10 +3303,10 @@ main.container {
 @media (max-width: 768px) {
 
     .splash-icon {
-    width: 100%;    /* Force width to 100% of parent */
-        height: 100%;   /* Force height to 100% of parent */
-        object-fit: contain; /* Maintain aspect ratio within these new dimensions */
-        margin-bottom: 0; /* Ensure no margin pushes it up */
+        width: 100%;
+        height: 100%;
+        object-fit: contain; /* This is the line we need to change */
+        margin-bottom: 0;
     }
 
     header {
