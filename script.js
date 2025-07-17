@@ -160,6 +160,12 @@ const splashScreen = document.getElementById('splashScreen');
 const splashKangarooIcon = document.getElementById('splashKangarooIcon');
 const splashSignInBtn = document.getElementById('splashSignInBtn');
 
+// NEW: UI Elements for Alert Panel
+const alertPanel = document.getElementById('alertPanel'); // NEW: Alert panel container
+const alertPanelCloseBtn = document.getElementById('alertPanelCloseBtn'); // NEW: Alert panel close button
+const alertList = document.getElementById('alertList'); // NEW: Container for alert items
+const dismissAllAlertsBtn = document.getElementById('dismissAllAlertsBtn'); // NEW: Dismiss All button
+
 
 let sidebarOverlay = document.querySelector('.sidebar-overlay');
 if (!sidebarOverlay) {
@@ -277,6 +283,8 @@ function closeModals() {
     deselectCurrentShare();
     if (autoDismissTimeout) { clearTimeout(autoDismissTimeout); autoDismissTimeout = null; }
     hideContextMenu();
+    // NEW: Also close the alert panel
+    hideAlertPanel();
     logDebug('Modal: All modals closed.');
 }
 
@@ -2053,12 +2061,23 @@ function updateTargetHitBanner() {
         targetHitIconBtn.style.display = 'flex'; // Show the icon
         targetHitIconCount.style.display = 'block'; // Show the count badge
         logDebug('Target Alert: Showing icon: ' + sharesAtTargetPrice.length + ' shares hit target.');
+        // NEW: Show the alert panel if there are alerts and it's not already open
+        if (alertPanel && !alertPanel.classList.contains('open')) {
+            logDebug('Alerts: Shares at target, auto-showing alert panel.');
+            showAlertPanel();
+        }
     } else {
         targetHitIconBtn.style.display = 'none'; // Hide the icon
         targetHitIconCount.style.display = 'none'; // Hide the count badge
         logDebug('Target Alert: No shares hit target. Hiding icon.');
+        // NEW: Hide the alert panel if no alerts and it's open
+        if (alertPanel && alertPanel.classList.contains('open')) {
+            logDebug('Alerts: No shares at target, auto-hiding alert panel.');
+            hideAlertPanel();
+        }
     }
     // No need to adjust main content padding based on this icon, as it's floating at the bottom.
+    renderAlertsInPanel(); // NEW: Render alerts in the panel whenever target hit status changes
 }
 
 /**
@@ -2638,6 +2657,8 @@ async function initializeAppLogic() {
     if (calculatorModal) calculatorModal.style.setProperty('display', 'none', 'important');
     if (shareContextMenu) shareContextMenu.style.setProperty('display', 'none', 'important');
     if (targetHitIconBtn) targetHitIconBtn.style.display = 'none'; // Ensure icon is hidden initially
+    if (alertPanel) alertPanel.style.display = 'none'; // NEW: Ensure alert panel is hidden initially
+
 
     // Service Worker Registration
     if ('serviceWorker' in navigator) {
@@ -2749,12 +2770,17 @@ async function initializeAppLogic() {
         if (event.target === shareDetailModal || event.target === dividendCalculatorModal ||
             event.target === shareFormSection || event.target === customDialogModal ||
             event.target === calculatorModal || event.target === addWatchlistModal ||
-            event.target === manageWatchlistModal) {
+            event.target === manageWatchlistModal || event.target === alertPanel) { // NEW: Include alertPanel
             closeModals();
         }
 
         if (contextMenuOpen && shareContextMenu && !shareContextMenu.contains(event.target)) {
             hideContextMenu();
+        }
+        // NEW: Close alert panel if clicked outside (but not on the bell icon itself)
+        if (alertPanel && alertPanel.classList.contains('open') && 
+            !alertPanel.contains(event.target) && !targetHitIconBtn.contains(event.target)) {
+            hideAlertPanel();
         }
     });
 
@@ -3426,9 +3452,161 @@ async function initializeAppLogic() {
     if (targetHitIconBtn) {
         targetHitIconBtn.addEventListener('click', (event) => {
             logDebug('Target Alert: Icon button clicked. Showing alerted shares.');
-            const alertedShareNames = sharesAtTargetPrice.map(s => s.shareName).join(', ');
-            showCustomAlert('Shares at target: ' + (alertedShareNames || 'None'), 3000);
+            // NEW: Toggle alert panel visibility
+            if (alertPanel.classList.contains('open')) {
+                hideAlertPanel();
+            } else {
+                showAlertPanel();
+            }
         });
+    }
+
+    // NEW: Alert Panel Close Button Listener
+    if (alertPanelCloseBtn) {
+        alertPanelCloseBtn.addEventListener('click', () => {
+            logDebug('Alerts: Alert panel close button clicked.');
+            hideAlertPanel();
+        });
+    }
+
+    // NEW: Dismiss All Alerts Button Listener
+    if (dismissAllAlertsBtn) {
+        dismissAllAlertsBtn.addEventListener('click', () => {
+            logDebug('Alerts: Dismiss All button clicked.');
+            // For now, just clear the UI and hide the panel.
+            // In future, this would involve updating Firestore to mark alerts as dismissed/snoozed.
+            sharesAtTargetPrice = []; // Clear current target price alerts
+            // TODO: Add logic to clear/snooze reminders here
+            updateTargetHitBanner(); // This will hide the icon and re-render the panel
+            showCustomAlert('All alerts dismissed!', 1500);
+        });
+    }
+
+    // NEW: Function to show the alert panel
+    function showAlertPanel() {
+        if (alertPanel) {
+            alertPanel.style.display = 'flex'; // Make it visible for transition
+            // Force reflow to ensure transition works from initial display:none
+            alertPanel.offsetHeight; 
+            alertPanel.classList.add('open');
+            logDebug('Alerts: Showing alert panel.');
+        }
+    }
+
+    // NEW: Function to hide the alert panel
+    function hideAlertPanel() {
+        if (alertPanel) {
+            alertPanel.classList.remove('open');
+            // Hide completely after transition
+            alertPanel.addEventListener('transitionend', function handler() {
+                alertPanel.style.display = 'none';
+                alertPanel.removeEventListener('transitionend', handler);
+                logDebug('Alerts: Alert panel hidden after transition.');
+            }, { once: true });
+            logDebug('Alerts: Hiding alert panel.');
+        }
+    }
+
+    // NEW: Function to render alerts in the panel
+    function renderAlertsInPanel() {
+        if (!alertList) {
+            console.warn('Alerts: alertList element not found. Cannot render alerts.');
+            return;
+        }
+
+        alertList.innerHTML = ''; // Clear existing alerts
+
+        const allActiveAlerts = [];
+
+        // Add Target Price Alerts
+        sharesAtTargetPrice.forEach(share => {
+            const livePriceData = livePrices[share.shareName.toUpperCase()];
+            const livePrice = livePriceData ? livePriceData.live : 'N/A';
+            const targetPrice = share.targetPrice !== null && !isNaN(share.targetPrice) ? share.targetPrice : 'N/A';
+            
+            allActiveAlerts.push({
+                type: 'target-price',
+                id: share.id,
+                title: `${share.shareName.toUpperCase()} Target Hit!`,
+                body: `Live: $${livePrice} | Target: $${targetPrice}`,
+                shareId: share.id // Store shareId for potential future actions
+            });
+        });
+
+        // TODO: Add Date/Time Reminders here when implemented
+
+        if (allActiveAlerts.length === 0) {
+            const noAlertsMessage = document.createElement('p');
+            noAlertsMessage.classList.add('no-alerts-message');
+            noAlertsMessage.textContent = 'No active alerts or reminders.';
+            alertList.appendChild(noAlertsMessage);
+            logDebug('Alerts: No active alerts to display in panel.');
+        } else {
+            allActiveAlerts.forEach(alert => {
+                const alertItem = document.createElement('div');
+                alertItem.classList.add('alert-item');
+                alertItem.dataset.alertId = alert.id; // Use alert.id for dismissal/snooze
+
+                alertItem.innerHTML = `
+                    <div class="alert-item-header">
+                        <span>${alert.title}</span>
+                        <!-- Add snooze dropdown here later -->
+                    </div>
+                    <div class="alert-item-body">${alert.body}</div>
+                    <div class="alert-item-actions">
+                        <button class="snooze-btn">Snooze
+                            <div class="snooze-options">
+                                <button data-snooze-duration="1">1 Hour</button>
+                                <button data-snooze-duration="4">4 Hours</button>
+                                <button data-snooze-duration="8">8 Hours</button>
+                                <button data-snooze-duration="12">12 Hours</button>
+                                <button data-snooze-duration="24">24 Hours</button>
+                                <button data-snooze-duration="session">Until Next Session</button>
+                            </div>
+                        </button>
+                        <button class="dismiss-btn">Dismiss</button>
+                    </div>
+                `;
+                alertList.appendChild(alertItem);
+
+                // Add event listeners for dismiss and snooze buttons
+                alertItem.querySelector('.dismiss-btn').addEventListener('click', (event) => {
+                    event.stopPropagation(); // Prevent alert item click
+                    logDebug('Alerts: Dismiss button clicked for alert ID: ' + alert.id);
+                    // TODO: Implement actual dismissal logic (e.g., mark as dismissed in Firestore)
+                    // For now, just remove from UI
+                    event.target.closest('.alert-item').remove();
+                    // Re-evaluate target hit banner and panel content
+                    updateTargetHitBanner(); 
+                });
+
+                const snoozeBtn = alertItem.querySelector('.snooze-btn');
+                const snoozeOptions = alertItem.querySelector('.snooze-options');
+
+                snoozeBtn.addEventListener('click', (event) => {
+                    event.stopPropagation(); // Prevent alert item click
+                    logDebug('Alerts: Snooze button clicked for alert ID: ' + alert.id);
+                    // Toggle snooze options visibility
+                    snoozeOptions.style.display = snoozeOptions.style.display === 'flex' ? 'none' : 'flex';
+                });
+
+                snoozeOptions.querySelectorAll('button').forEach(optionBtn => {
+                    optionBtn.addEventListener('click', (event) => {
+                        event.stopPropagation(); // Prevent snooze button click
+                        const duration = event.target.dataset.snoozeDuration;
+                        logDebug('Alerts: Snooze option selected for alert ID: ' + alert.id + ', Duration: ' + duration);
+                        // TODO: Implement snooze logic (e.g., set a snooze timestamp in Firestore)
+                        // For now, just remove from UI
+                        event.target.closest('.alert-item').remove();
+                        // Re-evaluate target hit banner and panel content
+                        updateTargetHitBanner(); 
+                        hideAlertPanel(); // Hide panel after snoozing
+                        showCustomAlert(`Alert snoozed for ${duration}!`, 1500);
+                    });
+                });
+            });
+            logDebug('Alerts: Rendered ' + allActiveAlerts.length + ' active alerts in panel.');
+        }
     }
 
 
