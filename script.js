@@ -48,7 +48,7 @@ let originalShareData = null; // Stores the original share data when editing for
 let originalWatchlistData = null; // Stores original watchlist data for dirty state check in watchlist modals
 
 // Live Price Data
-const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzp7OjZL3zqvJ9wPsV9M-afm2wKeQPbIgGVv_juVpkaRllADESLwj7F-S7YWYerau-/exec'; // Your new Google Apps Script URL
+const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzp7OjZL3zqvJ9wPsV9M-afm2wKeQPbIgGVv_juVpkaRllADESLwj7F4-S7YWYerau-/exec'; // Your new Google Apps Script URL
 let livePrices = {}; // Stores live price data: {ASX_CODE: {live: price, prevClose: price, PE: value, High52: value, Low52: value, targetHit: boolean}}
 let livePriceFetchInterval = null; // To hold the interval ID for live price updates
 const LIVE_PRICE_FETCH_INTERVAL_MS = 5 * 60 * 1000; // Fetch every 5 minutes
@@ -1953,14 +1953,14 @@ async function loadUserWatchlistsAndSettings() {
  * Updates the `livePrices` global object.
  */
 async function fetchLivePrices() {
-    logDebug('Live Price: Attempting to fetch live prices...'); // Moved this log inside the try block for better context
+    logDebug('Live Price: Attempting to fetch live prices...');
     try {
-        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, { cache: 'no-store' });
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL); // Reverted to original fetch call
         if (!response.ok) {
             throw new Error('HTTP error! status: ' + response.status);
         }
         const data = await response.json();
-        logDebug('Live Price: Raw data received:', data);
+        logDebug('Live Price: Raw data received:', data); // Using logDebug
 
         const newLivePrices = {};
         data.forEach(item => {
@@ -1982,7 +1982,7 @@ async function fetchLivePrices() {
                 const isTargetHit = (targetPrice !== undefined && livePrice <= targetPrice);
 
                 // Debugging log:
-                logDebug('Target Price Debug: Share: ' + asxCode + ', Live: ' + livePrice + ', Target: ' + targetPrice + ', Is Target Hit: ' + isTargetHit);
+                logDebug('Target Price Debug: Share: ' + asxCode + ', Live: ' + livePrice + ', Target: ' + targetPrice + ', Is Target Hit: ' + isTargetHit); // Using logDebug
 
 
                 newLivePrices[asxCode] = {
@@ -1998,9 +1998,9 @@ async function fetchLivePrices() {
             }
         });
         livePrices = newLivePrices;
-        logDebug('Live Price: Live prices updated:', livePrices);
+        logDebug('Live Price: Live prices updated:', livePrices); // Using logDebug
         renderWatchlist(); 
-        // Removed: adjustMainContentPadding(); // This is now called by renderAsxCodeButtons which is called by renderWatchlist
+        adjustMainContentPadding(); // Re-added this call
         // NEW: Indicate that live prices are loaded for splash screen
         window._livePricesLoaded = true;
         hideSplashScreenIfReady();
