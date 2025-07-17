@@ -3301,6 +3301,10 @@ main.container {
 
 /* Responsive Design */
 @media (max-width: 768px) {
+    .splash-icon {
+        max-width: 95%; /* Make it take up almost full width on mobile */
+        max-height: 95%; /* Make it take up almost full height on mobile */
+    }
     header {
         padding: 15px 10px 10px; /* Adjusted padding for mobile */
     }
@@ -3467,4 +3471,4 @@ main.container {
 
     /* Removed old target banner mobile styles */
     /* #targetHitBanner { display: none; ... } */
-}
+
