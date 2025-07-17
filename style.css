@@ -574,7 +574,7 @@ body.theme-bold-8 { /* Plum */
     --google-auth-btn-text: #4285F4;
     --price-up-color: #2ecc71;
     --price-down-color: #e74c3c;
-    --price-neutral-color: #ffccff;
+    --price-neutral-color: #e8d0ff;
     --live-price-section-bg: rgba(218, 112, 214, 0.1);
     --live-price-positive-bg: rgba(46, 204, 113, 0.15);
     --live-price-negative-bg: rgba(231, 76, 60, 0.15);
@@ -1855,6 +1855,7 @@ body.sidebar-active {
 /* Adjust main content padding to account for fixed header - REMOVED FROM CSS, NOW HANDLED BY JS */
 main.container {
     margin-top: 0; /* Ensure no extra margin pushes content down */
+    /* Padding will be set by JavaScript */
 }
 
 /* Header Top Row (now part of the fixed header) */
@@ -3108,59 +3109,56 @@ table td.live-price-cell.negative-change {
     color: var(--button-text);
 }
 
-/* NEW: Target Hit Notification Banner (moved to top) */
-#targetHitBanner {
-    display: none; /* Hidden by default, shown by JS */
+/* REMOVED: Target Hit Notification Banner (old styles) */
+/* #targetHitBanner { display: none; ... } */
+
+/* NEW: Target Hit Notification Icon (bottom right) */
+.target-hit-icon-btn {
+    display: none; /* Hidden by default, shown by JS when shares hit target */
     position: fixed;
-    top: 0; /* Position at the top */
-    left: 0;
-    width: 100%;
-    background-color: var(--target-alert-bg);
-    color: var(--target-alert-text);
-    padding: 12px 20px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2); /* Shadow below */
-    z-index: 900; /* Above header (500), below modals (1000) */
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 1em;
-    font-weight: 600;
-    border-bottom: 1px solid var(--target-alert-border); /* Border at bottom */
-    box-sizing: border-box;
-    cursor: pointer; /* Indicate it's clickable */
-    height: var(--target-banner-height); /* Use defined height */
-    transition: top 0.3s ease-in-out; /* Smooth transition for showing/hiding */
-}
-
-#targetHitBanner .message-content {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-#targetHitBanner .message-content i {
-    font-size: 1.2em;
-}
-
-#targetHitBanner .dismiss-btn {
-    background: none;
+    bottom: 20px; /* Adjust as needed, considering scroll-to-top button */
+    right: 20px; /* Adjust as needed */
+    z-index: 99; /* Below modals, above scroll-to-top if needed */
+    background-color: var(--alert-icon-bg); /* Use alert background color */
+    color: var(--alert-icon-text); /* Use alert text color */
     border: none;
-    color: inherit; /* Inherit text color */
-    font-size: 1.5em;
+    border-radius: 50%; /* Circular button */
+    width: 55px; /* Size of the button */
+    height: 55px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.8em; /* Icon size */
     cursor: pointer;
-    padding: 5px;
-    line-height: 1;
-    transition: transform 0.2s ease;
+    box-shadow: 0 4px 12px var(--alert-icon-shadow); /* More prominent shadow */
+    transition: transform 0.2s ease, background-color 0.2s ease;
+    animation: pulse-alert 1.5s infinite alternate; /* Subtle pulsing animation */
 }
 
-#targetHitBanner .dismiss-btn:hover {
-    transform: scale(1.2);
+.target-hit-icon-btn:hover {
+    transform: scale(1.1);
+    background-color: var(--warning-color); /* Slightly darker on hover */
 }
 
-/* Adjust main content padding to account for fixed header and banner */
-/* These will be handled dynamically by JS to be more precise */
-body.target-banner-active main.container {
-    /* No CSS rule here, padding-top set by JS */
+.target-hit-icon-count {
+    position: absolute;
+    top: -5px; /* Position above the icon */
+    right: -5px; /* Position to the right of the icon */
+    background-color: var(--danger-color); /* Red badge */
+    color: white;
+    font-size: 0.7em; /* Smaller font for the count */
+    font-weight: 700;
+    padding: 3px 6px;
+    border-radius: 50%;
+    min-width: 20px; /* Ensure it's circular for single digits */
+    text-align: center;
+    line-height: 1; /* Center text vertically */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+/* Adjust main content padding - only for header height now */
+main.container {
+    /* No CSS rule here, padding-top set by JS based on header height only */
 }
 
 /* --- NEW: Compact Mobile View Specific Styles --- */
@@ -3482,10 +3480,6 @@ body.target-banner-active main.container {
         font-size: 1em;
     }
 
-    #targetHitBanner {
-        bottom: auto; /* Remove bottom positioning */
-        top: 0; /* Keep at top for very small mobile */
-        font-size: 0.85em;
-        padding: 8px 10px;
-    }
+    /* Removed old target banner mobile styles */
+    /* #targetHitBanner { display: none; ... } */
 }

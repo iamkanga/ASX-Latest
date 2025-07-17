@@ -142,10 +142,8 @@ const exportWatchlistBtn = document.getElementById('exportWatchlistBtn');
 const refreshLivePricesBtn = document.getElementById('refreshLivePricesBtn');
 const shareWatchlistSelect = document.getElementById('shareWatchlistSelect');
 const modalLivePriceDisplaySection = document.querySelector('.live-price-display-section'); 
-const targetHitBanner = document.getElementById('targetHitBanner');
-const targetHitMessage = document.getElementById('targetHitMessage');
-const targetHitCount = document.getElementById('targetHitCount');
-const targetHitDismissBtn = document.getElementById('targetHitDismissBtn');
+const targetHitIconBtn = document.getElementById('targetHitIconBtn'); // NEW: Reference to the icon button
+const targetHitIconCount = document.getElementById('targetHitIconCount'); // NEW: Reference to the count span
 const toggleCompactViewBtn = document.getElementById('toggleCompactViewBtn');
 const splashScreen = document.getElementById('splashScreen');
 const splashKangarooIcon = document.getElementById('splashKangarooIcon');
@@ -169,23 +167,18 @@ const formInputs = [
 
 /**
  * Dynamically adjusts the top padding of the main content area
- * to prevent it from being hidden by the fixed header and target banner.
+ * to prevent it from being hidden by the fixed header.
  */
 function adjustMainContentPadding() {
     // Ensure both the header and main content container elements exist.
     if (appHeader && mainContainer) {
         // Get the current computed height of the fixed header.
         const headerHeight = appHeader.offsetHeight;
-        // Get the height of the target hit banner if it's currently displayed
-        // Check its computed style, as display 'none' means offsetHeight is 0
-        const bannerHeight = targetHitBanner && window.getComputedStyle(targetHitBanner).display !== 'none' ? targetHitBanner.offsetHeight : 0;
-        
-        // Calculate total required padding
-        const totalPadding = headerHeight + bannerHeight;
         
         // Apply this height as padding to the top of the main content container.
-        mainContainer.style.paddingTop = `${totalPadding}px`;
-        console.log('Layout: Adjusted main content padding-top to: ' + totalPadding + 'px (Header: ' + headerHeight + 'px, Banner: ' + bannerHeight + 'px)');
+        // The target banner is now a floating icon, so it doesn't affect top padding.
+        mainContainer.style.paddingTop = `${headerHeight}px`;
+        console.log('Layout: Adjusted main content padding-top to: ' + headerHeight + 'px (Header only).');
     } else {
         console.warn('Layout: Could not adjust main content padding-top: appHeader or mainContainer not found.');
     }
@@ -1594,15 +1587,11 @@ function scrollToShare(asxCode) {
             elementToScrollTo = document.querySelector('.mobile-card[data-doc-id="' + targetShare.id + '"]');
         }
         if (elementToScrollTo) {
-            // Get the height of the fixed header
+            // Get the height of the fixed header only, as banner is now at bottom
             const fixedHeaderHeight = appHeader ? appHeader.offsetHeight : 0;
-            // Get the height of the target hit banner if it's currently displayed
-            const bannerHeight = targetHitBanner && window.getComputedStyle(targetHitBanner).display !== 'none' ? targetHitBanner.offsetHeight : 0;
-            const totalFixedHeight = fixedHeaderHeight + bannerHeight;
-
             const elementRect = elementToScrollTo.getBoundingClientRect();
-            // Calculate scroll position, accounting for the fixed header and banner
-            const scrollY = elementRect.top + window.scrollY - totalFixedHeight - 10; // 10px buffer for a little space
+            // Calculate scroll position, accounting for the fixed header
+            const scrollY = elementRect.top + window.scrollY - fixedHeaderHeight - 10; // 10px buffer for a little space
             window.scrollTo({ top: scrollY, behavior: 'smooth' });
             console.log('UI: Scrolled to element for share ID: ' + targetShare.id);
         } else {
@@ -2003,7 +1992,7 @@ function stopLivePriceUpdates() {
     }
 }
 
-// NEW: Function to update the target hit notification banner
+// NEW: Function to update the target hit notification icon
 function updateTargetHitBanner() {
     sharesAtTargetPrice = allSharesData.filter(share => {
         const livePriceData = livePrices[share.shareName.toUpperCase()];
@@ -2011,23 +2000,22 @@ function updateTargetHitBanner() {
         return livePriceData && livePriceData.targetHit;
     });
 
-    if (!targetHitBanner || !targetHitMessage || !targetHitCount || !targetHitDismissBtn) {
-        console.warn('Target Alert: Target hit banner elements not found. Cannot update banner.');
+    if (!targetHitIconBtn || !targetHitIconCount) {
+        console.warn('Target Alert: Target hit icon elements not found. Cannot update icon.');
         return;
     }
 
     if (sharesAtTargetPrice.length > 0) {
-        targetHitCount.textContent = sharesAtTargetPrice.length;
-        targetHitMessage.textContent = ' shares have hit their target price!';
-        targetHitBanner.style.display = 'flex'; // Show the banner
-        // No longer adding/removing class to body; padding handled by JS
-        console.log('Target Alert: Showing banner: ' + sharesAtTargetPrice.length + ' shares hit target.');
+        targetHitIconCount.textContent = sharesAtTargetPrice.length;
+        targetHitIconBtn.style.display = 'flex'; // Show the icon
+        targetHitIconCount.style.display = 'block'; // Show the count badge
+        console.log('Target Alert: Showing icon: ' + sharesAtTargetPrice.length + ' shares hit target.');
     } else {
-        targetHitBanner.style.display = 'none'; // Hide the banner
-        // No longer adding/removing class to body; padding handled by JS
-        console.log('Target Alert: No shares hit target. Hiding banner.');
+        targetHitIconBtn.style.display = 'none'; // Hide the icon
+        targetHitIconCount.style.display = 'none'; // Hide the count badge
+        console.log('Target Alert: No shares hit target. Hiding icon.');
     }
-    adjustMainContentPadding(); // Recalculate padding after banner visibility changes
+    // No need to adjust main content padding based on this icon, as it's floating at the bottom.
 }
 
 /**
@@ -2606,7 +2594,7 @@ async function initializeAppLogic() {
     if (customDialogModal) customDialogModal.style.setProperty('display', 'none', 'important');
     if (calculatorModal) calculatorModal.style.setProperty('display', 'none', 'important');
     if (shareContextMenu) shareContextMenu.style.setProperty('display', 'none', 'important');
-    if (targetHitBanner) targetHitBanner.style.display = 'none'; // Ensure banner is hidden initially
+    if (targetHitIconBtn) targetHitIconBtn.style.display = 'none'; // Ensure icon is hidden initially
 
     // Service Worker Registration
     if ('serviceWorker' in navigator) {
@@ -3391,28 +3379,12 @@ async function initializeAppLogic() {
     }
 
 
-    // NEW: Target hit banner dismiss button listener
-    if (targetHitDismissBtn) {
-        targetHitDismissBtn.addEventListener('click', () => {
-            if (targetHitBanner) {
-                targetHitBanner.style.display = 'none';
-                // No longer removing class from body; padding handled by JS
-                console.log('Target Alert: Banner dismissed by user.');
-            }
-            adjustMainContentPadding(); // Recalculate padding after banner is dismissed
-        });
-    }
-
-    // NEW: Target hit banner click (to view alerted shares)
-    if (targetHitBanner) {
-        targetHitBanner.addEventListener('click', (event) => {
-            // Only trigger action if not clicking the dismiss button itself
-            if (!event.target.closest('#targetHitDismissBtn')) {
-                console.log('Target Alert: Banner clicked. Implementing action to show alerted shares.');
-                // For now, show an alert with names. Later, this can be a filtered view.
-                const alertedShareNames = sharesAtTargetPrice.map(s => s.shareName).join(', ');
-                showCustomAlert('Shares at target: ' + (alertedShareNames || 'None'), 3000);
-            }
+    // NEW: Target hit icon button listener
+    if (targetHitIconBtn) {
+        targetHitIconBtn.addEventListener('click', (event) => {
+            console.log('Target Alert: Icon button clicked. Showing alerted shares.');
+            const alertedShareNames = sharesAtTargetPrice.map(s => s.shareName).join(', ');
+            showCustomAlert('Shares at target: ' + (alertedShareNames || 'None'), 3000);
         });
     }
 
