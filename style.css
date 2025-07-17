@@ -170,7 +170,7 @@ body.theme-bold-1 { /* Ocean Blue */
     --calc-num-btn-bg: #007f8c;
     --calc-num-btn-text: #e0f2f7;
     --calc-num-btn-hover-bg: #0096c7;
-    color: #fff !important;
+    color: #fff;
     --text-color: #fff;
     --asx-button-text: #fff;
     --sidebar-text: #fff;
@@ -226,7 +226,7 @@ body.theme-bold-2 { /* Forest Green */
     --calc-num-btn-bg: #5a855a;
     --calc-num-btn-text: #e6ffe6;
     --calc-num-btn-hover-bg: #6a9955;
-    color: #fff !important;
+    color: #fff;
     --text-color: #fff;
     --asx-button-text: #fff;
     --sidebar-text: #fff;
@@ -282,7 +282,7 @@ body.theme-bold-3 { /* Sunset Orange */
     --calc-num-btn-bg: #f7b98d;
     --calc-num-btn-text: #3b2a20;
     --calc-num-btn-hover-bg: #f4a261;
-    color: #fff !important;
+    color: #fff;
     --text-color: #fff;
     --asx-button-text: #fff;
     --sidebar-text: #fff;
@@ -338,7 +338,7 @@ body.theme-bold-4 { /* Royal Purple */
     --calc-num-btn-bg: #9d4edd;
     --calc-num-btn-text: #f0e6ff;
     --calc-num-btn-hover-bg: #c77dff;
-    color: #fff !important;
+    color: #fff;
     --text-color: #fff;
     --asx-button-text: #fff;
     --sidebar-text: #fff;
@@ -394,7 +394,7 @@ body.theme-bold-5 { /* Deep Red */
     --calc-num-btn-bg: #c0392b;
     --calc-num-btn-text: #ffe6e6;
     --calc-num-btn-hover-bg: #e74c3c;
-    color: #fff !important;
+    color: #fff;
     --text-color: #fff;
     --asx-button-text: #fff;
     --sidebar-text: #fff;
@@ -450,7 +450,7 @@ body.theme-bold-6 { /* Gold */
     --calc-num-btn-bg: #ffd700;
     --calc-num-btn-text: #3b301a;
     --calc-num-btn-hover-bg: #ffeb3b;
-    color: #fff !important;
+    color: #fff;
     --text-color: #fff;
     --asx-button-text: #fff;
     --sidebar-text: #fff;
@@ -505,7 +505,7 @@ body.theme-bold-7 { /* Emerald */
     --calc-num-btn-bg: #3cb371;
     --calc-num-btn-text: #e6fff0;
     --calc-num-btn-hover-bg: #66bb6a;
-    color: #fff !important;
+    color: #fff;
     --text-color: #fff;
     --asx-button-text: #fff;
     --sidebar-text: #fff;
@@ -561,7 +561,7 @@ body.theme-bold-8 { /* Plum */
     --calc-num-btn-bg: #ba55d3;
     --calc-num-btn-text: #ffe6ff;
     --calc-num-btn-hover-bg: #da70d6;
-    color: #fff !important;
+    color: #fff;
     --text-color: #fff;
     --asx-button-text: #fff;
     --sidebar-text: #fff;
@@ -616,7 +616,7 @@ body.theme-bold-9 { /* Aqua */
     --calc-num-btn-bg: #40e0d0;
     --calc-num-btn-text: #e6ffff;
     --calc-num-btn-hover-bg: #20b2aa;
-    color: #fff !important;
+    color: #fff;
     --text-color: #fff;
     --asx-button-text: #fff;
     --sidebar-text: #fff;
@@ -671,7 +671,7 @@ body.theme-bold-10 { /* Ruby */
     --calc-num-btn-bg: #cd5c5c;
     --calc-num-btn-text: #ffe6f0;
     --calc-num-btn-hover-bg: #dc143c;
-    color: #fff !important;
+    color: #fff;
     --text-color: #fff;
     --asx-button-text: #fff;
     --sidebar-text: #fff;
@@ -1832,7 +1832,7 @@ body.sidebar-active {
 
 /* Class to hide main app content initially */
 .app-hidden {
-    display: none !important;
+    display: none;
 }
 
 
@@ -2103,7 +2103,7 @@ h1#mainTitle {
     background-color: transparent;
     color: var(--icon-danger-color);
     margin-top: auto;
-    border: none !important;
+    border: none;
     box-shadow: none !important;
 }
 #logoutBtn.menu-button-item:hover {

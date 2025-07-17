@@ -4,21 +4,17 @@
 // from the <script type="module"> block in index.html.
 
 // --- GLOBAL VARIABLES ---
-// --- GLOBAL VARIABLES ---
 const DEBUG_MODE = true; // Set to 'false' to disable most console.log messages in production
 
 // Custom logging function to control verbosity
 function logDebug(message, ...optionalParams) {
     if (DEBUG_MODE) {
-        logDebug(message, ...optionalParams);
+        // This line MUST call the native console.log, NOT logDebug itself.
+        console.log(message, ...optionalParams); 
     }
 }
 // --- END DEBUG LOGGING SETUP ---
 
-// Now, your existing global variables will follow, e.g.:
-// let db;
-// let auth = null;
-// ...
 let db;
 let auth = null;
 let currentUserId = null;
@@ -52,7 +48,7 @@ let originalShareData = null; // Stores the original share data when editing for
 let originalWatchlistData = null; // Stores original watchlist data for dirty state check in watchlist modals
 
 // Live Price Data
-const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzp7OjZL3zqvJ9wPsV9M-afm2wKeQPbIgGVv_juVpkaRllADESLwj7F4-S7YWYerau-/exec'; // Your new Google Apps Script URL
+const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzp7OjZL3zqvJ9wPsV9M-afm2wKeQPbIgGVv_juVpkaRllADESLwj7F-S7YWYerau-/exec'; // Your new Google Apps Script URL
 let livePrices = {}; // Stores live price data: {ASX_CODE: {live: price, prevClose: price, PE: value, High52: value, Low52: value, targetHit: boolean}}
 let livePriceFetchInterval = null; // To hold the interval ID for live price updates
 const LIVE_PRICE_FETCH_INTERVAL_MS = 5 * 60 * 1000; // Fetch every 5 minutes
@@ -1573,7 +1569,7 @@ function renderWatchlist() {
     }
     logDebug('Render: Watchlist rendering complete.');
     updateTargetHitBanner(); // NEW: Update the banner after rendering the watchlist
-    adjustMainContentPadding(); // Ensure padding is adjusted after rendering, as visibility of ASX buttons might change
+    renderAsxCodeButtons(); // Ensure ASX buttons are rendered after watchlist content
 }
 
 function renderAsxCodeButtons() {
@@ -1957,7 +1953,7 @@ async function loadUserWatchlistsAndSettings() {
  * Updates the `livePrices` global object.
  */
 async function fetchLivePrices() {
-    logDebug('Live Price: Attempting to fetch live prices...');
+    logDebug('Live Price: Attempting to fetch live prices...'); // Moved this log inside the try block for better context
     try {
         const response = await fetch(GOOGLE_APPS_SCRIPT_URL);
         if (!response.ok) {
@@ -2004,7 +2000,7 @@ async function fetchLivePrices() {
         livePrices = newLivePrices;
         logDebug('Live Price: Live prices updated:', livePrices);
         renderWatchlist(); 
-        adjustMainContentPadding(); // NEW: Ensure padding is adjusted after live prices update 
+        // Removed: adjustMainContentPadding(); // This is now called by renderAsxCodeButtons which is called by renderWatchlist
         // NEW: Indicate that live prices are loaded for splash screen
         window._livePricesLoaded = true;
         hideSplashScreenIfReady();
@@ -3437,7 +3433,7 @@ async function initializeAppLogic() {
 
 
     // Call adjustMainContentPadding initially and on window load/resize
-    // window.addEventListener('load', adjustMainContentPadding); // Removed, handled by onAuthStateChanged
+    // Removed: window.addEventListener('load', adjustMainContentPadding); // Removed, handled by onAuthStateChanged
     // Already added to window.addEventListener('resize') in sidebar section
 }
 
@@ -3573,7 +3569,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             // Call renderWatchlist here to ensure correct mobile card rendering after auth state is set
             renderWatchlist();
-            // adjustMainContentPadding(); // Removed duplicate call, now handled inside if (user) block
+            // Removed: adjustMainContentPadding(); // Removed duplicate call, now handled inside if (user) block
         });
     } else {
         console.error('Firebase: Firebase objects (db, auth, appId, firestore, authFunctions) are not available on DOMContentLoaded. Firebase initialization likely failed in index.html.');
