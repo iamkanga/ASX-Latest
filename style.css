@@ -64,7 +64,20 @@
     --target-alert-bg: #e0f7fa; /* Light blue for target hit alert */
     --target-alert-text: #0056b3; /* Darker blue for target hit text */
     --target-alert-border: #007bff;
-    --target-banner-height: 40px;
+    --target-banner-height: 40px; /* This variable is now effectively unused for the banner, but kept for other potential uses */
+
+    /* NEW: Alert System Colors */
+    --alert-icon-bg: #ffc107; /* Warning yellow for bell icon */
+    --alert-icon-text: #333;
+    --alert-icon-shadow: rgba(255, 193, 7, 0.4);
+    --alert-panel-bg: #f8f9fa; /* Light background for panel */
+    --alert-panel-border: #c9d2d4;
+    --alert-item-bg: #ffffff;
+    --alert-item-hover-bg: #f0f4f5;
+    --alert-dismiss-btn-color: #28a745; /* Green for dismiss */
+    --alert-snooze-btn-color: #17a2b8; /* Info blue for snooze */
+    --snooze-options-bg: #ffffff;
+    --snooze-options-border: #b0b8bb;
 }
 
 /* Dark Theme Variables */
@@ -1154,6 +1167,7 @@ body.theme-subtle-10 { /* Subtle Stone */
     --target-banner-height: 40px;
 }
 
+
 /* NEW: Muted Themes */
 body.theme-muted-blue {
     --background-color: #a8d0db;
@@ -1841,12 +1855,8 @@ body.sidebar-active {
     gap: 10px; /* Space between header rows */
 }
 
-/* Adjust main content padding to account for fixed header */
+/* Adjust main content padding to account for fixed header - REMOVED FROM CSS, NOW HANDLED BY JS */
 main.container {
-    /* This padding-top needs to be dynamically calculated in JS
-       or set to a generous fixed value that covers max header height.
-       For now, setting a fixed value based on visual inspection. */
-    padding-top: 150px; /* Adjusted to accommodate the full fixed header height */
     margin-top: 0; /* Ensure no extra margin pushes content down */
 }
 
@@ -1859,7 +1869,6 @@ main.container {
     width: 100%; 
     box-sizing: border-box;
     padding: 0; /* No individual padding, handled by parent header */
-    /* Remove position, top, left, z-index, background-color, box-shadow as parent header is fixed */
 }
 
 /* Watchlist and Sort Controls */
@@ -1877,7 +1886,6 @@ main.container {
     padding-left: 15px;
     padding-right: 15px;
     margin-top: 0; /* No top margin here, gap handled by parent header's gap */
-    /* This element is now part of the fixed header */
 }
 
 /* ASX Code Buttons */
@@ -1892,17 +1900,12 @@ main.container {
     padding-left: 15px;
     padding-right: 15px;
     margin-top: 0; /* No top margin here, gap handled by parent header's gap */
-    /* This element is now part of the fixed header */
 }
 
 /* NEW: Hide ASX code buttons when compact view is active */
 .mobile-share-cards.compact-view + #asxCodeButtonsContainer {
     display: none !important;
 }
-
-
-/* The rest of the CSS remains the same as your original file,
-   with previous fixes for modalShareName, etc. */
 
 h1#mainTitle {
     margin: 0;
