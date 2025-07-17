@@ -37,7 +37,7 @@ let originalShareData = null; // Stores the original share data when editing for
 let originalWatchlistData = null; // Stores original watchlist data for dirty state check in watchlist modals
 
 // Live Price Data
-const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzp7OjZL3zqvJ9wPsV9M-afm2wKeQPbIgGVv_juVpkaRllADESLwj7F4-S7YWYerau-/exec'; // Your new Google Apps Script URL
+const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzp7OjZL3zqvJ9wPsV9M-afm2wKeQPbIgGVv_juVpkaRllADESLwj7F-S7YWYerau-/exec'; // Your new Google Apps Script URL
 let livePrices = {}; // Stores live price data: {ASX_CODE: {live: price, prevClose: price, PE: value, High52: value, Low52: value, targetHit: boolean}}
 let livePriceFetchInterval = null; // To hold the interval ID for live price updates
 const LIVE_PRICE_FETCH_INTERVAL_MS = 5 * 60 * 1000; // Fetch every 5 minutes
@@ -59,6 +59,7 @@ let unsubscribeShares = null; // Holds the unsubscribe function for the Firestor
 let sharesAtTargetPrice = [];
 // NEW: Store acknowledged/snoozed alerts (shareId -> snoozeUntilTimestamp)
 let acknowledgedAlerts = {}; 
+let currentMobileViewMode = 'default'; // 'default' or 'compact'
 
 // --- UI Element References ---
 const appHeader = document.getElementById('appHeader'); // Reference to the main header
@@ -86,6 +87,7 @@ const mobileShareCardsContainer = document.getElementById('mobileShareCards');
 const loadingIndicator = document.getElementById('loadingIndicator');
 const shareDetailModal = document.getElementById('shareDetailModal');
 const modalShareName = document.getElementById('modalShareName');
+const modalEnteredPrice = document.getElementById('modalEnteredPrice'); 
 const modalEntryDate = document.getElementById('modalEntryDate');
 const modalTargetPrice = document.getElementById('modalTargetPrice');
 const modalCommentsContainer = document.getElementById('modalCommentsContainer');
@@ -141,6 +143,11 @@ const exportWatchlistBtn = document.getElementById('exportWatchlistBtn');
 const refreshLivePricesBtn = document.getElementById('refreshLivePricesBtn');
 const shareWatchlistSelect = document.getElementById('shareWatchlistSelect');
 const modalLivePriceDisplaySection = document.querySelector('.live-price-display-section'); 
+const splashScreen = document.getElementById('splashScreen');
+const splashKangarooIcon = document.getElementById('splashKangarooIcon');
+const splashSignInBtn = document.getElementById('splashSignInBtn');
+const toggleCompactViewBtn = document.getElementById('toggleCompactViewBtn');
+
 
 // NEW: Price Alert Notification Elements
 const priceAlertIcon = document.getElementById('priceAlertIcon');
@@ -163,6 +170,81 @@ const formInputs = [
     shareNameInput, currentPriceInput, targetPriceInput,
     dividendAmountInput, frankingCreditsInput
 ];
+
+// --- MutationObserver for Header Height Adjustment ---
+let headerObserver = null;
+let resizeTimeout;
+
+/**
+ * Dynamically adjusts the top padding of the main content area
+ * to prevent it from being hidden by the fixed header.
+ * This function is debounced for resize events.
+ */
+function adjustMainContentPadding() {
+    // Clear any existing timeout to debounce the function
+    clearTimeout(resizeTimeout);
+
+    // Set a new timeout to execute the padding adjustment after a short delay
+    // This ensures the DOM has settled after layout changes (e.g., ASX buttons appear/disappear)
+    resizeTimeout = setTimeout(() => {
+        // Ensure both the header and main content container elements exist.
+        if (appHeader && mainContainer) {
+            // Get the current computed height of the fixed header.
+            let headerHeight = appHeader.offsetHeight;
+
+            // Apply this total height as padding to the top of the main content container.
+            // This pushes the content down so it starts exactly below the fixed header.
+            mainContainer.style.paddingTop = `${headerHeight}px`;
+            console.log('Layout: Adjusted main content padding-top to: ' + headerHeight + 'px (Header: ' + appHeader.offsetHeight + ')');
+        } else {
+            console.warn('Layout: Could not adjust main content padding-top: appHeader or mainContainer not found.');
+        }
+    }, 50); // Small debounce delay (e.g., 50ms)
+}
+
+/**
+ * Initializes the MutationObserver to watch the appHeader for changes
+ * that might affect its height, triggering padding adjustments.
+ */
+function setupHeaderMutationObserver() {
+    if (!appHeader || !mainContainer) {
+        console.warn('MutationObserver: Cannot set up observer, appHeader or mainContainer not found.');
+        return;
+    }
+
+    // Disconnect any existing observer to prevent duplicates
+    if (headerObserver) {
+        headerObserver.disconnect();
+        console.log('MutationObserver: Disconnected existing header observer.');
+    }
+
+    // Create a new MutationObserver instance
+    headerObserver = new MutationObserver((mutationsList, observer) => {
+        // Check if any mutation occurred that might affect layout
+        // We are interested in childList changes (elements added/removed, like ASX buttons)
+        // or attribute changes (like style changes that affect height/display)
+        let layoutMightChange = false;
+        for (const mutation of mutationsList) {
+            if (mutation.type === 'childList' || 
+                (mutation.type === 'attributes' && (mutation.attributeName === 'style' || mutation.attributeName === 'class'))) {
+                layoutMightChange = true;
+                break;
+            }
+        }
+
+        if (layoutMightChange) {
+            console.log('MutationObserver: Header content changed. Triggering padding adjustment.');
+            adjustMainContentPadding();
+        }
+    });
+
+    // Start observing the appHeader for changes
+    // subtree: true to observe changes in descendants (e.g., ASX buttons container)
+    // childList: true to detect additions/removals of child nodes
+    // attributes: true to detect changes to attributes (like 'style' or 'class')
+    headerObserver.observe(appHeader, { childList: true, subtree: true, attributes: true });
+    console.log('MutationObserver: Header observer setup and started.');
+}
 
 
 // --- CORE APPLICATION FUNCTIONS (HOISTED FOR AVAILABILITY) ---
@@ -206,11 +288,12 @@ function hideSplashScreen() {
 function hideSplashScreenIfReady() {
     // Only hide if Firebase is initialized, user is authenticated, and all data flags are true
     if (window._firebaseInitialized && window._userAuthenticated && window._appDataLoaded && window._livePricesLoaded) {
-        if (splashScreenReady) { // Ensure splash screen itself is ready to be hidden
+        // Ensure splash screen itself is ready to be hidden (e.g., DOMContentLoaded has fired)
+        if (splashScreen && !splashScreen.classList.contains('hidden')) { 
             console.log('Splash Screen: All data loaded and ready. Hiding splash screen.');
             hideSplashScreen();
         } else {
-            console.log('Splash Screen: Data loaded, but splash screen not yet marked as ready. Will hide when ready.');
+            console.log('Splash Screen: Data loaded, but splash screen already hidden or not yet ready to be hidden.');
         }
     } else {
         console.log('Splash Screen: Not all data loaded yet. Current state: ' +
@@ -495,25 +578,6 @@ async function loadShares() {
 
 
 // --- GLOBAL HELPER FUNCTIONS (NOT HOISTED, CALLED AFTER CORE FUNCTIONS) ---
-
-/**
- * Dynamically adjusts the top padding of the main content area
- * to prevent it from being hidden by the fixed header.
- */
-function adjustMainContentPadding() {
-    // Ensure both the header and main content container elements exist.
-    if (appHeader && mainContainer) {
-        // Get the current computed height of the fixed header.
-        let headerHeight = appHeader.offsetHeight;
-
-        // Apply this total height as padding to the top of the main content container.
-        // This pushes the content down so it starts exactly below the fixed header.
-        mainContainer.style.paddingTop = `${headerHeight}px`;
-        console.log('Layout: Adjusted main content padding-top to: ' + headerHeight + 'px (Header: ' + appHeader.offsetHeight + ')');
-    } else {
-        console.warn('Layout: Could not adjust main content padding-top: appHeader or mainContainer not found.');
-    }
-}
 
 /**
  * Helper function to apply/remove a disabled visual state to non-button elements (like spans/icons).
@@ -1236,7 +1300,7 @@ function showShareDetails() {
                 }
             });
         } else {
-            modalCommentsContainer.innerHTML = '<p style="text-align: center; color: var(--label-color);">No comments for this share.</p>';
+            modalCommentsContainer.innerHTML = '<p style="text-align: center; color: var(--ghosted-text);">No comments for this share.</p>';
         }
     }
 
@@ -1773,6 +1837,19 @@ function addShareToMobileCards(share) {
 
     console.log('Render: Added share ' + displayShareName + ' to mobile cards.');
 }
+
+/**
+ * Toggles the mobile view mode between 'default' and 'compact'.
+ * Saves the preference to local storage and re-renders the watchlist.
+ */
+function toggleMobileViewMode() {
+    currentMobileViewMode = (currentMobileViewMode === 'default') ? 'compact' : 'default';
+    localStorage.setItem('currentMobileViewMode', currentMobileViewMode);
+    console.log('View Mode: Toggled to ' + currentMobileViewMode + ' view.');
+    renderWatchlist(); // Re-render to apply new view mode
+    adjustMainContentPadding(); // Ensure padding is correct after view mode change
+}
+
 
 /**
  * Renders the watchlist based on the currentSelectedWatchlistIds.
@@ -3549,8 +3626,12 @@ async function initializeAppLogic() {
 
 
     // Call adjustMainContentPadding initially and on window load/resize
-    window.addEventListener('load', adjustMainContentPadding);
-    window.addEventListener('resize', adjustMainContentPadding); // Ensure padding adjusts on resize
+    // Initial call to set padding correctly on first load
+    adjustMainContentPadding(); 
+    // Set up MutationObserver to watch for header changes
+    setupHeaderMutationObserver();
+    // Keep resize listener for general window resize, but it will be debounced by adjustMainContentPadding
+    window.addEventListener('resize', adjustMainContentPadding); 
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -3565,7 +3646,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Show splash screen immediately on DOMContentLoaded
     if (splashScreen) {
         splashScreen.style.display = 'flex'; // Ensure it's visible
-        splashScreenReady = true; // Mark splash screen as ready
+        // splashScreenReady = true; // No longer needed as part of the new splash screen logic
         document.body.style.overflow = 'hidden'; // Prevent scrolling of underlying content
         console.log('Splash Screen: Displayed on DOMContentLoaded, body overflow hidden.');
     } else {
