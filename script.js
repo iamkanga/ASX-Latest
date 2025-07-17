@@ -1955,7 +1955,7 @@ async function loadUserWatchlistsAndSettings() {
 async function fetchLivePrices() {
     logDebug('Live Price: Attempting to fetch live prices...'); // Moved this log inside the try block for better context
     try {
-        const response = await fetch(GOOGLE_APPS_SCRIPT_URL);
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, { cache: 'no-store' });
         if (!response.ok) {
             throw new Error('HTTP error! status: ' + response.status);
         }
