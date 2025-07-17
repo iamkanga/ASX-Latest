@@ -37,6 +37,7 @@ let originalShareData = null; // Stores the original share data when editing for
 let originalWatchlistData = null; // Stores original watchlist data for dirty state check in watchlist modals
 
 // Live Price Data
+// IMPORTANT: This URL is preserved as per user instruction. DO NOT MODIFY.
 const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzp7OjZL3zqvJ9wPsV9M-afm2wKeQPbIgGVv_juVpkaRllADESLwj7F4-S7YWYerau-/exec'; // Your Google Apps Script URL
 let livePrices = {}; // Stores live price data: {ASX_CODE: {live: price, prevClose: price, PE: value, High52: value, Low52: value, targetHit: boolean}}
 let livePriceFetchInterval = null; // To hold the interval ID for live price updates
@@ -63,7 +64,7 @@ let currentMobileViewMode = 'default'; // 'default' or 'compact'
 
 // --- MutationObserver for Header Height Adjustment ---
 let headerObserver = null;
-let resizeTimeout;
+let resizeTimeout; // Used for debouncing and retry logic in adjustMainContentPadding
 
 // --- UI Element References ---
 const appHeader = document.getElementById('appHeader'); // Reference to the main header
@@ -189,6 +190,7 @@ function adjustMainContentPadding() {
 
             // If headerHeight is 0, it means the header might not be fully rendered yet.
             // Re-queue the adjustment after a short delay to give the browser time.
+            // Check appHeader.classList.contains('app-hidden') === false to ensure it's supposed to be visible.
             if (headerHeight === 0 && appHeader.classList.contains('app-hidden') === false) {
                 console.warn('Layout: Header height is 0, re-queuing adjustment.');
                 // Clear any existing timeout to prevent multiple re-queues
@@ -584,6 +586,38 @@ async function loadShares() {
 // --- GLOBAL HELPER FUNCTIONS (NOT HOISTED, CALLED AFTER CORE FUNCTIONS) ---
 
 /**
+ * Dynamically adjusts the top padding of the main content area
+ * to prevent it from being hidden by the fixed header.
+ * This function uses requestAnimationFrame for accurate timing and includes a retry mechanism.
+ */
+function adjustMainContentPadding() {
+    // Use requestAnimationFrame for more accurate layout measurements
+    requestAnimationFrame(() => {
+        // Ensure both the header and main content container elements exist.
+        if (appHeader && mainContainer) {
+            let headerHeight = appHeader.offsetHeight;
+
+            // If headerHeight is 0, it means the header might not be fully rendered yet.
+            // Re-queue the adjustment after a short delay to give the browser time.
+            // Check appHeader.classList.contains('app-hidden') === false to ensure it's supposed to be visible.
+            if (headerHeight === 0 && appHeader.classList.contains('app-hidden') === false) {
+                console.warn('Layout: Header height is 0, re-queuing adjustment.');
+                // Clear any existing timeout to prevent multiple re-queues
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(adjustMainContentPadding, 100); // Retry after 100ms
+                return; // Exit current execution
+            }
+
+            // Apply this total height as padding to the top of the main content container.
+            mainContainer.style.paddingTop = `${headerHeight}px`;
+            console.log('Layout: Adjusted main content padding-top to: ' + headerHeight + 'px (Header: ' + appHeader.offsetHeight + ')');
+        } else {
+            console.warn('Layout: Could not adjust main content padding-top: appHeader or mainContainer not found.');
+        }
+    });
+}
+
+/**
  * Helper function to apply/remove a disabled visual state to non-button elements (like spans/icons).
  * This adds/removes the 'is-disabled-icon' class, which CSS then styles.
  * @param {HTMLElement} element The element to disable/enable.
@@ -920,8 +954,8 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
 
     if (commentsFormContainer) { // This now refers to #dynamicCommentsArea
         commentsFormContainer.innerHTML = ''; // Clear existing dynamic comment sections
-        if (shareToEdit.comments && Array.isArray(share.comments) && share.comments.length > 0) {
-            share.comments.forEach(comment => addCommentSection(comment.title, comment.text));
+        if (shareToEdit.comments && Array.isArray(shareToEdit.comments) && shareToEdit.comments.length > 0) {
+            shareToEdit.comments.forEach(comment => addCommentSection(comment.title, comment.text));
         } else {
             // Add one empty comment section if no existing comments
             addCommentSection(); 
@@ -1564,9 +1598,24 @@ function addShareToTable(share) {
         }
     });
 
-
     const displayShareName = (share.shareName && String(share.shareName).trim() !== '') ? share.shareName : '(No Code)';
-    row.insertCell().textContent = displayShareName;
+    const shareNameCell = row.insertCell(); // Create the cell for the share name
+
+    // Determine the price change class for the ASX code
+    let asxCodeChangeClass = 'neutral'; // Default to neutral
+    if (livePriceData && livePriceData.live !== undefined && livePriceData.prevClose !== undefined) {
+        const change = livePriceData.live - livePriceData.prevClose;
+        if (change > 0) {
+            asxCodeChangeClass = 'positive';
+        } else if (change < 0) {
+            asxCodeChangeClass = 'negative';
+        }
+    }
+
+    const asxCodeSpan = document.createElement('span');
+    asxCodeSpan.textContent = displayShareName;
+    asxCodeSpan.classList.add(asxCodeChangeClass); // Apply the color class
+    shareNameCell.appendChild(asxCodeSpan); // Append the styled span to the cell
 
     const livePriceCell = row.insertCell();
     // Get live price data from the global livePrices object
@@ -3204,7 +3253,7 @@ async function initializeAppLogic() {
 
     // Save Watchlist Button (for Add Watchlist Modal)
     if (saveWatchlistBtn) {
-    saveWatchlistBtn.addEventListener('click', async () => {
+        saveWatchlistBtn.addEventListener('click', async () => {
             console.log('Watchlist Form: Save Watchlist button clicked.');
             if (saveWatchlistBtn.classList.contains('is-disabled-icon')) {
                 showCustomAlert('Please enter a watchlist name.');
