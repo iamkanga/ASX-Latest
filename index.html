@@ -229,7 +229,7 @@
             <div id="mobileShareCards" class="mobile-share-cards">
                 <!-- Mobile share cards will be dynamically added here -->
             </div>
-        </section>
+        </div>
     </main>
 
     <!-- NEW: Target Price Notification Icon (bottom right) -->
@@ -486,6 +486,30 @@
         <button id="contextDeleteShareBtn" class="context-menu-item danger-button"><i class="fas fa-trash-alt"></i> Delete Share</button>
     </div>
 
+    <!-- NEW: Target Price Notification Icon (bottom right) -->
+    <button id="targetHitIconBtn" class="target-hit-icon-btn" title="Shares at Target Price">
+        <i class="fas fa-bell"></i>
+        <span id="targetHitIconCount" class="target-hit-icon-count">0</span>
+    </button>
+
+    <!-- Alert Panel Container -->
+    <div id="alertPanel" class="alert-panel">
+        <div class="alert-panel-header">
+            <h3>Notifications</h3>
+            <button id="alertPanelCloseBtn" class="close-button">&times;</button>
+        </div>
+        <div id="alertList" class="alert-list">
+            <!-- Alerts and reminders will be dynamically added here -->
+            <p class="no-alerts-message">No active alerts or reminders.</p>
+        </div>
+        <div class="alert-panel-footer">
+            <button id="dismissAllAlertsBtn" class="button secondary-buttons">Dismiss All</button>
+        </div>
+    </div>
+
+    <!-- Scroll-to-Top Button -->
+    <button id="scrollToTopBtn" title="Go to top"><i class="fas fa-arrow-up"></i></button>
+
     <!-- Firebase SDKs - Loaded as modules -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -493,24 +517,34 @@
         import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, writeBatch, FieldValue } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Global Firebase configuration variables (provided by the environment)
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-        const currentAppId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        // YOUR FIREBASE CONFIGURATION - Replace with your actual Firebase project config
+        const firebaseConfig = {
+            apiKey: "AIzaSyAyIWoTYlzTkaSZ9x-ySiHtzATBM9XFrYw", // Replace with your apiKey
+            authDomain: "asx-watchlist-app.firebaseapp.com", // Replace with your authDomain
+            projectId: "asx-watchlist-app", // Replace with your projectId
+            storageBucket: "asx-watchlist-app.firebaseapp.com", // Replace with your storageBucket
+            messagingSenderId: "671024168765", // Replace with your messagingSenderId
+            appId: "1:671024168765:web:f2b62cd0e77a126c0ecf54", // Replace with your appId
+            measurementId: "G-J24BTJ34D2" // Replace with your measurementId
+        };
+
+
+        const currentAppId = firebaseConfig.projectId || 'default-app-id';
 
         let app;
         let db;
         let auth;
         let firebaseInitialized = false;
 
-        try {
-            if (Object.keys(firebaseConfig).length > 0) {
+        if (firebaseConfig && firebaseConfig.apiKey && firebaseConfig.projectId) {
+            try {
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
                 firebaseInitialized = true;
                 // Attempt to sign in with custom token if available, otherwise anonymously
-                if (initialAuthToken) {
-                    signInWithCustomToken(auth, initialAuthToken)
+                if (typeof __initial_auth_token !== 'undefined') { // Use Canvas provided token
+                    signInWithCustomToken(auth, __initial_auth_token)
                         .then(() => console.log("Firebase: Signed in with custom token."))
                         .catch(error => {
                             console.error("Firebase: Custom token sign-in failed:", error);
@@ -518,25 +552,21 @@
                                 .then(() => console.log("Firebase: Signed in anonymously after custom token failure."))
                                 .catch(anonError => console.error("Firebase: Anonymous sign-in failed:", anonError));
                         });
-                } else {
+                } else { // Fallback to anonymous sign-in if no Canvas token
                     signInAnonymously(auth)
                         .then(() => console.log("Firebase: Signed in anonymously."))
                         .catch(error => console.error("Firebase: Anonymous sign-in failed:", error));
                 }
                 console.log("Firebase: Initialized successfully with config.");
-            } else {
-                console.warn("Firebase: No Firebase config found. Running in limited mode.");
-                const errorDiv = document.getElementById('firebaseInitError');
-                if (errorDiv) {
-                    errorDiv.textContent = 'Firebase configuration missing. App functionality will be limited.';
-                    errorDiv.style.display = 'block';
-                }
+            } catch (error) {
+                console.error("Firebase: Failed to initialize app with provided config:", error);
+                firebaseInitialized = false;
             }
-        } catch (e) {
-            console.error("Firebase: Error during Firebase initialization:", e);
+        } else {
+            console.warn("Firebase: Configuration is missing or invalid (apiKey or projectId). Firebase will not initialize.");
             const errorDiv = document.getElementById('firebaseInitError');
             if (errorDiv) {
-                errorDiv.textContent = 'Error initializing Firebase: ' + e.message;
+                errorDiv.textContent = 'Firebase configuration missing. App functionality will be limited.';
                 errorDiv.style.display = 'block';
             }
             firebaseInitialized = false;
