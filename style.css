@@ -3289,7 +3289,7 @@ main.container {
 /* Adjust the sign-in button on the splash screen */
 #splashScreen .google-auth-btn {
     position: absolute; /* Position relative to splash screen */
-    bottom: 10vh; /* Use viewport height to position relative to screen bottom, accounting for browser UI */
+    bottom: 15vh; /* Use viewport height to position relative to screen bottom, accounting for browser UI */
     width: auto; /* Let content dictate width */
     max-width: 80%; /* Ensure it doesn't overflow on small screens */
     padding: 12px 30px; /* Generous padding */
@@ -3303,10 +3303,12 @@ main.container {
 @media (max-width: 768px) {
 
     .splash-icon {
-     max-width: 100%; /* Allow it to take up full width on mobile */
-        max-height: 100%; /* Allow it to take up full height on mobile */
-        margin-bottom: 0; /* Remove the bottom margin on mobile */
+    width: 100%;    /* Force width to 100% of parent */
+        height: 100%;   /* Force height to 100% of parent */
+        object-fit: contain; /* Maintain aspect ratio within these new dimensions */
+        margin-bottom: 0; /* Ensure no margin pushes it up */
     }
+
     header {
         padding: 15px 10px 10px; /* Adjusted padding for mobile */
     }
