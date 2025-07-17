@@ -781,6 +781,18 @@ function showShareDetails() {
     if (modalLivePriceDisplaySection) {
         modalLivePriceDisplaySection.classList.remove('positive-change-section', 'negative-change-section'); // Clear previous states
 
+        // Determine price change class for modal live price section
+        let priceChangeClass = 'neutral'; // Default to neutral
+        if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice) && 
+            prevClosePrice !== undefined && prevClosePrice !== null && !isNaN(prevClosePrice)) {
+            const change = livePrice - prevClosePrice;
+            if (change > 0) {
+                priceChangeClass = 'positive';
+            } else if (change < 0) {
+                priceChangeClass = 'negative';
+            }
+        }
+
         // Clear previous dynamic content in the section
         modalLivePriceDisplaySection.innerHTML = ''; 
 
@@ -802,9 +814,9 @@ function showShareDetails() {
 
         // 2. Add Live Price and Change (Dynamically create these elements now)
         const currentModalLivePriceLarge = document.createElement('span');
-        currentModalLivePriceLarge.classList.add('live-price-large');
+        currentModalLivePriceLarge.classList.add('live-price-large', priceChangeClass); // Apply color class
         const currentModalPriceChangeLarge = document.createElement('span');
-        currentModalPriceChangeLarge.classList.add('price-change-large');
+        currentModalPriceChangeLarge.classList.add('price-change-large', priceChangeClass); // Apply color class
 
         const livePriceRow = document.createElement('div');
         livePriceRow.classList.add('live-price-main-row'); // New class for styling
@@ -827,19 +839,13 @@ function showShareDetails() {
 
             currentModalPriceChangeLarge.textContent = ''; // Clear previous content
             const priceChangeSpan = document.createElement('span');
-            priceChangeSpan.classList.add('price-change'); // Keep base class for coloring
-
+            priceChangeSpan.classList.add('price-change'); // Keep base class for coloring, color already applied to parent
             if (change > 0) {
                 priceChangeSpan.textContent = '(+$' + change.toFixed(2) + ' / +' + percentageChange.toFixed(2) + '%)';
-                priceChangeSpan.classList.add('positive');
-                modalLivePriceDisplaySection.classList.add('positive-change-section');
             } else if (change < 0) {
                 priceChangeSpan.textContent = '(-$' + Math.abs(change).toFixed(2) + ' / ' + percentageChange.toFixed(2) + '%)'; // percentageChange is already negative
-                priceChangeSpan.classList.add('negative');
-                modalLivePriceDisplaySection.classList.add('negative-change-section');
             } else {
                 priceChangeSpan.textContent = '($0.00 / 0.00%)';
-                priceChangeSpan.classList.add('neutral');
             }
             currentModalPriceChangeLarge.appendChild(priceChangeSpan);
             currentModalPriceChangeLarge.style.display = 'inline';
@@ -1094,7 +1100,7 @@ function addShareToTable(share) {
     row.dataset.docId = share.id;
     
     // Determine the price change class for the entire row
-    let priceChangeClass = '';
+    let priceChangeClass = 'neutral'; // Default to neutral to prevent empty class error
     const livePriceData = livePrices[share.shareName.toUpperCase()];
     const livePrice = livePriceData ? livePriceData.live : undefined;
     const prevClosePrice = livePriceData ? livePriceData.prevClose : undefined;
@@ -1260,7 +1266,7 @@ function addShareToMobileCards(share) {
     card.dataset.docId = share.id;
 
     // Determine the price change class for the card
-    let priceChangeClass = '';
+    let priceChangeClass = 'neutral'; // Default to neutral to prevent empty class error
     const livePriceData = livePrices[share.shareName.toUpperCase()];
     const livePrice = livePriceData ? livePriceData.live : undefined;
     const prevClosePrice = livePriceData ? livePriceData.prevClose : undefined;
@@ -1807,12 +1813,13 @@ async function saveSortOrderPreference(sortOrder) {
     }
     const userProfileDocRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/profile/settings');
     try {
-        await window.firestore.setDoc(userProfileDocRef, { lastSortOrder: sortOrder }, { merge: true });
-        console.log('Sort: Saved sort order preference: ' + sortOrder);
-    }
-    catch (error) {
-        console.error('Sort: Error saving sort order preference:', error);
-    }
+            // Ensure the sortOrder is not an empty string or null before saving
+            const dataToSave = sortOrder ? { lastSortOrder: sortOrder } : { lastSortOrder: window.firestore.deleteField() };
+            await window.firestore.setDoc(userProfileDocRef, dataToSave, { merge: true });
+            console.log('Sort: Saved sort order preference to Firestore: ' + sortOrder);
+        } catch (error) {
+            console.error('Sort: Error saving sort order preference to Firestore:', error);
+        }
 }
 
 async function loadUserWatchlistsAndSettings() {
