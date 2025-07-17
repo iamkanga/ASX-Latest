@@ -1148,8 +1148,8 @@ body.theme-subtle-10 { /* Subtle Stone */
     --icon-action-hover-color: #888888;
     --icon-danger-color: #e74c3c;
     --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #d9d9d9;
-    --calc-num-btn-text: #5a5a5a;
+    --calc-num-btn-bg: #c2c2c2;
+    --calc-num-btn-text: #505050;
     --calc-num-btn-hover-bg: #b2b2b2;
     --price-up-color: #28a745;
     --price-down-color: #dc3545;
@@ -3263,13 +3263,12 @@ main.container {
 }
 
 .splash-icon {
-    /* Change these two lines */
-    max-width: 90%; /* Allow it to take up most of the screen width */
-    max-height: 90%; /* Allow it to take up most of the screen height */
-    /* Keep existing lines below */
-    height: auto;
-    width: auto;
-    object-fit: contain; /* Maintain aspect ratio */
+    /* Allow it to take up full width/height of splash screen while maintaining aspect ratio */
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;  /* Let browser determine width based on aspect ratio */
+    height: auto; /* Let browser determine height based on aspect ratio */
+    object-fit: contain; /* Crucial to keep this to prevent text cropping */
     margin-bottom: 20px; /* Space between image and button */
     /* Initial state for animation */
     opacity: 1;
@@ -3289,7 +3288,7 @@ main.container {
 /* Adjust the sign-in button on the splash screen */
 #splashScreen .google-auth-btn {
     position: absolute; /* Position relative to splash screen */
-    bottom: 15vh; /* Use viewport height to position relative to screen bottom, accounting for browser UI */
+    bottom: 8vh; /* Adjusted to move it higher, experiment with 5vh-10vh */
     width: auto; /* Let content dictate width */
     max-width: 80%; /* Ensure it doesn't overflow on small screens */
     padding: 12px 30px; /* Generous padding */
@@ -3302,13 +3301,18 @@ main.container {
 /* Responsive Design */
 @media (max-width: 768px) {
 
+    /* Splash Screen Icon adjustments for mobile */
     .splash-icon {
-        width: 90%;
-        height: 90%;
-        object-fit: contain; /* THIS IS NOW 'COVER' */
+        /* Allow it to take up full width/height of splash screen while maintaining aspect ratio */
+        max-width: 100%;
+        max-height: 100%;
+        width: auto;  /* Let browser determine width based on aspect ratio */
+        height: auto; /* Let browser determine height based on aspect ratio */
+        object-fit: contain; /* Crucial to keep this to prevent text cropping */
         margin-bottom: 0;
     }
 
+    /* Header and Header Top Row adjustments for mobile - MOVED INSIDE MEDIA QUERY */
     header {
         padding: 15px 10px 10px; /* Adjusted padding for mobile */
     }
@@ -3476,3 +3480,5 @@ main.container {
     /* Removed old target banner mobile styles */
     /* #targetHitBanner { display: none; ... } */
 
+
+}
