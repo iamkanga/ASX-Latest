@@ -1065,7 +1065,6 @@ function showShareDetails() {
         const newsUrl = 'https://news.google.com/search?q=' + encodeURIComponent(share.shareName) + '%20ASX&hl=en-AU&gl=AU&ceid=AU%3Aen';
         modalNewsLink.href = newsUrl;
         modalNewsLink.textContent = 'View ' + share.shareName.toUpperCase() + ' News';
-        modalNewsLink.style.display = 'inline-flex';
         setIconDisabled(modalNewsLink, false);
     } else if (modalNewsLink) {
         modalNewsLink.style.display = 'none';
@@ -1076,7 +1075,6 @@ function showShareDetails() {
         const marketIndexUrl = 'https://www.marketindex.com.au/asx/' + share.shareName.toLowerCase();
         modalMarketIndexLink.href = marketIndexUrl;
         modalMarketIndexLink.textContent = 'View ' + share.shareName.toUpperCase() + ' on MarketIndex.com.au';
-        modalMarketIndexLink.style.display = 'inline-flex';
         setIconDisabled(modalMarketIndexLink, false);
     } else if (modalMarketIndexLink) {
         modalMarketIndexLink.style.display = 'none';
