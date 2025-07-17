@@ -60,9 +60,6 @@ let sharesAtTargetPrice = [];
 // NEW: Store acknowledged/snoozed alerts (shareId -> snoozeUntilTimestamp)
 let acknowledgedAlerts = {}; 
 
-// NEW: Global variable to track the current mobile view mode ('default' or 'compact')
-let currentMobileViewMode = 'default'; 
-
 // --- UI Element References ---
 const appHeader = document.getElementById('appHeader'); // Reference to the main header
 const mainContainer = document.querySelector('main.container'); // Reference to the main content container
@@ -168,7 +165,336 @@ const formInputs = [
 ];
 
 
-// --- GLOBAL HELPER FUNCTIONS ---
+// --- CORE APPLICATION FUNCTIONS (HOISTED FOR AVAILABILITY) ---
+
+/**
+ * Hides the splash screen with a fade-out effect.
+ * Declared as a function declaration to ensure hoisting.
+ */
+function hideSplashScreen() {
+    if (splashScreen) {
+        splashScreen.classList.add('hidden'); // Start fade-out
+        if (splashKangarooIcon) {
+            splashKangarooIcon.classList.remove('pulsing'); // Stop animation
+        }
+        // Show main app content
+        if (mainContainer) {
+            mainContainer.classList.remove('app-hidden');
+        }
+        if (appHeader) { // Assuming header is part of the main app content that needs to be revealed
+            appHeader.classList.remove('app-hidden');
+        }
+        // Temporarily remove overflow hidden from body
+        document.body.style.overflow = ''; 
+
+        // Remove splash screen from DOM after transition to prevent interaction issues
+        splashScreen.addEventListener('transitionend', () => {
+            if (splashScreen.parentNode) {
+                splashScreen.parentNode.removeChild(splashScreen);
+                console.log('Splash Screen: Removed from DOM.');
+            }
+        }, { once: true });
+        console.log('Splash Screen: Hiding.');
+    }
+}
+
+/**
+ * Checks if all necessary app data is loaded and hides the splash screen if ready.
+ * This function is called after each major data loading step.
+ * Declared as a function declaration to ensure hoisting.
+ */
+function hideSplashScreenIfReady() {
+    // Only hide if Firebase is initialized, user is authenticated, and all data flags are true
+    if (window._firebaseInitialized && window._userAuthenticated && window._appDataLoaded && window._livePricesLoaded) {
+        if (splashScreenReady) { // Ensure splash screen itself is ready to be hidden
+            console.log('Splash Screen: All data loaded and ready. Hiding splash screen.');
+            hideSplashScreen();
+        } else {
+            console.log('Splash Screen: Data loaded, but splash screen not yet marked as ready. Will hide when ready.');
+        }
+    } else {
+        console.log('Splash Screen: Not all data loaded yet. Current state: ' +
+            'Firebase Init: ' + window._firebaseInitialized +
+            ', User Auth: ' + window._userAuthenticated +
+            ', App Data: ' + window._appDataLoaded +
+            ', Live Prices: ' + window._livePricesLoaded);
+    }
+}
+
+/**
+ * Saves acknowledged alerts to Firestore.
+ * Declared as a function declaration to ensure hoisting.
+ */
+async function saveAcknowledgedAlerts() {
+    if (!db || !currentUserId || !window.firestore) {
+        console.warn('Alerts: Cannot save acknowledged alerts: DB, User ID, or Firestore functions not available.');
+        return;
+    }
+    const userProfileDocRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/profile/settings');
+    try {
+        await window.firestore.setDoc(userProfileDocRef, { acknowledgedAlerts: acknowledgedAlerts }, { merge: true });
+        console.log('Alerts: Saved acknowledged alerts to Firestore:', acknowledgedAlerts);
+    } catch (error) {
+        console.error('Alerts: Error saving acknowledged alerts to Firestore:', error);
+    }
+}
+
+/**
+ * Updates the floating price alert icon and panel based on current alerts.
+ * Declared as a function declaration to ensure hoisting.
+ */
+function updatePriceAlertUI() {
+    // Filter shares that have hit their target and are not acknowledged/snoozed
+    sharesAtTargetPrice = allSharesData.filter(share => {
+        const livePriceData = livePrices[share.shareName.toUpperCase()];
+        const isTargetHit = livePriceData && livePriceData.targetHit;
+        
+        // Check if acknowledgedAlerts has this shareId and if snooze time has passed
+        const snoozeUntil = acknowledgedAlerts[share.id];
+        const isSnoozed = snoozeUntil && (Date.now() < snoozeUntil);
+
+        return isTargetHit && !isSnoozed;
+    });
+
+    if (!priceAlertIcon || !alertCount || !priceAlertPanel || !panelAlertCount || !alertList || !dismissAllAlertsBtn) {
+        console.warn('Alerts: Price alert UI elements not found. Cannot update alerts.');
+        return;
+    }
+
+    // Update floating icon count
+    alertCount.textContent = sharesAtTargetPrice.length;
+    if (sharesAtTargetPrice.length > 0) {
+        priceAlertIcon.style.display = 'flex'; // Show icon
+        priceAlertIcon.classList.add('active'); // Add active state for styling (e.g., pulsing)
+        console.log('Alerts: Showing floating icon with ' + sharesAtTargetPrice.length + ' alerts.');
+    } else {
+        priceAlertIcon.style.display = 'none'; // Hide icon
+        priceAlertIcon.classList.remove('active');
+        hideAlertPanel(); // Hide panel if no active alerts
+        console.log('Alerts: No active alerts. Hiding floating icon.');
+    }
+
+    // Update panel content
+    panelAlertCount.textContent = sharesAtTargetPrice.length;
+    alertList.innerHTML = ''; // Clear previous alerts
+
+    if (sharesAtTargetPrice.length === 0) {
+        const noAlertsMessage = document.createElement('p');
+        noAlertsMessage.classList.add('no-alerts-message');
+        noAlertsMessage.textContent = 'No new price alerts.';
+        alertList.appendChild(noAlertsMessage);
+        setIconDisabled(dismissAllAlertsBtn, true); // Disable dismiss all button
+    } else {
+        setIconDisabled(dismissAllAlertsBtn, false); // Enable dismiss all button
+        sharesAtTargetPrice.forEach(share => {
+            const alertItem = document.createElement('div');
+            alertItem.classList.add('alert-item');
+            alertItem.dataset.shareId = share.id;
+            alertItem.innerHTML = `
+                <span class="alert-message"><strong>${share.shareName}</strong> Target Hit!</span>
+                <div class="alert-actions">
+                    <button class="dismiss-alert-btn" title="Dismiss Alert"><i class="fas fa-check"></i></button>
+                    <div class="snooze-dropdown-container">
+                        <button class="snooze-alert-btn" title="Snooze Alert"><i class="fas fa-clock"></i></button>
+                        <div class="snooze-options">
+                            <button data-snooze-time="3600000">1 Hour</button>
+                            <button data-snooze-time="14400000">4 Hours</button>
+                            <button data-snooze-time="86400000">24 Hours</button>
+                            <button data-snooze-time="session">Until Next Session</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            alertList.appendChild(alertItem);
+
+            // Add event listeners for dismiss and snooze buttons
+            alertItem.querySelector('.dismiss-alert-btn').addEventListener('click', () => {
+                dismissAlert(share.id);
+            });
+
+            const snoozeBtn = alertItem.querySelector('.snooze-alert-btn');
+            const snoozeOptions = alertItem.querySelector('.snooze-options');
+            snoozeBtn.addEventListener('click', (event) => {
+                event.stopPropagation(); // Prevent panel from closing when opening dropdown
+                snoozeOptions.classList.toggle('active');
+            });
+
+            snoozeOptions.querySelectorAll('button').forEach(optionBtn => {
+                optionBtn.addEventListener('click', (event) => {
+                    event.stopPropagation(); // Prevent panel from closing when selecting option
+                    const snoozeTime = event.target.dataset.snoozeTime;
+                    snoozeAlert(share.id, snoozeTime);
+                    snoozeOptions.classList.remove('active'); // Hide dropdown after selection
+                });
+            });
+        });
+    }
+}
+
+/**
+ * Shows the price alert panel.
+ * Declared as a function declaration to ensure hoisting.
+ */
+function showAlertPanel() {
+    if (priceAlertPanel) {
+        priceAlertPanel.classList.add('open');
+        console.log('Alerts: Price alert panel opened.');
+    }
+}
+
+/**
+ * Hides the price alert panel.
+ * Declared as a function declaration to ensure hoisting.
+ */
+function hideAlertPanel() {
+    if (priceAlertPanel) {
+        priceAlertPanel.classList.remove('open');
+        console.log('Alerts: Price alert panel closed.');
+    }
+}
+
+/**
+ * Dismisses a single alert.
+ * @param {string} shareId The ID of the share whose alert is to be dismissed.
+ * Declared as a function declaration to ensure hoisting.
+ */
+function dismissAlert(shareId) {
+    acknowledgedAlerts[shareId] = Date.now() + (100 * 365 * 24 * 60 * 60 * 1000); // A very long time (effectively permanent for session)
+    saveAcknowledgedAlerts();
+    updatePriceAlertUI();
+    console.log('Alerts: Dismissed alert for share ID: ' + shareId);
+}
+
+/**
+ * Snoozes a single alert for a specified duration.
+ * @param {string} shareId The ID of the share whose alert is to be snoozed.
+ * @param {string} snoozeTime The snooze duration ('1 Hour', '4 Hours', '24 Hours', 'session').
+ * Declared as a function declaration to ensure hoisting.
+ */
+function snoozeAlert(shareId, snoozeTime) {
+    let snoozeUntil;
+    const now = Date.now();
+    switch (snoozeTime) {
+        case '1 Hour':
+            snoozeUntil = now + 3600000; // 1 hour in ms
+            break;
+        case '4 Hours':
+            snoozeUntil = now + 14400000; // 4 hours in ms
+            break;
+        case '24 Hours':
+            snoozeUntil = now + 86400000; // 24 hours in ms
+            break;
+        case 'session':
+            snoozeUntil = now + (100 * 365 * 24 * 60 * 60 * 1000); // Effectively until next session/long time
+            break;
+        default:
+            snoozeUntil = now; // Snooze immediately if invalid
+    }
+    acknowledgedAlerts[shareId] = snoozeUntil;
+    saveAcknowledgedAlerts();
+    updatePriceAlertUI();
+    console.log('Alerts: Snoozed alert for share ID: ' + shareId + ' until ' + new Date(snoozeUntil).toLocaleString());
+}
+
+/**
+ * Dismisses all active alerts.
+ * Declared as a function declaration to ensure hoisting.
+ */
+function dismissAllAlerts() {
+    sharesAtTargetPrice.forEach(share => {
+        acknowledgedAlerts[share.id] = Date.now() + (100 * 365 * 24 * 60 * 60 * 1000); // Effectively permanent for session
+    });
+    saveAcknowledgedAlerts();
+    updatePriceAlertUI();
+    console.log('Alerts: Dismissed all active alerts.');
+}
+
+/**
+ * Sets up a real-time Firestore listener for shares based on currentSelectedWatchlistIds.
+ * Updates `allSharesData` and re-renders the UI whenever changes occur.
+ * Declared as a function declaration to ensure hoisting.
+ */
+async function loadShares() {
+    if (unsubscribeShares) {
+        unsubscribeShares();
+        unsubscribeShares = null;
+        console.log('Firestore Listener: Unsubscribed from previous shares listener.');
+    }
+
+    if (!db || !currentUserId || !window.firestore) {
+        console.warn('Shares: Firestore DB, User ID, or Firestore functions not available for loading shares. Clearing list.');
+        clearShareList();
+        // NEW: Indicate data loading failure for splash screen
+        window._appDataLoaded = false;
+        hideSplashScreen(); // Hide splash screen on critical failure
+        return;
+    }
+    if (loadingIndicator) loadingIndicator.style.display = 'block';
+    
+    try {
+        const sharesCol = window.firestore.collection(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/shares');
+        let q;
+
+        let effectiveWatchlistId = null;
+        if (watchlistSelect && watchlistSelect.value && watchlistSelect.value !== '') {
+            effectiveWatchlistId = watchlistSelect.value;
+        } else if (currentSelectedWatchlistIds.length > 0 && currentSelectedWatchlistIds[0] !== ALL_SHARES_ID) {
+            effectiveWatchlistId = currentSelectedWatchlistIds[0];
+        } else if (userWatchlists.length > 0) {
+            effectiveWatchlistId = userWatchlists[0].id;
+        }
+
+        if (effectiveWatchlistId === ALL_SHARES_ID) {
+            q = window.firestore.query(sharesCol);
+            console.log('Shares: Setting up real-time listener for ALL shares for user: ' + currentUserId);
+        } else if (effectiveWatchlistId) {
+            q = window.firestore.query(sharesCol, window.firestore.where('watchlistId', '==', effectiveWatchlistId));
+            console.log('Shares: Setting up real-time listener for shares in watchlist: ' + effectiveWatchlistId);
+        } else {
+            q = window.firestore.query(sharesCol, window.firestore.where('watchlistId', '==', 'NO_WATCHLIST_ID_EXISTS'));
+            console.warn('Shares: No effective watchlist selected or available. Querying for non-existent ID to get empty results.');
+        }
+        
+        unsubscribeShares = window.firestore.onSnapshot(q, (querySnapshot) => {
+            console.log('Firestore Listener: Shares snapshot received. Processing changes.');
+            let fetchedShares = [];
+            querySnapshot.forEach((doc) => {
+                const share = { id: doc.id, ...doc.data() };
+                fetchedShares.push(share);
+            });
+
+            allSharesData = fetchedShares;
+            console.log('Shares: Shares data updated from snapshot. Total shares: ' + allSharesData.length);
+            
+            sortShares();
+            renderAsxCodeButtons();
+            
+            if (loadingIndicator) loadingIndicator.style.display = 'none';
+            // NEW: Indicate that app data is loaded for splash screen
+            window._appDataLoaded = true;
+            hideSplashScreenIfReady();
+
+        }, (error) => {
+            console.error('Firestore Listener: Error listening to shares:', error);
+            showCustomAlert('Error loading shares in real-time: ' + error.message);
+            if (loadingIndicator) loadingIndicator.style.display = 'none';
+            // NEW: Indicate data loading failure for splash screen
+            window._appDataLoaded = false;
+            hideSplashScreen(); // Hide splash screen on critical failure
+        });
+
+    } catch (error) {
+        console.error('Shares: Error setting up shares listener:', error);
+        showCustomAlert('Error setting up real-time share updates: ' + error.message);
+        if (loadingIndicator) loadingIndicator.style.display = 'none';
+        // NEW: Indicate data loading failure for splash screen
+        window._appDataLoaded = false;
+        hideSplashScreen(); // Hide splash screen on critical failure
+    }
+}
+
+
+// --- GLOBAL HELPER FUNCTIONS (NOT HOISTED, CALLED AFTER CORE FUNCTIONS) ---
 
 /**
  * Dynamically adjusts the top padding of the main content area
@@ -1918,23 +2244,6 @@ async function loadUserWatchlistsAndSettings() {
 }
 
 /**
- * Saves acknowledged alerts to Firestore.
- */
-async function saveAcknowledgedAlerts() {
-    if (!db || !currentUserId || !window.firestore) {
-        console.warn('Alerts: Cannot save acknowledged alerts: DB, User ID, or Firestore functions not available.');
-        return;
-    }
-    const userProfileDocRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/profile/settings');
-    try {
-        await window.firestore.setDoc(userProfileDocRef, { acknowledgedAlerts: acknowledgedAlerts }, { merge: true });
-        console.log('Alerts: Saved acknowledged alerts to Firestore:', acknowledgedAlerts);
-    } catch (error) {
-        console.error('Alerts: Error saving acknowledged alerts to Firestore:', error);
-    }
-}
-
-/**
  * Fetches live price data from the Google Apps Script Web App.
  * Updates the `livePrices` global object.
  */
@@ -1952,7 +2261,7 @@ async function fetchLivePrices() {
         data.forEach(item => {
             const asxCode = String(item.ASXCode).toUpperCase();
             const livePrice = parseFloat(item.LivePrice);
-            const prevClose = parseFloat(item.PrevClose); 
+            const prevClose = parseFloat(item.C_Price); // Use C_Price for Previous Close
             const pe = parseFloat(item.PE);
             const high52 = parseFloat(item.High52);
             const low52 = parseFloat(item.Low52);
@@ -2020,170 +2329,6 @@ function stopLivePriceUpdates() {
         livePriceFetchInterval = null;
         console.log('Live Price: Stopped live price updates.');
     }
-}
-
-/**
- * Updates the floating price alert icon and panel based on current alerts.
- */
-function updatePriceAlertUI() {
-    // Filter shares that have hit their target and are not acknowledged/snoozed
-    sharesAtTargetPrice = allSharesData.filter(share => {
-        const livePriceData = livePrices[share.shareName.toUpperCase()];
-        const isTargetHit = livePriceData && livePriceData.targetHit;
-        
-        // Check if acknowledgedAlerts has this shareId and if snooze time has passed
-        const snoozeUntil = acknowledgedAlerts[share.id];
-        const isSnoozed = snoozeUntil && (Date.now() < snoozeUntil);
-
-        return isTargetHit && !isSnoozed;
-    });
-
-    if (!priceAlertIcon || !alertCount || !priceAlertPanel || !panelAlertCount || !alertList || !dismissAllAlertsBtn) {
-        console.warn('Alerts: Price alert UI elements not found. Cannot update alerts.');
-        return;
-    }
-
-    // Update floating icon count
-    alertCount.textContent = sharesAtTargetPrice.length;
-    if (sharesAtTargetPrice.length > 0) {
-        priceAlertIcon.style.display = 'flex'; // Show icon
-        priceAlertIcon.classList.add('active'); // Add active state for styling (e.g., pulsing)
-        console.log('Alerts: Showing floating icon with ' + sharesAtTargetPrice.length + ' alerts.');
-    } else {
-        priceAlertIcon.style.display = 'none'; // Hide icon
-        priceAlertIcon.classList.remove('active');
-        hideAlertPanel(); // Hide panel if no active alerts
-        console.log('Alerts: No active alerts. Hiding floating icon.');
-    }
-
-    // Update panel content
-    panelAlertCount.textContent = sharesAtTargetPrice.length;
-    alertList.innerHTML = ''; // Clear previous alerts
-
-    if (sharesAtTargetPrice.length === 0) {
-        const noAlertsMessage = document.createElement('p');
-        noAlertsMessage.classList.add('no-alerts-message');
-        noAlertsMessage.textContent = 'No new price alerts.';
-        alertList.appendChild(noAlertsMessage);
-        setIconDisabled(dismissAllAlertsBtn, true); // Disable dismiss all button
-    } else {
-        setIconDisabled(dismissAllAlertsBtn, false); // Enable dismiss all button
-        sharesAtTargetPrice.forEach(share => {
-            const alertItem = document.createElement('div');
-            alertItem.classList.add('alert-item');
-            alertItem.dataset.shareId = share.id;
-            alertItem.innerHTML = `
-                <span class="alert-message"><strong>${share.shareName}</strong> Target Hit!</span>
-                <div class="alert-actions">
-                    <button class="dismiss-alert-btn" title="Dismiss Alert"><i class="fas fa-check"></i></button>
-                    <div class="snooze-dropdown-container">
-                        <button class="snooze-alert-btn" title="Snooze Alert"><i class="fas fa-clock"></i></button>
-                        <div class="snooze-options">
-                            <button data-snooze-time="3600000">1 Hour</button>
-                            <button data-snooze-time="14400000">4 Hours</button>
-                            <button data-snooze-time="86400000">24 Hours</button>
-                            <button data-snooze-time="session">Until Next Session</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            alertList.appendChild(alertItem);
-
-            // Add event listeners for dismiss and snooze buttons
-            alertItem.querySelector('.dismiss-alert-btn').addEventListener('click', () => {
-                dismissAlert(share.id);
-            });
-
-            const snoozeBtn = alertItem.querySelector('.snooze-alert-btn');
-            const snoozeOptions = alertItem.querySelector('.snooze-options');
-            snoozeBtn.addEventListener('click', (event) => {
-                event.stopPropagation(); // Prevent panel from closing when opening dropdown
-                snoozeOptions.classList.toggle('active');
-            });
-
-            snoozeOptions.querySelectorAll('button').forEach(optionBtn => {
-                optionBtn.addEventListener('click', (event) => {
-                    event.stopPropagation(); // Prevent panel from closing when selecting option
-                    const snoozeTime = event.target.dataset.snoozeTime;
-                    snoozeAlert(share.id, snoozeTime);
-                    snoozeOptions.classList.remove('active'); // Hide dropdown after selection
-                });
-            });
-        });
-    }
-}
-
-/**
- * Shows the price alert panel.
- */
-function showAlertPanel() {
-    if (priceAlertPanel) {
-        priceAlertPanel.classList.add('open');
-        console.log('Alerts: Price alert panel opened.');
-    }
-}
-
-/**
- * Hides the price alert panel.
- */
-function hideAlertPanel() {
-    if (priceAlertPanel) {
-        priceAlertPanel.classList.remove('open');
-        console.log('Alerts: Price alert panel closed.');
-    }
-}
-
-/**
- * Dismisses a single alert.
- * @param {string} shareId The ID of the share whose alert is to be dismissed.
- */
-function dismissAlert(shareId) {
-    acknowledgedAlerts[shareId] = Date.now() + (100 * 365 * 24 * 60 * 60 * 1000); // A very long time (effectively permanent for session)
-    saveAcknowledgedAlerts();
-    updatePriceAlertUI();
-    console.log('Alerts: Dismissed alert for share ID: ' + shareId);
-}
-
-/**
- * Snoozes a single alert for a specified duration.
- * @param {string} shareId The ID of the share whose alert is to be snoozed.
- * @param {string} snoozeTime The snooze duration ('1 Hour', '4 Hours', '24 Hours', 'session').
- */
-function snoozeAlert(shareId, snoozeTime) {
-    let snoozeUntil;
-    const now = Date.now();
-    switch (snoozeTime) {
-        case '1 Hour':
-            snoozeUntil = now + 3600000; // 1 hour in ms
-            break;
-        case '4 Hours':
-            snoozeUntil = now + 14400000; // 4 hours in ms
-            break;
-        case '24 Hours':
-            snoozeUntil = now + 86400000; // 24 hours in ms
-            break;
-        case 'session':
-            snoozeUntil = now + (100 * 365 * 24 * 60 * 60 * 1000); // Effectively until next session/long time
-            break;
-        default:
-            snoozeUntil = now; // Snooze immediately if invalid
-    }
-    acknowledgedAlerts[shareId] = snoozeUntil;
-    saveAcknowledgedAlerts();
-    updatePriceAlertUI();
-    console.log('Alerts: Snoozed alert for share ID: ' + shareId + ' until ' + new Date(snoozeUntil).toLocaleString());
-}
-
-/**
- * Dismisses all active alerts.
- */
-function dismissAllAlerts() {
-    sharesAtTargetPrice.forEach(share => {
-        acknowledgedAlerts[share.id] = Date.now() + (100 * 365 * 24 * 60 * 60 * 1000); // Effectively permanent for session
-    });
-    saveAcknowledgedAlerts();
-    updatePriceAlertUI();
-    console.log('Alerts: Dismissed all active alerts.');
 }
 
 
