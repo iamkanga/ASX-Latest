@@ -169,17 +169,23 @@ const formInputs = [
 
 /**
  * Dynamically adjusts the top padding of the main content area
- * to prevent it from being hidden by the fixed header.
+ * to prevent it from being hidden by the fixed header and target banner.
  */
 function adjustMainContentPadding() {
     // Ensure both the header and main content container elements exist.
     if (appHeader && mainContainer) {
         // Get the current computed height of the fixed header.
         const headerHeight = appHeader.offsetHeight;
+        // Get the height of the target hit banner if it's currently displayed
+        // Check its computed style, as display 'none' means offsetHeight is 0
+        const bannerHeight = targetHitBanner && window.getComputedStyle(targetHitBanner).display !== 'none' ? targetHitBanner.offsetHeight : 0;
+        
+        // Calculate total required padding
+        const totalPadding = headerHeight + bannerHeight;
+        
         // Apply this height as padding to the top of the main content container.
-        // This pushes the content down so it starts exactly below the fixed header.
-        mainContainer.style.paddingTop = `${headerHeight}px`;
-        console.log('Layout: Adjusted main content padding-top to: ' + headerHeight + 'px');
+        mainContainer.style.paddingTop = `${totalPadding}px`;
+        console.log('Layout: Adjusted main content padding-top to: ' + totalPadding + 'px (Header: ' + headerHeight + 'px, Banner: ' + bannerHeight + 'px)');
     } else {
         console.warn('Layout: Could not adjust main content padding-top: appHeader or mainContainer not found.');
     }
@@ -966,7 +972,7 @@ function sortShares() {
             let percentageChangeB = null;
             // Only calculate if both livePriceB and prevCloseB are valid numbers and prevCloseB is not zero
             if (livePriceB !== undefined && livePriceB !== null && !isNaN(livePriceB) &&
-                prevCloseB !== undefined && prevCloseB !== null && !isNaN(prevCloseB) && prevCloseB !== 0) {
+                prevCloseB !== undefined && prevCloseB !== null && !isNaN(prevPriceB) && prevCloseB !== 0) {
                 percentageChangeB = ((livePriceB - prevCloseB) / prevCloseB) * 100;
             }
 
@@ -1528,6 +1534,7 @@ function renderWatchlist() {
     }
     console.log('Render: Watchlist rendering complete.');
     updateTargetHitBanner(); // NEW: Update the banner after rendering the watchlist
+    adjustMainContentPadding(); // Ensure padding is adjusted after rendering, as visibility of ASX buttons might change
 }
 
 function renderAsxCodeButtons() {
@@ -1589,9 +1596,13 @@ function scrollToShare(asxCode) {
         if (elementToScrollTo) {
             // Get the height of the fixed header
             const fixedHeaderHeight = appHeader ? appHeader.offsetHeight : 0;
+            // Get the height of the target hit banner if it's currently displayed
+            const bannerHeight = targetHitBanner && window.getComputedStyle(targetHitBanner).display !== 'none' ? targetHitBanner.offsetHeight : 0;
+            const totalFixedHeight = fixedHeaderHeight + bannerHeight;
+
             const elementRect = elementToScrollTo.getBoundingClientRect();
-            // Calculate scroll position, accounting for the fixed header
-            const scrollY = elementRect.top + window.scrollY - fixedHeaderHeight - 10; // 10px buffer for a little space
+            // Calculate scroll position, accounting for the fixed header and banner
+            const scrollY = elementRect.top + window.scrollY - totalFixedHeight - 10; // 10px buffer for a little space
             window.scrollTo({ top: scrollY, behavior: 'smooth' });
             console.log('UI: Scrolled to element for share ID: ' + targetShare.id);
         } else {
@@ -1887,7 +1898,7 @@ async function loadUserWatchlistsAndSettings() {
 
         const migratedSomething = await migrateOldSharesToWatchlist();
         if (!migratedSomething) {
-            console.log('Watchlist: No old shares to migrate/update, directly setting up shares listener for current watchlist.');
+            console.log('Migration: No old shares to migrate/update, directly setting up shares listener for current watchlist.');
             await loadShares(); // This now sets _appDataLoaded and calls hideSplashScreenIfReady
         }
 
@@ -2009,13 +2020,14 @@ function updateTargetHitBanner() {
         targetHitCount.textContent = sharesAtTargetPrice.length;
         targetHitMessage.textContent = ' shares have hit their target price!';
         targetHitBanner.style.display = 'flex'; // Show the banner
-        document.body.classList.add('target-banner-active'); // Add class to body for padding adjustment
+        // No longer adding/removing class to body; padding handled by JS
         console.log('Target Alert: Showing banner: ' + sharesAtTargetPrice.length + ' shares hit target.');
     } else {
         targetHitBanner.style.display = 'none'; // Hide the banner
-        document.body.classList.remove('target-banner-active'); // Remove class from body
+        // No longer adding/removing class to body; padding handled by JS
         console.log('Target Alert: No shares hit target. Hiding banner.');
     }
+    adjustMainContentPadding(); // Recalculate padding after banner visibility changes
 }
 
 /**
@@ -3384,9 +3396,10 @@ async function initializeAppLogic() {
         targetHitDismissBtn.addEventListener('click', () => {
             if (targetHitBanner) {
                 targetHitBanner.style.display = 'none';
-                document.body.classList.remove('target-banner-active'); // Remove class from body on dismiss
+                // No longer removing class from body; padding handled by JS
                 console.log('Target Alert: Banner dismissed by user.');
             }
+            adjustMainContentPadding(); // Recalculate padding after banner is dismissed
         });
     }
 
@@ -3531,7 +3544,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             // Call renderWatchlist here to ensure correct mobile card rendering after auth state is set
             renderWatchlist();
-            adjustMainContentPadding(); // NEW: Ensure padding is adjusted after initial render
+            adjustMainContentPadding(); // Ensure padding is adjusted after initial render
         });
     } else {
         console.error('Firebase: Firebase objects (db, auth, appId, firestore, authFunctions) are not available on DOMContentLoaded. Firebase initialization likely failed in index.html.');

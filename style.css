@@ -1150,10 +1150,7 @@ body.theme-subtle-10 { /* Subtle Stone */
     --icon-danger-hover-color: #c0392b;
     --calc-num-btn-bg: #d9d9d9;
     --calc-num-btn-text: #5a5a5a;
-    --calc-num-btn-hover-bg: #999999;
-    --google-auth-btn-bg: #FFFFFF;
-    --google-auth-btn-hover-bg: #F0F0F0;
-    --google-auth-btn-text: #4285F4;
+    --calc-num-btn-hover-bg: #b2b2b2;
     --price-up-color: #28a745;
     --price-down-color: #dc3545;
     --price-neutral-color: #6c757d;
@@ -1607,7 +1604,7 @@ body.theme-muted-cyan {
     --price-up-color: #28a745;
     --price-down-color: #dc3545;
     --price-neutral-color: #6c757d;
-    --live-price-section-bg: rgba(74, 144, 144, 0.08);
+    --live-price-section-bg: rgba(144, 144, 144, 0.08);
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
     --comment-title-bg: rgba(0, 0, 0, 0.05);
@@ -1871,7 +1868,7 @@ main.container {
     padding: 0; /* No individual padding, handled by parent header */
 }
 
-/* Watchlist and Sort Controls */
+/* Watchlist and Sort controls */
 .watchlist-controls-row {
     display: flex;
     flex-wrap: nowrap;
@@ -1903,8 +1900,9 @@ main.container {
 }
 
 /* NEW: Hide ASX code buttons when compact view is active */
+/* Removed !important to allow JS to control display if needed, but CSS handles it by default */
 .mobile-share-cards.compact-view + #asxCodeButtonsContainer {
-    display: none !important;
+    display: none; 
 }
 
 h1#mainTitle {
@@ -3121,7 +3119,7 @@ table td.live-price-cell.negative-change {
     color: var(--target-alert-text);
     padding: 12px 20px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.2); /* Shadow below */
-    z-index: 900; /* Above header, below modals */
+    z-index: 900; /* Above header (500), below modals (1000) */
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -3160,8 +3158,9 @@ table td.live-price-cell.negative-change {
 }
 
 /* Adjust main content padding to account for fixed header and banner */
+/* These will be handled dynamically by JS to be more precise */
 body.target-banner-active main.container {
-    padding-top: calc(150px + var(--target-banner-height)); /* Header height + banner height */
+    /* No CSS rule here, padding-top set by JS */
 }
 
 /* --- NEW: Compact Mobile View Specific Styles --- */
@@ -3354,12 +3353,12 @@ body.target-banner-active main.container {
     /* Adjust main content padding to account for fixed header */
     main.container {
         /* Calculated height of the fixed header on mobile */
-        padding-top: 130px; /* Adjusted for mobile fixed header height */
+        /* These will be handled dynamically by JS to be more precise */
     }
 
     /* Adjust main content padding to account for fixed header and banner */
     body.target-banner-active main.container {
-        padding-top: calc(130px + var(--target-banner-height)); /* Mobile header height + banner height */
+        /* No CSS rule here, padding-top set by JS */
     }
 
 
