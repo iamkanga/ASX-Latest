@@ -3303,8 +3303,8 @@ main.container {
 @media (max-width: 768px) {
 
     .splash-icon {
-        width: 100%;
-        height: 100%;
+        width: 90%;
+        height: 90%;
         object-fit: cover; /* THIS IS NOW 'COVER' */
         margin-bottom: 0;
     }
