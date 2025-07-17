@@ -1531,7 +1531,7 @@ body.theme-muted-orange {
     --shadow-color: rgba(0, 0, 0, 0.15);
     --close-sidebar-btn-color: #666;
     --icon-action-color: #a07a4a;
-    --icon-action-hover-color: #8f6a3a;
+    --icon-action-hover-color: #8f3a50;
     --icon-danger-color: #dc3545;
     --icon-danger-hover-color: #c82333;
     --calc-num-btn-bg: #c79987;
@@ -1546,7 +1546,7 @@ body.theme-muted-orange {
     --comment-title-bg: rgba(0, 0, 0, 0.05);
     --target-alert-bg: #a07a4a;
     --target-alert-text: #fff;
-    --target-alert-border: #8f6a3a;
+    --target-alert-border: #8f3a50;
     --target-banner-height: 40px;
 }
 
@@ -1608,7 +1608,7 @@ body.theme-muted-cyan {
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
     --comment-title-bg: rgba(0, 0, 0, 0.05);
-    --target-alert-bg: #4a9090;
+    --target-alert-bg: #4a904a;
     --target-alert-text: #fff;
     --target-alert-border: #3a7a7a;
     --target-banner-height: 40px;
@@ -2227,7 +2227,7 @@ table th, table td {
     padding: 12px 15px;
     text-align: left;
     border-bottom: 1px solid var(--border-color);
-    font-size: 0.9em;
+    font-size: 0.9em; /* Base font size for table cells */
 }
 
 table th {
@@ -2274,27 +2274,35 @@ table tbody tr.target-hit-alert td,
     to { opacity: 0.8; }
 }
 
-
-/* Live Price Column Styling */
-table td.live-price-cell {
-    font-weight: 600;
-    /* Styles for desktop table live price */
-    font-size: 1.1em; /* Slightly larger */
+/* Desktop Table: ASX Code and Live Price Styling */
+table td .share-code-display { /* New class for the ASX code span */
+    font-size: 1.2em; /* Larger for the code */
+    font-weight: 700;
 }
 
-table td.live-price-cell .price-value { /* Added span for the price number */
-    font-weight: 700; /* Bolder */
+table td .live-price-value {
+    font-size: 1.2em; /* Larger for the live price number */
+    font-weight: 700;
 }
 
-/* Conditional background highlight for table cells */
-table td.live-price-cell.positive-change {
-    background-color: var(--live-price-positive-bg);
+/* Apply coloring to specific text elements */
+.positive {
+    color: var(--price-up-color) !important; /* Use !important to override inherited text color */
 }
 
+.negative {
+    color: var(--price-down-color) !important; /* Use !important to override inherited text color */
+}
+
+.neutral {
+    color: var(--price-neutral-color) !important; /* Use !important to override inherited text color */
+}
+
+/* Remove background color from table cells, as text color is desired */
+table td.live-price-cell.positive-change,
 table td.live-price-cell.negative-change {
-    background-color: var(--live-price-negative-bg);
+    background-color: transparent;
 }
-
 
 .price-change {
     font-size: 0.8em;
@@ -2303,17 +2311,6 @@ table td.live-price-cell.negative-change {
     white-space: nowrap;
 }
 
-.price-change.positive {
-    color: var(--price-up-color);
-}
-
-.price-change.negative {
-    color: var(--price-down-color);
-}
-
-.price-change.neutral {
-    color: var(--price-neutral-color);
-}
 
 /* Mobile Cards */
 .mobile-share-cards {
@@ -2348,11 +2345,13 @@ table td.live-price-cell.negative-change {
     background-color: var(--table-row-hover-bg);
 }
 
+/* Mobile Card: ASX Code (h3) and Live Price Styling */
 .mobile-card h3 {
     margin-top: 0;
     margin-bottom: 10px;
     color: var(--text-color);
-    font-size: 1.2em;
+    font-size: 1.4em; /* Match live-price-large font size as requested */
+    font-weight: 800; /* Bolder for prominence */
 }
 
 .mobile-card p {
@@ -2405,14 +2404,14 @@ table td.live-price-cell.negative-change {
 }
 
 .live-price-display-section .live-price-large {
-    font-size: 2.2em; /* Significantly larger */
+    font-size: 1.4em; /* Size is correct as per user, ensure color applies */
     font-weight: 800; /* Much bolder */
-    color: var(--text-color);
+    color: var(--text-color); /* Default, will be overridden by .positive/.negative */
     line-height: 1; /* Prevent extra line height */
 }
 
 .live-price-display-section .price-change-large {
-    font-size: 1.2em; /* Larger than regular price change */
+    font-size: 0.8em; /* Smaller for percentage change */
     font-weight: 700;
     white-space: nowrap;
     margin-left: 10px; /* Space between price and change */
@@ -2433,12 +2432,13 @@ table td.live-price-cell.negative-change {
 
 
 /* Conditional background for the prominent live price section */
+/* Removed these as text coloring is preferred */
 .live-price-display-section.positive-change-section {
-    background-color: var(--live-price-positive-bg);
+    background-color: transparent;
 }
 
 .live-price-display-section.negative-change-section {
-    background-color: var(--live-price-negative-bg);
+    background-color: transparent;
 }
 
 
@@ -3109,9 +3109,6 @@ table td.live-price-cell.negative-change {
     color: var(--button-text);
 }
 
-/* REMOVED: Target Hit Notification Banner (old styles) */
-/* #targetHitBanner { display: none; ... } */
-
 /* NEW: Target Hit Notification Icon (bottom right) */
 .target-hit-icon-btn {
     display: none; /* Hidden by default, shown by JS when shares hit target */
@@ -3197,12 +3194,14 @@ main.container {
 
 /* Adjust font sizes for compact live price and change */
 .mobile-share-cards.compact-view .mobile-card .live-price-display-section .live-price-large {
-    font-size: 1.4em; /* Smaller font for compact view */
+    font-size: 1.4em; /* Size is correct as per user, ensure color applies */
     line-height: 1.2;
 }
 
 .mobile-share-cards.compact-view .mobile-card .live-price-display-section .price-change-large {
     font-size: 0.8em; /* Even smaller for percentage change */
+    font-weight: 700;
+    white-space: nowrap;
     margin-left: 0; /* Remove margin from main price */
     margin-top: 2px; /* Small space below price */
     line-height: 1;
@@ -3210,7 +3209,7 @@ main.container {
 
 /* Ensure the share name (h3) is concise and always visible */
 .mobile-share-cards.compact-view .mobile-card h3 {
-    font-size: 1.4em; /* Match live-price-large font size */
+    font-size: 1.4em; /* Match live-price-large font size as requested */
     font-weight: 800; /* Match live-price-large font weight */
     margin-bottom: 5px; /* Adjust margin */
     white-space: nowrap; /* Prevent wrapping */
@@ -3226,23 +3225,7 @@ main.container {
 }
 
 /* Apply color classes directly to the text elements in compact view */
-.mobile-share-cards.compact-view .mobile-card .live-price-large.positive,
-.mobile-share-cards.compact-view .mobile-card .price-change-large.positive,
-.mobile-share-cards.compact-view .mobile-card h3.positive { /* Apply to h3 */
-    color: var(--price-up-color);
-}
-
-.mobile-share-cards.compact-view .mobile-card .live-price-large.negative,
-.mobile-share-cards.compact-view .mobile-card .price-change-large.negative,
-.mobile-share-cards.compact-view .mobile-card h3.negative { /* Apply to h3 */
-    color: var(--price-down-color);
-}
-
-.mobile-share-cards.compact-view .mobile-card .live-price-large.neutral,
-.mobile-share-cards.compact-view .mobile-card .price-change-large.neutral,
-.mobile-share-cards.compact-view .mobile-card h3.neutral { /* Apply to h3 */
-    color: var(--price-neutral-color);
-}
+/* These rules are already correctly defined and will apply due to !important */
 
 
 /* Keep the target hit alert styling on the card itself */
