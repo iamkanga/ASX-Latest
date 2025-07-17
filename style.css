@@ -3245,7 +3245,7 @@ main.container {
     top: 0;
     left: 0;
     width: 100vw; /* Use viewport width */
-    height: 100vh; /* Use viewport height */
+    height: 100vh; /* Use viewport height to ensure full screen */
     background-color: #000; /* Solid black background for the splash screen */
     display: flex;
     flex-direction: column;
@@ -3305,7 +3305,7 @@ main.container {
     .splash-icon {
         width: 90%;
         height: 90%;
-        object-fit: cover; /* THIS IS NOW 'COVER' */
+        object-fit: contain; /* THIS IS NOW 'COVER' */
         margin-bottom: 0;
     }
 
