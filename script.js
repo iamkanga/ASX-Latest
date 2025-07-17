@@ -129,7 +129,7 @@ const addWatchlistBtn = document.getElementById('addWatchlistBtn');
 const editWatchlistBtn = document.getElementById('editWatchlistBtn');
 const addWatchlistModal = document.getElementById('addWatchlistModal');
 const newWatchlistNameInput = document.getElementById('newWatchlistName');
-const saveWatchlistBtn = document.getElementById('saveWatchlistBtn');
+const saveWatchlistBtn = document = document.getElementById('saveWatchlistBtn');
 const manageWatchlistModal = document.getElementById('manageWatchlistModal');
 const editWatchlistNameInput = document.getElementById('editWatchlistName');
 const saveWatchlistNameBtn = document.getElementById('saveWatchlistNameBtn');
@@ -953,7 +953,7 @@ function sortShares() {
 
             const livePriceDataB = livePrices[b.shareName.toUpperCase()];
             const livePriceB = livePriceDataB ? livePriceDataB.live : undefined;
-            const prevCloseB = livePriceDataB ? livePriceDataB.prevClose : undefined;
+            const prevCloseB = livePriceDataB ? livePriceDataB.prevClose : undefined; // Corrected variable name
 
             let percentageChangeA = null;
             // Only calculate if both livePriceA and prevCloseA are valid numbers and prevCloseA is not zero
@@ -965,7 +965,7 @@ function sortShares() {
             let percentageChangeB = null;
             // Only calculate if both livePriceB and prevCloseB are valid numbers and prevCloseB is not zero
             if (livePriceB !== undefined && livePriceB !== null && !isNaN(livePriceB) &&
-                prevCloseB !== undefined && prevCloseB !== null && !isNaN(prevPriceB) && prevCloseB !== 0) {
+                prevCloseB !== undefined && prevCloseB !== null && !isNaN(prevCloseB) && prevCloseB !== 0) { // Corrected variable name here
                 percentageChangeB = ((livePriceB - prevCloseB) / prevCloseB) * 100;
             }
 
@@ -3390,7 +3390,7 @@ async function initializeAppLogic() {
 
 
     // Call adjustMainContentPadding initially and on window load/resize
-    window.addEventListener('load', adjustMainContentPadding);
+    // window.addEventListener('load', adjustMainContentPadding); // Removed, handled by onAuthStateChanged
     // Already added to window.addEventListener('resize') in sidebar section
 }
 
@@ -3449,6 +3449,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 updateMainButtonsState(true);
                 window._userAuthenticated = true; // Mark user as authenticated
                 
+                // Show main app content and header here
+                if (mainContainer) {
+                    mainContainer.classList.remove('app-hidden');
+                }
+                if (appHeader) {
+                    appHeader.classList.remove('app-hidden');
+                }
+                // Adjust padding immediately after showing header
+                adjustMainContentPadding();
+
                 // Start pulsing animation on icon after successful sign-in
                 if (splashKangarooIcon) {
                     splashKangarooIcon.classList.add('pulsing');
@@ -3516,7 +3526,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             // Call renderWatchlist here to ensure correct mobile card rendering after auth state is set
             renderWatchlist();
-            adjustMainContentPadding(); // Ensure padding is adjusted after initial render
+            // adjustMainContentPadding(); // Removed duplicate call, now handled inside if (user) block
         });
     } else {
         console.error('Firebase: Firebase objects (db, auth, appId, firestore, authFunctions) are not available on DOMContentLoaded. Firebase initialization likely failed in index.html.');
