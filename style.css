@@ -3263,8 +3263,10 @@ main.container {
 }
 
 .splash-icon {
-    max-width: 160px; /* Maintain 160px max-width */
-    max-height: 160%; /* Maintain 160% max-height */
+    /* Change these two lines */
+    max-width: 90%; /* Allow it to take up most of the screen width */
+    max-height: 90%; /* Allow it to take up most of the screen height */
+    /* Keep existing lines below */
     height: auto;
     width: auto;
     object-fit: contain; /* Maintain aspect ratio */
@@ -3281,13 +3283,13 @@ main.container {
 }
 
 .splash-icon.pulsing {
-    animation: pulsing-fade 6s ease-in-out infinite; /* Apply the animation, now 6 seconds */
+    animation: pulsing-fade 5s ease-in-out infinite; /* Apply the animation, now 6 seconds */
 }
 
 /* Adjust the sign-in button on the splash screen */
 #splashScreen .google-auth-btn {
     position: absolute; /* Position relative to splash screen */
-    bottom: 50px; /* Distance from the bottom */
+    bottom: 60px; /* Distance from the bottom */
     width: auto; /* Let content dictate width */
     max-width: 80%; /* Ensure it doesn't overflow on small screens */
     padding: 12px 30px; /* Generous padding */
