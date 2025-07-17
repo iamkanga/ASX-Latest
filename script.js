@@ -536,7 +536,7 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
 
     if (commentsFormContainer) { // This now refers to #dynamicCommentsArea
         commentsFormContainer.innerHTML = ''; // Clear existing dynamic comment sections
-        if (shareToEdit.comments && Array.isArray(shareToEdit.comments) && shareToEdit.comments.length > 0) {
+        if (shareToEdit.comments && Array.isArray(share.comments) && share.comments.length > 0) {
             shareToEdit.comments.forEach(comment => addCommentSection(comment.title, comment.text));
         } else {
             // Add one empty comment section if no existing comments
@@ -1025,7 +1025,7 @@ function sortShares() {
             if (nameA === '' && nameB === '') return 0;
             // If A is empty, it comes after B (push to bottom)
             if (nameA === '') return 1; 
-            // If B is empty, it comes after A (push to bottom)
+            // If B is null but A is a number, B goes to the bottom
             if (nameB === '') return -1; 
 
             return order === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
@@ -1053,8 +1053,7 @@ function sortShares() {
 
 function renderWatchlistSelect() {
     if (!watchlistSelect) { console.error('renderWatchlistSelect: watchlistSelect element not found.'); return; }
-    // Set the initial placeholder text to "Watch List"
-    watchlistSelect.innerHTML = '<option value="" disabled selected>Watch List</option>';
+    watchlistSelect.innerHTML = '<option value="" disabled selected>Watch List</option>'; // Updated placeholder
 
     const allSharesOption = document.createElement('option');
     allSharesOption.value = ALL_SHARES_ID;
