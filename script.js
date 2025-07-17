@@ -61,6 +61,10 @@ let sharesAtTargetPrice = [];
 let acknowledgedAlerts = {}; 
 let currentMobileViewMode = 'default'; // 'default' or 'compact'
 
+// --- MutationObserver for Header Height Adjustment ---
+let headerObserver = null;
+let resizeTimeout;
+
 // --- UI Element References ---
 const appHeader = document.getElementById('appHeader'); // Reference to the main header
 const mainContainer = document.querySelector('main.container'); // Reference to the main content container
@@ -170,10 +174,6 @@ const formInputs = [
     shareNameInput, currentPriceInput, targetPriceInput,
     dividendAmountInput, frankingCreditsInput
 ];
-
-// --- MutationObserver for Header Height Adjustment ---
-let headerObserver = null;
-let resizeTimeout;
 
 /**
  * Dynamically adjusts the top padding of the main content area
@@ -916,8 +916,8 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
 
     if (commentsFormContainer) { // This now refers to #dynamicCommentsArea
         commentsFormContainer.innerHTML = ''; // Clear existing dynamic comment sections
-        if (shareToEdit.comments && Array.isArray(shareToEdit.comments) && shareToEdit.comments.length > 0) {
-            shareToEdit.comments.forEach(comment => addCommentSection(comment.title, comment.text));
+        if (shareToEdit.comments && Array.isArray(share.comments) && share.comments.length > 0) {
+            share.comments.forEach(comment => addCommentSection(comment.title, comment.text));
         } else {
             // Add one empty comment section if no existing comments
             addCommentSection(); 
@@ -3200,7 +3200,7 @@ async function initializeAppLogic() {
 
     // Save Watchlist Button (for Add Watchlist Modal)
     if (saveWatchlistBtn) {
-        saveWatchlistBtn.addEventListener('click', async () => {
+    saveWatchlistBtn.addEventListener('click', async () => {
             console.log('Watchlist Form: Save Watchlist button clicked.');
             if (saveWatchlistBtn.classList.contains('is-disabled-icon')) {
                 showCustomAlert('Please enter a watchlist name.');
@@ -3646,7 +3646,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Show splash screen immediately on DOMContentLoaded
     if (splashScreen) {
         splashScreen.style.display = 'flex'; // Ensure it's visible
-        // splashScreenReady = true; // No longer needed as part of the new splash screen logic
+        // splashScreenReady is no longer needed as part of the new splash screen logic
         document.body.style.overflow = 'hidden'; // Prevent scrolling of underlying content
         console.log('Splash Screen: Displayed on DOMContentLoaded, body overflow hidden.');
     } else {
