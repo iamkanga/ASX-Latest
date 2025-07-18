@@ -486,30 +486,6 @@
         <button id="contextDeleteShareBtn" class="context-menu-item danger-button"><i class="fas fa-trash-alt"></i> Delete Share</button>
     </div>
 
-    <!-- NEW: Target Price Notification Icon (bottom right) -->
-    <button id="targetHitIconBtn" class="target-hit-icon-btn" title="Shares at Target Price">
-        <i class="fas fa-bell"></i>
-        <span id="targetHitIconCount" class="target-hit-icon-count">0</span>
-    </button>
-
-    <!-- Alert Panel Container -->
-    <div id="alertPanel" class="alert-panel">
-        <div class="alert-panel-header">
-            <h3>Notifications</h3>
-            <button id="alertPanelCloseBtn" class="close-button">&times;</button>
-        </div>
-        <div id="alertList" class="alert-list">
-            <!-- Alerts and reminders will be dynamically added here -->
-            <p class="no-alerts-message">No active alerts or reminders.</p>
-        </div>
-        <div class="alert-panel-footer">
-            <button id="dismissAllAlertsBtn" class="button secondary-buttons">Dismiss All</button>
-        </div>
-    </div>
-
-    <!-- Scroll-to-Top Button -->
-    <button id="scrollToTopBtn" title="Go to top"><i class="fas fa-arrow-up"></i></button>
-
     <!-- Firebase SDKs - Loaded as modules -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";

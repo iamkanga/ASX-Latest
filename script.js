@@ -2250,7 +2250,7 @@ function hideSplashScreen() {
             mainContainer.classList.remove('app-hidden');
         }
         if (appHeader) { // Assuming header is part of the main app content that needs to be revealed
-            appHeader.classList.remove('app-hidden');
+            appHeader.classList.add('app-hidden');
         }
         // Temporarily remove overflow hidden from body
         document.body.style.overflow = ''; 
@@ -3670,7 +3670,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     mainContainer.classList.remove('app-hidden');
                 }
                 if (appHeader) {
-                    appHeader.classList.add('app-hidden');
+                    appHeader.classList.remove('app-hidden');
                 }
                 // Adjust padding immediately after showing header
                 adjustMainContentPadding();
