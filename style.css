@@ -1154,7 +1154,7 @@ body.theme-subtle-10 { /* Subtle Stone */
     --price-up-color: #28a745;
     --price-down-color: #dc3545;
     --price-neutral-color: #6c757d;
-    --live-price-section-bg: rgba(153, 153, 153, 0.08);
+    --live-price-section-bg: rgba(144, 144, 144, 0.08);
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
     --comment-title-bg: rgba(0, 0, 0, 0.05);
@@ -1510,7 +1510,7 @@ body.theme-muted-orange {
     --warning-color: #ffc107;
     --info-color: #17a2b8;
     --link-color: #a07a4a;
-    --link-hover-color: #8f6a3a;
+    --link-hover-color: #8f3a50;
     --sidebar-bg: #e4d0b9;
     --sidebar-text: #503e2c;
     --sidebar-border: #ad875b;
@@ -3109,7 +3109,7 @@ table td.live-price-cell.negative-change {
     color: var(--button-text);
 }
 
-/* NEW: Target Hit Notification Icon (bottom right) */
+/* Target Hit Notification Icon (bottom right) */
 .target-hit-icon-btn {
     display: none; /* Hidden by default, shown by JS when shares hit target */
     position: fixed; /* Ensures it stays in viewport */
@@ -3131,7 +3131,7 @@ table td.live-price-cell.negative-change {
     transition: transform 0.2s ease, background-color 0.2s ease;
     animation: pulse-alert 1.5s infinite alternate; /* Subtle pulsing animation */
     
-    /* NEW: Chat box tail */
+    /* Chat box tail */
     position: relative; /* For positioning the pseudo-element tail */
 }
 
@@ -3174,7 +3174,7 @@ table td.live-price-cell.negative-change {
     box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 
-/* NEW: Alert Panel Styles */
+/* Alert Panel Styles */
 .alert-panel {
     display: none; /* Hidden by default, shown by JS */
     flex-direction: column;
@@ -3505,19 +3505,26 @@ main.container {
 
 /* Responsive Design */
 @media (max-width: 768px) {
-
-    /* Splash Screen Icon adjustments for mobile */
-    .splash-icon {
-        /* Allow it to take up full width/height of splash screen while maintaining aspect ratio */
-        max-width: 100%;
-        max-height: 100%;
-        width: auto;  /* Let browser determine width based on aspect ratio */
-        height: auto; /* Let browser determine height based on aspect ratio */
-        object-fit: contain; /* Crucial to keep this to prevent text cropping */
-        margin-bottom: 0;
+    /* Ensure the main splash screen container itself has no internal padding on mobile */
+    .splash-screen {
+        padding: 0; /* Remove any padding that might constrain the image */
     }
 
-    /* Header and Header Top Row adjustments for mobile - MOVED INSIDE MEDIA QUERY */
+    /* Make the splash icon truly fill the entire screen area */
+    .splash-icon {
+        width: 100%;    /* Force width to 100% of its container */
+        height: 100%;   /* Force height to 100% of its container */
+        object-fit: cover; /* Make the image cover the entire area, potentially cropping edges (but text is safe now) */
+        margin-bottom: 0; /* Ensure no margin pushes it up */
+    }
+
+    /* Adjust the sign-in button position to be clearly above mobile browser UI */
+    #splashScreen .google-auth-btn {
+        bottom: 20vh; /* Position 20% from the bottom of the viewport */
+        /* You may need to adjust this '20vh' value further based on specific device/browser UI */
+    }
+
+    /* Keep existing mobile styles below */
     header {
         padding: 15px 10px 10px; /* Adjusted padding for mobile */
     }
