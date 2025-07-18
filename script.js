@@ -70,6 +70,8 @@ let unsubscribeShares = null; // Holds the unsubscribe function for the Firestor
 
 // NEW: Global variable to store shares that have hit their target price
 let sharesAtTargetPrice = [];
+// NEW: Map to store snooze timers for alerts {alertId: timeoutId}
+const snoozedAlerts = new Map();
 
 // NEW: Global variable to track the current mobile view mode ('default' or 'compact')
 let currentMobileViewMode = 'default'; 
@@ -259,17 +261,20 @@ function renderAlertsInPanel() {
 
     // Add Target Price Alerts
     sharesAtTargetPrice.forEach(share => {
-        const livePriceData = livePrices[share.shareName.toUpperCase()];
-        const livePrice = livePriceData ? livePriceData.live : 'N/A';
-        const targetPrice = share.targetPrice !== null && !isNaN(share.targetPrice) ? share.targetPrice : 'N/A';
-        
-        allActiveAlerts.push({
-            type: 'target-price',
-            id: share.id,
-            title: `${share.shareName.toUpperCase()} Target Hit!`,
-            body: `Live: $${livePrice} | Target: $${targetPrice}`,
-            shareId: share.id // Store shareId for potential future actions
-        });
+        // Only add if not currently snoozed
+        if (!snoozedAlerts.has(share.id)) {
+            const livePriceData = livePrices[share.shareName.toUpperCase()];
+            const livePrice = livePriceData ? livePriceData.live : 'N/A';
+            const targetPrice = share.targetPrice !== null && !isNaN(share.targetPrice) ? share.targetPrice : 'N/A';
+            
+            allActiveAlerts.push({
+                type: 'target-price',
+                id: share.id, // Use share.id as the alert ID
+                title: `${share.shareName.toUpperCase()} Target Hit!`,
+                body: `Live: $${livePrice} | Target: $${targetPrice}`,
+                shareId: share.id // Store shareId for potential future actions
+            });
+        }
     });
 
     // TODO: Add Date/Time Reminders here when implemented
@@ -280,6 +285,8 @@ function renderAlertsInPanel() {
         noAlertsMessage.textContent = 'No active alerts or reminders.';
         alertList.appendChild(noAlertsMessage);
         logDebug('Alerts: No active alerts to display in panel.');
+        // If no alerts, ensure the panel is hidden
+        hideAlertPanel();
     } else {
         allActiveAlerts.forEach(alert => {
             const alertItem = document.createElement('div');
@@ -289,7 +296,6 @@ function renderAlertsInPanel() {
             alertItem.innerHTML = `
                 <div class="alert-item-header">
                     <span>${alert.title}</span>
-                    <!-- Add snooze dropdown here later -->
                 </div>
                 <div class="alert-item-body">${alert.body}</div>
                 <div class="alert-item-actions">
@@ -312,11 +318,12 @@ function renderAlertsInPanel() {
             alertItem.querySelector('.dismiss-btn').addEventListener('click', (event) => {
                 event.stopPropagation(); // Prevent alert item click
                 logDebug('Alerts: Dismiss button clicked for alert ID: ' + alert.id);
-                // TODO: Implement actual dismissal logic (e.g., mark as dismissed in Firestore)
-                // For now, just remove from UI
-                event.target.closest('.alert-item').remove();
-                // Re-evaluate target hit banner and panel content
+                // Remove the alert from sharesAtTargetPrice and snoozedAlerts
+                sharesAtTargetPrice = sharesAtTargetPrice.filter(s => s.id !== alert.id);
+                snoozedAlerts.delete(alert.id); // Ensure any snooze timer is cleared
+                // Re-render alerts and update banner
                 updateTargetHitBanner(); 
+                showCustomAlert('Alert dismissed!', 1000);
             });
 
             const snoozeBtn = alertItem.querySelector('.snooze-btn');
@@ -334,17 +341,29 @@ function renderAlertsInPanel() {
                     event.stopPropagation(); // Prevent snooze button click
                     const duration = event.target.dataset.snoozeDuration;
                     logDebug('Alerts: Snooze option selected for alert ID: ' + alert.id + ', Duration: ' + duration);
-                    // TODO: Implement snooze logic (e.g., set a snooze timestamp in Firestore)
-                    // For now, just remove from UI
-                    event.target.closest('.alert-item').remove();
-                    // Re-evaluate target hit banner and panel content
-                    updateTargetHitBanner(); 
+                    
+                    // Set snooze timer
+                    if (duration === 'session') {
+                        snoozedAlerts.set(alert.id, 'session'); // Mark as snoozed for the session
+                    } else {
+                        const snoozeDurationMs = parseInt(duration) * 60 * 60 * 1000; // Convert hours to ms
+                        const timeoutId = setTimeout(() => {
+                            snoozedAlerts.delete(alert.id); // Remove from snoozed after duration
+                            updateTargetHitBanner(); // Re-evaluate and re-render alerts
+                            showCustomAlert(`Alert for ${alert.title} is active again!`, 1500);
+                        }, snoozeDurationMs);
+                        snoozedAlerts.set(alert.id, timeoutId);
+                    }
+                    
+                    updateTargetHitBanner(); // This will re-render and remove the snoozed alert from display
                     hideAlertPanel(); // Hide panel after snoozing
                     showCustomAlert(`Alert snoozed for ${duration}!`, 1500);
                 });
             });
         });
         logDebug('Alerts: Rendered ' + allActiveAlerts.length + ' active alerts in panel.');
+        // If there are alerts, ensure the panel is visible
+        showAlertPanel();
     }
 }
 
@@ -413,8 +432,10 @@ function closeModals() {
     deselectCurrentShare();
     if (autoDismissTimeout) { clearTimeout(autoDismissTimeout); autoDismissTimeout = null; }
     hideContextMenu();
-    // NEW: Also close the alert panel
-    hideAlertPanel();
+    // NEW: Also close the alert panel, but only if there are no active alerts
+    if (sharesAtTargetPrice.length === 0) {
+        hideAlertPanel();
+    }
     logDebug('Modal: All modals closed.');
 }
 
@@ -666,7 +687,7 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
 
     if (commentsFormContainer) { // This now refers to #dynamicCommentsArea
         commentsFormContainer.innerHTML = ''; // Clear existing dynamic comment sections
-        if (shareToEdit.comments && Array.isArray(share.comments) && share.comments.length > 0) {
+        if (shareToEdit.comments && Array.isArray(shareToEdit.comments) && shareToEdit.comments.length > 0) {
             shareToEdit.comments.forEach(comment => addCommentSection(comment.title, comment.text));
         } else {
             // Add one empty comment section if no existing comments
@@ -674,7 +695,7 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
         }
     }
     if (deleteShareBtn) {
-        deleteShareBtn.classList.add('hidden');
+        deleteShareBtn.classList.remove('hidden'); // Ensure it's visible for editing
         setIconDisabled(deleteShareBtn, false);
         logDebug('showEditFormForSelectedShare: deleteShareBtn shown and enabled.');
     }
@@ -1263,9 +1284,9 @@ function addShareToTable(share) {
         }
     }
 
-    // Apply target-hit-alert class if condition met
+    // Apply target-hit-alert class if condition met AND not snoozed
     const isTargetHit = livePriceData ? livePriceData.targetHit : false;
-    if (isTargetHit) {
+    if (isTargetHit && !snoozedAlerts.has(share.id)) { // Check if not snoozed
         row.classList.add('target-hit-alert');
     } else {
         row.classList.remove('target-hit-alert');
@@ -1437,9 +1458,9 @@ function addShareToMobileCards(share) {
         card.classList.remove('compact-view-item');
     }
 
-    // NEW: Apply target-hit-alert class if condition met
+    // NEW: Apply target-hit-alert class if condition met AND not snoozed
     const isTargetHit = livePriceData ? livePriceData.targetHit : false;
-    if (isTargetHit) {
+    if (isTargetHit && !snoozedAlerts.has(share.id)) { // Check if not snoozed
         card.classList.add('target-hit-alert');
     } else {
         card.classList.remove('target-hit-alert');
@@ -1505,7 +1526,7 @@ function addShareToMobileCards(share) {
             card.innerHTML = `
                 <h3 class="${priceChangeClass}">${displayShareName}</h3>
                 <div class="live-price-display-section">
-                    <span class="live-price-large ${pricePriceClass}">$${livePrice.toFixed(2)}</span>
+                    <span class="live-price-large ${priceChangeClass}">$${livePrice.toFixed(2)}</span>
                     <span class="price-change-large ${priceChangeClass}">${priceChangeText}</span>
                 </div>
                 <p><strong>Entered Price:</strong> $${displayEnteredPrice}</p>
@@ -1990,7 +2011,7 @@ async function loadUserWatchlistsAndSettings() {
     }
 
     try {
-        logDebug('User Settings: Fetching user watchlists and profile settings...');
+        logDebug('User Settings: Fetching user watchlists and profile settings... (User ID: ' + currentUserId + ')');
         const querySnapshot = await window.firestore.getDocs(window.firestore.query(watchlistsColRef));
         querySnapshot.forEach(doc => { userWatchlists.push({ id: doc.id, name: doc.data().name }); });
         logDebug('User Settings: Found ' + userWatchlists.length + ' existing watchlists.');
@@ -2172,10 +2193,10 @@ function stopLivePriceUpdates() {
 
 // NEW: Function to update the target hit notification icon
 function updateTargetHitBanner() {
+    // Filter shares that hit target AND are not currently snoozed
     sharesAtTargetPrice = allSharesData.filter(share => {
         const livePriceData = livePrices[share.shareName.toUpperCase()];
-        // Ensure livePriceData exists and has targetHit property
-        return livePriceData && livePriceData.targetHit;
+        return livePriceData && livePriceData.targetHit && !snoozedAlerts.has(share.id);
     });
 
     if (!targetHitIconBtn || !targetHitIconCount) {
@@ -2250,7 +2271,7 @@ function hideSplashScreen() {
             mainContainer.classList.remove('app-hidden');
         }
         if (appHeader) { // Assuming header is part of the main app content that needs to be revealed
-            appHeader.classList.add('app-hidden');
+            appHeader.classList.remove('app-hidden');
         }
         // Temporarily remove overflow hidden from body
         document.body.style.overflow = ''; 
@@ -2273,11 +2294,22 @@ function hideSplashScreen() {
 function hideSplashScreenIfReady() {
     // Only hide if Firebase is initialized, user is authenticated, and all data flags are true
     if (window._firebaseInitialized && window._userAuthenticated && window._appDataLoaded && window._livePricesLoaded) {
-        if (splashScreenReady) { // Ensure splash screen itself is ready to be hidden
-            logDebug('Splash Screen: All data loaded and ready. Hiding splash screen.');
-            hideSplashScreen();
+        if (sharesAtTargetPrice.length === 0) { // Only hide if no alerts are present
+            if (splashScreenReady) { // Ensure splash screen itself is ready to be hidden
+                logDebug('Splash Screen: All data loaded and ready. Hiding splash screen.');
+                hideSplashScreen();
+            } else {
+                logDebug('Splash Screen: Data loaded, but splash screen not yet marked as ready. Will hide when ready.');
+            }
         } else {
-            logDebug('Splash Screen: Data loaded, but splash screen not yet marked as ready. Will hide when ready.');
+            logDebug('Splash Screen: Data loaded, but shares at target. Splash screen will remain until alerts are dismissed/snoozed.');
+            // If there are alerts, keep splash screen visible until they are addressed
+            // Or, transition to main app and show the alert panel immediately.
+            // For now, let's transition to main app and rely on updateTargetHitBanner to show the panel.
+            if (splashScreenReady) {
+                logDebug('Splash Screen: Data loaded and alerts present. Hiding splash screen and showing main app.');
+                hideSplashScreen();
+            }
         }
     } else {
         logDebug('Splash Screen: Not all data loaded yet. Current state: ' +
@@ -2897,14 +2929,14 @@ async function initializeAppLogic() {
         if (event.target === shareDetailModal || event.target === dividendCalculatorModal ||
             event.target === shareFormSection || event.target === customDialogModal ||
             event.target === calculatorModal || event.target === addWatchlistModal ||
-            event.target === manageWatchlistModal || event.target === alertPanel) { // NEW: Include alertPanel
+            event.target === manageWatchlistModal) { // Removed alertPanel from here
             closeModals();
         }
 
         if (contextMenuOpen && shareContextMenu && !shareContextMenu.contains(event.target)) {
             hideContextMenu();
         }
-        // NEW: Close alert panel if clicked outside (but not on the bell icon itself)
+        // NEW: Close alert panel if clicked outside (but not on the bell icon itself or the panel itself)
         if (alertPanel && alertPanel.classList.contains('open') && 
             !alertPanel.contains(event.target) && !targetHitIconBtn.contains(event.target)) {
             hideAlertPanel();
@@ -2965,6 +2997,15 @@ async function initializeAppLogic() {
                 return;
             }
             try {
+                // Clear all snooze timers on logout
+                snoozedAlerts.forEach((timeoutId, alertId) => {
+                    if (timeoutId !== 'session') { // Only clear actual timeouts
+                        clearTimeout(timeoutId);
+                    }
+                });
+                snoozedAlerts.clear(); // Clear the map
+                logDebug('Alerts: Cleared all snooze timers on logout.');
+
                 await window.authFunctions.signOut(currentAuth);
                 showCustomAlert('Logged out successfully!', 1500);
                 logDebug('Auth: User successfully logged out.');
@@ -3600,8 +3641,14 @@ async function initializeAppLogic() {
     if (dismissAllAlertsBtn) {
         dismissAllAlertsBtn.addEventListener('click', () => {
             logDebug('Alerts: Dismiss All button clicked.');
-            // For now, just clear the UI and hide the panel.
-            // In future, this would involve updating Firestore to mark alerts as dismissed/snoozed.
+            // Clear all snooze timers
+            snoozedAlerts.forEach((timeoutId, alertId) => {
+                if (timeoutId !== 'session') { // Only clear actual timeouts
+                    clearTimeout(timeoutId);
+                }
+            });
+            snoozedAlerts.clear(); // Clear the map
+
             sharesAtTargetPrice = []; // Clear current target price alerts
             // TODO: Add logic to clear/snooze reminders here
             updateTargetHitBanner(); // This will hide the icon and re-render the panel
