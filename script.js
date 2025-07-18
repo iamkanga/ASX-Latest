@@ -52,7 +52,7 @@ let originalWatchlistData = null; // Stores original watchlist data for dirty st
 // IMPORTANT: This URL is the exact string provided in your initial script.js file.
 // If CORS errors persist, the solution is to redeploy your Google Apps Script with "Anyone, even anonymous" access
 // and then update this constant with the NEW URL provided by Google Apps Script.
-const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzp7OjZL3zqvJ9wPsV9M-afm2wKeQPbIgGVv_juVpkaRllADESLwj7F-S7YWYerau-/exec'; 
+const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzp7OjZL3zqvJ9wPsV9M-afm2wKeQPbIgGVv_juVpkaRllADESLwj7F4-S7YWYerau-/exec'; 
 let livePrices = {}; // Stores live price data: {ASX_CODE: {live: price, prevClose: price, PE: value, High52: value, Low52: value, targetHit: boolean}}
 let livePriceFetchInterval = null; // To hold the interval ID for live price updates
 const LIVE_PRICE_FETCH_INTERVAL_MS = 5 * 60 * 1000; // Fetch every 5 minutes
@@ -309,7 +309,7 @@ function closeModals() {
 function showCustomAlert(message, duration = 1000) {
     if (!customDialogModal || !customDialogMessage || !customDialogConfirmBtn || !customDialogCancelBtn) {
         console.error('Custom dialog elements not found. Cannot show alert.');
-        logDebug('ALERT (fallback): ' + message);
+        console.log('ALERT (fallback): ' + message); // Use console.log directly as per user instruction
         return;
     }
     customDialogMessage.textContent = message;
@@ -1998,8 +1998,9 @@ async function loadUserWatchlistsAndSettings() {
                 id === ALL_SHARES_ID || id === CASH_BANK_WATCHLIST_ID || userWatchlists.some(wl => wl.id === id)
             );
             // If "All Shares" is selected but no actual shares/watchlists exist (other than Cash & Bank), default to Cash & Bank or first
-            if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID) && userWatchlists.length <= 1) { // Only Cash & Bank exists
+            if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID) && userWatchlists.filter(wl => wl.id !== CASH_BANK_WATCHLIST_ID).length === 0) { 
                  currentSelectedWatchlistIds = [CASH_BANK_WATCHLIST_ID];
+                 logDebug('User Settings: Only Cash & Bank watchlist exists, defaulting to it.');
             }
             // If no valid watchlists are selected after filtering, default to first available
             if (currentSelectedWatchlistIds.length === 0) {
@@ -2074,10 +2075,10 @@ async function loadUserWatchlistsAndSettings() {
  * Updates the `livePrices` global object.
  */
 async function fetchLivePrices() {
-    logDebug('Live Price: Attempting to fetch live prices...');
+    console.log('Live Price: Attempting to fetch live prices...'); // Direct console.log as per user instruction
     // Only fetch live prices if a stock-related watchlist is selected
     if (currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
-        logDebug('Live Price: Skipping live price fetch because "Cash & Bank" is selected.');
+        console.log('Live Price: Skipping live price fetch because "Cash & Bank" is selected.'); // Direct console.log
         window._livePricesLoaded = true; // Mark as loaded even if skipped for splash screen
         hideSplashScreenIfReady();
         return;
@@ -2089,7 +2090,7 @@ async function fetchLivePrices() {
             throw new Error('HTTP error! status: ' + response.status);
         }
         const data = await response.json();
-        logDebug('Live Price: Raw data received:', data); 
+        console.log('Live Price: Raw data received:', data); // Direct console.log
 
         const newLivePrices = {};
         data.forEach(item => {
@@ -2111,7 +2112,7 @@ async function fetchLivePrices() {
                 const isTargetHit = (targetPrice !== undefined && livePrice <= targetPrice);
 
                 // Debugging log:
-                logDebug('Target Price Debug: Share: ' + asxCode + ', Live: ' + livePrice + ', Target: ' + targetPrice + ', Is Target Hit: ' + isTargetHit); 
+                console.log('Target Price Debug: Share: ' + asxCode + ', Live: ' + livePrice + ', Target: ' + targetPrice + ', Is Target Hit: ' + isTargetHit); // Direct console.log
 
 
                 newLivePrices[asxCode] = {
@@ -2127,15 +2128,15 @@ async function fetchLivePrices() {
             }
         });
         livePrices = newLivePrices;
-        logDebug('Live Price: Live prices updated:', livePrices); 
-        // No direct call to renderWatchlist here anymore, as onSnapshot for shares will trigger it after data updates.
-        // renderWatchlist(); // REMOVED: This was causing recursive calls.
+        console.log('Live Price: Live prices updated:', livePrices); // Direct console.log
+        
+        // renderWatchlist is called from the onSnapshot for shares, which will then trigger this.
+        // We need to ensure adjustMainContentPadding is called here as well, as per user's instruction.
         adjustMainContentPadding(); 
+        
         // NEW: Indicate that live prices are loaded for splash screen
         window._livePricesLoaded = true;
         hideSplashScreenIfReady();
-        
-        // REMOVED: targetHitIconDismissed = false; // This line is removed as per user's request for session-long dismissal
         
         updateTargetHitBanner(); // Explicitly update banner after prices are fresh
     } catch (error) {
@@ -2153,9 +2154,14 @@ function startLivePriceUpdates() {
         clearInterval(livePriceFetchInterval);
         logDebug('Live Price: Cleared existing live price interval.');
     }
-    fetchLivePrices(); 
-    livePriceFetchInterval = setInterval(fetchLivePrices, LIVE_PRICE_FETCH_INTERVAL_MS);
-    logDebug('Live Price: Started live price updates every ' + (LIVE_PRICE_FETCH_INTERVAL_MS / 1000 / 60) + ' minutes.');
+    // Only start fetching if not in cash view
+    if (!currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
+        fetchLivePrices(); 
+        livePriceFetchInterval = setInterval(fetchLivePrices, LIVE_PRICE_FETCH_INTERVAL_MS);
+        logDebug('Live Price: Started live price updates every ' + (LIVE_PRICE_FETCH_INTERVAL_MS / 1000 / 60) + ' minutes.');
+    } else {
+        logDebug('Live Price: Not starting live price updates because "Cash & Bank" is selected.');
+    }
 }
 
 /**
@@ -2289,8 +2295,8 @@ function hideSplashScreenIfReady() {
 }
 
 /**
- * Sets up a real-time Firestore listener for shares based on currentSelectedWatchlistIds.
- * Updates `allSharesData` and re-renders the UI whenever changes occur.
+ * Sets up a real-time Firestore listener for shares.
+ * Updates `allSharesData` and triggers UI re-render via `renderWatchlist` (indirectly through `fetchLivePrices` or `sortShares`).
  */
 async function loadShares() {
     if (unsubscribeShares) {
@@ -2303,19 +2309,16 @@ async function loadShares() {
         console.warn('Shares: Firestore DB, User ID, or Firestore functions not available for loading shares. Clearing list.');
         allSharesData = []; // Clear data if services aren't available
         // renderWatchlist(); // No need to call here, onAuthStateChanged will handle initial render
-        // NEW: Indicate data loading failure for splash screen
         window._appDataLoaded = false;
-        hideSplashScreen(); // Hide splash screen on critical failure
+        hideSplashScreen(); 
         return;
     }
-    // No need to show loading indicator here, as it's handled by main app flow
-    // if (loadingIndicator) loadingIndicator.style.display = 'block';
     
     try {
         const sharesCol = window.firestore.collection(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/shares');
-        let q = window.firestore.query(sharesCol); // Listener for all shares, filtering done in renderWatchlist
+        let q = window.firestore.query(sharesCol); // Listener for all shares, filtering for display done in renderWatchlist
 
-        unsubscribeShares = window.firestore.onSnapshot(q, async (querySnapshot) => { // ADD 'async' here
+        unsubscribeShares = window.firestore.onSnapshot(q, async (querySnapshot) => { 
             logDebug('Firestore Listener: Shares snapshot received. Processing changes.');
             let fetchedShares = [];
             querySnapshot.forEach((doc) => {
@@ -2334,7 +2337,6 @@ async function loadShares() {
             await fetchLivePrices(); 
 
             if (loadingIndicator) loadingIndicator.style.display = 'none';
-            // NEW: Indicate that app data is loaded for splash screen
             window._appDataLoaded = true;
             hideSplashScreenIfReady();
 
@@ -2342,18 +2344,16 @@ async function loadShares() {
             console.error('Firestore Listener: Error listening to shares:', error);
             showCustomAlert('Error loading shares in real-time: ' + error.message);
             if (loadingIndicator) loadingIndicator.style.display = 'none';
-            // NEW: Indicate data loading failure for splash screen
             window._appDataLoaded = false;
-            hideSplashScreen(); // Hide splash screen on critical failure
+            hideSplashScreen(); 
         });
 
     } catch (error) {
         console.error('Shares: Error setting up shares listener:', error);
         showCustomAlert('Error setting up real-time share updates: ' + error.message);
         if (loadingIndicator) loadingIndicator.style.display = 'none';
-        // NEW: Indicate data loading failure for splash screen
         window._appDataLoaded = false;
-        hideSplashScreen(); // Hide splash screen on critical failure
+        hideSplashScreen(); 
     }
 }
 
@@ -2361,7 +2361,7 @@ async function loadShares() {
 
 /**
  * Sets up a real-time Firestore listener for cash categories.
- * Updates `userCashCategories` and re-renders the UI whenever changes occur.
+ * Updates `userCashCategories` and triggers UI re-render via `renderWatchlist`.
  */
 async function loadCashCategories() {
     if (unsubscribeCashCategories) {
@@ -2392,10 +2392,8 @@ async function loadCashCategories() {
             userCashCategories = fetchedCategories.sort((a, b) => a.name.localeCompare(b.name));
             logDebug('Cash Categories: Data updated from snapshot. Total categories: ' + userCashCategories.length);
             
-            // No direct call to renderCashCategories here.
-            // renderWatchlist will be called after all data is loaded and will then call renderCashCategories if needed.
-            // Or, if data changes while already in cash view, renderWatchlist will be triggered by this snapshot.
-            renderWatchlist(); // This will re-render the current view, including cash if selected
+            // Trigger a re-render of the overall watchlist, which will then call renderCashCategories if needed
+            renderWatchlist(); 
             calculateTotalCash(); // Ensure total is updated whenever categories change
 
         }, (error) => {
@@ -2624,7 +2622,7 @@ function calculateTotalCash() {
 function showCustomConfirm(message, callback) {
     if (!customDialogModal || !customDialogMessage || !customDialogConfirmBtn || !customDialogCancelBtn) {
         console.error('Custom dialog elements not found. Cannot show confirm.');
-        logDebug('CONFIRM (fallback): ' + message);
+        console.log('CONFIRM (fallback): ' + message); // Use console.log directly as per user instruction
         callback(window.confirm(message)); // Fallback to native confirm
         return;
     }
