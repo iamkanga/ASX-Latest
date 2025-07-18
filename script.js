@@ -1034,11 +1034,15 @@ function sortShares() {
 
             return order === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
         } else if (field === 'entryDate') {
+            // UPDATED: Robust date parsing for sorting
             const dateA = new Date(valA);
             const dateB = new Date(valB);
-            valA = isNaN(dateA.getTime()) ? (order === 'asc' ? Infinity : -Infinity) : dateA.getTime();
-            valB = isNaN(dateB.getTime()) ? (order === 'asc' ? Infinity : -Infinity) : valB.getTime();
-            return order === 'asc' ? valA - valB : valB - valA;
+            
+            // Handle invalid dates by pushing them to the end of the list (Infinity for asc, -Infinity for desc)
+            const timeA = isNaN(dateA.getTime()) ? (order === 'asc' ? Infinity : -Infinity) : dateA.getTime();
+            const timeB = isNaN(dateB.getTime()) ? (order === 'asc' ? Infinity : -Infinity) : dateB.getTime();
+
+            return order === 'asc' ? timeA - timeB : timeB - timeA;
         } else {
             if (order === 'asc') {
                 if (valA < valB) return -1;
@@ -2021,8 +2025,6 @@ async function fetchLivePrices() {
         window._livePricesLoaded = true;
         hideSplashScreenIfReady();
         
-        // NEW: Reset dismissal state whenever new live prices are fetched.
-        // This allows the icon to reappear if new alerts are detected after a refresh.
         // REMOVED: targetHitIconDismissed = false; // This line is removed as per user's request for session-long dismissal
         
         updateTargetHitBanner(); // Explicitly update banner after prices are fresh
