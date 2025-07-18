@@ -64,7 +64,7 @@
     --target-alert-bg: #e0f7fa; /* Light blue for target hit alert */
     --target-alert-text: #0056b3; /* Darker blue for target hit text */
     --target-alert-border: #007bff;
-    --target-banner-height: 40px;
+    --target-banner-height: 40px; /* This variable is now effectively unused for the banner, but kept for other potential uses */
 
     /* NEW: Alert System Colors */
     --alert-icon-bg: #dc3545; /* Red for the chat box icon */
@@ -1513,7 +1513,7 @@ body.theme-muted-orange {
     --link-hover-color: #8f3a50;
     --sidebar-bg: #e4d0b9;
     --sidebar-text: #503e2c;
-    --sidebar-border: #9c7b66;
+    --sidebar-border: #ad875b;
     --menu-button-bg: transparent;
     --menu-button-hover-bg: #e0c2b2;
     --menu-button-active-bg: #a07a4a;
@@ -1544,7 +1544,7 @@ body.theme-muted-orange {
     --live-price-positive-bg: rgba(40, 167, 69, 0.1);
     --live-price-negative-bg: rgba(220, 53, 69, 0.1);
     --comment-title-bg: rgba(0, 0, 0, 0.05);
-    --target-alert-bg: #a07a4a;
+    --target-alert-bg: #a04a60;
     --target-alert-text: #fff;
     --target-alert-border: #8f3a50;
     --target-banner-height: 40px;
@@ -1580,7 +1580,7 @@ body.theme-muted-cyan {
     --sidebar-border: #5b9d9d;
     --menu-button-bg: transparent;
     --menu-button-hover-bg: #d0e0e0;
-    --menu-button-active-bg: #4a9090;
+    --menu-button-active-bg: #4a904a;
     --menu-button-active-text: #fff;
     --placeholder-text: #6c757d;
     --ghosted-text: #888;
@@ -1594,7 +1594,7 @@ body.theme-muted-cyan {
     --label-color: #555;
     --shadow-color: rgba(0, 0, 0, 0.15);
     --close-sidebar-btn-color: #666;
-    --icon-action-color: #4a9090;
+    --icon-action-color: #4a904a;
     --icon-action-hover-color: #3a7a7a;
     --icon-danger-color: #dc3545;
     --icon-danger-hover-color: #c82333;
@@ -2300,7 +2300,7 @@ table td .live-price-value {
     color: var(--price-neutral-color) !important; /* Use !important to override inherited text color */
 }
 
-/* Remove background color from table cells, as text coloring is desired */
+/* Remove background color from table cells, as text color is desired */
 table td.live-price-cell.positive-change,
 table td.live-price-cell.negative-change {
     background-color: transparent;
@@ -2474,7 +2474,7 @@ table td.live-price-cell.negative-change {
     align-items: center;
     justify-content: center;
     gap: 10px;
-    box-shadow: 0 4px 8px var(--shadow-color);
+    box-shadow: 0 44px 8px var(--shadow-color);
     width: fit-content;
     max-width: 100%;
 }
@@ -3113,11 +3113,11 @@ table td.live-price-cell.negative-change {
 /* Target Hit Notification Icon (bottom right) */
 .target-hit-icon-btn {
     display: none; /* Hidden by default, shown by JS when shares hit target */
-    position: fixed; /* Ensures it stays in viewport */
-    bottom: 20px; /* Padding from bottom */
-    right: 20px; /* Padding from right */
-    left: auto; /* Ensure it's not forced to the left */
-    z-index: 9999; /* Ensure it's on top of everything */
+    position: fixed !important; /* Ensures it stays in viewport, overriding any other positions */
+    bottom: 20px !important; /* Padding from bottom */
+    right: 20px !important; /* Padding from right */
+    left: auto !important; /* Ensure it's not forced to the left */
+    z-index: 9999 !important; /* Ensure it's on top of everything */
     background-color: var(--alert-icon-bg); /* Use alert background color */
     color: var(--alert-icon-text); /* Use alert text color */
     border: none;
@@ -3180,17 +3180,17 @@ table td.live-price-cell.negative-change {
 .alert-panel {
     display: none; /* Hidden by default, shown by JS */
     flex-direction: column;
-    position: fixed; /* Ensures it stays in viewport */
-    bottom: 80px; /* Position above the target hit icon button (20px button + 20px gap + 40px button = 80px) */
-    right: 20px; /* Align with the icon button */
-    left: auto; /* Ensure it's not forced to the left */
+    position: fixed !important; /* Ensures it stays in viewport */
+    bottom: 80px !important; /* Position above the target hit icon button (20px button + 20px gap + 40px button = 80px) */
+    right: 20px !important; /* Align with the icon button */
+    left: auto !important; /* Ensure it's not forced to the left */
     width: 300px; /* Fixed width for the panel */
     max-height: 70vh; /* Max height to prevent overflow, allow scrolling */
     background-color: var(--alert-panel-bg);
     border: 1px solid var(--alert-panel-border);
     border-radius: 10px;
     box-shadow: 0 4px 15px var(--shadow-color);
-    z-index: 9998; /* Above scroll-to-top, below modals */
+    z-index: 9998 !important; /* Above scroll-to-top, below modals */
     overflow: hidden; /* Hide scrollbar for the panel itself */
     opacity: 0; /* Start hidden for transition */
     transform: translateY(20px); /* Slide up from bottom */
@@ -3508,7 +3508,6 @@ main.container {
 
 /* Responsive Design */
 @media (max-width: 768px) {
-
     /* Ensure the main splash screen container itself has no internal padding on mobile */
     .splash-screen {
         padding: 0; /* Remove any padding that might constrain the image */
