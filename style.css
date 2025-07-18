@@ -1808,12 +1808,14 @@ body.theme-muted-grey {
 
 
 /* General Body and Layout */
-html, body {
-    height: 100%;
-    overflow-x: hidden; /* Prevent horizontal scroll */
-    overflow-y: auto; /* Allow vertical scroll */
+html {
+    height: 100%; /* Ensure html takes full height */
+    overflow-y: auto; /* Allow scrolling on html */
+    overflow-x: hidden;
 }
 body {
+    min-height: 100%; /* Ensure body stretches to html height */
+    position: relative; /* Fixed elements are relative to viewport, but this is good practice */
     font-family: 'Inter', sans-serif;
     margin: 0; 
     padding: 0; 
@@ -3112,11 +3114,11 @@ table td.live-price-cell.negative-change {
 /* Target Hit Notification Icon (bottom right) */
 .target-hit-icon-btn {
     display: none; /* Hidden by default, shown by JS when shares hit target */
-    position: fixed !important; /* Ensures it stays in viewport, overriding any other positions */
-    bottom: 20px !important; /* Padding from bottom */
-    right: 20px !important; /* Padding from right */
-    left: auto !important; /* Ensure it's not forced to the left */
-    z-index: 9999 !important; /* Ensure it's on top of everything */
+    position: fixed; /* Ensures it stays in viewport */
+    bottom: 20px; /* Padding from bottom */
+    right: 20px; /* Padding from right */
+    left: auto; /* Ensure it's not forced to the left */
+    z-index: 9999; /* Ensure it's on top of everything */
     background-color: var(--alert-icon-bg); /* Use alert background color */
     color: var(--alert-icon-text); /* Use alert text color */
     border: none;
@@ -3179,17 +3181,17 @@ table td.live-price-cell.negative-change {
 .alert-panel {
     display: none; /* Hidden by default, shown by JS */
     flex-direction: column;
-    position: fixed !important; /* Ensures it stays in viewport */
-    bottom: 80px !important; /* Position above the target hit icon button (20px button + 20px gap + 40px button = 80px) */
-    right: 20px !important; /* Align with the icon button */
-    left: auto !important; /* Ensure it's not forced to the left */
+    position: fixed; /* Ensures it stays in viewport */
+    bottom: 80px; /* Position above the target hit icon button (20px button + 20px gap + 40px button = 80px) */
+    right: 20px; /* Align with the icon button */
+    left: auto; /* Ensure it's not forced to the left */
     width: 300px; /* Fixed width for the panel */
     max-height: 70vh; /* Max height to prevent overflow, allow scrolling */
     background-color: var(--alert-panel-bg);
     border: 1px solid var(--alert-panel-border);
     border-radius: 10px;
     box-shadow: 0 4px 15px var(--shadow-color);
-    z-index: 9998 !important; /* Above scroll-to-top, below modals */
+    z-index: 9998; /* Above scroll-to-top, below modals */
     overflow: hidden; /* Hide scrollbar for the panel itself */
     opacity: 0; /* Start hidden for transition */
     transform: translateY(20px); /* Slide up from bottom */
