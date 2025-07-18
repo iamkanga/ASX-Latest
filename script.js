@@ -1146,7 +1146,7 @@ function addShareToTable(share) {
 
     // Apply target-hit-alert class if condition met AND icon is not dismissed
     const isTargetHit = livePriceData ? livePriceData.targetHit : false;
-    if (isTargetHit && !targetHitIconDismissed) { // NEW: Added !targetHitIconDismissed
+    if (isTargetHit && !targetHitIconDismissed) { 
         row.classList.add('target-hit-alert');
     } else {
         row.classList.remove('target-hit-alert');
@@ -1318,9 +1318,9 @@ function addShareToMobileCards(share) {
         card.classList.remove('compact-view-item');
     }
 
-    // NEW: Apply target-hit-alert class if condition met AND icon is not dismissed
+    // Apply target-hit-alert class if condition met AND icon is not dismissed
     const isTargetHit = livePriceData ? livePriceData.targetHit : false;
-    if (isTargetHit && !targetHitIconDismissed) { // NEW: Added !targetHitIconDismissed
+    if (isTargetHit && !targetHitIconDismissed) { 
         card.classList.add('target-hit-alert');
     } else {
         card.classList.remove('target-hit-alert');
@@ -2075,7 +2075,7 @@ function updateTargetHitBanner() {
     if (sharesAtTargetPrice.length > 0 && !targetHitIconDismissed) {
         targetHitIconCount.textContent = sharesAtTargetPrice.length;
         targetHitIconBtn.style.display = 'flex'; // Show the icon
-        targetHitIconCount.style.display = 'block'; // Show the count badge
+        targetHitIconBtn.style.display = 'block'; // Show the count badge
         logDebug('Target Alert: Showing icon: ' + sharesAtTargetPrice.length + ' shares hit target (global check).');
     } else {
         targetHitIconBtn.style.display = 'none'; // Hide the icon
