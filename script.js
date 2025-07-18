@@ -3111,7 +3111,11 @@ async function initializeAppLogic() {
                 showCustomAlert('Watchlist \'' + watchlistToDeleteName + '\' and its shares deleted successfully!', 2000);
                 closeModals();
 
-                await loadUserWatchlistsAndSettings();
+                // After deleting a watchlist, switch the current view to "All Shares"
+                currentSelectedWatchlistIds = [ALL_SHARES_ID];
+                await saveLastSelectedWatchlistIds(currentSelectedWatchlistIds); // Save this preference
+
+                await loadUserWatchlistsAndSettings(); // This will re-render everything correctly
             } catch (error) {
                 console.error('Firestore: Error deleting watchlist:', error);
                 showCustomAlert('Error deleting watchlist: ' + error.message);
@@ -3230,24 +3234,32 @@ async function initializeAppLogic() {
         }
     }
 
-        // Theme Toggle Button (Random Selection)
+    // Theme Toggle Button
     if (themeToggleBtn) {
         themeToggleBtn.addEventListener('click', () => {
-            logDebug('Theme Debug: Random Theme Toggle button clicked.');
-            if (CUSTOM_THEMES.length > 0) {
-                let randomIndex;
-                let newThemeName;
-                do {
-                    randomIndex = Math.floor(Math.random() * CUSTOM_THEMES.length);
-                    newThemeName = CUSTOM_THEMES[randomIndex];
-                } while (newThemeName === currentActiveTheme && CUSTOM_THEMES.length > 1); // Ensure a different theme if possible
-
-                logDebug('Theme Debug: Selected random nextThemeName: ' + newThemeName);
-                applyTheme(newThemeName);
+            logDebug('Theme Debug: Theme toggle button clicked.');
+            logDebug('Theme Debug: currentActiveTheme before toggle: ' + currentActiveTheme);
+            
+            let nextIndex;
+            // If currentActiveTheme is a custom theme, find its index
+            if (CUSTOM_THEMES.includes(currentActiveTheme)) {
+                let currentIndex = CUSTOM_THEMES.indexOf(currentActiveTheme);
+                nextIndex = (currentIndex + 1);
             } else {
-                logDebug('Theme Debug: No custom themes defined. Defaulting to system-default.');
-                applyTheme('system-default'); // Fallback if no custom themes defined
+                // If not a custom theme (system-default, light, dark), start from the first custom theme
+                nextIndex = 0;
             }
+
+            let nextThemeName;
+            if (nextIndex < CUSTOM_THEMES.length) {
+                nextThemeName = CUSTOM_THEMES[nextIndex];
+            } else {
+                // If we've cycled past the last custom theme, go to system-default
+                nextThemeName = 'system-default';
+            }
+            
+            logDebug('Theme Debug: Calculated nextIndex: ' + nextIndex + ', nextThemeName: ' + nextThemeName);
+            applyTheme(nextThemeName);
         });
     }
 
@@ -3265,60 +3277,17 @@ async function initializeAppLogic() {
         });
     }
 
-    // Revert to Default Theme Button (Toggle Light/Dark)
+    // Revert to Default Theme Button
     if (revertToDefaultThemeBtn) {
-        revertToDefaultThemeBtn.addEventListener('click', async (event) => {
-            logDebug('Theme Debug: Revert to Default Theme button clicked (now toggling Light/Dark).');
-            event.preventDefault(); // Prevent default button behavior
-
-            const body = document.body;
-            let targetTheme;
-
-            // Remove all custom theme classes and the data-theme attribute
-            body.className = body.className.split(' ').filter(c => !c.startsWith('theme-')).join(' ');
-            body.removeAttribute('data-theme');
-            localStorage.removeItem('selectedTheme'); // Clear custom theme preference
-
-            // Determine target theme based on current state (only considering light/dark classes)
-            if (currentActiveTheme === 'light') {
-                targetTheme = 'dark';
-                body.classList.add('dark-theme');
-                logDebug('Theme: Toggled from Light to Dark theme.');
-            } else if (currentActiveTheme === 'dark') {
-                targetTheme = 'light';
-                body.classList.remove('dark-theme');
-                logDebug('Theme: Toggled from Dark to Light theme.');
-            } else { // This handles the very first click, or when currentActiveTheme is 'system-default' or any custom theme
-                const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                if (systemPrefersDark) {
-                    targetTheme = 'light';
-                    body.classList.remove('dark-theme');
-                    logDebug('Theme: First click from system-default/custom: Toggled from System Dark to Light.');
-                } else {
-                    targetTheme = 'dark';
-                    body.classList.add('dark-theme');
-                    logDebug('Theme: First click from system-default/custom: Toggled from System Light to Dark.');
-                }
-            }
-            
-            currentActiveTheme = targetTheme; // Update global tracking variable
-            localStorage.setItem('theme', targetTheme); // Save preference for light/dark
-            
-            // Save preference to Firestore
-            if (currentUserId && db && window.firestore) {
-                const userProfileDocRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/profile/settings');
-                try {
-                    await window.firestore.setDoc(userProfileDocRef, { lastTheme: targetTheme }, { merge: true });
-                    logDebug('Theme: Saved explicit Light/Dark theme preference to Firestore: ' + targetTheme);
-                } catch (error) {
-                    console.error('Theme: Error saving explicit Light/Dark theme preference to Firestore:', error);
-                }
-            }
-            updateThemeToggleAndSelector(); // Update dropdown (it should now show "No Custom Theme")
+        revertToDefaultThemeBtn.addEventListener('click', (event) => {
+            logDebug('Theme: Revert to default theme button clicked.');
+            event.preventDefault();
+            applyTheme('system-default');
+            logDebug('Theme: Reverted to default light/dark theme via button.');
         });
     }
 
-    // System Dark Mode Preference Listener (Keep this as is)
+    // System Dark Mode Preference Listener
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
         if (currentActiveTheme === 'system-default') {
             if (event.matches) {
@@ -3331,6 +3300,69 @@ async function initializeAppLogic() {
         }
     });
 
+    // Scroll to Top Button
+    if (scrollToTopBtn) {
+        window.addEventListener('scroll', () => {
+            if (window.innerWidth <= 768) {
+                if (window.scrollY > 200) {
+                    scrollToTopBtn.style.display = 'flex';
+                    scrollToTopBtn.style.opacity = '1';
+                } else {
+                    scrollToTopBtn.style.opacity = '0';
+                    setTimeout(() => {
+                        scrollToTopBtn.style.display = 'none';
+                    }, 300);
+                }
+            } else {
+                scrollToTopBtn.style.display = 'none';
+            }
+        });
+        if (window.innerWidth > 768) {
+            scrollToTopBtn.style.display = 'none';
+        } else {
+            window.dispatchEvent(new Event('scroll'));
+        }
+        scrollToTopBtn.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); logDebug('UI: Scrolled to top.'); });
+    }
+
+    // Hamburger Menu and Sidebar Interactions
+    if (hamburgerBtn && appSidebar && closeMenuBtn && sidebarOverlay) {
+        logDebug('Sidebar Setup: Initializing sidebar event listeners. Elements found:', {
+            hamburgerBtn: !!hamburgerBtn,
+            appSidebar: !!appSidebar,
+            closeMenuBtn: !!closeMenuBtn,
+            sidebarOverlay: !!sidebarOverlay
+        });
+        hamburgerBtn.addEventListener('click', (event) => {
+            logDebug('UI: Hamburger button CLICKED. Event:', event);
+            event.stopPropagation();
+            toggleAppSidebar();
+        });
+        closeMenuBtn.addEventListener('click', () => {
+            logDebug('UI: Close Menu button CLICKED.');
+            toggleAppSidebar(false);
+        });
+        
+        // Corrected sidebar overlay dismissal logic for mobile
+        sidebarOverlay.addEventListener('click', (event) => {
+            logDebug('Sidebar Overlay: Clicked overlay. Attempting to close sidebar.');
+            // Ensure the click is actually on the overlay and not bubbling from inside the sidebar
+            if (appSidebar.classList.contains('open') && event.target === sidebarOverlay) {
+                toggleAppSidebar(false);
+            }
+        });
+
+        document.addEventListener('click', (event) => {
+            const isDesktop = window.innerWidth > 768;
+            // Only close sidebar on clicks outside if it's desktop and the click isn't on the sidebar or hamburger button
+            if (appSidebar.classList.contains('open') && isDesktop &&
+                !appSidebar.contains(event.target) && !hamburgerBtn.contains(event.target)) {
+                logDebug('Global Click: Clicked outside sidebar on desktop. Closing sidebar.');
+                toggleAppSidebar(false);
+            }
+            // For mobile, the sidebarOverlay handles clicks outside, and its pointer-events are managed.
+            // No additional document click listener needed for mobile sidebar dismissal.
+        });
 
         window.addEventListener('resize', () => {
             logDebug('Window Resize: Resizing window. Closing sidebar if open.');
