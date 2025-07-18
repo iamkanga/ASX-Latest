@@ -3239,10 +3239,42 @@ async function initializeAppLogic() {
     // Locate the themeToggleBtn event listener.
 // Copy the code from this locate comment to the start of the next section (like "Scroll to Top Button" or "Calculator Buttons"), then paste.
 
-    // Locate the revertToDefaultThemeBtn event listener.
-// Copy the code from this locate comment to the start of the next section (like "Scroll to Top Button" or "Calculator Buttons"), then paste.
+    // Theme Toggle Button (Random Selection)
+    if (themeToggleBtn) {
+        themeToggleBtn.addEventListener('click', () => {
+            logDebug('Theme Debug: Random Theme Toggle button clicked.');
+            if (CUSTOM_THEMES.length > 0) {
+                let randomIndex;
+                let newThemeName;
+                do {
+                    randomIndex = Math.floor(Math.random() * CUSTOM_THEMES.length);
+                    newThemeName = CUSTOM_THEMES[randomIndex];
+                } while (newThemeName === currentActiveTheme && CUSTOM_THEMES.length > 1); // Ensure a different theme if possible
 
-    // Revert to Default Theme Button (now toggles between Light/Dark)
+                logDebug('Theme Debug: Selected random nextThemeName: ' + newThemeName);
+                applyTheme(newThemeName);
+            } else {
+                logDebug('Theme Debug: No custom themes defined. Defaulting to system-default.');
+                applyTheme('system-default'); // Fallback if no custom themes defined
+            }
+        });
+    }
+
+    // Color Theme Select Dropdown
+    if (colorThemeSelect) {
+        colorThemeSelect.addEventListener('change', (event) => {
+            logDebug('Theme: Color theme select changed to: ' + event.target.value);
+            const selectedTheme = event.target.value;
+            // If "No Custom Theme" is selected, apply system-default
+            if (selectedTheme === 'none') {
+                applyTheme('system-default');
+            } else {
+                applyTheme(selectedTheme);
+            }
+        });
+    }
+
+    // Revert to Default Theme Button (Toggle Light/Dark)
     if (revertToDefaultThemeBtn) {
         revertToDefaultThemeBtn.addEventListener('click', async (event) => {
             logDebug('Theme Debug: Revert to Default Theme button clicked (now toggling Light/Dark).');
@@ -3251,28 +3283,36 @@ async function initializeAppLogic() {
             const body = document.body;
             let targetTheme;
 
-            // Remove any existing theme classes first (custom themes and dark-theme)
-            body.className = body.className.split(' ').filter(c => !c.startsWith('theme-') && c !== 'dark-theme').join(' ');
-            body.removeAttribute('data-theme'); // Clear custom theme attribute
-            localStorage.removeItem('selectedTheme'); // Clear custom theme from local storage
+            // Remove all custom theme classes and the data-theme attribute
+            body.className = body.className.split(' ').filter(c => !c.startsWith('theme-')).join(' ');
+            body.removeAttribute('data-theme');
+            localStorage.removeItem('selectedTheme'); // Clear custom theme preference
 
-            // Determine target theme based on current state
-            if (body.classList.contains('dark-theme')) {
-                // Currently dark, switch to light
-                body.classList.remove('dark-theme');
-                targetTheme = 'light';
-                logDebug('Theme: Toggled to Light theme.');
-            } else {
-                // Currently light, switch to dark
-                body.classList.add('dark-theme');
+            // Determine target theme based on current state (only considering light/dark classes)
+            if (currentActiveTheme === 'light') {
                 targetTheme = 'dark';
-                logDebug('Theme: Toggled to Dark theme.');
+                body.classList.add('dark-theme');
+                logDebug('Theme: Toggled from Light to Dark theme.');
+            } else if (currentActiveTheme === 'dark') {
+                targetTheme = 'light';
+                body.classList.remove('dark-theme');
+                logDebug('Theme: Toggled from Dark to Light theme.');
+            } else { // This handles the very first click, or when currentActiveTheme is 'system-default' or any custom theme
+                const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (systemPrefersDark) {
+                    targetTheme = 'light';
+                    body.classList.remove('dark-theme');
+                    logDebug('Theme: First click from system-default/custom: Toggled from System Dark to Light.');
+                } else {
+                    targetTheme = 'dark';
+                    body.classList.add('dark-theme');
+                    logDebug('Theme: First click from system-default/custom: Toggled from System Light to Dark.');
+                }
             }
-
+            
             currentActiveTheme = targetTheme; // Update global tracking variable
             localStorage.setItem('theme', targetTheme); // Save preference for light/dark
-            localStorage.removeItem('selectedTheme'); // Ensure custom theme preference is cleared
-
+            
             // Save preference to Firestore
             if (currentUserId && db && window.firestore) {
                 const userProfileDocRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/profile/settings');
