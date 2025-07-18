@@ -2197,10 +2197,12 @@ function updateTargetHitBanner() {
     if (sharesAtTargetPrice.length > 0 && !targetHitIconDismissed && !currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
         targetHitIconCount.textContent = sharesAtTargetPrice.length;
         targetHitIconBtn.classList.remove('app-hidden'); // Show the icon
+        targetHitIconBtn.style.display = 'flex'; // Ensure it's flex for icon + counter
         targetHitIconCount.style.display = 'block'; // Show the count badge
         logDebug('Target Alert: Showing icon: ' + sharesAtTargetPrice.length + ' shares hit target (watchlist-specific check).');
     } else {
         targetHitIconBtn.classList.add('app-hidden'); // Hide the icon
+        targetHitIconBtn.style.display = 'none'; // Ensure it's hidden
         targetHitIconCount.style.display = 'none'; // Hide the count badge
         logDebug('Target Alert: No shares hit target in current view or icon is dismissed or in cash view. Hiding icon.');
     }
