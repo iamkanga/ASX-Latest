@@ -1037,7 +1037,7 @@ function sortShares() {
             const dateA = new Date(valA);
             const dateB = new Date(valB);
             valA = isNaN(dateA.getTime()) ? (order === 'asc' ? Infinity : -Infinity) : dateA.getTime();
-            valB = isNaN(dateB.getTime()) ? (order === 'asc' ? Infinity : -Infinity) : dateB.getTime();
+            valB = isNaN(dateB.getTime()) ? (order === 'asc' ? Infinity : -Infinity) : valB.getTime();
             return order === 'asc' ? valA - valB : valB - valA;
         } else {
             if (order === 'asc') {
@@ -1584,7 +1584,7 @@ function renderWatchlist() {
          }
     }
     logDebug('Render: Watchlist rendering complete.');
-    // updateTargetHitBanner(); // REMOVED: This call is now handled in fetchLivePrices and loadShares
+    updateTargetHitBanner(); // NEW: Update the banner after rendering the watchlist
     renderAsxCodeButtons(); // Ensure ASX buttons are rendered after watchlist content
 }
 
@@ -2023,7 +2023,7 @@ async function fetchLivePrices() {
         
         // NEW: Reset dismissal state whenever new live prices are fetched.
         // This allows the icon to reappear if new alerts are detected after a refresh.
-        targetHitIconDismissed = false; 
+        // REMOVED: targetHitIconDismissed = false; // This line is removed as per user's request for session-long dismissal
         
         updateTargetHitBanner(); // Explicitly update banner after prices are fresh
     } catch (error) {
@@ -2207,13 +2207,7 @@ function hideSplashScreen() {
         // Temporarily remove overflow hidden from body
         document.body.style.overflow = ''; 
 
-        // Remove splash screen from DOM after transition to prevent interaction issues
-        splashScreen.addEventListener('transitionend', () => {
-            if (splashScreen.parentNode) {
-                splashScreen.parentNode.removeChild(splashScreen);
-                logDebug('Splash Screen: Removed from DOM.');
-            }
-        }, { once: true });
+        // REMOVED: splashScreen.addEventListener('transitionend', () => { if (splashScreen.parentNode) { splashScreen.parentNode.removeChild(splashScreen); } }, { once: true });
         logDebug('Splash Screen: Hiding.');
     }
 }
@@ -2909,6 +2903,7 @@ async function initializeAppLogic() {
         targetHitIconBtn.addEventListener('click', (event) => {
             logDebug('Target Alert: Icon button clicked. Dismissing icon.');
             targetHitIconDismissed = true; // Set flag to true
+            localStorage.setItem('targetHitIconDismissed', 'true'); // Save dismissal state to localStorage
             updateTargetHitBanner(); // Re-run to hide the icon
             showCustomAlert('Alerts dismissed for this session.', 1500); // Optional: Provide user feedback
             renderWatchlist(); // NEW: Re-render watchlist to remove highlighting
@@ -2991,8 +2986,9 @@ async function initializeAppLogic() {
                 } else {
                     console.warn('Splash Screen: User signed out, but splash screen element not found. App content might be visible.');
                 }
-                // NEW: Reset targetHitIconDismissed on logout for a fresh start on next login
+                // NEW: Reset targetHitIconDismissed and clear localStorage entry on logout for a fresh start on next login
                 targetHitIconDismissed = false; 
+                localStorage.removeItem('targetHitIconDismissed');
 
             }
             catch (error) {
@@ -3718,6 +3714,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     logDebug('Splash Screen: Started pulsing animation after sign-in.');
                 }
                 
+                // Load dismissal state from localStorage on login
+                targetHitIconDismissed = localStorage.getItem('targetHitIconDismissed') === 'true';
+
                 // Load data and then hide splash screen
                 await loadUserWatchlistsAndSettings(); // This now sets _appDataLoaded and calls hideSplashScreenIfReady
                 startLivePriceUpdates(); // This now sets _livePricesLoaded and calls hideSplashScreenIfReady
@@ -3762,8 +3761,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     console.warn('Splash Screen: User signed out, but splash screen element not found. App content might be visible.');
                 }
-                // NEW: Reset targetHitIconDismissed on logout for a fresh start on next login
+                // NEW: Reset targetHitIconDismissed and clear localStorage entry on logout for a fresh start on next login
                 targetHitIconDismissed = false; 
+                localStorage.removeItem('targetHitIconDismissed');
 
             }
             if (!window._appLogicInitialized) {
