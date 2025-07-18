@@ -64,12 +64,11 @@
     --target-alert-bg: #e0f7fa; /* Light blue for target hit alert */
     --target-alert-text: #0056b3; /* Darker blue for target hit text */
     --target-alert-border: #007bff;
-    --target-banner-height: 40px; /* This variable is now effectively unused for the banner, but kept for other potential uses */
 
     /* NEW: Alert System Colors */
-    --alert-icon-bg: #ffc107; /* Warning yellow for bell icon */
-    --alert-icon-text: #333;
-    --alert-icon-shadow: rgba(255, 193, 7, 0.4);
+    --alert-icon-bg: #dc3545; /* Red for the chat box icon */
+    --alert-icon-text: #fff;
+    --alert-icon-shadow: rgba(220, 53, 69, 0.4);
     --alert-panel-bg: #f8f9fa; /* Light background for panel */
     --alert-panel-border: #c9d2d4;
     --alert-item-bg: #ffffff;
@@ -133,7 +132,10 @@ body.dark-theme {
     --target-alert-bg: #3498db;
     --target-alert-text: #ecf0f1;
     --target-alert-border: #2980b9;
-    --target-banner-height: 40px;
+
+    --alert-icon-bg: #e74c3c; /* Red for the chat box icon */
+    --alert-icon-text: #fff;
+    --alert-icon-shadow: rgba(231, 76, 60, 0.4);
 }
 
 /* Custom Themes */
@@ -191,7 +193,10 @@ body.theme-bold-1 { /* Ocean Blue */
     --target-alert-bg: #00b4d8;
     --target-alert-text: #fff;
     --target-alert-border: #0096c7;
-    --target-banner-height: 40px;
+
+    --alert-icon-bg: #e63946;
+    --alert-icon-text: #fff;
+    --alert-icon-shadow: rgba(230, 57, 70, 0.4);
 }
 
 body.theme-bold-2 { /* Forest Green */
@@ -247,7 +252,10 @@ body.theme-bold-2 { /* Forest Green */
     --target-alert-bg: #a7c957;
     --target-alert-text: #fff;
     --target-alert-border: #8ba84a;
-    --target-banner-height: 40px;
+
+    --alert-icon-bg: #e74c3c;
+    --alert-icon-text: #fff;
+    --alert-icon-shadow: rgba(231, 76, 60, 0.4);
 }
 
 body.theme-bold-3 { /* Sunset Orange */
@@ -303,7 +311,10 @@ body.theme-bold-3 { /* Sunset Orange */
     --target-alert-bg: #ffc300;
     --target-alert-text: #333;
     --target-alert-border: #e0ac00;
-    --target-banner-height: 40px;
+
+    --alert-icon-bg: #e63946;
+    --alert-icon-text: #fff;
+    --alert-icon-shadow: rgba(230, 57, 70, 0.4);
 }
 
 body.theme-bold-4 { /* Royal Purple */
@@ -359,7 +370,10 @@ body.theme-bold-4 { /* Royal Purple */
     --target-alert-bg: #c77dff;
     --target-alert-text: #fff;
     --target-alert-border: #a842ff;
-    --target-banner-height: 40px;
+
+    --alert-icon-bg: #e74c3c;
+    --alert-icon-text: #fff;
+    --alert-icon-shadow: rgba(231, 76, 60, 0.4);
 }
 
 body.theme-bold-5 { /* Deep Red */
@@ -415,7 +429,10 @@ body.theme-bold-5 { /* Deep Red */
     --target-alert-bg: #e74c3c;
     --target-alert-text: #fff;
     --target-alert-border: #c0392b;
-    --target-banner-height: 40px;
+
+    --alert-icon-bg: #e74c3c;
+    --alert-icon-text: #fff;
+    --alert-icon-shadow: rgba(231, 76, 60, 0.4);
 }
 
 body.theme-bold-6 { /* Gold */
@@ -471,7 +488,10 @@ body.theme-bold-6 { /* Gold */
     --target-alert-bg: #ffeb3b;
     --target-alert-text: #333;
     --target-alert-border: #fdd835;
-    --target-banner-height: 40px;
+
+    --alert-icon-bg: #e74c3c;
+    --alert-icon-text: #fff;
+    --alert-icon-shadow: rgba(231, 76, 60, 0.4);
 }
 
 body.theme-bold-7 { /* Emerald */
@@ -526,7 +546,10 @@ body.theme-bold-7 { /* Emerald */
     --target-alert-bg: #66bb6a;
     --target-alert-text: #fff;
     --target-alert-border: #4caf50;
-    --target-banner-height: 40px;
+
+    --alert-icon-bg: #e74c3c;
+    --alert-icon-text: #fff;
+    --alert-icon-shadow: rgba(231, 76, 60, 0.4);
 }
 
 body.theme-bold-8 { /* Plum */
@@ -582,7 +605,10 @@ body.theme-bold-8 { /* Plum */
     --target-alert-bg: #da70d6;
     --target-alert-text: #fff;
     --target-alert-border: #c71585;
-    --target-banner-height: 40px;
+
+    --alert-icon-bg: #e74c3c;
+    --alert-icon-text: #fff;
+    --alert-icon-shadow: rgba(231, 76, 60, 0.4);
 }
 
 body.theme-bold-9 { /* Aqua */
@@ -637,7 +663,10 @@ body.theme-bold-9 { /* Aqua */
     --target-alert-bg: #20b2aa;
     --target-alert-text: #fff;
     --target-alert-border: #008080;
-    --target-banner-height: 40px;
+
+    --alert-icon-bg: #e74c3c;
+    --alert-icon-text: #fff;
+    --alert-icon-shadow: rgba(231, 76, 60, 0.4);
 }
 
 body.theme-bold-10 { /* Ruby */
@@ -692,7 +721,10 @@ body.theme-bold-10 { /* Ruby */
     --target-alert-bg: #dc143c;
     --target-alert-text: #fff;
     --target-alert-border: #b22222;
-    --target-banner-height: 40px;
+
+    --alert-icon-bg: #e74c3c;
+    --alert-icon-text: #fff;
+    --alert-icon-shadow: rgba(231, 76, 60, 0.4);
 }
 
 
@@ -741,7 +773,10 @@ body.theme-subtle-1 { /* Subtle Sky */
     --target-alert-bg: #6699cc;
     --target-alert-text: #fff;
     --target-alert-border: #4d7eb3;
-    --target-banner-height: 40px;
+
+    --alert-icon-bg: #e74c3c;
+    --alert-icon-text: #fff;
+    --alert-icon-shadow: rgba(220, 53, 69, 0.4);
 }
 
 body.theme-subtle-2 { /* Subtle Earth */
@@ -788,7 +823,10 @@ body.theme-subtle-2 { /* Subtle Earth */
     --target-alert-bg: #a8937d;
     --target-alert-text: #fff;
     --target-alert-border: #917e6c;
-    --target-banner-height: 40px;
+
+    --alert-icon-bg: #e74c3c;
+    --alert-icon-text: #fff;
+    --alert-icon-shadow: rgba(220, 53, 69, 0.4);
 }
 
 body.theme-subtle-3 { /* Subtle Rose */
@@ -835,7 +873,10 @@ body.theme-subtle-3 { /* Subtle Rose */
     --target-alert-bg: #e099a8;
     --target-alert-text: #333;
     --target-alert-border: #c98899;
-    --target-banner-height: 40px;
+
+    --alert-icon-bg: #e74c3c;
+    --alert-icon-text: #fff;
+    --alert-icon-shadow: rgba(220, 53, 69, 0.4);
 }
 
 body.theme-subtle-4 { /* Subtle Lavender */
@@ -882,7 +923,10 @@ body.theme-subtle-4 { /* Subtle Lavender */
     --target-alert-bg: #a899e0;
     --target-alert-text: #333;
     --target-alert-border: #9188c9;
-    --target-banner-height: 40px;
+
+    --alert-icon-bg: #e74c3c;
+    --alert-icon-text: #fff;
+    --alert-icon-shadow: rgba(220, 53, 69, 0.4);
 }
 
 body.theme-subtle-5 { /* Subtle Mint */
@@ -929,7 +973,10 @@ body.theme-subtle-5 { /* Subtle Mint */
     --target-alert-bg: #99e0a8;
     --target-alert-text: #333;
     --target-alert-border: #88c991;
-    --target-banner-height: 40px;
+
+    --alert-icon-bg: #e74c3c;
+    --alert-icon-text: #fff;
+    --alert-icon-shadow: rgba(220, 53, 69, 0.4);
 }
 
 body.theme-subtle-6 { /* Subtle Sand */
@@ -976,7 +1023,10 @@ body.theme-subtle-6 { /* Subtle Sand */
     --target-alert-bg: #e09988;
     --target-alert-text: #333;
     --target-alert-border: #c98877;
-    --target-banner-height: 40px;
+
+    --alert-icon-bg: #e74c3c;
+    --alert-icon-text: #fff;
+    --alert-icon-shadow: rgba(220, 53, 69, 0.4);
 }
 
 body.theme-subtle-7 { /* Subtle Graphite */
@@ -1023,7 +1073,10 @@ body.theme-subtle-7 { /* Subtle Graphite */
     --target-alert-bg: #999999;
     --target-alert-text: #333;
     --target-alert-border: #888888;
-    --target-banner-height: 40px;
+
+    --alert-icon-bg: #e74c3c;
+    --alert-icon-text: #fff;
+    --alert-icon-shadow: rgba(220, 53, 69, 0.4);
 }
 
 body.theme-subtle-8 { /* Subtle Peach */
@@ -1070,7 +1123,10 @@ body.theme-subtle-8 { /* Subtle Peach */
     --target-alert-bg: #e09988;
     --target-alert-text: #333;
     --target-alert-border: #c98877;
-    --target-banner-height: 40px;
+
+    --alert-icon-bg: #e74c3c;
+    --alert-icon-text: #fff;
+    --alert-icon-shadow: rgba(220, 53, 69, 0.4);
 }
 
 body.theme-subtle-9 { /* Subtle Teal */
@@ -1117,7 +1173,10 @@ body.theme-subtle-9 { /* Subtle Teal */
     --target-alert-bg: #99e0cc;
     --target-alert-text: #333;
     --target-alert-border: #88c9b3;
-    --target-banner-height: 40px;
+
+    --alert-icon-bg: #e74c3c;
+    --alert-icon-text: #fff;
+    --alert-icon-shadow: rgba(220, 53, 69, 0.4);
 }
 
 body.theme-subtle-10 { /* Subtle Stone */
@@ -1161,7 +1220,10 @@ body.theme-subtle-10 { /* Subtle Stone */
     --target-alert-bg: #999999;
     --target-alert-text: #333;
     --target-alert-border: #888888;
-    --target-banner-height: 40px;
+
+    --alert-icon-bg: #e74c3c;
+    --alert-icon-text: #fff;
+    --alert-icon-shadow: rgba(220, 53, 69, 0.4);
 }
 
 
@@ -1227,7 +1289,10 @@ body.theme-muted-blue {
     --target-alert-bg: #4a8ca0;
     --target-alert-text: #fff;
     --target-alert-border: #3a7a8f;
-    --target-banner-height: 40px;
+
+    --alert-icon-bg: #dc3545;
+    --alert-icon-text: #fff;
+    --alert-icon-shadow: rgba(220, 53, 69, 0.4);
 }
 
 body.theme-muted-brown {
@@ -1291,7 +1356,10 @@ body.theme-muted-brown {
     --target-alert-bg: #8c6a5a;
     --target-alert-text: #fff;
     --target-alert-border: #7a5a4a;
-    --target-banner-height: 40px;
+
+    --alert-icon-bg: #dc3545;
+    --alert-icon-text: #fff;
+    --alert-icon-shadow: rgba(220, 53, 69, 0.4);
 }
 
 body.theme-muted-pink {
@@ -1355,7 +1423,10 @@ body.theme-muted-pink {
     --target-alert-bg: #a04a60;
     --target-alert-text: #fff;
     --target-alert-border: #8f3a50;
-    --target-banner-height: 40px;
+
+    --alert-icon-bg: #dc3545;
+    --alert-icon-text: #fff;
+    --alert-icon-shadow: rgba(220, 53, 69, 0.4);
 }
 
 body.theme-muted-green {
@@ -1419,7 +1490,10 @@ body.theme-muted-green {
     --target-alert-bg: #4a904a;
     --target-alert-text: #fff;
     --target-alert-border: #3a7a3a;
-    --target-banner-height: 40px;
+
+    --alert-icon-bg: #dc3545;
+    --alert-icon-text: #fff;
+    --alert-icon-shadow: rgba(220, 53, 69, 0.4);
 }
 
 body.theme-muted-purple {
@@ -1483,7 +1557,10 @@ body.theme-muted-purple {
     --target-alert-bg: #904a90;
     --target-alert-text: #fff;
     --target-alert-border: #7a3a7a;
-    --target-banner-height: 40px;
+
+    --alert-icon-bg: #dc3545;
+    --alert-icon-text: #fff;
+    --alert-icon-shadow: rgba(220, 53, 69, 0.4);
 }
 
 body.theme-muted-orange {
@@ -1547,7 +1624,10 @@ body.theme-muted-orange {
     --target-alert-bg: #a07a4a;
     --target-alert-text: #fff;
     --target-alert-border: #8f3a50;
-    --target-banner-height: 40px;
+
+    --alert-icon-bg: #dc3545;
+    --alert-icon-text: #fff;
+    --alert-icon-shadow: rgba(220, 53, 69, 0.4);
 }
 
 body.theme-muted-cyan {
@@ -1611,7 +1691,10 @@ body.theme-muted-cyan {
     --target-alert-bg: #4a904a;
     --target-alert-text: #fff;
     --target-alert-border: #3a7a7a;
-    --target-banner-height: 40px;
+
+    --alert-icon-bg: #dc3545;
+    --alert-icon-text: #fff;
+    --alert-icon-shadow: rgba(220, 53, 69, 0.4);
 }
 
 body.theme-muted-magenta {
@@ -1675,7 +1758,10 @@ body.theme-muted-magenta {
     --target-alert-bg: #904a90;
     --target-alert-text: #fff;
     --target-alert-border: #7a3a7a;
-    --target-banner-height: 40px;
+
+    --alert-icon-bg: #dc3545;
+    --alert-icon-text: #fff;
+    --alert-icon-shadow: rgba(220, 53, 69, 0.4);
 }
 
 body.theme-muted-gold {
@@ -1739,7 +1825,10 @@ body.theme-muted-gold {
     --target-alert-bg: #90824a;
     --target-alert-text: #fff;
     --target-alert-border: #7a6e3a;
-    --target-banner-height: 40px;
+
+    --alert-icon-bg: #dc3545;
+    --alert-icon-text: #fff;
+    --alert-icon-shadow: rgba(220, 53, 69, 0.4);
 }
 
 body.theme-muted-grey {
@@ -1803,7 +1892,10 @@ body.theme-muted-grey {
     --target-alert-bg: #909090;
     --target-alert-text: #fff;
     --target-alert-border: #7a7a7a;
-    --target-banner-height: 40px;
+
+    --alert-icon-bg: #dc3545;
+    --alert-icon-text: #fff;
+    --alert-icon-shadow: rgba(220, 53, 69, 0.4);
 }
 
 
@@ -2244,6 +2336,7 @@ table tbody tr {
 
 table tbody tr.selected {
     background-color: var(--table-row-hover-bg);
+    border-color: var(--button-bg);
     font-weight: 600;
 }
 
@@ -2298,7 +2391,7 @@ table td .live-price-value {
     color: var(--price-neutral-color) !important; /* Use !important to override inherited text color */
 }
 
-/* Remove background color from table cells, as text color is desired */
+/* Remove background color from table cells, as text coloring is desired */
 table td.live-price-cell.positive-change,
 table td.live-price-cell.negative-change {
     background-color: transparent;
@@ -2433,10 +2526,7 @@ table td.live-price-cell.negative-change {
 
 /* Conditional background for the prominent live price section */
 /* Removed these as text coloring is preferred */
-.live-price-display-section.positive-change-section {
-    background-color: transparent;
-}
-
+.live-price-display-section.positive-change-section,
 .live-price-display-section.negative-change-section {
     background-color: transparent;
 }
@@ -2472,7 +2562,7 @@ table td.live-price-cell.negative-change {
     align-items: center;
     justify-content: center;
     gap: 10px;
-    box-shadow: 0 44px 8px var(--shadow-color);
+    box-shadow: 0 4px 8px var(--shadow-color);
     width: fit-content;
     max-width: 100%;
 }
@@ -3119,7 +3209,7 @@ table td.live-price-cell.negative-change {
     background-color: var(--alert-icon-bg); /* Use alert background color */
     color: var(--alert-icon-text); /* Use alert text color */
     border: none;
-    border-radius: 50%; /* Circular button */
+    border-radius: 8px; /* Slightly rounded for chat box look */
     width: 55px; /* Size of the button */
     height: 55px;
     display: flex;
@@ -3130,11 +3220,32 @@ table td.live-price-cell.negative-change {
     box-shadow: 0 4px 12px var(--alert-icon-shadow); /* More prominent shadow */
     transition: transform 0.2s ease, background-color 0.2s ease;
     animation: pulse-alert 1.5s infinite alternate; /* Subtle pulsing animation */
+    
+    /* NEW: Chat box tail */
+    position: relative; /* For positioning the pseudo-element tail */
 }
+
+.target-hit-icon-btn::after {
+    content: '';
+    position: absolute;
+    bottom: -8px; /* Position below the button */
+    right: 8px; /* Align to the right side of the button */
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 8px solid var(--alert-icon-bg); /* Color of the tail */
+    filter: drop-shadow(0 2px 1px rgba(0,0,0,0.1)); /* Match button shadow slightly */
+}
+
 
 .target-hit-icon-btn:hover {
     transform: scale(1.1);
-    background-color: var(--warning-color); /* Slightly darker on hover */
+    background-color: var(--danger-button-hover-bg); /* Slightly darker on hover */
+}
+
+.target-hit-icon-btn:hover::after {
+    border-top-color: var(--danger-button-hover-bg); /* Match tail color on hover */
 }
 
 .target-hit-icon-count {
@@ -3152,6 +3263,190 @@ table td.live-price-cell.negative-change {
     line-height: 1; /* Center text vertically */
     box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
+
+/* NEW: Alert Panel Styles */
+.alert-panel {
+    display: none; /* Hidden by default, shown by JS */
+    flex-direction: column;
+    position: fixed;
+    bottom: 80px; /* Position above the target hit icon button */
+    right: 20px;
+    width: 300px; /* Fixed width for the panel */
+    max-height: 70vh; /* Max height to prevent overflow, allow scrolling */
+    background-color: var(--alert-panel-bg);
+    border: 1px solid var(--alert-panel-border);
+    border-radius: 10px;
+    box-shadow: 0 4px 15px var(--shadow-color);
+    z-index: 100; /* Above scroll-to-top, below modals */
+    overflow: hidden; /* Hide scrollbar for the panel itself */
+    opacity: 0; /* Start hidden for transition */
+    transform: translateY(20px); /* Slide up from bottom */
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+}
+
+.alert-panel.open {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.alert-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    border-bottom: 1px solid var(--alert-panel-border);
+    background-color: var(--table-header-bg); /* Use a slightly different background */
+}
+
+.alert-panel-header h3 {
+    margin: 0;
+    font-size: 1.1em;
+    color: var(--text-color);
+}
+
+.alert-panel-header .close-button {
+    font-size: 1.5em;
+    padding: 5px;
+    color: var(--text-color); /* Ensure close button color is readable */
+}
+.alert-panel-header .close-button:hover {
+    color: var(--danger-color);
+}
+
+.alert-list {
+    flex-grow: 1; /* Allow list to take available space */
+    overflow-y: auto; /* Enable scrolling for alerts */
+    -webkit-overflow-scrolling: touch;
+    padding: 10px 15px;
+}
+
+.alert-item {
+    background-color: var(--alert-item-bg);
+    border: 1px solid var(--alert-panel-border);
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    color: var(--text-color);
+    font-size: 0.9em;
+    position: relative;
+}
+
+.alert-item:last-child {
+    margin-bottom: 0; /* No margin for the last item */
+}
+
+.alert-item-header {
+    font-weight: 600;
+    margin-bottom: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.alert-item-body {
+    margin-bottom: 10px;
+    line-height: 1.4;
+}
+
+.alert-item-actions {
+    display: flex;
+    justify-content: flex-end; /* Align buttons to the right */
+    gap: 8px;
+}
+
+.alert-item-actions button {
+    background: none;
+    border: 1px solid var(--alert-panel-border);
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 0.85em;
+    font-weight: 600;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.alert-item-actions .dismiss-btn {
+    color: var(--alert-dismiss-btn-color);
+    border-color: var(--alert-dismiss-btn-color);
+}
+.alert-item-actions .dismiss-btn:hover {
+    background-color: var(--alert-dismiss-btn-color);
+    color: #fff;
+}
+
+.alert-item-actions .snooze-btn {
+    color: var(--alert-snooze-btn-color);
+    border-color: var(--alert-snooze-btn-color);
+    position: relative; /* For dropdown */
+}
+.alert-item-actions .snooze-btn:hover {
+    background-color: var(--alert-snooze-btn-color);
+    color: #fff;
+}
+
+.snooze-options {
+    display: none; /* Hidden by default */
+    flex-direction: column;
+    position: absolute;
+    bottom: 100%; /* Position above the snooze button */
+    left: 0;
+    right: 0;
+    background-color: var(--snooze-options-bg);
+    border: 1px solid var(--snooze-options-border);
+    border-radius: 5px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    z-index: 1; /* Above other content in alert item */
+    padding: 5px;
+    gap: 3px;
+}
+
+.snooze-options button {
+    width: 100%;
+    padding: 5px 8px;
+    background: none;
+    border: none;
+    text-align: left;
+    font-size: 0.85em;
+    color: var(--text-color);
+    cursor: pointer;
+}
+.snooze-options button:hover {
+    background-color: var(--table-row-hover-bg);
+}
+
+.alert-panel-footer {
+    padding: 10px 15px;
+    border-top: 1px solid var(--alert-panel-border);
+    text-align: center;
+    background-color: var(--table-header-bg);
+}
+
+.alert-panel-footer .button {
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 600;
+    transition: background-color 0.2s ease;
+}
+
+.alert-panel-footer .secondary-buttons {
+    background-color: var(--secondary-button-bg);
+    color: var(--button-text);
+    border: 1px solid var(--secondary-button-bg);
+}
+.alert-panel-footer .secondary-buttons:hover {
+    background-color: var(--secondary-button-hover-bg);
+    border-color: var(--secondary-button-hover-bg);
+}
+
+.no-alerts-message {
+    text-align: center;
+    color: var(--ghosted-text);
+    padding: 20px 0;
+}
+
 
 /* Adjust main content padding - only for header height now */
 main.container {
@@ -3480,5 +3775,11 @@ main.container {
     /* Removed old target banner mobile styles */
     /* #targetHitBanner { display: none; ... } */
 
-
+    /* NEW: Alert Panel responsive adjustments */
+    .alert-panel {
+        width: calc(100% - 40px); /* Full width minus padding on mobile */
+        right: 20px;
+        left: 20px;
+        bottom: 80px; /* Keep it above the button */
+    }
 }
