@@ -3236,31 +3236,25 @@ async function initializeAppLogic() {
         }
     }
 
+    // Locate the themeToggleBtn event listener.
+// Copy the code from this locate comment to the start of the next section (like "Scroll to Top Button" or "Calculator Buttons"), then paste.
+
     // Theme Toggle Button
     if (themeToggleBtn) {
         themeToggleBtn.addEventListener('click', () => {
             logDebug('Theme Debug: Theme toggle button clicked.');
             logDebug('Theme Debug: currentActiveTheme before toggle: ' + currentActiveTheme);
-            
-            let nextIndex;
-            // If currentActiveTheme is a custom theme, find its index
-            if (CUSTOM_THEMES.includes(currentActiveTheme)) {
-                let currentIndex = CUSTOM_THEMES.indexOf(currentActiveTheme);
-                nextIndex = (currentIndex + 1);
-            } else {
-                // If not a custom theme (system-default, light, dark), start from the first custom theme
-                nextIndex = 0;
-            }
 
             let nextThemeName;
-            if (nextIndex < CUSTOM_THEMES.length) {
-                nextThemeName = CUSTOM_THEMES[nextIndex];
+            if (CUSTOM_THEMES.length > 0) {
+                // Generate a random index for the next theme
+                let randomIndex = Math.floor(Math.random() * CUSTOM_THEMES.length);
+                nextThemeName = CUSTOM_THEMES[randomIndex];
             } else {
-                // If we've cycled past the last custom theme, go to system-default
-                nextThemeName = 'system-default';
+                nextThemeName = 'system-default'; // Fallback if no custom themes defined
             }
-            
-            logDebug('Theme Debug: Calculated nextIndex: ' + nextIndex + ', nextThemeName: ' + nextThemeName);
+
+            logDebug('Theme Debug: Selected random nextThemeName: ' + nextThemeName);
             applyTheme(nextThemeName);
         });
     }
@@ -3279,13 +3273,30 @@ async function initializeAppLogic() {
         });
     }
 
-    // Revert to Default Theme Button
+    // Revert to Default Theme Button (now "Previous Theme" or "Default")
     if (revertToDefaultThemeBtn) {
         revertToDefaultThemeBtn.addEventListener('click', (event) => {
-            logDebug('Theme: Revert to default theme button clicked.');
-            event.preventDefault();
-            applyTheme('system-default');
-            logDebug('Theme: Reverted to default light/dark theme via button.');
+            logDebug('Theme Debug: Revert to Default Theme button clicked (now acting as Previous/Default).');
+            event.preventDefault(); // Prevent default button behavior
+
+            if (currentCustomThemeIndex !== -1 && CUSTOM_THEMES.length > 0) {
+                // Currently on a custom theme, go to the previous one in the array
+                // If it's the first one, loop back to the end, or go to system-default.
+                let previousIndex = currentCustomThemeIndex - 1;
+
+                if (previousIndex >= 0) {
+                    applyTheme(CUSTOM_THEMES[previousIndex]);
+                    logDebug('Theme: Moved to previous custom theme: ' + CUSTOM_THEMES[previousIndex]);
+                } else {
+                    // If we're at the beginning of the custom themes, go to system-default
+                    applyTheme('system-default');
+                    logDebug('Theme: Moved from first custom theme to system-default.');
+                }
+            } else {
+                // Not on a custom theme (system-default, light, or dark), so just apply system-default
+                applyTheme('system-default');
+                logDebug('Theme: Already on a non-custom theme, applied system-default.');
+            }
         });
     }
 
@@ -3301,6 +3312,9 @@ async function initializeAppLogic() {
             updateThemeToggleAndSelector();
         }
     });
+
+// (Keep the rest of initializeAppLogic() as is below this section)
+
 
     // Scroll to Top Button
     if (scrollToTopBtn) {
