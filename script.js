@@ -76,6 +76,9 @@ const snoozedAlerts = new Map();
 // NEW: Global variable to track the current mobile view mode ('default' or 'compact')
 let currentMobileViewMode = 'default'; 
 
+// NEW: Flag to prevent immediate closing of alert panel due to global click listener
+let ignoreNextGlobalClick = false;
+
 
 // --- UI Element References ---
 const appHeader = document.getElementById('appHeader'); // Reference to the main header
@@ -194,11 +197,7 @@ const formInputs = [
 function adjustMainContentPadding() {
     // Ensure both the header and main content container elements exist.
     if (appHeader && mainContainer) {
-        // Get the current computed height of the fixed header.
         const headerHeight = appHeader.offsetHeight;
-        
-        // Apply this height as padding to the top of the main content container.
-        // The target banner is now a floating icon, so it doesn't affect top padding.
         mainContainer.style.paddingTop = `${headerHeight}px`;
         logDebug('Layout: Adjusted main content padding-top to: ' + headerHeight + 'px (Header only).');
     } else {
@@ -231,6 +230,7 @@ function showAlertPanel() {
         // Force reflow to ensure transition works from initial display:none
         alertPanel.offsetHeight; 
         alertPanel.classList.add('open');
+        ignoreNextGlobalClick = true; // Set flag to ignore the next global click
         logDebug('Alerts: Showing alert panel.');
     }
 }
@@ -1090,16 +1090,6 @@ function showShareDetails() {
     } else if (modalNewsLink) {
         modalNewsLink.style.display = 'none';
         setIconDisabled(modalNewsLink, true);
-    }
-
-    if (modalMarketIndexLink && share.shareName) {
-        const marketIndexUrl = 'https://www.marketindex.com.au/asx/' + share.shareName.toLowerCase();
-        modalMarketIndexLink.href = marketIndexUrl;
-        modalMarketIndexLink.textContent = 'View ' + share.shareName.toUpperCase() + ' on MarketIndex.com.au';
-        setIconDisabled(modalMarketIndexLink, false);
-    } else if (modalMarketIndexLink) {
-        modalMarketIndexLink.style.display = 'none';
-        setIconDisabled(modalMarketIndexLink, true);
     }
 
     if (commSecLoginMessage) {
@@ -2920,6 +2910,14 @@ async function initializeAppLogic() {
 
     // Global click listener to close modals/context menu if clicked outside
     window.addEventListener('click', (event) => {
+        // If the ignoreNextGlobalClick flag is true, reset it and return immediately.
+        // This prevents the global click listener from immediately closing the alert panel
+        // right after it's opened by the targetHitIconBtn.
+        if (ignoreNextGlobalClick) {
+            ignoreNextGlobalClick = false;
+            return; 
+        }
+
         // Close modals if click is outside their content
         if (event.target === shareDetailModal || event.target === dividendCalculatorModal ||
             event.target === shareFormSection || event.target === customDialogModal ||
@@ -2933,15 +2931,11 @@ async function initializeAppLogic() {
             hideContextMenu();
         }
 
-        // NEW: Close alert panel if clicked outside (but not on the bell icon itself or the panel itself)
-        // This is crucial to allow the panel to stay open after clicking the icon
-        // Defer this check to the next event loop cycle to allow the icon's click event to fully process
-        setTimeout(() => {
-            if (alertPanel && alertPanel.classList.contains('open') && 
-                !alertPanel.contains(event.target) && !targetHitIconBtn.contains(event.target)) {
-                hideAlertPanel();
-            }
-        }, 0); // Defer to the next tick of the event loop
+        // Close alert panel if clicked outside (but not on the bell icon itself or the panel itself)
+        if (alertPanel && alertPanel.classList.contains('open') && 
+            !alertPanel.contains(event.target) && !targetHitIconBtn.contains(event.target)) {
+            hideAlertPanel();
+        }
     });
 
     // Google Auth Button (Sign In/Out) - This button is removed from index.html.
