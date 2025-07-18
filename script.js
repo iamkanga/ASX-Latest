@@ -956,51 +956,56 @@ function showShareDetails() {
 function sortShares() {
     const sortValue = currentSortOrder;
     if (!sortValue || sortValue === '') {
-        logDebug('Sort: Sort placeholder selected or empty sortValue, no explicit sorting applied. Will render existing order.');
-        renderWatchlist();
+        logDebug('Sort: Sort placeholder selected, no explicit sorting applied.');
+        renderWatchlist(); 
         return;
     }
     const [field, order] = sortValue.split('-');
-    
     allSharesData.sort((a, b) => {
         // Handle sorting by percentage change
         if (field === 'percentageChange') {
             const livePriceDataA = livePrices[a.shareName.toUpperCase()];
-            const livePriceA = livePriceDataA ? livePriceDataA.live : null; // Use null for missing/invalid
-            const prevCloseA = livePriceDataA ? livePriceDataA.prevClose : null; // Use null for missing/invalid
+            const livePriceA = livePriceDataA ? livePriceDataA.live : undefined;
+            const prevCloseA = livePriceDataA ? livePriceDataA.prevClose : undefined;
 
             const livePriceDataB = livePrices[b.shareName.toUpperCase()];
-            const livePriceB = livePriceDataB ? livePriceDataB.live : null; // Use null for missing/invalid
-            const prevCloseB = livePriceDataB ? livePriceDataB.prevClose : null; // Use null for missing/invalid
+            const livePriceB = livePriceDataB ? livePriceDataB.live : undefined;
+            const prevCloseB = livePriceDataB ? livePriceDataB.prevClose : undefined; // Corrected variable name
 
             let percentageChangeA = null;
-            if (typeof livePriceA === 'number' && typeof prevCloseA === 'number' && prevCloseA !== 0) {
+            // Only calculate if both livePriceA and prevCloseA are valid numbers and prevCloseA is not zero
+            if (livePriceA !== undefined && livePriceA !== null && !isNaN(livePriceA) &&
+                prevCloseA !== undefined && prevCloseA !== null && !isNaN(prevCloseA) && prevCloseA !== 0) {
                 percentageChangeA = ((livePriceA - prevCloseA) / prevCloseA) * 100;
             }
 
             let percentageChangeB = null;
-            if (typeof livePriceB === 'number' && typeof prevCloseB === 'number' && prevCloseB !== 0) {
+            // Only calculate if both livePriceB and prevCloseB are valid numbers and prevCloseB is not zero
+            if (livePriceB !== undefined && livePriceB !== null && !isNaN(livePriceB) &&
+                prevCloseB !== undefined && prevCloseB !== null && !isNaN(prevCloseB) && prevCloseB !== 0) { // Corrected variable name here
                 percentageChangeB = ((livePriceB - prevCloseB) / prevCloseB) * 100;
             }
 
             // Debugging log for percentage sort
             logDebug('Sort Debug - Percentage: Comparing ' + a.shareName + ' (Change: ' + percentageChangeA + ') vs ' + b.shareName + ' (Change: ' + percentageChangeB + ')');
 
-            // Handle null/NaN percentage changes to push them to the bottom
-            if (percentageChangeA === null && percentageChangeB === null) return 0;
-            if (percentageChangeA === null) return 1; // A goes to the bottom
-            if (percentageChangeB === null) return -1; // B goes to the bottom
 
-            // Now perform numerical comparison for valid numbers
+            // Handle null/NaN percentage changes to push them to the bottom
+            // If both are null, their relative order doesn't matter (return 0)
+            if (percentageChangeA === null && percentageChangeB === null) return 0;
+            // If A is null but B is a number, A goes to the bottom
+            if (percentageChangeA === null) return 1; 
+            // If B is null but A is a number, B goes to the bottom
+            if (percentageChangeB === null) return -1; 
+
+            // Now perform numerical comparison for non-null values
             return order === 'asc' ? percentageChangeA - percentageChangeB : percentageChangeB - percentageChangeA;
         }
 
-        // Existing sorting logic for other fields (no changes here)
         let valA = a[field];
         let valB = b[field];
 
         if (field === 'currentPrice' || field === 'targetPrice' || field === 'dividendAmount' || field === 'frankingCredits') {
-            // Ensure numeric comparison, pushing null/NaN to bottom
             valA = (typeof valA === 'string' && valA.trim() !== '') ? parseFloat(valA) : valA;
             valB = (typeof valB === 'string' && valB.trim() !== '') ? parseFloat(valB) : valB;
             valA = (valA === null || valA === undefined || isNaN(valA)) ? (order === 'asc' ? Infinity : -Infinity) : valA;
@@ -1077,7 +1082,7 @@ function renderSortSelect() {
         { value: 'shareName-desc', text: 'Code (Z-A)' },
         { value: 'dividendAmount-desc', text: 'Dividend (High-Low)' },
         { value: 'dividendAmount-asc', text: 'Dividend (Low-High)' },
-        // Options for percentage change
+        // NEW: Options for percentage change
         { value: 'percentageChange-desc', text: 'Percentage Change (High-Low)' },
         { value: 'percentageChange-asc', text: 'Percentage Change (Low-High)' }
     ];
@@ -1088,21 +1093,15 @@ function renderSortSelect() {
         sortSelect.appendChild(optionElement);
     });
 
-    // Always fall back to a valid sort option if no saved order or if current user is not logged in
-    let defaultSortValue = 'entryDate-desc';
-
-    if (currentUserId && savedSortOrder && options.some(option => option.value === savedSortOrder)) {
-        // If there's a valid saved sort order, use it
+    if (currentUserId && savedSortOrder && Array.from(sortSelect.options).some(option => option.value === savedSortOrder)) {
         sortSelect.value = savedSortOrder;
         currentSortOrder = savedSortOrder;
         logDebug('Sort: Applied saved sort order: ' + currentSortOrder);
     } else {
-        // If no valid saved sort order, or not logged in, default to 'entryDate-desc'
-        sortSelect.value = defaultSortValue;
-        currentSortOrder = defaultSortValue;
-        logDebug('Sort: No valid saved sort order or not logged in, defaulting to: ' + defaultSortValue);
+        sortSelect.value = ''; 
+        currentSortOrder = '';
+        logDebug('Sort: No valid saved sort order or not logged in, defaulting to placeholder.');
     }
-
     logDebug('UI Update: Sort select rendered. Sort select disabled: ' + sortSelect.disabled);
 }
 
@@ -1114,10 +1113,11 @@ function addShareToTable(share) {
     // Determine the price change class for the entire row
     let priceChangeClass = 'neutral'; // Default to neutral to prevent empty class error
     const livePriceData = livePrices[share.shareName.toUpperCase()];
-    const livePrice = livePriceData ? livePriceData.live : null;
-    const prevClosePrice = livePriceData ? livePriceData.prevClose : null;
+    const livePrice = livePriceData ? livePriceData.live : undefined;
+    const prevClosePrice = livePriceData ? livePriceData.prevClose : undefined;
 
-    if (typeof livePrice === 'number' && typeof prevClosePrice === 'number') {
+    if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice) && 
+        prevClosePrice !== undefined && prevClosePrice !== null && !isNaN(prevClosePrice)) {
         const change = livePrice - prevClosePrice;
         if (change > 0) {
             priceChangeClass = 'positive';
@@ -1205,15 +1205,15 @@ function addShareToTable(share) {
 
     // Cell for Live Price
     const livePriceCell = row.insertCell();
-    if (typeof livePrice === 'number') {
+    if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) {
         const priceValueSpan = document.createElement('span');
         priceValueSpan.classList.add('live-price-value', priceChangeClass); // Apply class and color
         priceValueSpan.textContent = '$' + livePrice.toFixed(2);
         livePriceCell.appendChild(priceValueSpan);
         
-        if (typeof prevClosePrice === 'number') {
+        if (prevClosePrice !== undefined && prevClosePrice !== null && !isNaN(prevClosePrice)) {
             const change = livePrice - prevClosePrice;
-            const percentageChange = (prevClosePrice !== 0) ? (change / prevClosePrice) * 100 : 0;
+            const percentageChange = (prevClosePrice !== 0 && !isNaN(prevClosePrice)) ? (change / prevClosePrice) * 100 : 0;
             const priceChangeSpan = document.createElement('span');
             priceChangeSpan.classList.add('price-change', priceChangeClass); // Apply class and color
             if (change > 0) {
@@ -1243,7 +1243,7 @@ function addShareToTable(share) {
     const dividendCell = row.insertCell();
     const dividendAmountNum = Number(share.dividendAmount);
     const frankingCreditsNum = Number(share.frankingCredits);
-    const priceForYield = (typeof livePrice === 'number') ? livePrice : enteredPriceNum;
+    const priceForYield = (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) ? livePrice : enteredPriceNum;
 
     const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, priceForYield); 
     // NEW: Display "0.00%" if unfrankedYield is null or NaN, otherwise format
@@ -1279,10 +1279,11 @@ function addShareToMobileCards(share) {
     // Determine the price change class for the card
     let priceChangeClass = 'neutral'; // Default to neutral to prevent empty class error
     const livePriceData = livePrices[share.shareName.toUpperCase()];
-    const livePrice = livePriceData ? livePriceData.live : null;
-    const prevClosePrice = livePriceData ? livePriceData.prevClose : null;
+    const livePrice = livePriceData ? livePriceData.live : undefined;
+    const prevClosePrice = livePriceData ? livePriceData.prevClose : undefined;
 
-    if (typeof livePrice === 'number' && typeof prevClosePrice === 'number') {
+    if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice) && 
+        prevClosePrice !== undefined && prevClosePrice !== null && !isNaN(prevClosePrice)) {
         const change = livePrice - prevClosePrice;
         if (change > 0) {
             priceChangeClass = 'positive';
@@ -1314,7 +1315,12 @@ function addShareToMobileCards(share) {
     const frankingCreditsNum = Number(share.frankingCredits);
     const targetPriceNum = Number(share.targetPrice);
     
-    const priceForYield = (typeof livePrice === 'number') ? livePrice : enteredPriceNum;
+    // Get live price data from the global livePrices object
+    // livePriceData is already defined above for targetHit check
+    // const livePrice = livePriceData ? livePriceData.live : undefined; // Already defined above
+    // const prevClosePrice = livePriceData ? livePriceData.prevClose : undefined; // Already defined above
+
+    const priceForYield = (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) ? livePrice : enteredPriceNum;
 
     const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, priceForYield);
     const frankedYield = calculateFrankedYield(dividendAmountNum, priceForYield, frankingCreditsNum);
@@ -1327,11 +1333,11 @@ function addShareToMobileCards(share) {
 
     let priceChangeText = '';
 
-    if (typeof livePrice === 'number') {
+    if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) {
         // Calculate daily change using livePrice and prevClosePrice for mobile cards
-        if (typeof prevClosePrice === 'number') {
+        if (prevClosePrice !== undefined && prevClosePrice !== null && !isNaN(prevClosePrice)) {
             const change = livePrice - prevClosePrice;
-            const percentageChange = (prevClosePrice !== 0) ? (change / prevClosePrice) * 100 : 0;
+            const percentageChange = (prevClosePrice !== 0 && !isNaN(prevClosePrice)) ? (change / prevClosePrice) * 100 : 0;
             if (change > 0) {
                 priceChangeText = '(+$' + change.toFixed(2) + ' / +' + percentageChange.toFixed(2) + '%)';
             } else if (change < 0) {
@@ -1710,39 +1716,42 @@ function resetCalculator() {
 
 async function applyTheme(themeName) {
     const body = document.body;
-    // Remove all existing theme classes and data-theme attribute
+    // Remove all existing theme classes
     body.className = body.className.split(' ').filter(c => !c.endsWith('-theme') && !c.startsWith('theme-')).join(' ');
-    body.removeAttribute('data-theme');
 
     logDebug('Theme Debug: Attempting to apply theme: ' + themeName);
-    currentActiveTheme = themeName; // IMPORTANT: Set currentActiveTheme here as the single source of truth
+    currentActiveTheme = themeName;
 
     if (themeName === 'system-default') {
-        localStorage.removeItem('selectedTheme'); // Clear custom theme preference
-        localStorage.removeItem('theme'); // Clear explicit light/dark preference
+        body.removeAttribute('data-theme');
+        localStorage.removeItem('selectedTheme');
+        localStorage.removeItem('theme');
         const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         if (systemPrefersDark) {
             body.classList.add('dark-theme');
         }
         logDebug('Theme Debug: Reverted to system default theme.');
+        // When reverting to system-default, ensure currentCustomThemeIndex is reset to -1
         currentCustomThemeIndex = -1; 
     } else if (themeName === 'light' || themeName === 'dark') {
-        localStorage.removeItem('selectedTheme'); // Clear custom theme preference
-        localStorage.setItem('theme', themeName); // Set explicit light/dark preference
+        body.removeAttribute('data-theme');
+        localStorage.removeItem('selectedTheme');
+        localStorage.setItem('theme', themeName);
         if (themeName === 'dark') {
             body.classList.add('dark-theme');
-        } else {
-            body.classList.remove('dark-theme'); // Ensure dark-theme is removed if light is selected
         }
         logDebug('Theme Debug: Applied explicit default theme: ' + themeName);
+        // When applying explicit light/dark, ensure currentCustomThemeIndex is reset to -1
         currentCustomThemeIndex = -1; 
     } else {
         // For custom themes, apply the class and set data-theme attribute
+        // The class name is 'theme-' followed by the themeName (e.g., 'theme-bold-1', 'theme-muted-blue')
         body.classList.add('theme-' + themeName.toLowerCase().replace(/\s/g, '-')); // Convert "Muted Blue" to "muted-blue" for class
         body.setAttribute('data-theme', themeName); // Keep the full name in data-theme
-        localStorage.setItem('selectedTheme', themeName); // Save custom theme preference
-        localStorage.removeItem('theme'); // Clear explicit light/dark preference
+        localStorage.setItem('selectedTheme', themeName);
+        localStorage.removeItem('theme');
         logDebug('Theme Debug: Applied custom theme: ' + themeName);
+        // When applying a custom theme, set currentCustomThemeIndex to its position
         currentCustomThemeIndex = CUSTOM_THEMES.indexOf(themeName); 
     }
     
@@ -1758,7 +1767,7 @@ async function applyTheme(themeName) {
             console.error('Theme: Error saving theme preference to Firestore:', error);
         }
     }
-    updateThemeToggleAndSelector(); // Call this to update dropdown, etc.
+    updateThemeToggleAndSelector();
 }
 
 function updateThemeToggleAndSelector() {
@@ -1889,19 +1898,17 @@ async function loadUserWatchlistsAndSettings() {
         }
 
         renderWatchlistSelect();
-        renderSortSelect(); // Ensure sort select is rendered before applying theme which might rely on it.
         
-        // This is the correct logic for setting currentSortOrder based on saved preference or default.
-        // It uses the savedSortOrder from Firestore.
-        let defaultSortValue = 'entryDate-desc'; // Always fall back to a valid sort option
-        if (currentUserId && savedSortOrder && sortSelect && Array.from(sortSelect.options).some(option => option.value === savedSortOrder)) {
+        if (currentUserId && savedSortOrder && Array.from(sortSelect.options).some(option => option.value === savedSortOrder)) {
+            sortSelect.value = savedSortOrder;
             currentSortOrder = savedSortOrder;
-            logDebug('Sort: Applied saved sort order: ' + currentSortOrder + ' from settings.');
+            logDebug('Sort: Applied saved sort order: ' + currentSortOrder);
         } else {
-            currentSortOrder = defaultSortValue;
-            logDebug('Sort: No valid saved sort order or not logged in, defaulting to: ' + defaultSortValue);
+            sortSelect.value = ''; 
+            currentSortOrder = '';
+            logDebug('Sort: No valid saved sort order or not logged in, defaulting to placeholder.');
         }
-        sortSelect.value = currentSortOrder; // Ensure the UI dropdown matches the set currentSortOrder
+        renderSortSelect();
         
         if (savedTheme) {
             applyTheme(savedTheme);
@@ -1942,26 +1949,6 @@ async function loadUserWatchlistsAndSettings() {
 }
 
 /**
- * Helper to safely parse a number, handling common non-numeric string values.
- * @param {string|number} value The value to parse.
- * @returns {number|null} The parsed number, or null if parsing fails.
- */
-function parseNumericValue(value) {
-    if (typeof value === 'number') {
-        return isNaN(value) ? null : value;
-    }
-    if (typeof value === 'string') {
-        const trimmedValue = value.trim();
-        if (trimmedValue === '' || trimmedValue.toLowerCase() === '#n/a') {
-            return null;
-        }
-        const parsed = parseFloat(trimmedValue);
-        return isNaN(parsed) ? null : parsed;
-    }
-    return null;
-}
-
-/**
  * Fetches live price data from the Google Apps Script Web App.
  * Updates the `livePrices` global object.
  */
@@ -1978,33 +1965,32 @@ async function fetchLivePrices() {
         const newLivePrices = {};
         data.forEach(item => {
             const asxCode = String(item.ASXCode).toUpperCase();
-            
-            // Use the new robust parsing function
-            const livePrice = parseNumericValue(item.LivePrice);
-            const prevClose = parseNumericValue(item.PrevClose); 
-            const pe = parseNumericValue(item.PE);
-            const high52 = parseNumericValue(item.High52);
-            const low52 = parseNumericValue(item.Low52);
+            const livePrice = parseFloat(item.LivePrice);
+            const prevClose = parseFloat(item.PrevClose); 
+            const pe = parseFloat(item.PE);
+            const high52 = parseFloat(item.High52);
+            const low52 = parseFloat(item.Low52);
 
-            // Only add to livePrices if ASXCode is present and livePrice is a valid number
-            if (asxCode && typeof livePrice === 'number') { // Removed !isNaN(livePrice) as parseNumericValue handles it
+            if (asxCode && !isNaN(livePrice)) {
                 // Find the corresponding share in allSharesData to get its targetPrice
                 const shareData = allSharesData.find(s => s.shareName.toUpperCase() === asxCode);
                 // Ensure targetPrice is parsed as a number, handling null/undefined/NaN
-                const targetPrice = shareData && typeof shareData.targetPrice === 'number' && !isNaN(shareData.targetPrice) 
-                                    ? shareData.targetPrice 
+                const targetPrice = shareData && shareData.targetPrice !== null && !isNaN(parseFloat(shareData.targetPrice)) 
+                                    ? parseFloat(shareData.targetPrice) 
                                     : undefined;
 
                 const isTargetHit = (targetPrice !== undefined && livePrice <= targetPrice);
 
-                logDebug('Target Price Debug: Share: ' + asxCode + ', Live: ' + livePrice + ', Target: ' + targetPrice + ', Is Target Hit: ' + isTargetHit);
+                // Debugging log:
+                logDebug('Target Price Debug: Share: ' + asxCode + ', Live: ' + livePrice + ', Target: ' + targetPrice + ', Is Target Hit: ' + isTargetHit); // Using logDebug
+
 
                 newLivePrices[asxCode] = {
                     live: livePrice,
-                    prevClose: prevClose, // parseNumericValue already returns null if NaN
-                    PE: pe, 
-                    High52: high52, 
-                    Low52: low52, 
+                    prevClose: isNaN(prevClose) ? null : prevClose,
+                    PE: isNaN(pe) ? null : pe, 
+                    High52: isNaN(high52) ? null : high52, 
+                    Low52: isNaN(low52) ? null : low52, 
                     targetHit: isTargetHit 
                 };
             } else {
@@ -2013,12 +1999,14 @@ async function fetchLivePrices() {
         });
         livePrices = newLivePrices;
         logDebug('Live Price: Live prices updated:', livePrices); // Using logDebug
-        sortShares(); // Call sortShares after livePrices are updated to apply percentage change sort
-        adjustMainContentPadding();
+        renderWatchlist(); 
+        adjustMainContentPadding(); // Re-added this call
+        // NEW: Indicate that live prices are loaded for splash screen
         window._livePricesLoaded = true;
         hideSplashScreenIfReady();
     } catch (error) {
         console.error('Live Price: Error fetching live prices:', error);
+        // NEW: Hide splash screen on error
         hideSplashScreen();
     }
 }
@@ -2270,24 +2258,32 @@ async function migrateOldSharesToWatchlist() {
                 const value = shareData[field];
                 const originalValueType = typeof value;
                 let parsedValue = value;
-                // Use the new robust parsing function
-                parsedValue = parseNumericValue(value);
-                if (value !== parsedValue) { // Check if original value differs from parsed value
+                if (originalValueType === 'string' && value.trim() !== '') {
+                    parsedValue = parseFloat(value);
+                    if (!isNaN(parsedValue)) {
+                        if (originalValueType !== typeof parsedValue || value !== String(parsedValue)) {
+                            needsUpdate = true;
+                            updatePayload[field] = parsedValue;
+                            logDebug('Migration: Share \'' + doc.id + '\': Converted ' + field + ' from string \'' + value + '\' (type ' + originalValueType + ') to number ' + parsedValue + '.');
+                        }
+                    } else {
+                        needsUpdate = true;
+                        updatePayload[field] = null;
+                        console.warn('Migration: Share \'' + doc.id + '\': Field \'' + field + '\' was invalid string \'' + value + '\', setting to null.');
+                    }
+                } else if (originalValueType === 'number' && isNaN(value)) {
                     needsUpdate = true;
-                    updatePayload[field] = parsedValue;
-                    logDebug('Migration: Share \'' + doc.id + '\': Converted ' + field + ' from ' + value + ' (type ' + originalValueType + ') to number ' + parsedValue + '.');
+                    updatePayload[field] = null;
+                    console.warn('Migration: Share \'' + doc.id + '\': Field \'' + field + '\' was NaN number, setting to null.');
+                }
+                if (field === 'frankingCredits' && typeof parsedValue === 'number' && !isNaN(parsedValue)) {
+                    if (parsedValue > 0 && parsedValue < 1) {
+                        needsUpdate = true;
+                        updatePayload.frankingCredits = parsedValue * 100;
+                        logDebug('Migration: Share \'' + doc.id + '\': Converted frankingCredits from decimal ' + parsedValue + ' to percentage ' + (parsedValue * 100) + '.');
+                    }
                 }
             });
-            if (shareData.hasOwnProperty('frankingCredits') && typeof updatePayload.frankingCredits === 'number' && !isNaN(updatePayload.frankingCredits)) {
-                 // Check if frankingCredits is already between 0 and 100, if not, it might be a decimal
-                if (updatePayload.frankingCredits > 0 && updatePayload.frankingCredits < 1) {
-                    needsUpdate = true;
-                    updatePayload.frankingCredits = updatePayload.frankingCredits * 100;
-                    logDebug('Migration: Share \'' + doc.id + '\': Converted frankingCredits from decimal ' + (updatePayload.frankingCredits / 100) + ' to percentage ' + updatePayload.frankingCredits + '.');
-                }
-            }
-
-
             const effectiveCurrentPrice = (typeof updatePayload.currentPrice === 'number' && !isNaN(updatePayload.currentPrice)) ? updatePayload.currentPrice :
                                           ((typeof shareData.currentPrice === 'string' ? parseFloat(shareData.currentPrice) : shareData.currentPrice) || null);
             if (!shareData.hasOwnProperty('lastFetchedPrice') || (typeof shareData.lastFetchedPrice === 'string' && isNaN(parseFloat(shareData.lastFetchedPrice)))) {
@@ -2469,17 +2465,18 @@ function exportWatchlistToCSV() {
 
         // Get live price data from the global livePrices object
         const livePriceData = livePrices[share.shareName.toUpperCase()];
-        const livePrice = livePriceData ? livePriceData.live : null;
-        const prevClosePrice = livePriceData ? livePriceData.prevClose : null;
+        const livePrice = livePriceData ? livePriceData.live : undefined;
+        const prevClosePrice = livePriceData ? livePriceData.prevClose : undefined;
 
         let priceChange = '';
-        if (typeof livePrice === 'number' && typeof prevClosePrice === 'number') {
+        if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice) && 
+            prevClosePrice !== undefined && prevClosePrice !== null && !isNaN(prevClosePrice)) {
             const change = livePrice - prevClosePrice;
-            const percentageChange = (prevClosePrice !== 0) ? (change / prevClosePrice) * 100 : 0;
+            const percentageChange = (prevClosePrice !== 0 && !isNaN(prevClosePrice)) ? (change / prevClosePrice) * 100 : 0;
             priceChange = change.toFixed(2) + ' (' + percentageChange.toFixed(2) + '%)'; // Include percentage in CSV
         }
 
-        const priceForYield = (typeof livePrice === 'number') ? livePrice : enteredPriceNum;
+        const priceForYield = (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) ? livePrice : enteredPriceNum;
 
         const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, priceForYield);
         const frankedYield = calculateFrankedYield(dividendAmountNum, priceForYield, frankingCreditsNum);
@@ -2487,7 +2484,7 @@ function exportWatchlistToCSV() {
         const row = [
             share.shareName || '',
             (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? enteredPriceNum.toFixed(2) : '',
-            (typeof livePrice === 'number') ? livePrice.toFixed(2) : '',
+            (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) ? livePrice.toFixed(2) : '',
             priceChange, // Now includes the calculated price change
             (!isNaN(targetPriceNum) && targetPriceNum !== null) ? targetPriceNum.toFixed(2) : '',
             (!isNaN(dividendAmountNum) && dividendAmountNum !== null) ? dividendAmountNum.toFixed(3) : '',
@@ -3114,11 +3111,7 @@ async function initializeAppLogic() {
                 showCustomAlert('Watchlist \'' + watchlistToDeleteName + '\' and its shares deleted successfully!', 2000);
                 closeModals();
 
-                // After deleting a watchlist, switch the current view to "All Shares"
-                currentSelectedWatchlistIds = [ALL_SHARES_ID];
-                await saveLastSelectedWatchlistIds(currentSelectedWatchlistIds); // Save this preference
-
-                await loadUserWatchlistsAndSettings(); // This will re-render everything correctly
+                await loadUserWatchlistsAndSettings();
             } catch (error) {
                 console.error('Firestore: Error deleting watchlist:', error);
                 showCustomAlert('Error deleting watchlist: ' + error.message);
@@ -3237,7 +3230,7 @@ async function initializeAppLogic() {
         }
     }
 
-    // Theme Toggle Button (Random Selection)
+        // Theme Toggle Button (Random Selection)
     if (themeToggleBtn) {
         themeToggleBtn.addEventListener('click', () => {
             logDebug('Theme Debug: Random Theme Toggle button clicked.');
@@ -3338,69 +3331,6 @@ async function initializeAppLogic() {
         }
     });
 
-    // Scroll to Top Button
-    if (scrollToTopBtn) {
-        window.addEventListener('scroll', () => {
-            if (window.innerWidth <= 768) {
-                if (window.scrollY > 200) {
-                    scrollToTopBtn.style.display = 'flex';
-                    scrollToTopBtn.style.opacity = '1';
-                } else {
-                    scrollToTopBtn.style.opacity = '0';
-                    setTimeout(() => {
-                        scrollToTopBtn.style.display = 'none';
-                    }, 300);
-                }
-            } else {
-                scrollToTopBtn.style.display = 'none';
-            }
-        });
-        if (window.innerWidth > 768) {
-            scrollToTopBtn.style.display = 'none';
-        } else {
-            window.dispatchEvent(new Event('scroll'));
-        }
-        scrollToTopBtn.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); logDebug('UI: Scrolled to top.'); });
-    }
-
-    // Hamburger Menu and Sidebar Interactions
-    if (hamburgerBtn && appSidebar && closeMenuBtn && sidebarOverlay) {
-        logDebug('Sidebar Setup: Initializing sidebar event listeners. Elements found:', {
-            hamburgerBtn: !!hamburgerBtn,
-            appSidebar: !!appSidebar,
-            closeMenuBtn: !!closeMenuBtn,
-            sidebarOverlay: !!sidebarOverlay
-        });
-        hamburgerBtn.addEventListener('click', (event) => {
-            logDebug('UI: Hamburger button CLICKED. Event:', event);
-            event.stopPropagation();
-            toggleAppSidebar();
-        });
-        closeMenuBtn.addEventListener('click', () => {
-            logDebug('UI: Close Menu button CLICKED.');
-            toggleAppSidebar(false);
-        });
-        
-        // Corrected sidebar overlay dismissal logic for mobile
-        sidebarOverlay.addEventListener('click', (event) => {
-            logDebug('Sidebar Overlay: Clicked overlay. Attempting to close sidebar.');
-            // Ensure the click is actually on the overlay and not bubbling from inside the sidebar
-            if (appSidebar.classList.contains('open') && event.target === sidebarOverlay) {
-                toggleAppSidebar(false);
-            }
-        });
-
-        document.addEventListener('click', (event) => {
-            const isDesktop = window.innerWidth > 768;
-            // Only close sidebar on clicks outside if it's desktop and the click isn't on the sidebar or hamburger button
-            if (appSidebar.classList.contains('open') && isDesktop &&
-                !appSidebar.contains(event.target) && !hamburgerBtn.contains(event.target)) {
-                logDebug('Global Click: Clicked outside sidebar on desktop. Closing sidebar.');
-                toggleAppSidebar(false);
-            }
-            // For mobile, the sidebarOverlay handles clicks outside, and its pointer-events are managed.
-            // No additional document click listener needed for mobile sidebar dismissal.
-        });
 
         window.addEventListener('resize', () => {
             logDebug('Window Resize: Resizing window. Closing sidebar if open.');
@@ -3456,7 +3386,7 @@ async function initializeAppLogic() {
     if (toggleCompactViewBtn) {
         // DEBUG: Log that the event listener is being attached
         logDebug('DEBUG: Attaching click listener to toggleCompactViewBtn.');
-        toggleCompactViewBtn.addEventListener('click', () => { // Corrected: Using the element directly
+        toggleCompactViewBtn.addEventListener('click', () => {
             logDebug('UI: Toggle Compact View button clicked.');
             toggleMobileViewMode();
             toggleAppSidebar(false); // Close sidebar after action
