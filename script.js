@@ -2017,7 +2017,12 @@ async function fetchLivePrices() {
         // NEW: Indicate that live prices are loaded for splash screen
         window._livePricesLoaded = true;
         hideSplashScreenIfReady();
-        updateTargetHitBanner(); // NEW: Explicitly update banner after prices are fresh
+        
+        // NEW: Reset dismissal state whenever new live prices are fetched.
+        // This allows the icon to reappear if new alerts are detected after a refresh.
+        targetHitIconDismissed = false; // <--- ADDED THIS LINE
+        
+        updateTargetHitBanner(); // Explicitly update banner after prices are fresh
     } catch (error) {
         console.error('Live Price: Error fetching live prices:', error);
         // NEW: Hide splash screen on error
@@ -2900,7 +2905,7 @@ async function initializeAppLogic() {
             targetHitIconDismissed = true; // Set flag to true
             updateTargetHitBanner(); // Re-run to hide the icon
             showCustomAlert('Alerts dismissed for this session.', 1500); // Optional: Provide user feedback
-            renderWatchlist(); // NEW: Re-render watchlist to remove highlighting
+            // renderWatchlist(); // REMOVED: This call is now handled by updateTargetHitBanner -> fetchLivePrices -> renderWatchlist
         });
     }
 
