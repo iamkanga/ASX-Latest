@@ -1082,7 +1082,7 @@ function renderSortSelect() {
         { value: 'shareName-desc', text: 'Code (Z-A)' },
         { value: 'dividendAmount-desc', text: 'Dividend (High-Low)' },
         { value: 'dividendAmount-asc', text: 'Dividend (Low-High)' },
-        // NEW: Options for percentage change
+        // Options for percentage change
         { value: 'percentageChange-desc', text: 'Percentage Change (High-Low)' },
         { value: 'percentageChange-asc', text: 'Percentage Change (Low-High)' }
     ];
@@ -1093,15 +1093,18 @@ function renderSortSelect() {
         sortSelect.appendChild(optionElement);
     });
 
+    // START HIGHLIGHT HERE
     if (currentUserId && savedSortOrder && Array.from(sortSelect.options).some(option => option.value === savedSortOrder)) {
         sortSelect.value = savedSortOrder;
         currentSortOrder = savedSortOrder;
         logDebug('Sort: Applied saved sort order: ' + currentSortOrder);
     } else {
-        sortSelect.value = ''; 
+        sortSelect.value = '';
         currentSortOrder = '';
         logDebug('Sort: No valid saved sort order or not logged in, defaulting to placeholder.');
     }
+    // END HIGHLIGHT HERE
+
     logDebug('UI Update: Sort select rendered. Sort select disabled: ' + sortSelect.disabled);
 }
 
