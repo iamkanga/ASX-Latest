@@ -58,7 +58,7 @@
                 <select id="watchlistSelect" class="dropdown-large">
                     <option value="" disabled selected>Watch List</option>
                     <!-- Options populated by JS -->
-                    <option value="cashBank">Cash & Bank</option> <!-- NEW: Option for Cash & Bank -->
+                    <option value="cashBank">Cash & Assets</option> <!-- NEW: Option for Cash & Assets -->
                 </select>
             </div>
 
@@ -251,19 +251,15 @@
             </div>
         </div>
 
-        <!-- NEW: Cash & Bank Section (Initially hidden) -->
-        <div id="cashBankSection" class="cash-bank-section app-hidden">
-            <h2>Cash & Bank Balances</h2>
-            <div id="cashCategoriesContainer" class="cash-categories-container">
-                <!-- Cash categories and their input fields will be dynamically added here by script.js -->
-                <p class="empty-message">No cash categories added yet. Click "Add Category" to get started!</p>
-            </div>
-            <div class="cash-actions">
-                <button id="addCashCategoryBtn" class="button">Add Category</button>
-                <button id="saveCashBalancesBtn" class="button primary-button">Save Balances</button>
+        <!-- NEW: Cash & Assets Section (Initially hidden) -->
+        <div id="cashAssetSection" class="cash-asset-section app-hidden">
+            <h2>Cash & Assets Balances</h2>
+            <div id="cashAssetListDisplay" class="cash-asset-list-display">
+                <!-- Cash asset cards/rows will be dynamically added here by script.js -->
+                <p class="empty-message">No cash assets added yet. Click the '+' icon to get started!</p>
             </div>
             <div class="total-cash-display">
-                <h3>Total Cash: <span id="totalCashDisplay">$0.00</span></h3>
+                <h3>Total Cash & Assets: <span id="totalCashDisplay">$0.00</span></h3>
             </div>
         </div>
     </main>
@@ -411,6 +407,47 @@
             <input type="text" id="editWatchlistName" required>
         </div>
     </div>
+
+    <!-- NEW: Cash Asset Form Modal (Input/Edit) -->
+    <div id="cashAssetFormModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header-with-icon">
+                <h2 id="cashAssetFormTitle">Add New Asset</h2>
+                <div class="modal-header-action-group">
+                    <span id="deleteCashAssetBtn" class="modal-action-icon danger hidden" title="Delete Asset"><i class="fas fa-trash-alt"></i></span>
+                    <span id="saveCashAssetBtn" class="modal-action-icon" title="Save Asset"><i class="fas fa-save"></i></span>
+                    <span class="close-button cash-asset-form-close-button">&times;</span>
+                </div>
+            </div>
+            <div class="modal-body-scrollable">
+                <label for="cashAssetName">Asset Name:</label>
+                <input type="text" id="cashAssetName" placeholder="e.g., Checking Account" required>
+
+                <label for="cashAssetBalance">Balance ($):</label>
+                <input type="number" id="cashAssetBalance" step="0.01" placeholder="e.g., 5000.00">
+            </div>
+        </div>
+    </div>
+
+    <!-- NEW: Cash Asset Detail Modal (Display) -->
+    <div id="cashAssetDetailModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header-with-icon">
+                <h2 id="modalCashAssetName">Asset Details</h2>
+                <div class="modal-header-action-group">
+                    <span id="deleteCashAssetFromDetailBtn" class="modal-action-icon danger" title="Delete Asset"><i class="fas fa-trash-alt"></i></span>
+                    <span id="editCashAssetFromDetailBtn" class="modal-action-icon" title="Edit Asset"><i class="fas fa-edit"></i></span>
+                    <span class="close-button">&times;</span>
+                </div>
+            </div>
+            <div class="modal-body-scrollable">
+                <p><strong>Asset Name:</strong> <span id="detailCashAssetName"></span></p>
+                <p><strong>Balance:</strong> <span id="detailCashAssetBalance"></span></p>
+                <p><strong>Last Updated:</strong> <span id="detailCashAssetLastUpdated"></span></p>
+            </div>
+        </div>
+    </div>
+
 
     <!-- Dividend Calculator Modal -->
     <div id="dividendCalculatorModal" class="modal">
