@@ -52,7 +52,7 @@ let originalWatchlistData = null; // Stores original watchlist data for dirty st
 // IMPORTANT: This URL is the exact string provided in your initial script.js file.
 // If CORS errors persist, the solution is to redeploy your Google Apps Script with "Anyone, even anonymous" access
 // and then update this constant with the NEW URL provided by Google Apps Script.
-const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzp7OjZL3zqvJ9wPsV9M-afm2wKeQPbIgGVv_juVpkaRllADESLwj7F4-S7YWYerau-/exec'; 
+const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzp7OjZL3zqvJ9wPsV9M-afm2wKeQPbIgGVv_juVpkaRllADESLwj7F-S7YWYerau-/exec'; 
 let livePrices = {}; // Stores live price data: {ASX_CODE: {live: price, prevClose: price, PE: value, High52: value, Low52: value, targetHit: boolean}}
 let livePriceFetchInterval = null; // To hold the interval ID for live price updates
 const LIVE_PRICE_FETCH_INTERVAL_MS = 5 * 60 * 1000; // Fetch every 5 minutes
@@ -170,7 +170,7 @@ const toggleCompactViewBtn = document.getElementById('toggleCompactViewBtn');
 const splashScreen = document.getElementById('splashScreen');
 const splashKangarooIcon = document.getElementById('splashKangarooIcon');
 const splashSignInBtn = document.getElementById('splashSignInBtn');
-const alertPanel = document.getElementById('alertPanel'); // NEW: Reference to the alert panel
+const alertPanel = document.getElementById('alertPanel'); // NEW: Reference to the alert panel (not in current HTML, but kept for consistency)
 const alertList = document.getElementById('alertList'); // NEW: Reference to the alert list container (not in current HTML, but kept for consistency)
 const closeAlertPanelBtn = document.getElementById('closeAlertPanelBtn'); // NEW: Reference to close alert panel button (not in current HTML, but kept for consistency)
 const clearAllAlertsBtn = document.getElementById('clearAllAlertsBtn'); // NEW: Reference to clear all alerts button (not in current HTML, but kept for consistency)
@@ -1107,6 +1107,15 @@ function renderWatchlistSelect() {
         watchlistSelect.appendChild(option);
     });
 
+    // Add the "Cash & Bank" option explicitly if it's not already in the HTML
+    // This assumes it's added in HTML, but as a fallback, we ensure it's there.
+    if (!watchlistSelect.querySelector(`option[value="${CASH_BANK_WATCHLIST_ID}"]`)) {
+        const cashBankOption = document.createElement('option');
+        cashBankOption.value = CASH_BANK_WATCHLIST_ID;
+        cashBankOption.textContent = 'Cash & Bank';
+        watchlistSelect.appendChild(cashBankOption);
+    }
+
     // Re-select the previously selected value if it still exists
     if (currentSelectedValue && (Array.from(watchlistSelect.options).some(opt => opt.value === currentSelectedValue))) {
         watchlistSelect.value = currentSelectedValue;
@@ -1120,6 +1129,7 @@ function renderWatchlistSelect() {
             watchlistSelect.value = ALL_SHARES_ID;
             currentSelectedWatchlistIds = [ALL_SHARES_ID];
         } else if (userWatchlists.length > 0) {
+            // Default to the first actual watchlist (which could be Cash & Bank if no others)
             watchlistSelect.value = userWatchlists[0].id;
             currentSelectedWatchlistIds = [userWatchlists[0].id];
         } else {
@@ -2036,14 +2046,14 @@ async function loadUserWatchlistsAndSettings() {
         const migratedSomething = await migrateOldSharesToWatchlist();
         if (!migratedSomething) {
             logDebug('Migration: No old shares to migrate/update, directly setting up shares listener for current watchlist.');
-            // await loadShares(); // This now sets _appDataLoaded and calls hideSplashScreenIfReady - moved to renderWatchlist
         }
         
-        // Load cash categories after watchlists are loaded
-        await loadCashCategories(); // This will also handle rendering the cash section if selected
+        // Load shares listener and cash categories listener once here
+        await loadShares(); // Sets up the listener for shares
+        await loadCashCategories(); // Sets up the listener for cash categories
 
         // Initial render based on selected watchlist (stock or cash)
-        renderWatchlist();
+        renderWatchlist(); // This will now correctly display based on the initial currentSelectedWatchlistIds
 
         // NEW: Indicate that data loading is complete for splash screen
         window._appDataLoaded = true;
@@ -2118,7 +2128,8 @@ async function fetchLivePrices() {
         });
         livePrices = newLivePrices;
         logDebug('Live Price: Live prices updated:', livePrices); 
-        renderWatchlist(); 
+        // No direct call to renderWatchlist here anymore, as onSnapshot for shares will trigger it after data updates.
+        // renderWatchlist(); // REMOVED: This was causing recursive calls.
         adjustMainContentPadding(); 
         // NEW: Indicate that live prices are loaded for splash screen
         window._livePricesLoaded = true;
@@ -2290,48 +2301,20 @@ async function loadShares() {
 
     if (!db || !currentUserId || !window.firestore) {
         console.warn('Shares: Firestore DB, User ID, or Firestore functions not available for loading shares. Clearing list.');
-        clearShareList();
+        allSharesData = []; // Clear data if services aren't available
+        // renderWatchlist(); // No need to call here, onAuthStateChanged will handle initial render
         // NEW: Indicate data loading failure for splash screen
         window._appDataLoaded = false;
         hideSplashScreen(); // Hide splash screen on critical failure
         return;
     }
-    if (loadingIndicator) loadingIndicator.style.display = 'block';
+    // No need to show loading indicator here, as it's handled by main app flow
+    // if (loadingIndicator) loadingIndicator.style.display = 'block';
     
     try {
         const sharesCol = window.firestore.collection(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/shares');
-        let q;
+        let q = window.firestore.query(sharesCol); // Listener for all shares, filtering done in renderWatchlist
 
-        // Only load shares if a stock-related watchlist is selected
-        if (currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
-            logDebug('Shares: Skipping shares listener because "Cash & Bank" is selected.');
-            allSharesData = []; // Clear shares data if switching to cash view
-            if (loadingIndicator) loadingIndicator.style.display = 'none';
-            window._appDataLoaded = true; // Mark as loaded even if skipped
-            hideSplashScreenIfReady();
-            return;
-        }
-
-        let effectiveWatchlistId = null;
-        if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID)) {
-            effectiveWatchlistId = ALL_SHARES_ID;
-        } else if (currentSelectedWatchlistIds.length === 1) { // A specific watchlist is selected
-            effectiveWatchlistId = currentSelectedWatchlistIds[0];
-        } else if (userWatchlists.length > 0) { // Fallback to first watchlist if nothing valid selected
-            effectiveWatchlistId = userWatchlists[0].id;
-        }
-
-        if (effectiveWatchlistId === ALL_SHARES_ID) {
-            q = window.firestore.query(sharesCol);
-            logDebug('Shares: Setting up real-time listener for ALL shares for user: ' + currentUserId);
-        } else if (effectiveWatchlistId) {
-            q = window.firestore.query(sharesCol, window.firestore.where('watchlistId', '==', effectiveWatchlistId));
-            logDebug('Shares: Setting up real-time listener for shares in watchlist: ' + effectiveWatchlistId);
-        } else {
-            q = window.firestore.query(sharesCol, window.firestore.where('watchlistId', '==', 'NO_WATCHLIST_ID_EXISTS'));
-            console.warn('Shares: No effective watchlist selected or available. Querying for non-existent ID to get empty results.');
-        }
-        
         unsubscribeShares = window.firestore.onSnapshot(q, async (querySnapshot) => { // ADD 'async' here
             logDebug('Firestore Listener: Shares snapshot received. Processing changes.');
             let fetchedShares = [];
@@ -2343,18 +2326,17 @@ async function loadShares() {
             allSharesData = fetchedShares;
             logDebug('Shares: Shares data updated from snapshot. Total shares: ' + allSharesData.length);
             
-            sortShares();
-            renderAsxCodeButtons();
+            sortShares(); // Sorts allSharesData and calls renderWatchlist
+            renderAsxCodeButtons(); // Re-renders ASX buttons based on allSharesData
             
+            // This is crucial: fetch live prices after shares data is updated
+            // fetchLivePrices will then call renderWatchlist and update the target banner
+            await fetchLivePrices(); 
+
             if (loadingIndicator) loadingIndicator.style.display = 'none';
             // NEW: Indicate that app data is loaded for splash screen
             window._appDataLoaded = true;
             hideSplashScreenIfReady();
-
-            // NEW: After allSharesData is updated, re-fetch live prices and update banner
-            await fetchLivePrices(); // Ensure live prices are fresh for all shares
-            // updateTargetHitBanner() and renderWatchlist() are called by fetchLivePrices() now.
-            logDebug('Target Alert: Banner updated after shares data change.');
 
         }, (error) => {
             console.error('Firestore Listener: Error listening to shares:', error);
@@ -2391,7 +2373,7 @@ async function loadCashCategories() {
     if (!db || !currentUserId || !window.firestore) {
         console.warn('Cash Categories: Firestore DB, User ID, or Firestore functions not available for loading cash categories. Clearing list.');
         userCashCategories = [];
-        renderCashCategories();
+        renderCashCategories(); // Render with empty data
         return;
     }
 
@@ -2410,11 +2392,11 @@ async function loadCashCategories() {
             userCashCategories = fetchedCategories.sort((a, b) => a.name.localeCompare(b.name));
             logDebug('Cash Categories: Data updated from snapshot. Total categories: ' + userCashCategories.length);
             
-            // Only render cash categories if the cashBank watchlist is currently selected
-            if (currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
-                renderCashCategories();
-            }
-            calculateTotalCash();
+            // No direct call to renderCashCategories here.
+            // renderWatchlist will be called after all data is loaded and will then call renderCashCategories if needed.
+            // Or, if data changes while already in cash view, renderWatchlist will be triggered by this snapshot.
+            renderWatchlist(); // This will re-render the current view, including cash if selected
+            calculateTotalCash(); // Ensure total is updated whenever categories change
 
         }, (error) => {
             console.error('Firestore Listener: Error listening to cash categories:', error);
@@ -2455,11 +2437,7 @@ function renderCashCategories() {
         nameInput.classList.add('category-name-input');
         nameInput.value = category.name || '';
         nameInput.placeholder = 'Category Name';
-        nameInput.addEventListener('input', () => {
-            // No dirty state check for cash categories yet, save button handles it
-            // This is for immediate UI update and to allow editing
-        });
-        nameInput.addEventListener('change', (event) => {
+        nameInput.addEventListener('change', (event) => { // Use 'change' for less frequent updates
             // Update the category name in userCashCategories array on change
             const updatedName = event.target.value.trim();
             const categoryToUpdate = userCashCategories.find(c => c.id === category.id);
@@ -2476,7 +2454,7 @@ function renderCashCategories() {
         balanceInput.classList.add('category-balance-input');
         balanceInput.value = Number(category.balance) !== null && !isNaN(Number(category.balance)) ? Number(category.balance).toFixed(2) : '';
         balanceInput.placeholder = '0.00';
-        balanceInput.addEventListener('input', () => {
+        balanceInput.addEventListener('input', () => { // Use 'input' for live calculation
             // Update the balance in userCashCategories array on input
             const updatedBalance = parseFloat(balanceInput.value);
             const categoryToUpdate = userCashCategories.find(c => c.id === category.id);
@@ -2529,6 +2507,7 @@ async function saveCashCategories() {
         return;
     }
 
+    // Validate category names before saving
     if (userCashCategories.some(cat => cat.name.trim() === '')) {
         showCustomAlert('Category names cannot be empty.');
         return;
@@ -2537,40 +2516,56 @@ async function saveCashCategories() {
     const batch = window.firestore.writeBatch(db);
     const cashCategoriesColRef = window.firestore.collection(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/cashCategories');
 
+    // Fetch current existing documents to determine what to update vs add
     const existingDocsSnapshot = await window.firestore.getDocs(cashCategoriesColRef);
     const existingDocIds = new Set();
-    existingDocsSnapshot.forEach(doc => existingDocIds.add(doc.id));
+    const existingDocsMap = new Map();
+    existingDocsSnapshot.forEach(doc => {
+        existingDocIds.add(doc.id);
+        existingDocsMap.set(doc.id, doc.data());
+    });
 
-    let categoriesSavedCount = 0;
+    let categoriesProcessedCount = 0;
 
     for (const category of userCashCategories) {
+        const currentBalance = isNaN(category.balance) || category.balance === null ? 0 : parseFloat(category.balance);
         const categoryData = {
             name: category.name.trim(),
-            balance: isNaN(category.balance) || category.balance === null ? 0 : parseFloat(category.balance),
+            balance: currentBalance,
             userId: currentUserId
         };
 
         if (category.id && existingDocIds.has(category.id)) {
-            // Update existing category
-            const docRef = window.firestore.doc(cashCategoriesColRef, category.id);
-            batch.update(docRef, categoryData);
-            logDebug('Firestore: Batching update for cash category: ' + category.name);
-            categoriesSavedCount++;
+            // Check if existing data has actually changed to avoid unnecessary writes
+            const oldData = existingDocsMap.get(category.id);
+            if (oldData && (oldData.name !== categoryData.name || oldData.balance !== categoryData.balance)) {
+                // Update existing category
+                const docRef = window.firestore.doc(cashCategoriesColRef, category.id);
+                batch.update(docRef, categoryData);
+                logDebug('Firestore: Batching update for cash category: ' + category.name + ' (ID: ' + category.id + ')');
+                categoriesProcessedCount++;
+            } else {
+                logDebug('Firestore: Skipping update for unchanged cash category: ' + category.name + ' (ID: ' + category.id + ')');
+            }
         } else if (category.name.trim() !== '') {
-            // Add new category (only if it has a name)
+            // Add new category (only if it has a name and is not an existing ID)
             const newDocRef = window.firestore.doc(cashCategoriesColRef); // Let Firestore generate ID
             batch.set(newDocRef, categoryData);
             logDebug('Firestore: Batching new cash category: ' + category.name);
-            categoriesSavedCount++;
+            categoriesProcessedCount++;
         }
     }
 
     try {
-        await batch.commit();
-        showCustomAlert('Cash balances saved successfully!', 1500);
-        logDebug('Firestore: Cash balances batch committed. ' + categoriesSavedCount + ' categories processed.');
-        // Re-load to ensure UI is perfectly in sync and temporary IDs are replaced
-        await loadCashCategories(); 
+        if (categoriesProcessedCount > 0) {
+            await batch.commit();
+            showCustomAlert('Cash balances saved successfully!', 1500);
+            logDebug('Firestore: Cash balances batch committed. ' + categoriesProcessedCount + ' categories processed.');
+        } else {
+            showCustomAlert('No changes to save for cash balances.', 1500);
+            logDebug('Firestore: No changes detected for cash balances. Skipping batch commit.');
+        }
+        // No need to call loadCashCategories() here, the onSnapshot listener will handle updates automatically
     } catch (error) {
         console.error('Firestore: Error saving cash categories:', error);
         showCustomAlert('Error saving cash balances: ' + error.message);
@@ -2602,6 +2597,7 @@ async function deleteCashCategory(categoryId) {
         await window.firestore.deleteDoc(categoryDocRef);
         showCustomAlert('Category deleted successfully!', 1500);
         logDebug('Firestore: Cash category (ID: ' + categoryId + ') deleted.');
+        // No need to call loadCashCategories() here, the onSnapshot listener will handle updates automatically
     } catch (error) {
         console.error('Firestore: Error deleting cash category:', error);
         showCustomAlert('Error deleting category: ' + error.message);
@@ -2763,7 +2759,7 @@ async function migrateOldSharesToWatchlist() {
             for (const item of sharesToUpdate) { await window.firestore.updateDoc(item.ref, item.data); }
             showCustomAlert('Migrated/Updated ' + sharesToUpdate.length + ' old shares.', 2000);
             logDebug('Migration: Migration complete. Setting up shares listener.');
-            await loadShares();
+            // No need to call loadShares here, the onSnapshot listener will handle updates automatically
             anyMigrationPerformed = true;
         } else {
             logDebug('Migration: No old shares found requiring migration or schema update.');
@@ -3369,14 +3365,8 @@ async function initializeAppLogic() {
             logDebug('Watchlist Select: Change event fired. New value: ' + event.target.value);
             currentSelectedWatchlistIds = [event.target.value];
             await saveLastSelectedWatchlistIds(currentSelectedWatchlistIds);
-            // Instead of directly calling loadShares, call renderWatchlist, which will then call loadShares/loadCashCategories
+            // Just render the watchlist. The listeners for shares/cash are already active.
             renderWatchlist();
-            // Load shares or cash categories based on the new selection
-            if (currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
-                await loadCashCategories();
-            } else {
-                await loadShares();
-            }
         });
     }
 
@@ -3591,7 +3581,9 @@ async function initializeAppLogic() {
             logDebug('Edit Watchlist Button Click: Watchlist to edit ID: ' + watchlistToEditId + ', Name: ' + watchlistToEditName);
 
             editWatchlistNameInput.value = watchlistToEditName;
-            const isDisabledDelete = userWatchlists.length <= 2; // Keep at least one real watchlist + Cash & Bank
+            // Keep at least one real watchlist + Cash & Bank
+            const actualWatchlistsCount = userWatchlists.filter(wl => wl.id !== ALL_SHARES_ID && wl.id !== CASH_BANK_WATCHLIST_ID).length;
+            const isDisabledDelete = actualWatchlistsCount <= 1; 
             setIconDisabled(deleteWatchlistInModalBtn, isDisabledDelete); 
             logDebug('Edit Watchlist: deleteWatchlistInModalBtn disabled: ' + isDisabledDelete);
             setIconDisabled(saveWatchlistNameBtn, true); // Disable save button initially
