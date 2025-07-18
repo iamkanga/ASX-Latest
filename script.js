@@ -956,11 +956,12 @@ function showShareDetails() {
 function sortShares() {
     const sortValue = currentSortOrder;
     if (!sortValue || sortValue === '') {
-        logDebug('Sort: Sort placeholder selected, no explicit sorting applied.');
-        renderWatchlist(); 
+        logDebug('Sort: Sort placeholder selected or empty sortValue, no explicit sorting applied.');
+        renderWatchlist();
         return;
     }
     const [field, order] = sortValue.split('-');
+    
     allSharesData.sort((a, b) => {
         // Handle sorting by percentage change
         if (field === 'percentageChange') {
@@ -970,38 +971,36 @@ function sortShares() {
 
             const livePriceDataB = livePrices[b.shareName.toUpperCase()];
             const livePriceB = livePriceDataB ? livePriceDataB.live : undefined;
-            const prevCloseB = livePriceDataB ? livePriceDataB.prevClose : undefined; // Corrected variable name
+            const prevCloseB = livePriceDataB ? livePriceDataB.prevClose : undefined;
 
             let percentageChangeA = null;
-            // Only calculate if both livePriceA and prevCloseA are valid numbers and prevCloseA is not zero
-            if (livePriceA !== undefined && livePriceA !== null && !isNaN(livePriceA) &&
-                prevCloseA !== undefined && prevCloseA !== null && !isNaN(prevCloseA) && prevCloseA !== 0) {
+            // Calculate percentageChangeA only if livePriceA, prevCloseA are valid numbers and prevCloseA is not zero
+            if (typeof livePriceA === 'number' && !isNaN(livePriceA) &&
+                typeof prevCloseA === 'number' && !isNaN(prevCloseA) && prevCloseA !== 0) {
                 percentageChangeA = ((livePriceA - prevCloseA) / prevCloseA) * 100;
             }
 
             let percentageChangeB = null;
-            // Only calculate if both livePriceB and prevCloseB are valid numbers and prevCloseB is not zero
-            if (livePriceB !== undefined && livePriceB !== null && !isNaN(livePriceB) &&
-                prevCloseB !== undefined && prevCloseB !== null && !isNaN(prevCloseB) && prevCloseB !== 0) { // Corrected variable name here
+            // Calculate percentageChangeB only if livePriceB, prevCloseB are valid numbers and prevCloseB is not zero
+            if (typeof livePriceB === 'number' && !isNaN(livePriceB) &&
+                typeof prevCloseB === 'number' && !isNaN(prevCloseB) && prevCloseB !== 0) {
                 percentageChangeB = ((livePriceB - prevCloseB) / prevCloseB) * 100;
             }
 
             // Debugging log for percentage sort
             logDebug('Sort Debug - Percentage: Comparing ' + a.shareName + ' (Change: ' + percentageChangeA + ') vs ' + b.shareName + ' (Change: ' + percentageChangeB + ')');
 
-
             // Handle null/NaN percentage changes to push them to the bottom
-            // If both are null, their relative order doesn't matter (return 0)
+            // This ensures shares without live price data or valid percentage change are always at the end.
             if (percentageChangeA === null && percentageChangeB === null) return 0;
-            // If A is null but B is a number, A goes to the bottom
-            if (percentageChangeA === null) return 1; 
-            // If B is null but A is a number, B goes to the bottom
-            if (percentageChangeB === null) return -1; 
+            if (percentageChangeA === null) return 1; // A goes to the bottom
+            if (percentageChangeB === null) return -1; // B goes to the bottom
 
-            // Now perform numerical comparison for non-null values
+            // Now perform numerical comparison for valid numbers
             return order === 'asc' ? percentageChangeA - percentageChangeB : percentageChangeB - percentageChangeA;
         }
 
+        // Existing sorting logic for other fields (no changes here)
         let valA = a[field];
         let valB = b[field];
 

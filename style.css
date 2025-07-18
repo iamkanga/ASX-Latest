@@ -3300,17 +3300,17 @@ main.container {
 
 /* Responsive Design */
 @media (max-width: 768px) {
+    /* ... (other existing mobile styles) ... */
 
-    /* Splash Screen Icon adjustments for mobile */
     .splash-icon {
-        /* Allow it to take up full width/height of splash screen while maintaining aspect ratio */
-        max-width: 100%;
-        max-height: 100%;
-        width: auto;  /* Let browser determine width based on aspect ratio */
-        height: auto; /* Let browser determine height based on aspect ratio */
-        object-fit: cover; /* Crucial to keep this to prevent text cropping */
+        width: 100%;
+        height: 100%;
+        object-fit: cover; /* THIS IS NOW 'COVER' */
         margin-bottom: 0;
     }
+
+    /* ... (rest of your mobile styles) ... */
+}
 
     /* Header and Header Top Row adjustments for mobile - MOVED INSIDE MEDIA QUERY */
     header {
