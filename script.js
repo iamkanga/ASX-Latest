@@ -41,7 +41,7 @@ const DEFAULT_WATCHLIST_ID_SUFFIX = 'default';
 let userWatchlists = []; // Stores all watchlists for the user
 let currentSelectedWatchlistIds = []; // Stores IDs of currently selected watchlists for display
 const ALL_SHARES_ID = 'all_shares_option'; // Special ID for the "Show All Shares" option
-const CASH_BANK_WATCHLIST_ID = 'cashBank'; // NEW: Special ID for the "Cash & Bank" option
+const CASH_BANK_WATCHLIST_ID = 'cashBank'; // NEW: Special ID for the "Cash & Assets" option
 let currentSortOrder = 'entryDate-desc'; // Default sort order
 let contextMenuOpen = false; // To track if the custom context menu is open
 let currentContextMenuShareId = null; // Stores the ID of the share that opened the context menu
@@ -82,6 +82,8 @@ let targetHitIconDismissed = false;
 
 // NEW: Global variable to store cash categories data
 let userCashCategories = [];
+let selectedCashAssetDocId = null; // NEW: To track selected cash asset for edit/detail
+let originalCashAssetData = null; // NEW: For dirty state check on cash asset form
 
 // --- UI Element References ---
 const appHeader = document.getElementById('appHeader'); // Reference to the main header
@@ -175,13 +177,28 @@ const alertList = document.getElementById('alertList'); // NEW: Reference to the
 const closeAlertPanelBtn = document.getElementById('closeAlertPanelBtn'); // NEW: Reference to close alert panel button (not in current HTML, but kept for consistency)
 const clearAllAlertsBtn = document.getElementById('clearAllAlertsBtn'); // NEW: Reference to clear all alerts button (not in current HTML, but kept for consistency)
 
-// NEW: Cash & Bank UI Elements
+// NEW: Cash & Assets UI Elements (Renamed from Cash & Bank)
 const stockWatchlistSection = document.getElementById('stockWatchlistSection');
-const cashBankSection = document.getElementById('cashBankSection');
-const cashCategoriesContainer = document.getElementById('cashCategoriesContainer');
-const addCashCategoryBtn = document.getElementById('addCashCategoryBtn');
-const saveCashBalancesBtn = document.getElementById('saveCashBalancesBtn');
+const cashAssetSection = document.getElementById('cashAssetSection'); // Renamed
+const cashAssetListDisplay = document.getElementById('cashAssetListDisplay'); // New container for display
 const totalCashDisplay = document.getElementById('totalCashDisplay');
+
+// NEW: Cash Asset Modals
+const cashAssetFormModal = document.getElementById('cashAssetFormModal');
+const cashAssetFormTitle = document.getElementById('cashAssetFormTitle');
+const cashAssetNameInput = document.getElementById('cashAssetName');
+const cashAssetBalanceInput = document.getElementById('cashAssetBalance');
+const saveCashAssetBtn = document.getElementById('saveCashAssetBtn');
+const deleteCashAssetBtn = document.getElementById('deleteCashAssetBtn');
+const cashAssetFormCloseButton = document.querySelector('.cash-asset-form-close-button'); // Specific close button for this modal
+
+const cashAssetDetailModal = document.getElementById('cashAssetDetailModal');
+const modalCashAssetName = document.getElementById('modalCashAssetName');
+const detailCashAssetName = document.getElementById('detailCashAssetName');
+const detailCashAssetBalance = document.getElementById('detailCashAssetBalance');
+const detailCashAssetLastUpdated = document.getElementById('detailCashAssetLastUpdated');
+const editCashAssetFromDetailBtn = document.getElementById('editCashAssetFromDetailBtn');
+const deleteCashAssetFromDetailBtn = document.getElementById('deleteCashAssetFromDetailBtn');
 
 
 let sidebarOverlay = document.querySelector('.sidebar-overlay');
@@ -194,6 +211,11 @@ if (!sidebarOverlay) {
 const formInputs = [
     shareNameInput, currentPriceInput, targetPriceInput,
     dividendAmountInput, frankingCreditsInput
+];
+
+// NEW: Cash Asset Form Inputs for dirty state check
+const cashAssetFormInputs = [
+    cashAssetNameInput, cashAssetBalanceInput
 ];
 
 
@@ -290,6 +312,29 @@ function closeModals() {
             }
         }
 
+    // NEW: Auto-save logic for cash asset form modal
+    if (cashAssetFormModal && cashAssetFormModal.style.display !== 'none') {
+        logDebug('Auto-Save: Cash Asset form modal is closing. Checking for unsaved changes.');
+        const currentCashAssetData = getCurrentCashAssetFormData();
+        const isAssetNameValid = currentCashAssetData.name.trim() !== '';
+
+        if (selectedCashAssetDocId) { // Existing cash asset
+            if (originalCashAssetData && !areCashAssetDataEqual(originalCashAssetData, currentCashAssetData)) {
+                logDebug('Auto-Save: Unsaved changes detected for existing cash asset. Attempting silent save.');
+                saveCashAssetData(true); // true indicates silent save
+            } else {
+                logDebug('Auto-Save: No changes detected for existing cash asset.');
+            }
+        } else { // New cash asset
+            if (isAssetNameValid) {
+                logDebug('Auto-Save: New cash asset detected with valid name. Attempting silent save.');
+                saveCashAssetData(true); // true indicates silent save
+            } else {
+                logDebug('Auto-Save: New cash asset has no name. Discarding changes.');
+            }
+        }
+    }
+
 
     document.querySelectorAll('.modal').forEach(modal => {
         if (modal) {
@@ -298,6 +343,8 @@ function closeModals() {
     });
     resetCalculator();
     deselectCurrentShare();
+    // NEW: Deselect cash asset when modals close
+    deselectCurrentCashAsset();
     if (autoDismissTimeout) { clearTimeout(autoDismissTimeout); autoDismissTimeout = null; }
     hideContextMenu();
     // NEW: Close the alert panel if open (alertPanel is not in current HTML, but kept for consistency)
@@ -351,8 +398,9 @@ function updateMainButtonsState(enable) {
     if (toggleCompactViewBtn) toggleCompactViewBtn.disabled = !enable; // NEW: Disable compact view toggle
     
     // NEW: Disable/enable buttons specific to cash section
-    if (addCashCategoryBtn) addCashCategoryBtn.disabled = !enable;
-    if (saveCashBalancesBtn) saveCashBalancesBtn.disabled = !enable;
+    // These buttons are now handled by the contextual change of addShareHeaderBtn
+    // if (addCashCategoryBtn) addCashCategoryBtn.disabled = !enable;
+    // if (saveCashBalancesBtn) saveCashBalancesBtn.disabled = !enable;
 
     logDebug('UI State: Sort Select Disabled: ' + (sortSelect ? sortSelect.disabled : 'N/A'));
     logDebug('UI State: Watchlist Select Disabled: ' + (watchlistSelect ? watchlistSelect.disabled : 'N/A'));
@@ -428,6 +476,30 @@ function deselectCurrentShare() {
     logDebug('Selection: Share deselected. selectedShareDocId is now null.');
 }
 
+// NEW: Select/Deselect for Cash Assets
+function selectCashAsset(assetId) {
+    logDebug('Selection: Attempting to select cash asset with ID: ' + assetId);
+    deselectCurrentCashAsset();
+
+    const assetItem = document.querySelector('.cash-asset-item[data-id="' + assetId + '"]');
+    if (assetItem) {
+        assetItem.classList.add('selected');
+        logDebug('Selection: Selected cash asset item for ID: ' + assetId);
+    }
+    selectedCashAssetDocId = assetId;
+}
+
+function deselectCurrentCashAsset() {
+    const currentlySelected = document.querySelectorAll('.cash-asset-item.selected');
+    logDebug('Selection: Attempting to deselect ' + currentlySelected.length + ' cash asset elements.');
+    currentlySelected.forEach(el => {
+        el.classList.remove('selected');
+    });
+    selectedCashAssetDocId = null;
+    logDebug('Selection: Cash asset deselected. selectedCashAssetDocId is now null.');
+}
+
+
 function addCommentSection(title = '', text = '') {
     // commentsFormContainer now correctly points to #dynamicCommentsArea
     if (!commentsFormContainer) { console.error('addCommentSection: commentsFormContainer (dynamicCommentsArea) not found.'); return; }
@@ -478,6 +550,19 @@ function clearForm() {
     logDebug('Form: Form fields cleared and selectedShareDocId reset. saveShareBtn disabled.');
 }
 
+// NEW: Clear Cash Asset Form
+function clearCashAssetForm() {
+    if (cashAssetNameInput) cashAssetNameInput.value = '';
+    if (cashAssetBalanceInput) cashAssetBalanceInput.value = '';
+    selectedCashAssetDocId = null;
+    originalCashAssetData = null;
+    if (deleteCashAssetBtn) {
+        deleteCashAssetBtn.classList.add('hidden');
+    }
+    setIconDisabled(saveCashAssetBtn, true); // Disable save button on clear
+    logDebug('Cash Asset Form: Form fields cleared and selectedCashAssetDocId reset. saveCashAssetBtn disabled.');
+}
+
 /**
  * Populates the 'Assign to Watchlist' dropdown in the share form modal.
  * Sets the default selection based on current view or existing share.
@@ -492,7 +577,7 @@ function populateShareWatchlistSelect(currentShareWatchlistId = null, isNewShare
 
     shareWatchlistSelect.innerHTML = '<option value="" disabled selected>Select a Watchlist</option>'; // Always start with placeholder
 
-    // Filter out the "Cash & Bank" option from the share watchlist dropdown
+    // Filter out the "Cash & Assets" option from the share watchlist dropdown
     const stockWatchlists = userWatchlists.filter(wl => wl.id !== CASH_BANK_WATCHLIST_ID);
 
     stockWatchlists.forEach(watchlist => {
@@ -504,7 +589,7 @@ function populateShareWatchlistSelect(currentShareWatchlistId = null, isNewShare
 
     if (isNewShare) {
         // If adding a new share:
-        // Pre-select if currently viewing a specific stock watchlist (not All Shares or Cash & Bank)
+        // Pre-select if currently viewing a specific stock watchlist (not All Shares or Cash & Assets)
         if (currentSelectedWatchlistIds.length === 1 && 
             currentSelectedWatchlistIds[0] !== ALL_SHARES_ID &&
             currentSelectedWatchlistIds[0] !== CASH_BANK_WATCHLIST_ID) {
@@ -513,7 +598,7 @@ function populateShareWatchlistSelect(currentShareWatchlistId = null, isNewShare
             shareWatchlistSelect.disabled = true; // Cannot change watchlist when adding from a specific one
             logDebug('Share Form: New share: Pre-selected and disabled watchlist to current view (' + stockWatchlists.find(wl => wl.id === currentSelectedWatchlistIds[0])?.name + ').');
         } else {
-            // If viewing "All Shares", "Cash & Bank", or multiple, force selection (dropdown remains enabled)
+            // If viewing "All Shares", "Cash & Assets", or multiple, force selection (dropdown remains enabled)
             shareWatchlistSelect.value = ''; // Ensure placeholder is selected
             shareWatchlistSelect.disabled = false;
             logDebug('Share Form: New share: User must select a watchlist.');
@@ -586,6 +671,40 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
     logDebug('Form: Opened edit form for share: ' + shareToEdit.shareName + ' (ID: ' + selectedShareDocId + ')');
 }
 
+// NEW: Show Edit Form for Cash Asset
+function showEditFormForCashAsset(assetIdToEdit = null) {
+    const targetAssetId = assetIdToEdit || selectedCashAssetDocId;
+
+    if (!targetAssetId) {
+        showCustomAlert('Please select a cash asset to edit.');
+        return;
+    }
+    const assetToEdit = userCashCategories.find(asset => asset.id === targetAssetId);
+    if (!assetToEdit) {
+        showCustomAlert('Selected cash asset not found.');
+        return;
+    }
+    selectedCashAssetDocId = targetAssetId;
+
+    cashAssetFormTitle.textContent = 'Edit Asset';
+    cashAssetNameInput.value = assetToEdit.name || '';
+    cashAssetBalanceInput.value = Number(assetToEdit.balance) !== null && !isNaN(Number(assetToEdit.balance)) ? Number(assetToEdit.balance).toFixed(2) : '';
+
+    if (deleteCashAssetBtn) {
+        deleteCashAssetBtn.classList.remove('hidden'); // Show delete button for existing assets
+        setIconDisabled(deleteCashAssetBtn, false);
+        logDebug('showEditFormForCashAsset: deleteCashAssetBtn shown and enabled.');
+    }
+
+    originalCashAssetData = getCurrentCashAssetFormData();
+    setIconDisabled(saveCashAssetBtn, true); // Save button disabled initially for editing
+    logDebug('showEditFormForCashAsset: saveCashAssetBtn initially disabled for dirty check.');
+
+    showModal(cashAssetFormModal);
+    cashAssetNameInput.focus();
+    logDebug('Cash Asset Form: Opened edit form for asset: ' + assetToEdit.name + ' (ID: ' + selectedCashAssetDocId + ')');
+}
+
 /**
  * Gathers all current data from the share form inputs.
  * @returns {object} An object representing the current state of the form.
@@ -613,6 +732,14 @@ function getCurrentFormData() {
         comments: comments,
         // Include the selected watchlist ID from the new dropdown
         watchlistId: shareWatchlistSelect ? shareWatchlistSelect.value : null
+    };
+}
+
+// NEW: Get Current Cash Asset Form Data
+function getCurrentCashAssetFormData() {
+    return {
+        name: cashAssetNameInput.value.trim(),
+        balance: parseFloat(cashAssetBalanceInput.value)
     };
 }
 
@@ -653,6 +780,24 @@ function areShareDataEqual(data1, data2) {
     return true;
 }
 
+// NEW: Compare Cash Asset Data
+function areCashAssetDataEqual(data1, data2) {
+    if (!data1 || !data2) return false;
+
+    let val1Name = data1.name;
+    let val2Name = data2.name;
+    if (val1Name !== val2Name) return false;
+
+    let val1Balance = data1.balance;
+    let val2Balance = data2.balance;
+    if (typeof val1Balance === 'number' && isNaN(val1Balance)) val1Balance = null;
+    if (typeof val2Balance === 'number' && isNaN(val2Balance)) val2Balance = null;
+
+    if (val1Balance !== val2Balance) return false;
+
+    return true;
+}
+
 /**
  * Checks the current state of the form against the original data (if editing)
  * and the share name validity, then enables/disables the save button accordingly.
@@ -685,6 +830,26 @@ function checkFormDirtyState() {
 
     setIconDisabled(saveShareBtn, !canSave);
     logDebug('Dirty State: Save button enabled: ' + canSave);
+}
+
+// NEW: Check Cash Asset Form Dirty State
+function checkCashAssetFormDirtyState() {
+    const currentData = getCurrentCashAssetFormData();
+    const isNameValid = currentData.name.trim() !== '';
+    let canSave = isNameValid;
+
+    if (selectedCashAssetDocId && originalCashAssetData) {
+        const isDirty = !areCashAssetDataEqual(originalCashAssetData, currentData);
+        canSave = canSave && isDirty;
+        if (!isDirty) {
+            logDebug('Dirty State: Existing cash asset: No changes detected, save disabled.');
+        }
+    } else if (!selectedCashAssetDocId) {
+        // For new cash assets, enable if name is valid
+    }
+
+    setIconDisabled(saveCashAssetBtn, !canSave);
+    logDebug('Dirty State: Cash Asset Save button enabled: ' + canSave);
 }
 
 /**
@@ -796,6 +961,60 @@ async function saveShareData(isSilent = false) {
         }
     }
     if (!isSilent) closeModals(); // Only close if not a silent save
+}
+
+// NEW: Save Cash Asset Data
+async function saveCashAssetData(isSilent = false) {
+    logDebug('Cash Asset Form: saveCashAssetData called.');
+
+    if (saveCashAssetBtn.classList.contains('is-disabled-icon') && isSilent) {
+        logDebug('Auto-Save: Save button is disabled (no changes or no valid name). Skipping silent save.');
+        return;
+    }
+
+    const assetName = cashAssetNameInput.value.trim();
+    if (!assetName) {
+        if (!isSilent) showCustomAlert('Asset Name is required!');
+        console.warn('Save Cash Asset: Asset Name is required. Skipping save.');
+        return;
+    }
+
+    const assetBalance = parseFloat(cashAssetBalanceInput.value);
+
+    const assetData = {
+        name: assetName,
+        balance: isNaN(assetBalance) ? 0 : assetBalance,
+        userId: currentUserId,
+        lastUpdated: new Date().toISOString()
+    };
+
+    if (selectedCashAssetDocId) {
+        try {
+            const assetDocRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/cashCategories', selectedCashAssetDocId);
+            await window.firestore.updateDoc(assetDocRef, assetData);
+            if (!isSilent) showCustomAlert('Asset \'' + assetName + '\' updated successfully!', 1500);
+            logDebug('Firestore: Cash Asset \'' + assetName + '\' (ID: ' + selectedCashAssetDocId + ') updated.');
+            originalCashAssetData = getCurrentCashAssetFormData();
+            setIconDisabled(saveCashAssetBtn, true);
+        } catch (error) {
+            console.error('Firestore: Error updating cash asset:', error);
+            if (!isSilent) showCustomAlert('Error updating asset: ' + error.message);
+        }
+    } else {
+        try {
+            const cashAssetsColRef = window.firestore.collection(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/cashCategories');
+            const newDocRef = await window.firestore.addDoc(cashAssetsColRef, assetData);
+            selectedCashAssetDocId = newDocRef.id;
+            if (!isSilent) showCustomAlert('Asset \'' + assetName + '\' added successfully!', 1500);
+            logDebug('Firestore: Cash Asset \'' + assetName + '\' added with ID: ' + newDocRef.id);
+            originalCashAssetData = getCurrentCashAssetFormData();
+            setIconDisabled(saveCashAssetBtn, true);
+        } catch (error) {
+            console.error('Firestore: Error adding cash asset:', error);
+            if (!isSilent) showCustomAlert('Error adding asset: ' + error.message);
+        }
+    }
+    if (!isSilent) closeModals();
 }
 
 
@@ -989,6 +1208,36 @@ function showShareDetails() {
     logDebug('Details: Displayed details for share: ' + share.shareName + ' (ID: ' + selectedShareDocId + ')');
 }
 
+// NEW: Show Cash Asset Details Modal
+function showCashAssetDetails() {
+    if (!selectedCashAssetDocId) {
+        showCustomAlert('Please select a cash asset to view details.');
+        return;
+    }
+    const asset = userCashCategories.find(a => a.id === selectedCashAssetDocId);
+    if (!asset) {
+        showCustomAlert('Selected cash asset not found.');
+        return;
+    }
+
+    modalCashAssetName.textContent = asset.name || 'N/A';
+    detailCashAssetName.textContent = asset.name || 'N/A';
+    detailCashAssetBalance.textContent = (typeof asset.balance === 'number' && !isNaN(asset.balance)) ? '$' + asset.balance.toFixed(2) : '$0.00';
+    detailCashAssetLastUpdated.textContent = formatDate(asset.lastUpdated) || 'N/A';
+
+    // Show/hide delete button based on whether it's an existing asset
+    if (selectedCashAssetDocId) {
+        deleteCashAssetFromDetailBtn.classList.remove('hidden');
+        setIconDisabled(deleteCashAssetFromDetailBtn, false);
+    } else {
+        deleteCashAssetFromDetailBtn.classList.add('hidden');
+        setIconDisabled(deleteCashAssetFromDetailBtn, true);
+    }
+
+    showModal(cashAssetDetailModal);
+    logDebug('Details: Displayed details for cash asset: ' + asset.name + ' (ID: ' + selectedCashAssetDocId + ')');
+}
+
 function sortShares() {
     const sortValue = currentSortOrder;
     if (!sortValue || sortValue === '') {
@@ -1097,7 +1346,7 @@ function renderWatchlistSelect() {
     watchlistSelect.appendChild(allSharesOption);
 
     userWatchlists.forEach(watchlist => {
-        // Skip adding "Cash & Bank" if it's already a hardcoded option in HTML
+        // Skip adding "Cash & Assets" if it's already a hardcoded option in HTML
         if (watchlist.id === CASH_BANK_WATCHLIST_ID) {
             return; 
         }
@@ -1107,12 +1356,12 @@ function renderWatchlistSelect() {
         watchlistSelect.appendChild(option);
     });
 
-    // Add the "Cash & Bank" option explicitly if it's not already in the HTML
+    // Add the "Cash & Assets" option explicitly if it's not already in the HTML
     // This assumes it's added in HTML, but as a fallback, we ensure it's there.
     if (!watchlistSelect.querySelector(`option[value="${CASH_BANK_WATCHLIST_ID}"]`)) {
         const cashBankOption = document.createElement('option');
         cashBankOption.value = CASH_BANK_WATCHLIST_ID;
-        cashBankOption.textContent = 'Cash & Bank';
+        cashBankOption.textContent = 'Cash & Assets'; // Renamed
         watchlistSelect.appendChild(cashBankOption);
     }
 
@@ -1129,7 +1378,7 @@ function renderWatchlistSelect() {
             watchlistSelect.value = ALL_SHARES_ID;
             currentSelectedWatchlistIds = [ALL_SHARES_ID];
         } else if (userWatchlists.length > 0) {
-            // Default to the first actual watchlist (which could be Cash & Bank if no others)
+            // Default to the first actual watchlist (which could be Cash & Assets if no others)
             watchlistSelect.value = userWatchlists[0].id;
             currentSelectedWatchlistIds = [userWatchlists[0].id];
         } else {
@@ -1566,29 +1815,35 @@ function renderWatchlist() {
     const selectedWatchlistId = currentSelectedWatchlistIds[0];
 
     // Hide both sections initially
-    stockWatchlistSection.classList.add('app-hidden');
-    cashBankSection.classList.add('app-hidden');
-    
+    if (stockWatchlistSection) stockWatchlistSection.classList.add('app-hidden');
+    if (cashAssetSection) cashAssetSection.classList.add('app-hidden'); // Renamed
+
     // Clear previous content
     clearShareListUI(); // Clears stock table and mobile cards
-    if (cashCategoriesContainer) cashCategoriesContainer.innerHTML = ''; // Clear cash categories
+    if (cashAssetListDisplay) cashAssetListDisplay.innerHTML = ''; // Clear cash categories
 
     if (selectedWatchlistId === CASH_BANK_WATCHLIST_ID) {
-        // Show Cash & Bank section
-        cashBankSection.classList.remove('app-hidden');
-        mainTitle.textContent = 'Cash & Bank';
-        renderCashCategories(); // Render cash categories
+        // Show Cash & Assets section
+        if (cashAssetSection) cashAssetSection.classList.remove('app-hidden'); // Renamed
+        mainTitle.textContent = 'Cash & Assets'; // Renamed
+        renderCashAssets(); // Render cash assets
         // Hide stock-specific UI elements
-        addShareHeaderBtn.classList.add('app-hidden');
-        sortSelect.classList.add('app-hidden');
-        refreshLivePricesBtn.classList.add('app-hidden');
-        toggleCompactViewBtn.classList.add('app-hidden');
-        asxCodeButtonsContainer.classList.add('app-hidden');
-        targetHitIconBtn.classList.add('app-hidden'); // Hide target icon for cash view
+        if (addShareHeaderBtn) addShareHeaderBtn.classList.add('app-hidden');
+        if (sortSelect) sortSelect.classList.add('app-hidden');
+        if (refreshLivePricesBtn) refreshLivePricesBtn.classList.add('app-hidden');
+        if (toggleCompactViewBtn) toggleCompactViewBtn.classList.add('app-hidden');
+        if (asxCodeButtonsContainer) asxCodeButtonsContainer.classList.add('app-hidden');
+        if (targetHitIconBtn) targetHitIconBtn.classList.add('app-hidden'); // Hide target icon for cash view
         stopLivePriceUpdates(); // Stop live price updates when in cash view
+
+        // NEW: Change "Add" button to "Add Cash Asset"
+        if (newShareBtn) newShareBtn.textContent = 'Add New Asset';
+        if (addShareHeaderBtn) addShareHeaderBtn.innerHTML = '<i class="fas fa-plus"></i>'; // Reset icon
+        if (addShareHeaderBtn) addShareHeaderBtn.title = 'Add New Asset'; // Set title
+        if (addShareHeaderBtn) addShareHeaderBtn.dataset.action = 'addCashAsset'; // Custom action for JS
     } else {
         // Show Stock Watchlist section
-        stockWatchlistSection.classList.remove('app-hidden');
+        if (stockWatchlistSection) stockWatchlistSection.classList.remove('app-hidden');
         // Update main title based on selected stock watchlist
         const selectedWatchlist = userWatchlists.find(wl => wl.id === selectedWatchlistId);
         if (selectedWatchlistId === ALL_SHARES_ID) {
@@ -1600,13 +1855,20 @@ function renderWatchlist() {
         }
 
         // Show stock-specific UI elements
-        addShareHeaderBtn.classList.remove('app-hidden');
-        sortSelect.classList.remove('app-hidden');
-        refreshLivePricesBtn.classList.remove('app-hidden');
-        toggleCompactViewBtn.classList.remove('app-hidden');
-        asxCodeButtonsContainer.classList.remove('app-hidden');
-        targetHitIconBtn.classList.remove('app-hidden'); // Show target icon for stock view
+        if (addShareHeaderBtn) addShareHeaderBtn.classList.remove('app-hidden');
+        if (sortSelect) sortSelect.classList.remove('app-hidden');
+        if (refreshLivePricesBtn) refreshLivePricesBtn.classList.remove('app-hidden');
+        if (toggleCompactViewBtn) toggleCompactViewBtn.classList.remove('app-hidden');
+        if (asxCodeButtonsContainer) asxCodeButtonsContainer.classList.remove('app-hidden');
+        if (targetHitIconBtn) targetHitIconBtn.classList.remove('app-hidden'); // Show target icon for stock view
         startLivePriceUpdates(); // Ensure live price updates are running for stock view
+
+        // NEW: Change "Add" button back to "Add New Share"
+        if (newShareBtn) newShareBtn.textContent = 'Add New Share';
+        if (addShareHeaderBtn) addShareHeaderBtn.innerHTML = '<i class="fas fa-plus"></i>'; // Reset icon
+        if (addShareHeaderBtn) addShareHeaderBtn.title = 'Add New Share'; // Set title
+        if (addShareHeaderBtn) addShareHeaderBtn.dataset.action = 'addShare'; // Custom action for JS
+
 
         let sharesToRender = [];
         if (selectedWatchlistId === ALL_SHARES_ID) {
@@ -1961,11 +2223,11 @@ async function loadUserWatchlistsAndSettings() {
         querySnapshot.forEach(doc => { userWatchlists.push({ id: doc.id, name: doc.data().name }); });
         logDebug('User Settings: Found ' + userWatchlists.length + ' existing watchlists.');
 
-        // Ensure "Cash & Bank" is always an option in `userWatchlists` for internal logic
+        // Ensure "Cash & Assets" is always an option in `userWatchlists` for internal logic
         // It's already hardcoded in HTML, but this ensures it's in our JS array for consistency.
         if (!userWatchlists.some(wl => wl.id === CASH_BANK_WATCHLIST_ID)) {
-            userWatchlists.push({ id: CASH_BANK_WATCHLIST_ID, name: 'Cash & Bank' });
-            logDebug('User Settings: Added "Cash & Bank" to internal watchlists array.');
+            userWatchlists.push({ id: CASH_BANK_WATCHLIST_ID, name: 'Cash & Assets' }); // Renamed
+            logDebug('User Settings: Added "Cash & Assets" to internal watchlists array.');
         }
 
         if (userWatchlists.length === 0) {
@@ -1974,10 +2236,10 @@ async function loadUserWatchlistsAndSettings() {
             userWatchlists.push({ id: getDefaultWatchlistId(currentUserId), name: DEFAULT_WATCHLIST_NAME });
             logDebug('User Settings: Created default watchlist.');
         }
-        // Sort only the user-defined watchlists, keep Cash & Bank at the bottom or handle its fixed position
+        // Sort only the user-defined watchlists, keep Cash & Assets at the bottom or handle its fixed position
         userWatchlists.sort((a, b) => {
-            if (a.id === CASH_BANK_WATCHLIST_ID) return 1; // Push Cash & Bank to end
-            if (b.id === CASH_BANK_WATCHLIST_ID) return -1; // Push Cash & Bank to end
+            if (a.id === CASH_BANK_WATCHLIST_ID) return 1; // Push Cash & Assets to end
+            if (b.id === CASH_BANK_WATCHLIST_ID) return -1; // Push Cash & Assets to end
             return a.name.localeCompare(b.name);
         });
 
@@ -1998,10 +2260,10 @@ async function loadUserWatchlistsAndSettings() {
             currentSelectedWatchlistIds = currentSelectedWatchlistIds.filter(id => 
                 id === ALL_SHARES_ID || id === CASH_BANK_WATCHLIST_ID || userWatchlists.some(wl => wl.id === id)
             );
-            // If "All Shares" is selected but no actual shares/watchlists exist (other than Cash & Bank), default to Cash & Bank or first
+            // If "All Shares" is selected but no actual shares/watchlists exist (other than Cash & Assets), default to Cash & Assets or first
             if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID) && userWatchlists.filter(wl => wl.id !== CASH_BANK_WATCHLIST_ID).length === 0) { 
                  currentSelectedWatchlistIds = [CASH_BANK_WATCHLIST_ID];
-                 logDebug('User Settings: Only Cash & Bank watchlist exists, defaulting to it.');
+                 logDebug('User Settings: Only Cash & Assets watchlist exists, defaulting to it.');
             }
             // If no valid watchlists are selected after filtering, default to first available
             if (currentSelectedWatchlistIds.length === 0) {
@@ -2009,7 +2271,7 @@ async function loadUserWatchlistsAndSettings() {
                 console.warn('User Settings: Saved watchlist IDs were invalid or empty, defaulting to first watchlist.');
             }
         } else {
-            // Default to the first actual watchlist (which could be Cash & Bank if no others)
+            // Default to the first actual watchlist (which could be Cash & Assets if no others)
             currentSelectedWatchlistIds = [userWatchlists[0].id];
             logDebug('User Settings: No saved watchlist preference, defaulting to first watchlist: ' + userWatchlists[0].name);
         }
@@ -2079,7 +2341,7 @@ async function fetchLivePrices() {
     console.log('Live Price: Attempting to fetch live prices...'); // Direct console.log as per user instruction
     // Only fetch live prices if a stock-related watchlist is selected
     if (currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
-        console.log('Live Price: Skipping live price fetch because "Cash & Bank" is selected.'); // Direct console.log
+        console.log('Live Price: Skipping live price fetch because "Cash & Assets" is selected.'); // Direct console.log
         window._livePricesLoaded = true; // Mark as loaded even if skipped for splash screen
         hideSplashScreenIfReady();
         return;
@@ -2161,7 +2423,7 @@ function startLivePriceUpdates() {
         livePriceFetchInterval = setInterval(fetchLivePrices, LIVE_PRICE_FETCH_INTERVAL_MS);
         logDebug('Live Price: Started live price updates every ' + (LIVE_PRICE_FETCH_INTERVAL_MS / 1000 / 60) + ' minutes.');
     } else {
-        logDebug('Live Price: Not starting live price updates because "Cash & Bank" is selected.');
+        logDebug('Live Price: Not starting live price updates because "Cash & Assets" is selected.');
     }
 }
 
@@ -2360,7 +2622,7 @@ async function loadShares() {
     }
 }
 
-// NEW: Cash & Bank Functions
+// NEW: Cash & Assets Functions
 
 /**
  * Sets up a real-time Firestore listener for cash categories.
@@ -2376,7 +2638,7 @@ async function loadCashCategories() {
     if (!db || !currentUserId || !window.firestore) {
         console.warn('Cash Categories: Firestore DB, User ID, or Firestore functions not available for loading cash categories. Clearing list.');
         userCashCategories = [];
-        renderCashCategories(); // Render with empty data
+        renderCashAssets(); // Render with empty data
         return;
     }
 
@@ -2395,7 +2657,7 @@ async function loadCashCategories() {
             userCashCategories = fetchedCategories.sort((a, b) => a.name.localeCompare(b.name));
             logDebug('Cash Categories: Data updated from snapshot. Total categories: ' + userCashCategories.length);
             
-            // Trigger a re-render of the overall watchlist, which will then call renderCashCategories if needed
+            // Trigger a re-render of the overall watchlist, which will then call renderCashAssets if needed
             renderWatchlist(); 
             calculateTotalCash(); // Ensure total is updated whenever categories change
 
@@ -2413,85 +2675,70 @@ async function loadCashCategories() {
 /**
  * Renders the cash categories in the UI.
  */
-function renderCashCategories() {
-    if (!cashCategoriesContainer) {
-        console.error('renderCashCategories: cashCategoriesContainer element not found.');
+function renderCashAssets() { // Renamed from renderCashCategories
+    if (!cashAssetListDisplay) {
+        console.error('renderCashAssets: cashAssetListDisplay element not found.');
         return;
     }
-    cashCategoriesContainer.innerHTML = ''; // Clear existing content
+    cashAssetListDisplay.innerHTML = ''; // Clear existing content
 
     if (userCashCategories.length === 0) {
         const emptyMessage = document.createElement('p');
         emptyMessage.classList.add('empty-message');
-        emptyMessage.textContent = 'No cash categories added yet. Click "Add Category" to get started!';
-        cashCategoriesContainer.appendChild(emptyMessage);
+        emptyMessage.textContent = 'No cash assets added yet. Click the \'+\' icon to get started!';
+        cashAssetListDisplay.appendChild(emptyMessage);
         return;
     }
 
-    userCashCategories.forEach(category => {
-        const categoryItem = document.createElement('div');
-        categoryItem.classList.add('cash-category-item');
-        categoryItem.dataset.id = category.id;
+    userCashCategories.forEach(asset => {
+        const assetItem = document.createElement('div');
+        assetItem.classList.add('cash-asset-item');
+        assetItem.dataset.id = asset.id;
 
-        const nameInput = document.createElement('input');
-        nameInput.type = 'text';
-        nameInput.classList.add('category-name-input');
-        nameInput.value = category.name || '';
-        nameInput.placeholder = 'Category Name';
-        nameInput.addEventListener('change', (event) => { // Use 'change' for less frequent updates
-            // Update the category name in userCashCategories array on change
-            const updatedName = event.target.value.trim();
-            const categoryToUpdate = userCashCategories.find(c => c.id === category.id);
-            if (categoryToUpdate) {
-                categoryToUpdate.name = updatedName;
-            }
-            // The save button will handle persistence to Firestore
+        const nameSpan = document.createElement('span');
+        nameSpan.classList.add('cash-asset-item-name');
+        nameSpan.textContent = asset.name || '';
+        assetItem.appendChild(nameSpan);
+
+        const balanceSpan = document.createElement('span');
+        balanceSpan.classList.add('cash-asset-item-balance');
+        balanceSpan.textContent = (typeof asset.balance === 'number' && !isNaN(asset.balance)) ? '$' + asset.balance.toFixed(2) : '$0.00';
+        assetItem.appendChild(balanceSpan);
+
+        const actionsDiv = document.createElement('div');
+        actionsDiv.classList.add('cash-asset-item-actions');
+        
+        const editIcon = document.createElement('span');
+        editIcon.classList.add('edit-icon');
+        editIcon.innerHTML = '<i class="fas fa-edit"></i>';
+        editIcon.title = 'Edit Asset';
+        editIcon.addEventListener('click', (event) => {
+            event.stopPropagation(); // Prevent opening detail modal
+            selectCashAsset(asset.id);
+            showEditFormForCashAsset(asset.id);
         });
-        categoryItem.appendChild(nameInput);
+        actionsDiv.appendChild(editIcon);
 
-        const balanceInput = document.createElement('input');
-        balanceInput.type = 'number';
-        balanceInput.step = '0.01';
-        balanceInput.classList.add('category-balance-input');
-        balanceInput.value = Number(category.balance) !== null && !isNaN(Number(category.balance)) ? Number(category.balance).toFixed(2) : '';
-        balanceInput.placeholder = '0.00';
-        balanceInput.addEventListener('input', () => { // Use 'input' for live calculation
-            // Update the balance in userCashCategories array on input
-            const updatedBalance = parseFloat(balanceInput.value);
-            const categoryToUpdate = userCashCategories.find(c => c.id === category.id);
-            if (categoryToUpdate) {
-                categoryToUpdate.balance = isNaN(updatedBalance) ? null : updatedBalance;
-            }
-            calculateTotalCash(); // Update total live
+        const deleteIcon = document.createElement('span');
+        deleteIcon.classList.add('delete-icon');
+        deleteIcon.innerHTML = '<i class="fas fa-trash-alt"></i>';
+        deleteIcon.title = 'Delete Asset';
+        deleteIcon.addEventListener('click', (event) => {
+            event.stopPropagation(); // Prevent opening detail modal
+            deleteCashCategory(asset.id); // Direct delete
         });
-        categoryItem.appendChild(balanceInput);
+        actionsDiv.appendChild(deleteIcon);
 
-        const deleteButton = document.createElement('button');
-        deleteButton.classList.add('delete-category-btn');
-        deleteButton.innerHTML = '<i class="fas fa-trash-alt"></i>';
-        deleteButton.title = 'Delete Category';
-        // NEW: Direct deletion without confirmation
-        deleteButton.addEventListener('click', async () => {
-            logDebug('Cash Categories: Delete button clicked for category ID: ' + category.id);
-            if (!db || !currentUserId || !window.firestore) {
-                showCustomAlert('Firestore not available. Cannot delete cash category.');
-                return;
-            }
-            try {
-                const categoryDocRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/cashCategories', category.id);
-                await window.firestore.deleteDoc(categoryDocRef);
-                showCustomAlert('Category deleted successfully!', 1500);
-                logDebug('Firestore: Cash category (ID: ' + category.id + ') deleted.');
-            } catch (error) {
-                console.error('Firestore: Error deleting cash category:', error);
-                showCustomAlert('Error deleting category: ' + error.message);
-            }
+        assetItem.appendChild(actionsDiv);
+        cashAssetListDisplay.appendChild(assetItem);
+
+        // Add click listener to open detail modal
+        assetItem.addEventListener('click', () => {
+            selectCashAsset(asset.id);
+            showCashAssetDetails();
         });
-        categoryItem.appendChild(deleteButton);
-
-        cashCategoriesContainer.appendChild(categoryItem);
     });
-    logDebug('Cash Categories: UI rendered.');
+    logDebug('Cash Assets: UI rendered.');
     calculateTotalCash(); // Calculate total after rendering
 }
 
@@ -2499,94 +2746,25 @@ function renderCashCategories() {
  * Adds a new empty cash category to the UI and `userCashCategories` array.
  */
 function addCashCategoryUI() {
-    const newCategory = {
-        id: 'new_' + Date.now(), // Temporary ID for UI, will get real ID from Firestore
-        name: '',
-        balance: null
-    };
-    userCashCategories.push(newCategory);
-    renderCashCategories(); // Re-render to show the new empty input
-    // Scroll to the new input field
-    const newElement = cashCategoriesContainer.querySelector(`[data-id="${newCategory.id}"] .category-name-input`);
-    if (newElement) {
-        newElement.focus();
-        newElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-    logDebug('Cash Categories: Added new category to UI.');
+    // This function is now only for triggering the modal, not directly adding to UI array
+    logDebug('UI: Add New Asset button clicked. Opening form modal.');
+    clearCashAssetForm();
+    cashAssetFormTitle.textContent = 'Add New Asset';
+    if (deleteCashAssetBtn) { deleteCashAssetBtn.classList.add('hidden'); } // Hide delete for new entries
+    setIconDisabled(saveCashAssetBtn, true); // Disable save button initially
+    originalCashAssetData = getCurrentCashAssetFormData(); // Set initial state for dirty check
+    showModal(cashAssetFormModal);
+    cashAssetNameInput.focus();
+    checkCashAssetFormDirtyState(); // Check dirty state immediately after opening
 }
 
 /**
  * Saves all current cash categories and their balances to Firestore.
  */
 async function saveCashCategories() {
-    if (!db || !currentUserId || !window.firestore) {
-        showCustomAlert('Firestore not available. Cannot save cash balances.');
-        return;
-    }
-
-    // Validate category names before saving
-    if (userCashCategories.some(cat => cat.name.trim() === '')) {
-        showCustomAlert('Category names cannot be empty.');
-        return;
-    }
-
-    const batch = window.firestore.writeBatch(db);
-    const cashCategoriesColRef = window.firestore.collection(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/cashCategories');
-
-    // Fetch current existing documents to determine what to update vs add
-    const existingDocsSnapshot = await window.firestore.getDocs(cashCategoriesColRef);
-    const existingDocIds = new Set();
-    const existingDocsMap = new Map();
-    existingDocsSnapshot.forEach(doc => {
-        existingDocIds.add(doc.id);
-        existingDocsMap.set(doc.id, doc.data());
-    });
-
-    let categoriesProcessedCount = 0;
-
-    for (const category of userCashCategories) {
-        const currentBalance = isNaN(category.balance) || category.balance === null ? 0 : parseFloat(category.balance);
-        const categoryData = {
-            name: category.name.trim(),
-            balance: currentBalance,
-            userId: currentUserId
-        };
-
-        if (category.id && existingDocIds.has(category.id)) {
-            // Check if existing data has actually changed to avoid unnecessary writes
-            const oldData = existingDocsMap.get(category.id);
-            if (oldData && (oldData.name !== categoryData.name || oldData.balance !== categoryData.balance)) {
-                // Update existing category
-                const docRef = window.firestore.doc(cashCategoriesColRef, category.id);
-                batch.update(docRef, categoryData);
-                logDebug('Firestore: Batching update for cash category: ' + category.name + ' (ID: ' + category.id + ')');
-                categoriesProcessedCount++;
-            } else {
-                logDebug('Firestore: Skipping update for unchanged cash category: ' + category.name + ' (ID: ' + category.id + ')');
-            }
-        } else if (category.name.trim() !== '') {
-            // Add new category (only if it has a name and is not an existing ID)
-            const newDocRef = window.firestore.doc(cashCategoriesColRef); // Let Firestore generate ID
-            batch.set(newDocRef, categoryData);
-            logDebug('Firestore: Batching new cash category: ' + category.name);
-            categoriesProcessedCount++;
-        }
-    }
-
-    try {
-        if (categoriesProcessedCount > 0) {
-            await batch.commit();
-            showCustomAlert('Cash balances saved successfully!', 1500);
-            logDebug('Firestore: Cash balances batch committed. ' + categoriesProcessedCount + ' categories processed.');
-        } else {
-            showCustomAlert('No changes to save for cash balances.', 1500);
-            logDebug('Firestore: No changes detected for cash balances. Skipping batch commit.');
-        }
-        // No need to call loadCashCategories() here, the onSnapshot listener will handle updates automatically
-    } catch (error) {
-        console.error('Firestore: Error saving cash categories:', error);
-        showCustomAlert('Error saving cash balances: ' + error.message);
-    }
+    // This function is now replaced by saveCashAssetData which handles single asset save
+    // This function is no longer called by a button, but kept for reference if needed
+    console.warn('saveCashCategories function is deprecated. Use saveCashAssetData instead.');
 }
 
 /**
@@ -2603,11 +2781,12 @@ async function deleteCashCategory(categoryId) {
     try {
         const categoryDocRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/cashCategories', categoryId);
         await window.firestore.deleteDoc(categoryDocRef);
-        showCustomAlert('Category deleted successfully!', 1500);
-        logDebug('Firestore: Cash category (ID: ' + categoryId + ') deleted.');
+        showCustomAlert('Asset deleted successfully!', 1500);
+        logDebug('Firestore: Cash asset (ID: ' + categoryId + ') deleted.');
+        closeModals(); // Close any open modals after deletion
     } catch (error) {
         console.error('Firestore: Error deleting cash category:', error);
-        showCustomAlert('Error deleting category: ' + error.message);
+        showCustomAlert('Error deleting asset: ' + error.message);
     }
 }
 
@@ -2676,7 +2855,7 @@ function updateMainTitle() {
     if (selectedValue === ALL_SHARES_ID) {
         mainTitle.textContent = 'All Shares';
     } else if (selectedValue === CASH_BANK_WATCHLIST_ID) {
-        mainTitle.textContent = 'Cash & Bank';
+        mainTitle.textContent = 'Cash & Assets'; // Renamed
     } else {
         mainTitle.textContent = selectedText;
     }
@@ -2886,7 +3065,7 @@ function exportWatchlistToCSV() {
     
     // Do not export cash data via this function
     if (currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
-        showCustomAlert('Cash & Bank data cannot be exported via this function. Please switch to a stock watchlist.', 3000);
+        showCustomAlert('Cash & Assets data cannot be exported via this function. Please switch to a stock watchlist.', 3000);
         return;
     }
 
@@ -3104,6 +3283,8 @@ async function initializeAppLogic() {
     if (shareContextMenu) shareContextMenu.style.setProperty('display', 'none', 'important');
     if (targetHitIconBtn) targetHitIconBtn.style.display = 'none'; // Ensure icon is hidden initially
     if (alertPanel) alertPanel.style.display = 'none'; // NEW: Ensure alert panel is hidden initially
+    if (cashAssetFormModal) cashAssetFormModal.style.setProperty('display', 'none', 'important'); // NEW
+    if (cashAssetDetailModal) cashAssetDetailModal.style.setProperty('display', 'none', 'important'); // NEW
 
     // Service Worker Registration
     if ('serviceWorker' in navigator) {
@@ -3158,6 +3339,17 @@ async function initializeAppLogic() {
         }
     });
 
+    // NEW: Add event listeners to cash asset form inputs for dirty state checking
+    cashAssetFormInputs.forEach(input => {
+        if (input) {
+            input.addEventListener('input', checkCashAssetFormDirtyState);
+            input.addEventListener('change', checkCashAssetFormDirtyState);
+            input.addEventListener('focus', function() {
+                this.select();
+            });
+        }
+    });
+
     // NEW: Add event listener for the shareWatchlistSelect for dirty state checking
     if (shareWatchlistSelect) {
         shareWatchlistSelect.addEventListener('change', checkFormDirtyState);
@@ -3188,6 +3380,24 @@ async function initializeAppLogic() {
         }
     });
 
+    // NEW: Cash Asset Form input navigation with Enter key
+    cashAssetFormInputs.forEach((input, index) => {
+        if (input) {
+            input.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    if (index === cashAssetFormInputs.length - 1) {
+                        if (saveCashAssetBtn && !saveCashAssetBtn.classList.contains('is-disabled-icon')) {
+                            saveCashAssetBtn.click();
+                        }
+                    } else {
+                        if (cashAssetFormInputs[index + 1]) cashAssetFormInputs[index + 1].focus();
+                    }
+                }
+            });
+        }
+    });
+
     // Add Comment Section Button
     if (addCommentSectionBtn) {
         setIconDisabled(addCommentSectionBtn, false);
@@ -3205,6 +3415,12 @@ async function initializeAppLogic() {
                 clearForm(); // This will reset originalShareData and selectedShareDocId, preventing auto-save
                 closeModals(); // Now closeModals won't trigger auto-save for this form
             });
+        } else if (button.classList.contains('cash-asset-form-close-button')) { // NEW: Specific for cash asset form's 'X'
+            button.addEventListener('click', () => {
+                logDebug('Cash Asset Form: Close button (X) clicked. Clearing form before closing to cancel edits.');
+                clearCashAssetForm();
+                closeModals();
+            });
         } else {
             button.addEventListener('click', closeModals); // Other modals still close normally
         }
@@ -3215,7 +3431,8 @@ async function initializeAppLogic() {
         if (event.target === shareDetailModal || event.target === dividendCalculatorModal ||
             event.target === shareFormSection || event.target === customDialogModal ||
             event.target === calculatorModal || event.target === addWatchlistModal ||
-            event.target === manageWatchlistModal || event.target === alertPanel) { // NEW: Include alertPanel here
+            event.target === manageWatchlistModal || event.target === alertPanel || // Existing
+            event.target === cashAssetFormModal || event.target === cashAssetDetailModal) { // NEW: Cash asset modals
             closeModals();
         }
 
@@ -3391,15 +3608,20 @@ async function initializeAppLogic() {
     if (newShareBtn) {
         newShareBtn.addEventListener('click', () => {
             logDebug('UI: New Share button (sidebar) clicked.');
-            clearForm();
-            formTitle.textContent = 'Add New Share';
-            if (deleteShareBtn) { deleteShareBtn.classList.add('hidden'); }
-            populateShareWatchlistSelect(null, true); // true indicates new share
-            showModal(shareFormSection);
-            shareNameInput.focus();
+            // Check if we are in Cash & Assets view
+            if (currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
+                addCashCategoryUI(); // Open Cash Asset form modal
+            } else {
+                clearForm();
+                formTitle.textContent = 'Add New Share';
+                if (deleteShareBtn) { deleteShareBtn.classList.add('hidden'); }
+                populateShareWatchlistSelect(null, true); // true indicates new share
+                showModal(shareFormSection);
+                shareNameInput.focus();
+                addCommentSection(); // ADDED: Add an initial empty comment section for new shares
+                checkFormDirtyState(); // Check dirty state immediately after opening for new share
+            }
             toggleAppSidebar(false);
-            addCommentSection(); // ADDED: Add an initial empty comment section for new shares
-            checkFormDirtyState(); // Check dirty state immediately after opening for new share
         });
     }
 
@@ -3407,14 +3629,19 @@ async function initializeAppLogic() {
     if (addShareHeaderBtn) {
         addShareHeaderBtn.addEventListener('click', () => {
             logDebug('UI: Add Share button (header) clicked.');
-            clearForm();
-            formTitle.textContent = 'Add New Share';
-            if (deleteShareBtn) { deleteShareBtn.classList.add('hidden'); }
-            populateShareWatchlistSelect(null, true); // true indicates new share
-            showModal(shareFormSection);
-            shareNameInput.focus();
-            addCommentSection(); // ADDED: Add an initial empty comment section for new shares
-            checkFormDirtyState(); // Check dirty state immediately after opening for new share
+            // Check if we are in Cash & Assets view
+            if (currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
+                addCashCategoryUI(); // Open Cash Asset form modal
+            } else {
+                clearForm();
+                formTitle.textContent = 'Add New Share';
+                if (deleteShareBtn) { deleteShareBtn.classList.add('hidden'); }
+                populateShareWatchlistSelect(null, true); // true indicates new share
+                showModal(shareFormSection);
+                shareNameInput.focus();
+                addCommentSection(); // ADDED: Add an initial empty comment section for new shares
+                checkFormDirtyState(); // Check dirty state immediately after opening for new share
+            }
         });
     }
 
@@ -3572,7 +3799,7 @@ async function initializeAppLogic() {
             logDebug('UI: Edit Watchlist button clicked.');
             let watchlistToEditId = watchlistSelect.value;
 
-            // Prevent editing "All Shares" or "Cash & Bank"
+            // Prevent editing "All Shares" or "Cash & Assets"
             if (watchlistToEditId === ALL_SHARES_ID || watchlistToEditId === CASH_BANK_WATCHLIST_ID) {
                 showCustomAlert('Cannot edit this special watchlist.', 2000);
                 return;
@@ -3588,9 +3815,9 @@ async function initializeAppLogic() {
             logDebug('Edit Watchlist Button Click: Watchlist to edit ID: ' + watchlistToEditId + ', Name: ' + watchlistToEditName);
 
             editWatchlistNameInput.value = watchlistToEditName;
-            // Keep at least one real watchlist + Cash & Bank
-            const actualWatchlists = userWatchlists.filter(wl => wl.id !== ALL_SHARES_ID && wl.id !== CASH_BANK_WATCHLIST_ID);
-            const isDisabledDelete = actualWatchlists.length <= 1; 
+            // Keep at least one real watchlist + Cash & Assets
+            const actualWatchlistsCount = userWatchlists.filter(wl => wl.id !== ALL_SHARES_ID && wl.id !== CASH_BANK_WATCHLIST_ID).length;
+            const isDisabledDelete = actualWatchlistsCount <= 1; 
             setIconDisabled(deleteWatchlistInModalBtn, isDisabledDelete); 
             logDebug('Edit Watchlist: deleteWatchlistInModalBtn disabled: ' + isDisabledDelete);
             setIconDisabled(saveWatchlistNameBtn, true); // Disable save button initially
@@ -3636,13 +3863,13 @@ async function initializeAppLogic() {
 
             let watchlistToDeleteId = watchlistSelect.value;
 
-            // Prevent deleting "All Shares" or "Cash & Bank"
+            // Prevent deleting "All Shares" or "Cash & Assets"
             if (watchlistToDeleteId === ALL_SHARES_ID || watchlistToDeleteId === CASH_BANK_WATCHLIST_ID) {
                 showCustomAlert('Cannot delete this special watchlist.', 2000);
                 return;
             }
 
-            // Ensure at least one actual watchlist remains (excluding Cash & Bank)
+            // Ensure at least one actual watchlist remains (excluding Cash & Assets)
             const actualWatchlists = userWatchlists.filter(wl => wl.id !== ALL_SHARES_ID && wl.id !== CASH_BANK_WATCHLIST_ID);
             if (actualWatchlists.length <= 1) {
                 showCustomAlert('Cannot delete the last stock watchlist. Please create another stock watchlist first.', 3000);
@@ -4020,18 +4247,61 @@ async function initializeAppLogic() {
         });
     }
 
-    // NEW: Cash & Bank Event Listeners
-    if (addCashCategoryBtn) {
-        addCashCategoryBtn.addEventListener('click', () => {
-            logDebug('UI: Add Cash Category button clicked.');
-            addCashCategoryUI();
+    // NEW: Cash Asset Form Save Button
+    if (saveCashAssetBtn) {
+        saveCashAssetBtn.addEventListener('click', async () => {
+            logDebug('Cash Asset Form: Save button clicked.');
+            if (saveCashAssetBtn.classList.contains('is-disabled-icon')) {
+                showCustomAlert('Asset name or balance cannot be empty/unchanged.');
+                console.warn('Save Cash Asset: Save button was disabled, preventing action.');
+                return;
+            }
+            await saveCashAssetData(false);
         });
     }
 
-    if (saveCashBalancesBtn) {
-        saveCashBalancesBtn.addEventListener('click', () => {
-            logDebug('UI: Save Cash Balances button clicked.');
-            saveCashCategories();
+    // NEW: Cash Asset Form Delete Button
+    if (deleteCashAssetBtn) {
+        deleteCashAssetBtn.addEventListener('click', async () => {
+            logDebug('Cash Asset Form: Delete button clicked (Direct Delete).');
+            if (deleteCashAssetBtn.classList.contains('is-disabled-icon')) {
+                console.warn('Delete Cash Asset: Delete button was disabled, preventing action.');
+                return;
+            }
+            if (selectedCashAssetDocId) {
+                await deleteCashCategory(selectedCashAssetDocId); // Reusing deleteCashCategory
+            } else {
+                showCustomAlert('No asset selected for deletion.');
+            }
+        });
+    }
+
+    // NEW: Cash Asset Detail Modal Edit Button
+    if (editCashAssetFromDetailBtn) {
+        editCashAssetFromDetailBtn.addEventListener('click', () => {
+            logDebug('Cash Asset Details: Edit button clicked.');
+            if (editCashAssetFromDetailBtn.classList.contains('is-disabled-icon')) {
+                console.warn('Edit Cash Asset From Detail: Edit button was disabled, preventing action.');
+                return;
+            }
+            hideModal(cashAssetDetailModal);
+            showEditFormForCashAsset(); // Opens the form modal for editing
+        });
+    }
+
+    // NEW: Cash Asset Detail Modal Delete Button
+    if (deleteCashAssetFromDetailBtn) {
+        deleteCashAssetFromDetailBtn.addEventListener('click', async () => {
+            logDebug('Cash Asset Details: Delete button clicked (Direct Delete).');
+            if (deleteCashAssetFromDetailBtn.classList.contains('is-disabled-icon')) {
+                console.warn('Delete Cash Asset From Detail: Delete button was disabled, preventing action.');
+                return;
+            }
+            if (selectedCashAssetDocId) {
+                await deleteCashCategory(selectedCashAssetDocId); // Reusing deleteCashCategory
+            } else {
+                showCustomAlert('No asset selected for deletion.');
+            }
         });
     }
 
@@ -4128,7 +4398,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 clearShareList();
                 clearWatchlistUI();
                 userCashCategories = []; // Clear cash data on logout
-                if (cashCategoriesContainer) cashCategoriesContainer.innerHTML = ''; // Clear cash UI
+                if (cashAssetListDisplay) cashAssetListDisplay.innerHTML = ''; // Clear cash UI
                 if (totalCashDisplay) totalCashDisplay.textContent = '$0.00'; // Reset total cash
                 if (loadingIndicator) loadingIndicator.style.display = 'none';
                 applyTheme('system-default');
