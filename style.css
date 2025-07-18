@@ -3112,9 +3112,9 @@ table td.live-price-cell.negative-change {
 /* NEW: Target Hit Notification Icon (bottom right) */
 .target-hit-icon-btn {
     display: none; /* Hidden by default, shown by JS when shares hit target */
-    position: fixed;
-    bottom: 20px; /* Consistent padding from bottom */
-    right: 20px; /* Consistent padding from right */
+    position: fixed; /* Ensures it stays in viewport */
+    bottom: 20px; /* Padding from bottom */
+    right: 20px; /* Padding from right */
     z-index: 99; /* Below modals, above scroll-to-top if needed */
     background-color: var(--alert-icon-bg); /* Use alert background color */
     color: var(--alert-icon-text); /* Use alert text color */
@@ -3178,8 +3178,8 @@ table td.live-price-cell.negative-change {
 .alert-panel {
     display: none; /* Hidden by default, shown by JS */
     flex-direction: column;
-    position: fixed;
-    bottom: 80px; /* Position above the target hit icon button */
+    position: fixed; /* Ensures it stays in viewport */
+    bottom: 80px; /* Position above the target hit icon button (20px button + 20px gap + 40px button = 80px) */
     right: 20px; /* Align with the icon button */
     width: 300px; /* Fixed width for the panel */
     max-height: 70vh; /* Max height to prevent overflow, allow scrolling */
