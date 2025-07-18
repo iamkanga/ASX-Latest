@@ -2381,7 +2381,6 @@ async function loadShares() {
             showCustomAlert('Error loading shares in real-time: ' + error.message);
             if (loadingIndicator) loadingIndicator.style.display = 'none';
             // NEW: Indicate data loading failure for splash screen
-            window._appDataLoaded = false;
             hideSplashScreen(); // Hide splash screen on critical failure
         });
 
@@ -3129,7 +3128,8 @@ async function initializeAppLogic() {
                     showCustomAlert('Share deleted successfully!', 1500);
                     logDebug('Firestore: Share (ID: ' + selectedShareDocId + ') deleted.');
                     closeModals();
-                } catch (error) {
+                }
+                catch (error) {
                     console.error('Firestore: Error deleting share:', error);
                     showCustomAlert('Error deleting share: ' + error.message);
                 }
