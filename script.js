@@ -1182,7 +1182,7 @@ if (currentUserId && savedSortOrder && options.some(option => option.value === s
 
 function addShareToTable(share) {
     if (!shareTableBody) { console.error('addShareToTable: shareTableBody element not found.'); return; }
-    const row = shareTableBody.insertRow();
+    const row = shareTableBody.insertCell();
     row.dataset.docId = share.id;
     
     // Determine the price change class for the entire row
