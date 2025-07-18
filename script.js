@@ -1082,7 +1082,7 @@ function renderSortSelect() {
         { value: 'shareName-desc', text: 'Code (Z-A)' },
         { value: 'dividendAmount-desc', text: 'Dividend (High-Low)' },
         { value: 'dividendAmount-asc', text: 'Dividend (Low-High)' },
-        // NEW: Options for percentage change
+        // Options for percentage change
         { value: 'percentageChange-desc', text: 'Percentage Change (High-Low)' },
         { value: 'percentageChange-asc', text: 'Percentage Change (Low-High)' }
     ];
@@ -1093,15 +1093,22 @@ function renderSortSelect() {
         sortSelect.appendChild(optionElement);
     });
 
-    if (currentUserId && savedSortOrder && Array.from(sortSelect.options).some(option => option.value === savedSortOrder)) {
-        sortSelect.value = savedSortOrder;
-        currentSortOrder = savedSortOrder;
-        logDebug('Sort: Applied saved sort order: ' + currentSortOrder);
-    } else {
-        sortSelect.value = ''; 
-        currentSortOrder = '';
-        logDebug('Sort: No valid saved sort order or not logged in, defaulting to placeholder.');
-    }
+    // START HIGHLIGHT HERE
+    let defaultSortValue = 'entryDate-desc'; // Always fall back to a valid sort option
+
+if (currentUserId && savedSortOrder && options.some(option => option.value === savedSortOrder)) {
+    // If there's a valid saved sort order, use it
+    sortSelect.value = savedSortOrder;
+    currentSortOrder = savedSortOrder;
+    logDebug('Sort: Applied saved sort order: ' + currentSortOrder);
+} else {
+    // If no valid saved sort order, or not logged in, default to 'entryDate-desc'
+    sortSelect.value = defaultSortValue;
+    currentSortOrder = defaultSortValue;
+    logDebug('Sort: No valid saved sort order or not logged in, defaulting to: ' + defaultSortValue);
+}
+    // END HIGHLIGHT HERE
+
     logDebug('UI Update: Sort select rendered. Sort select disabled: ' + sortSelect.disabled);
 }
 
@@ -3111,7 +3118,13 @@ async function initializeAppLogic() {
                 showCustomAlert('Watchlist \'' + watchlistToDeleteName + '\' and its shares deleted successfully!', 2000);
                 closeModals();
 
-                await loadUserWatchlistsAndSettings();
+                // --- NEW CODE START ---
+                // After deleting a watchlist, switch the current view to "All Shares"
+                currentSelectedWatchlistIds = [ALL_SHARES_ID];
+                await saveLastSelectedWatchlistIds(currentSelectedWatchlistIds); // Save this preference
+                // --- NEW CODE END ---
+
+                await loadUserWatchlistsAndSettings(); // This will re-render everything correctly
             } catch (error) {
                 console.error('Firestore: Error deleting watchlist:', error);
                 showCustomAlert('Error deleting watchlist: ' + error.message);
@@ -3230,32 +3243,27 @@ async function initializeAppLogic() {
         }
     }
 
-    // Theme Toggle Button
+    // Locate the themeToggleBtn event listener.
+// Copy the code from this locate comment to the start of the next section (like "Scroll to Top Button" or "Calculator Buttons"), then paste.
+
+    // Theme Toggle Button (Random Selection)
     if (themeToggleBtn) {
         themeToggleBtn.addEventListener('click', () => {
-            logDebug('Theme Debug: Theme toggle button clicked.');
-            logDebug('Theme Debug: currentActiveTheme before toggle: ' + currentActiveTheme);
-            
-            let nextIndex;
-            // If currentActiveTheme is a custom theme, find its index
-            if (CUSTOM_THEMES.includes(currentActiveTheme)) {
-                let currentIndex = CUSTOM_THEMES.indexOf(currentActiveTheme);
-                nextIndex = (currentIndex + 1);
-            } else {
-                // If not a custom theme (system-default, light, dark), start from the first custom theme
-                nextIndex = 0;
-            }
+            logDebug('Theme Debug: Random Theme Toggle button clicked.');
+            if (CUSTOM_THEMES.length > 0) {
+                let randomIndex;
+                let newThemeName;
+                do {
+                    randomIndex = Math.floor(Math.random() * CUSTOM_THEMES.length);
+                    newThemeName = CUSTOM_THEMES[randomIndex];
+                } while (newThemeName === currentActiveTheme && CUSTOM_THEMES.length > 1); // Ensure a different theme if possible
 
-            let nextThemeName;
-            if (nextIndex < CUSTOM_THEMES.length) {
-                nextThemeName = CUSTOM_THEMES[nextIndex];
+                logDebug('Theme Debug: Selected random nextThemeName: ' + newThemeName);
+                applyTheme(newThemeName);
             } else {
-                // If we've cycled past the last custom theme, go to system-default
-                nextThemeName = 'system-default';
+                logDebug('Theme Debug: No custom themes defined. Defaulting to system-default.');
+                applyTheme('system-default'); // Fallback if no custom themes defined
             }
-            
-            logDebug('Theme Debug: Calculated nextIndex: ' + nextIndex + ', nextThemeName: ' + nextThemeName);
-            applyTheme(nextThemeName);
         });
     }
 
@@ -3273,17 +3281,60 @@ async function initializeAppLogic() {
         });
     }
 
-    // Revert to Default Theme Button
+    // Revert to Default Theme Button (Toggle Light/Dark)
     if (revertToDefaultThemeBtn) {
-        revertToDefaultThemeBtn.addEventListener('click', (event) => {
-            logDebug('Theme: Revert to default theme button clicked.');
-            event.preventDefault();
-            applyTheme('system-default');
-            logDebug('Theme: Reverted to default light/dark theme via button.');
+        revertToDefaultThemeBtn.addEventListener('click', async (event) => {
+            logDebug('Theme Debug: Revert to Default Theme button clicked (now toggling Light/Dark).');
+            event.preventDefault(); // Prevent default button behavior
+
+            const body = document.body;
+            let targetTheme;
+
+            // Remove all custom theme classes and the data-theme attribute
+            body.className = body.className.split(' ').filter(c => !c.startsWith('theme-')).join(' ');
+            body.removeAttribute('data-theme');
+            localStorage.removeItem('selectedTheme'); // Clear custom theme preference
+
+            // Determine target theme based on current state (only considering light/dark classes)
+            if (currentActiveTheme === 'light') {
+                targetTheme = 'dark';
+                body.classList.add('dark-theme');
+                logDebug('Theme: Toggled from Light to Dark theme.');
+            } else if (currentActiveTheme === 'dark') {
+                targetTheme = 'light';
+                body.classList.remove('dark-theme');
+                logDebug('Theme: Toggled from Dark to Light theme.');
+            } else { // This handles the very first click, or when currentActiveTheme is 'system-default' or any custom theme
+                const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (systemPrefersDark) {
+                    targetTheme = 'light';
+                    body.classList.remove('dark-theme');
+                    logDebug('Theme: First click from system-default/custom: Toggled from System Dark to Light.');
+                } else {
+                    targetTheme = 'dark';
+                    body.classList.add('dark-theme');
+                    logDebug('Theme: First click from system-default/custom: Toggled from System Light to Dark.');
+                }
+            }
+            
+            currentActiveTheme = targetTheme; // Update global tracking variable
+            localStorage.setItem('theme', targetTheme); // Save preference for light/dark
+            
+            // Save preference to Firestore
+            if (currentUserId && db && window.firestore) {
+                const userProfileDocRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/profile/settings');
+                try {
+                    await window.firestore.setDoc(userProfileDocRef, { lastTheme: targetTheme }, { merge: true });
+                    logDebug('Theme: Saved explicit Light/Dark theme preference to Firestore: ' + targetTheme);
+                } catch (error) {
+                    console.error('Theme: Error saving explicit Light/Dark theme preference to Firestore:', error);
+                }
+            }
+            updateThemeToggleAndSelector(); // Update dropdown (it should now show "No Custom Theme")
         });
     }
 
-    // System Dark Mode Preference Listener
+    // System Dark Mode Preference Listener (Keep this as is)
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
         if (currentActiveTheme === 'system-default') {
             if (event.matches) {
@@ -3295,6 +3346,9 @@ async function initializeAppLogic() {
             updateThemeToggleAndSelector();
         }
     });
+
+// (Keep the rest of initializeAppLogic() as is below this section)
+
 
     // Scroll to Top Button
     if (scrollToTopBtn) {
