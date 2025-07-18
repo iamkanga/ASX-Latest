@@ -72,6 +72,9 @@ let sharesAtTargetPrice = [];
 // NEW: Global variable to track the current mobile view mode ('default' or 'compact')
 let currentMobileViewMode = 'default'; 
 
+// NEW: Global variable to track if the target hit icon is dismissed for the current session
+let targetHitIconDismissed = false;
+
 // --- UI Element References ---
 const appHeader = document.getElementById('appHeader'); // Reference to the main header
 const mainContainer = document.querySelector('main.container'); // Reference to the main content container
@@ -159,6 +162,10 @@ const toggleCompactViewBtn = document.getElementById('toggleCompactViewBtn');
 const splashScreen = document.getElementById('splashScreen');
 const splashKangarooIcon = document.getElementById('splashKangarooIcon');
 const splashSignInBtn = document.getElementById('splashSignInBtn');
+const alertPanel = document.getElementById('alertPanel'); // NEW: Reference to the alert panel
+const alertList = document.getElementById('alertList'); // NEW: Reference to the alert list container
+const closeAlertPanelBtn = document.getElementById('closeAlertPanelBtn'); // NEW: Reference to close alert panel button
+const clearAllAlertsBtn = document.getElementById('clearAllAlertsBtn'); // NEW: Reference to clear all alerts button
 
 
 let sidebarOverlay = document.querySelector('.sidebar-overlay');
@@ -277,6 +284,8 @@ function closeModals() {
     deselectCurrentShare();
     if (autoDismissTimeout) { clearTimeout(autoDismissTimeout); autoDismissTimeout = null; }
     hideContextMenu();
+    // NEW: Close the alert panel if open
+    if (alertPanel) hideModal(alertPanel);
     logDebug('Modal: All modals closed.');
 }
 
@@ -1093,7 +1102,6 @@ function renderSortSelect() {
         sortSelect.appendChild(optionElement);
     });
 
-    // START HIGHLIGHT HERE
     let defaultSortValue = 'entryDate-desc'; // Always fall back to a valid sort option
 
 if (currentUserId && savedSortOrder && options.some(option => option.value === savedSortOrder)) {
@@ -1107,8 +1115,6 @@ if (currentUserId && savedSortOrder && options.some(option => option.value === s
     currentSortOrder = defaultSortValue;
     logDebug('Sort: No valid saved sort order or not logged in, defaulting to: ' + defaultSortValue);
 }
-    // END HIGHLIGHT HERE
-
     logDebug('UI Update: Sort select rendered. Sort select disabled: ' + sortSelect.disabled);
 }
 
@@ -2067,6 +2073,78 @@ function updateTargetHitBanner() {
     }
 }
 
+// NEW: Function to render alerts in the alert panel (currently empty, but planned for future)
+function renderAlertsInPanel() {
+    if (!alertList) {
+        console.error('Alert Panel: Alert list element not found.');
+        return;
+    }
+
+    alertList.innerHTML = ''; // Clear existing alerts
+
+    if (sharesAtTargetPrice.length === 0) {
+        const noAlertsMessage = document.createElement('p');
+        noAlertsMessage.classList.add('no-alerts-message');
+        noAlertsMessage.textContent = 'No active alerts.';
+        alertList.appendChild(noAlertsMessage);
+        return;
+    }
+
+    sharesAtTargetPrice.forEach(share => {
+        const livePriceData = livePrices[share.shareName.toUpperCase()];
+        const livePrice = livePriceData ? livePriceData.live : 'N/A';
+        const targetPrice = share.targetPrice !== null && !isNaN(parseFloat(share.targetPrice)) ? parseFloat(share.targetPrice) : 'N/A';
+
+        const alertItem = document.createElement('div');
+        alertItem.classList.add('alert-item');
+        alertItem.dataset.shareId = share.id; // Store share ID for future actions
+
+        alertItem.innerHTML = `
+            <div class="alert-item-header">
+                <span><strong>${share.shareName.toUpperCase()}</strong></span>
+                <span class="price-info">Live: $${typeof livePrice === 'number' ? livePrice.toFixed(2) : livePrice} | Target: $${typeof targetPrice === 'number' ? targetPrice.toFixed(2) : targetPrice}</span>
+            </div>
+            <div class="alert-item-body">
+                <p>${share.shareName.toUpperCase()} has reached its target price!</p>
+            </div>
+            <div class="alert-item-actions">
+                <button class="dismiss-btn">Dismiss</button>
+                <button class="snooze-btn">Snooze</button>
+            </div>
+        `;
+        alertList.appendChild(alertItem);
+
+        // Add event listeners for dismiss and snooze buttons (future implementation)
+        const dismissBtn = alertItem.querySelector('.dismiss-btn');
+        const snoozeBtn = alertItem.querySelector('.snooze-btn');
+
+        if (dismissBtn) {
+            dismissBtn.addEventListener('click', () => {
+                logDebug('Alert Panel: Dismiss button clicked for share: ' + share.shareName);
+                // Future: Implement logic to dismiss individual alert (e.g., add to a temporary dismissed list)
+                alertItem.remove(); // For now, just remove from display
+                if (alertList.children.length === 0) {
+                    const noAlertsMessage = document.createElement('p');
+                    noAlertsMessage.classList.add('no-alerts-message');
+                    noAlertsMessage.textContent = 'No active alerts.';
+                    alertList.appendChild(noAlertsMessage);
+                }
+                updateTargetHitBanner(); // Update the main icon count
+            });
+        }
+
+        if (snoozeBtn) {
+            snoozeBtn.addEventListener('click', () => {
+                logDebug('Alert Panel: Snooze button clicked for share: ' + share.shareName);
+                // Future: Implement snooze options and logic
+                showCustomAlert('Snooze functionality coming soon!', 1500);
+            });
+        }
+    });
+    logDebug('Alert Panel: Alerts rendered in panel.');
+}
+
+
 /**
  * Toggles the mobile view mode between default (single column) and compact (two columns).
  * Updates the UI to reflect the new mode and saves preference to local storage.
@@ -2644,6 +2722,7 @@ async function initializeAppLogic() {
     if (calculatorModal) calculatorModal.style.setProperty('display', 'none', 'important');
     if (shareContextMenu) shareContextMenu.style.setProperty('display', 'none', 'important');
     if (targetHitIconBtn) targetHitIconBtn.style.display = 'none'; // Ensure icon is hidden initially
+    if (alertPanel) alertPanel.style.display = 'none'; // NEW: Ensure alert panel is hidden initially
 
     // Service Worker Registration
     if ('serviceWorker' in navigator) {
@@ -2755,7 +2834,7 @@ async function initializeAppLogic() {
         if (event.target === shareDetailModal || event.target === dividendCalculatorModal ||
             event.target === shareFormSection || event.target === customDialogModal ||
             event.target === calculatorModal || event.target === addWatchlistModal ||
-            event.target === manageWatchlistModal) {
+            event.target === manageWatchlistModal || event.target === alertPanel) { // NEW: Include alertPanel here
             closeModals();
         }
 
@@ -2803,6 +2882,52 @@ async function initializeAppLogic() {
                 splashSignInBtn.disabled = false; // Re-enable on error
                 if (splashKangarooIcon) splashKangarooIcon.classList.remove('pulsing'); // Stop animation on error
             }
+        });
+    }
+
+    // NEW: Target hit icon button listener for dismissal
+    if (targetHitIconBtn) {
+        targetHitIconBtn.addEventListener('click', (event) => {
+            logDebug('Target Alert: Icon button clicked. Dismissing icon.');
+            targetHitIconDismissed = true; // Set flag to true
+            updateTargetHitBanner(); // Re-run to hide the icon
+            showCustomAlert('Alerts dismissed for this session.', 1500); // Optional: Provide user feedback
+        });
+    }
+
+    // NEW: Target hit icon button listener to open alert panel (if you decide to use it later)
+    // For now, this is commented out as the user wants simple dismissal on click.
+    /*
+    if (targetHitIconBtn) {
+        targetHitIconBtn.addEventListener('click', () => {
+            logDebug('Target Alert: Icon button clicked. Toggling alert panel.');
+            if (alertPanel.style.display === 'flex') {
+                hideModal(alertPanel);
+            } else {
+                renderAlertsInPanel(); // Render alerts before showing
+                showModal(alertPanel);
+            }
+        });
+    }
+    */
+
+    // NEW: Close alert panel button listener
+    if (closeAlertPanelBtn) {
+        closeAlertPanelBtn.addEventListener('click', () => {
+            logDebug('Alert Panel: Close button clicked.');
+            hideModal(alertPanel);
+        });
+    }
+
+    // NEW: Clear All Alerts button listener
+    if (clearAllAlertsBtn) {
+        clearAllAlertsBtn.addEventListener('click', () => {
+            logDebug('Alert Panel: Clear All button clicked.');
+            sharesAtTargetPrice = []; // Clear all alerts in memory
+            renderAlertsInPanel(); // Re-render to show "No active alerts"
+            updateTargetHitBanner(); // Update the main icon count
+            showCustomAlert('All alerts cleared for this session.', 1500);
+            hideModal(alertPanel); // Close the panel after clearing
         });
     }
 
@@ -3242,9 +3367,6 @@ async function initializeAppLogic() {
         }
     }
 
-    // Locate the themeToggleBtn event listener.
-// Copy the code from this locate comment to the start of the next section (like "Scroll to Top Button" or "Calculator Buttons"), then paste.
-
     // Theme Toggle Button (Random Selection)
     if (themeToggleBtn) {
         themeToggleBtn.addEventListener('click', () => {
@@ -3345,9 +3467,6 @@ async function initializeAppLogic() {
             updateThemeToggleAndSelector();
         }
     });
-
-// (Keep the rest of initializeAppLogic() as is below this section)
-
 
     // Scroll to Top Button
     if (scrollToTopBtn) {
@@ -3471,16 +3590,6 @@ async function initializeAppLogic() {
             logDebug('UI: Toggle Compact View button clicked.');
             toggleMobileViewMode();
             toggleAppSidebar(false); // Close sidebar after action
-        });
-    }
-
-
-    // NEW: Target hit icon button listener
-    if (targetHitIconBtn) {
-        targetHitIconBtn.addEventListener('click', (event) => {
-            logDebug('Target Alert: Icon button clicked. Showing alerted shares.');
-            const alertedShareNames = sharesAtTargetPrice.map(s => s.shareName).join(', ');
-            showCustomAlert('Shares at target: ' + (alertedShareNames || 'None'), 3000);
         });
     }
 
