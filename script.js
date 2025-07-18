@@ -76,9 +76,6 @@ const snoozedAlerts = new Map();
 // NEW: Global variable to track the current mobile view mode ('default' or 'compact')
 let currentMobileViewMode = 'default'; 
 
-// NEW: Flag to prevent immediate closing of alert panel due to global click listener
-let isAlertPanelOpening = false;
-
 
 // --- UI Element References ---
 const appHeader = document.getElementById('appHeader'); // Reference to the main header
@@ -234,9 +231,6 @@ function showAlertPanel() {
         // Force reflow to ensure transition works from initial display:none
         alertPanel.offsetHeight; 
         alertPanel.classList.add('open');
-        isAlertPanelOpening = true; // Set flag when opening
-        // Reset flag after a short delay to allow click event to complete
-        setTimeout(() => { isAlertPanelOpening = false; }, 100); 
         logDebug('Alerts: Showing alert panel.');
     }
 }
@@ -2926,14 +2920,7 @@ async function initializeAppLogic() {
 
     // Global click listener to close modals/context menu if clicked outside
     window.addEventListener('click', (event) => {
-        // Exclude alertPanel from general modal closing logic to prevent immediate re-closing
-        // Only close alert panel if it's open, and the click is NOT inside the panel, and the click is NOT on the target hit icon.
-        // Also, use the isAlertPanelOpening flag to prevent immediate closing right after opening.
-        if (alertPanel && alertPanel.classList.contains('open') && 
-            !alertPanel.contains(event.target) && !targetHitIconBtn.contains(event.target) && !isAlertPanelOpening) {
-            hideAlertPanel();
-        }
-
+        // Close modals if click is outside their content
         if (event.target === shareDetailModal || event.target === dividendCalculatorModal ||
             event.target === shareFormSection || event.target === customDialogModal ||
             event.target === calculatorModal || event.target === addWatchlistModal ||
@@ -2941,9 +2928,20 @@ async function initializeAppLogic() {
             closeModals();
         }
 
+        // Close context menu if click is outside it
         if (contextMenuOpen && shareContextMenu && !shareContextMenu.contains(event.target)) {
             hideContextMenu();
         }
+
+        // NEW: Close alert panel if clicked outside (but not on the bell icon itself or the panel itself)
+        // This is crucial to allow the panel to stay open after clicking the icon
+        // Defer this check to the next event loop cycle to allow the icon's click event to fully process
+        setTimeout(() => {
+            if (alertPanel && alertPanel.classList.contains('open') && 
+                !alertPanel.contains(event.target) && !targetHitIconBtn.contains(event.target)) {
+                hideAlertPanel();
+            }
+        }, 0); // Defer to the next tick of the event loop
     });
 
     // Google Auth Button (Sign In/Out) - This button is removed from index.html.
