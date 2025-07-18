@@ -2059,11 +2059,14 @@ function stopLivePriceUpdates() {
 
 // NEW: Function to update the target hit notification icon
 function updateTargetHitBanner() {
-    // UPDATED: Filter allSharesData for target hits, regardless of current watchlist view
+    // UPDATED: Filter shares in the CURRENTLY SELECTED WATCHLIST for target hits
     sharesAtTargetPrice = allSharesData.filter(share => {
+        // Check if the share belongs to the currently selected watchlists (excluding 'All Shares' for this check)
+        const isShareInCurrentView = currentSelectedWatchlistIds.includes(ALL_SHARES_ID) || currentSelectedWatchlistIds.includes(share.watchlistId);
+        
         const livePriceData = livePrices[share.shareName.toUpperCase()];
-        // Ensure livePriceData exists and has targetHit property, and that it's not snoozed (future)
-        return livePriceData && livePriceData.targetHit;
+        // Ensure livePriceData exists and has targetHit property
+        return isShareInCurrentView && livePriceData && livePriceData.targetHit;
     });
 
     if (!targetHitIconBtn || !targetHitIconCount) {
@@ -2076,11 +2079,11 @@ function updateTargetHitBanner() {
         targetHitIconCount.textContent = sharesAtTargetPrice.length;
         targetHitIconBtn.style.display = 'flex'; // Show the icon
         targetHitIconCount.style.display = 'block'; // Show the count badge
-        logDebug('Target Alert: Showing icon: ' + sharesAtTargetPrice.length + ' shares hit target (global check).');
+        logDebug('Target Alert: Showing icon: ' + sharesAtTargetPrice.length + ' shares hit target (watchlist-specific check).');
     } else {
         targetHitIconBtn.style.display = 'none'; // Hide the icon
         targetHitIconCount.style.display = 'none'; // Hide the count badge
-        logDebug('Target Alert: No shares hit target globally or icon is dismissed. Hiding icon.');
+        logDebug('Target Alert: No shares hit target in current view or icon is dismissed. Hiding icon.');
     }
 }
 
@@ -2303,7 +2306,7 @@ async function loadShares() {
 
             // NEW: After allSharesData is updated, re-fetch live prices and update banner
             await fetchLivePrices(); // Ensure live prices are fresh for all shares
-            updateTargetHitBanner(); // Explicitly update banner after prices are fresh
+            // updateTargetHitBanner() and renderWatchlist() are called by fetchLivePrices() now.
             logDebug('Target Alert: Banner updated after shares data change.');
 
         }, (error) => {
@@ -2964,6 +2967,33 @@ async function initializeAppLogic() {
                 showCustomAlert('Logged out successfully!', 1500);
                 logDebug('Auth: User successfully logged out.');
                 toggleAppSidebar(false);
+
+                // NEW: Explicitly ensure splash screen is visible for re-authentication
+                if (splashScreen) {
+                    splashScreen.style.display = 'flex'; // Ensure splash screen is visible
+                    splashScreen.classList.remove('hidden'); // Ensure it's not hidden
+                    document.body.style.overflow = 'hidden'; // Re-apply overflow hidden
+                    if (splashKangarooIcon) {
+                        splashKangarooIcon.classList.remove('pulsing'); // Stop animation if signed out
+                    }
+                    if (splashSignInBtn) {
+                        splashSignInBtn.disabled = false; // Enable sign-in button
+                        splashSignInBtn.textContent = 'Google Sign In'; // Reset button text
+                    }
+                    // Hide main app content
+                    if (mainContainer) {
+                        mainContainer.classList.add('app-hidden');
+                    }
+                    if (appHeader) {
+                        appHeader.classList.add('app-hidden');
+                    }
+                    logDebug('Splash Screen: User signed out, splash screen remains visible for sign-in.');
+                } else {
+                    console.warn('Splash Screen: User signed out, but splash screen element not found. App content might be visible.');
+                }
+                // NEW: Reset targetHitIconDismissed on logout for a fresh start on next login
+                targetHitIconDismissed = false; 
+
             }
             catch (error) {
                 console.error('Auth: Logout failed:', error);
@@ -3657,7 +3687,7 @@ document.addEventListener('DOMContentLoaded', function() {
         window._firebaseInitialized = true; // Mark Firebase as initialized
         logDebug('Firebase Ready: DB, Auth, and AppId assigned from window. Setting up auth state listener.');
         
- window.authFunctions.onAuthStateChanged(auth, async (user) => {
+        window.authFunctions.onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUserId = user.uid;
                 logDebug('AuthState: User signed in: ' + user.uid);
@@ -3730,9 +3760,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     logDebug('Splash Screen: User signed out, splash screen remains visible for sign-in.');
                 } else {
-                    // Fallback if splash screen element not found
                     console.warn('Splash Screen: User signed out, but splash screen element not found. App content might be visible.');
                 }
+                // NEW: Reset targetHitIconDismissed on logout for a fresh start on next login
+                targetHitIconDismissed = false; 
+
             }
             if (!window._appLogicInitialized) {
                 initializeAppLogic();
