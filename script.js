@@ -1094,15 +1094,19 @@ function renderSortSelect() {
     });
 
     // START HIGHLIGHT HERE
-    if (currentUserId && savedSortOrder && Array.from(sortSelect.options).some(option => option.value === savedSortOrder)) {
-        sortSelect.value = savedSortOrder;
-        currentSortOrder = savedSortOrder;
-        logDebug('Sort: Applied saved sort order: ' + currentSortOrder);
-    } else {
-        sortSelect.value = '';
-        currentSortOrder = '';
-        logDebug('Sort: No valid saved sort order or not logged in, defaulting to placeholder.');
-    }
+    let defaultSortValue = 'entryDate-desc'; // Always fall back to a valid sort option
+
+if (currentUserId && savedSortOrder && options.some(option => option.value === savedSortOrder)) {
+    // If there's a valid saved sort order, use it
+    sortSelect.value = savedSortOrder;
+    currentSortOrder = savedSortOrder;
+    logDebug('Sort: Applied saved sort order: ' + currentSortOrder);
+} else {
+    // If no valid saved sort order, or not logged in, default to 'entryDate-desc'
+    sortSelect.value = defaultSortValue;
+    currentSortOrder = defaultSortValue;
+    logDebug('Sort: No valid saved sort order or not logged in, defaulting to: ' + defaultSortValue);
+}
     // END HIGHLIGHT HERE
 
     logDebug('UI Update: Sort select rendered. Sort select disabled: ' + sortSelect.disabled);
