@@ -468,9 +468,9 @@ body.theme-bold-6 { /* Gold */
     --live-price-positive-bg: rgba(46, 204, 113, 0.15);
     --live-price-negative-bg: rgba(231, 76, 60, 0.15);
     --comment-title-bg: rgba(255, 255, 255, 0.08);
-    --target-alert-bg: #ffc300;
+    --target-alert-bg: #ffeb3b;
     --target-alert-text: #333;
-    --target-alert-border: #e0ac00;
+    --target-alert-border: #fdd835;
     --target-banner-height: 40px;
 }
 
@@ -1513,7 +1513,7 @@ body.theme-muted-orange {
     --link-hover-color: #8f3a50;
     --sidebar-bg: #e4d0b9;
     --sidebar-text: #503e2c;
-    --sidebar-border: #ad875b;
+    --sidebar-border: #9c7b66;
     --menu-button-bg: transparent;
     --menu-button-hover-bg: #e0c2b2;
     --menu-button-active-bg: #a07a4a;
@@ -1580,7 +1580,7 @@ body.theme-muted-cyan {
     --sidebar-border: #5b9d9d;
     --menu-button-bg: transparent;
     --menu-button-hover-bg: #d0e0e0;
-    --menu-button-active-bg: #4a904a;
+    --menu-button-active-bg: #4a9090;
     --menu-button-active-text: #fff;
     --placeholder-text: #6c757d;
     --ghosted-text: #888;
@@ -2746,13 +2746,12 @@ table td.live-price-cell.negative-change {
 }
 
 .comment-section .comment-text-input {
-    min-height: 120px; /* Increased height for easier scrolling */
+    min-height: 100px; /* Make it taller by default */
     resize: vertical; /* Allow vertical resizing */
-    overflow-y: auto; /* Ensure vertical scrollbar appears when content overflows */
-    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
-    touch-action: pan-y; /* Prioritize vertical scrolling for touch */
+    /* Ensure resize handle is visible and scrollbar is usable */
     padding-right: 25px; /* Add extra padding to make space for resize handle/scrollbar */
     box-sizing: border-box; /* Include padding in width calculation */
+    overflow-y: auto; /* Ensure vertical scrollbar appears when content overflows */
     white-space: pre-wrap; /* Preserve whitespace and line breaks */
 }
 
@@ -3509,6 +3508,7 @@ main.container {
 
 /* Responsive Design */
 @media (max-width: 768px) {
+
     /* Ensure the main splash screen container itself has no internal padding on mobile */
     .splash-screen {
         padding: 0; /* Remove any padding that might constrain the image */
