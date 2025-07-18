@@ -64,7 +64,7 @@
     --target-alert-bg: #e0f7fa; /* Light blue for target hit alert */
     --target-alert-text: #0056b3; /* Darker blue for target hit text */
     --target-alert-border: #007bff;
-    --target-banner-height: 40px; /* This variable is now effectively unused for the banner, but kept for other potential uses */
+    --target-banner-height: 40px;
 
     /* NEW: Alert System Colors */
     --alert-icon-bg: #dc3545; /* Red for the chat box icon */
@@ -2300,7 +2300,7 @@ table td .live-price-value {
     color: var(--price-neutral-color) !important; /* Use !important to override inherited text color */
 }
 
-/* Remove background color from table cells, as text color is desired */
+/* Remove background color from table cells, as text coloring is desired */
 table td.live-price-cell.positive-change,
 table td.live-price-cell.negative-change {
     background-color: transparent;
@@ -2474,7 +2474,7 @@ table td.live-price-cell.negative-change {
     align-items: center;
     justify-content: center;
     gap: 10px;
-    box-shadow: 0 44px 8px var(--shadow-color);
+    box-shadow: 0 4px 8px var(--shadow-color);
     width: fit-content;
     max-width: 100%;
 }
