@@ -1082,7 +1082,7 @@ function renderSortSelect() {
         { value: 'shareName-desc', text: 'Code (Z-A)' },
         { value: 'dividendAmount-desc', text: 'Dividend (High-Low)' },
         { value: 'dividendAmount-asc', text: 'Dividend (Low-High)' },
-        // Options for percentage change
+        // NEW: Options for percentage change
         { value: 'percentageChange-desc', text: 'Percentage Change (High-Low)' },
         { value: 'percentageChange-asc', text: 'Percentage Change (Low-High)' }
     ];
@@ -1093,22 +1093,15 @@ function renderSortSelect() {
         sortSelect.appendChild(optionElement);
     });
 
-    // START HIGHLIGHT HERE
-    let defaultSortValue = 'entryDate-desc'; // Always fall back to a valid sort option
-
-if (currentUserId && savedSortOrder && options.some(option => option.value === savedSortOrder)) {
-    // If there's a valid saved sort order, use it
-    sortSelect.value = savedSortOrder;
-    currentSortOrder = savedSortOrder;
-    logDebug('Sort: Applied saved sort order: ' + currentSortOrder);
-} else {
-    // If no valid saved sort order, or not logged in, default to 'entryDate-desc'
-    sortSelect.value = defaultSortValue;
-    currentSortOrder = defaultSortValue;
-    logDebug('Sort: No valid saved sort order or not logged in, defaulting to: ' + defaultSortValue);
-}
-    // END HIGHLIGHT HERE
-
+    if (currentUserId && savedSortOrder && Array.from(sortSelect.options).some(option => option.value === savedSortOrder)) {
+        sortSelect.value = savedSortOrder;
+        currentSortOrder = savedSortOrder;
+        logDebug('Sort: Applied saved sort order: ' + currentSortOrder);
+    } else {
+        sortSelect.value = ''; 
+        currentSortOrder = '';
+        logDebug('Sort: No valid saved sort order or not logged in, defaulting to placeholder.');
+    }
     logDebug('UI Update: Sort select rendered. Sort select disabled: ' + sortSelect.disabled);
 }
 
