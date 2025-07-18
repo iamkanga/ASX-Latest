@@ -286,9 +286,9 @@ function closeModals() {
             logDebug('Auto-Save: Unsaved changes detected for existing watchlist. Attempting silent save.');
             saveWatchlistChanges(true, currentWatchlistData.name, watchlistSelect.value); // true indicates silent save, pass name and ID
         } else {
-            logDebug('Auto-Save: No changes detected for existing watchlist.');
+                logDebug('Auto-Save: No changes detected for existing watchlist.');
+            }
         }
-    }
 
 
     document.querySelectorAll('.modal').forEach(modal => {
@@ -1182,7 +1182,8 @@ if (currentUserId && savedSortOrder && options.some(option => option.value === s
 
 function addShareToTable(share) {
     if (!shareTableBody) { console.error('addShareToTable: shareTableBody element not found.'); return; }
-    const row = shareTableBody.insertCell();
+    // FIX: Create a new row and insert cells into it, instead of calling insertCell on tbody
+    const row = shareTableBody.insertRow(); 
     row.dataset.docId = share.id;
     
     // Determine the price change class for the entire row
@@ -2467,7 +2468,23 @@ function renderCashCategories() {
         deleteButton.classList.add('delete-category-btn');
         deleteButton.innerHTML = '<i class="fas fa-trash-alt"></i>';
         deleteButton.title = 'Delete Category';
-        deleteButton.addEventListener('click', () => deleteCashCategory(category.id));
+        // NEW: Direct deletion without confirmation
+        deleteButton.addEventListener('click', async () => {
+            logDebug('Cash Categories: Delete button clicked for category ID: ' + category.id);
+            if (!db || !currentUserId || !window.firestore) {
+                showCustomAlert('Firestore not available. Cannot delete cash category.');
+                return;
+            }
+            try {
+                const categoryDocRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/cashCategories', category.id);
+                await window.firestore.deleteDoc(categoryDocRef);
+                showCustomAlert('Category deleted successfully!', 1500);
+                logDebug('Firestore: Cash category (ID: ' + category.id + ') deleted.');
+            } catch (error) {
+                console.error('Firestore: Error deleting cash category:', error);
+                showCustomAlert('Error deleting category: ' + error.message);
+            }
+        });
         categoryItem.appendChild(deleteButton);
 
         cashCategoriesContainer.appendChild(categoryItem);
@@ -2580,22 +2597,12 @@ async function deleteCashCategory(categoryId) {
         return;
     }
 
-    // Confirm deletion
-    const confirmed = await new Promise(resolve => {
-        showCustomConfirm('Are you sure you want to delete this category?', resolve);
-    });
-
-    if (!confirmed) {
-        logDebug('Cash Categories: Deletion cancelled by user.');
-        return;
-    }
-
+    // NEW: Direct deletion without confirmation modal
     try {
         const categoryDocRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/cashCategories', categoryId);
         await window.firestore.deleteDoc(categoryDocRef);
         showCustomAlert('Category deleted successfully!', 1500);
         logDebug('Firestore: Cash category (ID: ' + categoryId + ') deleted.');
-        // No need to call loadCashCategories() here, the onSnapshot listener will handle updates automatically
     } catch (error) {
         console.error('Firestore: Error deleting cash category:', error);
         showCustomAlert('Error deleting category: ' + error.message);
@@ -2618,7 +2625,7 @@ function calculateTotalCash() {
     logDebug('Cash Categories: Total cash calculated: $' + total.toFixed(2));
 }
 
-// Custom Confirm Dialog Function (Re-added for use with cash category deletion)
+// Custom Confirm Dialog Function (Now unused for deletions, but kept for potential future use)
 function showCustomConfirm(message, callback) {
     if (!customDialogModal || !customDialogMessage || !customDialogConfirmBtn || !customDialogCancelBtn) {
         console.error('Custom dialog elements not found. Cannot show confirm.');
@@ -3428,7 +3435,7 @@ async function initializeAppLogic() {
     // Delete Share Button
     if (deleteShareBtn) {
         deleteShareBtn.addEventListener('click', async () => {
-            logDebug('Share Form: Delete Share button clicked (No Confirmation).');
+            logDebug('Share Form: Delete Share button clicked (Direct Delete).');
             if (deleteShareBtn.classList.contains('is-disabled-icon')) {
                 console.warn('Delete Share: Delete button was disabled, preventing action.');
                 return;
@@ -3464,7 +3471,7 @@ async function initializeAppLogic() {
     // Delete Share From Detail Button
     if (deleteShareFromDetailBtn) {
         deleteShareFromDetailBtn.addEventListener('click', async () => {
-            logDebug('Share Details: Delete Share button clicked (No Confirmation).');
+            logDebug('Share Details: Delete Share button clicked (Direct Delete).');
             if (deleteShareFromDetailBtn.classList.contains('is-disabled-icon')) {
                 console.warn('Delete Share From Detail: Delete button was disabled, preventing action.');
                 return;
@@ -3501,7 +3508,7 @@ async function initializeAppLogic() {
     // Context Menu Delete Share Button
     if (contextDeleteShareBtn) {
         contextDeleteShareBtn.addEventListener('click', async () => {
-            logDebug('Context Menu: Delete Share button clicked (No Confirmation).');
+            logDebug('Context Menu: Delete Share button clicked (Direct Delete).');
             if (currentContextMenuShareId) {
                 const shareToDeleteId = currentContextMenuShareId;
                 hideContextMenu();
@@ -3580,8 +3587,8 @@ async function initializeAppLogic() {
 
             editWatchlistNameInput.value = watchlistToEditName;
             // Keep at least one real watchlist + Cash & Bank
-            const actualWatchlistsCount = userWatchlists.filter(wl => wl.id !== ALL_SHARES_ID && wl.id !== CASH_BANK_WATCHLIST_ID).length;
-            const isDisabledDelete = actualWatchlistsCount <= 1; 
+            const actualWatchlists = userWatchlists.filter(wl => wl.id !== ALL_SHARES_ID && wl.id !== CASH_BANK_WATCHLIST_ID);
+            const isDisabledDelete = actualWatchlists.length <= 1; 
             setIconDisabled(deleteWatchlistInModalBtn, isDisabledDelete); 
             logDebug('Edit Watchlist: deleteWatchlistInModalBtn disabled: ' + isDisabledDelete);
             setIconDisabled(saveWatchlistNameBtn, true); // Disable save button initially
@@ -3619,7 +3626,7 @@ async function initializeAppLogic() {
     // Delete Watchlist In Modal Button (for Manage Watchlist Modal)
     if (deleteWatchlistInModalBtn) {
         deleteWatchlistInModalBtn.addEventListener('click', async () => {
-            logDebug('Manage Watchlist Form: Delete Watchlist button clicked (No Confirmation).');
+            logDebug('Manage Watchlist Form: Delete Watchlist button clicked (Direct Delete).');
             if (deleteWatchlistInModalBtn.classList.contains('is-disabled-icon')) {
                 console.warn('Delete Watchlist In Modal: Delete button was disabled, preventing action.');
                 return;
