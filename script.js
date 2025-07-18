@@ -2210,10 +2210,11 @@ function updateTargetHitBanner() {
         targetHitIconCount.style.display = 'block'; // Show the count badge
         logDebug('Target Alert: Showing icon: ' + sharesAtTargetPrice.length + ' shares hit target.');
         // NEW: Show the alert panel if there are alerts and it's not already open
-        if (alertPanel && !alertPanel.classList.contains('open')) {
-            logDebug('Alerts: Shares at target, auto-showing alert panel.');
-            showAlertPanel();
-        }
+        // Removed auto-showing logic from here, now controlled by initial load and user click
+        // if (alertPanel && !alertPanel.classList.contains('open')) {
+        //     logDebug('Alerts: Shares at target, auto-showing alert panel.');
+        //     showAlertPanel();
+        // }
     } else {
         targetHitIconBtn.style.display = 'none'; // Hide the icon
         targetHitIconCount.style.display = 'none'; // Hide the count badge
@@ -2294,22 +2295,13 @@ function hideSplashScreen() {
 function hideSplashScreenIfReady() {
     // Only hide if Firebase is initialized, user is authenticated, and all data flags are true
     if (window._firebaseInitialized && window._userAuthenticated && window._appDataLoaded && window._livePricesLoaded) {
-        if (sharesAtTargetPrice.length === 0) { // Only hide if no alerts are present
-            if (splashScreenReady) { // Ensure splash screen itself is ready to be hidden
-                logDebug('Splash Screen: All data loaded and ready. Hiding splash screen.');
-                hideSplashScreen();
-            } else {
-                logDebug('Splash Screen: Data loaded, but splash screen not yet marked as ready. Will hide when ready.');
-            }
+        // Only hide splash screen if there are NO active alerts, or if the user has explicitly dismissed/snoozed them.
+        // The splash screen should disappear to reveal the main app, and then the alert panel can appear if needed.
+        if (splashScreenReady) { // Ensure splash screen itself is ready to be hidden
+            logDebug('Splash Screen: All data loaded and ready. Hiding splash screen.');
+            hideSplashScreen();
         } else {
-            logDebug('Splash Screen: Data loaded, but shares at target. Splash screen will remain until alerts are dismissed/snoozed.');
-            // If there are alerts, keep splash screen visible until they are addressed
-            // Or, transition to main app and show the alert panel immediately.
-            // For now, let's transition to main app and rely on updateTargetHitBanner to show the panel.
-            if (splashScreenReady) {
-                logDebug('Splash Screen: Data loaded and alerts present. Hiding splash screen and showing main app.');
-                hideSplashScreen();
-            }
+            logDebug('Splash Screen: Data loaded, but splash screen not yet marked as ready. Will hide when ready.');
         }
     } else {
         logDebug('Splash Screen: Not all data loaded yet. Current state: ' +
@@ -2398,7 +2390,6 @@ async function loadShares() {
         showCustomAlert('Error setting up real-time share updates: ' + error.message);
         if (loadingIndicator) loadingIndicator.style.display = 'none';
         // NEW: Indicate data loading failure for splash screen
-        window._appDataLoaded = false;
         hideSplashScreen(); // Hide splash screen on critical failure
     }
 }
@@ -2926,10 +2917,11 @@ async function initializeAppLogic() {
 
     // Global click listener to close modals/context menu if clicked outside
     window.addEventListener('click', (event) => {
+        // Exclude alertPanel from general modal closing logic to prevent immediate re-closing
         if (event.target === shareDetailModal || event.target === dividendCalculatorModal ||
             event.target === shareFormSection || event.target === customDialogModal ||
             event.target === calculatorModal || event.target === addWatchlistModal ||
-            event.target === manageWatchlistModal) { // Removed alertPanel from here
+            event.target === manageWatchlistModal) {
             closeModals();
         }
 
@@ -2937,6 +2929,7 @@ async function initializeAppLogic() {
             hideContextMenu();
         }
         // NEW: Close alert panel if clicked outside (but not on the bell icon itself or the panel itself)
+        // This is crucial to allow the panel to stay open after clicking the icon
         if (alertPanel && alertPanel.classList.contains('open') && 
             !alertPanel.contains(event.target) && !targetHitIconBtn.contains(event.target)) {
             hideAlertPanel();
@@ -3170,7 +3163,8 @@ async function initializeAppLogic() {
                     await window.firestore.deleteDoc(shareDocRef);
                     showCustomAlert('Share deleted successfully!', 1500);
                     logDebug('Firestore: Share (ID: ' + shareToDeleteId + ') deleted.');
-                } catch (error) {
+                }
+                catch (error) {
                     console.error('Firestore: Error deleting share:', error);
                     showCustomAlert('Error deleting share: ' + error.message);
                 }
@@ -3621,19 +3615,23 @@ async function initializeAppLogic() {
         targetHitIconBtn.addEventListener('click', (event) => {
             logDebug('Target Alert: Icon button clicked. Showing alerted shares.');
             // NEW: Toggle alert panel visibility
+            // Prevent immediate closing if it's already open and clicked again
             if (alertPanel.classList.contains('open')) {
                 hideAlertPanel();
             } else {
                 showAlertPanel();
             }
+            // Stop propagation to prevent global click listener from immediately closing it
+            event.stopPropagation(); 
         });
     }
 
     // NEW: Alert Panel Close Button Listener
     if (alertPanelCloseBtn) {
-        alertPanelCloseBtn.addEventListener('click', () => {
+        alertPanelCloseBtn.addEventListener('click', (event) => {
             logDebug('Alerts: Alert panel close button clicked.');
             hideAlertPanel();
+            event.stopPropagation(); // Prevent global click listener from re-opening/re-closing
         });
     }
 
