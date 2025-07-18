@@ -48,7 +48,7 @@ let originalShareData = null; // Stores the original share data when editing for
 let originalWatchlistData = null; // Stores original watchlist data for dirty state check in watchlist modals
 
 // Live Price Data
-// IMPORTANT: This URL has been restored to the exact string you provided in your initial script.js file.
+// IMPORTANT: This URL is the exact string provided in your initial script.js file.
 // If CORS errors persist, the solution is to redeploy your Google Apps Script with "Anyone, even anonymous" access
 // and then update this constant with the NEW URL provided by Google Apps Script.
 const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzp7OjZL3zqvJ9wPsV9M-afm2wKeQPbIgGVv_juVpkaRllADESLwj7F4-S7YWYerau-/exec'; 
@@ -2075,7 +2075,7 @@ function updateTargetHitBanner() {
     if (sharesAtTargetPrice.length > 0 && !targetHitIconDismissed) {
         targetHitIconCount.textContent = sharesAtTargetPrice.length;
         targetHitIconBtn.style.display = 'flex'; // Show the icon
-        targetHitIconBtn.style.display = 'block'; // Show the count badge
+        targetHitIconCount.style.display = 'block'; // Show the count badge
         logDebug('Target Alert: Showing icon: ' + sharesAtTargetPrice.length + ' shares hit target (global check).');
     } else {
         targetHitIconBtn.style.display = 'none'; // Hide the icon
@@ -2908,7 +2908,7 @@ async function initializeAppLogic() {
             targetHitIconDismissed = true; // Set flag to true
             updateTargetHitBanner(); // Re-run to hide the icon
             showCustomAlert('Alerts dismissed for this session.', 1500); // Optional: Provide user feedback
-            // renderWatchlist(); // REMOVED: This call is now handled by updateTargetHitBanner -> fetchLivePrices -> renderWatchlist
+            renderWatchlist(); // NEW: Re-render watchlist to remove highlighting
         });
     }
 
@@ -3628,6 +3628,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Show splash screen immediately on DOMContentLoaded
     if (splashScreen) {
         splashScreen.style.display = 'flex'; // Ensure it's visible
+        splashScreen.classList.remove('hidden'); // Ensure it's not hidden
         splashScreenReady = true; // Mark splash screen as ready
         document.body.style.overflow = 'hidden'; // Prevent scrolling of underlying content
         logDebug('Splash Screen: Displayed on DOMContentLoaded, body overflow hidden.');
