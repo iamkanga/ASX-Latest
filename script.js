@@ -2055,7 +2055,7 @@ function updateTargetHitBanner() {
         return;
     }
 
-    if (sharesAtTargetPrice.length > 0) {
+    if (sharesAtTargetPrice.length > 0 && !targetHitIconDismissed) { // Only show if shares are at target AND not dismissed
         targetHitIconCount.textContent = sharesAtTargetPrice.length;
         targetHitIconBtn.style.display = 'flex'; // Show the icon
         targetHitIconCount.style.display = 'block'; // Show the count badge
@@ -2063,9 +2063,8 @@ function updateTargetHitBanner() {
     } else {
         targetHitIconBtn.style.display = 'none'; // Hide the icon
         targetHitIconCount.style.display = 'none'; // Hide the count badge
-        logDebug('Target Alert: No shares hit target. Hiding icon.');
+        logDebug('Target Alert: No shares hit target or icon is dismissed. Hiding icon.');
     }
-    // No need to adjust main content padding based on this icon, as it's floating at the bottom.
 }
 
 /**
