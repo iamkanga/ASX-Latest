@@ -3657,7 +3657,7 @@ document.addEventListener('DOMContentLoaded', function() {
         window._firebaseInitialized = true; // Mark Firebase as initialized
         logDebug('Firebase Ready: DB, Auth, and AppId assigned from window. Setting up auth state listener.');
         
-        window.authFunctions.onAuthStateChanged(auth, async (user) => {
+ window.authFunctions.onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUserId = user.uid;
                 logDebug('AuthState: User signed in: ' + user.uid);
