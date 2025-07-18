@@ -966,32 +966,27 @@ function sortShares() {
         // Handle sorting by percentage change
         if (field === 'percentageChange') {
             const livePriceDataA = livePrices[a.shareName.toUpperCase()];
-            const livePriceA = livePriceDataA ? livePriceDataA.live : undefined;
-            const prevCloseA = livePriceDataA ? livePriceDataA.prevClose : undefined;
+            const livePriceA = livePriceDataA ? livePriceDataA.live : null; // Use null for missing/invalid
+            const prevCloseA = livePriceDataA ? livePriceDataA.prevClose : null; // Use null for missing/invalid
 
             const livePriceDataB = livePrices[b.shareName.toUpperCase()];
-            const livePriceB = livePriceDataB ? livePriceDataB.live : undefined;
-            const prevCloseB = livePriceDataB ? livePriceDataB.prevClose : undefined;
+            const livePriceB = livePriceDataB ? livePriceDataB.live : null; // Use null for missing/invalid
+            const prevCloseB = livePriceDataB ? livePriceDataB.prevClose : null; // Use null for missing/invalid
 
             let percentageChangeA = null;
-            // Calculate percentageChangeA only if livePriceA, prevCloseA are valid numbers and prevCloseA is not zero
-            if (typeof livePriceA === 'number' && !isNaN(livePriceA) &&
-                typeof prevCloseA === 'number' && !isNaN(prevCloseA) && prevCloseA !== 0) {
+            if (typeof livePriceA === 'number' && typeof prevCloseA === 'number' && prevCloseA !== 0) {
                 percentageChangeA = ((livePriceA - prevCloseA) / prevCloseA) * 100;
             }
 
             let percentageChangeB = null;
-            // Calculate percentageChangeB only if livePriceB, prevCloseB are valid numbers and prevCloseB is not zero
-            if (typeof livePriceB === 'number' && !isNaN(livePriceB) &&
-                typeof prevCloseB === 'number' && !isNaN(prevCloseB) && prevCloseB !== 0) {
+            if (typeof livePriceB === 'number' && typeof prevCloseB === 'number' && prevCloseB !== 0) {
                 percentageChangeB = ((livePriceB - prevCloseB) / prevCloseB) * 100;
             }
 
             // Debugging log for percentage sort
             logDebug('Sort Debug - Percentage: Comparing ' + a.shareName + ' (Change: ' + percentageChangeA + ') vs ' + b.shareName + ' (Change: ' + percentageChangeB + ')');
 
-            // Handle null/NaN percentage changes to push them to the bottom
-            // This ensures shares without live price data or valid percentage change are always at the end.
+            // Handle null percentage changes to push them to the bottom
             if (percentageChangeA === null && percentageChangeB === null) return 0;
             if (percentageChangeA === null) return 1; // A goes to the bottom
             if (percentageChangeB === null) return -1; // B goes to the bottom
@@ -1005,6 +1000,7 @@ function sortShares() {
         let valB = b[field];
 
         if (field === 'currentPrice' || field === 'targetPrice' || field === 'dividendAmount' || field === 'frankingCredits') {
+            // Ensure numeric comparison, pushing null/NaN to bottom
             valA = (typeof valA === 'string' && valA.trim() !== '') ? parseFloat(valA) : valA;
             valB = (typeof valB === 'string' && valB.trim() !== '') ? parseFloat(valB) : valB;
             valA = (valA === null || valA === undefined || isNaN(valA)) ? (order === 'asc' ? Infinity : -Infinity) : valA;
@@ -1092,20 +1088,8 @@ function renderSortSelect() {
         sortSelect.appendChild(optionElement);
     });
 
-    // START HIGHLIGHT HERE (old code)
-    // if (currentUserId && savedSortOrder && Array.from(sortSelect.options).some(option => option.value === savedSortOrder)) {
-    //     sortSelect.value = savedSortOrder;
-    //     currentSortOrder = savedSortOrder;
-    //     logDebug('Sort: Applied saved sort order: ' + currentSortOrder);
-    // } else {
-    //     sortSelect.value = '';
-    //     currentSortOrder = '';
-    //     logDebug('Sort: No valid saved sort order or not logged in, defaulting to placeholder.');
-    // }
-    // END HIGHLIGHT HERE (old code)
-
-    // NEW CODE START
-    let defaultSortValue = 'entryDate-desc'; // Always fall back to a valid sort option
+    // Always fall back to a valid sort option if no saved order or if current user is not logged in
+    let defaultSortValue = 'entryDate-desc';
 
     if (currentUserId && savedSortOrder && options.some(option => option.value === savedSortOrder)) {
         // If there's a valid saved sort order, use it
@@ -1118,7 +1102,6 @@ function renderSortSelect() {
         currentSortOrder = defaultSortValue;
         logDebug('Sort: No valid saved sort order or not logged in, defaulting to: ' + defaultSortValue);
     }
-    // NEW CODE END
 
     logDebug('UI Update: Sort select rendered. Sort select disabled: ' + sortSelect.disabled);
 }
@@ -1131,11 +1114,10 @@ function addShareToTable(share) {
     // Determine the price change class for the entire row
     let priceChangeClass = 'neutral'; // Default to neutral to prevent empty class error
     const livePriceData = livePrices[share.shareName.toUpperCase()];
-    const livePrice = livePriceData ? livePriceData.live : undefined;
-    const prevClosePrice = livePriceData ? livePriceData.prevClose : undefined;
+    const livePrice = livePriceData ? livePriceData.live : null;
+    const prevClosePrice = livePriceData ? livePriceData.prevClose : null;
 
-    if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice) && 
-        prevClosePrice !== undefined && prevClosePrice !== null && !isNaN(prevClosePrice)) {
+    if (typeof livePrice === 'number' && typeof prevClosePrice === 'number') {
         const change = livePrice - prevClosePrice;
         if (change > 0) {
             priceChangeClass = 'positive';
@@ -1223,15 +1205,15 @@ function addShareToTable(share) {
 
     // Cell for Live Price
     const livePriceCell = row.insertCell();
-    if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) {
+    if (typeof livePrice === 'number') {
         const priceValueSpan = document.createElement('span');
         priceValueSpan.classList.add('live-price-value', priceChangeClass); // Apply class and color
         priceValueSpan.textContent = '$' + livePrice.toFixed(2);
         livePriceCell.appendChild(priceValueSpan);
         
-        if (prevClosePrice !== undefined && prevClosePrice !== null && !isNaN(prevClosePrice)) {
+        if (typeof prevClosePrice === 'number') {
             const change = livePrice - prevClosePrice;
-            const percentageChange = (prevClosePrice !== 0 && !isNaN(prevClosePrice)) ? (change / prevClosePrice) * 100 : 0;
+            const percentageChange = (prevClosePrice !== 0) ? (change / prevClosePrice) * 100 : 0;
             const priceChangeSpan = document.createElement('span');
             priceChangeSpan.classList.add('price-change', priceChangeClass); // Apply class and color
             if (change > 0) {
@@ -1261,7 +1243,7 @@ function addShareToTable(share) {
     const dividendCell = row.insertCell();
     const dividendAmountNum = Number(share.dividendAmount);
     const frankingCreditsNum = Number(share.frankingCredits);
-    const priceForYield = (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) ? livePrice : enteredPriceNum;
+    const priceForYield = (typeof livePrice === 'number') ? livePrice : enteredPriceNum;
 
     const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, priceForYield); 
     // NEW: Display "0.00%" if unfrankedYield is null or NaN, otherwise format
@@ -1297,11 +1279,10 @@ function addShareToMobileCards(share) {
     // Determine the price change class for the card
     let priceChangeClass = 'neutral'; // Default to neutral to prevent empty class error
     const livePriceData = livePrices[share.shareName.toUpperCase()];
-    const livePrice = livePriceData ? livePriceData.live : undefined;
-    const prevClosePrice = livePriceData ? livePriceData.prevClose : undefined;
+    const livePrice = livePriceData ? livePriceData.live : null;
+    const prevClosePrice = livePriceData ? livePriceData.prevClose : null;
 
-    if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice) && 
-        prevClosePrice !== undefined && prevClosePrice !== null && !isNaN(prevClosePrice)) {
+    if (typeof livePrice === 'number' && typeof prevClosePrice === 'number') {
         const change = livePrice - prevClosePrice;
         if (change > 0) {
             priceChangeClass = 'positive';
@@ -1333,12 +1314,7 @@ function addShareToMobileCards(share) {
     const frankingCreditsNum = Number(share.frankingCredits);
     const targetPriceNum = Number(share.targetPrice);
     
-    // Get live price data from the global livePrices object
-    // livePriceData is already defined above for targetHit check
-    // const livePrice = livePriceData ? livePriceData.live : undefined; // Already defined above
-    // const prevClosePrice = livePriceData ? livePriceData.prevClose : undefined; // Already defined above
-
-    const priceForYield = (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) ? livePrice : enteredPriceNum;
+    const priceForYield = (typeof livePrice === 'number') ? livePrice : enteredPriceNum;
 
     const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, priceForYield);
     const frankedYield = calculateFrankedYield(dividendAmountNum, priceForYield, frankingCreditsNum);
@@ -1351,11 +1327,11 @@ function addShareToMobileCards(share) {
 
     let priceChangeText = '';
 
-    if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) {
+    if (typeof livePrice === 'number') {
         // Calculate daily change using livePrice and prevClosePrice for mobile cards
-        if (prevClosePrice !== undefined && prevClosePrice !== null && !isNaN(prevClosePrice)) {
+        if (typeof prevClosePrice === 'number') {
             const change = livePrice - prevClosePrice;
-            const percentageChange = (prevClosePrice !== 0 && !isNaN(prevClosePrice)) ? (change / prevClosePrice) * 100 : 0;
+            const percentageChange = (prevClosePrice !== 0) ? (change / prevClosePrice) * 100 : 0;
             if (change > 0) {
                 priceChangeText = '(+$' + change.toFixed(2) + ' / +' + percentageChange.toFixed(2) + '%)';
             } else if (change < 0) {
@@ -1372,9 +1348,11 @@ function addShareToMobileCards(share) {
                 <div class="live-price-display-section">
                     <span class="live-price-large ${priceChangeClass}">$${livePrice.toFixed(2)}</span>
                     <span class="price-change-large ${priceChangeClass}">${priceChangeText}</span>
+                    <!-- 52-week high/low and P/E are hidden by CSS in compact view -->
                     <div class="fifty-two-week-row"></div>
                     <div class="pe-ratio-row"></div>
                 </div>
+                <!-- Other details are hidden by CSS for compact view -->
                 <p><strong>Entered Price:</strong> $${displayEnteredPrice}</p>
                 <p><strong>Target:</strong> $${displayTargetPrice}</p>
                 <p><strong>Dividend:</strong> $${displayDividendAmount}</p>
@@ -1732,42 +1710,39 @@ function resetCalculator() {
 
 async function applyTheme(themeName) {
     const body = document.body;
-    // Remove all existing theme classes
+    // Remove all existing theme classes and data-theme attribute
     body.className = body.className.split(' ').filter(c => !c.endsWith('-theme') && !c.startsWith('theme-')).join(' ');
+    body.removeAttribute('data-theme');
 
     logDebug('Theme Debug: Attempting to apply theme: ' + themeName);
-    currentActiveTheme = themeName;
+    currentActiveTheme = themeName; // IMPORTANT: Set currentActiveTheme here as the single source of truth
 
     if (themeName === 'system-default') {
-        body.removeAttribute('data-theme');
-        localStorage.removeItem('selectedTheme');
-        localStorage.removeItem('theme');
+        localStorage.removeItem('selectedTheme'); // Clear custom theme preference
+        localStorage.removeItem('theme'); // Clear explicit light/dark preference
         const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         if (systemPrefersDark) {
             body.classList.add('dark-theme');
         }
         logDebug('Theme Debug: Reverted to system default theme.');
-        // When reverting to system-default, ensure currentCustomThemeIndex is reset to -1
         currentCustomThemeIndex = -1; 
     } else if (themeName === 'light' || themeName === 'dark') {
-        body.removeAttribute('data-theme');
-        localStorage.removeItem('selectedTheme');
-        localStorage.setItem('theme', themeName);
+        localStorage.removeItem('selectedTheme'); // Clear custom theme preference
+        localStorage.setItem('theme', themeName); // Set explicit light/dark preference
         if (themeName === 'dark') {
             body.classList.add('dark-theme');
+        } else {
+            body.classList.remove('dark-theme'); // Ensure dark-theme is removed if light is selected
         }
         logDebug('Theme Debug: Applied explicit default theme: ' + themeName);
-        // When applying explicit light/dark, ensure currentCustomThemeIndex is reset to -1
         currentCustomThemeIndex = -1; 
     } else {
         // For custom themes, apply the class and set data-theme attribute
-        // The class name is 'theme-' followed by the themeName (e.g., 'theme-bold-1', 'theme-muted-blue')
         body.classList.add('theme-' + themeName.toLowerCase().replace(/\s/g, '-')); // Convert "Muted Blue" to "muted-blue" for class
         body.setAttribute('data-theme', themeName); // Keep the full name in data-theme
-        localStorage.setItem('selectedTheme', themeName);
-        localStorage.removeItem('theme');
+        localStorage.setItem('selectedTheme', themeName); // Save custom theme preference
+        localStorage.removeItem('theme'); // Clear explicit light/dark preference
         logDebug('Theme Debug: Applied custom theme: ' + themeName);
-        // When applying a custom theme, set currentCustomThemeIndex to its position
         currentCustomThemeIndex = CUSTOM_THEMES.indexOf(themeName); 
     }
     
@@ -1783,7 +1758,7 @@ async function applyTheme(themeName) {
             console.error('Theme: Error saving theme preference to Firestore:', error);
         }
     }
-    updateThemeToggleAndSelector();
+    updateThemeToggleAndSelector(); // Call this to update dropdown, etc.
 }
 
 function updateThemeToggleAndSelector() {
@@ -1914,23 +1889,19 @@ async function loadUserWatchlistsAndSettings() {
         }
 
         renderWatchlistSelect();
+        renderSortSelect(); // Ensure sort select is rendered before applying theme which might rely on it.
         
-        // This is the correct logic for setting sort order on load.
+        // This is the correct logic for setting currentSortOrder based on saved preference or default.
         // It uses the savedSortOrder from Firestore.
         let defaultSortValue = 'entryDate-desc'; // Always fall back to a valid sort option
-
         if (currentUserId && savedSortOrder && sortSelect && Array.from(sortSelect.options).some(option => option.value === savedSortOrder)) {
-            // If there's a valid saved sort order, use it
-            sortSelect.value = savedSortOrder;
             currentSortOrder = savedSortOrder;
-            logDebug('Sort: Applied saved sort order: ' + currentSortOrder);
+            logDebug('Sort: Applied saved sort order: ' + currentSortOrder + ' from settings.');
         } else {
-            // If no valid saved sort order, or not logged in, default to 'entryDate-desc'
-            sortSelect.value = defaultSortValue;
             currentSortOrder = defaultSortValue;
             logDebug('Sort: No valid saved sort order or not logged in, defaulting to: ' + defaultSortValue);
         }
-        renderSortSelect(); // Re-render the sort select with the newly determined currentSortOrder
+        sortSelect.value = currentSortOrder; // Ensure the UI dropdown matches the set currentSortOrder
         
         if (savedTheme) {
             applyTheme(savedTheme);
@@ -1971,6 +1942,26 @@ async function loadUserWatchlistsAndSettings() {
 }
 
 /**
+ * Helper to safely parse a number, handling common non-numeric string values.
+ * @param {string|number} value The value to parse.
+ * @returns {number|null} The parsed number, or null if parsing fails.
+ */
+function parseNumericValue(value) {
+    if (typeof value === 'number') {
+        return isNaN(value) ? null : value;
+    }
+    if (typeof value === 'string') {
+        const trimmedValue = value.trim();
+        if (trimmedValue === '' || trimmedValue.toLowerCase() === '#n/a') {
+            return null;
+        }
+        const parsed = parseFloat(trimmedValue);
+        return isNaN(parsed) ? null : parsed;
+    }
+    return null;
+}
+
+/**
  * Fetches live price data from the Google Apps Script Web App.
  * Updates the `livePrices` global object.
  */
@@ -1987,32 +1978,33 @@ async function fetchLivePrices() {
         const newLivePrices = {};
         data.forEach(item => {
             const asxCode = String(item.ASXCode).toUpperCase();
-            const livePrice = parseFloat(item.LivePrice);
-            const prevClose = parseFloat(item.PrevClose); 
-            const pe = parseFloat(item.PE);
-            const high52 = parseFloat(item.High52);
-            const low52 = parseFloat(item.Low52);
+            
+            // Use the new robust parsing function
+            const livePrice = parseNumericValue(item.LivePrice);
+            const prevClose = parseNumericValue(item.PrevClose); 
+            const pe = parseNumericValue(item.PE);
+            const high52 = parseNumericValue(item.High52);
+            const low52 = parseNumericValue(item.Low52);
 
-            if (asxCode && !isNaN(livePrice)) {
+            // Only add to livePrices if ASXCode is present and livePrice is a valid number
+            if (asxCode && typeof livePrice === 'number') { // Removed !isNaN(livePrice) as parseNumericValue handles it
                 // Find the corresponding share in allSharesData to get its targetPrice
                 const shareData = allSharesData.find(s => s.shareName.toUpperCase() === asxCode);
                 // Ensure targetPrice is parsed as a number, handling null/undefined/NaN
-                const targetPrice = shareData && shareData.targetPrice !== null && !isNaN(parseFloat(shareData.targetPrice)) 
-                                    ? parseFloat(shareData.targetPrice) 
+                const targetPrice = shareData && typeof shareData.targetPrice === 'number' && !isNaN(shareData.targetPrice) 
+                                    ? shareData.targetPrice 
                                     : undefined;
 
                 const isTargetHit = (targetPrice !== undefined && livePrice <= targetPrice);
 
-                // Debugging log:
-                logDebug('Target Price Debug: Share: ' + asxCode + ', Live: ' + livePrice + ', Target: ' + targetPrice + ', Is Target Hit: ' + isTargetHit); // Using logDebug
-
+                logDebug('Target Price Debug: Share: ' + asxCode + ', Live: ' + livePrice + ', Target: ' + targetPrice + ', Is Target Hit: ' + isTargetHit);
 
                 newLivePrices[asxCode] = {
                     live: livePrice,
-                    prevClose: isNaN(prevClose) ? null : prevClose,
-                    PE: isNaN(pe) ? null : pe, 
-                    High52: isNaN(high52) ? null : high52, 
-                    Low52: isNaN(low52) ? null : low52, 
+                    prevClose: prevClose, // parseNumericValue already returns null if NaN
+                    PE: pe, 
+                    High52: high52, 
+                    Low52: low52, 
                     targetHit: isTargetHit 
                 };
             } else {
@@ -2022,13 +2014,11 @@ async function fetchLivePrices() {
         livePrices = newLivePrices;
         logDebug('Live Price: Live prices updated:', livePrices); // Using logDebug
         sortShares(); // Call sortShares after livePrices are updated to apply percentage change sort
-        adjustMainContentPadding(); // Re-added this call
-        // NEW: Indicate that live prices are loaded for splash screen
+        adjustMainContentPadding();
         window._livePricesLoaded = true;
         hideSplashScreenIfReady();
     } catch (error) {
         console.error('Live Price: Error fetching live prices:', error);
-        // NEW: Hide splash screen on error
         hideSplashScreen();
     }
 }
@@ -2280,32 +2270,24 @@ async function migrateOldSharesToWatchlist() {
                 const value = shareData[field];
                 const originalValueType = typeof value;
                 let parsedValue = value;
-                if (originalValueType === 'string' && value.trim() !== '') {
-                    parsedValue = parseFloat(value);
-                    if (!isNaN(parsedValue)) {
-                        if (originalValueType !== typeof parsedValue || value !== String(parsedValue)) {
-                            needsUpdate = true;
-                            updatePayload[field] = parsedValue;
-                            logDebug('Migration: Share \'' + doc.id + '\': Converted ' + field + ' from string \'' + value + '\' (type ' + originalValueType + ') to number ' + parsedValue + '.');
-                        }
-                    } else {
-                        needsUpdate = true;
-                        updatePayload[field] = null;
-                        console.warn('Migration: Share \'' + doc.id + '\': Field \'' + field + '\' was invalid string \'' + value + '\', setting to null.');
-                    }
-                } else if (originalValueType === 'number' && isNaN(value)) {
+                // Use the new robust parsing function
+                parsedValue = parseNumericValue(value);
+                if (value !== parsedValue) { // Check if original value differs from parsed value
                     needsUpdate = true;
-                    updatePayload[field] = null;
-                    console.warn('Migration: Share \'' + doc.id + '\': Field \'' + field + '\' was NaN number, setting to null.');
-                }
-                if (field === 'frankingCredits' && typeof parsedValue === 'number' && !isNaN(parsedValue)) {
-                    if (parsedValue > 0 && parsedValue < 1) {
-                        needsUpdate = true;
-                        updatePayload.frankingCredits = parsedValue * 100;
-                        logDebug('Migration: Share \'' + doc.id + '\': Converted frankingCredits from decimal ' + parsedValue + ' to percentage ' + (parsedValue * 100) + '.');
-                    }
+                    updatePayload[field] = parsedValue;
+                    logDebug('Migration: Share \'' + doc.id + '\': Converted ' + field + ' from ' + value + ' (type ' + originalValueType + ') to number ' + parsedValue + '.');
                 }
             });
+            if (shareData.hasOwnProperty('frankingCredits') && typeof updatePayload.frankingCredits === 'number' && !isNaN(updatePayload.frankingCredits)) {
+                 // Check if frankingCredits is already between 0 and 100, if not, it might be a decimal
+                if (updatePayload.frankingCredits > 0 && updatePayload.frankingCredits < 1) {
+                    needsUpdate = true;
+                    updatePayload.frankingCredits = updatePayload.frankingCredits * 100;
+                    logDebug('Migration: Share \'' + doc.id + '\': Converted frankingCredits from decimal ' + (updatePayload.frankingCredits / 100) + ' to percentage ' + updatePayload.frankingCredits + '.');
+                }
+            }
+
+
             const effectiveCurrentPrice = (typeof updatePayload.currentPrice === 'number' && !isNaN(updatePayload.currentPrice)) ? updatePayload.currentPrice :
                                           ((typeof shareData.currentPrice === 'string' ? parseFloat(shareData.currentPrice) : shareData.currentPrice) || null);
             if (!shareData.hasOwnProperty('lastFetchedPrice') || (typeof shareData.lastFetchedPrice === 'string' && isNaN(parseFloat(shareData.lastFetchedPrice)))) {
@@ -2487,18 +2469,17 @@ function exportWatchlistToCSV() {
 
         // Get live price data from the global livePrices object
         const livePriceData = livePrices[share.shareName.toUpperCase()];
-        const livePrice = livePriceData ? livePriceData.live : undefined;
-        const prevClosePrice = livePriceData ? livePriceData.prevClose : undefined;
+        const livePrice = livePriceData ? livePriceData.live : null;
+        const prevClosePrice = livePriceData ? livePriceData.prevClose : null;
 
         let priceChange = '';
-        if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice) && 
-            prevClosePrice !== undefined && prevClosePrice !== null && !isNaN(prevClosePrice)) {
+        if (typeof livePrice === 'number' && typeof prevClosePrice === 'number') {
             const change = livePrice - prevClosePrice;
-            const percentageChange = (prevClosePrice !== 0 && !isNaN(prevClosePrice)) ? (change / prevClosePrice) * 100 : 0;
+            const percentageChange = (prevClosePrice !== 0) ? (change / prevClosePrice) * 100 : 0;
             priceChange = change.toFixed(2) + ' (' + percentageChange.toFixed(2) + '%)'; // Include percentage in CSV
         }
 
-        const priceForYield = (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) ? livePrice : enteredPriceNum;
+        const priceForYield = (typeof livePrice === 'number') ? livePrice : enteredPriceNum;
 
         const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, priceForYield);
         const frankedYield = calculateFrankedYield(dividendAmountNum, priceForYield, frankingCreditsNum);
@@ -2506,7 +2487,7 @@ function exportWatchlistToCSV() {
         const row = [
             share.shareName || '',
             (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? enteredPriceNum.toFixed(2) : '',
-            (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) ? livePrice.toFixed(2) : '',
+            (typeof livePrice === 'number') ? livePrice.toFixed(2) : '',
             priceChange, // Now includes the calculated price change
             (!isNaN(targetPriceNum) && targetPriceNum !== null) ? targetPriceNum.toFixed(2) : '',
             (!isNaN(dividendAmountNum) && dividendAmountNum !== null) ? dividendAmountNum.toFixed(3) : '',
@@ -3475,7 +3456,7 @@ async function initializeAppLogic() {
     if (toggleCompactViewBtn) {
         // DEBUG: Log that the event listener is being attached
         logDebug('DEBUG: Attaching click listener to toggleCompactViewBtn.');
-        toggleCompactViewBtn.addEventListener('click', () => {
+        toggleCompactViewBtn.addEventListener('click', () => { // Corrected: Using the element directly
             logDebug('UI: Toggle Compact View button clicked.');
             toggleMobileViewMode();
             toggleAppSidebar(false); // Close sidebar after action
