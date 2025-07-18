@@ -3111,11 +3111,7 @@ async function initializeAppLogic() {
                 showCustomAlert('Watchlist \'' + watchlistToDeleteName + '\' and its shares deleted successfully!', 2000);
                 closeModals();
 
-                // After deleting a watchlist, switch the current view to "All Shares"
-                currentSelectedWatchlistIds = [ALL_SHARES_ID];
-                await saveLastSelectedWatchlistIds(currentSelectedWatchlistIds); // Save this preference
-
-                await loadUserWatchlistsAndSettings(); // This will re-render everything correctly
+                await loadUserWatchlistsAndSettings();
             } catch (error) {
                 console.error('Firestore: Error deleting watchlist:', error);
                 showCustomAlert('Error deleting watchlist: ' + error.message);
