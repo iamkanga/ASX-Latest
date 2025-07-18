@@ -48,7 +48,10 @@ let originalShareData = null; // Stores the original share data when editing for
 let originalWatchlistData = null; // Stores original watchlist data for dirty state check in watchlist modals
 
 // Live Price Data
-const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzp7OjZL3zqvJ9wPsV9M-afm2wKePPbIgGVv_juVpkaRllADESLwj7F4-S7YWYerau-/exec'; // Your new Google Apps Script URL
+// IMPORTANT: This URL has been reverted to the exact string provided in your initial script.js file.
+// If CORS errors persist, the solution is to redeploy your Google Apps Script with "Anyone, even anonymous" access
+// and then update this constant with the NEW URL provided by Google Apps Script.
+const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzp7OjZL3zqvJ9wPsV9M-afm2wKePbIgGVv_juVpkaRllADESLwj7F4-S7YWYerau-/exec'; 
 let livePrices = {}; // Stores live price data: {ASX_CODE: {live: price, prevClose: price, PE: value, High52: value, Low52: value, targetHit: boolean}}
 let livePriceFetchInterval = null; // To hold the interval ID for live price updates
 const LIVE_PRICE_FETCH_INTERVAL_MS = 5 * 60 * 1000; // Fetch every 5 minutes
@@ -2072,7 +2075,7 @@ function updateTargetHitBanner() {
     if (sharesAtTargetPrice.length > 0 && !targetHitIconDismissed) {
         targetHitIconCount.textContent = sharesAtTargetPrice.length;
         targetHitIconBtn.style.display = 'flex'; // Show the icon
-        targetHitIconCount.style.display = 'block'; // Show the count badge
+        targetHitIconBtn.style.display = 'block'; // Show the count badge
         logDebug('Target Alert: Showing icon: ' + sharesAtTargetPrice.length + ' shares hit target (global check).');
     } else {
         targetHitIconBtn.style.display = 'none'; // Hide the icon
