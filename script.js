@@ -3239,68 +3239,55 @@ async function initializeAppLogic() {
     // Locate the themeToggleBtn event listener.
 // Copy the code from this locate comment to the start of the next section (like "Scroll to Top Button" or "Calculator Buttons"), then paste.
 
-    // Theme Toggle Button
-    if (themeToggleBtn) {
-        themeToggleBtn.addEventListener('click', () => {
-            logDebug('Theme Debug: Theme toggle button clicked.');
-            logDebug('Theme Debug: currentActiveTheme before toggle: ' + currentActiveTheme);
+    // Locate the revertToDefaultThemeBtn event listener.
+// Copy the code from this locate comment to the start of the next section (like "Scroll to Top Button" or "Calculator Buttons"), then paste.
 
-            let nextThemeName;
-            if (CUSTOM_THEMES.length > 0) {
-                // Generate a random index for the next theme
-                let randomIndex = Math.floor(Math.random() * CUSTOM_THEMES.length);
-                nextThemeName = CUSTOM_THEMES[randomIndex];
-            } else {
-                nextThemeName = 'system-default'; // Fallback if no custom themes defined
-            }
-
-            logDebug('Theme Debug: Selected random nextThemeName: ' + nextThemeName);
-            applyTheme(nextThemeName);
-        });
-    }
-
-    // Color Theme Select Dropdown
-    if (colorThemeSelect) {
-        colorThemeSelect.addEventListener('change', (event) => {
-            logDebug('Theme: Color theme select changed to: ' + event.target.value);
-            const selectedTheme = event.target.value;
-            // If "No Custom Theme" is selected, apply system-default
-            if (selectedTheme === 'none') {
-                applyTheme('system-default');
-            } else {
-                applyTheme(selectedTheme);
-            }
-        });
-    }
-
-    // Revert to Default Theme Button (now "Previous Theme" or "Default")
+    // Revert to Default Theme Button (now toggles between Light/Dark)
     if (revertToDefaultThemeBtn) {
-        revertToDefaultThemeBtn.addEventListener('click', (event) => {
-            logDebug('Theme Debug: Revert to Default Theme button clicked (now acting as Previous/Default).');
+        revertToDefaultThemeBtn.addEventListener('click', async (event) => {
+            logDebug('Theme Debug: Revert to Default Theme button clicked (now toggling Light/Dark).');
             event.preventDefault(); // Prevent default button behavior
 
-            if (currentCustomThemeIndex !== -1 && CUSTOM_THEMES.length > 0) {
-                // Currently on a custom theme, go to the previous one in the array
-                // If it's the first one, loop back to the end, or go to system-default.
-                let previousIndex = currentCustomThemeIndex - 1;
+            const body = document.body;
+            let targetTheme;
 
-                if (previousIndex >= 0) {
-                    applyTheme(CUSTOM_THEMES[previousIndex]);
-                    logDebug('Theme: Moved to previous custom theme: ' + CUSTOM_THEMES[previousIndex]);
-                } else {
-                    // If we're at the beginning of the custom themes, go to system-default
-                    applyTheme('system-default');
-                    logDebug('Theme: Moved from first custom theme to system-default.');
-                }
+            // Remove any existing theme classes first (custom themes and dark-theme)
+            body.className = body.className.split(' ').filter(c => !c.startsWith('theme-') && c !== 'dark-theme').join(' ');
+            body.removeAttribute('data-theme'); // Clear custom theme attribute
+            localStorage.removeItem('selectedTheme'); // Clear custom theme from local storage
+
+            // Determine target theme based on current state
+            if (body.classList.contains('dark-theme')) {
+                // Currently dark, switch to light
+                body.classList.remove('dark-theme');
+                targetTheme = 'light';
+                logDebug('Theme: Toggled to Light theme.');
             } else {
-                // Not on a custom theme (system-default, light, or dark), so just apply system-default
-                applyTheme('system-default');
-                logDebug('Theme: Already on a non-custom theme, applied system-default.');
+                // Currently light, switch to dark
+                body.classList.add('dark-theme');
+                targetTheme = 'dark';
+                logDebug('Theme: Toggled to Dark theme.');
             }
+
+            currentActiveTheme = targetTheme; // Update global tracking variable
+            localStorage.setItem('theme', targetTheme); // Save preference for light/dark
+            localStorage.removeItem('selectedTheme'); // Ensure custom theme preference is cleared
+
+            // Save preference to Firestore
+            if (currentUserId && db && window.firestore) {
+                const userProfileDocRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/profile/settings');
+                try {
+                    await window.firestore.setDoc(userProfileDocRef, { lastTheme: targetTheme }, { merge: true });
+                    logDebug('Theme: Saved explicit Light/Dark theme preference to Firestore: ' + targetTheme);
+                } catch (error) {
+                    console.error('Theme: Error saving explicit Light/Dark theme preference to Firestore:', error);
+                }
+            }
+            updateThemeToggleAndSelector(); // Update dropdown (it should now show "No Custom Theme")
         });
     }
 
-    // System Dark Mode Preference Listener
+    // System Dark Mode Preference Listener (Keep this as is)
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
         if (currentActiveTheme === 'system-default') {
             if (event.matches) {
