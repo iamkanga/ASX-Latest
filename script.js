@@ -76,6 +76,10 @@ const snoozedAlerts = new Map();
 // NEW: Global variable to track the current mobile view mode ('default' or 'compact')
 let currentMobileViewMode = 'default'; 
 
+// NEW: Flag to prevent immediate closing of alert panel due to global click listener
+let isAlertPanelOpening = false;
+
+
 // --- UI Element References ---
 const appHeader = document.getElementById('appHeader'); // Reference to the main header
 const mainContainer = document.querySelector('main.container'); // Reference to the main content container
@@ -230,6 +234,9 @@ function showAlertPanel() {
         // Force reflow to ensure transition works from initial display:none
         alertPanel.offsetHeight; 
         alertPanel.classList.add('open');
+        isAlertPanelOpening = true; // Set flag when opening
+        // Reset flag after a short delay to allow click event to complete
+        setTimeout(() => { isAlertPanelOpening = false; }, 100); 
         logDebug('Alerts: Showing alert panel.');
     }
 }
@@ -870,8 +877,7 @@ async function saveShareData(isSilent = false) {
         dividendAmount: isNaN(dividendAmount) ? null : dividendAmount,
         frankingCredits: isNaN(frankingCredits) ? null : frankingCredits,
         comments: comments,
-        userId: currentUserId,
-        // Use the selected watchlist from the modal dropdown
+        // Use the selected watchlist from the new dropdown
         watchlistId: selectedWatchlistIdForSave,
         lastPriceUpdateTime: new Date().toISOString()
     };
@@ -1667,7 +1673,7 @@ function renderWatchlist() {
         } else if (selectedNames.length > 1) {
             mainTitle.textContent = 'Multiple Watchlists Selected';
         } else {
-            mainTitle.textContent = 'Share Watchlist';
+            mainTitle.textContent = 'No Watchlists Selected';
         }
         logDebug('Render: Displaying shares from watchlists: ' + selectedNames.join(', '));
     } else {
@@ -2208,6 +2214,7 @@ function updateTargetHitBanner() {
         targetHitIconCount.textContent = sharesAtTargetPrice.length;
         targetHitIconBtn.style.display = 'flex'; // Show the icon
         targetHitIconCount.style.display = 'block'; // Show the count badge
+        targetHitIconBtn.style.pointerEvents = 'auto'; // Ensure it's clickable
         logDebug('Target Alert: Showing icon: ' + sharesAtTargetPrice.length + ' shares hit target.');
         // NEW: Show the alert panel if there are alerts and it's not already open
         // Removed auto-showing logic from here, now controlled by initial load and user click
@@ -2216,8 +2223,10 @@ function updateTargetHitBanner() {
         //     showAlertPanel();
         // }
     } else {
+        targetHitIconCount.textContent = '0'; // Reset count
         targetHitIconBtn.style.display = 'none'; // Hide the icon
         targetHitIconCount.style.display = 'none'; // Hide the count badge
+        targetHitIconBtn.style.pointerEvents = 'none'; // Make it non-interactive when hidden
         logDebug('Target Alert: No shares hit target. Hiding icon.');
         // NEW: Hide the alert panel if no alerts and it's open
         if (alertPanel && alertPanel.classList.contains('open')) {
@@ -2381,6 +2390,7 @@ async function loadShares() {
             showCustomAlert('Error loading shares in real-time: ' + error.message);
             if (loadingIndicator) loadingIndicator.style.display = 'none';
             // NEW: Indicate data loading failure for splash screen
+            window._appDataLoaded = false;
             hideSplashScreen(); // Hide splash screen on critical failure
         });
 
@@ -2917,6 +2927,13 @@ async function initializeAppLogic() {
     // Global click listener to close modals/context menu if clicked outside
     window.addEventListener('click', (event) => {
         // Exclude alertPanel from general modal closing logic to prevent immediate re-closing
+        // Only close alert panel if it's open, and the click is NOT inside the panel, and the click is NOT on the target hit icon.
+        // Also, use the isAlertPanelOpening flag to prevent immediate closing right after opening.
+        if (alertPanel && alertPanel.classList.contains('open') && 
+            !alertPanel.contains(event.target) && !targetHitIconBtn.contains(event.target) && !isAlertPanelOpening) {
+            hideAlertPanel();
+        }
+
         if (event.target === shareDetailModal || event.target === dividendCalculatorModal ||
             event.target === shareFormSection || event.target === customDialogModal ||
             event.target === calculatorModal || event.target === addWatchlistModal ||
@@ -2926,12 +2943,6 @@ async function initializeAppLogic() {
 
         if (contextMenuOpen && shareContextMenu && !shareContextMenu.contains(event.target)) {
             hideContextMenu();
-        }
-        // NEW: Close alert panel if clicked outside (but not on the bell icon itself or the panel itself)
-        // This is crucial to allow the panel to stay open after clicking the icon
-        if (alertPanel && alertPanel.classList.contains('open') && 
-            !alertPanel.contains(event.target) && !targetHitIconBtn.contains(event.target)) {
-            hideAlertPanel();
         }
     });
 
@@ -3128,8 +3139,7 @@ async function initializeAppLogic() {
                     showCustomAlert('Share deleted successfully!', 1500);
                     logDebug('Firestore: Share (ID: ' + selectedShareDocId + ') deleted.');
                     closeModals();
-                }
-                catch (error) {
+                } catch (error) {
                     console.error('Firestore: Error deleting share:', error);
                     showCustomAlert('Error deleting share: ' + error.message);
                 }
@@ -3614,7 +3624,6 @@ async function initializeAppLogic() {
     if (targetHitIconBtn) {
         targetHitIconBtn.addEventListener('click', (event) => {
             logDebug('Target Alert: Icon button clicked. Showing alerted shares.');
-            // NEW: Toggle alert panel visibility
             // Prevent immediate closing if it's already open and clicked again
             if (alertPanel.classList.contains('open')) {
                 hideAlertPanel();
