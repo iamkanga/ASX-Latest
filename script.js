@@ -48,7 +48,10 @@ let originalShareData = null; // Stores the original share data when editing for
 let originalWatchlistData = null; // Stores original watchlist data for dirty state check in watchlist modals
 
 // Live Price Data
-const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzp7OjZL3zqvJ9wPsV9M-afm2wKeQPbIgGVv_juVpkaRllADESLwj7F4-S7YWYerau-/exec'; // Your new Google Apps Script URL
+// IMPORTANT: This URL has been restored to the exact string you provided in your initial script.js file.
+// If CORS errors persist, the solution is to redeploy your Google Apps Script with "Anyone, even anonymous" access
+// and then update this constant with the NEW URL provided by Google Apps Script.
+const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzp7OjZL3zqvJ9wPsV9M-afm2wKeQPbIgGVv_juVpkaRllADESLwj7F4-S7YWYerau-/exec'; 
 let livePrices = {}; // Stores live price data: {ASX_CODE: {live: price, prevClose: price, PE: value, High52: value, Low52: value, targetHit: boolean}}
 let livePriceFetchInterval = null; // To hold the interval ID for live price updates
 const LIVE_PRICE_FETCH_INTERVAL_MS = 5 * 60 * 1000; // Fetch every 5 minutes
@@ -1581,7 +1584,7 @@ function renderWatchlist() {
          }
     }
     logDebug('Render: Watchlist rendering complete.');
-    updateTargetHitBanner(); // NEW: Update the banner after rendering the watchlist
+    // updateTargetHitBanner(); // REMOVED: This call is now handled in fetchLivePrices and loadShares
     renderAsxCodeButtons(); // Ensure ASX buttons are rendered after watchlist content
 }
 
@@ -1968,12 +1971,12 @@ async function loadUserWatchlistsAndSettings() {
 async function fetchLivePrices() {
     logDebug('Live Price: Attempting to fetch live prices...');
     try {
-        const response = await fetch(GOOGLE_APPS_SCRIPT_URL); // Reverted to original fetch call
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL); 
         if (!response.ok) {
             throw new Error('HTTP error! status: ' + response.status);
         }
         const data = await response.json();
-        logDebug('Live Price: Raw data received:', data); // Using logDebug
+        logDebug('Live Price: Raw data received:', data); 
 
         const newLivePrices = {};
         data.forEach(item => {
@@ -1995,7 +1998,7 @@ async function fetchLivePrices() {
                 const isTargetHit = (targetPrice !== undefined && livePrice <= targetPrice);
 
                 // Debugging log:
-                logDebug('Target Price Debug: Share: ' + asxCode + ', Live: ' + livePrice + ', Target: ' + targetPrice + ', Is Target Hit: ' + isTargetHit); // Using logDebug
+                logDebug('Target Price Debug: Share: ' + asxCode + ', Live: ' + livePrice + ', Target: ' + targetPrice + ', Is Target Hit: ' + isTargetHit); 
 
 
                 newLivePrices[asxCode] = {
@@ -2011,12 +2014,18 @@ async function fetchLivePrices() {
             }
         });
         livePrices = newLivePrices;
-        logDebug('Live Price: Live prices updated:', livePrices); // Using logDebug
+        logDebug('Live Price: Live prices updated:', livePrices); 
         renderWatchlist(); 
-        adjustMainContentPadding(); // Re-added this call
+        adjustMainContentPadding(); 
         // NEW: Indicate that live prices are loaded for splash screen
         window._livePricesLoaded = true;
         hideSplashScreenIfReady();
+        
+        // NEW: Reset dismissal state whenever new live prices are fetched.
+        // This allows the icon to reappear if new alerts are detected after a refresh.
+        targetHitIconDismissed = false; 
+        
+        updateTargetHitBanner(); // Explicitly update banner after prices are fresh
     } catch (error) {
         console.error('Live Price: Error fetching live prices:', error);
         // NEW: Hide splash screen on error
@@ -2273,7 +2282,7 @@ async function loadShares() {
             console.warn('Shares: No effective watchlist selected or available. Querying for non-existent ID to get empty results.');
         }
         
-        unsubscribeShares = window.firestore.onSnapshot(q, (querySnapshot) => {
+        unsubscribeShares = window.firestore.onSnapshot(q, async (querySnapshot) => { // ADD 'async' here
             logDebug('Firestore Listener: Shares snapshot received. Processing changes.');
             let fetchedShares = [];
             querySnapshot.forEach((doc) => {
@@ -2291,6 +2300,11 @@ async function loadShares() {
             // NEW: Indicate that app data is loaded for splash screen
             window._appDataLoaded = true;
             hideSplashScreenIfReady();
+
+            // NEW: After allSharesData is updated, re-fetch live prices and update banner
+            await fetchLivePrices(); // Ensure live prices are fresh for all shares
+            updateTargetHitBanner(); // Explicitly update banner after prices are fresh
+            logDebug('Target Alert: Banner updated after shares data change.');
 
         }, (error) => {
             console.error('Firestore Listener: Error listening to shares:', error);
@@ -2894,7 +2908,7 @@ async function initializeAppLogic() {
             targetHitIconDismissed = true; // Set flag to true
             updateTargetHitBanner(); // Re-run to hide the icon
             showCustomAlert('Alerts dismissed for this session.', 1500); // Optional: Provide user feedback
-            renderWatchlist(); // NEW: Re-render watchlist to remove highlighting
+            // renderWatchlist(); // REMOVED: This call is now handled by updateTargetHitBanner -> fetchLivePrices -> renderWatchlist
         });
     }
 
