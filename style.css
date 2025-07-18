@@ -3308,7 +3308,7 @@ main.container {
         max-height: 100%;
         width: auto;  /* Let browser determine width based on aspect ratio */
         height: auto; /* Let browser determine height based on aspect ratio */
-        object-fit: contain; /* Crucial to keep this to prevent text cropping */
+        object-fit: cover; /* Crucial to keep this to prevent text cropping */
         margin-bottom: 0;
     }
 
