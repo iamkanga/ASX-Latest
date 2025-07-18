@@ -986,7 +986,7 @@ function sortShares() {
             // Debugging log for percentage sort
             logDebug('Sort Debug - Percentage: Comparing ' + a.shareName + ' (Change: ' + percentageChangeA + ') vs ' + b.shareName + ' (Change: ' + percentageChangeB + ')');
 
-            // Handle null percentage changes to push them to the bottom
+            // Handle null/NaN percentage changes to push them to the bottom
             if (percentageChangeA === null && percentageChangeB === null) return 0;
             if (percentageChangeA === null) return 1; // A goes to the bottom
             if (percentageChangeB === null) return -1; // B goes to the bottom
