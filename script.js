@@ -956,7 +956,7 @@ function showShareDetails() {
 function sortShares() {
     const sortValue = currentSortOrder;
     if (!sortValue || sortValue === '') {
-        logDebug('Sort: Sort placeholder selected or empty sortValue, no explicit sorting applied.');
+        logDebug('Sort: Sort placeholder selected or empty sortValue, no explicit sorting applied. Will render existing order.');
         renderWatchlist();
         return;
     }
@@ -1092,21 +1092,33 @@ function renderSortSelect() {
         sortSelect.appendChild(optionElement);
     });
 
-    // START HIGHLIGHT HERE
+    // START HIGHLIGHT HERE (old code)
+    // if (currentUserId && savedSortOrder && Array.from(sortSelect.options).some(option => option.value === savedSortOrder)) {
+    //     sortSelect.value = savedSortOrder;
+    //     currentSortOrder = savedSortOrder;
+    //     logDebug('Sort: Applied saved sort order: ' + currentSortOrder);
+    // } else {
+    //     sortSelect.value = '';
+    //     currentSortOrder = '';
+    //     logDebug('Sort: No valid saved sort order or not logged in, defaulting to placeholder.');
+    // }
+    // END HIGHLIGHT HERE (old code)
+
+    // NEW CODE START
     let defaultSortValue = 'entryDate-desc'; // Always fall back to a valid sort option
 
-if (currentUserId && savedSortOrder && options.some(option => option.value === savedSortOrder)) {
-    // If there's a valid saved sort order, use it
-    sortSelect.value = savedSortOrder;
-    currentSortOrder = savedSortOrder;
-    logDebug('Sort: Applied saved sort order: ' + currentSortOrder);
-} else {
-    // If no valid saved sort order, or not logged in, default to 'entryDate-desc'
-    sortSelect.value = defaultSortValue;
-    currentSortOrder = defaultSortValue;
-    logDebug('Sort: No valid saved sort order or not logged in, defaulting to: ' + defaultSortValue);
-}
-    // END HIGHLIGHT HERE
+    if (currentUserId && savedSortOrder && options.some(option => option.value === savedSortOrder)) {
+        // If there's a valid saved sort order, use it
+        sortSelect.value = savedSortOrder;
+        currentSortOrder = savedSortOrder;
+        logDebug('Sort: Applied saved sort order: ' + currentSortOrder);
+    } else {
+        // If no valid saved sort order, or not logged in, default to 'entryDate-desc'
+        sortSelect.value = defaultSortValue;
+        currentSortOrder = defaultSortValue;
+        logDebug('Sort: No valid saved sort order or not logged in, defaulting to: ' + defaultSortValue);
+    }
+    // NEW CODE END
 
     logDebug('UI Update: Sort select rendered. Sort select disabled: ' + sortSelect.disabled);
 }
@@ -1360,11 +1372,9 @@ function addShareToMobileCards(share) {
                 <div class="live-price-display-section">
                     <span class="live-price-large ${priceChangeClass}">$${livePrice.toFixed(2)}</span>
                     <span class="price-change-large ${priceChangeClass}">${priceChangeText}</span>
-                    <!-- 52-week high/low and P/E are hidden by CSS in compact view -->
                     <div class="fifty-two-week-row"></div>
                     <div class="pe-ratio-row"></div>
                 </div>
-                <!-- Other details are hidden by CSS for compact view -->
                 <p><strong>Entered Price:</strong> $${displayEnteredPrice}</p>
                 <p><strong>Target:</strong> $${displayTargetPrice}</p>
                 <p><strong>Dividend:</strong> $${displayDividendAmount}</p>
@@ -1905,16 +1915,22 @@ async function loadUserWatchlistsAndSettings() {
 
         renderWatchlistSelect();
         
-        if (currentUserId && savedSortOrder && Array.from(sortSelect.options).some(option => option.value === savedSortOrder)) {
+        // This is the correct logic for setting sort order on load.
+        // It uses the savedSortOrder from Firestore.
+        let defaultSortValue = 'entryDate-desc'; // Always fall back to a valid sort option
+
+        if (currentUserId && savedSortOrder && sortSelect && Array.from(sortSelect.options).some(option => option.value === savedSortOrder)) {
+            // If there's a valid saved sort order, use it
             sortSelect.value = savedSortOrder;
             currentSortOrder = savedSortOrder;
             logDebug('Sort: Applied saved sort order: ' + currentSortOrder);
         } else {
-            sortSelect.value = ''; 
-            currentSortOrder = '';
-            logDebug('Sort: No valid saved sort order or not logged in, defaulting to placeholder.');
+            // If no valid saved sort order, or not logged in, default to 'entryDate-desc'
+            sortSelect.value = defaultSortValue;
+            currentSortOrder = defaultSortValue;
+            logDebug('Sort: No valid saved sort order or not logged in, defaulting to: ' + defaultSortValue);
         }
-        renderSortSelect();
+        renderSortSelect(); // Re-render the sort select with the newly determined currentSortOrder
         
         if (savedTheme) {
             applyTheme(savedTheme);
@@ -2005,7 +2021,7 @@ async function fetchLivePrices() {
         });
         livePrices = newLivePrices;
         logDebug('Live Price: Live prices updated:', livePrices); // Using logDebug
-        renderWatchlist(); 
+        sortShares(); // Call sortShares after livePrices are updated to apply percentage change sort
         adjustMainContentPadding(); // Re-added this call
         // NEW: Indicate that live prices are loaded for splash screen
         window._livePricesLoaded = true;
@@ -3117,11 +3133,9 @@ async function initializeAppLogic() {
                 showCustomAlert('Watchlist \'' + watchlistToDeleteName + '\' and its shares deleted successfully!', 2000);
                 closeModals();
 
-                // --- NEW CODE START ---
                 // After deleting a watchlist, switch the current view to "All Shares"
                 currentSelectedWatchlistIds = [ALL_SHARES_ID];
                 await saveLastSelectedWatchlistIds(currentSelectedWatchlistIds); // Save this preference
-                // --- NEW CODE END ---
 
                 await loadUserWatchlistsAndSettings(); // This will re-render everything correctly
             } catch (error) {
@@ -3242,9 +3256,6 @@ async function initializeAppLogic() {
         }
     }
 
-    // Locate the themeToggleBtn event listener.
-// Copy the code from this locate comment to the start of the next section (like "Scroll to Top Button" or "Calculator Buttons"), then paste.
-
     // Theme Toggle Button (Random Selection)
     if (themeToggleBtn) {
         themeToggleBtn.addEventListener('click', () => {
@@ -3345,9 +3356,6 @@ async function initializeAppLogic() {
             updateThemeToggleAndSelector();
         }
     });
-
-// (Keep the rest of initializeAppLogic() as is below this section)
-
 
     // Scroll to Top Button
     if (scrollToTopBtn) {
