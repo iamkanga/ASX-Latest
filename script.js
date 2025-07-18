@@ -1141,9 +1141,9 @@ function addShareToTable(share) {
         }
     }
 
-    // Apply target-hit-alert class if condition met
+    // Apply target-hit-alert class if condition met AND icon is not dismissed
     const isTargetHit = livePriceData ? livePriceData.targetHit : false;
-    if (isTargetHit) {
+    if (isTargetHit && !targetHitIconDismissed) { // NEW: Added !targetHitIconDismissed
         row.classList.add('target-hit-alert');
     } else {
         row.classList.remove('target-hit-alert');
@@ -1315,9 +1315,9 @@ function addShareToMobileCards(share) {
         card.classList.remove('compact-view-item');
     }
 
-    // NEW: Apply target-hit-alert class if condition met
+    // NEW: Apply target-hit-alert class if condition met AND icon is not dismissed
     const isTargetHit = livePriceData ? livePriceData.targetHit : false;
-    if (isTargetHit) {
+    if (isTargetHit && !targetHitIconDismissed) { // NEW: Added !targetHitIconDismissed
         card.classList.add('target-hit-alert');
     } else {
         card.classList.remove('target-hit-alert');
@@ -2892,6 +2892,7 @@ async function initializeAppLogic() {
             targetHitIconDismissed = true; // Set flag to true
             updateTargetHitBanner(); // Re-run to hide the icon
             showCustomAlert('Alerts dismissed for this session.', 1500); // Optional: Provide user feedback
+            renderWatchlist(); // NEW: Re-render watchlist to remove highlighting
         });
     }
 
@@ -3446,7 +3447,7 @@ async function initializeAppLogic() {
                 const userProfileDocRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/profile/settings');
                 try {
                     await window.firestore.setDoc(userProfileDocRef, { lastTheme: targetTheme }, { merge: true });
-                    logDebug('Theme: Saved explicit Light/Dark theme preference to Firestore: ' + targetTheme);
+                    logDebug('Theme: Error saving explicit Light/Dark theme preference to Firestore:', error);
                 } catch (error) {
                     console.error('Theme: Error saving explicit Light/Dark theme preference to Firestore:', error);
                 }
