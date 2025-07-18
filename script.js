@@ -76,8 +76,8 @@ const snoozedAlerts = new Map();
 // NEW: Global variable to track the current mobile view mode ('default' or 'compact')
 let currentMobileViewMode = 'default'; 
 
-// NEW: Flag to prevent immediate closing of alert panel due to global click listener
-let ignoreNextGlobalClick = false;
+// NEW: Flag to prevent immediate re-closing of the alert panel
+let isAlertPanelInteraction = false;
 
 
 // --- UI Element References ---
@@ -230,7 +230,12 @@ function showAlertPanel() {
         // Force reflow to ensure transition works from initial display:none
         alertPanel.offsetHeight; 
         alertPanel.classList.add('open');
-        ignoreNextGlobalClick = true; // Set flag to ignore the next global click
+        isAlertPanelInteraction = true; // Set flag when opening
+        // Reset flag after a short delay to allow the current click event to fully propagate
+        // This delay needs to be slightly longer than the browser's event loop processing time for a single click
+        setTimeout(() => {
+            isAlertPanelInteraction = false;
+        }, 100); // Increased delay slightly
         logDebug('Alerts: Showing alert panel.');
     }
 }
@@ -2910,12 +2915,9 @@ async function initializeAppLogic() {
 
     // Global click listener to close modals/context menu if clicked outside
     window.addEventListener('click', (event) => {
-        // If the ignoreNextGlobalClick flag is true, reset it and return immediately.
-        // This prevents the global click listener from immediately closing the alert panel
-        // right after it's opened by the targetHitIconBtn.
-        if (ignoreNextGlobalClick) {
-            ignoreNextGlobalClick = false;
-            return; 
+        // If a recent interaction originated from the alert system, ignore this global click
+        if (isAlertPanelInteraction) {
+            return;
         }
 
         // Close modals if click is outside their content
@@ -2931,9 +2933,10 @@ async function initializeAppLogic() {
             hideContextMenu();
         }
 
-        // Close alert panel if clicked outside (but not on the bell icon itself or the panel itself)
-        if (alertPanel && alertPanel.classList.contains('open') && 
-            !alertPanel.contains(event.target) && !targetHitIconBtn.contains(event.target)) {
+        // Only hide alert panel if it's open AND the click was NOT inside the panel
+        // The `stopPropagation` on the icon and panel elements should prevent this from firing
+        // when clicking them directly. This check handles clicks *outside* the alert system.
+        if (alertPanel && alertPanel.classList.contains('open') && !alertPanel.contains(event.target)) {
             hideAlertPanel();
         }
     });
@@ -3615,24 +3618,22 @@ async function initializeAppLogic() {
     // NEW: Target hit icon button listener
     if (targetHitIconBtn) {
         targetHitIconBtn.addEventListener('click', (event) => {
+            event.stopPropagation(); // Crucial: Stop the click event from bubbling up to the window
             logDebug('Target Alert: Icon button clicked. Showing alerted shares.');
-            // Prevent immediate closing if it's already open and clicked again
             if (alertPanel.classList.contains('open')) {
                 hideAlertPanel();
             } else {
                 showAlertPanel();
             }
-            // Stop propagation to prevent global click listener from immediately closing it
-            event.stopPropagation(); 
         });
     }
 
     // NEW: Alert Panel Close Button Listener
     if (alertPanelCloseBtn) {
         alertPanelCloseBtn.addEventListener('click', (event) => {
+            event.stopPropagation(); // Stop the click event from bubbling up
             logDebug('Alerts: Alert panel close button clicked.');
             hideAlertPanel();
-            event.stopPropagation(); // Prevent global click listener from re-opening/re-closing
         });
     }
 
