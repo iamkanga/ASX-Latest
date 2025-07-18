@@ -2050,9 +2050,10 @@ function stopLivePriceUpdates() {
 
 // NEW: Function to update the target hit notification icon
 function updateTargetHitBanner() {
+    // UPDATED: Filter allSharesData for target hits, regardless of current watchlist view
     sharesAtTargetPrice = allSharesData.filter(share => {
         const livePriceData = livePrices[share.shareName.toUpperCase()];
-        // Ensure livePriceData exists and has targetHit property
+        // Ensure livePriceData exists and has targetHit property, and that it's not snoozed (future)
         return livePriceData && livePriceData.targetHit;
     });
 
@@ -2061,15 +2062,16 @@ function updateTargetHitBanner() {
         return;
     }
 
-    if (sharesAtTargetPrice.length > 0 && !targetHitIconDismissed) { // Only show if shares are at target AND not dismissed
+    // Only show if there are shares at target AND the icon hasn't been manually dismissed
+    if (sharesAtTargetPrice.length > 0 && !targetHitIconDismissed) {
         targetHitIconCount.textContent = sharesAtTargetPrice.length;
         targetHitIconBtn.style.display = 'flex'; // Show the icon
         targetHitIconCount.style.display = 'block'; // Show the count badge
-        logDebug('Target Alert: Showing icon: ' + sharesAtTargetPrice.length + ' shares hit target.');
+        logDebug('Target Alert: Showing icon: ' + sharesAtTargetPrice.length + ' shares hit target (global check).');
     } else {
         targetHitIconBtn.style.display = 'none'; // Hide the icon
         targetHitIconCount.style.display = 'none'; // Hide the count badge
-        logDebug('Target Alert: No shares hit target or icon is dismissed. Hiding icon.');
+        logDebug('Target Alert: No shares hit target globally or icon is dismissed. Hiding icon.');
     }
 }
 
