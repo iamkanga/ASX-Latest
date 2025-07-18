@@ -518,21 +518,7 @@
                 db = getFirestore(app);
                 auth = getAuth(app);
                 firebaseInitialized = true;
-                // Attempt to sign in with custom token if available, otherwise anonymously
-                if (typeof __initial_auth_token !== 'undefined') { // Use Canvas provided token
-                    signInWithCustomToken(auth, __initial_auth_token)
-                        .then(() => console.log("Firebase: Signed in with custom token."))
-                        .catch(error => {
-                            console.error("Firebase: Custom token sign-in failed:", error);
-                            signInAnonymously(auth)
-                                .then(() => console.log("Firebase: Signed in anonymously after custom token failure."))
-                                .catch(anonError => console.error("Firebase: Anonymous sign-in failed:", anonError));
-                        });
-                } else { // Fallback to anonymous sign-in if no Canvas token
-                    signInAnonymously(auth)
-                        .then(() => console.log("Firebase: Signed in anonymously."))
-                        .catch(error => console.error("Firebase: Anonymous sign-in failed:", error));
-                }
+                // No automatic sign-in here. Authentication will be triggered by user action.
                 console.log("Firebase: Initialized successfully with config.");
             } catch (error) {
                 console.error("Firebase: Failed to initialize app with provided config:", error);
