@@ -2874,7 +2874,7 @@ function showCashCategoryDetailsModal(assetId) {
 }
 
 // NEW: Function to toggle visibility of a cash asset (New Feature)
-function toggleCashAssetVisibility(assetId) {
+async function toggleCashAssetVisibility(assetId) {
     logDebug('Cash Asset Visibility: Toggling visibility for asset ID: ' + assetId);
     // Toggle the visibility state
     // If currently hidden (false), set to true; otherwise, false
