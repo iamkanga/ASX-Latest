@@ -58,7 +58,7 @@
                 <select id="watchlistSelect" class="dropdown-large">
                     <option value="" disabled selected>Watch List</option>
                     <!-- Options populated by JS -->
-                    <option value="cashBank">Cash & Bank</option> <!-- NEW: Option for Cash & Bank -->
+                    <option value="cashBank">Cash & Assets</option> <!-- UPDATED: Option for Cash & Assets -->
                 </select>
             </div>
 
@@ -251,9 +251,9 @@
             </div>
         </div>
 
-        <!-- NEW: Cash & Bank Section (Initially hidden) -->
-        <div id="cashBankSection" class="cash-bank-section app-hidden">
-            <h2>Cash & Bank Balances</h2>
+        <!-- NEW: Cash & Assets Section (Initially hidden) -->
+        <div id="cashAssetsSection" class="cash-assets-section app-hidden">
+            <h2>Cash & Assets Balances</h2>
             <div id="cashCategoriesContainer" class="cash-categories-container">
                 <!-- Cash categories and their input fields will be dynamically added here by script.js -->
                 <p class="empty-message">No cash categories added yet. Click "Add Category" to get started!</p>
@@ -504,6 +504,47 @@
         <button id="contextEditShareBtn" class="context-menu-item"><i class="fas fa-edit"></i> Edit Share</button>
         <button id="contextDeleteShareBtn" class="context-menu-item danger-button"><i class="fas fa-trash-alt"></i> Delete Share</button>
     </div>
+
+    <!-- NEW: Add/Edit Cash Asset Modal (2.1) -->
+    <div id="cashAssetFormModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header-with-icon">
+                <h2 id="cashFormTitle">Add New Cash Asset</h2>
+                <div class="modal-header-action-group">
+                    <span id="deleteCashAssetBtn" class="modal-action-icon danger hidden" title="Delete"><i class="fas fa-trash-alt"></i></span>
+                    <span id="saveCashAssetBtn" class="modal-action-icon" title="Save Cash Asset"><i class="fas fa-save"></i></span>
+                    <span class="close-button cash-form-close-button">&times;</span>
+                </div>
+            </div>
+            <div class="modal-body-scrollable">
+                <label for="cashAssetName">Asset Name:</label>
+                <input type="text" id="cashAssetName" placeholder="e.g., Savings Account" required>
+
+                <label for="cashAssetBalance">Balance ($):</label>
+                <input type="number" id="cashAssetBalance" step="0.01" placeholder="e.g., 10000.00" required>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEW: Cash Asset Details Modal (2.2) -->
+    <div id="cashAssetDetailModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header-with-icon">
+                <h2 id="modalCashAssetName">Cash Asset Details</h2>
+                <div class="modal-header-action-group">
+                    <span id="deleteCashAssetFromDetailBtn" class="modal-action-icon danger" title="Delete Cash Asset"><i class="fas fa-trash-alt"></i></span>
+                    <span id="editCashAssetFromDetailBtn" class="modal-action-icon" title="Edit Cash Asset"><i class="fas fa-edit"></i></span>
+                    <span class="close-button">&times;</span>
+                </div>
+            </div>
+            <div class="modal-body-scrollable">
+                <p><strong>Asset Name:</strong> <span id="detailCashAssetName"></span></p>
+                <p><strong>Balance:</strong> <span id="detailCashAssetBalance"></span></p>
+                <p><strong>Last Updated:</strong> <span id="detailCashAssetLastUpdated"></span></p>
+            </div>
+        </div>
+    </div>
+
 
     <!-- Firebase and main script loading -->
     <script type="module">

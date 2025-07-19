@@ -79,7 +79,7 @@
     --snooze-options-bg: #ffffff;
     --snooze-options-border: #b0b8bb;
 
-    /* NEW: Cash & Bank Section Colors */
+    /* UPDATED: Cash & Assets Section Colors */
     --cash-section-bg: #f8f9fa;
     --cash-card-bg: #ffffff;
     --cash-border-color: #c9d2d4;
@@ -148,7 +148,7 @@ body.dark-theme {
     --target-alert-border: #2980b9;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Bank Section Colors (Dark Theme) */
+    /* UPDATED: Cash & Assets Section Colors (Dark Theme) */
     --cash-section-bg: #3b526b;
     --cash-card-bg: #4a627a;
     --cash-border-color: #5c758e;
@@ -219,7 +219,7 @@ body.theme-bold-1 { /* Ocean Blue */
     --target-alert-border: #0096c7;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Bank Section Colors (Custom Theme) */
+    /* UPDATED: Cash & Assets Section Colors (Custom Theme) */
     --cash-section-bg: #0a475a;
     --cash-card-bg: #005f73;
     --cash-border-color: #008793;
@@ -288,7 +288,7 @@ body.theme-bold-2 { /* Forest Green */
     --target-alert-border: #8ba84a;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Bank Section Colors (Custom Theme) */
+    /* UPDATED: Cash & Assets Section Colors (Custom Theme) */
     --cash-section-bg: #4a754a;
     --cash-card-bg: #386641;
     --cash-border-color: #6a9955;
@@ -357,7 +357,7 @@ body.theme-bold-3 { /* Sunset Orange */
     --target-alert-border: #e0ac00;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Bank Section Colors (Custom Theme) */
+    /* UPDATED: Cash & Assets Section Colors (Custom Theme) */
     --cash-section-bg: #f4a261;
     --cash-card-bg: #e63946;
     --cash-border-color: #e76f51;
@@ -426,7 +426,7 @@ body.theme-bold-4 { /* Royal Purple */
     --target-alert-border: #a842ff;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Bank Section Colors (Custom Theme) */
+    /* UPDATED: Cash & Assets Section Colors (Custom Theme) */
     --cash-section-bg: #7b2cbf;
     --cash-card-bg: #5a189a;
     --cash-border-color: #9d4edd;
@@ -495,7 +495,7 @@ body.theme-bold-5 { /* Deep Red */
     --target-alert-border: #c0392b;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Bank Section Colors (Custom Theme) */
+    /* UPDATED: Cash & Assets Section Colors (Custom Theme) */
     --cash-section-bg: #a02020;
     --cash-card-bg: #8b0000;
     --cash-border-color: #c0392b;
@@ -564,7 +564,7 @@ body.theme-bold-6 { /* Gold */
     --target-alert-border: #fdd835;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Bank Section Colors (Custom Theme) */
+    /* UPDATED: Cash & Assets Section Colors (Custom Theme) */
     --cash-section-bg: #daa520;
     --cash-card-bg: #b8860b;
     --cash-border-color: #ffd700;
@@ -632,7 +632,7 @@ body.theme-bold-7 { /* Emerald */
     --target-alert-border: #4caf50;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Bank Section Colors (Custom Theme) */
+    /* UPDATED: Cash & Assets Section Colors (Custom Theme) */
     --cash-section-bg: #228b22;
     --cash-card-bg: #006400;
     --cash-border-color: #3cb371;
@@ -701,7 +701,7 @@ body.theme-bold-8 { /* Plum */
     --target-alert-border: #c71585;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Bank Section Colors (Custom Theme) */
+    /* UPDATED: Cash & Assets Section Colors (Custom Theme) */
     --cash-section-bg: #9932cc;
     --cash-card-bg: #800080;
     --cash-border-color: #ba55d3;
@@ -770,7 +770,7 @@ body.theme-bold-9 { /* Aqua */
     --target-alert-border: #008080;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Bank Section Colors (Custom Theme) */
+    /* UPDATED: Cash & Assets Section Colors (Custom Theme) */
     --cash-section-bg: #00ced1;
     --cash-card-bg: #008b8b;
     --cash-border-color: #40e0d0;
@@ -839,7 +839,7 @@ body.theme-bold-10 { /* Ruby */
     --target-alert-border: #b22222;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Bank Section Colors (Custom Theme) */
+    /* UPDATED: Cash & Assets Section Colors (Custom Theme) */
     --cash-section-bg: #a52a2a;
     --cash-card-bg: #8b0000;
     --cash-border-color: #cd5c5c;
@@ -867,7 +867,7 @@ body.theme-subtle-1 { /* Subtle Sky */
     --input-border: #99b3cc;
     --modal-content-bg: #e0eaf2;
     --table-header-bg: #b3d0e6;
-    --table-row-hover-bg: #d9e6f2;
+    --table-row-hover-bg: #d9eaf0;
     --asx-button-bg: #b3d0e6;
     --asx-button-hover-bg: #99b3cc;
     --asx-button-active-bg: #6699cc;
@@ -901,7 +901,7 @@ body.theme-subtle-1 { /* Subtle Sky */
     --target-alert-border: #4d7eb3;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Bank Section Colors (Custom Theme) */
+    /* UPDATED: Cash & Assets Section Colors (Custom Theme) */
     --cash-section-bg: #f5faff;
     --cash-card-bg: #e0eaf2;
     --cash-border-color: #a2c2d9;
@@ -961,7 +961,7 @@ body.theme-subtle-2 { /* Subtle Earth */
     --target-alert-border: #917e6c;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Bank Section Colors (Custom Theme) */
+    /* UPDATED: Cash & Assets Section Colors (Custom Theme) */
     --cash-section-bg: #ffffff;
     --cash-card-bg: #f0ebe5;
     --cash-border-color: #c2b3a2;
@@ -1021,7 +1021,7 @@ body.theme-subtle-3 { /* Subtle Rose */
     --target-alert-border: #c98899;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Bank Section Colors (Custom Theme) */
+    /* UPDATED: Cash & Assets Section Colors (Custom Theme) */
     --cash-section-bg: #ffffff;
     --cash-card-bg: #ffe0e6;
     --cash-border-color: #e6b3be;
@@ -1081,7 +1081,7 @@ body.theme-subtle-4 { /* Subtle Lavender */
     --target-alert-border: #9188c9;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Bank Section Colors (Custom Theme) */
+    /* UPDATED: Cash & Assets Section Colors (Custom Theme) */
     --cash-section-bg: #ffffff;
     --cash-card-bg: #f0e0f2;
     --cash-border-color: #c2b3d9;
@@ -1141,7 +1141,7 @@ body.theme-subtle-5 { /* Subtle Mint */
     --target-alert-border: #88c991;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Bank Section Colors (Custom Theme) */
+    /* UPDATED: Cash & Assets Section Colors (Custom Theme) */
     --cash-section-bg: #ffffff;
     --cash-card-bg: #e0f2e6;
     --cash-border-color: #b3d9be;
@@ -1201,7 +1201,7 @@ body.theme-subtle-6 { /* Subtle Sand */
     --target-alert-border: #c98877;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Bank Section Colors (Custom Theme) */
+    /* UPDATED: Cash & Assets Section Colors (Custom Theme) */
     --cash-section-bg: #ffffff;
     --cash-card-bg: #fff0e0;
     --cash-border-color: #e6b3a2;
@@ -1261,7 +1261,7 @@ body.theme-subtle-7 { /* Subtle Graphite */
     --target-alert-border: #888888;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Bank Section Colors (Custom Theme) */
+    /* UPDATED: Cash & Assets Section Colors (Custom Theme) */
     --cash-section-bg: #ffffff;
     --cash-card-bg: #e6e6e6;
     --cash-border-color: #b3b3b3;
@@ -1321,7 +1321,7 @@ body.theme-subtle-8 { /* Subtle Peach */
     --target-alert-border: #c98877;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Bank Section Colors (Custom Theme) */
+    /* UPDATED: Cash & Assets Section Colors (Custom Theme) */
     --cash-section-bg: #ffffff;
     --cash-card-bg: #ffebe0;
     --cash-border-color: #e6b3a2;
@@ -1381,7 +1381,7 @@ body.theme-subtle-9 { /* Subtle Teal */
     --target-alert-border: #88c9b3;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Bank Section Colors (Custom Theme) */
+    /* UPDATED: Cash & Assets Section Colors (Custom Theme) */
     --cash-section-bg: #ffffff;
     --cash-card-bg: #e0f2f0;
     --cash-border-color: #b3d9c2;
@@ -1438,7 +1438,7 @@ body.theme-subtle-10 { /* Subtle Stone */
     --target-alert-border: #7a7a7a;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Bank Section Colors (Custom Theme) */
+    /* UPDATED: Cash & Assets Section Colors (Custom Theme) */
     --cash-section-bg: #ffffff;
     --cash-card-bg: #e6e6e6;
     --cash-border-color: #b3b3b3;
@@ -1517,7 +1517,7 @@ body.theme-muted-blue {
     --target-alert-border: #3a7a8f;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Bank Section Colors (Custom Theme) */
+    /* UPDATED: Cash & Assets Section Colors (Custom Theme) */
     --cash-section-bg: #c7e0e7;
     --cash-card-bg: #a8d0db;
     --cash-border-color: #5b99ad;
@@ -1594,7 +1594,7 @@ body.theme-muted-brown {
     --target-alert-border: #7a5a4a;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Bank Section Colors (Custom Theme) */
+    /* UPDATED: Cash & Assets Section Colors (Custom Theme) */
     --cash-section-bg: #e7d8c7;
     --cash-card-bg: #d0b8a8;
     --cash-border-color: #9c7b66;
@@ -1671,7 +1671,7 @@ body.theme-muted-pink {
     --target-alert-border: #8f3a50;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Bank Section Colors (Custom Theme) */
+    /* UPDATED: Cash & Assets Section Colors (Custom Theme) */
     --cash-section-bg: #e7c7d0;
     --cash-card-bg: #e0a8b8;
     --cash-border-color: #ad5b73;
@@ -1748,7 +1748,7 @@ body.theme-muted-green {
     --target-alert-border: #3a7a3a;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Bank Section Colors (Custom Theme) */
+    /* UPDATED: Cash & Assets Section Colors (Custom Theme) */
     --cash-section-bg: #c7e7c7;
     --cash-card-bg: #a8d0a8;
     --cash-border-color: #5b9d5b;
@@ -1825,7 +1825,7 @@ body.theme-muted-purple {
     --target-alert-border: #7a3a7a;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Bank Section Colors (Custom Theme) */
+    /* UPDATED: Cash & Assets Section Colors (Custom Theme) */
     --cash-section-bg: #e7c7e7;
     --cash-card-bg: #d0a8d0;
     --cash-border-color: #9d5b9d;
@@ -1902,7 +1902,7 @@ body.theme-muted-orange {
     --target-alert-border: #8f3a50;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Bank Section Colors (Custom Theme) */
+    /* UPDATED: Cash & Assets Section Colors (Custom Theme) */
     --cash-section-bg: #e7d0c7;
     --cash-card-bg: #d0b8a8;
     --cash-border-color: #ad875b;
@@ -1979,7 +1979,7 @@ body.theme-muted-cyan {
     --target-alert-border: #3a7a7a;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Bank Section Colors (Custom Theme) */
+    /* UPDATED: Cash & Assets Section Colors (Custom Theme) */
     --cash-section-bg: #e7e7e7;
     --cash-card-bg: #a8d0d0;
     --cash-border-color: #5b9d9d;
@@ -2056,7 +2056,7 @@ body.theme-muted-magenta {
     --target-alert-border: #7a3a7a;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Bank Section Colors (Custom Theme) */
+    /* UPDATED: Cash & Assets Section Colors (Custom Theme) */
     --cash-section-bg: #e7c7e7;
     --cash-card-bg: #d0a8d0;
     --cash-border-color: #9d5b9d;
@@ -2133,7 +2133,7 @@ body.theme-muted-gold {
     --target-alert-border: #7a6e3a;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Bank Section Colors (Custom Theme) */
+    /* UPDATED: Cash & Assets Section Colors (Custom Theme) */
     --cash-section-bg: #e7dcc7;
     --cash-card-bg: #d0c2a8;
     --cash-border-color: #9d8d5b;
@@ -2210,7 +2210,7 @@ body.theme-muted-grey {
     --target-alert-border: #7a7a7a;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Bank Section Colors (Custom Theme) */
+    /* UPDATED: Cash & Assets Section Colors (Custom Theme) */
     --cash-section-bg: #e7e7e7;
     --cash-card-bg: #d0d0d0;
     --cash-border-color: #9d9d9d;
@@ -2218,10 +2218,10 @@ body.theme-muted-grey {
     --cash-total-text: #fff;
     --cash-button-bg: #28a745;
     --cash-button-hover-bg: #218838;
-    --cash-primary-button-bg: #909090;
-    --cash-primary-button-hover-bg: #7a7a7a;
+    --cash-primary-button-bg: #999999;
+    --cash-primary-button-hover-bg: #888888;
     --cash-delete-icon-color: #dc3545;
-    --cash-edit-icon-color: #909090;
+    --cash-edit-icon-color: #999999;
 }
 
 
@@ -2892,7 +2892,7 @@ table td.live-price-cell.negative-change {
     align-items: center;
     justify-content: center;
     gap: 10px;
-    box-shadow: 0 44px 8px var(--shadow-color);
+    box-shadow: 0 4px 8px var(--shadow-color);
     width: fit-content;
     max-width: 100%;
 }
@@ -2955,7 +2955,7 @@ table td.live-price-cell.negative-change {
 }
 
 /* ASX Code prominence and alignment */
-#modalShareName { /* Targeted directly for higher specificity */
+#modalShareName, #modalCashAssetName { /* Targeted directly for higher specificity */
     margin: 0;
     flex-grow: 1;
     text-align: center;
@@ -3923,8 +3923,8 @@ main.container {
     box-shadow: 0 5px 15px rgba(0,0,0,0.3); /* More prominent shadow */
 }
 
-/* NEW: Cash & Bank Section Styles */
-.cash-bank-section {
+/* UPDATED: Cash & Assets Section Styles (1, 2.1, 3.1) */
+.cash-assets-section { /* Renamed from cash-bank-section */
     margin-top: 20px;
     background-color: var(--cash-section-bg);
     border-radius: 8px;
@@ -3935,7 +3935,7 @@ main.container {
     padding: 20px;
 }
 
-.cash-bank-section h2 {
+.cash-assets-section h2 {
     margin-top: 0;
     margin-bottom: 20px;
     text-align: center;
@@ -3944,60 +3944,77 @@ main.container {
 }
 
 .cash-categories-container {
-    max-height: 400px; /* Limit height for scrolling */
+    /* 3.2: Adjust max height for scrollable area to fill available screen */
+    max-height: calc(100vh - var(--header-height) - var(--footer-height, 0px) - 180px); /* Approx. viewport height - header - footer - other section padding */
+    min-height: 150px; /* Ensure a minimum height */
     overflow-y: auto;
     padding-right: 10px; /* Space for scrollbar */
     margin-right: -10px; /* Compensate for padding-right */
     margin-bottom: 20px;
+    display: grid; /* For desktop card layout */
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* 1: Desktop cards 2-3 horizontally */
+    gap: 15px; /* Space between cards */
+    padding: 10px; /* Padding inside the container for cards */
+    box-sizing: border-box;
 }
 
 .cash-category-item {
     display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 15px;
+    flex-direction: column; /* Stack content vertically within the card */
+    align-items: center; /* Center content horizontally for dollar value (3.1) */
+    gap: 10px; /* Space between elements in the card */
     background-color: var(--cash-card-bg);
     border: 1px solid var(--cash-border-color);
     border-radius: 8px;
-    padding: 10px 15px;
+    padding: 15px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    cursor: pointer; /* Make cards clickable */
+    transition: background-color 0.2s ease;
 }
 
-.cash-category-item:last-child {
-    margin-bottom: 0;
+.cash-category-item:hover {
+    background-color: var(--table-row-hover-bg);
 }
 
-.cash-category-item .category-name-input {
+.cash-category-item .category-header { /* NEW: Container for name and icons */
+    display: flex;
+    justify-content: space-between; /* Name left, icons right */
+    align-items: center;
+    width: 100%;
+    margin-bottom: 5px; /* Space between header and balance */
+}
+
+.cash-category-item .category-name-display { /* NEW: For displaying name in card */
+    font-size: 1.2em;
+    font-weight: 700;
+    color: var(--text-color);
     flex-grow: 1;
-    padding: 8px;
-    border: 1px solid var(--input-border);
-    border-radius: 5px;
-    background-color: var(--input-bg);
-    color: var(--text-color);
-    font-size: 1em;
-    margin-right: 10px;
-    width: auto; /* Allow input to grow */
-    min-width: 0; /* Allow shrinking */
+    text-align: left; /* Name on the left */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
+.cash-category-item .category-actions { /* NEW: Container for edit/delete icons */
+    display: flex;
+    gap: 5px;
+    flex-shrink: 0;
+}
+
+.cash-category-item .category-balance-display { /* NEW: For displaying balance in card */
+    font-size: 1.8em; /* Prominent size for dollar value */
+    font-weight: 800;
+    color: var(--text-color);
+    text-align: center; /* 3.1: Centralized dollar value */
+    width: 100%; /* Take full width to allow centering */
+}
+
+/* Hide inputs when displaying cards (they are used in modals) */
+.cash-category-item .category-name-input,
 .cash-category-item .category-balance-input {
-    width: 100px; /* Fixed width for balance input */
-    padding: 8px;
-    border: 1px solid var(--input-border);
-    border-radius: 5px;
-    background-color: var(--input-bg);
-    color: var(--text-color);
-    font-size: 1em;
-    text-align: right;
-    flex-shrink: 0; /* Prevent shrinking */
+    display: none; /* These are for modal inputs, not direct card display */
 }
 
-.cash-category-item .category-name-input:focus,
-.cash-category-item .category-balance-input:focus {
-    border-color: var(--cash-primary-button-bg);
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-    outline: none;
-}
 
 .cash-category-item .edit-category-name-btn,
 .cash-category-item .delete-category-btn {
@@ -4090,6 +4107,33 @@ main.container {
     color: var(--ghosted-text);
     padding: 20px 0;
     font-style: italic;
+    grid-column: 1 / -1; /* Span all columns in grid layout */
+}
+
+/* NEW: Cash Asset Modals (2.1, 2.2) */
+#cashAssetFormModal .modal-content,
+#cashAssetDetailModal .modal-content {
+    max-width: 450px; /* Slightly narrower for cash modals */
+}
+
+#cashAssetDetailModal .modal-body-scrollable p {
+    margin: 10px 0;
+    font-size: 1.1em;
+    color: var(--text-color);
+}
+
+#cashAssetDetailModal .modal-body-scrollable p strong {
+    color: var(--label-color);
+}
+
+#detailCashAssetBalance { /* 2.2: Centralized dollar value in details modal */
+    display: block; /* Make it a block element to center */
+    text-align: center;
+    font-size: 2em; /* Prominent size */
+    font-weight: 800;
+    color: var(--text-color);
+    margin-top: 10px;
+    margin-bottom: 20px;
 }
 
 
@@ -4162,7 +4206,7 @@ main.container {
     .watchlist-controls-row {
         flex-direction: row; /* Keep as row for side-by-side */
         flex-wrap: nowrap; /* Prevent wrapping */
-        justify-content: space-around; /* Distribute space evenly */
+        justify-content: center; /* 3.3: Centralize watchlist selection on mobile */
         gap: 10px; /* Smaller gap for mobile */
         padding: 10px 15px;
         margin-top: 0; /* No top margin here, gap handled by parent header's gap */
@@ -4174,6 +4218,13 @@ main.container {
         max-width: calc(50% - 5px); /* Account for half the gap */
         min-width: 120px; /* Ensure a reasonable minimum width for dropdowns */
     }
+    
+    /* 3.3: Ensure watchlist select is centered within its group */
+    .watchlist-group {
+        display: flex;
+        justify-content: center;
+    }
+
 
     .dropdown-large {
         width: 100%; /* Ensure dropdowns fill their allocated space */
@@ -4211,7 +4262,7 @@ main.container {
     }
 
     /* Ensure modalShareName retains its large font size on mobile */
-    #modalShareName {
+    #modalShareName, #modalCashAssetName {
         font-size: 2.2em; /* Keep it consistent with desktop and live price */
     }
 
@@ -4279,37 +4330,56 @@ main.container {
         font-size: 1em;
     }
 
-    /* NEW: Mobile specific styles for Cash & Bank Section */
-    .cash-bank-section {
+    /* UPDATED: Mobile specific styles for Cash & Assets Section (3.1) */
+    .cash-assets-section { /* Renamed from cash-bank-section */
         padding: 15px;
     }
 
     .cash-categories-container {
-        max-height: 300px; /* Adjust max height for mobile */
+        /* 3.2: Adjust max height for mobile scrollable area */
+        max-height: calc(100vh - var(--header-height) - var(--footer-height, 0px) - 150px); /* Adjusted for mobile header/footer */
+        grid-template-columns: 1fr; /* Single column on mobile */
+        gap: 10px;
+        padding: 0; /* Remove internal padding on mobile grid */
     }
 
     .cash-category-item {
         flex-wrap: wrap; /* Allow items to wrap on smaller screens */
         padding: 8px 10px;
+        flex-direction: column; /* Revert to column for mobile cards */
+        align-items: center; /* Center content on mobile */
+        text-align: center;
     }
 
-    .cash-category-item .category-name-input {
+    .cash-category-item .category-header {
+        margin-bottom: 5px;
+        /* Ensure name is left, icons are right on the same line */
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .cash-category-item .category-name-display {
+        flex-grow: 1;
+        text-align: left; /* Name on the left */
+        margin-right: 10px; /* Space before icons */
+    }
+
+    .cash-category-item .category-actions {
+        flex-shrink: 0;
+    }
+
+    .cash-category-item .category-balance-display {
+        font-size: 1.5em; /* Slightly smaller for mobile cards */
+        text-align: center; /* Centralized dollar value */
+        margin-top: 0;
+    }
+
+    /* Ensure input fields in modals are full width */
+    .cash-asset-form-modal .category-name-input,
+    .cash-asset-form-modal .category-balance-input {
         width: calc(100% - 10px); /* Take full width minus padding/margin */
         margin-right: 0;
         margin-bottom: 10px; /* Add margin below name input when wrapped */
-    }
-
-    .cash-category-item .category-balance-input {
-        width: calc(100% - 10px); /* Take full width minus padding/margin */
-        text-align: left; /* Align left for mobile input */
-        order: 3; /* Push balance input to a new line */
-        margin-top: 5px;
-    }
-
-    .cash-category-item .edit-category-name-btn,
-    .cash-category-item .delete-category-btn {
-        font-size: 1.1em; /* Slightly smaller icons */
-        padding: 3px;
     }
 
     .cash-actions {
