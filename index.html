@@ -102,10 +102,6 @@
                 <button id="newShareBtn" class="menu-button-item" data-action-closes-menu="true">
                     <i class="fas fa-plus-circle"></i> <span>Add New Share</span>
                 </button>
-                <!-- NEW: Add New Cash Asset Button (3) -->
-                <button id="newCashAssetBtn" class="menu-button-item" data-action-closes-menu="true">
-                    <i class="fas fa-money-bill-wave"></i> <span>Add New Cash Asset</span>
-                </button>
             </div>
         </div>
 
@@ -262,11 +258,10 @@
                 <!-- Cash categories and their input fields will be dynamically added here by script.js -->
                 <p class="empty-message">No cash categories added yet. Click "Add Category" to get started!</p>
             </div>
-            <!-- REMOVED: Add Category and Save Balances buttons (3) -->
-            <!-- <div class="cash-actions">
+            <div class="cash-actions">
                 <button id="addCashCategoryBtn" class="button">Add Category</button>
                 <button id="saveCashBalancesBtn" class="button primary-button">Save Balances</button>
-            </div> -->
+            </div>
             <div class="total-cash-display">
                 <h3>Total Cash: <span id="totalCashDisplay">$0.00</span></h3>
             </div>
@@ -527,14 +522,6 @@
 
                 <label for="cashAssetBalance">Balance ($):</label>
                 <input type="number" id="cashAssetBalance" step="0.01" placeholder="e.g., 10000.00" required>
-                
-                <!-- NEW: Comments section for Cash Asset Form (2) -->
-                <div class="comments-form-container">
-                    <h3>Comments <span id="addCashCommentSectionBtn" class="add-section-icon"><i class="fas fa-plus"></i></span></h3>
-                    <div id="dynamicCashCommentsArea">
-                        <!-- Dynamically added comment sections will go here -->
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -554,12 +541,6 @@
                 <p><strong>Asset Name:</strong> <span id="detailCashAssetName"></span></p>
                 <p><strong>Balance:</strong> <span id="detailCashAssetBalance"></span></p>
                 <p><strong>Last Updated:</strong> <span id="detailCashAssetLastUpdated"></span></p>
-
-                <!-- NEW: Comments section for Cash Asset Details (2) -->
-                <div id="detailCashCommentsContainer" class="modal-comments-sections">
-                    <h3>Comments</h3>
-                    <!-- Comments will be displayed here -->
-                </div>
             </div>
         </div>
     </div>
