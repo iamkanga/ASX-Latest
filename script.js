@@ -1693,7 +1693,8 @@ function addShareToMobileCards(share) {
                 longPressTimer = null;
                 logDebug('Mobile Card TouchMove: Long press cancelled due to movement.');
             }
-        });
+        }
+    });
 
     card.addEventListener('touchend', () => {
         if (longPressTimer) {
