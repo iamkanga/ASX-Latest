@@ -1642,7 +1642,7 @@ function renderWatchlist() {
 
     const selectedWatchlistId = currentSelectedWatchlistIds[0];
 
-    // Ensure elements exist before trying to manipulate them
+    // Get references to all necessary elements, checking if they exist
     const stockWatchlistSectionEl = document.getElementById('stockWatchlistSection');
     const cashAssetsSectionEl = document.getElementById('cashAssetsSection');
     const cashCategoriesContainerEl = document.getElementById('cashCategoriesContainer');
@@ -1656,33 +1656,33 @@ function renderWatchlist() {
     const shareTableBodyEl = document.querySelector('#shareTable tbody');
     const mobileShareCardsContainerEl = document.getElementById('mobileShareCards');
 
-    // Hide both sections initially if they exist
+    // Hide both sections initially, but only if they exist
     if (stockWatchlistSectionEl) stockWatchlistSectionEl.classList.add('app-hidden');
     if (cashAssetsSectionEl) cashAssetsSectionEl.classList.add('app-hidden');
 
-    // Clear previous content if elements exist
+    // Clear previous content, but only if elements exist
     if (shareTableBodyEl) shareTableBodyEl.innerHTML = '';
     if (mobileShareCardsContainerEl) mobileShareCardsContainerEl.innerHTML = '';
     if (cashCategoriesContainerEl) cashCategoriesContainerEl.innerHTML = '';
 
 
     if (selectedWatchlistId === CASH_BANK_WATCHLIST_ID) {
-        // Show Cash & Assets section
+        // Show Cash & Assets section, if element exists
         if (cashAssetsSectionEl) cashAssetsSectionEl.classList.remove('app-hidden');
-        if (mainTitleEl) mainTitleEl.textContent = 'Cash & Assets'; // UPDATED TEXT
-        renderCashCategories(); // Render cash categories
-        // Hide stock-specific UI elements if they exist
+        if (mainTitleEl) mainTitleEl.textContent = 'Cash & Assets';
+        renderCashCategories(); // This function will also perform its own element checks
+        // Hide stock-specific UI elements, if they exist
         if (addShareHeaderBtnEl) addShareHeaderBtnEl.classList.add('app-hidden');
         if (sortSelectEl) sortSelectEl.classList.add('app-hidden');
         if (refreshLivePricesBtnEl) refreshLivePricesBtnEl.classList.add('app-hidden');
         if (toggleCompactViewBtnEl) toggleCompactViewBtnEl.classList.add('app-hidden');
         if (asxCodeButtonsContainerEl) asxCodeButtonsContainerEl.classList.add('app-hidden');
-        if (targetHitIconBtnEl) targetHitIconBtnEl.classList.add('app-hidden'); // Hide target icon for cash view
+        if (targetHitIconBtnEl) targetHitIconBtnEl.classList.add('app-hidden');
         stopLivePriceUpdates(); // Stop live price updates when in cash view
     } else {
-        // Show Stock Watchlist section
+        // Show Stock Watchlist section, if element exists
         if (stockWatchlistSectionEl) stockWatchlistSectionEl.classList.remove('app-hidden');
-        // Update main title based on selected stock watchlist
+        // Update main title
         if (mainTitleEl) {
             const selectedWatchlist = userWatchlists.find(wl => wl.id === selectedWatchlistId);
             if (selectedWatchlistId === ALL_SHARES_ID) {
@@ -1694,27 +1694,27 @@ function renderWatchlist() {
             }
         }
 
-        // Show stock-specific UI elements if they exist
+        // Show stock-specific UI elements, if they exist
         if (addShareHeaderBtnEl) addShareHeaderBtnEl.classList.remove('app-hidden');
         if (sortSelectEl) sortSelectEl.classList.remove('app-hidden');
         if (refreshLivePricesBtnEl) refreshLivePricesBtnEl.classList.remove('app-hidden');
         if (toggleCompactViewBtnEl) toggleCompactViewBtnEl.classList.remove('app-hidden');
         if (asxCodeButtonsContainerEl) asxCodeButtonsContainerEl.classList.remove('app-hidden');
-        if (targetHitIconBtnEl) targetHitIconBtnEl.classList.remove('app-hidden'); // Show target icon for stock view
-        startLivePriceUpdates(); // Ensure live price updates are running for stock view
+        if (targetHitIconBtnEl) targetHitIconBtnEl.classList.remove('app-hidden');
+        startLivePriceUpdates(); // Ensure live price updates are running
 
         let sharesToRender = [];
         if (selectedWatchlistId === ALL_SHARES_ID) {
             sharesToRender = [...allSharesData];
             logDebug('Render: Displaying all shares (from ALL_SHARES_ID in currentSelectedWatchlistIds).');
-        } else if (currentSelectedWatchlistIds.length === 1) { // Only render if a single stock watchlist is selected
+        } else if (currentSelectedWatchlistIds.length === 1) {
             sharesToRender = allSharesData.filter(share => currentSelectedWatchlistIds.includes(share.watchlistId));
             logDebug('Render: Displaying shares from watchlist: ' + selectedWatchlistId);
         } else {
             logDebug('Render: No specific stock watchlists selected or multiple selected, showing empty state.');
         }
 
-        // Apply or remove the 'compact-view' class from the mobileShareCardsContainer
+        // Apply or remove the 'compact-view' class from the mobileShareCardsContainer, if element exists
         if (mobileShareCardsContainerEl) {
             if (currentMobileViewMode === 'compact') {
                 mobileShareCardsContainerEl.classList.add('compact-view');
@@ -1723,13 +1723,13 @@ function renderWatchlist() {
             }
         }
 
-        // Hide/Show ASX code buttons based on currentMobileViewMode
+        // Hide/Show ASX code buttons based on currentMobileViewMode, if element exists
         if (asxCodeButtonsContainerEl) {
             if (currentMobileViewMode === 'compact') {
                 asxCodeButtonsContainerEl.style.display = 'none';
                 logDebug('UI: Hiding ASX code buttons in compact view.');
             } else {
-                asxCodeButtonsContainerEl.style.display = 'flex'; // Or whatever its default display is
+                asxCodeButtonsContainerEl.style.display = 'flex';
                 logDebug('UI: Showing ASX code buttons in default view.');
             }
         }
@@ -1743,7 +1743,7 @@ function renderWatchlist() {
             // Only append to table/cards if elements exist
             if (shareTableBodyEl) {
                 const td = document.createElement('td');
-                td.colSpan = 5; // Updated colspan to 5 as Comments column is removed
+                td.colSpan = 5;
                 td.appendChild(emptyWatchlistMessage);
                 const tr = document.createElement('tr');
                 tr.appendChild(td);
@@ -1767,10 +1767,10 @@ function renderWatchlist() {
             }
         }
         logDebug('Render: Stock watchlist rendering complete.');
-        updateTargetHitBanner(); // NEW: Update the banner after rendering the watchlist
-        renderAsxCodeButtons(); // Ensure ASX buttons are rendered after watchlist content
+        updateTargetHitBanner();
+        renderAsxCodeButtons();
     }
-    adjustMainContentPadding(); // Adjust padding after section visibility changes
+    adjustMainContentPadding();
 }
 
 function renderAsxCodeButtons() {
