@@ -286,9 +286,9 @@ function closeModals() {
             logDebug('Auto-Save: Unsaved changes detected for existing watchlist. Attempting silent save.');
             saveWatchlistChanges(true, currentWatchlistData.name, watchlistSelect.value); // true indicates silent save, pass name and ID
         } else {
-                logDebug('Auto-Save: No changes detected for existing watchlist.');
-            }
+            logDebug('Auto-Save: No changes detected for existing watchlist.');
         }
+    }
 
 
     document.querySelectorAll('.modal').forEach(modal => {
@@ -309,7 +309,7 @@ function closeModals() {
 function showCustomAlert(message, duration = 1000) {
     if (!customDialogModal || !customDialogMessage || !customDialogConfirmBtn || !customDialogCancelBtn) {
         console.error('Custom dialog elements not found. Cannot show alert.');
-        console.log('ALERT (fallback): ' + message); // Use console.log directly as per user instruction
+        console.log('ALERT (fallback): ' + message);
         return;
     }
     customDialogMessage.textContent = message;
@@ -483,7 +483,7 @@ function clearForm() {
  * Sets the default selection based on current view or existing share.
  * @param {string|null} currentShareWatchlistId The ID of the watchlist the share is currently in (for editing).
  * @param {boolean} isNewShare True if adding a new share, false if editing.
- */
+*/
 function populateShareWatchlistSelect(currentShareWatchlistId = null, isNewShare = true) {
     if (!shareWatchlistSelect) {
         console.error('populateShareWatchlistSelect: shareWatchlistSelect element not found.');
@@ -837,6 +837,8 @@ function showShareDetails() {
                 priceChangeClass = 'positive';
             } else if (change < 0) {
                 priceChangeClass = 'negative';
+            } else {
+                priceChangeClass = 'neutral';
             }
         }
 
@@ -1121,7 +1123,7 @@ function renderWatchlistSelect() {
         watchlistSelect.value = currentSelectedValue;
         currentSelectedWatchlistIds = [currentSelectedValue]; // Ensure currentSelectedWatchlistIds reflects this
     } else if (currentSelectedWatchlistIds.length === 1 && 
-               Array.from(watchlistSelect.options).some(opt => opt.value === currentSelectedWatchlistIds[0])) {
+                Array.from(watchlistSelect.options).some(opt => opt.value === currentSelectedWatchlistIds[0])) {
         watchlistSelect.value = currentSelectedWatchlistIds[0];
     } else {
         // If the previously selected value is no longer valid, default to the first available option (All Shares or first custom)
@@ -1130,7 +1132,6 @@ function renderWatchlistSelect() {
             currentSelectedWatchlistIds = [ALL_SHARES_ID];
         } else if (userWatchlists.length > 0) {
             // Default to the first actual watchlist (which could be Cash & Bank if no others)
-            watchlistSelect.value = userWatchlists[0].id;
             currentSelectedWatchlistIds = [userWatchlists[0].id];
         } else {
             watchlistSelect.value = ''; // Fallback to placeholder if no options
@@ -1998,20 +1999,45 @@ async function loadUserWatchlistsAndSettings() {
             currentSelectedWatchlistIds = currentSelectedWatchlistIds.filter(id => 
                 id === ALL_SHARES_ID || id === CASH_BANK_WATCHLIST_ID || userWatchlists.some(wl => wl.id === id)
             );
-            // If "All Shares" is selected but no actual shares/watchlists exist (other than Cash & Bank), default to Cash & Bank or first
-            if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID) && userWatchlists.filter(wl => wl.id !== CASH_BANK_WATCHLIST_ID).length === 0) { 
+
+            // NEW LOGIC START: Prioritize a stock watchlist if Cash & Bank is the default on login
+            // Get all actual stock watchlists (excluding ALL_SHARES_ID as it's a view, not a user-created watchlist data record)
+            const actualStockWatchlists = userWatchlists.filter(wl => wl.id !== ALL_SHARES_ID && wl.id !== CASH_BANK_WATCHLIST_ID);
+
+            if (currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID) && actualStockWatchlists.length > 0) {
+                // If saved preference is Cash & Bank, but stock watchlists exist,
+                // switch to 'All Shares' or the first stock watchlist for initial display.
+                currentSelectedWatchlistIds = [ALL_SHARES_ID]; // Default to 'All Shares' view
+                logDebug('User Settings: Saved preference was Cash & Bank, but stock watchlists exist. Defaulting to "All Shares" for initial view.');
+            } else if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID) && actualStockWatchlists.length === 0) {
+                 // If "All Shares" is selected but no actual stock watchlists exist, default to Cash & Bank
                  currentSelectedWatchlistIds = [CASH_BANK_WATCHLIST_ID];
                  logDebug('User Settings: Only Cash & Bank watchlist exists, defaulting to it.');
             }
-            // If no valid watchlists are selected after filtering, default to first available
+            // NEW LOGIC END
+            
+            // If no valid watchlists are selected after filtering (e.g., deleted), default to first available
             if (currentSelectedWatchlistIds.length === 0) {
-                currentSelectedWatchlistIds = [userWatchlists[0].id];
-                console.warn('User Settings: Saved watchlist IDs were invalid or empty, defaulting to first watchlist.');
+                // Fallback: If after all logic, no valid selection, pick first non-cash watchlist or Cash&Bank if no others.
+                const firstNonCashWatchlist = userWatchlists.find(wl => wl.id !== CASH_BANK_WATCHLIST_ID);
+                if (firstNonCashWatchlist) {
+                     currentSelectedWatchlistIds = [firstNonCashWatchlist.id];
+                     console.warn('User Settings: No valid watchlist selection after filtering, defaulting to first non-cash watchlist.');
+                } else {
+                     currentSelectedWatchlistIds = [CASH_BANK_WATCHLIST_ID];
+                     console.warn('User Settings: No valid watchlist selection and no non-cash watchlists, defaulting to Cash & Bank.');
+                }
             }
         } else {
             // Default to the first actual watchlist (which could be Cash & Bank if no others)
-            currentSelectedWatchlistIds = [userWatchlists[0].id];
-            logDebug('User Settings: No saved watchlist preference, defaulting to first watchlist: ' + userWatchlists[0].name);
+            const firstNonCashWatchlist = userWatchlists.find(wl => wl.id !== CASH_BANK_WATCHLIST_ID);
+            if (firstNonCashWatchlist) {
+                 currentSelectedWatchlistIds = [firstNonCashWatchlist.id];
+                 logDebug('User Settings: No saved watchlist preference, defaulting to first non-cash watchlist: ' + firstNonCashWatchlist.name);
+            } else {
+                 currentSelectedWatchlistIds = [CASH_BANK_WATCHLIST_ID];
+                 logDebug('User Settings: No saved watchlist preference and no non-cash watchlists, defaulting to Cash & Bank: ' + userWatchlists[0].name);
+            }
         }
 
         renderWatchlistSelect();
@@ -2076,10 +2102,10 @@ async function loadUserWatchlistsAndSettings() {
  * Updates the `livePrices` global object.
  */
 async function fetchLivePrices() {
-    console.log('Live Price: Attempting to fetch live prices...'); // Direct console.log as per user instruction
+    console.log('Live Price: Attempting to fetch live prices...');
     // Only fetch live prices if a stock-related watchlist is selected
     if (currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
-        console.log('Live Price: Skipping live price fetch because "Cash & Bank" is selected.'); // Direct console.log
+        console.log('Live Price: Skipping live price fetch because "Cash & Bank" is selected.');
         window._livePricesLoaded = true; // Mark as loaded even if skipped for splash screen
         hideSplashScreenIfReady();
         return;
@@ -2091,7 +2117,7 @@ async function fetchLivePrices() {
             throw new Error('HTTP error! status: ' + response.status);
         }
         const data = await response.json();
-        console.log('Live Price: Raw data received:', data); // Direct console.log
+        console.log('Live Price: Raw data received:', data); 
 
         const newLivePrices = {};
         data.forEach(item => {
@@ -2113,7 +2139,7 @@ async function fetchLivePrices() {
                 const isTargetHit = (targetPrice !== undefined && livePrice <= targetPrice);
 
                 // Debugging log:
-                console.log('Target Price Debug: Share: ' + asxCode + ', Live: ' + livePrice + ', Target: ' + targetPrice + ', Is Target Hit: ' + isTargetHit); // Direct console.log
+                console.log('Target Price Debug: Share: ' + asxCode + ', Live: ' + livePrice + ', Target: ' + targetPrice + ', Is Target Hit: ' + isTargetHit); 
 
 
                 newLivePrices[asxCode] = {
@@ -2129,7 +2155,7 @@ async function fetchLivePrices() {
             }
         });
         livePrices = newLivePrices;
-        console.log('Live Price: Live prices updated:', livePrices); // Direct console.log
+        console.log('Live Price: Live prices updated:', livePrices); 
         
         // renderWatchlist is called from the onSnapshot for shares, which will then trigger this.
         // We need to ensure adjustMainContentPadding is called here as well, as per user's instruction.
@@ -2335,8 +2361,9 @@ async function loadShares() {
             sortShares(); // Sorts allSharesData and calls renderWatchlist
             renderAsxCodeButtons(); // Re-renders ASX buttons based on allSharesData
             
-            // This is crucial: fetch live prices after shares data is updated
-            // fetchLivePrices will then call renderWatchlist and update the target banner
+            // REMOVE START
+            // await fetchLivePrices(); 
+            // REMOVE END
             
             if (loadingIndicator) loadingIndicator.style.display = 'none';
             window._appDataLoaded = true;
@@ -2630,7 +2657,7 @@ function calculateTotalCash() {
 function showCustomConfirm(message, callback) {
     if (!customDialogModal || !customDialogMessage || !customDialogConfirmBtn || !customDialogCancelBtn) {
         console.error('Custom dialog elements not found. Cannot show confirm.');
-        console.log('CONFIRM (fallback): ' + message); // Use console.log directly as per user instruction
+        console.log('CONFIRM (fallback): ' + message);
         callback(window.confirm(message)); // Fallback to native confirm
         return;
     }
@@ -2742,7 +2769,7 @@ async function migrateOldSharesToWatchlist() {
                 }
             });
             const effectiveCurrentPrice = (typeof updatePayload.currentPrice === 'number' && !isNaN(updatePayload.currentPrice)) ? updatePayload.currentPrice :
-                                          ((typeof shareData.currentPrice === 'string' ? parseFloat(shareData.currentPrice) : shareData.currentPrice) || null);
+                                           ((typeof shareData.currentPrice === 'string' ? parseFloat(shareData.currentPrice) : shareData.currentPrice) || null);
             if (!shareData.hasOwnProperty('lastFetchedPrice') || (typeof shareData.lastFetchedPrice === 'string' && isNaN(parseFloat(shareData.lastFetchedPrice)))) {
                 needsUpdate = true;
                 updatePayload.lastFetchedPrice = effectiveCurrentPrice;
@@ -4117,7 +4144,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // Load data and then hide splash screen
                 await loadUserWatchlistsAndSettings(); // This now sets _appDataLoaded and calls hideSplashScreenIfReady
-                await fetchLivePrices();
+                await fetchLivePrices(); // Ensure live prices are fetched after settings and current watchlist are loaded
 
                 // Removed: startLivePriceUpdates(); // This is now called by renderWatchlist based on selected type
                 
@@ -4187,7 +4214,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     mobileShareCardsContainer.classList.remove('compact-view');
                 }
             }
-            // renderWatchlist() is now called by loadUserWatchlistsAndSettings or directly by watchlistSelect change.
+            // Call renderWatchlist here to ensure correct mobile card rendering after auth state is set
+            renderWatchlist();
             // Removed: adjustMainContentPadding(); // Removed duplicate call, now handled inside if (user) block
         });
     } else {
