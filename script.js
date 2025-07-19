@@ -2899,21 +2899,24 @@ function showCashCategoryDetailsModal(assetId) {
 // NEW: Function to toggle visibility of a cash asset (New Feature)
 async function toggleCashAssetVisibility(assetId) {
     logDebug('Cash Asset Visibility: Toggling visibility for asset ID: ' + assetId);
-    // Toggle the visibility state
-    // If currently hidden (false), set to true; otherwise, false
-    const newState = cashAssetVisibility[assetId] === false ? true : false;
-    cashAssetVisibility[assetId] = newState;
+
+    // Determine the new state: if it's currently hidden (false), the new state is visible (true).
+    // Otherwise, the new state is hidden (false).
+    const currentState = cashAssetVisibility[assetId];
+    const newState = (currentState === false) ? true : false;
+    cashAssetVisibility[assetId] = newState; // Update local state immediately
 
     // Persist the state to Firestore
     if (db && currentUserId && window.firestore) {
         const userProfileDocRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/profile/settings');
         try {
-            // Use a map to update a specific field within the settings document
             const updateData = {};
-            // If newState is true (visible), we delete the field to save space and mark as default visible
             if (newState === true) {
+                // If the asset is now visible, we remove its entry from cashAssetVisibility in Firestore
+                // because visible is the default and we don't need to explicitly store it.
                 updateData[`cashAssetVisibility.${assetId}`] = window.firestore.deleteField();
-            } else { // If newState is false (hidden), we set the field to false
+            } else {
+                // If the asset is now hidden, we store 'false' in Firestore.
                 updateData[`cashAssetVisibility.${assetId}`] = newState;
             }
             await window.firestore.updateDoc(userProfileDocRef, updateData);
@@ -2927,15 +2930,16 @@ async function toggleCashAssetVisibility(assetId) {
     // Update the UI
     const assetElement = cashCategoriesContainer.querySelector(`.cash-category-item[data-id="${assetId}"]`);
     if (assetElement) {
-        if (cashAssetVisibility[assetId] === false) {
+        // Apply or remove the 'hidden' class based on the new state
+        if (newState === false) { // If the asset is now hidden
             assetElement.classList.add('hidden');
-            assetElement.querySelector('.hide-toggle-btn').innerHTML = '<i class="fas fa-eye-slash"></i>';
+            assetElement.querySelector('.hide-toggle-btn').innerHTML = '<i class="fas fa-eye-slash"></i>'; // Show eye-slash icon
             assetElement.querySelector('.hide-toggle-btn').title = 'Show Asset';
             assetElement.querySelector('.hide-toggle-btn').classList.add('hidden-icon');
             logDebug('Cash Asset Visibility: Asset ' + assetId + ' is now HIDDEN.');
-        } else {
+        } else { // If the asset is now visible
             assetElement.classList.remove('hidden');
-            assetElement.querySelector('.hide-toggle-btn').innerHTML = '<i class="fas fa-eye"></i>';
+            assetElement.querySelector('.hide-toggle-btn').innerHTML = '<i class="fas fa-eye"></i>'; // Show eye icon
             assetElement.querySelector('.hide-toggle-btn').title = 'Hide Asset';
             assetElement.querySelector('.hide-toggle-btn').classList.remove('hidden-icon');
             logDebug('Cash Asset Visibility: Asset ' + assetId + ' is now VISIBLE.');
