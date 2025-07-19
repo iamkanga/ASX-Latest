@@ -227,6 +227,72 @@ const cashFormInputs = [
 // --- GLOBAL HELPER FUNCTIONS ---
 
 /**
+ * Renders the watchlist options in the dropdown and sets the current selection.
+ * Includes "All Shares" and "Cash & Assets" as special options.
+ */
+function renderWatchlistSelect() {
+    if (!watchlistSelect) {
+        console.error('renderWatchlistSelect: watchlistSelect element not found.');
+        return;
+    }
+
+    watchlistSelect.innerHTML = ''; // Clear existing options
+
+    // Add "All Shares" option
+    const allSharesOption = document.createElement('option');
+    allSharesOption.value = ALL_SHARES_ID;
+    allSharesOption.textContent = 'All Shares';
+    watchlistSelect.appendChild(allSharesOption);
+
+    // Add user-defined watchlists
+    // Filter out CASH_BANK_WATCHLIST_ID before adding user-defined watchlists to ensure it's added only once explicitly.
+    const userDefinedStockWatchlists = userWatchlists.filter(wl => wl.id !== ALL_SHARES_ID && wl.id !== CASH_BANK_WATCHLIST_ID);
+
+    userDefinedStockWatchlists.forEach(watchlist => {
+        const option = document.createElement('option');
+        option.value = watchlist.id;
+        option.textContent = watchlist.name;
+        watchlistSelect.appendChild(option);
+    });
+
+    // Add "Cash & Assets" option explicitly at the end for consistent placement
+    const cashBankOption = document.createElement('option');
+    cashBankOption.value = CASH_BANK_WATCHLIST_ID;
+    cashBankOption.textContent = 'Cash & Assets';
+    watchlistSelect.appendChild(cashBankOption);
+
+
+    // Set the selected value based on currentSelectedWatchlistIds
+    if (currentSelectedWatchlistIds.length > 0) {
+        // Ensure the selected option exists in the dropdown before trying to set its value
+        const targetValue = currentSelectedWatchlistIds[0];
+        const optionExists = Array.from(watchlistSelect.options).some(option => option.value === targetValue);
+
+        if (optionExists) {
+            watchlistSelect.value = targetValue;
+            logDebug('UI Update: Watchlist select dropdown set to: ' + targetValue);
+        } else {
+            // Fallback to "All Shares" or first available if the saved ID is no longer valid
+            if (userWatchlists.length > 0) {
+                const firstValidWatchlistId = userWatchlists[0].id; // This should be 'All Shares' or a user-defined one.
+                watchlistSelect.value = firstValidWatchlistId;
+                currentSelectedWatchlistIds = [firstValidWatchlistId]; // Update the global variable
+                console.warn('UI Update: Saved watchlist ID not found, defaulting to: ' + firstValidWatchlistId);
+            } else {
+                 watchlistSelect.value = ''; // Fallback if no watchlists at all (shouldn't happen with default)
+                 currentSelectedWatchlistIds = [];
+                 console.warn('UI Update: No watchlists available, cannot set selection.');
+            }
+        }
+    } else {
+        // If currentSelectedWatchlistIds is empty, default to "All Shares" or a sensible default
+        watchlistSelect.value = ALL_SHARES_ID;
+        currentSelectedWatchlistIds = [ALL_SHARES_ID];
+        logDebug('UI Update: No currentSelectedWatchlistIds, defaulting to "All Shares".');
+    }
+}
+
+/**
  * Dynamically adjusts the top padding of the main content area
  * to prevent it from being hidden by the fixed header.
  */
