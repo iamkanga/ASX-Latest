@@ -2271,7 +2271,7 @@ async function loadUserWatchlistsAndSettings() {
  * Updates the `livePrices` global object.
  */
 async function fetchLivePrices() {
-    console.log('Live Price: Attempting to fetch live prices...');
+    logDebug('Live Price: Attempting to fetch live prices...');
     // Only fetch live prices if a stock-related watchlist is selected
     if (currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
         console.log('Live Price: Skipping live price fetch because "Cash & Assets" is selected.'); // UPDATED TEXT
@@ -2286,7 +2286,7 @@ async function fetchLivePrices() {
             throw new Error('HTTP error! status: ' + response.status);
         }
         const data = await response.json();
-        console.log('Live Price: Raw data received:', data); 
+        logDebug('Live Price: Raw data received:', data); 
 
         const newLivePrices = {};
         data.forEach(item => {
@@ -2308,7 +2308,7 @@ async function fetchLivePrices() {
                 const isTargetHit = (targetPrice !== undefined && livePrice <= targetPrice);
 
                 // Debugging log:
-                console.log('Target Price Debug: Share: ' + asxCode + ', Live: ' + livePrice + ', Target: ' + targetPrice + ', Is Target Hit: ' + isTargetHit); 
+                logDebug('Target Price Debug: Share: ' + asxCode + ', Live: ' + livePrice + ', Target: ' + targetPrice + ', Is Target Hit: ' + isTargetHit); 
 
 
                 newLivePrices[asxCode] = {
@@ -2324,7 +2324,7 @@ async function fetchLivePrices() {
             }
         });
         livePrices = newLivePrices;
-        console.log('Live Price: Live prices updated:', livePrices); 
+        logDebug('Live Price: Live prices updated:', livePrices); 
         
         // renderWatchlist is called from the onSnapshot for shares, which will then trigger this.
         // We need to ensure adjustMainContentPadding is called here as well, as per user's instruction.
