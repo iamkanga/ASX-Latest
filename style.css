@@ -1521,7 +1521,7 @@ main.container {
 .watchlist-controls-row {
     display: flex;
     flex-wrap: nowrap;
-    justify-content: center;
+    justify-content: center; /* 4: Centralize dropdowns on desktop */
     align-items: center;
     gap: 15px;
     padding: 10px 0;
@@ -2180,7 +2180,7 @@ table td.live-price-cell.negative-change {
 }
 
 /* ASX Code prominence and alignment */
-#modalShareName, #modalCashAssetName { /* Targeted directly for higher specificity */
+#modalShareName, #modalCashAssetName, #cashFormTitle { /* Targeted directly for higher specificity */
     margin: 0;
     flex-grow: 1;
     text-align: center;
@@ -3201,7 +3201,7 @@ main.container {
     background-color: var(--table-row-hover-bg);
 }
 
-/* NEW: Style for temporarily hidden cash asset cards */
+/* NEW: Style for temporarily hidden cash asset cards (1) */
 .cash-category-item.hidden {
     opacity: 0.4; /* Slightly dim when hidden */
     pointer-events: none; /* Disable clicks when hidden */
@@ -3233,7 +3233,7 @@ main.container {
     flex-shrink: 0;
 }
 
-/* NEW: Hide edit/delete buttons on main display (as per user request) */
+/* NEW: Hide edit/delete buttons on main display (3) */
 .cash-category-item .edit-category-name-btn,
 .cash-category-item .delete-category-btn {
     display: none; 
@@ -3253,7 +3253,7 @@ main.container {
     width: 100%; /* Take full width to allow centering */
 }
 
-/* NEW: Style for the hide/show toggle icon */
+/* NEW: Style for the hide/show toggle icon (1) */
 .cash-category-item .hide-toggle-btn {
     background: none;
     border: none;
@@ -3438,7 +3438,7 @@ main.container {
     .watchlist-controls-row {
         flex-direction: row; /* Keep as row for side-by-side */
         flex-wrap: nowrap; /* Prevent wrapping */
-        justify-content: center; /* 3.3: Centralize watchlist selection on mobile */
+        justify-content: center; /* 4: Centralize watchlist selection on mobile */
         gap: 10px; /* Smaller gap for mobile */
         padding: 10px 15px;
         margin-top: 0; /* No top margin here, gap handled by parent header's gap */
@@ -3494,7 +3494,7 @@ main.container {
     }
 
     /* Ensure modalShareName retains its large font size on mobile */
-    #modalShareName, #modalCashAssetName {
+    #modalShareName, #modalCashAssetName, #cashFormTitle {
         font-size: 2.2em; /* Keep it consistent with desktop and live price */
     }
 
@@ -3600,7 +3600,7 @@ main.container {
         flex-shrink: 0;
     }
 
-    /* NEW: Hide edit/delete buttons on main display (as per user request) */
+    /* NEW: Hide edit/delete buttons on main display (3) */
     .cash-category-item .edit-category-name-btn,
     .cash-category-item .delete-category-btn {
         display: none; 
