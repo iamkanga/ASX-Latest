@@ -3887,6 +3887,11 @@ async function initializeAppLogic() {
     if (saveShareBtn) {
         saveShareBtn.addEventListener('click', async () => {
             logDebug('Share Form: Save Share button clicked.');
+            if (saveShareBtn.classList.contains('is-disabled-icon')) {
+                showCustomAlert('Asset name and balance are required, or no changes made.');
+                console.warn('Save Share: Save button was disabled, preventing action.');
+                return;
+            }
             // Call the shared save function, not silent
             saveShareData(false);
         });
