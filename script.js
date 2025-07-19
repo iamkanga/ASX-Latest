@@ -2337,8 +2337,7 @@ async function loadShares() {
             
             // This is crucial: fetch live prices after shares data is updated
             // fetchLivePrices will then call renderWatchlist and update the target banner
-            await fetchLivePrices(); 
-
+            
             if (loadingIndicator) loadingIndicator.style.display = 'none';
             window._appDataLoaded = true;
             hideSplashScreenIfReady();
@@ -4118,8 +4117,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // Load data and then hide splash screen
                 await loadUserWatchlistsAndSettings(); // This now sets _appDataLoaded and calls hideSplashScreenIfReady
-                // startLivePriceUpdates(); // This is now called by renderWatchlist based on selected type
+                await fetchLivePrices();
 
+                // Removed: startLivePriceUpdates(); // This is now called by renderWatchlist based on selected type
+                
             } else {
                 currentUserId = null;
                 mainTitle.textContent = 'Share Watchlist';
