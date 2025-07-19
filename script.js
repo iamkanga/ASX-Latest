@@ -642,7 +642,7 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
     currentPriceInput.value = Number(shareToEdit.currentPrice) !== null && !isNaN(Number(shareToEdit.currentPrice)) ? Number(shareToEdit.currentPrice).toFixed(2) : '';
     targetPriceInput.value = Number(shareToEdit.targetPrice) !== null && !isNaN(Number(shareToEdit.targetPrice)) ? Number(shareToEdit.targetPrice).toFixed(2) : '';
     dividendAmountInput.value = Number(shareToEdit.dividendAmount) !== null && !isNaN(Number(shareToEdit.dividendAmount)) ? Number(shareToEdit.dividendAmount).toFixed(3) : '';
-    frankingCreditsInput.value = Number(shareToEdit.frankingCredits) !== null && !isNaN(Number(shareToToEdit.frankingCredits)) ? Number(shareToEdit.frankingCredits).toFixed(1) : '';
+    frankingCreditsInput.value = Number(shareToEdit.frankingCredits) !== null && !isNaN(Number(shareToEdit.frankingCredits)) ? Number(shareToEdit.frankingCredits).toFixed(1) : '';
     
     // Populate and set selection for the watchlist dropdown
     populateShareWatchlistSelect(shareToEdit.watchlistId, false); // false indicates not a new share
@@ -1253,10 +1253,6 @@ function sortShares() {
             const livePriceA = livePriceDataA ? livePriceDataA.live : undefined;
             const prevCloseA = livePriceDataA ? livePriceDataA.prevClose : undefined;
 
-            const livePriceDataB = livePrices[b.shareName.toUpperCase()];
-            const livePriceB = livePriceDataB ? livePriceDataB.live : undefined;
-            const prevCloseB = livePriceDataB ? livePriceDataB.prevClose : undefined; // Corrected variable name
-
             let percentageChangeA = null;
             // Only calculate if both livePriceA and prevCloseA are valid numbers and prevCloseA is not zero
             if (livePriceA !== undefined && livePriceA !== null && !isNaN(livePriceA) &&
@@ -1415,7 +1411,7 @@ function renderSortSelect() {
 
     let defaultSortValue = 'entryDate-desc'; // Always fall back to a valid sort option
 
-if (currentUserId && savedSortOrder && options.some(option => option.value === savedSortOrder)) {
+if (currentUserId && savedSortOrder && Array.from(sortSelect.options).some(option => option.value === savedSortOrder)) {
     // If there's a valid saved sort order, use it
     sortSelect.value = savedSortOrder;
     currentSortOrder = savedSortOrder;
@@ -1836,7 +1832,7 @@ function renderWatchlist() {
         if (targetHitIconBtn) targetHitIconBtn.classList.add('app-hidden'); // Hide target icon for cash view
         stopLivePriceUpdates(); // Stop live price updates when in cash view
 
-        // NEW: Change "Add" button to "Add Cash Asset"
+        // NEW: Change "Add" button to "Add New Asset"
         if (newShareBtn) newShareBtn.textContent = 'Add New Asset';
         if (addShareHeaderBtn) addShareHeaderBtn.innerHTML = '<i class="fas fa-plus"></i>'; // Reset icon
         if (addShareHeaderBtn) addShareHeaderBtn.title = 'Add New Asset'; // Set title
@@ -3274,18 +3270,18 @@ async function initializeAppLogic() {
     logDebug('initializeAppLogic: Firebase is ready. Starting app logic.');
 
     // Initial modal hiding
-    if (shareFormSection) shareFormSection.style.setProperty('display', 'none', 'important');
-    if (dividendCalculatorModal) dividendCalculatorModal.style.setProperty('display', 'none', 'important');
-    if (shareDetailModal) shareDetailModal.style.setProperty('display', 'none', 'important');
-    if (addWatchlistModal) addWatchlistModal.style.setProperty('display', 'none', 'important');
-    if (manageWatchlistModal) manageWatchlistModal.style.setProperty('display', 'none', 'important');
-    if (customDialogModal) customDialogModal.style.setProperty('display', 'none', 'important');
-    if (calculatorModal) calculatorModal.style.setProperty('display', 'none', 'important');
-    if (shareContextMenu) shareContextMenu.style.setProperty('display', 'none', 'important');
+    if (shareFormSection) hideModal(shareFormSection); // Use hideModal for consistency
+    if (dividendCalculatorModal) hideModal(dividendCalculatorModal);
+    if (shareDetailModal) hideModal(shareDetailModal);
+    if (addWatchlistModal) hideModal(addWatchlistModal);
+    if (manageWatchlistModal) hideModal(manageWatchlistModal);
+    if (customDialogModal) hideModal(customDialogModal);
+    if (calculatorModal) hideModal(calculatorModal);
+    if (shareContextMenu) hideModal(shareContextMenu); // Context menu is not a modal, but treat similarly for hiding
     if (targetHitIconBtn) targetHitIconBtn.style.display = 'none'; // Ensure icon is hidden initially
-    if (alertPanel) alertPanel.style.display = 'none'; // NEW: Ensure alert panel is hidden initially
-    if (cashAssetFormModal) cashAssetFormModal.style.setProperty('display', 'none', 'important'); // NEW
-    if (cashAssetDetailModal) cashAssetDetailModal.style.setProperty('display', 'none', 'important'); // NEW
+    if (alertPanel) hideModal(alertPanel); // NEW: Ensure alert panel is hidden initially
+    if (cashAssetFormModal) hideModal(cashAssetFormModal); // NEW
+    if (cashAssetDetailModal) hideModal(cashAssetDetailModal); // NEW
 
     // Service Worker Registration
     if ('serviceWorker' in navigator) {
@@ -3817,8 +3813,8 @@ async function initializeAppLogic() {
 
             editWatchlistNameInput.value = watchlistToEditName;
             // Keep at least one real watchlist + Cash & Assets
-            const actualWatchlists = userWatchlists.filter(wl => wl.id !== ALL_SHARES_ID && wl.id !== CASH_BANK_WATCHLIST_ID);
-            const isDisabledDelete = actualWatchlists.length <= 1; 
+            const actualWatchlistsCount = userWatchlists.filter(wl => wl.id !== ALL_SHARES_ID && wl.id !== CASH_BANK_WATCHLIST_ID).length;
+            const isDisabledDelete = actualWatchlistsCount <= 1; 
             setIconDisabled(deleteWatchlistInModalBtn, isDisabledDelete); 
             logDebug('Edit Watchlist: deleteWatchlistInModalBtn disabled: ' + isDisabledDelete);
             setIconDisabled(saveWatchlistNameBtn, true); // Disable save button initially
