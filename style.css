@@ -64,7 +64,7 @@
     --target-alert-bg: #e0f7fa; /* Light blue for target hit alert */
     --target-alert-text: #0056b3; /* Darker blue for target hit text */
     --target-alert-border: #007bff;
-    --target-banner-height: 40px;
+    --target-banner-height: 40px; /* This variable is now effectively unused for the banner, but kept for other potential uses */
 
     /* NEW: Alert System Colors */
     --alert-icon-bg: #dc3545; /* Red for the chat box icon */
@@ -79,7 +79,7 @@
     --snooze-options-bg: #ffffff;
     --snooze-options-border: #b0b8bb;
 
-    /* NEW: Cash & Assets Section Colors */
+    /* NEW: Cash & Bank Section Colors */
     --cash-section-bg: #f8f9fa;
     --cash-card-bg: #ffffff;
     --cash-border-color: #c9d2d4;
@@ -148,7 +148,7 @@ body.dark-theme {
     --target-alert-border: #2980b9;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Assets Section Colors (Dark Theme) */
+    /* NEW: Cash & Bank Section Colors (Dark Theme) */
     --cash-section-bg: #3b526b;
     --cash-card-bg: #4a627a;
     --cash-border-color: #5c758e;
@@ -219,7 +219,7 @@ body.theme-bold-1 { /* Ocean Blue */
     --target-alert-border: #0096c7;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Assets Section Colors (Custom Theme) */
+    /* NEW: Cash & Bank Section Colors (Custom Theme) */
     --cash-section-bg: #0a475a;
     --cash-card-bg: #005f73;
     --cash-border-color: #008793;
@@ -288,7 +288,7 @@ body.theme-bold-2 { /* Forest Green */
     --target-alert-border: #8ba84a;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Assets Section Colors (Custom Theme) */
+    /* NEW: Cash & Bank Section Colors (Custom Theme) */
     --cash-section-bg: #4a754a;
     --cash-card-bg: #386641;
     --cash-border-color: #6a9955;
@@ -357,7 +357,7 @@ body.theme-bold-3 { /* Sunset Orange */
     --target-alert-border: #e0ac00;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Assets Section Colors (Custom Theme) */
+    /* NEW: Cash & Bank Section Colors (Custom Theme) */
     --cash-section-bg: #f4a261;
     --cash-card-bg: #e63946;
     --cash-border-color: #e76f51;
@@ -426,7 +426,7 @@ body.theme-bold-4 { /* Royal Purple */
     --target-alert-border: #a842ff;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Assets Section Colors (Custom Theme) */
+    /* NEW: Cash & Bank Section Colors (Custom Theme) */
     --cash-section-bg: #7b2cbf;
     --cash-card-bg: #5a189a;
     --cash-border-color: #9d4edd;
@@ -495,7 +495,7 @@ body.theme-bold-5 { /* Deep Red */
     --target-alert-border: #c0392b;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Assets Section Colors (Custom Theme) */
+    /* NEW: Cash & Bank Section Colors (Custom Theme) */
     --cash-section-bg: #a02020;
     --cash-card-bg: #8b0000;
     --cash-border-color: #c0392b;
@@ -564,7 +564,7 @@ body.theme-bold-6 { /* Gold */
     --target-alert-border: #fdd835;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Assets Section Colors (Custom Theme) */
+    /* NEW: Cash & Bank Section Colors (Custom Theme) */
     --cash-section-bg: #daa520;
     --cash-card-bg: #b8860b;
     --cash-border-color: #ffd700;
@@ -632,7 +632,7 @@ body.theme-bold-7 { /* Emerald */
     --target-alert-border: #4caf50;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Assets Section Colors (Custom Theme) */
+    /* NEW: Cash & Bank Section Colors (Custom Theme) */
     --cash-section-bg: #228b22;
     --cash-card-bg: #006400;
     --cash-border-color: #3cb371;
@@ -701,7 +701,7 @@ body.theme-bold-8 { /* Plum */
     --target-alert-border: #c71585;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Assets Section Colors (Custom Theme) */
+    /* NEW: Cash & Bank Section Colors (Custom Theme) */
     --cash-section-bg: #9932cc;
     --cash-card-bg: #800080;
     --cash-border-color: #ba55d3;
@@ -770,7 +770,7 @@ body.theme-bold-9 { /* Aqua */
     --target-alert-border: #008080;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Assets Section Colors (Custom Theme) */
+    /* NEW: Cash & Bank Section Colors (Custom Theme) */
     --cash-section-bg: #00ced1;
     --cash-card-bg: #008b8b;
     --cash-border-color: #40e0d0;
@@ -839,7 +839,7 @@ body.theme-bold-10 { /* Ruby */
     --target-alert-border: #b22222;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Assets Section Colors (Custom Theme) */
+    /* NEW: Cash & Bank Section Colors (Custom Theme) */
     --cash-section-bg: #a52a2a;
     --cash-card-bg: #8b0000;
     --cash-border-color: #cd5c5c;
@@ -901,7 +901,7 @@ body.theme-subtle-1 { /* Subtle Sky */
     --target-alert-border: #4d7eb3;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Assets Section Colors (Custom Theme) */
+    /* NEW: Cash & Bank Section Colors (Custom Theme) */
     --cash-section-bg: #f5faff;
     --cash-card-bg: #e0eaf2;
     --cash-border-color: #a2c2d9;
@@ -961,7 +961,7 @@ body.theme-subtle-2 { /* Subtle Earth */
     --target-alert-border: #917e6c;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Assets Section Colors (Custom Theme) */
+    /* NEW: Cash & Bank Section Colors (Custom Theme) */
     --cash-section-bg: #ffffff;
     --cash-card-bg: #f0ebe5;
     --cash-border-color: #c2b3a2;
@@ -1021,7 +1021,7 @@ body.theme-subtle-3 { /* Subtle Rose */
     --target-alert-border: #c98899;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Assets Section Colors (Custom Theme) */
+    /* NEW: Cash & Bank Section Colors (Custom Theme) */
     --cash-section-bg: #ffffff;
     --cash-card-bg: #ffe0e6;
     --cash-border-color: #e6b3be;
@@ -1081,7 +1081,7 @@ body.theme-subtle-4 { /* Subtle Lavender */
     --target-alert-border: #9188c9;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Assets Section Colors (Custom Theme) */
+    /* NEW: Cash & Bank Section Colors (Custom Theme) */
     --cash-section-bg: #ffffff;
     --cash-card-bg: #f0e0f2;
     --cash-border-color: #c2b3d9;
@@ -1141,7 +1141,7 @@ body.theme-subtle-5 { /* Subtle Mint */
     --target-alert-border: #88c991;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Assets Section Colors (Custom Theme) */
+    /* NEW: Cash & Bank Section Colors (Custom Theme) */
     --cash-section-bg: #ffffff;
     --cash-card-bg: #e0f2e6;
     --cash-border-color: #b3d9be;
@@ -1201,7 +1201,7 @@ body.theme-subtle-6 { /* Subtle Sand */
     --target-alert-border: #c98877;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Assets Section Colors (Custom Theme) */
+    /* NEW: Cash & Bank Section Colors (Custom Theme) */
     --cash-section-bg: #ffffff;
     --cash-card-bg: #fff0e0;
     --cash-border-color: #e6b3a2;
@@ -1261,7 +1261,7 @@ body.theme-subtle-7 { /* Subtle Graphite */
     --target-alert-border: #888888;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Assets Section Colors (Custom Theme) */
+    /* NEW: Cash & Bank Section Colors (Custom Theme) */
     --cash-section-bg: #ffffff;
     --cash-card-bg: #e6e6e6;
     --cash-border-color: #b3b3b3;
@@ -1321,7 +1321,7 @@ body.theme-subtle-8 { /* Subtle Peach */
     --target-alert-border: #c98877;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Assets Section Colors (Custom Theme) */
+    /* NEW: Cash & Bank Section Colors (Custom Theme) */
     --cash-section-bg: #ffffff;
     --cash-card-bg: #ffebe0;
     --cash-border-color: #e6b3a2;
@@ -1381,7 +1381,7 @@ body.theme-subtle-9 { /* Subtle Teal */
     --target-alert-border: #88c9b3;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Assets Section Colors (Custom Theme) */
+    /* NEW: Cash & Bank Section Colors (Custom Theme) */
     --cash-section-bg: #ffffff;
     --cash-card-bg: #e0f2f0;
     --cash-border-color: #b3d9c2;
@@ -1390,7 +1390,7 @@ body.theme-subtle-9 { /* Subtle Teal */
     --cash-button-bg: #28a745;
     --cash-button-hover-bg: #218838;
     --cash-primary-button-bg: #99e0cc;
-    --cash-primary-button-bg: #88c9b3;
+    --cash-primary-button-hover-bg: #88c9b3;
     --cash-delete-icon-color: #e74c3c;
     --cash-edit-icon-color: #99e0cc;
 }
@@ -1438,7 +1438,7 @@ body.theme-subtle-10 { /* Subtle Stone */
     --target-alert-border: #7a7a7a;
     --target-banner-height: 40px;
 
-    /* NEW: Cash & Assets Section Colors (Custom Theme) */
+    /* NEW: Cash & Bank Section Colors (Custom Theme) */
     --cash-section-bg: #ffffff;
     --cash-card-bg: #e6e6e6;
     --cash-border-color: #b3b3b3;
@@ -1450,6 +1450,778 @@ body.theme-subtle-10 { /* Subtle Stone */
     --cash-primary-button-hover-bg: #888888;
     --cash-delete-icon-color: #e74c3c;
     --cash-edit-icon-color: #999999;
+}
+
+
+/* NEW: Muted Themes */
+body.theme-muted-blue {
+    --background-color: #a8d0db;
+    --text-color: #2c3e50;
+    --header-bg: #7cb0c2;
+    --card-bg: #c7e0e7;
+    --border-color: #5b99ad;
+    --button-bg: #4a8ca0;
+    --button-hover-bg: #3a7a8f;
+    --input-bg: #e0f0f5;
+    --input-border: #90b8c7;
+    --input-placeholder-color: #6c757d;
+    --modal-bg: rgba(0, 0, 0, 0.6);
+    --modal-content-bg: #c7e0e7;
+    --table-header-bg: #99c2d1;
+    --table-row-hover-bg: #d9eaf0;
+    --asx-button-bg: #99c2d1;
+    --asx-button-hover-bg: #7cb0c2;
+    --asx-button-active-bg: #4a8ca0;
+    --asx-button-active-text: #fff;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #17a2b8;
+    --link-color: #4a8ca0;
+    --link-hover-color: #3a7a8f;
+    --sidebar-bg: #b9dbe4;
+    --sidebar-text: #2c3e50;
+    --sidebar-border: #5b99ad;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #d9eaf0;
+    --menu-button-active-bg: #4a8ca0;
+    --menu-button-active-text: #fff;
+    --placeholder-text: #6c757d;
+    --ghosted-text: #888;
+    --danger-button-bg: #dc3545;
+    --danger-button-hover-bg: #c82333;
+    --secondary-button-bg: #6c757d;
+    --secondary-button-hover-bg: #545b62;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --label-color: #555;
+    --shadow-color: rgba(0, 0, 0, 0.15);
+    --close-sidebar-btn-color: #666;
+    --icon-action-color: #4a8ca0;
+    --icon-action-hover-color: #3a7a8f;
+    --icon-danger-color: #dc3545;
+    --icon-danger-hover-color: #c82333;
+    --calc-num-btn-bg: #99c2d1;
+    --calc-num-btn-text: #2c3e50;
+    --calc-num-btn-hover-bg: #7cb0c2;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(74, 140, 160, 0.08);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #4a8ca0;
+    --target-alert-text: #fff;
+    --target-alert-border: #3a7a8f;
+    --target-banner-height: 40px;
+
+    /* NEW: Cash & Bank Section Colors (Custom Theme) */
+    --cash-section-bg: #c7e0e7;
+    --cash-card-bg: #a8d0db;
+    --cash-border-color: #5b99ad;
+    --cash-total-bg: #3a7a8f;
+    --cash-total-text: #fff;
+    --cash-button-bg: #28a745;
+    --cash-button-hover-bg: #218838;
+    --cash-primary-button-bg: #4a8ca0;
+    --cash-primary-button-hover-bg: #3a7a8f;
+    --cash-delete-icon-color: #dc3545;
+    --cash-edit-icon-color: #4a8ca0;
+}
+
+body.theme-muted-brown {
+    --background-color: #d0b8a8;
+    --text-color: #503e2c;
+    --header-bg: #b29987;
+    --card-bg: #e7d8c7;
+    --border-color: #9c7b66;
+    --button-bg: #8c6a5a;
+    --button-hover-bg: #7a5a4a;
+    --input-bg: #f5edeb;
+    --input-border: #c7b099;
+    --input-placeholder-color: #6c757d;
+    --modal-bg: rgba(0, 0, 0, 0.6);
+    --modal-content-bg: #e7d8c7;
+    --table-header-bg: #c2aa99;
+    --table-row-hover-bg: #e0d0c2;
+    --asx-button-bg: #c2aa99;
+    --asx-button-hover-bg: #b29987;
+    --asx-button-active-bg: #8c6a5a;
+    --asx-button-active-text: #fff;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #17a2b8;
+    --link-color: #8c6a5a;
+    --link-hover-color: #7a5a4a;
+    --sidebar-bg: #e4d0b9;
+    --sidebar-text: #503e2c;
+    --sidebar-border: #9c7b66;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #e0d0c2;
+    --menu-button-active-bg: #8c6a5a;
+    --menu-button-active-text: #fff;
+    --placeholder-text: #6c757d;
+    --ghosted-text: #888;
+    --danger-button-bg: #dc3545;
+    --danger-button-hover-bg: #c82333;
+    --secondary-button-bg: #6c757d;
+    --secondary-button-hover-bg: #545b62;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --label-color: #555;
+    --shadow-color: rgba(0, 0, 0, 0.15);
+    --close-sidebar-btn-color: #666;
+    --icon-action-color: #8c6a5a;
+    --icon-action-hover-color: #7a5a4a;
+    --icon-danger-color: #dc3545;
+    --icon-danger-hover-color: #c82333;
+    --calc-num-btn-bg: #c2aa99;
+    --calc-num-btn-text: #503e2c;
+    --calc-num-btn-hover-bg: #b29987;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(140, 106, 90, 0.08);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #8c6a5a;
+    --target-alert-text: #fff;
+    --target-alert-border: #7a5a4a;
+    --target-banner-height: 40px;
+
+    /* NEW: Cash & Bank Section Colors (Custom Theme) */
+    --cash-section-bg: #e7d8c7;
+    --cash-card-bg: #d0b8a8;
+    --cash-border-color: #9c7b66;
+    --cash-total-bg: #7a5a4a;
+    --cash-total-text: #fff;
+    --cash-button-bg: #28a745;
+    --cash-button-hover-bg: #218838;
+    --cash-primary-button-bg: #8c6a5a;
+    --cash-primary-button-hover-bg: #7a5a4a;
+    --cash-delete-icon-color: #dc3545;
+    --cash-edit-icon-color: #8c6a5a;
+}
+
+body.theme-muted-pink {
+    --background-color: #e0a8b8;
+    --text-color: #502c3e;
+    --header-bg: #c27b8f;
+    --card-bg: #e7c7d0;
+    --border-color: #ad5b73;
+    --button-bg: #a04a60;
+    --button-hover-bg: #8f3a50;
+    --input-bg: #f5ebee;
+    --input-border: #c799a8;
+    --input-placeholder-color: #6c757d;
+    --modal-bg: rgba(0, 0, 0, 0.6);
+    --modal-content-bg: #e7c7d0;
+    --table-header-bg: #c299a8;
+    --table-row-hover-bg: #e0d0d9;
+    --asx-button-bg: #c299a8;
+    --asx-button-hover-bg: #b28799;
+    --asx-button-active-bg: #a04a60;
+    --asx-button-active-text: #fff;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #17a2b8;
+    --link-color: #a04a60;
+    --link-hover-color: #8f3a50;
+    --sidebar-bg: #e4b9c2;
+    --sidebar-text: #502c3e;
+    --sidebar-border: #ad5b73;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #e0d0d9;
+    --menu-button-active-bg: #a04a60;
+    --menu-button-active-text: #fff;
+    --placeholder-text: #6c757d;
+    --ghosted-text: #888;
+    --danger-button-bg: #dc3545;
+    --danger-button-hover-bg: #c82333;
+    --secondary-button-bg: #6c757d;
+    --secondary-button-hover-bg: #545b62;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --label-color: #555;
+    --shadow-color: rgba(0, 0, 0, 0.15);
+    --close-sidebar-btn-color: #666;
+    --icon-action-color: #a04a60;
+    --icon-action-hover-color: #8f3a50;
+    --icon-danger-color: #dc3545;
+    --icon-danger-hover-color: #c82333;
+    --calc-num-btn-bg: #c799a8;
+    --calc-num-btn-text: #502c3e;
+    --calc-num-btn-hover-bg: #b27b8f;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(160, 74, 96, 0.08);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #a04a60;
+    --target-alert-text: #fff;
+    --target-alert-border: #8f3a50;
+    --target-banner-height: 40px;
+
+    /* NEW: Cash & Bank Section Colors (Custom Theme) */
+    --cash-section-bg: #e7c7d0;
+    --cash-card-bg: #e0a8b8;
+    --cash-border-color: #ad5b73;
+    --cash-total-bg: #8f3a50;
+    --cash-total-text: #fff;
+    --cash-button-bg: #28a745;
+    --cash-button-hover-bg: #218838;
+    --cash-primary-button-bg: #a04a60;
+    --cash-primary-button-hover-bg: #8f3a50;
+    --cash-delete-icon-color: #dc3545;
+    --cash-edit-icon-color: #a04a60;
+}
+
+body.theme-muted-green {
+    --background-color: #a8d0a8;
+    --text-color: #2c502c;
+    --header-bg: #7cb27c;
+    --card-bg: #c7e7c7;
+    --border-color: #5b9d5b;
+    --button-bg: #4a904a;
+    --button-hover-bg: #3a7a3a;
+    --input-bg: #eef5ee;
+    --input-border: #99c799;
+    --input-placeholder-color: #6c757d;
+    --modal-bg: rgba(0, 0, 0, 0.6);
+    --modal-content-bg: #e7c7e7;
+    --table-header-bg: #99c299;
+    --table-row-hover-bg: #d0e0d0;
+    --asx-button-bg: #99c299;
+    --asx-button-hover-bg: #7cb27c;
+    --asx-button-active-bg: #4a904a;
+    --asx-button-active-text: #fff;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #17a2b8;
+    --link-color: #4a904a;
+    --link-hover-color: #3a7a3a;
+    --sidebar-bg: #b9e4b9;
+    --sidebar-text: #2c502c;
+    --sidebar-border: #5b9d5b;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #d0e0d0;
+    --menu-button-active-bg: #4a904a;
+    --menu-button-active-text: #fff;
+    --placeholder-text: #6c757d;
+    --ghosted-text: #888;
+    --danger-button-bg: #dc3545;
+    --danger-button-hover-bg: #c82333;
+    --secondary-button-bg: #6c757d;
+    --secondary-button-hover-bg: #545b62;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --label-color: #555;
+    --shadow-color: rgba(0, 0, 0, 0.15);
+    --close-sidebar-btn-color: #666;
+    --icon-action-color: #4a904a;
+    --icon-action-hover-color: #3a7a3a;
+    --icon-danger-color: #dc3545;
+    --icon-danger-hover-color: #c82333;
+    --calc-num-btn-bg: #99c299;
+    --calc-num-btn-text: #2c502c;
+    --calc-num-btn-hover-bg: #7cb27c;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(74, 144, 74, 0.08);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #4a904a;
+    --target-alert-text: #fff;
+    --target-alert-border: #3a7a3a;
+    --target-banner-height: 40px;
+
+    /* NEW: Cash & Bank Section Colors (Custom Theme) */
+    --cash-section-bg: #c7e7c7;
+    --cash-card-bg: #a8d0a8;
+    --cash-border-color: #5b9d5b;
+    --cash-total-bg: #3a7a3a;
+    --cash-total-text: #fff;
+    --cash-button-bg: #28a745;
+    --cash-button-hover-bg: #218838;
+    --cash-primary-button-bg: #4a904a;
+    --cash-primary-button-hover-bg: #3a7a3a;
+    --cash-delete-icon-color: #dc3545;
+    --cash-edit-icon-color: #4a904a;
+}
+
+body.theme-muted-purple {
+    --background-color: #d0a8d0;
+    --text-color: #502c50;
+    --header-bg: #b27cb2;
+    --card-bg: #e7c7e7;
+    --border-color: #9d5b9d;
+    --button-bg: #904a90;
+    --button-hover-bg: #7a3a7a;
+    --input-bg: #f5eef5;
+    --input-border: #c799c7;
+    --input-placeholder-color: #6c757d;
+    --modal-bg: rgba(0, 0, 0, 0.6);
+    --modal-content-bg: #e7c7e7;
+    --table-header-bg: #c299c2;
+    --table-row-hover-bg: #e0d0e0;
+    --asx-button-bg: #c299c2;
+    --asx-button-hover-bg: #b27cb2;
+    --asx-button-active-bg: #904a90;
+    --asx-button-active-text: #fff;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #17a2b8;
+    --link-color: #904a90;
+    --link-hover-color: #7a3a7a;
+    --sidebar-bg: #e4b9e4;
+    --sidebar-text: #502c50;
+    --sidebar-border: #9d5b9d;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #e0d0e0;
+    --menu-button-active-bg: #904a90;
+    --menu-button-active-text: #fff;
+    --placeholder-text: #6c757d;
+    --ghosted-text: #888;
+    --danger-button-bg: #dc3545;
+    --danger-button-hover-bg: #c82333;
+    --secondary-button-bg: #6c757d;
+    --secondary-button-hover-bg: #545b62;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --label-color: #555;
+    --shadow-color: rgba(0, 0, 0, 0.15);
+    --close-sidebar-btn-color: #666;
+    --icon-action-color: #904a90;
+    --icon-action-hover-color: #7a3a7a;
+    --icon-danger-color: #dc3545;
+    --icon-danger-hover-color: #c82333;
+    --calc-num-btn-bg: #c299c2;
+    --calc-num-btn-text: #502c50;
+    --calc-num-btn-hover-bg: #b27cb2;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(144, 74, 144, 0.08);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #904a90;
+    --target-alert-text: #fff;
+    --target-alert-border: #7a3a7a;
+    --target-banner-height: 40px;
+
+    /* NEW: Cash & Bank Section Colors (Custom Theme) */
+    --cash-section-bg: #e7c7e7;
+    --cash-card-bg: #d0a8d0;
+    --cash-border-color: #9d5b9d;
+    --cash-total-bg: #7a3a7a;
+    --cash-total-text: #fff;
+    --cash-button-bg: #28a745;
+    --cash-button-hover-bg: #218838;
+    --cash-primary-button-bg: #904a90;
+    --cash-primary-button-hover-bg: #7a3a7a;
+    --cash-delete-icon-color: #dc3545;
+    --cash-edit-icon-color: #904a90;
+}
+
+body.theme-muted-orange {
+    --background-color: #d0b8a8;
+    --text-color: #503e2c;
+    --header-bg: #c2997b;
+    --card-bg: #e7d0c7;
+    --border-color: #ad875b;
+    --button-bg: #a07a4a;
+    --button-hover-bg: #8f6a3a;
+    --input-bg: #f5ebee;
+    --input-border: #c7b099;
+    --input-placeholder-color: #6c757d;
+    --modal-bg: rgba(0, 0, 0, 0.6);
+    --modal-content-bg: #e7d0c7;
+    --table-header-bg: #c29987;
+    --table-row-hover-bg: #e0c2b2;
+    --asx-button-bg: #c29987;
+    --asx-button-hover-bg: #b2877c;
+    --asx-button-active-bg: #a07a4a;
+    --asx-button-active-text: #fff;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #17a2b8;
+    --link-color: #a07a4a;
+    --link-hover-color: #8f3a50;
+    --sidebar-bg: #e4d0b9;
+    --sidebar-text: #503e2c;
+    --sidebar-border: #ad875b;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #e0c2b2;
+    --menu-button-active-bg: #a07a4a;
+    --menu-button-active-text: #fff;
+    --placeholder-text: #6c757d;
+    --ghosted-text: #888;
+    --danger-button-bg: #dc3545;
+    --danger-button-hover-bg: #c82333;
+    --secondary-button-bg: #6c757d;
+    --secondary-button-hover-bg: #545b62;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --label-color: #555;
+    --shadow-color: rgba(0, 0, 0, 0.15);
+    --close-sidebar-btn-color: #666;
+    --icon-action-color: #a07a4a;
+    --icon-action-hover-color: #8f3a50;
+    --icon-danger-color: #dc3545;
+    --icon-danger-hover-color: #c82333;
+    --calc-num-btn-bg: #c79987;
+    --calc-num-btn-text: #503e2c;
+    --calc-num-btn-hover-bg: #b27b66;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(160, 122, 74, 0.08);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #a04a60;
+    --target-alert-text: #fff;
+    --target-alert-border: #8f3a50;
+    --target-banner-height: 40px;
+
+    /* NEW: Cash & Bank Section Colors (Custom Theme) */
+    --cash-section-bg: #e7d0c7;
+    --cash-card-bg: #d0b8a8;
+    --cash-border-color: #ad875b;
+    --cash-total-bg: #8f6a3a;
+    --cash-total-text: #fff;
+    --cash-button-bg: #28a745;
+    --cash-button-hover-bg: #218838;
+    --cash-primary-button-bg: #a07a4a;
+    --cash-primary-button-hover-bg: #8f6a3a;
+    --cash-delete-icon-color: #dc3545;
+    --cash-edit-icon-color: #a07a4a;
+}
+
+body.theme-muted-cyan {
+    --background-color: #a8d0d0;
+    --text-color: #2c5050;
+    --header-bg: #7cb2b2;
+    --card-bg: #c7e7e7;
+    --border-color: #5b9d9d;
+    --button-bg: #4a9090;
+    --button-hover-bg: #3a7a7a;
+    --input-bg: #eef5f5;
+    --input-border: #99c7c7;
+    --input-placeholder-color: #6c757d;
+    --modal-bg: rgba(0, 0, 0, 0.6);
+    --modal-content-bg: #e7e7e7;
+    --table-header-bg: #99c2c2;
+    --table-row-hover-bg: #d0e0e0;
+    --asx-button-bg: #99c2c2;
+    --asx-button-hover-bg: #7cb2b2;
+    --asx-button-active-bg: #4a9090;
+    --asx-button-active-text: #fff;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #17a2b8;
+    --link-color: #4a9090;
+    --link-hover-color: #3a7a7a;
+    --sidebar-bg: #b9e4e4;
+    --sidebar-text: #2c5050;
+    --sidebar-border: #5b9d9d;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #d0e0e0;
+    --menu-button-active-bg: #4a904a;
+    --menu-button-active-text: #fff;
+    --placeholder-text: #6c757d;
+    --ghosted-text: #888;
+    --danger-button-bg: #dc3545;
+    --danger-button-hover-bg: #c82333;
+    --secondary-button-bg: #6c757d;
+    --secondary-button-hover-bg: #545b62;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --label-color: #555;
+    --shadow-color: rgba(0, 0, 0, 0.15);
+    --close-sidebar-btn-color: #666;
+    --icon-action-color: #4a904a;
+    --icon-action-hover-color: #3a7a7a;
+    --icon-danger-color: #dc3545;
+    --icon-danger-hover-color: #c82333;
+    --calc-num-btn-bg: #99c2c2;
+    --calc-num-btn-text: #2c5050;
+    --calc-num-btn-hover-bg: #7cb2b2;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(144, 144, 144, 0.08);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #4a904a;
+    --target-alert-text: #fff;
+    --target-alert-border: #3a7a7a;
+    --target-banner-height: 40px;
+
+    /* NEW: Cash & Bank Section Colors (Custom Theme) */
+    --cash-section-bg: #e7e7e7;
+    --cash-card-bg: #a8d0d0;
+    --cash-border-color: #5b9d9d;
+    --cash-total-bg: #3a7a7a;
+    --cash-total-text: #fff;
+    --cash-button-bg: #28a745;
+    --cash-button-hover-bg: #218838;
+    --cash-primary-button-bg: #4a9090;
+    --cash-primary-button-hover-bg: #3a7a7a;
+    --cash-delete-icon-color: #dc3545;
+    --cash-edit-icon-color: #4a9090;
+}
+
+body.theme-muted-magenta {
+    --background-color: #d0a8d0;
+    --text-color: #502c50;
+    --header-bg: #b27cb2;
+    --card-bg: #e7c7e7;
+    --border-color: #9d5b9d;
+    --button-bg: #904a90;
+    --button-hover-bg: #7a3a7a;
+    --input-bg: #f5eef5;
+    --input-border: #c799c7;
+    --input-placeholder-color: #6c757d;
+    --modal-bg: rgba(0, 0, 0, 0.6);
+    --modal-content-bg: #e7c7e7;
+    --table-header-bg: #c299c2;
+    --table-row-hover-bg: #e0d0e0;
+    --asx-button-bg: #c299c2;
+    --asx-button-hover-bg: #b27cb2;
+    --asx-button-active-bg: #904a90;
+    --asx-button-active-text: #fff;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #17a2b8;
+    --link-color: #904a90;
+    --link-hover-color: #7a3a7a;
+    --sidebar-bg: #e4b9e4;
+    --sidebar-text: #502c50;
+    --sidebar-border: #9d5b9d;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #e0d0e0;
+    --menu-button-active-bg: #904a90;
+    --menu-button-active-text: #fff;
+    --placeholder-text: #6c757d;
+    --ghosted-text: #888;
+    --danger-button-bg: #dc3545;
+    --danger-button-hover-bg: #c82333;
+    --secondary-button-bg: #6c757d;
+    --secondary-button-hover-bg: #545b62;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --label-color: #555;
+    --shadow-color: rgba(0, 0, 0, 0.15);
+    --close-sidebar-btn-color: #666;
+    --icon-action-color: #904a90;
+    --icon-action-hover-color: #7a3a7a;
+    --icon-danger-color: #dc3545;
+    --icon-danger-hover-color: #c82333;
+    --calc-num-btn-bg: #c299c2;
+    --calc-num-btn-text: #502c50;
+    --calc-num-btn-hover-bg: #b27cb2;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(144, 74, 144, 0.08);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #904a90;
+    --target-alert-text: #fff;
+    --target-alert-border: #7a3a7a;
+    --target-banner-height: 40px;
+
+    /* NEW: Cash & Bank Section Colors (Custom Theme) */
+    --cash-section-bg: #e7c7e7;
+    --cash-card-bg: #d0a8d0;
+    --cash-border-color: #9d5b9d;
+    --cash-total-bg: #7a3a7a;
+    --cash-total-text: #fff;
+    --cash-button-bg: #28a745;
+    --cash-button-hover-bg: #218838;
+    --cash-primary-button-bg: #904a90;
+    --cash-primary-button-hover-bg: #7a3a7a;
+    --cash-delete-icon-color: #dc3545;
+    --cash-edit-icon-color: #904a90;
+}
+
+body.theme-muted-gold {
+    --background-color: #d0c2a8;
+    --text-color: #50462c;
+    --header-bg: #b2a47c;
+    --card-bg: #e7dcc7;
+    --border-color: #9d8d5b;
+    --button-bg: #90824a;
+    --button-hover-bg: #7a6e3a;
+    --input-bg: #f5f0eb;
+    --input-border: #c7bda8;
+    --input-placeholder-color: #6c757d;
+    --modal-bg: rgba(0, 0, 0, 0.6);
+    --modal-content-bg: #e7dcc7;
+    --table-header-bg: #c2b899;
+    --table-row-hover-bg: #e0d9c2;
+    --asx-button-bg: #c2b899;
+    --asx-button-hover-bg: #b2a487;
+    --asx-button-active-bg: #90824a;
+    --asx-button-active-text: #fff;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #17a2b8;
+    --link-color: #90824a;
+    --link-hover-color: #7a6e3a;
+    --sidebar-bg: #e4dbe4;
+    --sidebar-text: #50462c;
+    --sidebar-border: #9d8d5b;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #e0d9c2;
+    --menu-button-active-bg: #90824a;
+    --menu-button-active-text: #fff;
+    --placeholder-text: #6c757d;
+    --ghosted-text: #888;
+    --danger-button-bg: #dc3545;
+    --danger-button-hover-bg: #c82333;
+    --secondary-button-bg: #6c757d;
+    --secondary-button-hover-bg: #545b62;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --label-color: #555;
+    --shadow-color: rgba(0, 0, 0, 0.15);
+    --close-sidebar-btn-color: #666;
+    --icon-action-color: #90824a;
+    --icon-action-hover-color: #7a6e3a;
+    --icon-danger-color: #dc3545;
+    --icon-danger-hover-color: #c82333;
+    --calc-num-btn-bg: #c2b899;
+    --calc-num-btn-text: #50462c;
+    --calc-num-btn-hover-bg: #b2a47c;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(144, 130, 74, 0.08);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #90824a;
+    --target-alert-text: #fff;
+    --target-alert-border: #7a6e3a;
+    --target-banner-height: 40px;
+
+    /* NEW: Cash & Bank Section Colors (Custom Theme) */
+    --cash-section-bg: #e7dcc7;
+    --cash-card-bg: #d0c2a8;
+    --cash-border-color: #9d8d5b;
+    --cash-total-bg: #7a6e3a;
+    --cash-total-text: #fff;
+    --cash-button-bg: #28a745;
+    --cash-button-hover-bg: #218838;
+    --cash-primary-button-bg: #90824a;
+    --cash-primary-button-hover-bg: #7a6e3a;
+    --cash-delete-icon-color: #dc3545;
+    --cash-edit-icon-color: #90824a;
+}
+
+body.theme-muted-grey {
+    --background-color: #d0d0d0;
+    --text-color: #505050;
+    --header-bg: #b2b2b2;
+    --card-bg: #e7e7e7;
+    --border-color: #9d9d9d;
+    --button-bg: #909090;
+    --button-hover-bg: #7a7a7a;
+    --input-bg: #f5f5f5;
+    --input-border: #c7c7c7;
+    --input-placeholder-color: #6c757d;
+    --modal-bg: rgba(0, 0, 0, 0.6);
+    --modal-content-bg: #e7e7e7;
+    --table-header-bg: #c2c2c2;
+    --table-row-hover-bg: #e0e0e0;
+    --asx-button-bg: #c2c2c2;
+    --asx-button-hover-bg: #b2b2b2;
+    --asx-button-active-bg: #909090;
+    --asx-button-active-text: #fff;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #17a2b8;
+    --link-color: #909090;
+    --link-hover-color: #7a7a7a;
+    --sidebar-bg: #e4e4e4;
+    --sidebar-text: #505050;
+    --sidebar-border: #9d9d9d;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #e0e0e0;
+    --menu-button-active-bg: #909090;
+    --menu-button-active-text: #fff;
+    --placeholder-text: #6c757d;
+    --ghosted-text: #888;
+    --danger-button-bg: #dc3545;
+    --danger-button-hover-bg: #c82333;
+    --secondary-button-bg: #6c757d;
+    --secondary-button-hover-bg: #545b62;
+    --google-auth-btn-bg: #FFFFFF;
+    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-text: #4285F4;
+    --label-color: #555;
+    --shadow-color: rgba(0, 0, 0, 0.15);
+    --close-sidebar-btn-color: #666;
+    --icon-action-color: #909090;
+    --icon-action-hover-color: #7a7a7a;
+    --icon-danger-color: #dc3545;
+    --icon-danger-hover-color: #c82333;
+    --calc-num-btn-bg: #c2c2c2;
+    --calc-num-btn-text: #505050;
+    --calc-num-btn-hover-bg: #b2b2b2;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(144, 144, 144, 0.08);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #909090;
+    --target-alert-text: #fff;
+    --target-alert-border: #7a7a7a;
+    --target-banner-height: 40px;
+
+    /* NEW: Cash & Bank Section Colors (Custom Theme) */
+    --cash-section-bg: #e7e7e7;
+    --cash-card-bg: #d0d0d0;
+    --cash-border-color: #9d9d9d;
+    --cash-total-bg: #7a7a7a;
+    --cash-total-text: #fff;
+    --cash-button-bg: #28a745;
+    --cash-button-hover-bg: #218838;
+    --cash-primary-button-bg: #909090;
+    --cash-primary-button-hover-bg: #7a7a7a;
+    --cash-delete-icon-color: #dc3545;
+    --cash-edit-icon-color: #909090;
 }
 
 
@@ -1521,8 +2293,7 @@ main.container {
 .watchlist-controls-row {
     display: flex;
     flex-wrap: nowrap;
-    /* FIX: Center the watchlist selector */
-    justify-content: center; 
+    justify-content: center;
     align-items: center;
     gap: 15px;
     padding: 10px 0;
@@ -2184,7 +2955,7 @@ table td.live-price-cell.negative-change {
 }
 
 /* ASX Code prominence and alignment */
-#modalShareName, #modalCashAssetName { /* Targeted directly for higher specificity */
+#modalShareName { /* Targeted directly for higher specificity */
     margin: 0;
     flex-grow: 1;
     text-align: center;
@@ -2430,24 +3201,8 @@ table td.live-price-cell.negative-change {
 .form-action-buttons,
 .modal-action-buttons,
 .custom-dialog-buttons { 
-    /* Fix: Ensure these are visible if they are used elsewhere, or explicitly hide if not. */
-    /* For now, removing `display: none` from here to ensure buttons are visible if used. */
-    display: flex; /* Default to flex if they are meant to be visible */
-    justify-content: flex-end; /* Align buttons to the right */
-    gap: 10px; /* Space between buttons */
-    margin-top: 20px; /* Space above buttons */
-    padding-top: 15px; /* Padding above buttons */
-    border-top: 1px solid var(--border-color); /* Separator */
+    display: none; /* Hide these old containers */
 }
-
-/* Ensure custom dialog buttons are visible */
-#customDialogModal .custom-dialog-buttons {
-    display: flex; /* Ensure these buttons are always visible in the custom dialog */
-    justify-content: space-around; /* Distribute space evenly */
-    align-items: center;
-    padding: 10px 0;
-}
-
 
 /* REMOVED: Sticky footer for action icons - These are now in the header */
 .modal-content .sticky-footer {
@@ -3139,7 +3894,7 @@ main.container {
     max-height: 100%;
     width: auto;  /* Let browser determine width based on aspect ratio */
     height: auto; /* Let browser determine height based on aspect ratio */
-    object-fit: cover; /* Crucial to keep this to prevent text cropping */
+    object-fit: contain; /* Crucial to keep this to prevent text cropping */
     margin-bottom: 20px; /* Space between image and button */
     /* Initial state for animation */
     opacity: 1;
@@ -3168,8 +3923,8 @@ main.container {
     box-shadow: 0 5px 15px rgba(0,0,0,0.3); /* More prominent shadow */
 }
 
-/* NEW: Cash & Assets Section Styles */
-.cash-asset-section { /* Renamed from .cash-bank-section */
+/* NEW: Cash & Bank Section Styles */
+.cash-bank-section {
     margin-top: 20px;
     background-color: var(--cash-section-bg);
     border-radius: 8px;
@@ -3178,13 +3933,9 @@ main.container {
     width: 100%;
     box-sizing: border-box;
     padding: 20px;
-    /* FIX: Make cash asset section take up available height */
-    flex-grow: 1; /* Allow it to grow and fill space */
-    display: flex; /* Use flexbox for internal layout */
-    flex-direction: column; /* Stack children vertically */
 }
 
-.cash-asset-section h2 {
+.cash-bank-section h2 {
     margin-top: 0;
     margin-bottom: 20px;
     text-align: center;
@@ -3192,91 +3943,124 @@ main.container {
     font-size: 1.6em;
 }
 
-.cash-asset-list-display { /* New container for displaying cards/rows */
-    /* REMOVED: max-height: 400px; */ /* This was limiting height, now flex-grow will handle it */
+.cash-categories-container {
+    max-height: 400px; /* Limit height for scrolling */
     overflow-y: auto;
     padding-right: 10px; /* Space for scrollbar */
     margin-right: -10px; /* Compensate for padding-right */
     margin-bottom: 20px;
-    display: flex; /* Use flexbox for layout of individual asset items */
-    flex-direction: column; /* Stack items vertically */
-    gap: 15px; /* Space between asset items */
-    flex-grow: 1; /* Allow the list to grow and fill available space */
 }
 
-.cash-asset-item { /* Style for individual cash asset cards/rows */
+.cash-category-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
     background-color: var(--cash-card-bg);
     border: 1px solid var(--cash-border-color);
     border-radius: 8px;
-    padding: 15px;
+    padding: 10px 15px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    display: flex;
-    flex-wrap: wrap; /* Allow wrapping on small screens */
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
 }
 
-.cash-asset-item:hover {
-    background-color: var(--table-row-hover-bg); /* Use existing hover color */
+.cash-category-item:last-child {
+    margin-bottom: 0;
 }
 
-.cash-asset-item-name {
-    font-size: 1.2em;
-    font-weight: 600;
-    color: var(--text-color);
+.cash-category-item .category-name-input {
     flex-grow: 1;
-    /* FIX: Ensure name takes up most space, but leaves room for icons */
-    flex-basis: auto; /* Allow content to determine initial size */
-    min-width: 0; /* Allow shrinking */
-    padding-right: 10px; /* Space between name and icons */
-}
-
-.cash-asset-item-balance {
-    font-size: 1.2em;
-    font-weight: 700;
+    padding: 8px;
+    border: 1px solid var(--input-border);
+    border-radius: 5px;
+    background-color: var(--input-bg);
     color: var(--text-color);
-    white-space: nowrap; /* Prevent wrapping */
-    /* FIX: Center balance below the top row on mobile */
-    width: 100%; /* Take full width on a new line */
-    text-align: center; /* Center the text */
-    margin-top: 10px; /* Space from top row */
-    order: 3; /* Ensure it appears below name and icons on mobile */
+    font-size: 1em;
+    margin-right: 10px;
+    width: auto; /* Allow input to grow */
+    min-width: 0; /* Allow shrinking */
 }
 
-.cash-asset-item-actions {
-    display: flex;
-    gap: 5px;
-    margin-left: auto; /* Push to the right */
+.cash-category-item .category-balance-input {
+    width: 100px; /* Fixed width for balance input */
+    padding: 8px;
+    border: 1px solid var(--input-border);
+    border-radius: 5px;
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    font-size: 1em;
+    text-align: right;
     flex-shrink: 0; /* Prevent shrinking */
-    order: 2; /* Ensure it appears next to name on mobile */
 }
 
-.cash-asset-item-actions .edit-icon,
-.cash-asset-item-actions .delete-icon {
+.cash-category-item .category-name-input:focus,
+.cash-category-item .category-balance-input:focus {
+    border-color: var(--cash-primary-button-bg);
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+    outline: none;
+}
+
+.cash-category-item .edit-category-name-btn,
+.cash-category-item .delete-category-btn {
     background: none;
     border: none;
     cursor: pointer;
     font-size: 1.2em;
     padding: 5px;
     transition: color 0.2s ease, transform 0.1s ease;
-    color: var(--icon-action-color);
+    flex-shrink: 0;
 }
 
-.cash-asset-item-actions .edit-icon:hover {
-    color: var(--icon-action-hover-color);
+.cash-category-item .edit-category-name-btn {
+    color: var(--cash-edit-icon-color);
+}
+.cash-category-item .edit-category-name-btn:hover {
+    color: var(--cash-primary-button-hover-bg);
     transform: translateY(-1px);
 }
 
-.cash-asset-item-actions .delete-icon {
-    color: var(--icon-danger-color);
+.cash-category-item .delete-category-btn {
+    color: var(--cash-delete-icon-color);
 }
-.cash-asset-item-actions .delete-icon:hover {
-    color: var(--icon-danger-hover-color);
+.cash-category-item .delete-category-btn:hover {
+    color: var(--danger-button-hover-bg);
     transform: scale(1.1);
 }
 
+.cash-actions {
+    display: flex;
+    justify-content: space-around;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.cash-actions .button {
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 600;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    flex-grow: 1;
+    text-align: center;
+    border: none;
+    color: var(--button-text);
+}
+
+.cash-actions .button.primary-button {
+    background-color: var(--cash-primary-button-bg);
+}
+.cash-actions .button.primary-button:hover {
+    background-color: var(--cash-primary-button-hover-bg);
+    transform: translateY(-1px);
+}
+
+.cash-actions .button:not(.primary-button) {
+    background-color: var(--cash-button-bg);
+}
+.cash-actions .button:not(.primary-button):hover {
+    background-color: var(--cash-button-hover-bg);
+    transform: translateY(-1px);
+}
 
 .total-cash-display {
     background-color: var(--cash-total-bg);
@@ -3288,8 +4072,6 @@ main.container {
     font-weight: 700;
     color: var(--cash-total-text);
     box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
-    flex-shrink: 0; /* Prevent it from shrinking */
-    margin-top: 20px; /* Space above total display */
 }
 
 .total-cash-display h3 {
@@ -3429,7 +4211,7 @@ main.container {
     }
 
     /* Ensure modalShareName retains its large font size on mobile */
-    #modalShareName, #modalCashAssetName {
+    #modalShareName {
         font-size: 2.2em; /* Keep it consistent with desktop and live price */
     }
 
@@ -3497,36 +4279,47 @@ main.container {
         font-size: 1em;
     }
 
-    /* NEW: Mobile specific styles for Cash & Assets Section */
-    .cash-asset-section { /* Renamed from .cash-bank-section */
+    /* NEW: Mobile specific styles for Cash & Bank Section */
+    .cash-bank-section {
         padding: 15px;
     }
 
-    .cash-asset-list-display { /* New container for displaying cards/rows */
+    .cash-categories-container {
         max-height: 300px; /* Adjust max height for mobile */
-        gap: 10px; /* Smaller gap for mobile */
     }
 
-    .cash-asset-item { /* Style for individual cash asset cards/rows */
+    .cash-category-item {
         flex-wrap: wrap; /* Allow items to wrap on smaller screens */
         padding: 8px 10px;
     }
 
-    .cash-asset-item-name {
+    .cash-category-item .category-name-input {
         width: calc(100% - 10px); /* Take full width minus padding/margin */
-        margin-bottom: 5px; /* Add margin below name input when wrapped */
+        margin-right: 0;
+        margin-bottom: 10px; /* Add margin below name input when wrapped */
     }
 
-    .cash-asset-item-balance {
+    .cash-category-item .category-balance-input {
         width: calc(100% - 10px); /* Take full width minus padding/margin */
         text-align: left; /* Align left for mobile input */
         order: 3; /* Push balance input to a new line */
         margin-top: 5px;
     }
 
-    .cash-asset-item-actions {
+    .cash-category-item .edit-category-name-btn,
+    .cash-category-item .delete-category-btn {
         font-size: 1.1em; /* Slightly smaller icons */
         padding: 3px;
+    }
+
+    .cash-actions {
+        flex-direction: column; /* Stack buttons vertically on mobile */
+        gap: 10px;
+    }
+
+    .cash-actions .button {
+        width: 100%;
+        padding: 8px 15px;
     }
 
     .total-cash-display {
