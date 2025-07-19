@@ -1234,7 +1234,7 @@ function renderWatchlist() {
         mainTitle.textContent = 'Cash & Assets';
         renderCashCategories(); // Render cash categories
         // Hide stock-specific UI elements
-        addShareHeaderBtn.classList.add('app-hidden');
+        addShareHeaderBtn.classList.remove('app-hidden'); // The plus button is contextual now
         sortSelect.classList.remove('app-hidden'); // Sort is visible for cash assets
         refreshLivePricesBtn.classList.add('app-hidden');
         toggleCompactViewBtn.classList.add('app-hidden');
@@ -1256,7 +1256,7 @@ function renderWatchlist() {
         }
 
         // Show stock-specific UI elements
-        addShareHeaderBtn.classList.remove('app-hidden');
+        addShareHeaderBtn.classList.remove('app-hidden'); // The plus button is contextual now
         sortSelect.classList.remove('app-hidden');
         refreshLivePricesBtn.classList.remove('app-hidden');
         toggleCompactViewBtn.classList.remove('app-hidden');
@@ -1754,7 +1754,8 @@ async function loadUserWatchlistsAndSettings() {
         await loadCashCategories(); // Sets up the listener for cash categories
 
         // Initial render based on selected watchlist (stock or cash)
-        renderWatchlist(); // This will now correctly display based on the initial currentSelectedWatchlistIds
+        // This is now called by sortDataAndRender, which is called by loadShares/loadCashCategories
+        // renderWatchlist();
 
         // Indicate that data loading is complete for splash screen
         window._appDataLoaded = true;
@@ -3957,6 +3958,7 @@ document.addEventListener('DOMContentLoaded', function() {
     window._userAuthenticated = false;
     window._appDataLoaded = false;
     window._livePricesLoaded = false;
+    window._appLogicInitialized = false; // Ensure this is explicitly set to false initially
 
     // Show splash screen immediately on DOMContentLoaded
     if (splashScreen) {
@@ -3972,6 +3974,7 @@ document.addEventListener('DOMContentLoaded', function() {
         window._userAuthenticated = false; // Will be set by onAuthStateChanged
         window._appDataLoaded = true;
         window._livePricesLoaded = true;
+        window._appLogicInitialized = true; // If no splash, assume logic is initialized
     }
 
     // Initially hide main app content and header
@@ -3991,6 +3994,12 @@ document.addEventListener('DOMContentLoaded', function() {
         logDebug('Firebase Ready: DB, Auth, and AppId assigned from window. Setting up auth state listener.');
 
         window.authFunctions.onAuthStateChanged(auth, async (user) => {
+            // Initialize app logic only once
+            if (!window._appLogicInitialized) {
+                initializeAppLogic();
+                window._appLogicInitialized = true;
+            }
+
             if (user) {
                 currentUserId = user.uid;
                 logDebug('AuthState: User signed in: ' + user.uid);
@@ -4025,8 +4034,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 targetHitIconDismissed = localStorage.getItem('targetHitIconDismissed') === 'true';
 
                 // Load data and then hide splash screen
-                await loadUserWatchlistsAndSettings(); // This now sets _appDataLoaded and calls hideSplashScreenIfReady
-                await fetchLivePrices(); // Ensure live prices are fetched after settings and current watchlist are loaded
+                await loadUserWatchlistsAndSettings(); // This internally calls renderWatchlist() and renderSortSelect()
+                await fetchLivePrices(); // This also calls adjustMainContentPadding() and hideSplashScreenIfReady()
+
+                // After everything is loaded and rendered, ensure mobile view mode is applied correctly.
+                // This is redundant if renderWatchlist already handles it, but good as a final check.
+                if (currentMobileViewMode === 'compact' && mobileShareCardsContainer) {
+                    mobileShareCardsContainer.classList.add('compact-view');
+                } else if (mobileShareCardsContainer) {
+                    mobileShareCardsContainer.classList.remove('compact-view');
+                }
 
             } else {
                 currentUserId = null;
@@ -4080,22 +4097,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 targetHitIconDismissed = false;
                 localStorage.removeItem('targetHitIconDismissed');
 
+                // After logout, ensure the view is reset, potentially showing splash or default empty state
+                renderWatchlist(); // Call renderWatchlist to reset UI for signed out state.
             }
-            if (!window._appLogicInitialized) {
-                initializeAppLogic();
-                window._appLogicInitialized = true;
-            } else {
-                // If app logic already initialized, ensure view mode is applied after auth.
-                // This handles cases where user signs out and then signs back in,
-                // and we need to re-apply the correct mobile view class.
-                if (currentMobileViewMode === 'compact' && mobileShareCardsContainer) {
-                    mobileShareCardsContainer.classList.add('compact-view');
-                } else if (mobileShareCardsContainer) {
-                    mobileShareCardsContainer.classList.remove('compact-view');
-                }
-            }
-            // Call renderWatchlist here to ensure correct mobile card rendering after auth state is set
-            renderWatchlist();
         });
     } else {
         console.error('Firebase: Firebase objects (db, auth, appId, firestore, authFunctions) are not available on DOMContentLoaded. Firebase initialization likely failed in index.html.');
