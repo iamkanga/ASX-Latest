@@ -501,6 +501,67 @@ function deselectCurrentCashAsset() {
 }
 
 /**
+ * Renders the sort options in the sort dropdown based on the currently selected watchlist type (shares or cash).
+ */
+function renderSortSelect() {
+    if (!sortSelect) { console.error('renderSortSelect: sortSelect element not found.'); return; }
+    // Set the initial placeholder text to "Sort List"
+    sortSelect.innerHTML = '<option value="" disabled selected>Sort List</option>';
+
+    const selectedWatchlistId = currentSelectedWatchlistIds[0];
+    let options = [];
+
+    if (selectedWatchlistId === CASH_BANK_WATCHLIST_ID) {
+        // Options for Cash & Assets
+        options = [
+            { value: 'name-asc', text: 'Asset Name (A-Z)' },
+            { value: 'name-desc', text: 'Asset Name (Z-A)' },
+            { value: 'balance-desc', text: 'Balance (High-Low)' },
+            { value: 'balance-asc', text: 'Balance (Low-High)' },
+            { value: 'lastUpdated-desc', text: 'Last Updated (Newest)' },
+            { value: 'lastUpdated-asc', text: 'Last Updated (Oldest)' }
+        ];
+    } else {
+        // Options for Shares
+        options = [
+            { value: 'entryDate-desc', text: 'Date Added (Newest)' },
+            { value: 'entryDate-asc', text: 'Date Added (Oldest)' },
+            { value: 'shareName-asc', text: 'Code (A-Z)' },
+            { value: 'shareName-desc', text: 'Code (Z-A)' },
+            { value: 'dividendAmount-desc', text: 'Dividend (High-Low)' },
+            { value: 'dividendAmount-asc', text: 'Dividend (Low-High)' },
+            { value: 'percentageChange-desc', text: 'Percentage Change (High-Low)' },
+            { value: 'percentageChange-asc', text: 'Percentage Change (Low-High)' }
+        ];
+    }
+
+    options.forEach(opt => {
+        const optionElement = document.createElement('option');
+        optionElement.value = opt.value;
+        optionElement.textContent = opt.text;
+        sortSelect.appendChild(optionElement);
+    });
+
+    // Re-select the current sort order if it's still a valid option for the current view
+    const isValidSortOption = options.some(option => option.value === currentSortOrder);
+    if (isValidSortOption) {
+        sortSelect.value = currentSortOrder;
+    } else {
+        // If the current sort order is not valid for the new view type, default to the first option
+        if (options.length > 0) {
+            sortSelect.value = options[0].value;
+            currentSortOrder = options[0].value; // Update global currentSortOrder
+            logDebug('Sort: Defaulting sort order to first available option for current view: ' + currentSortOrder);
+        } else {
+            sortSelect.value = ''; // Fallback to placeholder if no options
+            currentSortOrder = '';
+        }
+    }
+    logDebug('UI Update: Sort select dropdown rendered. Selected value: ' + sortSelect.value);
+}
+
+
+/**
  * Adds a new comment section to a form (for shares or cash assets).
  * @param {HTMLElement} container The container element where comment sections will be added.
  * @param {Function} dirtyCheckCallback The callback function to check form dirty state.
@@ -1098,7 +1159,7 @@ function sortDataAndRender() {
                 if (nameA === '' && nameB === '') return 0;
                 if (nameA === '') return 1;
                 if (nameB === '') return -1;
-                return order === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+                return order === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(a.name); // Corrected b.name.localeCompare(a.name) to a.name.localeCompare(b.name) for asc
             } else if (field === 'lastUpdated') {
                 const dateA = new Date(valA);
                 const dateB = new Date(valB);
