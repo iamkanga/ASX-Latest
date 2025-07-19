@@ -84,6 +84,9 @@ let targetHitIconDismissed = false;
 let userCashCategories = [];
 let selectedCashAssetDocId = null; // NEW: To track which cash asset is selected for editing/details
 let originalCashAssetData = null; // NEW: To store original cash asset data for dirty state check
+// NEW: Global variable to store visibility state of cash assets (temporary, not persisted)
+let cashAssetVisibility = {}; // {assetId: true/false (visible/hidden)}
+
 
 // --- UI Element References ---
 const appHeader = document.getElementById('appHeader'); // Reference to the main header
@@ -475,7 +478,7 @@ function deselectCurrentShare() {
     logDebug('Selection: Share deselected. selectedShareDocId is now null.');
 }
 
-// NEW: Select/Deselect for Cash Assets
+// NEW: Select/Deselect for Cash Assets (3.1)
 function selectCashAsset(assetId) {
     logDebug('Selection: Attempting to select cash asset with ID: ' + assetId);
     deselectCurrentCashAsset();
@@ -1630,7 +1633,7 @@ function addShareToMobileCards(share) {
 }
 
 /**
- * Renders the watchlist based on the currentSelectedWatchlistIds.
+ * Renders the watchlist based on the currentSelectedWatchlistIds. (1)
  */
 function renderWatchlist() {
     logDebug('Render: Rendering content for selected watchlist ID: ' + currentSelectedWatchlistIds[0]);
@@ -2528,6 +2531,10 @@ function renderCashCategories() {
         const categoryItem = document.createElement('div');
         categoryItem.classList.add('cash-category-item');
         categoryItem.dataset.id = category.id;
+        // Apply hidden class if asset is marked as hidden (new feature)
+        if (cashAssetVisibility[category.id] === false) {
+            categoryItem.classList.add('hidden');
+        }
 
         // Header for name and icons (3.1)
         const categoryHeader = document.createElement('div');
@@ -2541,29 +2548,21 @@ function renderCashCategories() {
         const actionsContainer = document.createElement('div');
         actionsContainer.classList.add('category-actions');
 
-        const editButton = document.createElement('button');
-        editButton.classList.add('edit-category-name-btn');
-        editButton.innerHTML = '<i class="fas fa-edit"></i>';
-        editButton.title = 'Edit Category';
-        editButton.addEventListener('click', (event) => {
+        // NEW: Hide/Show Toggle Button (New Feature)
+        const hideToggleButton = document.createElement('button');
+        hideToggleButton.classList.add('hide-toggle-btn');
+        hideToggleButton.innerHTML = cashAssetVisibility[category.id] === false ? '<i class="fas fa-eye-slash"></i>' : '<i class="fas fa-eye"></i>';
+        hideToggleButton.title = cashAssetVisibility[category.id] === false ? 'Show Asset' : 'Hide Asset';
+        if (cashAssetVisibility[category.id] === false) {
+            hideToggleButton.classList.add('hidden-icon');
+        }
+        hideToggleButton.addEventListener('click', (event) => {
             event.stopPropagation(); // Prevent card click from triggering details
-            logDebug('Cash Categories: Edit button clicked for category ID: ' + category.id);
-            selectCashAsset(category.id); // Select the asset for editing
-            showAddEditCashCategoryModal(category.id); // Open edit modal
+            toggleCashAssetVisibility(category.id);
         });
-        actionsContainer.appendChild(editButton);
+        actionsContainer.appendChild(hideToggleButton);
 
-        const deleteButton = document.createElement('button');
-        deleteButton.classList.add('delete-category-btn');
-        deleteButton.innerHTML = '<i class="fas fa-trash-alt"></i>';
-        deleteButton.title = 'Delete Category';
-        deleteButton.addEventListener('click', async (event) => {
-            event.stopPropagation(); // Prevent card click from triggering details
-            logDebug('Cash Categories: Delete button clicked for category ID: ' + category.id);
-            // Direct deletion without confirmation (as per existing share deletion pattern)
-            await deleteCashCategory(category.id);
-        });
-        actionsContainer.appendChild(deleteButton);
+        // Edit and Delete buttons are now only in the modal, so they are not added here.
 
         categoryHeader.appendChild(actionsContainer);
         categoryItem.appendChild(categoryHeader);
@@ -2615,17 +2614,15 @@ async function saveCashCategories() {
     const categoryElements = cashCategoriesContainer.querySelectorAll('.cash-category-item');
     categoryElements.forEach(item => {
         const id = item.dataset.id;
-        const nameInput = item.querySelector('.category-name-input');
-        const balanceInput = item.querySelector('.category-balance-input');
+        // When saving from the main view, the inputs are hidden.
+        // We get the data from the userCashCategories array directly which is updated by input listeners.
+        const categoryDataInArray = userCashCategories.find(cat => cat.id === id);
 
-        const name = nameInput ? nameInput.value.trim() : '';
-        const balance = balanceInput ? parseFloat(balanceInput.value) : null;
-
-        if (name !== '') { // Only save if name is not empty
+        if (categoryDataInArray && categoryDataInArray.name.trim() !== '') { // Only save if name is not empty
             categoriesToSave.push({
                 id: id.startsWith('new_') ? null : id, // Use null for new items so Firestore generates ID
-                name: name,
-                balance: isNaN(balance) ? 0 : balance, // Default to 0 if balance is NaN
+                name: categoryDataInArray.name.trim(),
+                balance: isNaN(categoryDataInArray.balance) ? 0 : categoryDataInArray.balance, // Default to 0 if balance is NaN
                 userId: currentUserId
             });
         }
@@ -2640,7 +2637,7 @@ async function saveCashCategories() {
     const batch = window.firestore.writeBatch(db);
     const cashCategoriesColRef = window.firestore.collection(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/cashCategories');
 
-    // Fetch current existing documents to determine what to update vs add vs delete
+    // Fetch current existing documents to determine what to update vs add
     const existingDocsSnapshot = await window.firestore.getDocs(cashCategoriesColRef);
     const existingDocIds = new Set();
     existingDocsSnapshot.forEach(doc => {
@@ -2716,13 +2713,16 @@ async function deleteCashCategory(categoryId) {
 }
 
 /**
- * Calculates and displays the total cash balance.
+ * Calculates and displays the total cash balance. (1)
  */
 function calculateTotalCash() {
     let total = 0;
     userCashCategories.forEach(category => {
-        if (typeof category.balance === 'number' && !isNaN(category.balance)) {
-            total += category.balance;
+        // Only include visible assets in the total (New Feature)
+        if (cashAssetVisibility[category.id] !== false) { // If not explicitly hidden
+            if (typeof category.balance === 'number' && !isNaN(category.balance)) {
+                total += category.balance;
+            }
         }
     });
     if (totalCashDisplay) {
@@ -2866,6 +2866,33 @@ function showCashCategoryDetailsModal(assetId) {
 
     showModal(cashAssetDetailModal);
     logDebug('Details: Displayed details for cash asset: ' + asset.name + ' (ID: ' + assetId + ')');
+}
+
+// NEW: Function to toggle visibility of a cash asset (New Feature)
+function toggleCashAssetVisibility(assetId) {
+    logDebug('Cash Asset Visibility: Toggling visibility for asset ID: ' + assetId);
+    // Toggle the visibility state
+    cashAssetVisibility[assetId] = cashAssetVisibility[assetId] !== false; // Default to true if undefined
+
+    // Update the UI
+    const assetElement = cashCategoriesContainer.querySelector(`.cash-category-item[data-id="${assetId}"]`);
+    if (assetElement) {
+        if (cashAssetVisibility[assetId] === false) {
+            assetElement.classList.add('hidden');
+            assetElement.querySelector('.hide-toggle-btn').innerHTML = '<i class="fas fa-eye-slash"></i>';
+            assetElement.querySelector('.hide-toggle-btn').title = 'Show Asset';
+            assetElement.querySelector('.hide-toggle-btn').classList.add('hidden-icon');
+            logDebug('Cash Asset Visibility: Asset ' + assetId + ' is now HIDDEN.');
+        } else {
+            assetElement.classList.remove('hidden');
+            assetElement.querySelector('.hide-toggle-btn').innerHTML = '<i class="fas fa-eye"></i>';
+            assetElement.querySelector('.hide-toggle-btn').title = 'Hide Asset';
+            assetElement.querySelector('.hide-toggle-btn').classList.remove('hidden-icon');
+            logDebug('Cash Asset Visibility: Asset ' + assetId + ' is now VISIBLE.');
+        }
+    }
+    // Recalculate total cash after visibility change
+    calculateTotalCash();
 }
 
 
