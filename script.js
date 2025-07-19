@@ -642,7 +642,7 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
     currentPriceInput.value = Number(shareToEdit.currentPrice) !== null && !isNaN(Number(shareToEdit.currentPrice)) ? Number(shareToEdit.currentPrice).toFixed(2) : '';
     targetPriceInput.value = Number(shareToEdit.targetPrice) !== null && !isNaN(Number(shareToEdit.targetPrice)) ? Number(shareToEdit.targetPrice).toFixed(2) : '';
     dividendAmountInput.value = Number(shareToEdit.dividendAmount) !== null && !isNaN(Number(shareToEdit.dividendAmount)) ? Number(shareToEdit.dividendAmount).toFixed(3) : '';
-    frankingCreditsInput.value = Number(shareToEdit.frankingCredits) !== null && !isNaN(Number(shareToEdit.frankingCredits)) ? Number(shareToEdit.frankingCredits).toFixed(1) : '';
+    frankingCreditsInput.value = Number(shareToEdit.frankingCredits) !== null && !isNaN(Number(shareToToEdit.frankingCredits)) ? Number(shareToEdit.frankingCredits).toFixed(1) : '';
     
     // Populate and set selection for the watchlist dropdown
     populateShareWatchlistSelect(shareToEdit.watchlistId, false); // false indicates not a new share
@@ -1814,7 +1814,7 @@ function renderWatchlist() {
     
     const selectedWatchlistId = currentSelectedWatchlistIds[0];
 
-    // Hide both sections initially
+    // Hide both sections initially with null checks
     if (stockWatchlistSection) stockWatchlistSection.classList.add('app-hidden');
     if (cashAssetSection) cashAssetSection.classList.add('app-hidden'); // Renamed
 
@@ -1823,11 +1823,11 @@ function renderWatchlist() {
     if (cashAssetListDisplay) cashAssetListDisplay.innerHTML = ''; // Clear cash categories
 
     if (selectedWatchlistId === CASH_BANK_WATCHLIST_ID) {
-        // Show Cash & Assets section
+        // Show Cash & Assets section with null check
         if (cashAssetSection) cashAssetSection.classList.remove('app-hidden'); // Renamed
         mainTitle.textContent = 'Cash & Assets'; // Renamed
         renderCashAssets(); // Render cash assets
-        // Hide stock-specific UI elements
+        // Hide stock-specific UI elements with null checks
         if (addShareHeaderBtn) addShareHeaderBtn.classList.add('app-hidden');
         if (sortSelect) sortSelect.classList.add('app-hidden');
         if (refreshLivePricesBtn) refreshLivePricesBtn.classList.add('app-hidden');
@@ -1842,7 +1842,7 @@ function renderWatchlist() {
         if (addShareHeaderBtn) addShareHeaderBtn.title = 'Add New Asset'; // Set title
         if (addShareHeaderBtn) addShareHeaderBtn.dataset.action = 'addCashAsset'; // Custom action for JS
     } else {
-        // Show Stock Watchlist section
+        // Show Stock Watchlist section with null check
         if (stockWatchlistSection) stockWatchlistSection.classList.remove('app-hidden');
         // Update main title based on selected stock watchlist
         const selectedWatchlist = userWatchlists.find(wl => wl.id === selectedWatchlistId);
@@ -1854,7 +1854,7 @@ function renderWatchlist() {
             mainTitle.textContent = 'Share Watchlist'; // Fallback
         }
 
-        // Show stock-specific UI elements
+        // Show stock-specific UI elements with null checks
         if (addShareHeaderBtn) addShareHeaderBtn.classList.remove('app-hidden');
         if (sortSelect) sortSelect.classList.remove('app-hidden');
         if (refreshLivePricesBtn) refreshLivePricesBtn.classList.remove('app-hidden');
@@ -1909,11 +1909,12 @@ function renderWatchlist() {
             emptyWatchlistMessage.style.color = 'var(--ghosted-text)';
             const td = document.createElement('td');
             td.colSpan = 5; // Updated colspan to 5 as Comments column is removed
-            td.appendChild(emptyWatchlistMessage);
             const tr = document.createElement('tr');
             tr.appendChild(td);
-            shareTableBody.appendChild(tr);
-            mobileShareCardsContainer.appendChild(emptyWatchlistMessage.cloneNode(true));
+            // Only append if shareTableBody exists
+            if (shareTableBody) shareTableBody.appendChild(tr);
+            // Only append if mobileShareCardsContainer exists
+            if (mobileShareCardsContainer) mobileShareCardsContainer.appendChild(emptyWatchlistMessage.cloneNode(true));
         }
 
         sharesToRender.forEach((share) => {
@@ -2751,7 +2752,7 @@ function addCashCategoryUI() {
     clearCashAssetForm();
     cashAssetFormTitle.textContent = 'Add New Asset';
     if (deleteCashAssetBtn) { deleteCashAssetBtn.classList.add('hidden'); } // Hide delete for new entries
-    setIconDisabled(saveCashAssetBtn, true); // Disable save button initially
+    setIconDisabled(saveCashAssetBtn, true); // Set initial state for dirty check
     originalCashAssetData = getCurrentCashAssetFormData(); // Set initial state for dirty check
     showModal(cashAssetFormModal);
     cashAssetNameInput.focus();
@@ -3816,8 +3817,8 @@ async function initializeAppLogic() {
 
             editWatchlistNameInput.value = watchlistToEditName;
             // Keep at least one real watchlist + Cash & Assets
-            const actualWatchlistsCount = userWatchlists.filter(wl => wl.id !== ALL_SHARES_ID && wl.id !== CASH_BANK_WATCHLIST_ID).length;
-            const isDisabledDelete = actualWatchlistsCount <= 1; 
+            const actualWatchlists = userWatchlists.filter(wl => wl.id !== ALL_SHARES_ID && wl.id !== CASH_BANK_WATCHLIST_ID);
+            const isDisabledDelete = actualWatchlists.length <= 1; 
             setIconDisabled(deleteWatchlistInModalBtn, isDisabledDelete); 
             logDebug('Edit Watchlist: deleteWatchlistInModalBtn disabled: ' + isDisabledDelete);
             setIconDisabled(saveWatchlistNameBtn, true); // Disable save button initially
