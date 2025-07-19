@@ -4395,7 +4395,7 @@ if (showAllCashAssetsBtn) {
                 // Only update if currently hidden
                 cashAssetVisibility[assetId] = true; // Set to true locally
                 // Use FieldValue.delete to remove the specific field from the map in Firestore
-                batch.update(userProfileDocRef, { [`cashAssetVisibility.${assetId}`]: window.firestore.deleteField() });
+                batch.update(userProfileDocRef, { [`cashAssetVisibility.${assetId}`]: window.firestore.deleteField });
                 changesMade = true;
                 logDebug('Firestore Batch: Resetting visibility for ' + assetId);
             }
