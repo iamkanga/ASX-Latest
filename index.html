@@ -315,6 +315,17 @@
                 <label for="frankingCredits">Franking Credits (%):</label>
                 <input type="number" id="frankingCredits" step="0.1" min="0" max="100" placeholder="e.g., 70 for 70%">
 
+                <!-- NEW: Share Rating Dropdown -->
+                <label for="shareRatingSelect">Rating:</label>
+                <select id="shareRatingSelect" class="dropdown-large">
+                    <option value="0">No Rating</option>
+                    <option value="1">⭐ 1</option>
+                    <option value="2">⭐⭐ 2</option>
+                    <option value="3">⭐⭐⭐ 3</option>
+                    <option value="4">⭐⭐⭐⭐ 4</option>
+                    <option value="5">⭐⭐⭐⭐⭐ 5</option>
+                </select>
+
                 <!-- Comments section container -->
                 <div class="comments-form-container">
                     <h3>Comments <span id="addCommentSectionBtn" class="add-section-icon"><i class="fas fa-plus"></i></span></h3>
@@ -355,6 +366,8 @@
                 <p><strong>Unfranked Yield:</strong> <span id="modalUnfrankedYield"></span></p>
                 <p><strong>Franked Yield:</strong> <span id="modalFrankedYield"></span></p>
                 <p><strong>Entry Date:</strong> <span id="modalEntryDate"></span></p>
+                <!-- NEW: Display for Share Rating in Details Modal -->
+                <p><strong>Rating:</strong> <span id="modalShareRating"></span></p>
 
                 <div id="modalCommentsContainer" class="modal-comments-sections">
                     <h3>Comments</h3>
