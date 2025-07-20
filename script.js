@@ -85,7 +85,10 @@ let userCashCategories = [];
 let selectedCashAssetDocId = null; // NEW: To track which cash asset is selected for editing/details
 let originalCashAssetData = null; // NEW: To store original cash asset data for dirty state check
 // NEW: Global variable to store visibility state of cash assets (temporary, not persisted)
-let cashAssetVisibility = {}; // {assetId: true/false (visible/hidden)}
+// This will now be managed directly by the 'isHidden' property on the cash asset object itself.
+let cashAssetVisibility = {}; // This object will still track the *current session's* visibility.
+// NEW: Reference for the hide/show checkbox in the cash asset form modal
+const hideCashAssetCheckbox = document.getElementById('hideCashAssetCheckbox');
 
 
 // --- UI Element References ---
@@ -2461,25 +2464,10 @@ function renderCashCategories() {
         nameDisplay.textContent = category.name || 'Unnamed Asset';
         categoryHeader.appendChild(nameDisplay);
 
-        const actionsContainer = document.createElement('div');
-        actionsContainer.classList.add('category-actions');
-
-        // NEW: Hide/Show Toggle Button (New Feature) - Listener moved to event delegation
-        const hideToggleButton = document.createElement('button');
-        hideToggleButton.classList.add('hide-toggle-btn');
-        hideToggleButton.dataset.categoryId = category.id; // Store category ID on the button itself
-        hideToggleButton.innerHTML = cashAssetVisibility[category.id] === false ? '<i class="fas fa-eye-slash"></i>' : '<i class="fas fa-eye"></i>';
-        hideToggleButton.title = cashAssetVisibility[category.id] === false ? 'Show Asset' : 'Hide Asset';
-        if (cashAssetVisibility[category.id] === false) {
-            hideToggleButton.classList.add('hidden-icon');
-        }
-        // Removed direct event listener attachment here
-        actionsContainer.appendChild(hideToggleButton);
-
+        // No eye icon button creation here anymore, as visibility is controlled by checkbox in modal.
         // Edit and Delete buttons are now only in the modal, so they are not added here.
 
-        categoryHeader.appendChild(actionsContainer);
-        categoryItem.appendChild(categoryHeader);
+        categoryItem.appendChild(categoryHeader); // Attach header directly
 
         // Balance Display (3.1)
         const balanceDisplay = document.createElement('span');
@@ -2549,8 +2537,8 @@ async function deleteCashCategory(categoryId) {
 function calculateTotalCash() {
     let total = 0;
     userCashCategories.forEach(category => {
-        // Only include visible assets in the total (New Feature)
-        if (cashAssetVisibility[category.id] !== false) { // If not explicitly hidden
+        // Only include assets that are NOT hidden in the total
+        if (!category.isHidden) { // Check the 'isHidden' property directly
             if (typeof category.balance === 'number' && !isNaN(category.balance)) {
                 total += category.balance;
             }
@@ -2591,6 +2579,10 @@ function showAddEditCashCategoryModal(assetIdToEdit = null) {
         if (addCashAssetCommentBtn) {
             addCashAssetCommentBtn.classList.remove('hidden'); // Show add comment button
         }
+        // Set checkbox state based on existing asset's isHidden property
+        if (hideCashAssetCheckbox) {
+            hideCashAssetCheckbox.checked = !!assetToEdit.isHidden; // Convert to boolean
+        }
         originalCashAssetData = getCurrentCashAssetFormData(); // Store original data for dirty check
         logDebug('Cash Form: Opened edit form for cash asset: ' + assetToEdit.name + ' (ID: ' + assetIdToEdit + ')');
     } else {
@@ -2603,6 +2595,10 @@ function showAddEditCashCategoryModal(assetIdToEdit = null) {
         // Ensure addCashAssetCommentBtn exists before trying to modify its classList
         if (addCashAssetCommentBtn) {
             addCashAssetCommentBtn.classList.remove('hidden'); // Show add comment button
+        }
+        // For new assets, checkbox should be unchecked by default
+        if (hideCashAssetCheckbox) {
+            hideCashAssetCheckbox.checked = false;
         }
         originalCashAssetData = null; // No original data for new asset
         logDebug('Cash Form: Opened add new cash asset form.');
@@ -2640,7 +2636,9 @@ function getCurrentCashAssetFormData() {
     return {
         name: cashAssetNameInput ? cashAssetNameInput.value.trim() : '',
         balance: cashAssetBalanceInput ? parseFloat(cashAssetBalanceInput.value) : null,
-        comments: comments
+        comments: comments,
+        // NEW: Include the isHidden state from the checkbox
+        isHidden: hideCashAssetCheckbox ? hideCashAssetCheckbox.checked : false
     };
 }
 
@@ -2649,7 +2647,8 @@ function areCashAssetDataEqual(data1, data2) {
     let balance1 = typeof data1.balance === 'number' && !isNaN(data1.balance) ? data1.balance : null;
     let balance2 = typeof data2.balance === 'number' && !isNaN(data2.balance) ? data2.balance : null;
     
-    if (data1.name !== data2.name || balance1 !== balance2) {
+    // NEW: Compare isHidden state
+    if (data1.name !== data2.name || balance1 !== balance2 || data1.isHidden !== data2.isHidden) {
         return false;
     }
 
@@ -2720,7 +2719,9 @@ async function saveCashAsset(isSilent = false) {
         balance: isNaN(assetBalance) ? 0 : assetBalance, // Default to 0 if NaN
         comments: comments, // NEW: Include comments
         userId: currentUserId,
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
+        // NEW: Save the isHidden state from the checkbox
+        isHidden: hideCashAssetCheckbox ? hideCashAssetCheckbox.checked : false
     };
 
     try {
@@ -2794,34 +2795,6 @@ function showCashCategoryDetailsModal(assetId) {
     showModal(cashAssetDetailModal);
     logDebug('Details: Displayed details for cash asset: ' + asset.name + ' (ID: ' + assetId + ')');
 }
-
-// NEW: Function to toggle visibility of a cash asset (New Feature)
-function toggleCashAssetVisibility(assetId) {
-    logDebug('Cash Asset Visibility: Toggling visibility for asset ID: ' + assetId);
-    // Toggle the visibility state
-    cashAssetVisibility[assetId] = cashAssetVisibility[assetId] !== false; // Default to true if undefined
-
-    // Update the UI
-    const assetElement = cashCategoriesContainer.querySelector(`.cash-category-item[data-id="${assetId}"]`);
-    if (assetElement) {
-        if (cashAssetVisibility[assetId] === false) {
-            assetElement.classList.add('hidden');
-            assetElement.querySelector('.hide-toggle-btn').innerHTML = '<i class="fas fa-eye-slash"></i>';
-            assetElement.querySelector('.hide-toggle-btn').title = 'Show Asset';
-            assetElement.querySelector('.hide-toggle-btn').classList.add('hidden-icon');
-            logDebug('Cash Asset Visibility: Asset ' + assetId + ' is now HIDDEN.');
-        } else {
-            assetElement.classList.remove('hidden');
-            assetElement.querySelector('.hide-toggle-btn').innerHTML = '<i class="fas fa-eye"></i>';
-            assetElement.querySelector('.hide-toggle-btn').title = 'Hide Asset';
-            assetElement.querySelector('.hide-toggle-btn').classList.remove('hidden-icon');
-            logDebug('Cash Asset Visibility: Asset ' + assetId + ' is now VISIBLE.');
-        }
-    }
-    // Recalculate total cash after visibility change
-    calculateTotalCash();
-}
-
 
 // Custom Confirm Dialog Function (Now unused for deletions, but kept for potential future use)
 function showCustomConfirm(message, callback) {
@@ -4308,19 +4281,7 @@ async function initializeAppLogic() {
     //         saveCashCategories(); // Saves all currently displayed cash categories
     //     });
     // }
-    // NEW: Event delegation for hide/show cash asset toggle buttons (eye icon)
-    if (cashCategoriesContainer) {
-        cashCategoriesContainer.addEventListener('click', (event) => {
-            const toggleButton = event.target.closest('.hide-toggle-btn');
-            if (toggleButton) {
-                event.stopPropagation(); // Prevent the card click listener from firing
-                const categoryId = toggleButton.dataset.categoryId;
-                if (categoryId) {
-                    toggleCashAssetVisibility(categoryId);
-                }
-            }
-        });
-    }
+    
     // NEW: Cash Asset Form Modal Save/Delete/Edit Buttons (2.1, 2.2)
     if (saveCashAssetBtn) {
         saveCashAssetBtn.addEventListener('click', async () => {
