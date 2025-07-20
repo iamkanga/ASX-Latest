@@ -493,6 +493,558 @@ function shouldDisplayZeroChange() {
 }
 
 // --- UI State Management Functions ---
+/**
+ * Gets the current Date object adjusted to a specific IANA timezone.
+ * This is crucial for accurate market open/close checks across timezones.
+ * @param {string} timeZone The IANA timezone string (e.g., 'Australia/Sydney', 'Asia/Bangkok').
+ * @returns {Date} A Date object representing the current time in the specified timezone.
+ */
+function getDateInTimezone(timeZone) {
+    // Using Intl.DateTimeFormat to get parts of the date in the target timezone
+    // and then constructing a local Date object from those parts.
+    // This correctly handles Daylight Saving Time for the target timezone.
+    const now = new Date();
+    const options = {
+        year: 'numeric', month: 'numeric', day: 'numeric',
+        hour: 'numeric', minute: 'numeric', second: 'numeric',
+        hour12: false, // Use 24-hour format
+        timeZone: timeZone
+    };
+    const formatter = new Intl.DateTimeFormat('en-US', options);
+    const parts = formatter.formatToParts(now);
+
+    const getPart = (type) => parseInt(parts.find(p => p.type === type)?.value || '0', 10);
+
+    const year = getPart('year');
+    const month = getPart('month') - 1; // Month is 0-indexed
+    const day = getPart('day');
+    const hour = getPart('hour');
+    const minute = getPart('minute');
+    const second = getPart('second');
+
+    // Construct a Date object in the local timezone, but with the year/month/day/hour/minute/second
+    // values from the target timezone. This is a common pattern to create a "local date"
+    // that effectively represents the target timezone's date/time.
+    return new Date(year, month, day, hour, minute, second);
+}
+
+/**
+ * Checks if the ASX market is currently open based on Sydney time.
+ * ASX trading hours: 10:00 AM - 4:00 PM AEDT/AEST, Monday-Friday.
+ * @returns {boolean} True if the market is open, false otherwise.
+ */
+function isAsxMarketOpen() {
+    const sydneyTime = getDateInTimezone(SYDNEY_TIMEZONE);
+    const dayOfWeek = sydneyTime.getDay(); // Sunday - Saturday : 0 - 6
+    const hour = sydneyTime.getHours();
+    const minute = sydneyTime.getMinutes();
+
+    // Check for weekends (Saturday=6, Sunday=0)
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+        logDebug('Market Check: ASX market is closed (weekend).');
+        return false;
+    }
+
+    // Check for trading hours (10:00 to 16:00 Sydney time)
+    // Pre-open is from 7:00 AM, but for "zero change" we care about active trading.
+    if (hour > 10 || (hour === 10 && minute >= 0)) { // After 10:00 AM
+        if (hour < 16 || (hour === 16 && minute === 0)) { // Before or at 4:00 PM (end of continuous trading)
+            logDebug('Market Check: ASX market is open.');
+            return true;
+        }
+    }
+
+    logDebug('Market Check: ASX market is closed (outside trading hours).');
+    return false;
+}
+
+/**
+ * Checks if the current time in Thailand is past midnight (00:00).
+ * This is used to decide when to show "zero change" after market close.
+ * @returns {boolean} True if current hour in Thailand is 0 (midnight) or later.
+ */
+function isPastThailandMidnight() {
+    const thailandTime = getDateInTimezone(THAILAND_TIMEZONE);
+    const hour = thailandTime.getHours();
+    
+    // If it's 00:00 (midnight) or later in Thailand, return true.
+    // This means the "day" has rolled over in Thailand.
+    const isPastMidnight = hour >= 0; 
+    logDebug('Market Check: Thailand time is ' + thailandTime.toLocaleTimeString('en-US', { timeZone: THAILAND_TIMEZONE }) + '. Past midnight: ' + isPastMidnight);
+    return isPastMidnight;
+}
+
+/**
+ * Combines checks: ASX market is closed AND it's past midnight in Thailand.
+ * This is the condition for displaying "zero change".
+ * @returns {boolean} True if both conditions are met.
+ */
+function shouldDisplayZeroChange() {
+    const marketClosed = !isAsxMarketOpen();
+    const pastThailandMidnight = isPastThailandMidnight();
+
+    const displayZero = marketClosed && pastThailandMidnight;
+    logDebug('Market Check: Should display zero change? Market Closed: ' + marketClosed + ', Past Thailand Midnight: ' + pastThailandMidnight + ' => Result: ' + displayZero);
+    return displayZero;
+}
+
+/**
+ * Gathers current data from the Share Form inputs.
+ * @returns {object} An object representing the current state of the share form.
+ */
+function getCurrentFormData() {
+    const comments = [];
+    if (commentsFormContainer) {
+        commentsFormContainer.querySelectorAll('.comment-section').forEach(section => {
+            const titleInput = section.querySelector('.comment-title-input');
+            const textInput = section.querySelector('.comment-text-input');
+            const title = titleInput ? titleInput.value.trim() : '';
+            const text = textInput ? textInput.value.trim() : '';
+            if (title || text) {
+                comments.push({ title: title, text: text });
+            }
+        });
+    }
+
+    return {
+        shareName: shareNameInput ? shareNameInput.value.trim() : '',
+        currentPrice: currentPriceInput ? parseFloat(currentPriceInput.value) : null,
+        targetPrice: targetPriceInput ? parseFloat(targetPriceInput.value) : null,
+        dividendAmount: dividendAmountInput ? parseFloat(dividendAmountInput.value) : null,
+        frankingCredits: frankingCreditsInput ? parseFloat(frankingCreditsInput.value) : null,
+        rating: shareRatingSelect ? parseInt(shareRatingSelect.value, 10) : 0,
+        comments: comments,
+        watchlistId: shareWatchlistSelect ? shareWatchlistSelect.value : null
+    };
+}
+
+/**
+ * Compares two share data objects to check for equality.
+ * Used for dirty state checking before saving.
+ * @param {object} data1
+ * @param {object} data2
+ * @returns {boolean} True if data is identical, false otherwise.
+ */
+function areShareDataEqual(data1, data2) {
+    if (!data1 || !data2) return false;
+
+    // Convert numbers to consistent format for comparison, treating null/NaN similarly
+    const numOrNull = (val) => (typeof val === 'number' && !isNaN(val)) ? val : null;
+
+    const areNumbersEqual = (n1, n2) => {
+        const _n1 = numOrNull(n1);
+        const _n2 = numOrNull(n2);
+        return _n1 === _n2;
+    };
+
+    if (data1.shareName !== data2.shareName ||
+        !areNumbersEqual(data1.currentPrice, data2.currentPrice) ||
+        !areNumbersEqual(data1.targetPrice, data2.targetPrice) ||
+        !areNumbersEqual(data1.dividendAmount, data2.dividendAmount) ||
+        !areNumbersEqual(data1.frankingCredits, data2.frankingCredits) ||
+        data1.rating !== data2.rating ||
+        data1.watchlistId !== data2.watchlistId) {
+        return false;
+    }
+
+    // Deep compare comments
+    if (data1.comments.length !== data2.comments.length) {
+        return false;
+    }
+    for (let i = 0; i < data1.comments.length; i++) {
+        const comment1 = data1.comments[i];
+        const comment2 = data2.comments[i];
+        if (comment1.title !== comment2.title || comment1.text !== comment2.text) {
+            return false;
+        }
+    }
+    return true;
+}
+
+/**
+ * Checks the current state of the share form against the original data (if editing)
+ * and enables/disables the save button accordingly.
+ */
+function checkFormDirtyState() {
+    const currentData = getCurrentFormData();
+    const isNameValid = currentData.shareName.trim() !== '';
+    let canSave = isNameValid;
+
+    if (selectedShareDocId && originalShareData) {
+        // For existing shares, enable save if data is dirty (including watchlist selection)
+        const isDirty = !areShareDataEqual(originalShareData, currentData);
+        canSave = canSave && isDirty;
+        if (!isDirty) {
+            logDebug('Dirty State: Existing share: No changes detected, save disabled.');
+        }
+    } else if (!selectedShareDocId) {
+        // For new shares, enable if name is valid AND a watchlist is selected (if 'All Shares' is active)
+        const needsWatchlistSelection = currentSelectedWatchlistIds.includes(ALL_SHARES_ID);
+        const isWatchlistSelected = shareWatchlistSelect && shareWatchlistSelect.value !== '';
+        canSave = canSave && (!needsWatchlistSelection || isWatchlistSelected);
+        if (!canSave) {
+            logDebug('Dirty State: New share: Name invalid or no watchlist selected, save disabled.');
+        }
+    }
+    setIconDisabled(saveShareBtn, !canSave);
+    logDebug('Dirty State: Share save button enabled: ' + canSave);
+}
+
+/**
+ * Saves share data to Firestore (add new or update existing).
+ * @param {boolean} isSilent If true, no alert messages are shown on success (used for auto-save).
+ */
+async function saveShareData(isSilent = false) {
+    logDebug('Share Form: saveShareData called. Silent: ' + isSilent);
+    if (saveShareBtn.classList.contains('is-disabled-icon') && isSilent) {
+        logDebug('Auto-Save: Save button is disabled (no changes or no valid name). Skipping silent save.');
+        return;
+    }
+
+    const shareName = shareNameInput.value.trim();
+    if (!shareName) {
+        if (!isSilent) showCustomAlert('Share code is required!');
+        console.warn('Save Share: Share name is required. Skipping save.');
+        return;
+    }
+
+    const currentPrice = parseFloat(currentPriceInput.value);
+    const targetPrice = parseFloat(targetPriceInput.value);
+    const dividendAmount = parseFloat(dividendAmountInput.value);
+    const frankingCredits = parseFloat(frankingCreditsInput.value);
+    const rating = parseInt(shareRatingSelect.value, 10);
+    const watchlistId = shareWatchlistSelect.value;
+
+    if (!watchlistId && currentSelectedWatchlistIds.includes(ALL_SHARES_ID)) {
+        if (!isSilent) showCustomAlert('Please select a watchlist for the share.');
+        console.warn('Save Share: Watchlist not selected. Skipping save.');
+        return;
+    }
+
+    const comments = [];
+    if (commentsFormContainer) {
+        commentsFormContainer.querySelectorAll('.comment-section').forEach(section => {
+            const titleInput = section.querySelector('.comment-title-input');
+            const textInput = section.querySelector('.comment-text-input');
+            const title = titleInput ? titleInput.value.trim() : '';
+            const text = textInput ? textInput.value.trim() : '';
+            if (title || text) {
+                comments.push({ title: title, text: text });
+            }
+        });
+    }
+
+    const shareData = {
+        shareName: shareName,
+        currentPrice: isNaN(currentPrice) ? null : currentPrice,
+        targetPrice: isNaN(targetPrice) ? null : targetPrice,
+        dividendAmount: isNaN(dividendAmount) ? null : dividendAmount,
+        frankingCredits: isNaN(frankingCredits) ? null : frankingCredits,
+        rating: isNaN(rating) ? 0 : rating,
+        comments: comments,
+        watchlistId: watchlistId,
+        userId: currentUserId,
+        lastUpdated: new Date().toISOString()
+    };
+
+    try {
+        if (selectedShareDocId) {
+            const shareDocRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/shares', selectedShareDocId);
+            await window.firestore.updateDoc(shareDocRef, shareData);
+            if (!isSilent) showCustomAlert('Share \'' + shareName + '\' updated successfully!', 1500);
+            logDebug('Firestore: Share \'' + shareName + '\' (ID: ' + selectedShareDocId + ') updated.');
+        } else {
+            const sharesColRef = window.firestore.collection(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/shares');
+            const newDocRef = await window.firestore.addDoc(sharesColRef, {
+                ...shareData,
+                entryDate: new Date().toISOString()
+            });
+            selectedShareDocId = newDocRef.id; // Set selected ID for newly added
+            if (!isSilent) showCustomAlert('Share \'' + shareName + '\' added successfully!', 1500);
+            logDebug('Firestore: Share \'' + shareName + '\' added with ID: ' + newDocRef.id);
+        }
+        originalShareData = getCurrentFormData(); // Update original data after save
+        setIconDisabled(saveShareBtn, true); // Disable save button after saving
+        if (!isSilent) closeModals();
+    } catch (error) {
+        console.error('Firestore: Error saving share:', error);
+        if (!isSilent) showCustomAlert('Error saving share: ' + error.message);
+    }
+}
+
+/**
+ * Populates the watchlist select dropdown in the share form.
+ * @param {string|null} selectedWatchlistId The ID of the watchlist to pre-select.
+ * @param {boolean} isNewShare True if it's a new share being added, false if editing existing.
+ */
+function populateShareWatchlistSelect(selectedWatchlistId = null, isNewShare = true) {
+    if (!shareWatchlistSelect) {
+        console.error('populateShareWatchlistSelect: shareWatchlistSelect element not found.');
+        return;
+    }
+    // Clear existing options
+    shareWatchlistSelect.innerHTML = '<option value="" disabled>Select a Watchlist</option>';
+
+    // Filter out "All Shares" and "Cash & Assets" from the options
+    const selectableWatchlists = userWatchlists.filter(wl =>
+        wl.id !== ALL_SHARES_ID && wl.id !== CASH_BANK_WATCHLIST_ID
+    );
+
+    if (selectableWatchlists.length === 0) {
+        // If no user-defined watchlists, prompt to create one
+        const noWatchlistOption = document.createElement('option');
+        noWatchlistOption.value = "";
+        noWatchlistOption.textContent = "No watchlists found. Create one!";
+        noWatchlistOption.disabled = true;
+        shareWatchlistSelect.appendChild(noWatchlistOption);
+        shareWatchlistSelect.value = ""; // Ensure the disabled option is shown
+        setIconDisabled(saveShareBtn, true); // Cannot save if no watchlist can be selected
+        logDebug('Share Watchlist Select: No custom watchlists to select from.');
+        return;
+    }
+
+    selectableWatchlists.sort((a, b) => a.name.localeCompare(b.name)).forEach(watchlist => {
+        const option = document.createElement('option');
+        option.value = watchlist.id;
+        option.textContent = watchlist.name;
+        shareWatchlistSelect.appendChild(option);
+    });
+
+    // Attempt to set selected value
+    if (selectedWatchlistId && selectableWatchlists.some(wl => wl.id === selectedWatchlistId)) {
+        shareWatchlistSelect.value = selectedWatchlistId;
+        logDebug('Share Watchlist Select: Pre-selected watchlist: ' + selectedWatchlistId);
+    } else if (isNewShare && currentSelectedWatchlistIds.length === 1 &&
+               currentSelectedWatchlistIds[0] !== ALL_SHARES_ID &&
+               currentSelectedWatchlistIds[0] !== CASH_BANK_WATCHLIST_ID) {
+        // For new shares, default to the currently selected watchlist if it's a specific one
+        shareWatchlistSelect.value = currentSelectedWatchlistIds[0];
+        logDebug('Share Watchlist Select: Defaulting new share to current active watchlist: ' + currentSelectedWatchlistIds[0]);
+    } else if (isNewShare && selectableWatchlists.length > 0) {
+        // If no specific selection, but there are watchlists, select the first available one
+        shareWatchlistSelect.value = selectableWatchlists[0].id;
+        logDebug('Share Watchlist Select: Defaulting new share to first available watchlist: ' + selectableWatchlists[0].id);
+    } else {
+        shareWatchlistSelect.value = ""; // Ensure placeholder is shown if nothing matches
+        logDebug('Share Watchlist Select: No specific watchlist selected, defaulting to placeholder.');
+    }
+
+    // After populating, ensure the save button is correctly enabled/disabled based on current dirty state.
+    // This call is crucial because populating options can change the form state (e.g., if a default is set).
+    checkFormDirtyState();
+}
+
+/**
+ * Clears the share form inputs and resets its state.
+ */
+function clearForm() {
+    if (shareNameInput) shareNameInput.value = '';
+    if (currentPriceInput) currentPriceInput.value = '';
+    if (targetPriceInput) targetPriceInput.value = '';
+    if (dividendAmountInput) dividendAmountInput.value = '';
+    if (frankingCreditsInput) frankingCreditsInput.value = '';
+    if (shareRatingSelect) shareRatingSelect.value = '0'; // Reset rating to 'No Rating'
+    if (commentsFormContainer) commentsFormContainer.innerHTML = ''; // Clear all comments
+    selectedShareDocId = null;
+    originalShareData = null; // Reset original data
+    setIconDisabled(saveShareBtn, true); // Disable save button
+    // Ensure the watchlist select is reset and populated
+    populateShareWatchlistSelect(null, true); // Call with true for new share context
+    logDebug('Form: Share form cleared.');
+}
+
+/**
+ * Sorts the allSharesData array based on the currentSortOrder.
+ * Then re-renders the watchlist UI.
+ */
+function sortShares() {
+    logDebug('Sort: Attempting to sort shares by: ' + currentSortOrder);
+    if (!allSharesData || allSharesData.length === 0) {
+        logDebug('Sort: No shares to sort.');
+        renderWatchlist();
+        return;
+    }
+
+    allSharesData.sort((a, b) => {
+        let valA, valB;
+
+        switch (currentSortOrder) {
+            case 'shareName-asc':
+                valA = (a.shareName || '').toLowerCase();
+                valB = (b.shareName || '').toLowerCase();
+                return valA.localeCompare(valB);
+            case 'shareName-desc':
+                valA = (a.shareName || '').toLowerCase();
+                valB = (b.shareName || '').toLowerCase();
+                return valB.localeCompare(valA);
+            case 'entryDate-asc':
+                valA = new Date(a.entryDate || 0).getTime();
+                valB = new Date(b.entryDate || 0).getTime();
+                return valA - valB;
+            case 'entryDate-desc':
+                valA = new Date(a.entryDate || 0).getTime();
+                valB = new Date(b.entryDate || 0).getTime();
+                return valB - valA;
+            case 'dividendAmount-asc':
+                valA = parseFloat(a.dividendAmount) || 0;
+                valB = parseFloat(b.dividendAmount) || 0;
+                return valA - valB;
+            case 'dividendAmount-desc':
+                valA = parseFloat(a.dividendAmount) || 0;
+                valB = parseFloat(b.dividendAmount) || 0;
+                return valB - valA;
+            case 'percentageChange-asc':
+                // Calculate percentage change for sorting
+                const changeA = calculatePercentageChange(a.shareName);
+                const changeB = calculatePercentageChange(b.shareName);
+                return changeA - changeB;
+            case 'percentageChange-desc':
+                // Calculate percentage change for sorting
+                const changeA_desc = calculatePercentageChange(a.shareName);
+                const changeB_desc = calculatePercentageChange(b.shareName);
+                return changeB_desc - changeA_desc;
+            default:
+                // Fallback or default sort if no match
+                return 0;
+        }
+    });
+    logDebug('Sort: Shares sorted by ' + currentSortOrder + '.');
+    renderWatchlist(); // Re-render the UI with sorted data
+}
+
+/**
+ * Helper to calculate percentage change for sorting.
+ * Returns 0 if data is not available or not a number, preventing NaN issues during sort.
+ * @param {string} shareCode
+ * @returns {number} Percentage change or 0.
+ */
+function calculatePercentageChange(shareCode) {
+    const livePriceData = livePrices[shareCode.toUpperCase()];
+    if (!livePriceData || livePriceData.live === null || livePriceData.prevClose === null ||
+        isNaN(livePriceData.live) || isNaN(livePriceData.prevClose)) {
+        return 0; // Cannot calculate, treat as no change for sorting
+    }
+    if (livePriceData.prevClose === 0) {
+        return 0; // Avoid division by zero
+    }
+    return ((livePriceData.live - livePriceData.prevClose) / livePriceData.prevClose) * 100;
+}
+
+/**
+ * Adds a comment section (title and text area) to a given container.
+ * @param {HTMLElement} container The DOM element to append the comment section to.
+ * @param {string} initialTitle Optional initial title for the comment.
+ * @param {string} initialText Optional initial text for the comment.
+ * @param {boolean} isCashAsset Flag to indicate if it's a cash asset comment, changes dirty check.
+ */
+function addCommentSection(container, initialTitle = '', initialText = '', isCashAsset = false) {
+    if (!container) {
+        console.error('addCommentSection: Container element not found.');
+        return;
+    }
+
+    const commentSection = document.createElement('div');
+    commentSection.classList.add('comment-section');
+
+    commentSection.innerHTML = `
+        <div class="comment-section-header">
+            <input type="text" class="comment-title-input" placeholder="Comment Title (Optional)" value="${initialTitle}">
+            <button type="button" class="comment-delete-btn"><i class="fas fa-trash-alt"></i></button>
+        </div>
+        <textarea class="comment-text-input" placeholder="Your comments here..." rows="4">${initialText}</textarea>
+    `;
+
+    // Add event listeners for dirty state checking on the new inputs
+    const titleInput = commentSection.querySelector('.comment-title-input');
+    const textInput = commentSection.querySelector('.comment-text-input');
+    const deleteButton = commentSection.querySelector('.comment-delete-btn');
+
+    const updateDirtyState = () => {
+        if (isCashAsset) {
+            checkCashAssetFormDirtyState();
+        } else {
+            checkFormDirtyState();
+        }
+    };
+
+    if (titleInput) {
+        titleInput.addEventListener('input', updateDirtyState);
+        titleInput.addEventListener('change', updateDirtyState);
+    }
+    if (textInput) {
+        textInput.addEventListener('input', updateDirtyState);
+        textInput.addEventListener('change', updateDirtyState);
+    }
+    if (deleteButton) {
+        deleteButton.addEventListener('click', () => {
+            commentSection.remove();
+            updateDirtyState(); // Re-check dirty state after removing a comment
+            logDebug('Comment: Comment section removed.');
+        });
+    }
+
+    container.appendChild(commentSection);
+    logDebug('Comment: Added new comment section.');
+}
+
+/**
+ * Deselects the currently selected cash asset.
+ */
+function deselectCurrentCashAsset() {
+    const currentlySelected = document.querySelectorAll('.cash-category-item.selected');
+    logDebug('Selection: Attempting to deselect ' + currentlySelected.length + ' cash asset elements.');
+    currentlySelected.forEach(el => {
+        el.classList.remove('selected');
+    });
+    selectedCashAssetDocId = null;
+    logDebug('Selection: Cash asset deselected. selectedCashAssetDocId is now null.');
+}
+
+/**
+ * Sorts the cash categories based on the currentSortOrder and returns the sorted array.
+ * This function does NOT modify `userCashCategories` directly; it returns a new sorted array.
+ * It's called by `renderCashCategories`.
+ */
+function sortCashCategories() {
+    logDebug('Sort: Attempting to sort cash categories by: ' + currentSortOrder);
+    if (!userCashCategories || userCashCategories.length === 0) {
+        logDebug('Sort: No cash categories to sort.');
+        return [];
+    }
+
+    // Create a mutable copy for sorting
+    const sortableCategories = [...userCashCategories];
+
+    sortableCategories.sort((a, b) => {
+        let valA, valB;
+
+        switch (currentSortOrder) {
+            case 'name-asc':
+                valA = (a.name || '').toLowerCase();
+                valB = (b.name || '').toLowerCase();
+                return valA.localeCompare(valB);
+            case 'name-desc':
+                valA = (a.name || '').toLowerCase();
+                valB = (b.name || '').toLowerCase();
+                return valB.localeCompare(valA);
+            case 'balance-asc':
+                valA = parseFloat(a.balance) || 0;
+                valB = parseFloat(b.balance) || 0;
+                return valA - valB;
+            case 'balance-desc':
+                valA = parseFloat(a.balance) || 0;
+                valB = parseFloat(b.balance) || 0;
+                return valB - valA;
+            default:
+                // Default sort (e.g., by name ascending if no specific cash sort order)
+                valA = (a.name || '').toLowerCase();
+                valB = (b.name || '').toLowerCase();
+                return valA.localeCompare(valB);
+        }
+    });
+    logDebug('Sort: Cash categories sorted by ' + currentSortOrder + '.');
+    return sortableCategories;
+}
 
 /**
  * Adds a single share to the desktop table view.
