@@ -869,15 +869,12 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
     targetPriceInput.value = Number(shareToEdit.targetPrice) !== null && !isNaN(Number(shareToEdit.targetPrice)) ? Number(shareToEdit.targetPrice).toFixed(2) : '';
     dividendAmountInput.value = Number(shareToEdit.dividendAmount) !== null && !isNaN(Number(shareToEdit.dividendAmount)) ? Number(shareToEdit.dividendAmount).toFixed(3) : '';
     frankingCreditsInput.value = Number(shareToEdit.frankingCredits) !== null && !isNaN(Number(shareToEdit.frankingCredits)) ? Number(shareToEdit.frankingCredits).toFixed(1) : '';
+
     // Set the star rating dropdown
     if (shareRatingSelect) {
         shareRatingSelect.value = shareToEdit.starRating !== undefined && shareToEdit.starRating !== null ? shareToEdit.starRating.toString() : '0';
     }
-    currentPriceInput.value = Number(shareToEdit.currentPrice) !== null && !isNaN(Number(share.currentPrice)) ? Number(shareToEdit.currentPrice).toFixed(2) : '';
-    targetPriceInput.value = Number(shareToEdit.targetPrice) !== null && !isNaN(Number(share.targetPrice)) ? Number(shareToEdit.targetPrice).toFixed(2) : '';
-    dividendAmountInput.value = Number(shareToEdit.dividendAmount) !== null && !isNaN(Number(share.dividendAmount)) ? Number(shareToEdit.dividendAmount).toFixed(3) : '';
-    frankingCreditsInput.value = Number(shareToEdit.frankingCredits) !== null && !isNaN(Number(share.frankingCredits)) ? Number(shareToEdit.frankingCredits).toFixed(1) : '';
-    
+
     // Populate and set selection for the watchlist dropdown
     populateShareWatchlistSelect(shareToEdit.watchlistId, false); // false indicates not a new share
 
@@ -895,11 +892,11 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
         setIconDisabled(deleteShareBtn, false);
         logDebug('showEditFormForSelectedShare: deleteShareBtn shown and enabled.');
     }
-    
+
     originalShareData = getCurrentFormData();
     setIconDisabled(saveShareBtn, true); // Save button disabled initially for editing
     logDebug('showEditFormForSelectedShare: saveShareBtn initially disabled for dirty check.');
-    
+
     showModal(shareFormSection);
     shareNameInput.focus();
     logDebug('Form: Opened edit form for share: ' + shareToEdit.shareName + ' (ID: ' + selectedShareDocId + ')');
