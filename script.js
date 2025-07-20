@@ -721,226 +721,6 @@ function selectCashAsset(assetId) {
     selectedCashAssetDocId = assetId;
 }
 
-function deselectCurrentCashAsset() {
-    const currentlySelected = document.querySelectorAll('.cash-category-item.selected');
-    logDebug('Selection: Attempting to deselect ' + currentlySelected.length + ' cash asset elements.');
-    currentlySelected.forEach(el => {
-        el.classList.remove('selected');
-    });
-    selectedCashAssetDocId = null;
-    logDebug('Selection: Cash asset deselected. selectedCashAssetDocId is now null.');
-}
-
-// --- NEW: Market Hours and Time Zone Helper Functions ---
-
-/**
- * Gets the current Date object adjusted to a specific IANA timezone.
- * This is crucial for accurate market open/close checks across timezones.
- * @param {string} timeZone The IANA timezone string (e.g., 'Australia/Sydney', 'Asia/Bangkok').
- * @returns {Date} A Date object representing the current time in the specified timezone.
- */
-function getDateInTimezone(timeZone) {
-    // Using Intl.DateTimeFormat to get parts of the date in the target timezone
-    // and then constructing a local Date object from those parts.
-    // This correctly handles Daylight Saving Time for the target timezone.
-    const now = new Date();
-    const options = {
-        year: 'numeric', month: 'numeric', day: 'numeric',
-        hour: 'numeric', minute: 'numeric', second: 'numeric',
-        hour12: false, // Use 24-hour format
-        timeZone: timeZone
-    };
-    const formatter = new Intl.DateTimeFormat('en-US', options);
-    const parts = formatter.formatToParts(now);
-
-    const getPart = (type) => parseInt(parts.find(p => p.type === type)?.value || '0', 10);
-
-    const year = getPart('year');
-    const month = getPart('month') - 1; // Month is 0-indexed
-    const day = getPart('day');
-    const hour = getPart('hour');
-    const minute = getPart('minute');
-    const second = getPart('second');
-
-    // Construct a Date object in the local timezone, but with the year/month/day/hour/minute/second
-    // values from the target timezone. This is a common pattern to create a "local date"
-    // that effectively represents the target timezone's date/time.
-    return new Date(year, month, day, hour, minute, second);
-}
-
-/**
- * Checks if the ASX market is currently open based on Sydney time.
- * ASX trading hours: 10:00 AM - 4:00 PM AEDT/AEST, Monday-Friday.
- * @returns {boolean} True if the market is open, false otherwise.
- */
-function isAsxMarketOpen() {
-    const sydneyTime = getDateInTimezone(SYDNEY_TIMEZONE);
-    const dayOfWeek = sydneyTime.getDay(); // Sunday - Saturday : 0 - 6
-    const hour = sydneyTime.getHours();
-    const minute = sydneyTime.getMinutes();
-
-    // Check for weekends (Saturday=6, Sunday=0)
-    if (dayOfWeek === 0 || dayOfWeek === 6) {
-        logDebug('Market Check: ASX market is closed (weekend).');
-        return false;
-    }
-
-    // Check for trading hours (10:00 to 16:00 Sydney time)
-    // Pre-open is from 7:00 AM, but for "zero change" we care about active trading.
-    if (hour > 10 || (hour === 10 && minute >= 0)) { // After 10:00 AM
-        if (hour < 16 || (hour === 16 && minute === 0)) { // Before or at 4:00 PM (end of continuous trading)
-            logDebug('Market Check: ASX market is open.');
-            return true;
-        }
-    }
-
-    logDebug('Market Check: ASX market is closed (outside trading hours).');
-    return false;
-}
-
-/**
- * Checks if the current time in Thailand is past midnight (00:00).
- * This is used to decide when to show "zero change" after market close.
- * @returns {boolean} True if current hour in Thailand is 0 (midnight) or later.
- */
-function isPastThailandMidnight() {
-    const thailandTime = getDateInTimezone(THAILAND_TIMEZONE);
-    const hour = thailandTime.getHours();
-    
-    // If it's 00:00 (midnight) or later in Thailand, return true.
-    // This means the "day" has rolled over in Thailand.
-    const isPastMidnight = hour >= 0; 
-    logDebug('Market Check: Thailand time is ' + thailandTime.toLocaleTimeString('en-US', { timeZone: THAILAND_TIMEZONE }) + '. Past midnight: ' + isPastMidnight);
-    return isPastMidnight;
-}
-
-/**
- * Combines checks: ASX market is closed AND it's past midnight in Thailand.
- * This is the condition for displaying "zero change".
- * @returns {boolean} True if both conditions are met.
- */
-function shouldDisplayZeroChange() {
-    const marketClosed = !isAsxMarketOpen();
-    const pastThailandMidnight = isPastThailandMidnight();
-
-    const displayZero = marketClosed && pastThailandMidnight;
-    logDebug('Market Check: Should display zero change? Market Closed: ' + marketClosed + ', Past Thailand Midnight: ' + pastThailandMidnight + ' => Result: ' + displayZero);
-    return displayZero;
-}
-
-function addCommentSection(container, title = '', text = '', isCashAssetComment = false) {
-    if (!container) { console.error('addCommentSection: comments container not found.'); return; }
-    const commentSectionDiv = document.createElement('div');
-    commentSectionDiv.className = 'comment-section';
-    commentSectionDiv.innerHTML = `
-        <div class="comment-section-header">
-            <input type="text" class="comment-title-input" placeholder="Comment Title" value="${title}">
-            <button type="button" class="comment-delete-btn">&times;</button>
-        </div>
-        <textarea class="comment-text-input" placeholder="Your comments here...">${text}</textarea>
-    `;
-    container.appendChild(commentSectionDiv);
-    
-    const commentTitleInput = commentSectionDiv.querySelector('.comment-title-input');
-    const commentTextInput = commentSectionDiv.querySelector('.comment-text-input');
-    
-    if (commentTitleInput) {
-        commentTitleInput.addEventListener('input', isCashAssetComment ? checkCashAssetFormDirtyState : checkFormDirtyState);
-    }
-    if (commentTextInput) {
-        commentTextInput.addEventListener('input', isCashAssetComment ? checkCashAssetFormDirtyState : checkFormDirtyState);
-    }
-
-    commentSectionDiv.querySelector('.comment-delete-btn').addEventListener('click', (event) => {
-        logDebug('Comments: Delete comment button clicked.');
-        event.target.closest('.comment-section').remove();
-        isCashAssetComment ? checkCashAssetFormDirtyState() : checkFormDirtyState();
-    });
-    logDebug('Comments: Added new comment section.');
-}
-
-function clearForm() {
-    formInputs.forEach(input => {
-        if (input) { input.value = ''; }
-    });
-    if (commentsFormContainer) { // This now refers to #dynamicCommentsArea
-        commentsFormContainer.innerHTML = ''; // Clears ONLY the dynamically added comments
-    }
-    selectedShareDocId = null;
-    originalShareData = null; // IMPORTANT: Reset original data to prevent auto-save of cancelled edits
-    if (deleteShareBtn) {
-        deleteShareBtn.classList.add('hidden');
-        logDebug('clearForm: deleteShareBtn hidden.');
-    }
-    // Reset shareWatchlistSelect to its default placeholder
-    if (shareWatchlistSelect) {
-        shareWatchlistSelect.value = ''; // Set to empty string to select the disabled option
-        shareWatchlistSelect.disabled = false; // Ensure it's enabled for new share entry
-    }
-    setIconDisabled(saveShareBtn, true); // Save button disabled on clear
-    logDebug('Form: Form fields cleared and selectedShareDocId reset. saveShareBtn disabled.');
-}
-
-/**
- * Populates the 'Assign to Watchlist' dropdown in the share form modal.
- * Sets the default selection based on current view or existing share.
- * @param {string|null} currentShareWatchlistId The ID of the watchlist the share is currently in (for editing).
- * @param {boolean} isNewShare True if adding a new share, false if editing.
-*/
-function populateShareWatchlistSelect(currentShareWatchlistId = null, isNewShare = true) {
-    if (!shareWatchlistSelect) {
-        console.error('populateShareWatchlistSelect: shareWatchlistSelect element not found.');
-        return;
-    }
-
-    shareWatchlistSelect.innerHTML = '<option value="" disabled selected>Select a Watchlist</option>'; // Always start with placeholder
-
-    // Filter out the "Cash & Assets" option from the share watchlist dropdown
-    const stockWatchlists = userWatchlists.filter(wl => wl.id !== CASH_BANK_WATCHLIST_ID);
-
-    stockWatchlists.forEach(watchlist => {
-        const option = document.createElement('option');
-        option.value = watchlist.id;
-        option.textContent = watchlist.name;
-        shareWatchlistSelect.appendChild(option);
-    });
-
-    if (isNewShare) {
-        // If adding a new share:
-        // Pre-select if currently viewing a specific stock watchlist (not All Shares or Cash & Assets)
-        if (currentSelectedWatchlistIds.length === 1 && 
-            currentSelectedWatchlistIds[0] !== ALL_SHARES_ID &&
-            currentSelectedWatchlistIds[0] !== CASH_BANK_WATCHLIST_ID) {
-            
-            shareWatchlistSelect.value = currentSelectedWatchlistIds[0];
-            shareWatchlistSelect.disabled = true; // Cannot change watchlist when adding from a specific one
-            logDebug('Share Form: New share: Pre-selected and disabled watchlist to current view (' + stockWatchlists.find(wl => wl.id === currentSelectedWatchlistIds[0])?.name + ').');
-        } else {
-            // If viewing "All Shares", "Cash & Assets", or multiple, force selection (dropdown remains enabled)
-            shareWatchlistSelect.value = ''; // Ensure placeholder is selected
-            shareWatchlistSelect.disabled = false;
-            logDebug('Share Form: New share: User must select a watchlist.');
-        }
-    } else {
-        // If editing an existing share:
-        if (currentShareWatchlistId && stockWatchlists.some(wl => wl.id === currentShareWatchlistId)) {
-            shareWatchlistSelect.value = currentShareWatchlistId;
-            logDebug('Share Form: Editing share: Pre-selected watchlist to existing share\'s (' + stockWatchlists.find(wl => wl.id === currentShareWatchlistId)?.name + ').');
-        } else if (stockWatchlists.length > 0) {
-            // Fallback to first stock watchlist if current one is invalid/missing
-            shareWatchlistSelect.value = stockWatchlists[0].id;
-            console.warn('Share Form: Editing share: Original watchlist not found, defaulted to first available stock watchlist.');
-        } else {
-            shareWatchlistSelect.value = ''; // No watchlists available
-            console.warn('Share Form: Editing share: No stock watchlists available to select.');
-        }
-        shareWatchlistSelect.disabled = false; // Always allow changing watchlist when editing
-    }
-    // Add event listener for dirty state checking on this dropdown
-    shareWatchlistSelect.addEventListener('change', checkFormDirtyState);
-}
-
-
 function showEditFormForSelectedShare(shareIdToEdit = null) {
     const targetShareId = shareIdToEdit || selectedShareDocId;
 
@@ -962,6 +742,11 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
     dividendAmountInput.value = Number(shareToEdit.dividendAmount) !== null && !isNaN(Number(share.dividendAmount)) ? Number(shareToEdit.dividendAmount).toFixed(3) : '';
     frankingCreditsInput.value = Number(shareToEdit.frankingCredits) !== null && !isNaN(Number(share.frankingCredits)) ? Number(shareToEdit.frankingCredits).toFixed(1) : '';
     
+    // NEW: Set the rating dropdown value
+    if (shareRatingSelect) {
+        shareRatingSelect.value = shareToEdit.rating !== undefined && shareToEdit.rating !== null ? shareToEdit.rating.toString() : '0';
+    }
+
     // Populate and set selection for the watchlist dropdown
     populateShareWatchlistSelect(shareToEdit.watchlistId, false); // false indicates not a new share
 
@@ -990,215 +775,218 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
 }
 
 /**
- * Gathers all current data from the share form inputs.
- * @returns {object} An object representing the current state of the form.
+ * Displays the details of the currently selected share in a modal.
  */
-function getCurrentFormData() {
-    const comments = [];
-    if (commentsFormContainer) { // This now refers to #dynamicCommentsArea
-        commentsFormContainer.querySelectorAll('.comment-section').forEach(section => {
-            const titleInput = section.querySelector('.comment-title-input');
-            const textInput = section.querySelector('.comment-text-input');
-            const title = titleInput ? titleInput.value.trim() : '';
-            const text = textInput ? textInput.value.trim() : '';
-            if (title || text) {
-                comments.push({ title: title, text: text });
-            }
-        });
-    }
-
-    return {
-        shareName: shareNameInput.value.trim().toUpperCase(),
-        currentPrice: parseFloat(currentPriceInput.value),
-        targetPrice: parseFloat(targetPriceInput.value),
-        dividendAmount: parseFloat(dividendAmountInput.value),
-        frankingCredits: parseFloat(frankingCreditsInput.value),
-        comments: comments,
-        // Include the selected watchlist ID from the new dropdown
-        watchlistId: shareWatchlistSelect ? shareWatchlistSelect.value : null
-    };
-}
-
-/**
- * Compares two share data objects (original vs. current form data) to check for equality.
- * Handles null/NaN for numbers and deep comparison for comments array.
- * @param {object} data1
- * @param {object} data2
- * @returns {boolean} True if data is identical, false otherwise.
- */
-function areShareDataEqual(data1, data2) {
-    if (!data1 || !data2) return false;
-
-    const fields = ['shareName', 'currentPrice', 'targetPrice', 'dividendAmount', 'frankingCredits', 'watchlistId']; // Include watchlistId
-    for (const field of fields) {
-        let val1 = data1[field];
-        let val2 = data2[field];
-
-        if (typeof val1 === 'number' && isNaN(val1)) val1 = null;
-        if (typeof val2 === 'number' && isNaN(val2)) val2 = null;
-
-        if (val1 !== val2) {
-            return false;
-        }
-    }
-
-    if (data1.comments.length !== data2.comments.length) {
-        return false;
-    }
-    for (let i = 0; i < data1.comments.length; i++) {
-        const comment1 = data1.comments[i];
-        const comment2 = data2.comments[i];
-        if (comment1.title !== comment2.title || comment1.text !== comment2.text) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-/**
- * Checks the current state of the form against the original data (if editing)
- * and the share name validity, then enables/disables the save button accordingly.
- */
-function checkFormDirtyState() {
-    const currentData = getCurrentFormData();
-    const isShareNameValid = currentData.shareName.trim() !== '';
-    const isWatchlistSelected = shareWatchlistSelect && shareWatchlistSelect.value !== '';
-
-    let canSave = isShareNameValid;
-
-    // Additional condition for new shares when in "All Shares" view
-    if (!selectedShareDocId && currentSelectedWatchlistIds.includes(ALL_SHARES_ID)) {
-        canSave = canSave && isWatchlistSelected;
-        if (!isWatchlistSelected) {
-            logDebug('Dirty State: New share from All Shares: Watchlist not selected, save disabled.');
-        }
-    }
-
-    if (selectedShareDocId && originalShareData) {
-        const isDirty = !areShareDataEqual(originalShareData, currentData);
-        canSave = canSave && isDirty;
-        if (!isDirty) {
-            logDebug('Dirty State: Existing share: No changes detected, save disabled.');
-        }
-    } else if (!selectedShareDocId) {
-        // For new shares, enable if name is valid and (if from All Shares) watchlist is selected
-        // No additional 'isDirty' check needed for new shares beyond initial validity
-    }
-
-    setIconDisabled(saveShareBtn, !canSave);
-    logDebug('Dirty State: Save button enabled: ' + canSave);
-}
-
-/**
- * Saves share data to Firestore. Can be called silently for auto-save.
- * @param {boolean} isSilent If true, no alert messages are shown on success.
- */
-async function saveShareData(isSilent = false) {
-    logDebug('Share Form: saveShareData called.');
-    // Check if the save button would normally be disabled (no valid name or no changes)
-    // This prevents saving blank new shares or unchanged existing shares on auto-save.
-    if (saveShareBtn.classList.contains('is-disabled-icon') && isSilent) {
-        logDebug('Auto-Save: Save button is disabled (no changes or no valid name). Skipping silent save.');
+function showShareDetails() {
+    if (!selectedShareDocId) {
+        showCustomAlert('Please select a share to view details.');
         return;
     }
-
-    const shareName = shareNameInput.value.trim().toUpperCase();
-    if (!shareName) { 
-        if (!isSilent) showCustomAlert('Code is required!'); 
-        console.warn('Save Share: Code is required. Skipping save.');
-        return; 
+    const share = allSharesData.find(s => s.id === selectedShareDocId);
+    if (!share) {
+        showCustomAlert('Selected share not found.');
+        return;
     }
-
-    const selectedWatchlistIdForSave = shareWatchlistSelect ? shareWatchlistSelect.value : null;
-    // For new shares from 'All Shares' view, force watchlist selection
-    if (!selectedShareDocId && currentSelectedWatchlistIds.includes(ALL_SHARES_ID)) {
-        if (!selectedWatchlistIdForSave || selectedWatchlistIdForSave === '') { // Check for empty string too
-            if (!isSilent) showCustomAlert('Please select a watchlist to assign the new share to.');
-            console.warn('Save Share: New share from All Shares: Watchlist not selected. Skipping save.');
-            return;
-        }
-    } else if (!selectedShareDocId && !selectedWatchlistIdForSave) { // New share not from All Shares, but no watchlist selected (shouldn't happen if default exists)
-         if (!isSilent) showCustomAlert('Please select a watchlist to assign the new share to.');
-         console.warn('Save Share: New share: No watchlist selected. Skipping save.');
-         return;
-    }
-
-
-    const currentPrice = parseFloat(currentPriceInput.value);
-    const targetPrice = parseFloat(targetPriceInput.value);
-    const dividendAmount = parseFloat(dividendAmountInput.value);
-    const frankingCredits = parseFloat(frankingCreditsInput.value);
-
-    const comments = [];
-    if (commentsFormContainer) { // This now refers to #dynamicCommentsArea
-        commentsFormContainer.querySelectorAll('.comment-section').forEach(section => {
-            const titleInput = section.querySelector('.comment-title-input');
-            const textInput = section.querySelector('.comment-text-input');
-            const title = titleInput ? titleInput.value.trim() : '';
-            const text = textInput ? textInput.value.trim() : '';
-            if (title || text) {
-                comments.push({ title: title, text: text });
-            }
-        });
-    }
-
-    const shareData = {
-        shareName: shareName,
-        currentPrice: isNaN(currentPrice) ? null : currentPrice,
-        targetPrice: isNaN(targetPrice) ? null : targetPrice,
-        dividendAmount: isNaN(dividendAmount) ? null : dividendAmount,
-        frankingCredits: isNaN(frankingCredits) ? null : frankingCredits,
-        comments: comments,
-        userId: currentUserId,
-        // Use the selected watchlist from the modal dropdown
-        watchlistId: selectedWatchlistIdForSave,
-        lastPriceUpdateTime: new Date().toISOString()
-    };
-
-    if (selectedShareDocId) {
-        const existingShare = allSharesData.find(s => s.id === selectedShareDocId);
-        if (shareData.currentPrice !== null && existingShare && existingShare.currentPrice !== shareData.currentPrice) {
-            shareData.previousFetchedPrice = existingShare.lastFetchedPrice;
-            shareData.lastFetchedPrice = shareData.currentPrice;
-        } else if (!existingShare || existingShare.lastFetchedPrice === undefined) {
-            shareData.previousFetchedPrice = shareData.currentPrice;
-            shareData.lastFetchedPrice = shareData.currentPrice;
+    // Determine price change class for modalShareName
+    let modalShareNamePriceChangeClass = 'neutral';
+    const livePriceDataForName = livePrices[share.shareName.toUpperCase()];
+    if (livePriceDataForName && !livePriceDataForName.zeroChangeActive && livePriceDataForName.live !== null && livePriceDataForName.prevClose !== null && !isNaN(livePriceDataForName.live) && !isNaN(livePriceDataForName.prevClose)) {
+        const change = livePriceDataForName.live - livePriceDataForName.prevClose;
+        if (change > 0) {
+            modalShareNamePriceChangeClass = 'positive';
+        } else if (change < 0) {
+            modalShareNamePriceChangeClass = 'negative';
         } else {
-            shareData.previousFetchedPrice = existingShare.previousFetchedPrice;
-            shareData.lastFetchedPrice = existingShare.lastFetchedPrice;
-        }
-
-        try {
-            const shareDocRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/shares', selectedShareDocId);
-            await window.firestore.updateDoc(shareDocRef, shareData);
-            if (!isSilent) showCustomAlert('Share \'' + shareName + '\' updated successfully!', 1500);
-            logDebug('Firestore: Share \'' + shareName + '\' (ID: ' + selectedShareDocId + ') updated.');
-            originalShareData = getCurrentFormData(); // Update original data after successful save
-            setIconDisabled(saveShareBtn, true); // Disable save button after saving
-        } catch (error) {
-            console.error('Firestore: Error updating share:', error);
-            if (!isSilent) showCustomAlert('Error updating share: ' + error.message);
-        }
-    } else {
-        shareData.entryDate = new Date().toISOString();
-        shareData.lastFetchedPrice = shareData.currentPrice;
-        shareData.previousFetchedPrice = shareData.currentPrice;
-
-        try {
-            const sharesColRef = window.firestore.collection(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/shares');
-            const newDocRef = await window.firestore.addDoc(sharesColRef, shareData);
-            selectedShareDocId = newDocRef.id; // Set selectedShareDocId for the newly added share
-            if (!isSilent) showCustomAlert('Share \'' + shareName + '\' added successfully!', 1500);
-            logDebug('Firestore: Share \'' + shareName + '\' added with ID: ' + newDocRef.id);
-            originalShareData = getCurrentFormData(); // Update original data after successful save
-            setIconDisabled(saveShareBtn, true); // Disable save button after saving
-        } catch (error) {
-            console.error('Firestore: Error adding share:', error);
-            if (!isSilent) showCustomAlert('Error adding share: ' + error.message);
+            modalShareNamePriceChangeClass = 'neutral';
         }
     }
-    if (!isSilent) closeModals(); // Only close if not a silent save
+    modalShareName.textContent = share.shareName || 'N/A';
+    modalShareName.className = 'modal-share-name ' + modalShareNamePriceChangeClass; // Apply class to modalShareName
+    
+    const enteredPriceNum = Number(share.currentPrice);
+
+    // Get live price data from the global livePrices object
+    const livePriceData = livePrices[share.shareName.toUpperCase()];
+    const livePrice = livePriceData ? livePriceData.live : undefined;
+    const prevClosePrice = livePriceData ? livePriceData.prevClose : undefined;
+    // Get PE, High52, Low52
+    const peRatio = livePriceData ? livePriceData.PE : undefined;
+    const high52Week = livePriceData ? livePriceData.High52 : undefined;
+    const low52Week = livePriceData ? livePriceData.Low52 : undefined;
+
+
+    // Display large live price and change in the dedicated section
+    // The modalLivePriceDisplaySection is already referenced globally
+    if (modalLivePriceDisplaySection) {
+        modalLivePriceDisplaySection.classList.remove('positive-change-section', 'negative-change-section'); // Clear previous states
+
+        // Determine price change class for modal live price section
+        let priceChangeClass = 'neutral'; // Default to neutral
+        if (livePriceData && !livePriceData.zeroChangeActive && livePriceData.live !== null && livePriceData.prevClose !== null && !isNaN(livePriceData.live) && !isNaN(livePriceData.prevClose)) {
+            const change = livePriceData.live - livePriceData.prevClose;
+            if (change > 0) {
+                priceChangeClass = 'positive';
+            } else if (change < 0) {
+                priceChangeClass = 'negative';
+            } else {
+                priceChangeClass = 'neutral';
+            }
+        }
+
+        // Clear previous dynamic content in the section
+        modalLivePriceDisplaySection.innerHTML = ''; 
+
+        // 1. Add 52-Week Low and High at the top
+        const fiftyTwoWeekRow = document.createElement('div');
+        fiftyTwoWeekRow.classList.add('fifty-two-week-row'); // New class for styling
+        
+        const lowSpan = document.createElement('span');
+        lowSpan.classList.add('fifty-two-week-value', 'low'); // New classes
+        lowSpan.textContent = 'Low: ' + (low52Week !== undefined && low52Week !== null && !isNaN(low52Week) ? '$' + low52Week.toFixed(2) : 'N/A');
+        fiftyTwoWeekRow.appendChild(lowSpan);
+
+        const highSpan = document.createElement('span');
+        highSpan.classList.add('fifty-two-week-value', 'high'); // New classes
+        highSpan.textContent = 'High: ' + (high52Week !== undefined && high52Week !== null && !isNaN(high52Week) ? '$' + high52Week.toFixed(2) : 'N/A');
+        fiftyTwoWeekRow.appendChild(highSpan);
+
+        modalLivePriceDisplaySection.appendChild(fiftyTwoWeekRow);
+
+        // 2. Add Live Price and Change (Dynamically create these elements now)
+        const currentModalLivePriceLarge = document.createElement('span');
+        currentModalLivePriceLarge.classList.add('live-price-large', priceChangeClass); // Apply color class
+        const currentModalPriceChangeLarge = document.createElement('span');
+        currentModalPriceChangeLarge.classList.add('price-change-large', priceChangeClass); // Apply color class
+
+        const livePriceRow = document.createElement('div');
+        livePriceRow.classList.add('live-price-main-row'); // New class for styling
+        livePriceRow.appendChild(currentModalLivePriceLarge);
+        livePriceRow.appendChild(currentModalPriceChangeLarge);
+        modalLivePriceDisplaySection.appendChild(livePriceRow);
+
+        if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) {
+            currentModalLivePriceLarge.textContent = '$' + livePrice.toFixed(2);
+            currentModalLivePriceLarge.style.display = 'inline';
+        } else {
+            currentModalLivePriceLarge.textContent = 'N/A';
+            currentModalLivePriceLarge.style.display = 'inline';
+        }
+
+        if (livePriceData && livePriceData.live !== null && livePriceData.prevClose !== null && !isNaN(livePriceData.live) && !isNaN(livePriceData.prevClose)) {
+            const change = livePriceData.live - livePriceData.prevClose;
+            const percentageChange = (livePriceData.prevClose !== 0 && !isNaN(livePriceData.prevClose)) ? (change / livePriceData.prevClose) * 100 : 0; // Handle division by zero
+
+            currentModalPriceChangeLarge.textContent = ''; // Clear previous content
+            const priceChangeSpan = document.createElement('span');
+            priceChangeSpan.classList.add('price-change'); // Keep base class for coloring, color already applied to parent
+            if (livePriceData.zeroChangeActive) {
+                priceChangeSpan.textContent = '($0.00 / 0.00%)';
+            } else if (change > 0) {
+                priceChangeSpan.textContent = '(+$' + change.toFixed(2) + ' / +' + percentageChange.toFixed(2) + '%)';
+            } else if (change < 0) {
+                priceChangeSpan.textContent = '(-$' + Math.abs(change).toFixed(2) + ' / ' + percentageChange.toFixed(2) + '%)'; // percentageChange is already negative
+            } else {
+                priceChangeSpan.textContent = '($0.00 / 0.00%)';
+            }
+            currentModalPriceChangeLarge.appendChild(priceChangeSpan);
+            currentModalPriceChangeLarge.style.display = 'inline';
+        } else {
+            currentModalPriceChangeLarge.textContent = '';
+            currentModalPriceChangeLarge.style.display = 'none';
+        }
+
+        // 3. Add P/E Ratio below live price
+        const peRow = document.createElement('div');
+        peRow.classList.add('pe-ratio-row'); // New class for styling
+        const peSpan = document.createElement('span');
+        peSpan.classList.add('pe-ratio-value'); // New class
+        peSpan.textContent = 'P/E: ' + (peRatio !== undefined && peRatio !== null && !isNaN(peRatio) ? peRatio.toFixed(2) : 'N/A');
+        peRow.appendChild(peSpan);
+        modalLivePriceDisplaySection.appendChild(peRow);
+    }
+    
+    modalEnteredPrice.textContent = (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? '$' + enteredPriceNum.toFixed(2) : 'N/A';
+    const targetPriceNum = Number(share.targetPrice);
+    modalTargetPrice.textContent = (!isNaN(targetPriceNum) && targetPriceNum !== null) ? '$' + targetPriceNum.toFixed(2) : 'N/A';
+    
+    const dividendAmountNum = Number(share.dividendAmount);
+    const modalDividendAmountText = (!isNaN(dividendAmountNum) && dividendAmountNum !== null) ? '$' + dividendAmountNum.toFixed(3) : 'N/A';
+    
+    const frankingCreditsNum = Number(share.frankingCredits);
+    
+    const priceForYield = (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) ? livePrice : enteredPriceNum;
+    const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, priceForYield); 
+    modalUnfrankedYieldSpan.textContent = unfrankedYield !== null && !isNaN(unfrankedYield) ? unfrankedYield.toFixed(2) + '%' : '0.00%';
+    
+    const frankedYield = calculateFrankedYield(dividendAmountNum, priceForYield, frankingCreditsNum);
+    modalFrankedYieldSpan.textContent = frankedYield !== null && !isNaN(frankedYield) ? frankedYield.toFixed(2) + '%' : '0.00%';
+
+    // Populate Entry Date after Franked Yield
+    modalEntryDate.textContent = formatDate(share.entryDate) || 'N/A';
+    
+    // NEW: Display the share rating in the details modal
+    if (modalShareRating) {
+        const rating = share.rating || 0; // Default to 0 if no rating
+        modalShareRating.textContent = rating > 0 ? '⭐ ' + rating : 'N/A';
+    }
+
+    if (modalCommentsContainer) {
+        modalCommentsContainer.innerHTML = '';
+        if (share.comments && Array.isArray(share.comments) && share.comments.length > 0) {
+            share.comments.forEach(comment => {
+                if (comment.title || comment.text) {
+                    const commentDiv = document.createElement('div');
+                    commentDiv.className = 'modal-comment-item';
+                    
+                    // Conditional Title Bar
+                    if (comment.title && comment.title.trim() !== '') {
+                        const titleBar = document.createElement('div');
+                        titleBar.classList.add('comment-title-bar'); // New class for styling
+                        titleBar.textContent = comment.title;
+                        commentDiv.appendChild(titleBar);
+                    }
+                    
+                    const commentTextP = document.createElement('p');
+                    commentTextP.textContent = comment.text || '';
+                    commentDiv.appendChild(commentTextP);
+
+                    modalCommentsContainer.appendChild(commentDiv);
+                }
+            });
+        } else {
+            modalCommentsContainer.innerHTML = '<p style="text-align: center; color: var(--label-color);">No comments for this share.</p>';
+        }
+    }
+
+    // External Links
+    if (modalNewsLink && share.shareName) {
+        const newsUrl = 'https://news.google.com/search?q=' + encodeURIComponent(share.shareName) + '%20ASX&hl=en-AU&gl=AU&ceid=AU%3Aen';
+        modalNewsLink.href = newsUrl;
+        modalNewsLink.textContent = 'View ' + share.shareName.toUpperCase() + ' News';
+        modalNewsLink.style.display = 'inline-flex';
+        setIconDisabled(modalNewsLink, false);
+    } else if (modalNewsLink) {
+        modalNewsLink.style.display = 'none';
+        setIconDisabled(modalNewsLink, true);
+    }
+
+    if (modalMarketIndexLink && share.shareName) {
+        const marketIndexUrl = 'https://www.marketindex.com.au/asx/' + share.shareName.toLowerCase();
+        modalMarketIndexLink.href = marketIndexUrl;
+        modalMarketIndexLink.textContent = 'View ' + share.shareName.toUpperCase() + ' on MarketIndex.com.au';
+        modalMarketIndexLink.style.display = 'inline-flex';
+        setIconDisabled(modalMarketIndexLink, false);
+    } else if (modalMarketIndexLink) {
+        modalMarketIndexLink.style.display = 'none';
+        setIconDisabled(modalMarketIndexLink, true);
+    }
+
+    if (commSecLoginMessage) {
+        commSecLoginMessage.style.display = 'block'; 
+    }
+
+    showModal(shareDetailModal);
+    logDebug('Details: Displayed details for share: ' + share.shareName + ' (ID: ' + selectedShareDocId + ')');
 }
 
 
