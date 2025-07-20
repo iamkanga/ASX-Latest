@@ -865,6 +865,10 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
 
     formTitle.textContent = 'Edit Share';
     shareNameInput.value = shareToEdit.shareName || '';
+    currentPriceInput.value = Number(shareToEdit.currentPrice) !== null && !isNaN(Number(shareToEdit.currentPrice)) ? Number(shareToEdit.currentPrice).toFixed(2) : '';
+    targetPriceInput.value = Number(shareToEdit.targetPrice) !== null && !isNaN(Number(shareToEdit.targetPrice)) ? Number(shareToEdit.targetPrice).toFixed(2) : '';
+    dividendAmountInput.value = Number(shareToEdit.dividendAmount) !== null && !isNaN(Number(shareToEdit.dividendAmount)) ? Number(shareToEdit.dividendAmount).toFixed(3) : '';
+    frankingCreditsInput.value = Number(shareToEdit.frankingCredits) !== null && !isNaN(Number(shareToEdit.frankingCredits)) ? Number(shareToEdit.frankingCredits).toFixed(1) : '';
     // Set the star rating dropdown
     if (shareRatingSelect) {
         shareRatingSelect.value = shareToEdit.starRating !== undefined && shareToEdit.starRating !== null ? shareToEdit.starRating.toString() : '0';
@@ -1519,69 +1523,71 @@ function renderWatchlistSelect() {
 }
 
 function renderSortSelect() {
-    if (!sortSelect) { console.error('renderSortSelect: sortSelect element not found.'); return; }
-    // Store the currently selected value before clearing
-    const currentSelectedSortValue = sortSelect.value;
+        if (!sortSelect) { console.error('renderSortSelect: sortSelect element not found.'); return; }
+        // Store the currently selected value before clearing
+        const currentSelectedSortValue = sortSelect.value;
 
-    // Set the initial placeholder text to "Sort List"
-    sortSelect.innerHTML = '<option value="" disabled selected>Sort List</option>';
+        // Set the initial placeholder text to "Sort List"
+        sortSelect.innerHTML = '<option value="" disabled selected>Sort List</option>';
 
-    const stockOptions = [
-        { value: 'entryDate-desc', text: 'Date Added (Newest)' },
-        { value: 'entryDate-asc', text: 'Date Added (Oldest)' },
-        { value: 'shareName-asc', text: 'Code (A-Z)' },
-        { value: 'shareName-desc', text: 'Code (Z-A)' },
-        { value: 'dividendAmount-desc', text: 'Dividend (High-Low)' },
-        { value: 'dividendAmount-asc', text: 'Dividend (Low-High)' },
-        { value: 'percentageChange-desc', text: 'Percentage Change (High-Low)' },
-        { value: 'percentageChange-asc', text: 'Percentage Change (Low-High)' }
-    ];
+        const stockOptions = [
+            { value: 'entryDate-desc', text: 'Date Added (Newest)' },
+            { value: 'entryDate-asc', text: 'Date Added (Oldest)' },
+            { value: 'shareName-asc', text: 'Code (A-Z)' },
+            { value: 'shareName-desc', text: 'Code (Z-A)' },
+            { value: 'dividendAmount-desc', text: 'Dividend (High-Low)' },
+            { value: 'dividendAmount-asc', text: 'Dividend (Low-High)' },
+            { value: 'percentageChange-desc', text: 'Percentage Change (High-Low)' },
+            { value: 'percentageChange-asc', text: 'Percentage Change (Low-High)' },
+            { value: 'starRating-desc', text: 'Star Rating (High-Low)' }, // Added star rating sort
+            { value: 'starRating-asc', text: 'Star Rating (Low-High)' }   // Added star rating sort
+        ];
 
-    const cashOptions = [
-        { value: 'name-asc', text: 'Asset Name (A-Z)' },
-        { value: 'name-desc', text: 'Asset Name (Z-A)' },
-        { value: 'balance-desc', text: 'Balance (High-Low)' },
-        { value: 'balance-asc', text: 'Balance (Low-High)' }
-    ];
+        const cashOptions = [
+            { value: 'name-asc', text: 'Asset Name (A-Z)' },
+            { value: 'name-desc', text: 'Asset Name (Z-A)' },
+            { value: 'balance-desc', text: 'Balance (High-Low)' },
+            { value: 'balance-asc', text: 'Balance (Low-High)' }
+        ];
 
-    // Determine which set of options to display
-    if (currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
-        cashOptions.forEach(opt => {
-            const optionElement = document.createElement('option');
-            optionElement.value = opt.value;
-            optionElement.textContent = opt.text;
-            sortSelect.appendChild(optionElement);
-        });
-        logDebug('Sort Select: Populated with Cash Asset options.');
-    } else {
-        stockOptions.forEach(opt => {
-            const optionElement = document.createElement('option');
-            optionElement.value = opt.value;
-            optionElement.textContent = opt.text;
-            sortSelect.appendChild(optionElement);
-        });
-        logDebug('Sort Select: Populated with Stock options.');
+        // Determine which set of options to display
+        if (currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
+            cashOptions.forEach(opt => {
+                const optionElement = document.createElement('option');
+                optionElement.value = opt.value;
+                optionElement.textContent = opt.text;
+                sortSelect.appendChild(optionElement);
+            });
+            logDebug('Sort Select: Populated with Cash Asset options.');
+        } else {
+            stockOptions.forEach(opt => {
+                const optionElement = document.createElement('option');
+                optionElement.value = opt.value;
+                optionElement.textContent = opt.text;
+                sortSelect.appendChild(optionElement);
+            });
+            logDebug('Sort Select: Populated with Stock options.');
+        }
+
+        let defaultSortValue = 'entryDate-desc'; // Default for stocks
+        if (currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
+            defaultSortValue = 'name-asc'; // Default for cash
+        }
+
+        // Try to re-select the previously selected value if it's still valid for the current view
+        if (currentSelectedSortValue && Array.from(sortSelect.options).some(option => option.value === currentSelectedSortValue)) {
+            sortSelect.value = currentSelectedSortValue;
+            currentSortOrder = currentSelectedSortValue;
+            logDebug('Sort: Applied previously selected sort order: ' + currentSortOrder);
+        } else {
+            // If not valid or no previous, apply the default for the current view type
+            sortSelect.value = defaultSortValue;
+            currentSortOrder = defaultSortValue;
+            logDebug('Sort: No valid saved sort order or not applicable, defaulting to: ' + defaultSortValue);
+        }
+
+        logDebug('UI Update: Sort select rendered. Sort select disabled: ' + sortSelect.disabled);
     }
-
-    let defaultSortValue = 'entryDate-desc'; // Default for stocks
-    if (currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
-        defaultSortValue = 'name-asc'; // Default for cash
-    }
-
-    // Try to re-select the previously selected value if it's still valid for the current view
-    if (currentSelectedSortValue && Array.from(sortSelect.options).some(option => option.value === currentSelectedSortValue)) {
-        sortSelect.value = currentSelectedSortValue;
-        currentSortOrder = currentSelectedSortValue;
-        logDebug('Sort: Applied previously selected sort order: ' + currentSortOrder);
-    } else {
-        // If not valid or no previous, apply the default for the current view type
-        sortSelect.value = defaultSortValue;
-        currentSortOrder = defaultSortValue;
-        logDebug('Sort: No valid saved sort order or not applicable, defaulting to: ' + defaultSortValue);
-    }
-    
-    logDebug('UI Update: Sort select rendered. Sort select disabled: ' + sortSelect.disabled);
-}
 
 /**
  * Renders the watchlist based on the currentSelectedWatchlistIds. (1)
@@ -3498,13 +3504,18 @@ async function initializeAppLogic() {
     // NEW: Add event listener for the hideCashAssetCheckbox for dirty state checking
     if (hideCashAssetCheckbox) hideCashAssetCheckbox.addEventListener('change', checkCashAssetFormDirtyState);
 
-    // Form input navigation with Enter key
     formInputs.forEach((input, index) => {
         if (input) {
             input.addEventListener('keydown', function(event) {
                 if (event.key === 'Enter') {
                     event.preventDefault();
                     const nextInput = formInputs[index + 1];
+
+                    // Only call select() if the input has the method (i.e., it's a text/number input)
+                    if (input.tagName === 'INPUT' || input.tagName === 'TEXTAREA') {
+                        input.select();
+                    }
+
                     // If current input is the last one, try to add a comment or save
                     if (index === formInputs.length - 1) {
                         if (addCommentSectionBtn && addCommentSectionBtn.offsetParent !== null && !addCommentSectionBtn.classList.contains('is-disabled-icon')) {
