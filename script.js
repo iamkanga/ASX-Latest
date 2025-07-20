@@ -171,6 +171,7 @@ const shareContextMenu = document.getElementById('shareContextMenu');
 const contextEditShareBtn = document.getElementById('contextEditShareBtn');
 const contextDeleteShareBtn = document.getElementById('contextDeleteShareBtn');
 const logoutBtn = document.getElementById('logoutBtn');
+const deleteAllUserDataBtn = document.getElementById('deleteAllUserDataBtn');
 const exportWatchlistBtn = document.getElementById('exportWatchlistBtn');
 const refreshLivePricesBtn = document.getElementById('refreshLivePricesBtn');
 const shareWatchlistSelect = document.getElementById('shareWatchlistSelect');
@@ -3425,6 +3426,71 @@ async function saveWatchlistChanges(isSilent = false, newName, watchlistId = nul
 }
 
 
+/**
+ * Deletes all user-specific data from Firestore for the current user.
+ * This is a destructive and irreversible action.
+ */
+async function deleteAllUserData() {
+    if (!db || !currentUserId || !window.firestore) {
+        showCustomAlert('Firestore not available. Cannot delete data.');
+        return;
+    }
+
+    showCustomConfirm('Are you absolutely sure you want to delete ALL your data? This action is irreversible and will permanently remove all shares, watchlists, cash assets, and settings associated with your account.', async (confirmed) => {
+        if (!confirmed) {
+            showCustomAlert('Data deletion cancelled.', 1000);
+            return;
+        }
+
+        showCustomAlert('Deleting all data...', 999999); // Show persistent alert during deletion
+        if (loadingIndicator) loadingIndicator.style.display = 'flex'; // Show loading spinner
+
+        try {
+            const collectionsToDelete = ['shares', 'watchlists', 'cashCategories'];
+            const batch = window.firestore.writeBatch(db);
+
+            // 1. Delete documents from collections
+            for (const collectionName of collectionsToDelete) {
+                const collectionRef = window.firestore.collection(db, `artifacts/${currentAppId}/users/${currentUserId}/${collectionName}`);
+                const querySnapshot = await window.firestore.getDocs(window.firestore.query(collectionRef));
+                querySnapshot.forEach(doc => {
+                    batch.delete(doc.ref);
+                });
+                logDebug(`Firestore: Added ${querySnapshot.docs.length} documents from '${collectionName}' to batch for deletion.`);
+            }
+
+            // 2. Delete the user's profile/settings document (if it exists)
+            const userProfileDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/profile/settings`);
+            const profileDocSnap = await window.firestore.getDoc(userProfileDocRef);
+            if (profileDocSnap.exists()) {
+                batch.delete(userProfileDocRef);
+                logDebug('Firestore: Added user profile settings to batch for deletion.');
+            }
+
+            // Commit the batch
+            await batch.commit();
+            logDebug('Firestore: All user data batch committed successfully.');
+
+            // 3. Sign out the user after data deletion
+            if (window.firebaseAuth && window.authFunctions) {
+                await window.authFunctions.signOut(window.firebaseAuth);
+                showCustomAlert('All your data has been permanently deleted. You have been logged out.', 3000);
+                logDebug('Auth: User signed out after data deletion.');
+            } else {
+                showCustomAlert('All your data has been permanently deleted. Please log out manually.', 3000);
+                console.warn('Auth: Could not sign out user automatically after data deletion.');
+            }
+
+        } catch (error) {
+            console.error('Firestore: Error deleting all user data:', error);
+            showCustomAlert('Error deleting all data: ' + error.message, 3000);
+        } finally {
+            if (loadingIndicator) loadingIndicator.style.display = 'none';
+            closeModals(); // Close any open modals
+        }
+    });
+}
+
 async function initializeAppLogic() {
     // DEBUG: Log when initializeAppLogic starts
     logDebug('initializeAppLogic: Firebase is ready. Starting app logic.');
@@ -3752,6 +3818,15 @@ async function initializeAppLogic() {
             }
         });
     }
+
+// Delete All User Data Button
+if (deleteAllUserDataBtn) {
+    deleteAllUserDataBtn.addEventListener('click', () => {
+        logDebug('UI: Delete All User Data button clicked.');
+        deleteAllUserData();
+        toggleAppSidebar(false); // Close sidebar after action
+    });
+}
 
     // Watchlist Select Change Listener
     if (watchlistSelect) {
