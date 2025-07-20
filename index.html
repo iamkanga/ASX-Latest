@@ -88,11 +88,32 @@
         <button id="closeMenuBtn" class="close-menu-btn">X</button>
         
         <div class="menu-section">
+            <h3>Share Actions</h3>
+            <div class="menu-buttons-group">
+                <!-- Compact View Toggle Button -->
+                <button id="toggleCompactViewBtn" class="menu-button-item" data-action-closes-menu="false">
+                    <i class="fas fa-th-large"></i> <span>Toggle Compact View</span>
+                </button>
+                <!-- Refresh Live Prices Button -->
+                <button id="refreshLivePricesBtn" class="menu-button-item" data-action-closes-menu="false">
+                    <i class="fas fa-sync-alt"></i> <span>Refresh Live Prices</span>
+                </button>
+                <!-- Add New Share -->
+                <button id="newShareBtn" class="menu-button-item" data-action-closes-menu="true">
+                    <i class="fas fa-plus-circle"></i> <span>Add New Share</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- NEW: Cash & Assets Section -->
+        <div class="menu-section">
             <h3>Cash & Assets</h3>
             <div class="menu-buttons-group">
+                <!-- Add New Cash Asset -->
                 <button id="addCashAssetSidebarBtn" class="menu-button-item" data-action-closes-menu="true">
                     <i class="fas fa-money-bill-wave"></i> <span>Add Cash Asset</span>
                 </button>
+                <!-- Show All Hidden Cash Assets -->
                 <button id="showAllCashAssetsBtn" class="menu-button-item" data-action-closes-menu="true">
                     <i class="fas fa-eye"></i> <span>Show All Hidden Cash</span>
                 </button>
@@ -203,7 +224,7 @@
                     <i class="fas fa-sign-out-alt"></i> <span>Log Out</span>
                 </span>
             </div>
-        </div>
+        </div
     </nav>
 
     <!-- Sidebar overlay for desktop to handle clicks outside -->
@@ -600,7 +621,7 @@
             query: query,
             where: where,
             getDocs: getDocs,
-            deleteField: FieldValue.delete,
+            deleteField: FieldValue.delete, // Corrected: FieldValue.delete is a property, not a function
             writeBatch: writeBatch
         } : null;
         

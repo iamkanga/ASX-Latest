@@ -2914,7 +2914,7 @@ async function toggleCashAssetVisibility(assetId) {
             if (newState === true) {
                 // If the asset is now visible, we remove its entry from cashAssetVisibility in Firestore
                 // because visible is the default and we don't need to explicitly store it.
-                updateData[`cashAssetVisibility.${assetId}`] = window.firestore.deleteField();
+                updateData[`cashAssetVisibility.${assetId}`] = window.firestore.deleteField;
             } else {
                 // If the asset is now hidden, we store 'false' in Firestore.
                 updateData[`cashAssetVisibility.${assetId}`] = newState;
@@ -4235,29 +4235,65 @@ async function initializeAppLogic() {
     });
 
     // Scroll to Top Button
-    if (scrollToTopBtn) {
-        window.addEventListener('scroll', () => {
-            if (window.innerWidth <= 768) {
-                if (window.scrollY > 200) {
-                    scrollToTopBtn.style.display = 'flex';
-                    scrollToTopBtn.style.opacity = '1';
-                } else {
-                    scrollToTopBtn.style.opacity = '0';
-                    setTimeout(() => {
-                        scrollToTopBtn.style.display = 'none';
-                    }, 300);
-                }
-            } else {
-                scrollToTopBtn.style.display = 'none';
-            }
-        });
-        if (window.innerWidth > 768) {
-            scrollToTopBtn.style.display = 'none';
-        } else {
-            window.dispatchEvent(new Event('scroll'));
+    // NEW: Cash & Assets Event Listeners (1)
+if (addCashCategoryBtn) {
+    addCashCategoryBtn.addEventListener('click', () => {
+        logDebug('UI: Add Cash Category (main section) button clicked.');
+        addCashCategoryUI(); // Triggers the modal for adding new cash asset
+    });
+}
+
+// NEW: Add Cash Asset from Sidebar Button
+if (addCashAssetSidebarBtn) {
+    addCashAssetSidebarBtn.addEventListener('click', () => {
+        logDebug('UI: Add Cash Asset from Sidebar button clicked.');
+        addCashCategoryUI();
+        toggleAppSidebar(false); // Close sidebar after action
+    });
+}
+
+// NEW: Show All Hidden Cash Assets Button Listener
+if (showAllCashAssetsBtn) {
+    showAllCashAssetsBtn.addEventListener('click', async () => {
+        logDebug('UI: Show All Hidden Cash Assets button clicked.');
+        if (!currentUserId || !db || !window.firestore) {
+            showCustomAlert('Please sign in to perform this action.');
+            return;
         }
-        scrollToTopBtn.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); logDebug('UI: Scrolled to top.'); });
-    }
+
+        // Clear the local visibility state and then update Firestore
+        let changesMade = false;
+        const batch = window.firestore.writeBatch(db);
+        const userProfileDocRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/profile/settings');
+
+        for (const assetId in cashAssetVisibility) {
+            if (cashAssetVisibility.hasOwnProperty(assetId) && cashAssetVisibility[assetId] === false) {
+                // Only update if currently hidden
+                cashAssetVisibility[assetId] = true; // Set to true locally
+                // Use FieldValue.delete to remove the specific field from the map in Firestore
+                batch.update(userProfileDocRef, { [`cashAssetVisibility.${assetId}`]: window.firestore.deleteField });
+                changesMade = true;
+                logDebug('Firestore Batch: Resetting visibility for ' + assetId);
+            }
+        }
+
+        if (changesMade) {
+            try {
+                await batch.commit();
+                showCustomAlert('All hidden cash assets are now visible!', 2000);
+                logDebug('Firestore: All hidden cash assets visibility reset via batch commit.');
+            } catch (error) {
+                console.error('Firestore: Error resetting all cash asset visibility:', error);
+                showCustomAlert('Error resetting hidden assets: ' + error.message);
+            }
+        } else {
+            showCustomAlert('No cash assets are currently hidden.', 1500);
+            logDebug('Cash Asset Visibility: No hidden cash assets to reset.');
+        }
+        // No need to call renderCashCategories directly; the Firestore listener will handle it.
+        toggleAppSidebar(false); // Close sidebar after action
+    });
+}
 
     // Hamburger Menu and Sidebar Interactions
     if (hamburgerBtn && appSidebar && closeMenuBtn && sidebarOverlay) {
