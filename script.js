@@ -1546,6 +1546,9 @@ function renderSortSelect() {
 /**
  * Renders the watchlist based on the currentSelectedWatchlistIds. (1)
  */
+/**
+ * Renders the watchlist based on the currentSelectedWatchlistIds. (1)
+ */
 function renderWatchlist() {
     logDebug('DEBUG: renderWatchlist called. Current selected watchlist ID: ' + currentSelectedWatchlistIds[0]);
     
@@ -1576,6 +1579,7 @@ function renderWatchlist() {
         targetHitIconBtn.classList.add('app-hidden'); // Hide target icon for cash view
         exportWatchlistBtn.classList.add('app-hidden'); // Hide export for cash view
         stopLivePriceUpdates(); // Stop live price updates when in cash view
+        updateAddHeaderButton(); // Ensure header button context is set for cash view
     } else {
         // Show Stock Watchlist section
         stockWatchlistSection.classList.remove('app-hidden');
@@ -1598,6 +1602,7 @@ function renderWatchlist() {
         targetHitIconBtn.classList.remove('app-hidden'); // Show target icon for stock view
         exportWatchlistBtn.classList.remove('app-hidden'); // Show export for stock view
         startLivePriceUpdates(); // Ensure live price updates are running for stock view
+        updateAddHeaderButton(); // Ensure header button context is set for stock view
 
         let sharesToRender = [];
         if (selectedWatchlistId === ALL_SHARES_ID) {
