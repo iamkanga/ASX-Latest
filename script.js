@@ -2450,8 +2450,8 @@ function renderCashCategories() {
         const categoryItem = document.createElement('div');
         categoryItem.classList.add('cash-category-item');
         categoryItem.dataset.id = category.id;
-        // Apply hidden class if asset is marked as hidden (new feature)
-        if (cashAssetVisibility[category.id] === false) {
+        // Apply 'hidden' class if asset is marked as hidden in its data
+        if (category.isHidden) {
             categoryItem.classList.add('hidden');
         }
 
@@ -2672,13 +2672,15 @@ function checkCashAssetFormDirtyState() {
     let canSave = isNameValid;
 
     if (selectedCashAssetDocId && originalCashAssetData) {
+        // For existing assets, enable save if data is dirty (including checkbox state)
         const isDirty = !areCashAssetDataEqual(originalCashAssetData, currentData);
         canSave = canSave && isDirty;
         if (!isDirty) {
             logDebug('Dirty State: Existing cash asset: No changes detected, save disabled.');
         }
     } else if (!selectedCashAssetDocId) {
-        // For new cash assets, enable if name is valid
+        // For new cash assets, enable if name is valid (no original data to compare against)
+        // 'canSave' is already 'isNameValid' here.
     }
 
     setIconDisabled(saveCashAssetBtn, !canSave);
@@ -3389,7 +3391,8 @@ async function initializeAppLogic() {
     // NEW: Add event listeners for cash asset form inputs for dirty state checking (2.1)
     if (cashAssetNameInput) cashAssetNameInput.addEventListener('input', checkCashAssetFormDirtyState);
     if (cashAssetBalanceInput) cashAssetBalanceInput.addEventListener('input', checkCashAssetFormDirtyState);
-
+    // NEW: Add event listener for the hideCashAssetCheckbox for dirty state checking
+    if (hideCashAssetCheckbox) hideCashAssetCheckbox.addEventListener('change', checkCashAssetFormDirtyState);
 
     // Form input navigation with Enter key
     formInputs.forEach((input, index) => {
@@ -4265,23 +4268,7 @@ async function initializeAppLogic() {
             toggleAppSidebar(false); // Close sidebar after action
         });
     }
-
-    // NEW: Cash & Assets Event Listeners (1)
-    // addCashCategoryBtn and saveCashBalancesBtn are removed from HTML/functionality is moved
-    // if (addCashCategoryBtn) {
-    //     addCashCategoryBtn.addEventListener('click', () => {
-    //         logDebug('UI: Add Cash Category button clicked.');
-    //         addCashCategoryUI(); // Triggers the modal for adding new cash asset
-    //     });
-    // }
-
-    // if (saveCashBalancesBtn) {
-    //     saveCashBalancesBtn.addEventListener('click', () => {
-    //         logDebug('UI: Save Cash Balances button clicked.');
-    //         saveCashCategories(); // Saves all currently displayed cash categories
-    //     });
-    // }
-    
+     
     // NEW: Cash Asset Form Modal Save/Delete/Edit Buttons (2.1, 2.2)
     if (saveCashAssetBtn) {
         saveCashAssetBtn.addEventListener('click', async () => {

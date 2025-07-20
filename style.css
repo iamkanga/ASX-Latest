@@ -2312,6 +2312,65 @@ table td.live-price-cell.negative-change {
     margin: 0;
 }
 
+/* NEW: Styling for Checkbox Group */
+.form-check-group {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px; /* Space below the checkbox */
+    margin-top: 10px; /* Space above the checkbox */
+    padding: 10px;
+    background-color: var(--table-header-bg); /* Subtle background for the group */
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.form-check-group input[type="checkbox"] {
+    /* Make checkbox larger */
+    width: 24px;
+    height: 24px;
+    min-width: 24px; /* Ensure it doesn't shrink on mobile */
+    min-height: 24px; /* Ensure it doesn't shrink on mobile */
+    margin-right: 10px;
+    cursor: pointer;
+    border: 1px solid var(--input-border);
+    border-radius: 4px;
+    appearance: none; /* Hide default checkbox */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: var(--input-bg);
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+    flex-shrink: 0; /* Prevent the checkbox from shrinking */
+}
+
+.form-check-group input[type="checkbox"]:checked {
+    background-color: var(--success-color); /* Green when checked */
+    border-color: var(--success-color);
+}
+
+.form-check-group input[type="checkbox"]:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25); /* Focus ring */
+}
+
+.form-check-group label {
+    margin-bottom: 0; /* Remove default label margin */
+    font-weight: 400; /* Lighter font weight for the label */
+    color: var(--text-color);
+    cursor: pointer;
+    flex-grow: 1; /* Allow label to take remaining space */
+    font-size: 1em; /* Ensure readable font size */
+}
+
+/* Custom checkmark for the checkbox */
+.form-check-group input[type="checkbox"]:checked::before {
+    content: '\2713'; /* Unicode checkmark character */
+    display: block;
+    color: var(--button-text); /* White checkmark */
+    font-size: 18px; /* Adjust size of checkmark */
+    line-height: 24px; /* Vertically center checkmark */
+    text-align: center;
+}
+
 .modal-content input[type="text"]:focus,
 .modal-content input[type="number"]:focus,
 .modal-content textarea:focus,
@@ -3203,9 +3262,10 @@ main.container {
 
 /* NEW: Style for temporarily hidden cash asset cards */
 .cash-category-item.hidden {
-    opacity: 0.4; /* Slightly dim when hidden */
-    pointer-events: none; /* Disable clicks when hidden */
-    /* You might also consider: display: none; if you want them completely removed from layout */
+    opacity: 0.5; /* Visually ghosted out */
+    /* pointer-events: none; */ /* Keep clickable for details modal */
+    filter: grayscale(80%); /* Make it grayscale to emphasize hidden state */
+    transition: opacity 0.3s ease, filter 0.3s ease; /* Smooth transition */
 }
 
 .cash-category-item .category-header { /* NEW: Container for name and icons */
