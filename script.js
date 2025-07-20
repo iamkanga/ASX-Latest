@@ -2506,9 +2506,10 @@ function renderCashCategories() {
  * Adds a new empty cash category to the UI and `userCashCategories` array.
  * This function is now primarily for triggering the modal for a new entry.
  */
-function handleAddCashAssetClick() {
-    logDebug('UI: Add Cash Asset button clicked (contextual).');
-    addCashCategoryUI(); // This function now directly opens the modal for adding a new cash asset
+function addCashCategoryUI() {
+    logDebug('Cash Categories: Add new category UI triggered.');
+    // This function now directly opens the modal for a new cash asset.
+    showAddEditCashCategoryModal(null); // Pass null to indicate a new asset
 }
 
 /**
@@ -2919,7 +2920,9 @@ function handleAddShareClick() {
  */
 function handleAddCashAssetClick() {
     logDebug('UI: Add Cash Asset button clicked (contextual).');
-    addCashCategoryUI(); // This function now directly opens the modal for adding a new cash asset
+    // Ensure this specific handleAddCashAssetClick (the standalone one) calls addCashCategoryUI correctly.
+    // The previous instructions already ensured addCashCategoryUI calls showAddEditCashCategoryModal(null).
+    addCashCategoryUI();
 }
 
 
