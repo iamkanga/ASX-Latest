@@ -1752,6 +1752,20 @@ function renderWatchlist() {
             if (mobileShareCardsContainerEl) {
                 mobileShareCardsContainerEl.appendChild(emptyWatchlistMessage.cloneNode(true));
             }
+            // Ensure correct display based on empty state
+            if (shareTableBodyEl) shareTableBodyEl.closest('table').style.display = 'table';
+            if (mobileShareCardsContainerEl) mobileShareCardsContainerEl.style.display = 'none'; // Hide mobile cards if empty table is shown
+        } else {
+            // If there are shares, decide whether to show table or mobile cards
+            if (window.matchMedia('(max-width: 768px)').matches) {
+                // On mobile, show mobile cards and hide table
+                if (mobileShareCardsContainerEl) mobileShareCardsContainerEl.style.display = 'flex';
+                if (shareTableBodyEl) shareTableBodyEl.closest('table').style.display = 'none';
+            } else {
+                // On desktop, show table and hide mobile cards
+                if (shareTableBodyEl) shareTableBodyEl.closest('table').style.display = 'table';
+                if (mobileShareCardsContainerEl) mobileShareCardsContainerEl.style.display = 'none';
+            }
         }
 
         sharesToRender.forEach((share) => {
