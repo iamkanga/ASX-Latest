@@ -3161,6 +3161,10 @@ function toggleAppSidebar(forceState = null) {
     if (forceState === true || (forceState === null && !isOpen)) {
         appSidebar.classList.add('open');
         sidebarOverlay.classList.add('open');
+        // Reset sidebar scroll position to top when opening
+        if (appSidebar) {
+            appSidebar.scrollTop = 0;
+        }
         // Prevent scrolling of main content when sidebar is open on mobile
         if (!isDesktop) {
             document.body.style.overflow = 'hidden';
@@ -3182,6 +3186,10 @@ function toggleAppSidebar(forceState = null) {
         document.body.classList.remove('sidebar-active');
         document.body.style.overflow = ''; // Restore scrolling
         sidebarOverlay.style.pointerEvents = 'none'; // Reset pointer-events when closed
+        // Reset sidebar scroll position to top when closing
+        if (appSidebar) {
+            appSidebar.scrollTop = 0;
+        }
         logDebug('Sidebar: Sidebar closed.');
     }
 }
