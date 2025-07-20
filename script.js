@@ -225,7 +225,7 @@ if (!sidebarOverlay) {
 
 const formInputs = [
     shareNameInput, currentPriceInput, targetPriceInput,
-    dividendAmountInput, frankingCreditsInput
+    dividendAmountInput, frankingCreditsInput, shareRatingSelect // NEW: Include shareRatingSelect
 ];
 
 // NEW: Form inputs for Cash Asset Modal
@@ -395,6 +395,103 @@ function formatDate(dateString) {
     return date.toLocaleDateString('en-AU', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
+// --- NEW: Market Hours and Time Zone Helper Functions ---
+
+/**
+ * Gets the current Date object adjusted to a specific IANA timezone.
+ * This is crucial for accurate market open/close checks across timezones.
+ * @param {string} timeZone The IANA timezone string (e.g., 'Australia/Sydney', 'Asia/Bangkok').
+ * @returns {Date} A Date object representing the current time in the specified timezone.
+ */
+function getDateInTimezone(timeZone) {
+    // Using Intl.DateTimeFormat to get parts of the date in the target timezone
+    // and then constructing a local Date object from those parts.
+    // This correctly handles Daylight Saving Time for the target timezone.
+    const now = new Date();
+    const options = {
+        year: 'numeric', month: 'numeric', day: 'numeric',
+        hour: 'numeric', minute: 'numeric', second: 'numeric',
+        hour12: false, // Use 24-hour format
+        timeZone: timeZone
+    };
+    const formatter = new Intl.DateTimeFormat('en-US', options);
+    const parts = formatter.formatToParts(now);
+
+    const getPart = (type) => parseInt(parts.find(p => p.type === type)?.value || '0', 10);
+
+    const year = getPart('year');
+    const month = getPart('month') - 1; // Month is 0-indexed
+    const day = getPart('day');
+    const hour = getPart('hour');
+    const minute = getPart('minute');
+    const second = getPart('second');
+
+    // Construct a Date object in the local timezone, but with the year/month/day/hour/minute/second
+    // values from the target timezone. This is a common pattern to create a "local date"
+    // that effectively represents the target timezone's date/time.
+    return new Date(year, month, day, hour, minute, second);
+}
+
+/**
+ * Checks if the ASX market is currently open based on Sydney time.
+ * ASX trading hours: 10:00 AM - 4:00 PM AEDT/AEST, Monday-Friday.
+ * @returns {boolean} True if the market is open, false otherwise.
+ */
+function isAsxMarketOpen() {
+    const sydneyTime = getDateInTimezone(SYDNEY_TIMEZONE);
+    const dayOfWeek = sydneyTime.getDay(); // Sunday - Saturday : 0 - 6
+    const hour = sydneyTime.getHours();
+    const minute = sydneyTime.getMinutes();
+
+    // Check for weekends (Saturday=6, Sunday=0)
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+        logDebug('Market Check: ASX market is closed (weekend).');
+        return false;
+    }
+
+    // Check for trading hours (10:00 to 16:00 Sydney time)
+    // Pre-open is from 7:00 AM, but for "zero change" we care about active trading.
+    if (hour > 10 || (hour === 10 && minute >= 0)) { // After 10:00 AM
+        if (hour < 16 || (hour === 16 && minute === 0)) { // Before or at 4:00 PM (end of continuous trading)
+            logDebug('Market Check: ASX market is open.');
+            return true;
+        }
+    }
+
+    logDebug('Market Check: ASX market is closed (outside trading hours).');
+    return false;
+}
+
+/**
+ * Checks if the current time in Thailand is past midnight (00:00).
+ * This is used to decide when to show "zero change" after market close.
+ * @returns {boolean} True if current hour in Thailand is 0 (midnight) or later.
+ */
+function isPastThailandMidnight() {
+    const thailandTime = getDateInTimezone(THAILAND_TIMEZONE);
+    const hour = thailandTime.getHours();
+    
+    // If it's 00:00 (midnight) or later in Thailand, return true.
+    // This means the "day" has rolled over in Thailand.
+    const isPastMidnight = hour >= 0; 
+    logDebug('Market Check: Thailand time is ' + thailandTime.toLocaleTimeString('en-US', { timeZone: THAILAND_TIMEZONE }) + '. Past midnight: ' + isPastMidnight);
+    return isPastMidnight;
+}
+
+/**
+ * Combines checks: ASX market is closed AND it's past midnight in Thailand.
+ * This is the condition for displaying "zero change".
+ * @returns {boolean} True if both conditions are met.
+ */
+function shouldDisplayZeroChange() {
+    const marketClosed = !isAsxMarketOpen();
+    const pastThailandMidnight = isPastThailandMidnight();
+
+    const displayZero = marketClosed && pastThailandMidnight;
+    logDebug('Market Check: Should display zero change? Market Closed: ' + marketClosed + ', Past Thailand Midnight: ' + pastThailandMidnight + ' => Result: ' + displayZero);
+    return displayZero;
+}
+
 // --- UI State Management Functions ---
 
 /**
@@ -481,127 +578,7 @@ function addShareToTable(share) {
 
     row.addEventListener('touchend', () => {
         clearTimeout(longPressTimer);
-        if (Date.now() - touchStartTime < LONG_PRESS_THRESHOLD && selectedElementForTap === row) {
-            // This is a short tap, let the click event handler fire naturally if it hasn't been prevented.
-            // No explicit click() call needed here as a short tap naturally dispatches click.
-        }
-        touchStartTime = 0;
-        selectedElementForTap = null;
-    });
-
-
-    // Right-click / Context menu for desktop
-    row.addEventListener('contextmenu', (e) => {
-        if (window.innerWidth > 768) { // Only enable on desktop
-            e.preventDefault();
-            selectShare(share.id);
-            showContextMenu(e, share.id);
-        }
-    });
-
-    shareTableBody.appendChild(row);
-    logDebug('Table: Added share ' + share.shareName + ' to table.');
-}
-
-/**
- * Adds a single share to the mobile cards view.
- * @param {object} share The share object to add.
- */
-function addShareToMobileCards(share) {
-    if (!mobileShareCardsContainer) {
-        console.error('addShareToMobileCards: mobileShareCardsContainer element not found.');
-        return;
-    }
-
-    const card = document.createElement('div');
-    card.classList.add('mobile-card');
-    card.dataset.docId = share.id;
-
-    // Check if target price is hit for this share
-    const livePriceData = livePrices[share.shareName.toUpperCase()];
-    const isTargetHit = livePriceData ? livePriceData.targetHit : false;
-
-    // Apply target-hit-alert class if target is hit and not dismissed
-    if (isTargetHit && !targetHitIconDismissed) {
-        card.classList.add('target-hit-alert');
-    }
-
-    // Determine price change class for mobile card's live price section
-    let priceChangeClass = '';
-    if (livePriceData && livePriceData.live !== null && livePriceData.prevClose !== null && !isNaN(livePriceData.live) && !isNaN(livePriceData.prevClose)) {
-        const change = livePriceData.live - livePriceData.prevClose;
-        if (change > 0) {
-            priceChangeClass = 'positive';
-        } else if (change < 0) {
-            priceChangeClass = 'negative';
-        } else {
-            priceChangeClass = 'neutral';
-        }
-    }
-
-    card.innerHTML = `
-        <h3 class="${livePriceData && !livePriceData.zeroChangeActive ? priceChangeClass : ''}">${share.shareName || ''}</h3>
-        <div class="live-price-display-section">
-            <div class="fifty-two-week-row">
-                <span class="fifty-two-week-value low">Low: ${livePriceData && livePriceData.Low52 !== null && !isNaN(livePriceData.Low52) ? '$' + livePriceData.Low52.toFixed(2) : 'N/A'}</span>
-                <span class="fifty-two-week-value high">High: ${livePriceData && livePriceData.High52 !== null && !isNaN(livePriceData.High52) ? '$' + livePriceData.High52.toFixed(2) : 'N/A'}</span>
-            </div>
-            <div class="live-price-main-row">
-                <span class="live-price-large ${livePriceData && !livePriceData.zeroChangeActive ? priceChangeClass : ''}">${
-                    livePriceData && livePriceData.live !== null && !isNaN(livePriceData.live) ?
-                    '$' + livePriceData.live.toFixed(2) : 'N/A'
-                }</span>
-                <span class="price-change-large ${livePriceData && !livePriceData.zeroChangeActive ? priceChangeClass : ''}">${
-                    livePriceData && livePriceData.live !== null && livePriceData.prevClose !== null && !isNaN(livePriceData.live) && !isNaN(livePriceData.prevClose) ?
-                    (livePriceData.zeroChangeActive ? '0.00 (0.00%)' : (livePriceData.live - livePriceData.prevClose).toFixed(2) + ' (' +
-                    (livePriceData.prevClose !== 0 ? (((livePriceData.live - livePriceData.prevClose) / livePriceData.prevClose) * 100).toFixed(2) : '0.00') + '%)') : ''
-                }</span>
-            </div>
-            <div class="pe-ratio-row">
-                <span class="pe-ratio-value">P/E: ${livePriceData && livePriceData.PE !== null && !isNaN(livePriceData.PE) ? livePriceData.PE.toFixed(2) : 'N/A'}</span>
-            </div>
-        </div>
-        <p><strong>Entered Price:</strong> $${Number(share.currentPrice) !== null && !isNaN(Number(share.currentPrice)) ? Number(share.currentPrice).toFixed(2) : 'N/A'}</p>
-        <p><strong>Target Price:</strong> $${Number(share.targetPrice) !== null && !isNaN(Number(share.targetPrice)) ? Number(share.targetPrice).toFixed(2) : 'N/A'}</p>
-        <p><strong>Dividends:</strong> $${Number(share.dividendAmount) !== null && !isNaN(Number(share.dividendAmount)) ? Number(share.dividendAmount).toFixed(3) : 'N/A'} (Franking: ${Number(share.frankingCredits) !== null && !isNaN(Number(share.frankingCredits)) ? Number(share.frankingCredits).toFixed(1) + '%' : 'N/A'})</p>
-    `;
-
-    card.addEventListener('click', () => {
-        logDebug('Mobile Card Click: Share ID: ' + share.id);
-        selectShare(share.id);
-        showShareDetails();
-    });
-
-    // Add long press / context menu for mobile
-    let touchStartTime = 0;
-    card.addEventListener('touchstart', (e) => {
-        touchStartTime = Date.now();
-        selectedElementForTap = card; // Store the element that started the touch
-        touchStartX = e.touches[0].clientX;
-        touchStartY = e.touches[0].clientY;
-
-        longPressTimer = setTimeout(() => {
-            if (Date.now() - touchStartTime >= LONG_PRESS_THRESHOLD) {
-                selectShare(share.id); // Select the share first
-                showContextMenu(e, share.id);
-                e.preventDefault(); // Prevent default browser context menu
-            }
-        }, LONG_PRESS_THRESHOLD);
-    }, { passive: false });
-
-    card.addEventListener('touchmove', (e) => {
-        const currentX = e.touches[0].clientX;
-        const currentY = e.touches[0].clientY;
-        const dist = Math.sqrt(Math.pow(currentX - touchStartX, 2) + Math.pow(currentY - touchStartY, 2));
-        if (dist > TOUCH_MOVE_THRESHOLD) {
-            clearTimeout(longPressTimer);
-            touchStartTime = 0; // Reset
-        }
-    });
-
-    card.addEventListener('touchend', () => {
-        clearTimeout(longPressTimer);
-        if (Date.now() - touchStartTime < LONG_PRESS_THRESHOLD && selectedElementForTap === card) {
+        if (Date.Now() - touchStartTime < LONG_PRESS_THRESHOLD && selectedElementForTap === row) {
             // This is a short tap, let the click event handler fire naturally if it hasn't been prevented.
             // No explicit click() call needed here as a short tap naturally dispatches click.
         }
@@ -777,219 +754,6 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
 /**
  * Displays the details of the currently selected share in a modal.
  */
-function showShareDetails() {
-    if (!selectedShareDocId) {
-        showCustomAlert('Please select a share to view details.');
-        return;
-    }
-    const share = allSharesData.find(s => s.id === selectedShareDocId);
-    if (!share) {
-        showCustomAlert('Selected share not found.');
-        return;
-    }
-    // Determine price change class for modalShareName
-    let modalShareNamePriceChangeClass = 'neutral';
-    const livePriceDataForName = livePrices[share.shareName.toUpperCase()];
-    if (livePriceDataForName && !livePriceDataForName.zeroChangeActive && livePriceDataForName.live !== null && livePriceDataForName.prevClose !== null && !isNaN(livePriceDataForName.live) && !isNaN(livePriceDataForName.prevClose)) {
-        const change = livePriceDataForName.live - livePriceDataForName.prevClose;
-        if (change > 0) {
-            modalShareNamePriceChangeClass = 'positive';
-        } else if (change < 0) {
-            modalShareNamePriceChangeClass = 'negative';
-        } else {
-            modalShareNamePriceChangeClass = 'neutral';
-        }
-    }
-    modalShareName.textContent = share.shareName || 'N/A';
-    modalShareName.className = 'modal-share-name ' + modalShareNamePriceChangeClass; // Apply class to modalShareName
-    
-    const enteredPriceNum = Number(share.currentPrice);
-
-    // Get live price data from the global livePrices object
-    const livePriceData = livePrices[share.shareName.toUpperCase()];
-    const livePrice = livePriceData ? livePriceData.live : undefined;
-    const prevClosePrice = livePriceData ? livePriceData.prevClose : undefined;
-    // Get PE, High52, Low52
-    const peRatio = livePriceData ? livePriceData.PE : undefined;
-    const high52Week = livePriceData ? livePriceData.High52 : undefined;
-    const low52Week = livePriceData ? livePriceData.Low52 : undefined;
-
-
-    // Display large live price and change in the dedicated section
-    // The modalLivePriceDisplaySection is already referenced globally
-    if (modalLivePriceDisplaySection) {
-        modalLivePriceDisplaySection.classList.remove('positive-change-section', 'negative-change-section'); // Clear previous states
-
-        // Determine price change class for modal live price section
-        let priceChangeClass = 'neutral'; // Default to neutral
-        if (livePriceData && !livePriceData.zeroChangeActive && livePriceData.live !== null && livePriceData.prevClose !== null && !isNaN(livePriceData.live) && !isNaN(livePriceData.prevClose)) {
-            const change = livePriceData.live - livePriceData.prevClose;
-            if (change > 0) {
-                priceChangeClass = 'positive';
-            } else if (change < 0) {
-                priceChangeClass = 'negative';
-            } else {
-                priceChangeClass = 'neutral';
-            }
-        }
-
-        // Clear previous dynamic content in the section
-        modalLivePriceDisplaySection.innerHTML = ''; 
-
-        // 1. Add 52-Week Low and High at the top
-        const fiftyTwoWeekRow = document.createElement('div');
-        fiftyTwoWeekRow.classList.add('fifty-two-week-row'); // New class for styling
-        
-        const lowSpan = document.createElement('span');
-        lowSpan.classList.add('fifty-two-week-value', 'low'); // New classes
-        lowSpan.textContent = 'Low: ' + (low52Week !== undefined && low52Week !== null && !isNaN(low52Week) ? '$' + low52Week.toFixed(2) : 'N/A');
-        fiftyTwoWeekRow.appendChild(lowSpan);
-
-        const highSpan = document.createElement('span');
-        highSpan.classList.add('fifty-two-week-value', 'high'); // New classes
-        highSpan.textContent = 'High: ' + (high52Week !== undefined && high52Week !== null && !isNaN(high52Week) ? '$' + high52Week.toFixed(2) : 'N/A');
-        fiftyTwoWeekRow.appendChild(highSpan);
-
-        modalLivePriceDisplaySection.appendChild(fiftyTwoWeekRow);
-
-        // 2. Add Live Price and Change (Dynamically create these elements now)
-        const currentModalLivePriceLarge = document.createElement('span');
-        currentModalLivePriceLarge.classList.add('live-price-large', priceChangeClass); // Apply color class
-        const currentModalPriceChangeLarge = document.createElement('span');
-        currentModalPriceChangeLarge.classList.add('price-change-large', priceChangeClass); // Apply color class
-
-        const livePriceRow = document.createElement('div');
-        livePriceRow.classList.add('live-price-main-row'); // New class for styling
-        livePriceRow.appendChild(currentModalLivePriceLarge);
-        livePriceRow.appendChild(currentModalPriceChangeLarge);
-        modalLivePriceDisplaySection.appendChild(livePriceRow);
-
-        if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) {
-            currentModalLivePriceLarge.textContent = '$' + livePrice.toFixed(2);
-            currentModalLivePriceLarge.style.display = 'inline';
-        } else {
-            currentModalLivePriceLarge.textContent = 'N/A';
-            currentModalLivePriceLarge.style.display = 'inline';
-        }
-
-        if (livePriceData && livePriceData.live !== null && livePriceData.prevClose !== null && !isNaN(livePriceData.live) && !isNaN(livePriceData.prevClose)) {
-            const change = livePriceData.live - livePriceData.prevClose;
-            const percentageChange = (livePriceData.prevClose !== 0 && !isNaN(livePriceData.prevClose)) ? (change / livePriceData.prevClose) * 100 : 0; // Handle division by zero
-
-            currentModalPriceChangeLarge.textContent = ''; // Clear previous content
-            const priceChangeSpan = document.createElement('span');
-            priceChangeSpan.classList.add('price-change'); // Keep base class for coloring, color already applied to parent
-            if (livePriceData.zeroChangeActive) {
-                priceChangeSpan.textContent = '($0.00 / 0.00%)';
-            } else if (change > 0) {
-                priceChangeSpan.textContent = '(+$' + change.toFixed(2) + ' / +' + percentageChange.toFixed(2) + '%)';
-            } else if (change < 0) {
-                priceChangeSpan.textContent = '(-$' + Math.abs(change).toFixed(2) + ' / ' + percentageChange.toFixed(2) + '%)'; // percentageChange is already negative
-            } else {
-                priceChangeSpan.textContent = '($0.00 / 0.00%)';
-            }
-            currentModalPriceChangeLarge.appendChild(priceChangeSpan);
-            currentModalPriceChangeLarge.style.display = 'inline';
-        } else {
-            currentModalPriceChangeLarge.textContent = '';
-            currentModalPriceChangeLarge.style.display = 'none';
-        }
-
-        // 3. Add P/E Ratio below live price
-        const peRow = document.createElement('div');
-        peRow.classList.add('pe-ratio-row'); // New class for styling
-        const peSpan = document.createElement('span');
-        peSpan.classList.add('pe-ratio-value'); // New class
-        peSpan.textContent = 'P/E: ' + (peRatio !== undefined && peRatio !== null && !isNaN(peRatio) ? peRatio.toFixed(2) : 'N/A');
-        peRow.appendChild(peSpan);
-        modalLivePriceDisplaySection.appendChild(peRow);
-    }
-    
-    modalEnteredPrice.textContent = (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? '$' + enteredPriceNum.toFixed(2) : 'N/A';
-    const targetPriceNum = Number(share.targetPrice);
-    modalTargetPrice.textContent = (!isNaN(targetPriceNum) && targetPriceNum !== null) ? '$' + targetPriceNum.toFixed(2) : 'N/A';
-    
-    const dividendAmountNum = Number(share.dividendAmount);
-    const modalDividendAmountText = (!isNaN(dividendAmountNum) && dividendAmountNum !== null) ? '$' + dividendAmountNum.toFixed(3) : 'N/A';
-    
-    const frankingCreditsNum = Number(share.frankingCredits);
-    
-    const priceForYield = (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) ? livePrice : enteredPriceNum;
-    const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, priceForYield); 
-    modalUnfrankedYieldSpan.textContent = unfrankedYield !== null && !isNaN(unfrankedYield) ? unfrankedYield.toFixed(2) + '%' : '0.00%';
-    
-    const frankedYield = calculateFrankedYield(dividendAmountNum, priceForYield, frankingCreditsNum);
-    modalFrankedYieldSpan.textContent = frankedYield !== null && !isNaN(frankedYield) ? frankedYield.toFixed(2) + '%' : '0.00%';
-
-    // Populate Entry Date after Franked Yield
-    modalEntryDate.textContent = formatDate(share.entryDate) || 'N/A';
-    
-    // NEW: Display the share rating in the details modal
-    if (modalShareRating) {
-        const rating = share.rating || 0; // Default to 0 if no rating
-        modalShareRating.textContent = rating > 0 ? '⭐ ' + rating : 'N/A';
-    }
-
-    if (modalCommentsContainer) {
-        modalCommentsContainer.innerHTML = '';
-        if (share.comments && Array.isArray(share.comments) && share.comments.length > 0) {
-            share.comments.forEach(comment => {
-                if (comment.title || comment.text) {
-                    const commentDiv = document.createElement('div');
-                    commentDiv.className = 'modal-comment-item';
-                    
-                    // Conditional Title Bar
-                    if (comment.title && comment.title.trim() !== '') {
-                        const titleBar = document.createElement('div');
-                        titleBar.classList.add('comment-title-bar'); // New class for styling
-                        titleBar.textContent = comment.title;
-                        commentDiv.appendChild(titleBar);
-                    }
-                    
-                    const commentTextP = document.createElement('p');
-                    commentTextP.textContent = comment.text || '';
-                    commentDiv.appendChild(commentTextP);
-
-                    modalCommentsContainer.appendChild(commentDiv);
-                }
-            });
-        } else {
-            modalCommentsContainer.innerHTML = '<p style="text-align: center; color: var(--label-color);">No comments for this share.</p>';
-        }
-    }
-
-    // External Links
-    if (modalNewsLink && share.shareName) {
-        const newsUrl = 'https://news.google.com/search?q=' + encodeURIComponent(share.shareName) + '%20ASX&hl=en-AU&gl=AU&ceid=AU%3Aen';
-        modalNewsLink.href = newsUrl;
-        modalNewsLink.textContent = 'View ' + share.shareName.toUpperCase() + ' News';
-        modalNewsLink.style.display = 'inline-flex';
-        setIconDisabled(modalNewsLink, false);
-    } else if (modalNewsLink) {
-        modalNewsLink.style.display = 'none';
-        setIconDisabled(modalNewsLink, true);
-    }
-
-    if (modalMarketIndexLink && share.shareName) {
-        const marketIndexUrl = 'https://www.marketindex.com.au/asx/' + share.shareName.toLowerCase();
-        modalMarketIndexLink.href = marketIndexUrl;
-        modalMarketIndexLink.textContent = 'View ' + share.shareName.toUpperCase() + ' on MarketIndex.com.au';
-        modalMarketIndexLink.style.display = 'inline-flex';
-        setIconDisabled(modalMarketIndexLink, false);
-    } else if (modalMarketIndexLink) {
-        modalMarketIndexLink.style.display = 'none';
-        setIconDisabled(modalMarketIndexLink, true);
-    }
-
-    if (commSecLoginMessage) {
-        commSecLoginMessage.style.display = 'block'; 
-    }
-
-    showModal(shareDetailModal);
-    logDebug('Details: Displayed details for share: ' + share.shareName + ' (ID: ' + selectedShareDocId + ')');
-}
-
-
 function showShareDetails() {
     if (!selectedShareDocId) {
         showCustomAlert('Please select a share to view details.');
@@ -1943,9 +1707,6 @@ async function fetchLivePrices() {
 
                 const isTargetHit = (targetPrice !== undefined && livePrice <= targetPrice);
 
-                // Debugging log:
-                console.log('Target Price Debug: Share: ' + asxCode + ', Live: ' + livePrice + ', Target: ' + targetPrice + ', Is Target Hit: ' + isTargetHit); 
-
 
                 newLivePrices[asxCode] = {
                     live: livePrice,
@@ -2624,32 +2385,14 @@ function showCustomConfirm(message, callback) {
         return;
     }
     customDialogMessage.textContent = message;
-    customDialogConfirmBtn.style.display = 'inline-flex'; // Show confirm
-    setIconDisabled(customDialogConfirmBtn, false);
-    customDialogCancelBtn.style.display = 'inline-flex'; // Show cancel
-    setIconDisabled(customDialogCancelBtn, false);
-
+    setIconDisabled(customDialogConfirmBtn, true); // Hide and disable confirm for alert
+    customDialogConfirmBtn.style.display = 'none';
+    setIconDisabled(customDialogCancelBtn, true); // Hide and disable cancel for alert
+    customDialogCancelBtn.style.display = 'none';
     showModal(customDialogModal);
-
-    const onConfirm = () => {
-        hideModal(customDialogModal);
-        customDialogConfirmBtn.removeEventListener('click', onConfirm);
-        customDialogCancelBtn.removeEventListener('click', onCancel);
-        callback(true);
-        logDebug('Confirm: User confirmed.');
-    };
-
-    const onCancel = () => {
-        hideModal(customDialogModal);
-        customDialogConfirmBtn.removeEventListener('click', onConfirm);
-        customDialogCancelBtn.removeEventListener('click', onCancel);
-        callback(false);
-        logDebug('Confirm: User cancelled.');
-    };
-
-    customDialogConfirmBtn.addEventListener('click', onConfirm);
-    customDialogCancelBtn.addEventListener('click', onCancel);
-    logDebug('Confirm: Showing confirm: "' + message + '"');
+    if (autoDismissTimeout) { clearTimeout(autoDismissTimeout); }
+    autoDismissTimeout = setTimeout(() => { hideModal(customDialogModal); autoDismissTimeout = null; }, duration);
+    logDebug('Alert: Showing alert: "' + message + '"');
 }
 
 /**
@@ -3687,7 +3430,7 @@ async function initializeAppLogic() {
             const isDisabledDelete = actualWatchlists.length <= 1; 
             setIconDisabled(deleteWatchlistInModalBtn, isDisabledDelete); 
             logDebug('Edit Watchlist: deleteWatchlistInModalBtn disabled: ' + isDisabledDelete);
-            setIconDisabled(saveWatchlistNameBtn, true); // Disable save button initially
+            setIconDisabled(saveWatchlistNameBtn, true); // Save button disabled initially
             logDebug('Edit Watchlist: saveWatchlistNameBtn disabled initially.');
             originalWatchlistData = getCurrentWatchlistFormData(false); // Store initial state for dirty check
             showModal(manageWatchlistModal);
