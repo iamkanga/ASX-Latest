@@ -1740,7 +1740,10 @@ function renderAsxCodeButtons() {
                 buttonPriceChangeClass = 'neutral';
             }
         }
-        button.classList.add(buttonPriceChangeClass); // Apply the color class
+        // Only add the class if it's not empty
+        if (buttonPriceChangeClass) {
+            button.classList.add(buttonPriceChangeClass); // Apply the color class
+        }
 
         asxCodeButtonsContainer.appendChild(button);
         button.addEventListener('click', (event) => {
