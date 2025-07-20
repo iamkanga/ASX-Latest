@@ -1656,9 +1656,9 @@ function renderWatchlist() {
     const shareTableBodyEl = document.querySelector('#shareTable tbody');
     const mobileShareCardsContainerEl = document.getElementById('mobileShareCards');
 
-    // Hide both sections initially, but only if they exist
-    if (stockWatchlistSectionEl) stockWatchlistSectionEl.classList.add('app-hidden');
-    if (cashAssetsSectionEl) cashAssetsSectionEl.classList.add('app-hidden');
+    // Explicitly hide both sections initially using style.display
+    if (stockWatchlistSectionEl) stockWatchlistSectionEl.style.display = 'none';
+    if (cashAssetsSectionEl) cashAssetsSectionEl.style.display = 'none';
 
     // Clear previous content, but only if elements exist
     if (shareTableBodyEl) shareTableBodyEl.innerHTML = '';
@@ -1667,8 +1667,8 @@ function renderWatchlist() {
 
 
     if (selectedWatchlistId === CASH_BANK_WATCHLIST_ID) {
-        // Show Cash & Assets section, if element exists
-        if (cashAssetsSectionEl) cashAssetsSectionEl.classList.remove('app-hidden');
+        // Show Cash & Assets section by setting display to block
+        if (cashAssetsSectionEl) cashAssetsSectionEl.style.display = 'block'; // Use 'block' for this section
         if (mainTitleEl) mainTitleEl.textContent = 'Cash & Assets';
         renderCashCategories(); // This function will also perform its own element checks
         // Hide stock-specific UI elements, if they exist
@@ -1680,8 +1680,8 @@ function renderWatchlist() {
         if (targetHitIconBtnEl) targetHitIconBtnEl.classList.add('app-hidden');
         stopLivePriceUpdates(); // Stop live price updates when in cash view
     } else {
-        // Show Stock Watchlist section, if element exists
-        if (stockWatchlistSectionEl) stockWatchlistSectionEl.classList.remove('app-hidden');
+        // Show Stock Watchlist section by setting display to block
+        if (stockWatchlistSectionEl) stockWatchlistSectionEl.style.display = 'block'; // Use 'block' for this section
         // Update main title
         if (mainTitleEl) {
             const selectedWatchlist = userWatchlists.find(wl => wl.id === selectedWatchlistId);
@@ -1740,7 +1740,7 @@ function renderWatchlist() {
             emptyWatchlistMessage.style.textAlign = 'center';
             emptyWatchlistMessage.style.padding = '20px';
             emptyWatchlistMessage.style.color = 'var(--ghosted-text)';
-            // Only append to table/cards if elements exist
+            // Append to table/cards if elements exist
             if (shareTableBodyEl) {
                 const td = document.createElement('td');
                 td.colSpan = 5;
@@ -1752,9 +1752,16 @@ function renderWatchlist() {
             if (mobileShareCardsContainerEl) {
                 mobileShareCardsContainerEl.appendChild(emptyWatchlistMessage.cloneNode(true));
             }
-            // Ensure correct display based on empty state
-            if (shareTableBodyEl) shareTableBodyEl.closest('table').style.display = 'table';
-            if (mobileShareCardsContainerEl) mobileShareCardsContainerEl.style.display = 'none'; // Hide mobile cards if empty table is shown
+
+            // Ensure correct display for table/mobile cards based on empty state
+            if (window.matchMedia('(max-width: 768px)').matches) {
+                if (mobileShareCardsContainerEl) mobileShareCardsContainerEl.style.display = 'flex';
+                if (shareTableBodyEl) shareTableBodyEl.closest('table').style.display = 'none';
+            } else {
+                if (mobileShareCardsContainerEl) mobileShareCardsContainerEl.style.display = 'none';
+                if (shareTableBodyEl) shareTableBodyEl.closest('table').style.display = 'table';
+            }
+
         } else {
             // If there are shares, decide whether to show table or mobile cards
             if (window.matchMedia('(max-width: 768px)').matches) {
@@ -1763,15 +1770,16 @@ function renderWatchlist() {
                 if (shareTableBodyEl) shareTableBodyEl.closest('table').style.display = 'none';
             } else {
                 // On desktop, show table and hide mobile cards
-                if (shareTableBodyEl) shareTableBodyEl.closest('table').style.display = 'table';
                 if (mobileShareCardsContainerEl) mobileShareCardsContainerEl.style.display = 'none';
+                if (shareTableBodyEl) shareTableBodyEl.closest('table').style.display = 'table';
             }
-        }
 
-        sharesToRender.forEach((share) => {
-            addShareToTable(share);
-            addShareToMobileCards(share);
-        });
+            // Add shares to display elements
+            sharesToRender.forEach((share) => {
+                addShareToTable(share);
+                addShareToMobileCards(share);
+            });
+        }
         if (selectedShareDocId) {
             const stillExists = sharesToRender.some(share => share.id === selectedShareDocId);
             if (stillExists) {
