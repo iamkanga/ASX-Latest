@@ -2814,7 +2814,7 @@ function showCashCategoryDetailsModal(assetId) {
 
     // Display comments in details modal
     if (modalCashAssetCommentsContainer) {
-        modalCashAssetCommentsContainer.innerHTML = '';
+        modalCashAssetCommentsContainer.innerHTML = ''; // Clear existing content
         if (asset.comments && Array.isArray(asset.comments) && asset.comments.length > 0) {
             asset.comments.forEach(comment => {
                 if (comment.title || comment.text) {
