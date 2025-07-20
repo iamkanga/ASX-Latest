@@ -375,21 +375,21 @@ function closeModals() {
 
 // Custom Dialog (Alert) Function
 function showCustomAlert(message, duration = 1000) {
-    // Re-fetch elements to ensure they are current, especially after modal state changes
-    customDialogConfirmBtn = document.getElementById('customDialogConfirmBtn');
-    customDialogCancelBtn = document.getElementById('customDialogCancelBtn');
+    // Always get fresh references to the buttons when showing the alert
+    const confirmBtn = document.getElementById('customDialogConfirmBtn');
+    const cancelBtn = document.getElementById('customDialogCancelBtn');
 
-    if (!customDialogModal || !customDialogMessage || !customDialogConfirmBtn || !customDialogCancelBtn) {
+    if (!customDialogModal || !customDialogMessage || !confirmBtn || !cancelBtn) {
         console.error('Custom dialog elements not found. Cannot show alert.');
         console.log('ALERT (fallback): ' + message);
         return;
     }
     customDialogMessage.textContent = message;
     // For alerts, ensure buttons are hidden and disabled
-    customDialogConfirmBtn.style.display = 'none';
-    setIconDisabled(customDialogConfirmBtn, true); // Use setIconDisabled to manage class
-    customDialogCancelBtn.style.display = 'none';
-    setIconDisabled(customDialogCancelBtn, true); // Use setIconDisabled to manage class
+    confirmBtn.style.display = 'none';
+    setIconDisabled(confirmBtn, true);
+    cancelBtn.style.display = 'none';
+    setIconDisabled(cancelBtn, true);
 
     showModal(customDialogModal);
     if (autoDismissTimeout) { clearTimeout(autoDismissTimeout); }
@@ -806,8 +806,9 @@ function clearForm() {
  * @param {boolean} isNewShare True if adding a new share, false if editing.
 */
 function populateShareWatchlistSelect(currentShareWatchlistId = null, isNewShare = true) {
-    logDebug('populateShareWatchlistSelect called. isNewShare: ' + isNewShare + ', currentShareWatchlistId: ' + currentShareWatchlistId); // Added log
-    logDebug('Current currentSelectedWatchlistIds: ' + currentSelectedWatchlistIds.join(', ')); // Added log
+    logDebug('populateShareWatchlistSelect called. isNewShare: ' + isNewShare + ', currentShareWatchlistId: ' + currentShareWatchlistId);
+    logDebug('Current currentSelectedWatchlistIds: ' + currentSelectedWatchlistIds.join(', '));
+    logDebug('User watchlists available: ' + userWatchlists.map(wl => wl.name + ' (' + wl.id + ')').join(', '));
 
     if (!shareWatchlistSelect) {
         console.error('populateShareWatchlistSelect: shareWatchlistSelect element not found.');
@@ -826,52 +827,58 @@ function populateShareWatchlistSelect(currentShareWatchlistId = null, isNewShare
         shareWatchlistSelect.appendChild(option);
     });
 
+    let selectedOptionId = ''; // Variable to hold the ID of the option we want to select
+    let disableDropdown = false; // Variable to control if dropdown should be disabled
+
     if (isNewShare) {
-        // If adding a new share:
-        // Try to pre-select the currently active stock watchlist (if a single one is selected and it's not ALL_SHARES or CASH_BANK)
-        // or the default watchlist if it's the only one available.
         const defaultWatchlistForNewShare = userWatchlists.find(wl => wl.id === getDefaultWatchlistId(currentUserId));
 
-        // Prioritize current view if it's a specific stock watchlist
+        // Priority 1: If currently viewing a specific stock watchlist, pre-select and disable
         if (currentSelectedWatchlistIds.length === 1 && 
             currentSelectedWatchlistIds[0] !== ALL_SHARES_ID &&
             currentSelectedWatchlistIds[0] !== CASH_BANK_WATCHLIST_ID &&
-            stockWatchlists.some(wl => wl.id === currentSelectedWatchlistIds[0])) { // Ensure the selected watchlist actually exists
+            stockWatchlists.some(wl => wl.id === currentSelectedWatchlistIds[0])) { 
 
-            shareWatchlistSelect.value = currentSelectedWatchlistIds[0];
-            shareWatchlistSelect.disabled = true; // Cannot change watchlist when adding from a specific one
-            logDebug('Share Form: New share: Pre-selected and disabled watchlist to current view (' + stockWatchlists.find(wl => wl.id === currentSelectedWatchlistIds[0])?.name + ').');
-        } else if (defaultWatchlistForNewShare) {
-            // If not viewing a specific watchlist, but a default one exists, pre-select it
-            shareWatchlistSelect.value = defaultWatchlistForNewShare.id;
-            shareWatchlistSelect.disabled = false; // Allow changing even if default is pre-selected
-            logDebug('Share Form: New share: Pre-selected default watchlist (' + defaultWatchlistForNewShare.name + ').');
-        } else if (stockWatchlists.length > 0) {
-            // Fallback: If no specific view and no default, but other stock watchlists exist, select the first one
-            shareWatchlistSelect.value = stockWatchlists[0].id;
-            shareWatchlistSelect.disabled = false;
-            logDebug('Share Form: New share: No specific view or default, pre-selected first available stock watchlist.');
-        } else {
-            // Final fallback: No stock watchlists at all, force selection
-            shareWatchlistSelect.value = ''; // Ensure placeholder is selected
-            shareWatchlistSelect.disabled = false;
-            logDebug('Share Form: New share: User must select a watchlist (no stock watchlists available).');
+            selectedOptionId = currentSelectedWatchlistIds[0];
+            disableDropdown = true;
+            logDebug('Share Form: New share: Pre-selected and disabled to current view: ' + selectedOptionId);
+        } 
+        // Priority 2: If a default watchlist exists, pre-select it (and keep enabled)
+        else if (defaultWatchlistForNewShare) {
+            selectedOptionId = defaultWatchlistForNewShare.id;
+            disableDropdown = false; // Keep enabled for user to change
+            logDebug('Share Form: New share: Pre-selected default watchlist: ' + selectedOptionId);
+        } 
+        // Priority 3: If no specific view or default, but other stock watchlists exist, select the first one
+        else if (stockWatchlists.length > 0) {
+            selectedOptionId = stockWatchlists[0].id;
+            disableDropdown = false;
+            logDebug('Share Form: New share: No specific view or default, pre-selected first available: ' + selectedOptionId);
+        } 
+        // Priority 4: No stock watchlists at all, leave on placeholder
+        else {
+            selectedOptionId = ''; // Keep placeholder selected
+            disableDropdown = false;
+            logDebug('Share Form: New share: No stock watchlists available, user must select.');
         }
-    } else {
-        // If editing an existing share:
+    } else { // Editing an existing share
         if (currentShareWatchlistId && stockWatchlists.some(wl => wl.id === currentShareWatchlistId)) {
-            shareWatchlistSelect.value = currentShareWatchlistId;
-            logDebug('Share Form: Editing share: Pre-selected watchlist to existing share\'s (' + stockWatchlists.find(wl => wl.id === currentShareWatchlistId)?.name + ').');
+            selectedOptionId = currentShareWatchlistId;
+            logDebug('Share Form: Editing share: Pre-selected to existing share\'s watchlist: ' + selectedOptionId);
         } else if (stockWatchlists.length > 0) {
-            // Fallback to first stock watchlist if current one is invalid/missing
-            shareWatchlistSelect.value = stockWatchlists[0].id;
+            selectedOptionId = stockWatchlists[0].id;
             console.warn('Share Form: Editing share: Original watchlist not found, defaulted to first available stock watchlist.');
         } else {
-            shareWatchlistSelect.value = ''; // No watchlists available
+            selectedOptionId = ''; // No watchlists available
             console.warn('Share Form: Editing share: No stock watchlists available to select.');
         }
-        shareWatchlistSelect.disabled = false; // Always allow changing watchlist when editing
+        disableDropdown = false; // Always allow changing watchlist when editing
     }
+
+    // Apply the determined selection and disabled state
+    shareWatchlistSelect.value = selectedOptionId;
+    shareWatchlistSelect.disabled = disableDropdown;
+
     // Add event listener for dirty state checking on this dropdown
     shareWatchlistSelect.addEventListener('change', checkFormDirtyState);
 }
@@ -2898,11 +2905,11 @@ function showCashCategoryDetailsModal(assetId) {
 
 // Custom Confirm Dialog Function (Now unused for deletions, but kept for potential future use)
 function showCustomConfirm(message, callback) {
-    // Re-fetch elements to ensure they are current
-    customDialogConfirmBtn = document.getElementById('customDialogConfirmBtn');
-    customDialogCancelBtn = document.getElementById('customDialogCancelBtn');
+    // Always get fresh references to the buttons when showing the confirm dialog
+    const confirmBtn = document.getElementById('customDialogConfirmBtn');
+    const cancelBtn = document.getElementById('customDialogCancelBtn');
 
-    if (!customDialogModal || !customDialogMessage || !customDialogConfirmBtn || !customDialogCancelBtn) {
+    if (!customDialogModal || !customDialogMessage || !confirmBtn || !cancelBtn) {
         console.error('Custom dialog elements not found. Cannot show confirm.');
         console.log('CONFIRM (fallback): ' + message);
         callback(window.confirm(message)); // Fallback to native confirm
@@ -2910,26 +2917,24 @@ function showCustomConfirm(message, callback) {
     }
     customDialogMessage.textContent = message;
     // For confirms, ensure buttons are visible and enabled
-    customDialogConfirmBtn.style.display = 'inline-flex';
-    setIconDisabled(customDialogConfirmBtn, false); // Enable the confirm button
-    customDialogCancelBtn.style.display = 'inline-flex';
-    setIconDisabled(customDialogCancelBtn, false); // Enable the cancel button
+    confirmBtn.style.display = 'inline-flex'; // Make sure they are visible
+    setIconDisabled(confirmBtn, false); // Enable the confirm button
+    cancelBtn.style.display = 'inline-flex'; // Make sure they are visible
+    setIconDisabled(cancelBtn, false); // Enable the cancel button
 
     showModal(customDialogModal);
 
-    // Remove existing listeners first to prevent multiple attachments
-    // Use a flag or a stored listener reference if you're not cloning.
-    // Since we ARE cloning, the old listeners are on the old elements, so this is clean.
-
-    // Re-clone elements to ensure fresh event listeners and no lingering issues.
-    // This is the most robust way to handle dynamic listeners on reused elements.
-    const confirmBtnClone = customDialogConfirmBtn.cloneNode(true);
-    customDialogConfirmBtn.parentNode.replaceChild(confirmBtnClone, customDialogConfirmBtn);
-    customDialogConfirmBtn = confirmBtnClone; // Reassign the global variable to the new element
-
-    const cancelBtnClone = customDialogCancelBtn.cloneNode(true);
-    customDialogCancelBtn.parentNode.replaceChild(cancelBtnClone, customDialogCancelBtn);
-    customDialogCancelBtn = cancelBtnClone; // Reassign the global variable to the new element
+    // Remove any existing 'click' listeners to prevent multiple firings
+    // This is crucial if the same button elements are reused without cloning.
+    // We ensure only one listener is active at a time.
+    const oldConfirmListener = confirmBtn._currentClickListener;
+    if (oldConfirmListener) {
+        confirmBtn.removeEventListener('click', oldConfirmListener);
+    }
+    const oldCancelListener = cancelBtn._currentClickListener;
+    if (oldCancelListener) {
+        cancelBtn.removeEventListener('click', oldCancelListener);
+    }
 
     const onConfirm = () => {
         hideModal(customDialogModal);
@@ -2943,9 +2948,12 @@ function showCustomConfirm(message, callback) {
         logDebug('Confirm: User cancelled.');
     };
 
-    // Attach listeners to the NEWLY CLONED elements
-    customDialogConfirmBtn.addEventListener('click', onConfirm, { once: true }); // Use {once: true} for auto-cleanup
-    customDialogCancelBtn.addEventListener('click', onCancel, { once: true }); // Use {once: true} for auto-cleanup
+    // Attach new listeners and store references for future removal
+    confirmBtn.addEventListener('click', onConfirm);
+    confirmBtn._currentClickListener = onConfirm; // Store reference
+
+    cancelBtn.addEventListener('click', onCancel);
+    cancelBtn._currentClickListener = onCancel; // Store reference
 
     logDebug('Confirm: Showing confirm: "' + message + '"');
 }
