@@ -3728,21 +3728,23 @@ main.container {
     display: grid;
     /* On mobile, keep two equal columns */
     grid-template-columns: 1fr 1fr;
-    gap: 10px; /* Space between the cards */
-    padding: 10px; /* Adjust padding for grid layout */
+    gap: 10px;
+    padding: 10px;
 }
 
-/* On desktop, for compact view, force a single column and center it */
+/* On desktop, for compact view, force exactly four columns */
 @media (min-width: 769px) {
     .mobile-share-cards.compact-view {
-        grid-template-columns: 1fr; /* Force single column on desktop */
-        max-width: 450px; /* Adjust max-width as desired for desktop cards */
-        margin: 0 auto; /* Center the single column on desktop */
-        padding: 20px 0; /* Add vertical padding for spacing */
+        display: grid !important; /* Ensure display is grid */
+        grid-template-columns: repeat(4, 1fr) !important; /* Force exactly 4 equal columns */
+        gap: 15px !important; /* Space between the cards */
+        padding: 15px !important; /* Adjust padding for desktop grid layout */
+        max-width: none !important; /* Allow container to take full width */
+        margin: 0 !important; /* Remove centering margin */
     }
-    /* Ensure individual cards fill the single column width */
+    /* Ensure individual cards fill their grid column width */
     .mobile-share-cards.compact-view .mobile-card {
-        width: 100%; /* Make cards fill the grid column */
+        width: auto !important; /* Let grid handle width */
     }
 }
 
