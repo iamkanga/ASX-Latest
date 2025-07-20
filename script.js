@@ -1475,7 +1475,7 @@ function renderWatchlistSelect() {
     }
     logDebug('UI Update: Watchlist select dropdown rendered. Selected value: ' + watchlistSelect.value);
     updateMainTitle(); // Update main title based on newly selected watchlist
-    updateAddHeaderButton(); // Update the plus button context
+    updateAddHeaderButton(); // Update the plus button context (and sidebar button context)
 }
 
 function renderSortSelect() {
@@ -2855,8 +2855,9 @@ function updateMainTitle() {
 }
 
 /**
- * Updates the behavior of the main header's plus button based on the selected watchlist.
- * If 'Cash & Assets' is selected, it opens the cash asset form. Otherwise, it opens the share form.
+ * Updates the behavior of the main header's plus button and sidebar's "Add New Share" button
+ * based on the selected watchlist.
+ * If 'Cash & Assets' is selected, they open the cash asset form. Otherwise, they open the share form.
  */
 function updateAddHeaderButton() {
     if (!addShareHeaderBtn) {
@@ -2864,10 +2865,11 @@ function updateAddHeaderButton() {
         return;
     }
 
-    // Remove existing event listener to prevent multiple bindings
+    // Remove existing event listeners from header button to prevent multiple bindings
     addShareHeaderBtn.removeEventListener('click', handleAddShareClick);
     addShareHeaderBtn.removeEventListener('click', handleAddCashAssetClick);
 
+    // Set the appropriate event listener for the header button
     if (currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
         addShareHeaderBtn.addEventListener('click', handleAddCashAssetClick);
         logDebug('Header Button: Plus button set to Add Cash Asset.');
@@ -2877,6 +2879,9 @@ function updateAddHeaderButton() {
     }
     // Ensure the button is enabled as its functionality is now contextual
     addShareHeaderBtn.disabled = false; 
+
+    // Also update the sidebar's "Add New Share" button context
+    updateSidebarAddButtonContext();
 }
 
 /**
@@ -2904,6 +2909,35 @@ function handleAddCashAssetClick() {
     addCashCategoryUI();
 }
 
+/**
+ * Updates the sidebar's "Add New Share" button to be contextual.
+ * It will open the Share Form or Cash Asset Form based on the selected watchlist.
+ */
+function updateSidebarAddButtonContext() {
+    if (!newShareBtn) {
+        console.warn('updateSidebarAddButtonContext: newShareBtn not found.');
+        return;
+    }
+
+    // Remove existing event listeners from sidebar button
+    newShareBtn.removeEventListener('click', handleAddShareClick);
+    newShareBtn.removeEventListener('click', handleAddCashAssetClick);
+
+    // Set the appropriate event listener for the sidebar button
+    if (currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
+        newShareBtn.addEventListener('click', handleAddCashAssetClick);
+        // Update the text/icon if needed (optional, but good for clarity)
+        newShareBtn.querySelector('span').textContent = 'Add New Cash Asset';
+        newShareBtn.querySelector('i').className = 'fas fa-money-bill-wave'; // Example icon change
+        logDebug('Sidebar Button: "Add New Share" button set to Add Cash Asset.');
+    } else {
+        newShareBtn.addEventListener('click', handleAddShareClick);
+        // Revert text/icon to original for stock view
+        newShareBtn.querySelector('span').textContent = 'Add New Share';
+        newShareBtn.querySelector('i').className = 'fas fa-plus-circle'; // Original icon
+        logDebug('Sidebar Button: "Add New Share" button set to Add Share.');
+    }
+}
 
 async function migrateOldSharesToWatchlist() {
     if (!db || !currentUserId || !window.firestore) {
@@ -3639,21 +3673,9 @@ async function initializeAppLogic() {
         });
     }
 
-    // New Share Button (from sidebar)
-    if (newShareBtn) {
-        newShareBtn.addEventListener('click', () => {
-            logDebug('UI: New Share button (sidebar) clicked.');
-            clearForm();
-            formTitle.textContent = 'Add New Share';
-            if (deleteShareBtn) { deleteShareBtn.classList.add('hidden'); }
-            populateShareWatchlistSelect(null, true); // true indicates new share
-            showModal(shareFormSection);
-            shareNameInput.focus();
-            toggleAppSidebar(false);
-            addCommentSection(commentsFormContainer); // ADDED: Add an initial empty comment section for new shares
-            checkFormDirtyState(); // Check dirty state immediately after opening for new share
-        });
-    }
+    // New Share Button (from sidebar) - Now contextual, handled by updateSidebarAddButtonContext
+    // The event listener will be set dynamically by updateSidebarAddButtonContext()
+    // No direct event listener here anymore.
 
     // NEW: Add New Cash Asset Button (from sidebar)
     if (addCashAssetSidebarBtn) {
