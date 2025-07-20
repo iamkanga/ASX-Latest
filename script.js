@@ -2386,9 +2386,11 @@ function hideSplashScreen() {
         // Show main app content
         if (mainContainer) {
             mainContainer.classList.remove('app-hidden');
+            mainContainer.style.display = 'block'; // Explicitly set to block
         }
         if (appHeader) { // Assuming header is part of the main app content that needs to be revealed
             appHeader.classList.remove('app-hidden');
+            appHeader.style.display = 'block'; // Explicitly set to block
         }
         // Temporarily remove overflow hidden from body
         document.body.style.overflow = ''; 
@@ -3411,19 +3413,19 @@ async function initializeAppLogic() {
     // DEBUG: Log when initializeAppLogic starts
     logDebug('initializeAppLogic: Firebase is ready. Starting app logic.');
 
-    // Initial modal hiding and main app content hiding
-if (shareFormSection) shareFormSection.style.display = 'none';
-if (dividendCalculatorModal) dividendCalculatorModal.style.display = 'none';
-if (shareDetailModal) shareDetailModal.style.display = 'none';
-if (addWatchlistModal) addWatchlistModal.style.display = 'none';
-if (manageWatchlistModal) manageWatchlistModal.style.display = 'none';
-if (customDialogModal) customDialogModal.style.display = 'none';
-if (calculatorModal) calculatorModal.style.display = 'none';
-if (shareContextMenu) shareContextMenu.style.display = 'none';
-if (targetHitIconBtn) targetHitIconBtn.style.display = 'none';
-if (alertPanel) alertPanel.style.display = 'none';
-if (cashAssetFormModal) cashAssetFormModal.style.display = 'none';
-if (cashAssetDetailModal) cashAssetDetailModal.style.display = 'none';
+    // Initial modal hiding (main app content and header handled by splash screen logic)
+    if (shareFormSection) shareFormSection.style.display = 'none';
+    if (dividendCalculatorModal) dividendCalculatorModal.style.display = 'none';
+    if (shareDetailModal) shareDetailModal.style.display = 'none';
+    if (addWatchlistModal) addWatchlistModal.style.display = 'none';
+    if (manageWatchlistModal) manageWatchlistModal.style.display = 'none';
+    if (customDialogModal) customDialogModal.style.display = 'none';
+    if (calculatorModal) calculatorModal.style.display = 'none';
+    if (shareContextMenu) shareContextMenu.style.display = 'none';
+    if (targetHitIconBtn) targetHitIconBtn.style.display = 'none';
+    if (alertPanel) alertPanel.style.display = 'none';
+    if (cashAssetFormModal) cashAssetFormModal.style.display = 'none';
+    if (cashAssetDetailModal) cashAssetDetailModal.style.display = 'none';
 
 // Explicitly hide main app content and header initially
 if (mainContainer) {
