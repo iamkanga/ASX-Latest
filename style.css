@@ -3131,9 +3131,16 @@ table td.live-price-cell.negative-change {
 
 /* REMOVED: Action Buttons in Modals (Save, Delete, etc.) - These are now in the header */
 .form-action-buttons,
-.modal-action-buttons,
-.custom-dialog-buttons { 
+.modal-action-buttons { 
     display: none; /* Hide these old containers */
+}
+
+/* Custom dialog buttons container - default is hidden, JS will set display: flex or none */
+.custom-dialog-buttons {
+    display: none; /* Hidden by default, JS will explicitly set to flex or none */
+    justify-content: center; /* Center the buttons */
+    gap: 15px; /* Space between buttons */
+    margin-top: 20px; /* Space above buttons */
 }
 
 /* REMOVED: Sticky footer for action icons - These are now in the header */
