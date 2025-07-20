@@ -56,8 +56,11 @@ const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzp7OjZL
 let livePrices = {}; // Stores live price data: {ASX_CODE: {live: price, prevClose: price, PE: value, High52: value, Low52: value, targetHit: boolean}}
 let livePriceFetchInterval = null; // To hold the interval ID for live price updates
 const LIVE_PRICE_FETCH_INTERVAL_MS = 5 * 60 * 1000; // Fetch every 5 minutes
-
+// NEW: Time Zone Constants for Market Hours Calculation
+const SYDNEY_TIMEZONE = 'Australia/Sydney'; // IANA Time Zone ID for Sydney
+const THAILAND_TIMEZONE = 'Asia/Bangkok'; // IANA Time Zone ID for Bangkok (UTC+7)
 // Theme related variables
+
 const CUSTOM_THEMES = [
     'bold-1', 'bold-2', 'bold-3', 'bold-4', 'bold-5', 'bold-6', 'bold-7', 'bold-8', 'bold-9', 'bold-10',
     'subtle-1', 'subtle-2', 'subtle-3', 'subtle-4', 'subtle-5', 'subtle-6', 'subtle-7', 'subtle-8', 'subtle-9', 'subtle-10',
@@ -418,24 +421,24 @@ function addShareToTable(share) {
 
     row.innerHTML = `
         <td><span class="share-code-display ${
-            livePriceData && livePriceData.live !== null && livePriceData.prevClose !== null && !isNaN(livePriceData.live) && !isNaN(livePriceData.prevClose) ?
+            livePriceData && !livePriceData.zeroChangeActive && livePriceData.live !== null && livePriceData.prevClose !== null && !isNaN(livePriceData.live) && !isNaN(livePriceData.prevClose) ?
             (livePriceData.live - livePriceData.prevClose > 0 ? 'positive' : (livePriceData.live - livePriceData.prevClose < 0 ? 'negative' : 'neutral')) : ''
         }">${share.shareName || ''}</span></td>
         <td class="live-price-cell">
             <span class="live-price-value ${
-                livePriceData && livePriceData.live !== null && livePriceData.prevClose !== null && !isNaN(livePriceData.live) && !isNaN(livePriceData.prevClose) ?
+                livePriceData && !livePriceData.zeroChangeActive && livePriceData.live !== null && livePriceData.prevClose !== null && !isNaN(livePriceData.live) && !isNaN(livePriceData.prevClose) ?
                 (livePriceData.live - livePriceData.prevClose > 0 ? 'positive' : (livePriceData.live - livePriceData.prevClose < 0 ? 'negative' : 'neutral')) : ''
             }">${
                 livePriceData && livePriceData.live !== null && !isNaN(livePriceData.live) ?
                 '$' + livePriceData.live.toFixed(2) : 'N/A'
             }</span>
             <span class="price-change ${
-                livePriceData && livePriceData.live !== null && livePriceData.prevClose !== null && !isNaN(livePriceData.live) && !isNaN(livePriceData.prevClose) ?
+                livePriceData && !livePriceData.zeroChangeActive && livePriceData.live !== null && livePriceData.prevClose !== null && !isNaN(livePriceData.live) && !isNaN(livePriceData.prevClose) ?
                 (livePriceData.live - livePriceData.prevClose > 0 ? 'positive' : (livePriceData.live - livePriceData.prevClose < 0 ? 'negative' : 'neutral')) : ''
             }">${
                 livePriceData && livePriceData.live !== null && livePriceData.prevClose !== null && !isNaN(livePriceData.live) && !isNaN(livePriceData.prevClose) ?
-                (livePriceData.live - livePriceData.prevClose).toFixed(2) + ' (' + 
-                (livePriceData.prevClose !== 0 ? (( (livePriceData.live - livePriceData.prevClose) / livePriceData.prevClose) * 100).toFixed(2) : '0.00') + '%)' : ''
+                (livePriceData.zeroChangeActive ? '0.00 (0.00%)' : (livePriceData.live - livePriceData.prevClose).toFixed(2) + ' (' + 
+                (livePriceData.prevClose !== 0 ? (( (livePriceData.live - livePriceData.prevClose) / livePriceData.prevClose) * 100).toFixed(2) : '0.00') + '%)') : ''
             }</span>
         </td>
         <td>${Number(share.currentPrice) !== null && !isNaN(Number(share.currentPrice)) ? '$' + Number(share.currentPrice).toFixed(2) : 'N/A'}</td>
@@ -537,21 +540,21 @@ function addShareToMobileCards(share) {
     }
 
     card.innerHTML = `
-        <h3 class="${priceChangeClass}">${share.shareName || ''}</h3>
+        <h3 class="${livePriceData && !livePriceData.zeroChangeActive ? priceChangeClass : ''}">${share.shareName || ''}</h3>
         <div class="live-price-display-section">
             <div class="fifty-two-week-row">
                 <span class="fifty-two-week-value low">Low: ${livePriceData && livePriceData.Low52 !== null && !isNaN(livePriceData.Low52) ? '$' + livePriceData.Low52.toFixed(2) : 'N/A'}</span>
                 <span class="fifty-two-week-value high">High: ${livePriceData && livePriceData.High52 !== null && !isNaN(livePriceData.High52) ? '$' + livePriceData.High52.toFixed(2) : 'N/A'}</span>
             </div>
             <div class="live-price-main-row">
-                <span class="live-price-large ${priceChangeClass}">${
+                <span class="live-price-large ${livePriceData && !livePriceData.zeroChangeActive ? priceChangeClass : ''}">${
                     livePriceData && livePriceData.live !== null && !isNaN(livePriceData.live) ?
                     '$' + livePriceData.live.toFixed(2) : 'N/A'
                 }</span>
-                <span class="price-change-large ${priceChangeClass}">${
+                <span class="price-change-large ${livePriceData && !livePriceData.zeroChangeActive ? priceChangeClass : ''}">${
                     livePriceData && livePriceData.live !== null && livePriceData.prevClose !== null && !isNaN(livePriceData.live) && !isNaN(livePriceData.prevClose) ?
-                    (livePriceData.live - livePriceData.prevClose).toFixed(2) + ' (' +
-                    (livePriceData.prevClose !== 0 ? (((livePriceData.live - livePriceData.prevClose) / livePriceData.prevClose) * 100).toFixed(2) : '0.00') + '%)' : ''
+                    (livePriceData.zeroChangeActive ? '0.00 (0.00%)' : (livePriceData.live - livePriceData.prevClose).toFixed(2) + ' (' +
+                    (livePriceData.prevClose !== 0 ? (((livePriceData.live - livePriceData.prevClose) / livePriceData.prevClose) * 100).toFixed(2) : '0.00') + '%)') : ''
                 }</span>
             </div>
             <div class="pe-ratio-row">
@@ -728,6 +731,102 @@ function deselectCurrentCashAsset() {
     logDebug('Selection: Cash asset deselected. selectedCashAssetDocId is now null.');
 }
 
+// --- NEW: Market Hours and Time Zone Helper Functions ---
+
+/**
+ * Gets the current Date object adjusted to a specific IANA timezone.
+ * This is crucial for accurate market open/close checks across timezones.
+ * @param {string} timeZone The IANA timezone string (e.g., 'Australia/Sydney', 'Asia/Bangkok').
+ * @returns {Date} A Date object representing the current time in the specified timezone.
+ */
+function getDateInTimezone(timeZone) {
+    // Using Intl.DateTimeFormat to get parts of the date in the target timezone
+    // and then constructing a local Date object from those parts.
+    // This correctly handles Daylight Saving Time for the target timezone.
+    const now = new Date();
+    const options = {
+        year: 'numeric', month: 'numeric', day: 'numeric',
+        hour: 'numeric', minute: 'numeric', second: 'numeric',
+        hour12: false, // Use 24-hour format
+        timeZone: timeZone
+    };
+    const formatter = new Intl.DateTimeFormat('en-US', options);
+    const parts = formatter.formatToParts(now);
+
+    const getPart = (type) => parseInt(parts.find(p => p.type === type)?.value || '0', 10);
+
+    const year = getPart('year');
+    const month = getPart('month') - 1; // Month is 0-indexed
+    const day = getPart('day');
+    const hour = getPart('hour');
+    const minute = getPart('minute');
+    const second = getPart('second');
+
+    // Construct a Date object in the local timezone, but with the year/month/day/hour/minute/second
+    // values from the target timezone. This is a common pattern to create a "local date"
+    // that effectively represents the target timezone's date/time.
+    return new Date(year, month, day, hour, minute, second);
+}
+
+/**
+ * Checks if the ASX market is currently open based on Sydney time.
+ * ASX trading hours: 10:00 AM - 4:00 PM AEDT/AEST, Monday-Friday.
+ * @returns {boolean} True if the market is open, false otherwise.
+ */
+function isAsxMarketOpen() {
+    const sydneyTime = getDateInTimezone(SYDNEY_TIMEZONE);
+    const dayOfWeek = sydneyTime.getDay(); // Sunday - Saturday : 0 - 6
+    const hour = sydneyTime.getHours();
+    const minute = sydneyTime.getMinutes();
+
+    // Check for weekends (Saturday=6, Sunday=0)
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+        logDebug('Market Check: ASX market is closed (weekend).');
+        return false;
+    }
+
+    // Check for trading hours (10:00 to 16:00 Sydney time)
+    // Pre-open is from 7:00 AM, but for "zero change" we care about active trading.
+    if (hour > 10 || (hour === 10 && minute >= 0)) { // After 10:00 AM
+        if (hour < 16 || (hour === 16 && minute === 0)) { // Before or at 4:00 PM (end of continuous trading)
+            logDebug('Market Check: ASX market is open.');
+            return true;
+        }
+    }
+
+    logDebug('Market Check: ASX market is closed (outside trading hours).');
+    return false;
+}
+
+/**
+ * Checks if the current time in Thailand is past midnight (00:00).
+ * This is used to decide when to show "zero change" after market close.
+ * @returns {boolean} True if current hour in Thailand is 0 (midnight) or later.
+ */
+function isPastThailandMidnight() {
+    const thailandTime = getDateInTimezone(THAILAND_TIMEZONE);
+    const hour = thailandTime.getHours();
+    
+    // If it's 00:00 (midnight) or later in Thailand, return true.
+    // This means the "day" has rolled over in Thailand.
+    const isPastMidnight = hour >= 0; 
+    logDebug('Market Check: Thailand time is ' + thailandTime.toLocaleTimeString('en-US', { timeZone: THAILAND_TIMEZONE }) + '. Past midnight: ' + isPastMidnight);
+    return isPastMidnight;
+}
+
+/**
+ * Combines checks: ASX market is closed AND it's past midnight in Thailand.
+ * This is the condition for displaying "zero change".
+ * @returns {boolean} True if both conditions are met.
+ */
+function shouldDisplayZeroChange() {
+    const marketClosed = !isAsxMarketOpen();
+    const pastThailandMidnight = isPastThailandMidnight();
+
+    const displayZero = marketClosed && pastThailandMidnight;
+    logDebug('Market Check: Should display zero change? Market Closed: ' + marketClosed + ', Past Thailand Midnight: ' + pastThailandMidnight + ' => Result: ' + displayZero);
+    return displayZero;
+}
 
 function addCommentSection(container, title = '', text = '', isCashAssetComment = false) {
     if (!container) { console.error('addCommentSection: comments container not found.'); return; }
@@ -1116,7 +1215,7 @@ function showShareDetails() {
     // Determine price change class for modalShareName
     let modalShareNamePriceChangeClass = 'neutral';
     const livePriceDataForName = livePrices[share.shareName.toUpperCase()];
-    if (livePriceDataForName && livePriceDataForName.live !== null && livePriceDataForName.prevClose !== null && !isNaN(livePriceDataForName.live) && !isNaN(livePriceDataForName.prevClose)) {
+    if (livePriceDataForName && !livePriceDataForName.zeroChangeActive && livePriceDataForName.live !== null && livePriceDataForName.prevClose !== null && !isNaN(livePriceDataForName.live) && !isNaN(livePriceDataForName.prevClose)) {
         const change = livePriceDataForName.live - livePriceDataForName.prevClose;
         if (change > 0) {
             modalShareNamePriceChangeClass = 'positive';
@@ -1148,9 +1247,8 @@ function showShareDetails() {
 
         // Determine price change class for modal live price section
         let priceChangeClass = 'neutral'; // Default to neutral
-        if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice) && 
-            prevClosePrice !== undefined && prevClosePrice !== null && !isNaN(prevClosePrice)) {
-            const change = livePrice - prevClosePrice;
+        if (livePriceData && !livePriceData.zeroChangeActive && livePriceData.live !== null && livePriceData.prevClose !== null && !isNaN(livePriceData.live) && !isNaN(livePriceData.prevClose)) {
+            const change = livePriceData.live - livePriceData.prevClose;
             if (change > 0) {
                 priceChangeClass = 'positive';
             } else if (change < 0) {
@@ -1199,15 +1297,16 @@ function showShareDetails() {
             currentModalLivePriceLarge.style.display = 'inline';
         }
 
-        if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice) && 
-            prevClosePrice !== undefined && prevClosePrice !== null && !isNaN(prevClosePrice)) {
-            const change = livePrice - prevClosePrice;
-            const percentageChange = (prevClosePrice !== 0 && !isNaN(prevClosePrice)) ? (change / prevClosePrice) * 100 : 0; // Handle division by zero
+        if (livePriceData && livePriceData.live !== null && livePriceData.prevClose !== null && !isNaN(livePriceData.live) && !isNaN(livePriceData.prevClose)) {
+            const change = livePriceData.live - livePriceData.prevClose;
+            const percentageChange = (livePriceData.prevClose !== 0 && !isNaN(livePriceData.prevClose)) ? (change / livePriceData.prevClose) * 100 : 0; // Handle division by zero
 
             currentModalPriceChangeLarge.textContent = ''; // Clear previous content
             const priceChangeSpan = document.createElement('span');
             priceChangeSpan.classList.add('price-change'); // Keep base class for coloring, color already applied to parent
-            if (change > 0) {
+            if (livePriceData.zeroChangeActive) {
+                priceChangeSpan.textContent = '($0.00 / 0.00%)';
+            } else if (change > 0) {
                 priceChangeSpan.textContent = '(+$' + change.toFixed(2) + ' / +' + percentageChange.toFixed(2) + '%)';
             } else if (change < 0) {
                 priceChangeSpan.textContent = '(-$' + Math.abs(change).toFixed(2) + ' / ' + percentageChange.toFixed(2) + '%)'; // percentageChange is already negative
@@ -1250,6 +1349,12 @@ function showShareDetails() {
     // Populate Entry Date after Franked Yield
     modalEntryDate.textContent = formatDate(share.entryDate) || 'N/A';
     
+    // NEW: Display the share rating in the details modal
+    if (modalShareRating) {
+        const rating = share.rating || 0; // Default to 0 if no rating
+        modalShareRating.textContent = rating > 0 ? '⭐ ' + rating : 'N/A';
+    }
+
     if (modalCommentsContainer) {
         modalCommentsContainer.innerHTML = '';
         if (share.comments && Array.isArray(share.comments) && share.comments.length > 0) {
@@ -1307,139 +1412,6 @@ function showShareDetails() {
 
     showModal(shareDetailModal);
     logDebug('Details: Displayed details for share: ' + share.shareName + ' (ID: ' + selectedShareDocId + ')');
-}
-
-function sortShares() {
-    const sortValue = currentSortOrder;
-    if (!sortValue || sortValue === '') {
-        logDebug('Sort: Sort placeholder selected, no explicit sorting applied.');
-        renderWatchlist(); 
-        return;
-    }
-    const [field, order] = sortValue.split('-');
-    allSharesData.sort((a, b) => {
-        // Handle sorting by percentage change
-        if (field === 'percentageChange') {
-            const livePriceDataA = livePrices[a.shareName.toUpperCase()];
-            const livePriceA = livePriceDataA ? livePriceDataA.live : undefined;
-            const prevCloseA = livePriceDataA ? livePriceDataA.prevClose : undefined;
-
-            const livePriceDataB = livePrices[b.shareName.toUpperCase()];
-            const livePriceB = livePriceDataB ? livePriceDataB.live : undefined;
-            const prevCloseB = livePriceDataB ? livePriceDataB.prevClose : undefined; // Corrected variable name
-
-            let percentageChangeA = null;
-            // Only calculate if both livePriceA and prevCloseA are valid numbers and prevCloseA is not zero
-            if (livePriceA !== undefined && livePriceA !== null && !isNaN(livePriceA) &&
-                prevCloseA !== undefined && prevCloseA !== null && !isNaN(prevCloseA) && prevCloseA !== 0) {
-                percentageChangeA = ((livePriceA - prevCloseA) / prevCloseA) * 100;
-            }
-
-            let percentageChangeB = null;
-            // Only calculate if both livePriceB and prevCloseB are valid numbers and prevCloseB is not zero
-            if (livePriceB !== undefined && livePriceB !== null && !isNaN(livePriceB) &&
-                prevCloseB !== undefined && prevCloseB !== null && !isNaN(prevCloseB) && prevCloseB !== 0) { // Corrected variable name here
-                percentageChangeB = ((livePriceB - prevCloseB) / prevCloseB) * 100;
-            }
-
-            // Debugging log for percentage sort
-            logDebug('Sort Debug - Percentage: Comparing ' + a.shareName + ' (Change: ' + percentageChangeA + ') vs ' + b.shareName + ' (Change: ' + percentageChangeB + ')');
-
-
-            // Handle null/NaN percentage changes to push them to the bottom
-            // If both are null, their relative order doesn't matter (return 0)
-            if (percentageChangeA === null && percentageChangeB === null) return 0;
-            // If A is null but B is a number, A goes to the bottom
-            if (percentageChangeA === null) return 1; 
-            // If B is null but A is a number, B goes to the bottom
-            if (percentageChangeB === null) return -1; 
-
-            // Now perform numerical comparison for non-null values
-            return order === 'asc' ? percentageChangeA - percentageChangeB : percentageChangeB - percentageChangeA;
-        }
-
-        let valA = a[field];
-        let valB = b[field];
-
-        if (field === 'currentPrice' || field === 'targetPrice' || field === 'dividendAmount' || field === 'frankingCredits') {
-            valA = (typeof valA === 'string' && valA.trim() !== '') ? parseFloat(valA) : valA;
-            valB = (typeof valB === 'string' && valB.trim() !== '') ? parseFloat(valB) : valB;
-            valA = (valA === null || valA === undefined || isNaN(valA)) ? (order === 'asc' ? Infinity : -Infinity) : valA;
-            valB = (valB === null || valB === undefined || isNaN(valB)) ? (order === 'asc' ? Infinity : -Infinity) : valB;
-            return order === 'asc' ? valA - valB : valB - valA;
-        } else if (field === 'shareName') {
-            const nameA = (a.shareName || '').toUpperCase().trim();
-            const nameB = (b.shareName || '').toUpperCase().trim();
-            if (nameA === '' && nameB === '') return 0;
-            // If A is empty, it comes after B (push to bottom)
-            if (nameA === '') return 1; 
-            // If B is empty, it comes after A (push to bottom)
-            if (nameB === '') return -1; 
-
-            return order === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
-        } else if (field === 'entryDate') {
-            // UPDATED: Robust date parsing for sorting
-            const dateA = new Date(valA);
-            const dateB = new Date(valB);
-            
-            // Handle invalid dates by pushing them to the end of the list (Infinity for asc, -Infinity for desc)
-            const timeA = isNaN(dateA.getTime()) ? (order === 'asc' ? Infinity : -Infinity) : dateA.getTime();
-            const timeB = isNaN(dateB.getTime()) ? (order === 'asc' ? Infinity : -Infinity) : dateB.getTime();
-
-            return order === 'asc' ? timeA - timeB : timeB - timeA;
-        } else {
-            if (order === 'asc') {
-                if (valA < valB) return -1;
-                if (valA > valB) return 1;
-                return 0;
-            } else {
-                if (valA > valB) return -1;
-                if (valA < valB) return 1;
-                return 0;
-            }
-        }
-    });
-    logDebug('Sort: Shares sorted. Rendering watchlist.');
-    renderWatchlist(); 
-}
-
-/**
- * Sorts the cash categories based on the currentSortOrder.
- * @returns {Array} The sorted array of cash categories.
- */
-function sortCashCategories() {
-    const sortValue = currentSortOrder;
-    if (!sortValue || sortValue === '') {
-        logDebug('Sort: Cash sort placeholder selected, no explicit sorting applied.');
-        return [...userCashCategories]; // Return a copy to avoid direct mutation
-    }
-
-    const [field, order] = sortValue.split('-');
-
-    // Ensure we're only sorting by relevant fields for cash assets
-    if (field !== 'name' && field !== 'balance') {
-        logDebug('Sort: Invalid sort field for cash assets: ' + field + '. Defaulting to name-asc.');
-        return [...userCashCategories].sort((a, b) => a.name.localeCompare(b.name));
-    }
-
-    const sortedCategories = [...userCashCategories].sort((a, b) => {
-        let valA = a[field];
-        let valB = b[field];
-
-        if (field === 'balance') {
-            valA = (typeof valA === 'number' && !isNaN(valA)) ? valA : (order === 'asc' ? Infinity : -Infinity);
-            valB = (typeof valB === 'number' && !isNaN(valB)) ? valB : (order === 'asc' ? Infinity : -Infinity);
-            return order === 'asc' ? valA - valB : valB - valA;
-        } else if (field === 'name') {
-            const nameA = (a.name || '').toUpperCase().trim();
-            const nameB = (b.name || '').toUpperCase().trim();
-            return order === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
-        }
-        return 0; // Should not reach here
-    });
-
-    logDebug('Sort: Cash categories sorted by ' + field + ' ' + order + '.');
-    return sortedCategories;
 }
 
 function renderWatchlistSelect() {
@@ -2156,13 +2128,22 @@ async function fetchLivePrices() {
         console.log('Live Price: Raw data received:', data); 
 
         const newLivePrices = {};
+        const zeroChangeDisplayActive = shouldDisplayZeroChange(); // Determine if zero change should be displayed
+
         data.forEach(item => {
             const asxCode = String(item.ASXCode).toUpperCase();
             const livePrice = parseFloat(item.LivePrice);
-            const prevClose = parseFloat(item.PrevClose); 
+            let prevClose = parseFloat(item.PrevClose); // Use let as it might be overridden
             const pe = parseFloat(item.PE);
             const high52 = parseFloat(item.High52);
             const low52 = parseFloat(item.Low52);
+
+            // If zero change display is active, override prevClose to make change appear zero
+            if (zeroChangeDisplayActive) {
+                // Set prevClose to be equal to livePrice to force zero change calculation
+                prevClose = livePrice; 
+                logDebug('Live Price: Zero change display active. Overriding PrevClose for ' + asxCode + ' to ' + prevClose);
+            }
 
             if (asxCode && !isNaN(livePrice)) {
                 // Find the corresponding share in allSharesData to get its targetPrice
@@ -2180,11 +2161,13 @@ async function fetchLivePrices() {
 
                 newLivePrices[asxCode] = {
                     live: livePrice,
-                    prevClose: isNaN(prevClose) ? null : prevClose,
+                    prevClose: isNaN(prevClose) ? null : prevClose, // Use potentially overridden prevClose
                     PE: isNaN(pe) ? null : pe, 
                     High52: isNaN(high52) ? null : high52, 
                     Low52: isNaN(low52) ? null : low52, 
-                    targetHit: isTargetHit 
+                    targetHit: isTargetHit,
+                    // NEW: Store whether zero change display is active for this price data
+                    zeroChangeActive: zeroChangeDisplayActive
                 };
             } else {
                 console.warn('Live Price: Skipping item due to missing ASX code or invalid price:', item);
