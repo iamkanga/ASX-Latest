@@ -2066,7 +2066,7 @@ body.sidebar-active {
     box-sizing: border-box;
     display: flex; /* Use flexbox for internal layout */
     flex-direction: column; /* Stack children vertically */
-    padding: 15px 20px 10px; /* Combined padding for the whole fixed header */
+    padding: 15px 20px 0; /* Removed padding-bottom, will be determined by content + gap */
     gap: 10px; /* Space between header rows */
 }
 
@@ -2094,13 +2094,11 @@ main.container {
     justify-content: center;
     align-items: center;
     gap: 15px;
-    padding: 10px 0;
+    padding: 10px 15px; /* Added horizontal padding for consistency */
     border-top: 1px solid var(--border-color);
     border-bottom: 1px solid var(--border-color);
     width: 100%;
     box-sizing: border-box;
-    padding-left: 15px;
-    padding-right: 15px;
     margin-top: 0; /* No top margin here, gap handled by parent header's gap */
 }
 
@@ -2110,11 +2108,9 @@ main.container {
     flex-wrap: wrap;
     justify-content: center;
     gap: 8px;
-    padding: 10px 0;
+    padding: 10px 15px; /* Added horizontal padding for consistency */
     width: 100%;
     box-sizing: border-box;
-    padding-left: 15px;
-    padding-right: 15px;
     margin-top: 0; /* No top margin here, gap handled by parent header's gap */
     min-height: 0; /* Ensure it can shrink, but also allow it to grow */
     overflow: visible; /* Explicitly allow content to be visible even if it wraps multiple lines */
