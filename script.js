@@ -41,7 +41,6 @@ const DEFAULT_WATCHLIST_ID_SUFFIX = 'default';
 let userWatchlists = []; // Stores all watchlists for the user
 let currentSelectedWatchlistIds = []; // Stores IDs of currently selected watchlists for display
 const ALL_SHARES_ID = 'all_shares_option'; // Special ID for the "Show All Shares" option
-const CASH_BANK_WATCHLIST_ID = 'cashBank'; // NEW: Special ID for the "Cash & Assets" option
 let currentSortOrder = 'entryDate-desc'; // Default sort order
 let contextMenuOpen = false; // To track if the custom context menu is open
 let currentContextMenuShareId = null; // Stores the ID of the share that opened the context menu
@@ -69,7 +68,6 @@ let savedSortOrder = null; // GLOBAL: Stores the sort order loaded from user set
 let savedTheme = null; // GLOBAL: Stores the theme loaded from user settings
 
 let unsubscribeShares = null; // Holds the unsubscribe function for the Firestore shares listener
-let unsubscribeCashCategories = null; // NEW: Holds the unsubscribe function for Firestore cash categories listener
 
 // NEW: Global variable to store shares that have hit their target price
 let sharesAtTargetPrice = [];
@@ -79,14 +77,6 @@ let currentMobileViewMode = 'default';
 
 // NEW: Global variable to track if the target hit icon is dismissed for the current session
 let targetHitIconDismissed = false;
-
-// NEW: Global variable to store cash categories data
-let userCashCategories = [];
-let selectedCashAssetDocId = null; // NEW: To track which cash asset is selected for editing/details
-let originalCashAssetData = null; // NEW: To store original cash asset data for dirty state check
-// NEW: Global variable to store visibility state of cash assets (temporary, not persisted)
-let cashAssetVisibility = {}; // {assetId: true/false (visible/hidden)}
-
 
 // --- UI Element References ---
 const appHeader = document.getElementById('appHeader'); // Reference to the main header
@@ -175,35 +165,10 @@ const toggleCompactViewBtn = document.getElementById('toggleCompactViewBtn');
 const splashScreen = document.getElementById('splashScreen');
 const splashKangarooIcon = document.getElementById('splashKangarooIcon');
 const splashSignInBtn = document.getElementById('splashSignInBtn');
-const alertPanel = document.getElementById('alertPanel'); // NEW: Reference to the alert panel (not in current HTML, but kept for consistency)
-const alertList = document.getElementById('alertList'); // NEW: Reference to the alert list container (not in current HTML, but kept for consistency)
-const closeAlertPanelBtn = document.getElementById('closeAlertPanelBtn'); // NEW: Reference to close alert panel button (not in current HTML, but kept for consistency)
-const clearAllAlertsBtn = document.getElementById('clearAllAlertsBtn'); // NEW: Reference to clear all alerts button (not in current HTML, but kept for consistency)
-
-// NEW: Cash & Assets UI Elements (1)
-const stockWatchlistSection = document.getElementById('stockWatchlistSection');
-const cashAssetsSection = document.getElementById('cashAssetsSection'); // UPDATED ID
-const cashCategoriesContainer = document.getElementById('cashCategoriesContainer');
-const addCashCategoryBtn = document.getElementById('addCashCategoryBtn');
-const saveCashBalancesBtn = document.getElementById('saveCashBalancesBtn');
-const totalCashDisplay = document.getElementById('totalCashDisplay');
-
-// NEW: Cash Asset Modal Elements (2.1, 2.2)
-const cashAssetFormModal = document.getElementById('cashAssetFormModal');
-const cashFormTitle = document.getElementById('cashFormTitle');
-const cashAssetNameInput = document.getElementById('cashAssetName');
-const cashAssetBalanceInput = document.getElementById('cashAssetBalance');
-const saveCashAssetBtn = document.getElementById('saveCashAssetBtn');
-const deleteCashAssetBtn = document.getElementById('deleteCashAssetBtn');
-const cashAssetDetailModal = document.getElementById('cashAssetDetailModal');
-const modalCashAssetName = document.getElementById('modalCashAssetName');
-const detailCashAssetName = document.getElementById('detailCashAssetName');
-const detailCashAssetBalance = document.getElementById('detailCashAssetBalance');
-const detailCashAssetLastUpdated = document.getElementById('detailCashAssetLastUpdated');
-const showAllCashAssetsBtn = document.getElementById('showAllCashAssetsBtn');
-const addCashAssetSidebarBtn = document.getElementById('addCashAssetSidebarBtn');
-const editCashAssetFromDetailBtn = document.getElementById('editCashAssetFromDetailBtn');
-const deleteCashAssetFromDetailBtn = document.getElementById('deleteCashAssetFromDetailBtn');
+const alertPanel = document.getElementById('alertPanel'); // NEW: Reference to the alert panel
+const alertList = document.getElementById('alertList'); // NEW: Reference to the alert list container
+const closeAlertPanelBtn = document.getElementById('closeAlertPanelBtn'); // NEW: Reference to close alert panel button
+const clearAllAlertsBtn = document.getElementById('clearAllAlertsBtn'); // NEW: Reference to clear all alerts button
 
 
 let sidebarOverlay = document.querySelector('.sidebar-overlay');
@@ -216,11 +181,6 @@ if (!sidebarOverlay) {
 const formInputs = [
     shareNameInput, currentPriceInput, targetPriceInput,
     dividendAmountInput, frankingCreditsInput
-];
-
-// NEW: Form inputs for Cash Asset Modal
-const cashFormInputs = [
-    cashAssetNameInput, cashAssetBalanceInput
 ];
 
 
@@ -317,29 +277,6 @@ function closeModals() {
         }
     }
 
-    // NEW: Auto-save logic for cash asset form modal (2.1)
-    if (cashAssetFormModal && cashAssetFormModal.style.display !== 'none') {
-        logDebug('Auto-Save: Cash Asset form modal is closing. Checking for unsaved changes.');
-        const currentCashData = getCurrentCashAssetFormData();
-        const isCashAssetNameValid = currentCashData.name.trim() !== '';
-
-        if (selectedCashAssetDocId) { // Existing cash asset
-            if (originalCashAssetData && !areCashAssetDataEqual(originalCashAssetData, currentCashData)) {
-                logDebug('Auto-Save: Unsaved changes detected for existing cash asset. Attempting silent save.');
-                saveCashAsset(true); // true indicates silent save
-            } else {
-                logDebug('Auto-Save: No changes detected for existing cash asset.');
-            }
-        } else { // New cash asset
-            if (isCashAssetNameValid) {
-                logDebug('Auto-Save: New cash asset detected with valid name. Attempting silent save.');
-                saveCashAsset(true); // true indicates silent save
-            } else {
-                logDebug('Auto-Save: New cash asset has no name. Discarding changes.');
-            }
-        }
-    }
-
 
     document.querySelectorAll('.modal').forEach(modal => {
         if (modal) {
@@ -348,11 +285,9 @@ function closeModals() {
     });
     resetCalculator();
     deselectCurrentShare();
-    // NEW: Deselect current cash asset
-    deselectCurrentCashAsset();
     if (autoDismissTimeout) { clearTimeout(autoDismissTimeout); autoDismissTimeout = null; }
     hideContextMenu();
-    // NEW: Close the alert panel if open (alertPanel is not in current HTML, but kept for consistency)
+    // NEW: Close the alert panel if open
     if (alertPanel) hideModal(alertPanel);
     logDebug('Modal: All modals closed.');
 }
@@ -361,7 +296,7 @@ function closeModals() {
 function showCustomAlert(message, duration = 1000) {
     if (!customDialogModal || !customDialogMessage || !customDialogConfirmBtn || !customDialogCancelBtn) {
         console.error('Custom dialog elements not found. Cannot show alert.');
-        console.log('ALERT (fallback): ' + message);
+        logDebug('ALERT (fallback): ' + message);
         return;
     }
     customDialogMessage.textContent = message;
@@ -401,11 +336,6 @@ function updateMainButtonsState(enable) {
     if (watchlistSelect) watchlistSelect.disabled = !enable;
     if (refreshLivePricesBtn) refreshLivePricesBtn.disabled = !enable;
     if (toggleCompactViewBtn) toggleCompactViewBtn.disabled = !enable; // NEW: Disable compact view toggle
-    
-    // NEW: Disable/enable buttons specific to cash section
-    if (addCashCategoryBtn) addCashCategoryBtn.disabled = !enable;
-    if (saveCashBalancesBtn) saveCashBalancesBtn.disabled = !enable;
-
     logDebug('UI State: Sort Select Disabled: ' + (sortSelect ? sortSelect.disabled : 'N/A'));
     logDebug('UI State: Watchlist Select Disabled: ' + (watchlistSelect ? watchlistSelect.disabled : 'N/A'));
 }
@@ -480,30 +410,6 @@ function deselectCurrentShare() {
     logDebug('Selection: Share deselected. selectedShareDocId is now null.');
 }
 
-// NEW: Select/Deselect for Cash Assets (3.1)
-function selectCashAsset(assetId) {
-    logDebug('Selection: Attempting to select cash asset with ID: ' + assetId);
-    deselectCurrentCashAsset();
-
-    const assetCard = document.querySelector('.cash-category-item[data-id="' + assetId + '"]');
-    if (assetCard) {
-        assetCard.classList.add('selected');
-        logDebug('Selection: Selected cash asset card for ID: ' + assetId);
-    }
-    selectedCashAssetDocId = assetId;
-}
-
-function deselectCurrentCashAsset() {
-    const currentlySelected = document.querySelectorAll('.cash-category-item.selected');
-    logDebug('Selection: Attempting to deselect ' + currentlySelected.length + ' cash asset elements.');
-    currentlySelected.forEach(el => {
-        el.classList.remove('selected');
-    });
-    selectedCashAssetDocId = null;
-    logDebug('Selection: Cash asset deselected. selectedCashAssetDocId is now null.');
-}
-
-
 function addCommentSection(title = '', text = '') {
     // commentsFormContainer now correctly points to #dynamicCommentsArea
     if (!commentsFormContainer) { console.error('addCommentSection: commentsFormContainer (dynamicCommentsArea) not found.'); return; }
@@ -559,7 +465,7 @@ function clearForm() {
  * Sets the default selection based on current view or existing share.
  * @param {string|null} currentShareWatchlistId The ID of the watchlist the share is currently in (for editing).
  * @param {boolean} isNewShare True if adding a new share, false if editing.
-*/
+ */
 function populateShareWatchlistSelect(currentShareWatchlistId = null, isNewShare = true) {
     if (!shareWatchlistSelect) {
         console.error('populateShareWatchlistSelect: shareWatchlistSelect element not found.');
@@ -568,10 +474,7 @@ function populateShareWatchlistSelect(currentShareWatchlistId = null, isNewShare
 
     shareWatchlistSelect.innerHTML = '<option value="" disabled selected>Select a Watchlist</option>'; // Always start with placeholder
 
-    // Filter out the "Cash & Assets" option from the share watchlist dropdown
-    const stockWatchlists = userWatchlists.filter(wl => wl.id !== CASH_BANK_WATCHLIST_ID);
-
-    stockWatchlists.forEach(watchlist => {
+    userWatchlists.forEach(watchlist => {
         const option = document.createElement('option');
         option.value = watchlist.id;
         option.textContent = watchlist.name;
@@ -580,32 +483,29 @@ function populateShareWatchlistSelect(currentShareWatchlistId = null, isNewShare
 
     if (isNewShare) {
         // If adding a new share:
-        // Pre-select if currently viewing a specific stock watchlist (not All Shares or Cash & Assets)
-        if (currentSelectedWatchlistIds.length === 1 && 
-            currentSelectedWatchlistIds[0] !== ALL_SHARES_ID &&
-            currentSelectedWatchlistIds[0] !== CASH_BANK_WATCHLIST_ID) {
-            
+        if (currentSelectedWatchlistIds.length === 1 && currentSelectedWatchlistIds[0] !== ALL_SHARES_ID) {
+            // If currently viewing a specific watchlist, pre-select it and disable dropdown
             shareWatchlistSelect.value = currentSelectedWatchlistIds[0];
             shareWatchlistSelect.disabled = true; // Cannot change watchlist when adding from a specific one
-            logDebug('Share Form: New share: Pre-selected and disabled watchlist to current view (' + stockWatchlists.find(wl => wl.id === currentSelectedWatchlistIds[0])?.name + ').');
+            logDebug('Share Form: New share: Pre-selected and disabled watchlist to current view (' + userWatchlists.find(wl => wl.id === currentSelectedWatchlistIds[0])?.name + ').');
         } else {
-            // If viewing "All Shares", "Cash & Assets", or multiple, force selection (dropdown remains enabled)
+            // If viewing "All Shares" or multiple, force selection (dropdown remains enabled)
             shareWatchlistSelect.value = ''; // Ensure placeholder is selected
             shareWatchlistSelect.disabled = false;
             logDebug('Share Form: New share: User must select a watchlist.');
         }
     } else {
         // If editing an existing share:
-        if (currentShareWatchlistId && stockWatchlists.some(wl => wl.id === currentShareWatchlistId)) {
+        if (currentShareWatchlistId && userWatchlists.some(wl => wl.id === currentShareWatchlistId)) {
             shareWatchlistSelect.value = currentShareWatchlistId;
-            logDebug('Share Form: Editing share: Pre-selected watchlist to existing share\'s (' + stockWatchlists.find(wl => wl.id === currentShareWatchlistId)?.name + ').');
-        } else if (stockWatchlists.length > 0) {
-            // Fallback to first stock watchlist if current one is invalid/missing
-            shareWatchlistSelect.value = stockWatchlists[0].id;
-            console.warn('Share Form: Editing share: Original watchlist not found, defaulted to first available stock watchlist.');
+            logDebug('Share Form: Editing share: Pre-selected watchlist to existing share\'s (' + userWatchlists.find(wl => wl.id === currentShareWatchlistId)?.name + ').');
+        } else if (userWatchlists.length > 0) {
+            // Fallback to first watchlist if current one is invalid/missing
+            shareWatchlistSelect.value = userWatchlists[0].id;
+            console.warn('Share Form: Editing share: Original watchlist not found, defaulted to first available.');
         } else {
             shareWatchlistSelect.value = ''; // No watchlists available
-            console.warn('Share Form: Editing share: No stock watchlists available to select.');
+            console.warn('Share Form: Editing share: No watchlists available to select.');
         }
         shareWatchlistSelect.disabled = false; // Always allow changing watchlist when editing
     }
@@ -913,8 +813,6 @@ function showShareDetails() {
                 priceChangeClass = 'positive';
             } else if (change < 0) {
                 priceChangeClass = 'negative';
-            } else {
-                priceChangeClass = 'neutral';
             }
         }
 
@@ -1163,9 +1061,6 @@ function sortShares() {
 
 function renderWatchlistSelect() {
     if (!watchlistSelect) { console.error('renderWatchlistSelect: watchlistSelect element not found.'); return; }
-    // Store the currently selected value before clearing
-    const currentSelectedValue = watchlistSelect.value;
-    
     // Set the initial placeholder text to "Watch List"
     watchlistSelect.innerHTML = '<option value="" disabled selected>Watch List</option>';
 
@@ -1175,47 +1070,20 @@ function renderWatchlistSelect() {
     watchlistSelect.appendChild(allSharesOption);
 
     userWatchlists.forEach(watchlist => {
-        // Skip adding "Cash & Assets" if it's already a hardcoded option in HTML
-        if (watchlist.id === CASH_BANK_WATCHLIST_ID) {
-            return; 
-        }
         const option = document.createElement('option');
         option.value = watchlist.id;
         option.textContent = watchlist.name;
         watchlistSelect.appendChild(option);
     });
 
-    // Add the "Cash & Assets" option explicitly if it's not already in the HTML
-    // This assumes it's added in HTML, but as a fallback, we ensure it's there.
-    if (!watchlistSelect.querySelector(`option[value="${CASH_BANK_WATCHLIST_ID}"]`)) {
-        const cashBankOption = document.createElement('option');
-        cashBankOption.value = CASH_BANK_WATCHLIST_ID;
-        cashBankOption.textContent = 'Cash & Assets'; // UPDATED TEXT
-        watchlistSelect.appendChild(cashBankOption);
-    }
-
-    // Re-select the previously selected value if it still exists
-    if (currentSelectedValue && (Array.from(watchlistSelect.options).some(opt => opt.value === currentSelectedValue))) {
-        watchlistSelect.value = currentSelectedValue;
-        currentSelectedWatchlistIds = [currentSelectedValue]; // Ensure currentSelectedWatchlistIds reflects this
-    } else if (currentSelectedWatchlistIds.length === 1 && 
-                Array.from(watchlistSelect.options).some(opt => opt.value === currentSelectedWatchlistIds[0])) {
+    if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID)) {
+        watchlistSelect.value = ALL_SHARES_ID; // Corrected typo here
+    } else if (currentSelectedWatchlistIds.length === 1) {
         watchlistSelect.value = currentSelectedWatchlistIds[0];
     } else {
-        // If the previously selected value is no longer valid, default to the first available option (All Shares or first custom)
-        if (watchlistSelect.querySelector('option[value="' + ALL_SHARES_ID + '"]')) {
-            watchlistSelect.value = ALL_SHARES_ID;
-            currentSelectedWatchlistIds = [ALL_SHARES_ID];
-        } else if (userWatchlists.length > 0) {
-            // Default to the first actual watchlist (which could be Cash & Assets if no others)
-            currentSelectedWatchlistIds = [userWatchlists[0].id];
-        } else {
-            watchlistSelect.value = ''; // Fallback to placeholder if no options
-            currentSelectedWatchlistIds = [];
-        }
+        watchlistSelect.value = '';
     }
-    logDebug('UI Update: Watchlist select dropdown rendered. Selected value: ' + watchlistSelect.value);
-    updateMainTitle(); // Update main title based on newly selected watchlist
+    logDebug('UI Update: Watchlist select dropdown rendered.');
 }
 
 function renderSortSelect() {
@@ -1259,8 +1127,7 @@ if (currentUserId && savedSortOrder && options.some(option => option.value === s
 
 function addShareToTable(share) {
     if (!shareTableBody) { console.error('addShareToTable: shareTableBody element not found.'); return; }
-    // FIX: Create a new row and insert cells into it, instead of calling insertCell on tbody
-    const row = shareTableBody.insertRow(); 
+    const row = shareTableBody.insertRow();
     row.dataset.docId = share.id;
     
     // Determine the price change class for the entire row
@@ -1635,137 +1502,94 @@ function addShareToMobileCards(share) {
 }
 
 /**
- * Renders the watchlist based on the currentSelectedWatchlistIds. (1)
+ * Renders the watchlist based on the currentSelectedWatchlistIds.
  */
 function renderWatchlist() {
-    logDebug('Render: Rendering content for selected watchlist ID: ' + currentSelectedWatchlistIds[0]);
+    logDebug('Render: Rendering shares for selected watchlists: ' + currentSelectedWatchlistIds.join(', '));
+    clearShareListUI();
+    
+    let sharesToRender = [];
 
-    const selectedWatchlistId = currentSelectedWatchlistIds[0];
-
-    // Get references to all necessary elements, checking if they exist
-    const stockWatchlistSectionEl = document.getElementById('stockWatchlistSection');
-    const cashAssetsSectionEl = document.getElementById('cashAssetsSection');
-    const cashCategoriesContainerEl = document.getElementById('cashCategoriesContainer');
-    const mainTitleEl = document.getElementById('mainTitle');
-    const addShareHeaderBtnEl = document.getElementById('addShareHeaderBtn');
-    const sortSelectEl = document.getElementById('sortSelect');
-    const refreshLivePricesBtnEl = document.getElementById('refreshLivePricesBtn');
-    const toggleCompactViewBtnEl = document.getElementById('toggleCompactViewBtn');
-    const asxCodeButtonsContainerEl = document.getElementById('asxCodeButtonsContainer');
-    const targetHitIconBtnEl = document.getElementById('targetHitIconBtn');
-    const shareTableBodyEl = document.querySelector('#shareTable tbody');
-    const mobileShareCardsContainerEl = document.getElementById('mobileShareCards');
-
-    // Explicitly hide both main content sections initially using style.display
-    if (stockWatchlistSectionEl) stockWatchlistSectionEl.style.display = 'none';
-    if (cashAssetsSectionEl) cashAssetsSectionEl.style.display = 'none';
-
-    // Clear previous content, but only if elements exist
-    if (shareTableBodyEl) shareTableBodyEl.innerHTML = '';
-    if (mobileShareCardsContainerEl) mobileShareCardsContainerEl.innerHTML = '';
-    if (cashCategoriesContainerEl) cashCategoriesContainerEl.innerHTML = '';
-
-
-    if (selectedWatchlistId === CASH_BANK_WATCHLIST_ID) {
-        // Show Cash & Assets section by setting display to block
-        if (cashAssetsSectionEl) cashAssetsSectionEl.style.display = 'block';
-        if (mainTitleEl) mainTitleEl.textContent = 'Cash & Assets';
-        renderCashCategories(); // This function will also perform its own element checks
-        // Hide stock-specific UI elements, if they exist
-        if (addShareHeaderBtnEl) addShareHeaderBtnEl.classList.add('app-hidden');
-        if (sortSelectEl) sortSelectEl.classList.add('app-hidden');
-        if (refreshLivePricesBtnEl) refreshLivePricesBtnEl.classList.add('app-hidden');
-        if (toggleCompactViewBtnEl) toggleCompactViewBtnEl.classList.add('app-hidden');
-        if (asxCodeButtonsContainerEl) asxCodeButtonsContainerEl.classList.add('app-hidden');
-        if (targetHitIconBtnEl) targetHitIconBtnEl.classList.add('app-hidden');
-        stopLivePriceUpdates(); // Stop live price updates when in cash view
+    if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID)) {
+        sharesToRender = [...allSharesData];
+        // UPDATED: Main title for "All Shares"
+        mainTitle.textContent = 'All Shares'; 
+        logDebug('Render: Displaying all shares (from ALL_SHARES_ID in currentSelectedWatchlistIds).');
+    } else if (currentSelectedWatchlistIds.length === 0 && userWatchlists.length > 0) {
+        currentSelectedWatchlistIds = [userWatchlists[0].id];
+        sharesToRender = allSharesData.filter(share => currentSelectedWatchlistIds.includes(share.watchlistId));
+        mainTitle.textContent = userWatchlists[0].name;
+        logDebug('Render: No specific watchlists selected, defaulting to first watchlist.');
+    } else if (currentSelectedWatchlistIds.length > 0) {
+        sharesToRender = allSharesData.filter(share => currentSelectedWatchlistIds.includes(share.watchlistId));
+        const selectedNames = currentSelectedWatchlistIds.map(id => {
+            const wl = userWatchlists.find(w => w.id === id);
+            return wl ? wl.name : 'Unknown Watchlist';
+        });
+        if (selectedNames.length === 1) {
+            mainTitle.textContent = selectedNames[0];
+        } else if (selectedNames.length > 1) {
+            mainTitle.textContent = 'Multiple Watchlists Selected';
+        } else {
+            mainTitle.textContent = 'No Watchlists Selected';
+        }
+        logDebug('Render: Displaying shares from watchlists: ' + selectedNames.join(', '));
     } else {
-        // Show Stock Watchlist section by setting display to block
-        if (stockWatchlistSectionEl) stockWatchlistSectionEl.style.display = 'block';
-        // Update main title
-        if (mainTitleEl) {
-            const selectedWatchlist = userWatchlists.find(wl => wl.id === selectedWatchlistId);
-            if (selectedWatchlistId === ALL_SHARES_ID) {
-                mainTitleEl.textContent = 'All Shares';
-            } else if (selectedWatchlist) {
-                mainTitleEl.textContent = selectedWatchlist.name;
-            } else {
-                mainTitleEl.textContent = 'Share Watchlist'; // Fallback
-            }
-        }
-
-        // Show stock-specific UI elements, if they exist
-        if (addShareHeaderBtnEl) addShareHeaderBtnEl.classList.remove('app-hidden');
-        if (sortSelectEl) sortSelectEl.classList.remove('app-hidden');
-        if (refreshLivePricesBtnEl) refreshLivePricesBtnEl.classList.remove('app-hidden');
-        if (toggleCompactViewBtnEl) toggleCompactViewBtnEl.classList.remove('app-hidden');
-        if (asxCodeButtonsContainerEl) asxCodeButtonsContainerEl.classList.remove('app-hidden');
-        if (targetHitIconBtnEl) targetHitIconBtnEl.classList.remove('app-hidden');
-        startLivePriceUpdates(); // Ensure live price updates are running
-
-        let sharesToRender = [];
-        if (selectedWatchlistId === ALL_SHARES_ID) {
-            sharesToRender = [...allSharesData];
-            logDebug('Render: Displaying all shares (from ALL_SHARES_ID in currentSelectedWatchlistIds).');
-        } else if (currentSelectedWatchlistIds.length === 1) {
-            sharesToRender = allSharesData.filter(share => currentSelectedWatchlistIds.includes(share.watchlistId));
-            logDebug('Render: Displaying shares from watchlist: ' + selectedWatchlistId);
-        } else {
-            logDebug('Render: No specific stock watchlists selected or multiple selected, showing empty state.');
-        }
-
-        // Add shares to display elements BEFORE deciding which container to show/hide
-        if (sharesToRender.length > 0) {
-            sharesToRender.forEach((share) => {
-                addShareToTable(share);
-                addShareToMobileCards(share);
-            });
-        }
-
-        // Now, decide whether to show the table or mobile cards
-        if (window.matchMedia('(max-width: 768px)').matches) {
-            // On mobile, show mobile cards and hide table
-            if (mobileShareCardsContainerEl) mobileShareCardsContainerEl.style.display = 'flex';
-            if (shareTableBodyEl) shareTableBodyEl.closest('table').style.display = 'none';
-        } else {
-            // On desktop, show table and hide mobile cards
-            if (mobileShareCardsContainerEl) mobileShareCardsContainerEl.style.display = 'none';
-            if (shareTableBodyEl) shareTableBodyEl.closest('table').style.display = 'table';
-        }
-
-        // If no shares, display empty message
-        if (sharesToRender.length === 0) {
-            const emptyWatchlistMessage = document.createElement('p');
-            emptyWatchlistMessage.textContent = 'No shares found for the selected watchlists. Add a new share to get started!';
-            emptyWatchlistMessage.style.textAlign = 'center';
-            emptyWatchlistMessage.style.padding = '20px';
-            emptyWatchlistMessage.style.color = 'var(--ghosted-text)';
-            if (shareTableBodyEl) {
-                const td = document.createElement('td');
-                td.colSpan = 5;
-                td.appendChild(emptyWatchlistMessage);
-                const tr = document.createElement('tr');
-                tr.appendChild(td);
-                shareTableBodyEl.appendChild(tr);
-            }
-            if (mobileShareCardsContainerEl) {
-                mobileShareCardsContainerEl.appendChild(emptyWatchlistMessage.cloneNode(true));
-            }
-        }
-
-        if (selectedShareDocId) {
-            const stillExists = sharesToRender.some(share => share.id === selectedShareDocId);
-            if (stillExists) {
-                selectShare(selectedShareDocId);
-            } else {
-                deselectCurrentShare();
-            }
-        }
-        logDebug('Render: Stock watchlist rendering complete.');
-        updateTargetHitBanner();
-        renderAsxCodeButtons();
+        mainTitle.textContent = 'Share Watchlist';
+        logDebug('Render: No watchlists available for display.');
     }
-    adjustMainContentPadding();
+
+    // Apply or remove the 'compact-view' class from the mobileShareCardsContainer
+    if (mobileShareCardsContainer) {
+        if (currentMobileViewMode === 'compact') {
+            mobileShareCardsContainer.classList.add('compact-view');
+        } else {
+            mobileShareCardsContainer.classList.remove('compact-view');
+        }
+    }
+
+    // NEW: Hide/Show ASX code buttons based on currentMobileViewMode
+    if (asxCodeButtonsContainer) {
+        if (currentMobileViewMode === 'compact') {
+            asxCodeButtonsContainer.style.display = 'none';
+            logDebug('UI: Hiding ASX code buttons in compact view.');
+        } else {
+            asxCodeButtonsContainer.style.display = 'flex'; // Or whatever its default display is
+            logDebug('UI: Showing ASX code buttons in default view.');
+        }
+    }
+
+
+    if (sharesToRender.length === 0) {
+        const emptyWatchlistMessage = document.createElement('p');
+        emptyWatchlistMessage.textContent = 'No shares found for the selected watchlists. Add a new share to get started!';
+        emptyWatchlistMessage.style.textAlign = 'center';
+        emptyWatchlistMessage.style.padding = '20px';
+        emptyWatchlistMessage.style.color = 'var(--ghosted-text)';
+        const td = document.createElement('td');
+        td.colSpan = 5; // Updated colspan to 5 as Comments column is removed
+        td.appendChild(emptyWatchlistMessage);
+        const tr = document.createElement('tr');
+        tr.appendChild(td);
+        shareTableBody.appendChild(tr);
+        mobileShareCardsContainer.appendChild(emptyWatchlistMessage.cloneNode(true));
+    }
+
+    sharesToRender.forEach((share) => {
+        addShareToTable(share);
+        addShareToMobileCards(share); 
+    });
+    if (selectedShareDocId) {
+         const stillExists = sharesToRender.some(share => share.id === selectedShareDocId);
+         if (stillExists) {
+            selectShare(selectedShareDocId);
+         } else {
+            deselectCurrentShare();
+         }
+    }
+    logDebug('Render: Watchlist rendering complete.');
+    updateTargetHitBanner(); // NEW: Update the banner after rendering the watchlist
+    renderAsxCodeButtons(); // Ensure ASX buttons are rendered after watchlist content
 }
 
 function renderAsxCodeButtons() {
@@ -2056,25 +1880,13 @@ async function loadUserWatchlistsAndSettings() {
         querySnapshot.forEach(doc => { userWatchlists.push({ id: doc.id, name: doc.data().name }); });
         logDebug('User Settings: Found ' + userWatchlists.length + ' existing watchlists.');
 
-        // Ensure "Cash & Assets" is always an option in `userWatchlists` for internal logic
-        // It's already hardcoded in HTML, but this ensures it's in our JS array for consistency.
-        if (!userWatchlists.some(wl => wl.id === CASH_BANK_WATCHLIST_ID)) {
-            userWatchlists.push({ id: CASH_BANK_WATCHLIST_ID, name: 'Cash & Assets' }); // UPDATED TEXT
-            logDebug('User Settings: Added "Cash & Assets" to internal watchlists array.');
-        }
-
         if (userWatchlists.length === 0) {
             const defaultWatchlistRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/watchlists/' + getDefaultWatchlistId(currentUserId));
             await window.firestore.setDoc(defaultWatchlistRef, { name: DEFAULT_WATCHLIST_NAME, createdAt: new Date().toISOString() });
             userWatchlists.push({ id: getDefaultWatchlistId(currentUserId), name: DEFAULT_WATCHLIST_NAME });
             logDebug('User Settings: Created default watchlist.');
         }
-        // Sort only the user-defined watchlists, keep Cash & Assets at the bottom or handle its fixed position
-        userWatchlists.sort((a, b) => {
-            if (a.id === CASH_BANK_WATCHLIST_ID) return 1; // Push Cash & Assets to end
-            if (b.id === CASH_BANK_WATCHLIST_ID) return -1; // Push Cash & Assets to end
-            return a.name.localeCompare(b.name);
-        });
+        userWatchlists.sort((a, b) => a.name.localeCompare(b.name));
 
         const userProfileSnap = await window.firestore.getDoc(userProfileDocRef);
         savedSortOrder = null;
@@ -2088,53 +1900,21 @@ async function loadUserWatchlistsAndSettings() {
             logDebug('User Settings: Found saved sort order in profile: ' + savedSortOrder);
             logDebug('User Settings: Found saved theme in profile: ' + savedTheme);
         }
-        // NEW: Load cash asset visibility state
-                cashAssetVisibility = userProfileSnap.data().cashAssetVisibility || {};
-                logDebug('User Settings: Found saved cash asset visibility: ', cashAssetVisibility);
 
         if (currentSelectedWatchlistIds && Array.isArray(currentSelectedWatchlistIds) && currentSelectedWatchlistIds.length > 0) {
             currentSelectedWatchlistIds = currentSelectedWatchlistIds.filter(id => 
-                id === ALL_SHARES_ID || id === CASH_BANK_WATCHLIST_ID || userWatchlists.some(wl => wl.id === id)
+                id === ALL_SHARES_ID || userWatchlists.some(wl => wl.id === id)
             );
-
-            // NEW LOGIC START: Prioritize a stock watchlist if Cash & Assets is the default on login (1)
-            // Get all actual stock watchlists (excluding ALL_SHARES_ID as it's a view, not a user-created watchlist data record)
-            const actualStockWatchlists = userWatchlists.filter(wl => wl.id !== ALL_SHARES_ID && wl.id !== CASH_BANK_WATCHLIST_ID);
-
-            if (currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID) && actualStockWatchlists.length > 0) {
-                // If saved preference is Cash & Assets, but stock watchlists exist,
-                // switch to 'All Shares' or the first stock watchlist for initial display.
-                currentSelectedWatchlistIds = [ALL_SHARES_ID]; // Default to 'All Shares' view
-                logDebug('User Settings: Saved preference was Cash & Assets, but stock watchlists exist. Defaulting to "All Shares" for initial view.');
-            } else if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID) && actualStockWatchlists.length === 0) {
-                 // If "All Shares" is selected but no actual stock watchlists exist, default to Cash & Assets
-                 currentSelectedWatchlistIds = [CASH_BANK_WATCHLIST_ID];
-                 logDebug('User Settings: Only Cash & Assets watchlist exists, defaulting to it.');
+            if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID) && userWatchlists.length === 0) {
+                 currentSelectedWatchlistIds = [];
             }
-            // NEW LOGIC END
-            
-            // If no valid watchlists are selected after filtering (e.g., deleted), default to first available
             if (currentSelectedWatchlistIds.length === 0) {
-                // Fallback: If after all logic, no valid selection, pick first non-cash watchlist or Cash&Assets if no others.
-                const firstNonCashWatchlist = userWatchlists.find(wl => wl.id !== CASH_BANK_WATCHLIST_ID);
-                if (firstNonCashWatchlist) {
-                     currentSelectedWatchlistIds = [firstNonCashWatchlist.id];
-                     console.warn('User Settings: No valid watchlist selection after filtering, defaulting to first non-cash watchlist.');
-                } else {
-                     currentSelectedWatchlistIds = [CASH_BANK_WATCHLIST_ID];
-                     console.warn('User Settings: No valid watchlist selection and no non-cash watchlists, defaulting to Cash & Assets.');
-                }
+                currentSelectedWatchlistIds = [userWatchlists[0].id];
+                console.warn('User Settings: Saved watchlist IDs were invalid or empty, defaulting to first watchlist.');
             }
         } else {
-            // Default to the first actual watchlist (which could be Cash & Assets if no others)
-            const firstNonCashWatchlist = userWatchlists.find(wl => wl.id !== CASH_BANK_WATCHLIST_ID);
-            if (firstNonCashWatchlist) {
-                 currentSelectedWatchlistIds = [firstNonCashWatchlist.id];
-                 logDebug('User Settings: No saved watchlist preference, defaulting to first non-cash watchlist: ' + firstNonCashWatchlist.name);
-            } else {
-                 currentSelectedWatchlistIds = [CASH_BANK_WATCHLIST_ID];
-                 logDebug('User Settings: No saved watchlist preference and no non-cash watchlists, defaulting to Cash & Assets: ' + userWatchlists[0].name);
-            }
+            currentSelectedWatchlistIds = [userWatchlists[0].id];
+            logDebug('User Settings: No saved watchlist preference, defaulting to first watchlist.');
         }
 
         renderWatchlistSelect();
@@ -2171,14 +1951,8 @@ async function loadUserWatchlistsAndSettings() {
         const migratedSomething = await migrateOldSharesToWatchlist();
         if (!migratedSomething) {
             logDebug('Migration: No old shares to migrate/update, directly setting up shares listener for current watchlist.');
+            await loadShares(); // This now sets _appDataLoaded and calls hideSplashScreenIfReady
         }
-        
-        // Load shares listener and cash categories listener once here
-        await loadShares(); // Sets up the listener for shares
-        await loadCashCategories(); // Sets up the listener for cash categories
-
-        // Initial render based on selected watchlist (stock or cash)
-        renderWatchlist(); // This will now correctly display based on the initial currentSelectedWatchlistIds
 
         // NEW: Indicate that data loading is complete for splash screen
         window._appDataLoaded = true;
@@ -2199,22 +1973,14 @@ async function loadUserWatchlistsAndSettings() {
  * Updates the `livePrices` global object.
  */
 async function fetchLivePrices() {
-    console.log('Live Price: Attempting to fetch live prices...');
-    // Only fetch live prices if a stock-related watchlist is selected
-    if (currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
-        console.log('Live Price: Skipping live price fetch because "Cash & Assets" is selected.'); // UPDATED TEXT
-        window._livePricesLoaded = true; // Mark as loaded even if skipped for splash screen
-        hideSplashScreenIfReady();
-        return;
-    }
-
+    logDebug('Live Price: Attempting to fetch live prices...');
     try {
         const response = await fetch(GOOGLE_APPS_SCRIPT_URL); 
         if (!response.ok) {
             throw new Error('HTTP error! status: ' + response.status);
         }
         const data = await response.json();
-        console.log('Live Price: Raw data received:', data); 
+        logDebug('Live Price: Raw data received:', data); 
 
         const newLivePrices = {};
         data.forEach(item => {
@@ -2236,7 +2002,7 @@ async function fetchLivePrices() {
                 const isTargetHit = (targetPrice !== undefined && livePrice <= targetPrice);
 
                 // Debugging log:
-                console.log('Target Price Debug: Share: ' + asxCode + ', Live: ' + livePrice + ', Target: ' + targetPrice + ', Is Target Hit: ' + isTargetHit); 
+                logDebug('Target Price Debug: Share: ' + asxCode + ', Live: ' + livePrice + ', Target: ' + targetPrice + ', Is Target Hit: ' + isTargetHit); 
 
 
                 newLivePrices[asxCode] = {
@@ -2252,15 +2018,14 @@ async function fetchLivePrices() {
             }
         });
         livePrices = newLivePrices;
-        console.log('Live Price: Live prices updated:', livePrices); 
-        
-        // renderWatchlist is called from the onSnapshot for shares, which will then trigger this.
-        // We need to ensure adjustMainContentPadding is called here as well, as per user's instruction.
+        logDebug('Live Price: Live prices updated:', livePrices); 
+        renderWatchlist(); 
         adjustMainContentPadding(); 
-        
         // NEW: Indicate that live prices are loaded for splash screen
         window._livePricesLoaded = true;
         hideSplashScreenIfReady();
+        
+        // REMOVED: targetHitIconDismissed = false; // This line is removed as per user's request for session-long dismissal
         
         updateTargetHitBanner(); // Explicitly update banner after prices are fresh
     } catch (error) {
@@ -2278,14 +2043,9 @@ function startLivePriceUpdates() {
         clearInterval(livePriceFetchInterval);
         logDebug('Live Price: Cleared existing live price interval.');
     }
-    // Only start fetching if not in cash view
-    if (!currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
-        fetchLivePrices(); 
-        livePriceFetchInterval = setInterval(fetchLivePrices, LIVE_PRICE_FETCH_INTERVAL_MS);
-        logDebug('Live Price: Started live price updates every ' + (LIVE_PRICE_FETCH_INTERVAL_MS / 1000 / 60) + ' minutes.');
-    } else {
-        logDebug('Live Price: Not starting live price updates because "Cash & Assets" is selected.'); // UPDATED TEXT
-    }
+    fetchLivePrices(); 
+    livePriceFetchInterval = setInterval(fetchLivePrices, LIVE_PRICE_FETCH_INTERVAL_MS);
+    logDebug('Live Price: Started live price updates every ' + (LIVE_PRICE_FETCH_INTERVAL_MS / 1000 / 60) + ' minutes.');
 }
 
 /**
@@ -2316,32 +2076,88 @@ function updateTargetHitBanner() {
         return;
     }
 
-    // Only show if there are shares at target AND the icon hasn't been manually dismissed AND we are in a stock view
-    if (sharesAtTargetPrice.length > 0 && !targetHitIconDismissed && !currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
+    // Only show if there are shares at target AND the icon hasn't been manually dismissed
+    if (sharesAtTargetPrice.length > 0 && !targetHitIconDismissed) {
         targetHitIconCount.textContent = sharesAtTargetPrice.length;
-        targetHitIconBtn.classList.remove('app-hidden'); // Show the icon
-        targetHitIconBtn.style.display = 'flex'; // Ensure it's flex for icon + counter
+        targetHitIconBtn.style.display = 'flex'; // Show the icon
         targetHitIconCount.style.display = 'block'; // Show the count badge
         logDebug('Target Alert: Showing icon: ' + sharesAtTargetPrice.length + ' shares hit target (watchlist-specific check).');
     } else {
-        targetHitIconBtn.classList.add('app-hidden'); // Hide the icon
-        targetHitIconBtn.style.display = 'none'; // Ensure it's hidden
+        targetHitIconBtn.style.display = 'none'; // Hide the icon
         targetHitIconCount.style.display = 'none'; // Hide the count badge
-        logDebug('Target Alert: No shares hit target in current view or icon is dismissed or in cash view. Hiding icon.');
+        logDebug('Target Alert: No shares hit target in current view or icon is dismissed. Hiding icon.');
     }
 }
 
 // NEW: Function to render alerts in the alert panel (currently empty, but planned for future)
 function renderAlertsInPanel() {
-    // alertList and closeAlertPanelBtn, clearAllAlertsBtn are currently not in index.html, so this function is a placeholder
-    // If you add the alert panel back, ensure these elements exist.
-    if (!alertPanel) {
-        console.warn('Alert Panel: Alert panel elements not found. Skipping renderAlertsInPanel.');
+    if (!alertList) {
+        console.error('Alert Panel: Alert list element not found.');
         return;
     }
 
-    // Placeholder for alert rendering logic if you re-introduce the alert panel
-    logDebug('Alert Panel: Rendering alerts in panel (placeholder).');
+    alertList.innerHTML = ''; // Clear existing alerts
+
+    if (sharesAtTargetPrice.length === 0) {
+        const noAlertsMessage = document.createElement('p');
+        noAlertsMessage.classList.add('no-alerts-message');
+        noAlertsMessage.textContent = 'No active alerts.';
+        alertList.appendChild(noAlertsMessage);
+        return;
+    }
+
+    sharesAtTargetPrice.forEach(share => {
+        const livePriceData = livePrices[share.shareName.toUpperCase()];
+        const livePrice = livePriceData ? livePriceData.live : 'N/A';
+        const targetPrice = share.targetPrice !== null && !isNaN(parseFloat(share.targetPrice)) ? parseFloat(share.targetPrice) : 'N/A';
+
+        const alertItem = document.createElement('div');
+        alertItem.classList.add('alert-item');
+        alertItem.dataset.shareId = share.id; // Store share ID for future actions
+
+        alertItem.innerHTML = `
+            <div class="alert-item-header">
+                <span><strong>${share.shareName.toUpperCase()}</strong></span>
+                <span class="price-info">Live: $${typeof livePrice === 'number' ? livePrice.toFixed(2) : livePrice} | Target: $${typeof targetPrice === 'number' ? targetPrice.toFixed(2) : targetPrice}</span>
+            </div>
+            <div class="alert-item-body">
+                <p>${share.shareName.toUpperCase()} has reached its target price!</p>
+            </div>
+            <div class="alert-item-actions">
+                <button class="dismiss-btn">Dismiss</button>
+                <button class="snooze-btn">Snooze</button>
+            </div>
+        `;
+        alertList.appendChild(alertItem);
+
+        // Add event listeners for dismiss and snooze buttons (future implementation)
+        const dismissBtn = alertItem.querySelector('.dismiss-btn');
+        const snoozeBtn = alertItem.querySelector('.snooze-btn');
+
+        if (dismissBtn) {
+            dismissBtn.addEventListener('click', () => {
+                logDebug('Alert Panel: Dismiss button clicked for share: ' + share.shareName);
+                // Future: Implement logic to dismiss individual alert (e.g., add to a temporary dismissed list)
+                alertItem.remove(); // For now, just remove from display
+                if (alertList.children.length === 0) {
+                    const noAlertsMessage = document.createElement('p');
+                    noAlertsMessage.classList.add('no-alerts-message');
+                    noAlertsMessage.textContent = 'No active alerts.';
+                    alertList.appendChild(noAlertsMessage);
+                }
+                updateTargetHitBanner(); // Update the main icon count
+            });
+        }
+
+        if (snoozeBtn) {
+            snoozeBtn.addEventListener('click', () => {
+                logDebug('Alert Panel: Snooze button clicked for share: ' + share.shareName);
+                // Future: Implement snooze options and logic
+                showCustomAlert('Snooze functionality coming soon!', 1500);
+            });
+        }
+    });
+    logDebug('Alert Panel: Alerts rendered in panel.');
 }
 
 
@@ -2386,11 +2202,9 @@ function hideSplashScreen() {
         // Show main app content
         if (mainContainer) {
             mainContainer.classList.remove('app-hidden');
-            mainContainer.style.display = 'block'; // Explicitly set to block
         }
         if (appHeader) { // Assuming header is part of the main app content that needs to be revealed
             appHeader.classList.remove('app-hidden');
-            appHeader.style.display = 'block'; // Explicitly set to block
         }
         // Temporarily remove overflow hidden from body
         document.body.style.overflow = ''; 
@@ -2423,8 +2237,8 @@ function hideSplashScreenIfReady() {
 }
 
 /**
- * Sets up a real-time Firestore listener for shares.
- * Updates `allSharesData` and triggers UI re-render via `renderWatchlist` (indirectly through `fetchLivePrices` or `sortShares`).
+ * Sets up a real-time Firestore listener for shares based on currentSelectedWatchlistIds.
+ * Updates `allSharesData` and re-renders the UI whenever changes occur.
  */
 async function loadShares() {
     if (unsubscribeShares) {
@@ -2435,18 +2249,39 @@ async function loadShares() {
 
     if (!db || !currentUserId || !window.firestore) {
         console.warn('Shares: Firestore DB, User ID, or Firestore functions not available for loading shares. Clearing list.');
-        allSharesData = []; // Clear data if services aren't available
-        // renderWatchlist(); // No need to call here, onAuthStateChanged will handle initial render
+        clearShareList();
+        // NEW: Indicate data loading failure for splash screen
         window._appDataLoaded = false;
-        hideSplashScreen(); 
+        hideSplashScreen(); // Hide splash screen on critical failure
         return;
     }
+    if (loadingIndicator) loadingIndicator.style.display = 'block';
     
     try {
         const sharesCol = window.firestore.collection(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/shares');
-        let q = window.firestore.query(sharesCol); // Listener for all shares, filtering for display done in renderWatchlist
+        let q;
 
-        unsubscribeShares = window.firestore.onSnapshot(q, async (querySnapshot) => { 
+        let effectiveWatchlistId = null;
+        if (watchlistSelect && watchlistSelect.value && watchlistSelect.value !== '') {
+            effectiveWatchlistId = watchlistSelect.value;
+        } else if (currentSelectedWatchlistIds.length > 0 && currentSelectedWatchlistIds[0] !== ALL_SHARES_ID) {
+            effectiveWatchlistId = currentSelectedWatchlistIds[0];
+        } else if (userWatchlists.length > 0) {
+            effectiveWatchlistId = userWatchlists[0].id;
+        }
+
+        if (effectiveWatchlistId === ALL_SHARES_ID) {
+            q = window.firestore.query(sharesCol);
+            logDebug('Shares: Setting up real-time listener for ALL shares for user: ' + currentUserId);
+        } else if (effectiveWatchlistId) {
+            q = window.firestore.query(sharesCol, window.firestore.where('watchlistId', '==', effectiveWatchlistId));
+            logDebug('Shares: Setting up real-time listener for shares in watchlist: ' + effectiveWatchlistId);
+        } else {
+            q = window.firestore.query(sharesCol, window.firestore.where('watchlistId', '==', 'NO_WATCHLIST_ID_EXISTS'));
+            console.warn('Shares: No effective watchlist selected or available. Querying for non-existent ID to get empty results.');
+        }
+        
+        unsubscribeShares = window.firestore.onSnapshot(q, async (querySnapshot) => { // ADD 'async' here
             logDebug('Firestore Listener: Shares snapshot received. Processing changes.');
             let fetchedShares = [];
             querySnapshot.forEach((doc) => {
@@ -2457,550 +2292,36 @@ async function loadShares() {
             allSharesData = fetchedShares;
             logDebug('Shares: Shares data updated from snapshot. Total shares: ' + allSharesData.length);
             
-            sortShares(); // Sorts allSharesData and calls renderWatchlist
-            renderAsxCodeButtons(); // Re-renders ASX buttons based on allSharesData
-            
-            // REMOVED this line as it's now handled by the fetchLivePrices() call in onAuthStateChanged
-            // await fetchLivePrices(); 
+            sortShares();
+            renderAsxCodeButtons();
             
             if (loadingIndicator) loadingIndicator.style.display = 'none';
+            // NEW: Indicate that app data is loaded for splash screen
             window._appDataLoaded = true;
             hideSplashScreenIfReady();
+
+            // NEW: After allSharesData is updated, re-fetch live prices and update banner
+            await fetchLivePrices(); // Ensure live prices are fresh for all shares
+            // updateTargetHitBanner() and renderWatchlist() are called by fetchLivePrices() now.
+            logDebug('Target Alert: Banner updated after shares data change.');
 
         }, (error) => {
             console.error('Firestore Listener: Error listening to shares:', error);
             showCustomAlert('Error loading shares in real-time: ' + error.message);
             if (loadingIndicator) loadingIndicator.style.display = 'none';
+            // NEW: Indicate data loading failure for splash screen
             window._appDataLoaded = false;
-            hideSplashScreen(); 
+            hideSplashScreen(); // Hide splash screen on critical failure
         });
 
     } catch (error) {
         console.error('Shares: Error setting up shares listener:', error);
         showCustomAlert('Error setting up real-time share updates: ' + error.message);
         if (loadingIndicator) loadingIndicator.style.display = 'none';
+        // NEW: Indicate data loading failure for splash screen
         window._appDataLoaded = false;
-        hideSplashScreen(); 
+        hideSplashScreen(); // Hide splash screen on critical failure
     }
-}
-
-// NEW: Cash & Assets Functions (3.1)
-
-/**
- * Sets up a real-time Firestore listener for cash categories.
- * Updates `userCashCategories` and triggers UI re-render via `renderWatchlist`.
- */
-async function loadCashCategories() {
-    if (unsubscribeCashCategories) {
-        unsubscribeCashCategories();
-        unsubscribeCashCategories = null;
-        logDebug('Firestore Listener: Unsubscribed from previous cash categories listener.');
-    }
-
-    if (!db || !currentUserId || !window.firestore) {
-        console.warn('Cash Categories: Firestore DB, User ID, or Firestore functions not available for loading cash categories. Clearing list.');
-        userCashCategories = [];
-        renderCashCategories(); // Render with empty data
-        return;
-    }
-
-    try {
-        const cashCategoriesCol = window.firestore.collection(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/cashCategories');
-        const q = window.firestore.query(cashCategoriesCol);
-
-        unsubscribeCashCategories = window.firestore.onSnapshot(q, (querySnapshot) => {
-            logDebug('Firestore Listener: Cash categories snapshot received. Processing changes.');
-            let fetchedCategories = [];
-            querySnapshot.forEach((doc) => {
-                const category = { id: doc.id, ...doc.data() };
-                fetchedCategories.push(category);
-            });
-
-            userCashCategories = fetchedCategories.sort((a, b) => a.name.localeCompare(b.name));
-            logDebug('Cash Categories: Data updated from snapshot. Total categories: ' + userCashCategories.length);
-            
-            // Trigger a re-render of the overall watchlist, which will then call renderCashCategories if needed
-            renderWatchlist(); 
-            calculateTotalCash(); // Ensure total is updated whenever categories change
-
-        }, (error) => {
-            console.error('Firestore Listener: Error listening to cash categories:', error);
-            showCustomAlert('Error loading cash categories in real-time: ' + error.message);
-        });
-
-    } catch (error) {
-        console.error('Cash Categories: Error setting up cash categories listener:', error);
-        showCustomAlert('Error setting up real-time cash category updates: ' + error.message);
-    }
-}
-
-/**
- * Renders the cash categories in the UI. (1)
- */
-function renderCashCategories() {
-    if (!cashCategoriesContainer) {
-        console.error('renderCashCategories: cashCategoriesContainer element not found.');
-        return;
-    }
-    cashCategoriesContainer.innerHTML = ''; // Clear existing content
-
-    if (userCashCategories.length === 0) {
-        const emptyMessage = document.createElement('p');
-        emptyMessage.classList.add('empty-message');
-        emptyMessage.textContent = 'No cash categories added yet. Click "Add Category" to get started!';
-        cashCategoriesContainer.appendChild(emptyMessage);
-        return;
-    }
-
-    userCashCategories.forEach(category => {
-        const categoryItem = document.createElement('div');
-        categoryItem.classList.add('cash-category-item');
-        categoryItem.dataset.id = category.id;
-        // Apply hidden class if asset is marked as hidden (new feature)
-        if (cashAssetVisibility[category.id] === false) {
-            categoryItem.classList.add('hidden');
-        }
-
-        // Header for name and icons (3.1)
-        const categoryHeader = document.createElement('div');
-        categoryHeader.classList.add('category-header');
-
-        const nameDisplay = document.createElement('span'); // Use span for display
-        nameDisplay.classList.add('category-name-display');
-        nameDisplay.textContent = category.name || 'Unnamed Asset';
-        categoryHeader.appendChild(nameDisplay);
-
-        const actionsContainer = document.createElement('div');
-        actionsContainer.classList.add('category-actions');
-
-        // NEW: Hide/Show Toggle Button (New Feature)
-        const hideToggleButton = document.createElement('button');
-        hideToggleButton.classList.add('hide-toggle-btn');
-        hideToggleButton.innerHTML = cashAssetVisibility[category.id] === false ? '<i class="fas fa-eye-slash"></i>' : '<i class="fas fa-eye"></i>';
-        hideToggleButton.title = cashAssetVisibility[category.id] === false ? 'Show Asset' : 'Hide Asset';
-        if (cashAssetVisibility[category.id] === false) {
-            hideToggleButton.classList.add('hidden-icon');
-        }
-        hideToggleButton.addEventListener('click', (event) => {
-            event.stopPropagation(); // Prevent card click from triggering details
-            toggleCashAssetVisibility(category.id);
-        });
-        actionsContainer.appendChild(hideToggleButton);
-
-        // Edit and Delete buttons are now only in the modal, so they are not added here.
-
-        categoryHeader.appendChild(actionsContainer);
-        categoryItem.appendChild(categoryHeader);
-
-        // Balance Display (3.1)
-        const balanceDisplay = document.createElement('span');
-        balanceDisplay.classList.add('category-balance-display');
-        balanceDisplay.textContent = '$' + (Number(category.balance) !== null && !isNaN(Number(category.balance)) ? Number(category.balance).toFixed(2) : '0.00');
-        categoryItem.appendChild(balanceDisplay);
-
-        // Add click listener for details modal (2.2)
-        categoryItem.addEventListener('click', () => {
-            logDebug('Cash Categories: Card clicked for category ID: ' + category.id);
-            selectCashAsset(category.id);
-            showCashCategoryDetailsModal(category.id);
-        });
-
-        cashCategoriesContainer.appendChild(categoryItem);
-    });
-    logDebug('Cash Categories: UI rendered.');
-    calculateTotalCash(); // Calculate total after rendering
-}
-
-/**
- * Adds a new empty cash category to the UI and `userCashCategories` array.
- */
-function addCashCategoryUI() {
-    // This function is now primarily for triggering the modal for a new entry
-    logDebug('Cash Categories: Add new category UI triggered.');
-    clearCashAssetForm(); // Clear the form first
-    cashFormTitle.textContent = 'Add New Cash Asset'; // Set title for new asset
-    setIconDisabled(deleteCashAssetBtn, true); // Hide delete button for new asset
-    showModal(cashAssetFormModal);
-    cashAssetNameInput.focus();
-}
-
-/**
- * Saves all current cash categories and their balances to Firestore.
- * This function now saves from the UI inputs directly.
- */
-async function saveCashCategories() {
-    if (!db || !currentUserId || !window.firestore) {
-        showCustomAlert('Firestore not available. Cannot save cash balances.');
-        return;
-    }
-
-    // This function will now iterate through the currently rendered inputs to get data
-    const categoriesToSave = [];
-    const categoryElements = cashCategoriesContainer.querySelectorAll('.cash-category-item');
-    categoryElements.forEach(item => {
-        const id = item.dataset.id;
-        // When saving from the main view, the inputs are hidden.
-        // We get the data from the userCashCategories array directly which is updated by input listeners.
-        const categoryDataInArray = userCashCategories.find(cat => cat.id === id);
-
-        if (categoryDataInArray && categoryDataInArray.name.trim() !== '') { // Only save if name is not empty
-            categoriesToSave.push({
-                id: id.startsWith('new_') ? null : id, // Use null for new items so Firestore generates ID
-                name: categoryDataInArray.name.trim(),
-                balance: isNaN(categoryDataInArray.balance) ? 0 : categoryDataInArray.balance, // Default to 0 if balance is NaN
-                userId: currentUserId
-            });
-        }
-    });
-
-    // Validate category names before saving
-    if (categoriesToSave.some(cat => cat.name.trim() === '')) {
-        showCustomAlert('Category names cannot be empty.');
-        return;
-    }
-
-    const batch = window.firestore.writeBatch(db);
-    const cashCategoriesColRef = window.firestore.collection(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/cashCategories');
-
-    // Fetch current existing documents to determine what to update vs add
-    const existingDocsSnapshot = await window.firestore.getDocs(cashCategoriesColRef);
-    const existingDocIds = new Set();
-    existingDocsSnapshot.forEach(doc => {
-        existingDocIds.add(doc.id);
-    });
-
-    let categoriesProcessedCount = 0;
-
-    for (const category of categoriesToSave) {
-        if (category.id && existingDocIds.has(category.id)) {
-            // Update existing category
-            const docRef = window.firestore.doc(cashCategoriesColRef, category.id);
-            batch.update(docRef, { name: category.name, balance: category.balance });
-            logDebug('Firestore: Batching update for cash category: ' + category.name + ' (ID: ' + category.id + ')');
-            categoriesProcessedCount++;
-        } else {
-            // Add new category
-            const newDocRef = window.firestore.doc(cashCategoriesColRef); // Let Firestore generate ID
-            batch.set(newDocRef, { name: category.name, balance: category.balance, userId: category.userId, createdAt: new Date().toISOString() });
-            logDebug('Firestore: Batching new cash category: ' + category.name);
-            categoriesProcessedCount++;
-        }
-    }
-
-    // Delete categories that are in Firestore but no longer in the UI (if any were removed by delete button)
-    const currentUiIds = new Set(categoriesToSave.map(cat => cat.id).filter(id => id !== null)); // Get IDs of categories currently in UI
-    existingDocIds.forEach(existingId => {
-        if (!currentUiIds.has(existingId)) {
-            const docRef = window.firestore.doc(cashCategoriesColRef, existingId);
-            batch.delete(docRef);
-            logDebug('Firestore: Batching deletion for cash category (not in UI): ' + existingId);
-            categoriesProcessedCount++;
-        }
-    });
-
-
-    try {
-        if (categoriesProcessedCount > 0) {
-            await batch.commit();
-            showCustomAlert('Cash balances saved successfully!', 1500);
-            logDebug('Firestore: Cash balances batch committed. ' + categoriesProcessedCount + ' categories processed.');
-        } else {
-            showCustomAlert('No changes to save for cash balances.', 1500);
-            logDebug('Firestore: No changes detected for cash balances. Skipping batch commit.');
-        }
-        // No need to call loadCashCategories() here, the onSnapshot listener will handle updates automatically
-    } catch (error) {
-        console.error('Firestore: Error saving cash categories:', error);
-        showCustomAlert('Error saving cash balances: ' + error.message);
-    }
-}
-
-/**
- * Deletes a specific cash category from Firestore.
- * @param {string} categoryId The ID of the category to delete.
- */
-async function deleteCashCategory(categoryId) {
-    if (!db || !currentUserId || !window.firestore) {
-        showCustomAlert('Firestore not available. Cannot delete cash category.');
-        return;
-    }
-
-    // NEW: Direct deletion without confirmation modal
-    try {
-        const categoryDocRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/cashCategories', categoryId);
-        await window.firestore.deleteDoc(categoryDocRef);
-        showCustomAlert('Category deleted successfully!', 1500);
-        logDebug('Firestore: Cash category (ID: ' + categoryId + ') deleted.');
-    } catch (error) {
-        console.error('Firestore: Error deleting cash category:', error);
-        showCustomAlert('Error deleting category: ' + error.message);
-    }
-}
-
-/**
- * Calculates and displays the total cash balance. (1)
- */
-function calculateTotalCash() {
-    let total = 0;
-    userCashCategories.forEach(category => {
-        // Only include visible assets in the total (New Feature)
-        if (cashAssetVisibility[category.id] !== false) { // If not explicitly hidden
-            if (typeof category.balance === 'number' && !isNaN(category.balance)) {
-                total += category.balance;
-            }
-        }
-    });
-    if (totalCashDisplay) {
-        totalCashDisplay.textContent = '$' + total.toFixed(2);
-    }
-    logDebug('Cash Categories: Total cash calculated: $' + total.toFixed(2));
-}
-
-// NEW: Cash Asset Form Modal Functions (2.1)
-function showAddEditCashCategoryModal(assetIdToEdit = null) {
-    clearCashAssetForm(); // Clear form for new entry or before populating for edit
-    selectedCashAssetDocId = assetIdToEdit;
-
-    if (assetIdToEdit) {
-        const assetToEdit = userCashCategories.find(asset => asset.id === assetIdToEdit);
-        if (!assetToEdit) {
-            showCustomAlert('Cash asset not found.');
-            return;
-        }
-        cashFormTitle.textContent = 'Edit Cash Asset';
-        cashAssetNameInput.value = assetToEdit.name || '';
-        cashAssetBalanceInput.value = Number(assetToEdit.balance) !== null && !isNaN(Number(assetToEdit.balance)) ? Number(assetToEdit.balance).toFixed(2) : '';
-        setIconDisabled(deleteCashAssetBtn, false); // Enable delete button for existing asset
-        originalCashAssetData = getCurrentCashAssetFormData(); // Store original data for dirty check
-        logDebug('Cash Form: Opened edit form for cash asset: ' + assetToEdit.name + ' (ID: ' + assetIdToEdit + ')');
-    } else {
-        cashFormTitle.textContent = 'Add New Cash Asset';
-        setIconDisabled(deleteCashAssetBtn, true); // Hide delete button for new asset
-        originalCashAssetData = null; // No original data for new asset
-        logDebug('Cash Form: Opened add new cash asset form.');
-    }
-    setIconDisabled(saveCashAssetBtn, true); // Save button disabled initially
-    showModal(cashAssetFormModal);
-    cashAssetNameInput.focus();
-    checkCashAssetFormDirtyState(); // Initial dirty state check
-}
-
-function clearCashAssetForm() {
-    if (cashAssetNameInput) cashAssetNameInput.value = '';
-    if (cashAssetBalanceInput) cashAssetBalanceInput.value = '';
-    selectedCashAssetDocId = null;
-    originalCashAssetData = null; // Reset original data
-    setIconDisabled(saveCashAssetBtn, true); // Disable save button
-    logDebug('Cash Form: Cash asset form cleared.');
-}
-
-function getCurrentCashAssetFormData() {
-    return {
-        name: cashAssetNameInput ? cashAssetNameInput.value.trim() : '',
-        balance: cashAssetBalanceInput ? parseFloat(cashAssetBalanceInput.value) : null
-    };
-}
-
-function areCashAssetDataEqual(data1, data2) {
-    if (!data1 || !data2) return false;
-    let balance1 = typeof data1.balance === 'number' && !isNaN(data1.balance) ? data1.balance : null;
-    let balance2 = typeof data2.balance === 'number' && !isNaN(data2.balance) ? data2.balance : null;
-    return data1.name === data2.name && balance1 === balance2;
-}
-
-function checkCashAssetFormDirtyState() {
-    const currentData = getCurrentCashAssetFormData();
-    const isNameValid = currentData.name.trim() !== '';
-    let canSave = isNameValid;
-
-    if (selectedCashAssetDocId && originalCashAssetData) {
-        const isDirty = !areCashAssetDataEqual(originalCashAssetData, currentData);
-        canSave = canSave && isDirty;
-        if (!isDirty) {
-            logDebug('Dirty State: Existing cash asset: No changes detected, save disabled.');
-        }
-    } else if (!selectedCashAssetDocId) {
-        // For new cash assets, enable if name is valid
-    }
-
-    setIconDisabled(saveCashAssetBtn, !canSave);
-    logDebug('Dirty State: Cash asset save button enabled: ' + canSave);
-}
-
-async function saveCashAsset(isSilent = false) {
-    logDebug('Cash Form: saveCashAsset called.');
-    if (saveCashAssetBtn.classList.contains('is-disabled-icon') && isSilent) {
-        logDebug('Auto-Save: Save button is disabled (no changes or no valid name). Skipping silent save.');
-        return;
-    }
-
-    const assetName = cashAssetNameInput.value.trim();
-    if (!assetName) {
-        if (!isSilent) showCustomAlert('Asset name is required!');
-        console.warn('Save Cash Asset: Asset name is required. Skipping save.');
-        return;
-    }
-
-    const assetBalance = parseFloat(cashAssetBalanceInput.value);
-    const cashAssetData = {
-        name: assetName,
-        balance: isNaN(assetBalance) ? 0 : assetBalance, // Default to 0 if NaN
-        userId: currentUserId,
-        lastUpdated: new Date().toISOString()
-    };
-
-    try {
-        if (selectedCashAssetDocId) {
-            const assetDocRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/cashCategories', selectedCashAssetDocId);
-            await window.firestore.updateDoc(assetDocRef, cashAssetData);
-            if (!isSilent) showCustomAlert('Cash asset \'' + assetName + '\' updated successfully!', 1500);
-            logDebug('Firestore: Cash asset \'' + assetName + '\' (ID: ' + selectedCashAssetDocId + ') updated.');
-        } else {
-            const cashCategoriesColRef = window.firestore.collection(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/cashCategories');
-            const newDocRef = await window.firestore.addDoc(cashCategoriesColRef, cashAssetData);
-            selectedCashAssetDocId = newDocRef.id; // Set selected ID for newly added
-            if (!isSilent) showCustomAlert('Cash asset \'' + assetName + '\' added successfully!', 1500);
-            logDebug('Firestore: Cash asset \'' + assetName + '\' added with ID: ' + newDocRef.id);
-        }
-        originalCashAssetData = getCurrentCashAssetFormData(); // Update original data after save
-        setIconDisabled(saveCashAssetBtn, true); // Disable save button after saving
-        if (!isSilent) closeModals();
-    } catch (error) {
-        console.error('Firestore: Error saving cash asset:', error);
-        if (!isSilent) showCustomAlert('Error saving cash asset: ' + error.message);
-    }
-}
-
-// NEW: Cash Asset Details Modal Functions (2.2)
-function showCashCategoryDetailsModal(assetId) {
-    if (!assetId) {
-        showCustomAlert('Please select a cash asset to view details.');
-        return;
-    }
-    const asset = userCashCategories.find(a => a.id === assetId);
-    if (!asset) {
-        showCustomAlert('Selected cash asset not found.');
-        return;
-    }
-    selectedCashAssetDocId = assetId; // Set for potential edit/delete from details modal
-
-    modalCashAssetName.textContent = asset.name || 'N/A';
-    detailCashAssetName.textContent = asset.name || 'N/A';
-    detailCashAssetBalance.textContent = '$' + (Number(asset.balance) !== null && !isNaN(Number(asset.balance)) ? Number(asset.balance).toFixed(2) : '0.00');
-    detailCashAssetLastUpdated.textContent = formatDate(asset.lastUpdated) || 'N/A';
-
-    showModal(cashAssetDetailModal);
-    logDebug('Details: Displayed details for cash asset: ' + asset.name + ' (ID: ' + assetId + ')');
-}
-
-// NEW: Function to toggle visibility of a cash asset (New Feature)
-async function toggleCashAssetVisibility(assetId) {
-    logDebug('Cash Asset Visibility: Toggling visibility for asset ID: ' + assetId);
-
-    // Determine the new state: if it's currently hidden (false), the new state is visible (true).
-    // Otherwise, the new state is hidden (false).
-    const currentState = cashAssetVisibility[assetId];
-    const newState = (currentState === false) ? true : false;
-    cashAssetVisibility[assetId] = newState; // Update local state immediately
-
-    // Persist the state to Firestore
-    if (db && currentUserId && window.firestore) {
-        const userProfileDocRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/profile/settings');
-        try {
-            const updateData = {};
-            if (newState === true) {
-                // If the asset is now visible, we remove its entry from cashAssetVisibility in Firestore
-                // because visible is the default and we don't need to explicitly store it.
-                updateData[`cashAssetVisibility.${assetId}`] = window.firestore.deleteField;
-            } else {
-                // If the asset is now hidden, we store 'false' in Firestore.
-                updateData[`cashAssetVisibility.${assetId}`] = newState;
-            }
-            await window.firestore.updateDoc(userProfileDocRef, updateData);
-            logDebug('Firestore: Saved cash asset visibility for ' + assetId + ': ' + newState);
-        } catch (error) {
-            console.error('Firestore: Error saving cash asset visibility:', error);
-            showCustomAlert('Error saving visibility preference: ' + error.message);
-        }
-    }
-
-    // Update the UI
-    const assetElement = cashCategoriesContainer.querySelector(`.cash-category-item[data-id="${assetId}"]`);
-    if (assetElement) {
-        // Apply or remove the 'hidden' class based on the new state
-        if (newState === false) { // If the asset is now hidden
-            assetElement.classList.add('hidden');
-            assetElement.querySelector('.hide-toggle-btn').innerHTML = '<i class="fas fa-eye-slash"></i>'; // Show eye-slash icon
-            assetElement.querySelector('.hide-toggle-btn').title = 'Show Asset';
-            assetElement.querySelector('.hide-toggle-btn').classList.add('hidden-icon');
-            logDebug('Cash Asset Visibility: Asset ' + assetId + ' is now HIDDEN.');
-        } else { // If the asset is now visible
-            assetElement.classList.remove('hidden');
-            assetElement.querySelector('.hide-toggle-btn').innerHTML = '<i class="fas fa-eye"></i>'; // Show eye icon
-            assetElement.querySelector('.hide-toggle-btn').title = 'Hide Asset';
-            assetElement.querySelector('.hide-toggle-btn').classList.remove('hidden-icon');
-            logDebug('Cash Asset Visibility: Asset ' + assetId + ' is now VISIBLE.');
-        }
-    }
-    // Recalculate total cash after visibility change
-    calculateTotalCash();
-}
-
-
-// Custom Confirm Dialog Function (Now unused for deletions, but kept for potential future use)
-function showCustomConfirm(message, callback) {
-    if (!customDialogModal || !customDialogMessage || !customDialogConfirmBtn || !customDialogCancelBtn) {
-        console.error('Custom dialog elements not found. Cannot show confirm.');
-        console.log('CONFIRM (fallback): ' + message);
-        callback(window.confirm(message)); // Fallback to native confirm
-        return;
-    }
-    customDialogMessage.textContent = message;
-    customDialogConfirmBtn.style.display = 'inline-flex'; // Show confirm
-    setIconDisabled(customDialogConfirmBtn, false);
-    customDialogCancelBtn.style.display = 'inline-flex'; // Show cancel
-    setIconDisabled(customDialogCancelBtn, false);
-
-    showModal(customDialogModal);
-
-    const onConfirm = () => {
-        hideModal(customDialogModal);
-        customDialogConfirmBtn.removeEventListener('click', onConfirm);
-        customDialogCancelBtn.removeEventListener('click', onCancel);
-        callback(true);
-        logDebug('Confirm: User confirmed.');
-    };
-
-    const onCancel = () => {
-        hideModal(customDialogModal);
-        customDialogConfirmBtn.removeEventListener('click', onConfirm);
-        customDialogCancelBtn.removeEventListener('click', onCancel);
-        callback(false);
-        logDebug('Confirm: User cancelled.');
-    };
-
-    customDialogConfirmBtn.addEventListener('click', onConfirm);
-    customDialogCancelBtn.addEventListener('click', onCancel);
-    logDebug('Confirm: Showing confirm: "' + message + '"');
-}
-
-/**
- * Updates the main title of the app based on the currently selected watchlist.
- */
-function updateMainTitle() {
-    if (!mainTitle || !watchlistSelect) return;
-
-    const selectedValue = watchlistSelect.value;
-    const selectedText = watchlistSelect.options[watchlistSelect.selectedIndex].textContent;
-
-    if (selectedValue === ALL_SHARES_ID) {
-        mainTitle.textContent = 'All Shares';
-    } else if (selectedValue === CASH_BANK_WATCHLIST_ID) {
-        mainTitle.textContent = 'Cash & Assets'; // UPDATED TEXT
-    } else {
-        mainTitle.textContent = selectedText;
-    }
-    logDebug('UI: Main title updated to: ' + mainTitle.textContent);
 }
 
 
@@ -3063,7 +2384,7 @@ async function migrateOldSharesToWatchlist() {
                 }
             });
             const effectiveCurrentPrice = (typeof updatePayload.currentPrice === 'number' && !isNaN(updatePayload.currentPrice)) ? updatePayload.currentPrice :
-                                           ((typeof shareData.currentPrice === 'string' ? parseFloat(shareData.currentPrice) : shareData.currentPrice) || null);
+                                          ((typeof shareData.currentPrice === 'string' ? parseFloat(shareData.currentPrice) : shareData.currentPrice) || null);
             if (!shareData.hasOwnProperty('lastFetchedPrice') || (typeof shareData.lastFetchedPrice === 'string' && isNaN(parseFloat(shareData.lastFetchedPrice)))) {
                 needsUpdate = true;
                 updatePayload.lastFetchedPrice = effectiveCurrentPrice;
@@ -3086,7 +2407,7 @@ async function migrateOldSharesToWatchlist() {
             for (const item of sharesToUpdate) { await window.firestore.updateDoc(item.ref, item.data); }
             showCustomAlert('Migrated/Updated ' + sharesToUpdate.length + ' old shares.', 2000);
             logDebug('Migration: Migration complete. Setting up shares listener.');
-            // No need to call loadShares here, the onSnapshot listener will handle updates automatically
+            await loadShares();
             anyMigrationPerformed = true;
         } else {
             logDebug('Migration: No old shares found requiring migration or schema update.');
@@ -3204,12 +2525,6 @@ function exportWatchlistToCSV() {
         return;
     }
     
-    // Do not export cash data via this function
-    if (currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
-        showCustomAlert('Cash & Assets data cannot be exported via this function. Please switch to a stock watchlist.', 3000); // UPDATED TEXT
-        return;
-    }
-
     let sharesToExport = [];
     let exportFileNamePrefix = 'selected_watchlists';
 
@@ -3224,7 +2539,6 @@ function exportWatchlistToCSV() {
             if (wl) { exportFileNamePrefix = wl.name; }
         }
     } else {
-        // If multiple stock watchlists are selected, export all shares
         sharesToExport = [...allSharesData];
         exportFileNamePrefix = 'all_shares';
     }
@@ -3413,32 +2727,17 @@ async function initializeAppLogic() {
     // DEBUG: Log when initializeAppLogic starts
     logDebug('initializeAppLogic: Firebase is ready. Starting app logic.');
 
-    // Initial modal hiding (main app content and header handled by splash screen logic)
-    if (shareFormSection) shareFormSection.style.display = 'none';
-    if (dividendCalculatorModal) dividendCalculatorModal.style.display = 'none';
-    if (shareDetailModal) shareDetailModal.style.display = 'none';
-    if (addWatchlistModal) addWatchlistModal.style.display = 'none';
-    if (manageWatchlistModal) manageWatchlistModal.style.display = 'none';
-    if (customDialogModal) customDialogModal.style.display = 'none';
-    if (calculatorModal) calculatorModal.style.display = 'none';
-    if (shareContextMenu) shareContextMenu.style.display = 'none';
-    if (targetHitIconBtn) targetHitIconBtn.style.display = 'none';
-    if (alertPanel) alertPanel.style.display = 'none';
-    if (cashAssetFormModal) cashAssetFormModal.style.display = 'none';
-    if (cashAssetDetailModal) cashAssetDetailModal.style.display = 'none';
-
-// Show main app content and header here, ensuring they are visible
-        if (mainContainer) {
-            mainContainer.classList.remove('app-hidden'); // Remove the class if present
-            mainContainer.style.display = 'block'; // Explicitly set display to block
-        }
-        if (appHeader) {
-            appHeader.classList.remove('app-hidden'); // Remove the class if present
-            appHeader.style.display = 'block'; // Explicitly set display to block
-        }
-        // Adjust padding immediately after showing header
-        adjustMainContentPadding();
-
+    // Initial modal hiding
+    if (shareFormSection) shareFormSection.style.setProperty('display', 'none', 'important');
+    if (dividendCalculatorModal) dividendCalculatorModal.style.setProperty('display', 'none', 'important');
+    if (shareDetailModal) shareDetailModal.style.setProperty('display', 'none', 'important');
+    if (addWatchlistModal) addWatchlistModal.style.setProperty('display', 'none', 'important');
+    if (manageWatchlistModal) manageWatchlistModal.style.setProperty('display', 'none', 'important');
+    if (customDialogModal) customDialogModal.style.setProperty('display', 'none', 'important');
+    if (calculatorModal) calculatorModal.style.setProperty('display', 'none', 'important');
+    if (shareContextMenu) shareContextMenu.style.setProperty('display', 'none', 'important');
+    if (targetHitIconBtn) targetHitIconBtn.style.display = 'none'; // Ensure icon is hidden initially
+    if (alertPanel) alertPanel.style.display = 'none'; // NEW: Ensure alert panel is hidden initially
 
     // Service Worker Registration
     if ('serviceWorker' in navigator) {
@@ -3498,10 +2797,6 @@ async function initializeAppLogic() {
         shareWatchlistSelect.addEventListener('change', checkFormDirtyState);
     }
 
-    // NEW: Add event listeners for cash asset form inputs for dirty state checking (2.1)
-    if (cashAssetNameInput) cashAssetNameInput.addEventListener('input', checkCashAssetFormDirtyState);
-    if (cashAssetBalanceInput) cashAssetBalanceInput.addEventListener('input', checkCashAssetFormDirtyState);
-
 
     // Form input navigation with Enter key
     formInputs.forEach((input, index) => {
@@ -3544,14 +2839,7 @@ async function initializeAppLogic() {
                 clearForm(); // This will reset originalShareData and selectedShareDocId, preventing auto-save
                 closeModals(); // Now closeModals won't trigger auto-save for this form
             });
-        } else if (button.classList.contains('cash-form-close-button')) { // NEW: Specific for cash asset form's 'X' (Cancel button)
-            button.addEventListener('click', () => {
-                logDebug('Cash Form: Cash asset form close button (X) clicked. Clearing form before closing to cancel edits.');
-                clearCashAssetForm(); // Reset originalCashAssetData and selectedCashAssetDocId
-                closeModals();
-            });
-        }
-        else {
+        } else {
             button.addEventListener('click', closeModals); // Other modals still close normally
         }
     });
@@ -3561,8 +2849,7 @@ async function initializeAppLogic() {
         if (event.target === shareDetailModal || event.target === dividendCalculatorModal ||
             event.target === shareFormSection || event.target === customDialogModal ||
             event.target === calculatorModal || event.target === addWatchlistModal ||
-            event.target === manageWatchlistModal || event.target === alertPanel ||
-            event.target === cashAssetFormModal || event.target === cashAssetDetailModal) { // NEW: Include cash asset modals here
+            event.target === manageWatchlistModal || event.target === alertPanel) { // NEW: Include alertPanel here
             closeModals();
         }
 
@@ -3641,23 +2928,23 @@ async function initializeAppLogic() {
     }
     */
 
-    // NEW: Close alert panel button listener (alertPanel is not in current HTML, but kept for consistency)
+    // NEW: Close alert panel button listener
     if (closeAlertPanelBtn) {
         closeAlertPanelBtn.addEventListener('click', () => {
             logDebug('Alert Panel: Close button clicked.');
-            // hideModal(alertPanel); // Commented out as alertPanel is not in HTML
+            hideModal(alertPanel);
         });
     }
 
-    // NEW: Clear All Alerts button listener (alertPanel is not in current HTML, but kept for consistency)
+    // NEW: Clear All Alerts button listener
     if (clearAllAlertsBtn) {
         clearAllAlertsBtn.addEventListener('click', () => {
             logDebug('Alert Panel: Clear All button clicked.');
             sharesAtTargetPrice = []; // Clear all alerts in memory
-            // renderAlertsInPanel(); // Commented out as alertPanel is not in HTML
+            renderAlertsInPanel(); // Re-render to show "No active alerts"
             updateTargetHitBanner(); // Update the main icon count
             showCustomAlert('All alerts cleared for this session.', 1500);
-            // hideModal(alertPanel); // Commented out as alertPanel is not in HTML
+            hideModal(alertPanel); // Close the panel after clearing
         });
     }
 
@@ -3719,8 +3006,7 @@ async function initializeAppLogic() {
             logDebug('Watchlist Select: Change event fired. New value: ' + event.target.value);
             currentSelectedWatchlistIds = [event.target.value];
             await saveLastSelectedWatchlistIds(currentSelectedWatchlistIds);
-            // Just render the watchlist. The listeners for shares/cash are already active.
-            renderWatchlist();
+            await loadShares();
         });
     }
 
@@ -3784,7 +3070,7 @@ async function initializeAppLogic() {
     // Delete Share Button
     if (deleteShareBtn) {
         deleteShareBtn.addEventListener('click', async () => {
-            logDebug('Share Form: Delete Share button clicked (Direct Delete).');
+            logDebug('Share Form: Delete Share button clicked (No Confirmation).');
             if (deleteShareBtn.classList.contains('is-disabled-icon')) {
                 console.warn('Delete Share: Delete button was disabled, preventing action.');
                 return;
@@ -3820,7 +3106,7 @@ async function initializeAppLogic() {
     // Delete Share From Detail Button
     if (deleteShareFromDetailBtn) {
         deleteShareFromDetailBtn.addEventListener('click', async () => {
-            logDebug('Share Details: Delete Share button clicked (Direct Delete).');
+            logDebug('Share Details: Delete Share button clicked (No Confirmation).');
             if (deleteShareFromDetailBtn.classList.contains('is-disabled-icon')) {
                 console.warn('Delete Share From Detail: Delete button was disabled, preventing action.');
                 return;
@@ -3857,7 +3143,7 @@ async function initializeAppLogic() {
     // Context Menu Delete Share Button
     if (contextDeleteShareBtn) {
         contextDeleteShareBtn.addEventListener('click', async () => {
-            logDebug('Context Menu: Delete Share button clicked (Direct Delete).');
+            logDebug('Context Menu: Delete Share button clicked (No Confirmation).');
             if (currentContextMenuShareId) {
                 const shareToDeleteId = currentContextMenuShareId;
                 hideContextMenu();
@@ -3919,12 +3205,6 @@ async function initializeAppLogic() {
             logDebug('UI: Edit Watchlist button clicked.');
             let watchlistToEditId = watchlistSelect.value;
 
-            // Prevent editing "All Shares" or "Cash & Assets"
-            if (watchlistToEditId === ALL_SHARES_ID || watchlistToEditId === CASH_BANK_WATCHLIST_ID) {
-                showCustomAlert('Cannot edit this special watchlist.', 2000);
-                return;
-            }
-
             if (!watchlistToEditId || !userWatchlists.some(w => w.id === watchlistToEditId)) {
                 showCustomAlert('Please select a watchlist to edit.');
                 return;
@@ -3935,9 +3215,7 @@ async function initializeAppLogic() {
             logDebug('Edit Watchlist Button Click: Watchlist to edit ID: ' + watchlistToEditId + ', Name: ' + watchlistToEditName);
 
             editWatchlistNameInput.value = watchlistToEditName;
-            // Keep at least one real watchlist + Cash & Assets
-            const actualWatchlists = userWatchlists.filter(wl => wl.id !== ALL_SHARES_ID && wl.id !== CASH_BANK_WATCHLIST_ID);
-            const isDisabledDelete = actualWatchlists.length <= 1; 
+            const isDisabledDelete = userWatchlists.length <= 1;
             setIconDisabled(deleteWatchlistInModalBtn, isDisabledDelete); 
             logDebug('Edit Watchlist: deleteWatchlistInModalBtn disabled: ' + isDisabledDelete);
             setIconDisabled(saveWatchlistNameBtn, true); // Disable save button initially
@@ -3975,7 +3253,7 @@ async function initializeAppLogic() {
     // Delete Watchlist In Modal Button (for Manage Watchlist Modal)
     if (deleteWatchlistInModalBtn) {
         deleteWatchlistInModalBtn.addEventListener('click', async () => {
-            logDebug('Manage Watchlist Form: Delete Watchlist button clicked (Direct Delete).');
+            logDebug('Manage Watchlist Form: Delete Watchlist button clicked (No Confirmation).');
             if (deleteWatchlistInModalBtn.classList.contains('is-disabled-icon')) {
                 console.warn('Delete Watchlist In Modal: Delete button was disabled, preventing action.');
                 return;
@@ -3983,19 +3261,10 @@ async function initializeAppLogic() {
 
             let watchlistToDeleteId = watchlistSelect.value;
 
-            // Prevent deleting "All Shares" or "Cash & Assets"
-            if (watchlistToDeleteId === ALL_SHARES_ID || watchlistToDeleteId === CASH_BANK_WATCHLIST_ID) {
-                showCustomAlert('Cannot delete this special watchlist.', 2000);
+            if (!watchlistToDeleteId || userWatchlists.length <= 1) {
+                showCustomAlert('Cannot delete the last watchlist. Please create another watchlist first.');
                 return;
             }
-
-            // Ensure at least one actual watchlist remains (excluding Cash & Assets)
-            const actualWatchlists = userWatchlists.filter(wl => wl.id !== ALL_SHARES_ID && wl.id !== CASH_BANK_WATCHLIST_ID);
-            if (actualWatchlists.length <= 1) {
-                showCustomAlert('Cannot delete the last stock watchlist. Please create another stock watchlist first.', 3000);
-                return;
-            }
-
             const watchlistToDeleteName = userWatchlists.find(w => w.id === watchlistToDeleteId)?.name || 'Unknown Watchlist';
             
             try {
@@ -4018,9 +3287,11 @@ async function initializeAppLogic() {
                 showCustomAlert('Watchlist \'' + watchlistToDeleteName + '\' and its shares deleted successfully!', 2000);
                 closeModals();
 
+                // --- NEW CODE START ---
                 // After deleting a watchlist, switch the current view to "All Shares"
                 currentSelectedWatchlistIds = [ALL_SHARES_ID];
                 await saveLastSelectedWatchlistIds(currentSelectedWatchlistIds); // Save this preference
+                // --- NEW CODE END ---
 
                 await loadUserWatchlistsAndSettings(); // This will re-render everything correctly
             } catch (error) {
@@ -4243,65 +3514,29 @@ async function initializeAppLogic() {
     });
 
     // Scroll to Top Button
-    // NEW: Cash & Assets Event Listeners (1)
-if (addCashCategoryBtn) {
-    addCashCategoryBtn.addEventListener('click', () => {
-        logDebug('UI: Add Cash Category (main section) button clicked.');
-        addCashCategoryUI(); // Triggers the modal for adding new cash asset
-    });
-}
-
-// NEW: Add Cash Asset from Sidebar Button
-if (addCashAssetSidebarBtn) {
-    addCashAssetSidebarBtn.addEventListener('click', () => {
-        logDebug('UI: Add Cash Asset from Sidebar button clicked.');
-        addCashCategoryUI();
-        toggleAppSidebar(false); // Close sidebar after action
-    });
-}
-
-// NEW: Show All Hidden Cash Assets Button Listener
-if (showAllCashAssetsBtn) {
-    showAllCashAssetsBtn.addEventListener('click', async () => {
-        logDebug('UI: Show All Hidden Cash Assets button clicked.');
-        if (!currentUserId || !db || !window.firestore) {
-            showCustomAlert('Please sign in to perform this action.');
-            return;
-        }
-
-        // Clear the local visibility state and then update Firestore
-        let changesMade = false;
-        const batch = window.firestore.writeBatch(db);
-        const userProfileDocRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/profile/settings');
-
-        for (const assetId in cashAssetVisibility) {
-            if (cashAssetVisibility.hasOwnProperty(assetId) && cashAssetVisibility[assetId] === false) {
-                // Only update if currently hidden
-                cashAssetVisibility[assetId] = true; // Set to true locally
-                // Use FieldValue.delete to remove the specific field from the map in Firestore
-                batch.update(userProfileDocRef, { [`cashAssetVisibility.${assetId}`]: window.firestore.deleteField });
-                changesMade = true;
-                logDebug('Firestore Batch: Resetting visibility for ' + assetId);
+    if (scrollToTopBtn) {
+        window.addEventListener('scroll', () => {
+            if (window.innerWidth <= 768) {
+                if (window.scrollY > 200) {
+                    scrollToTopBtn.style.display = 'flex';
+                    scrollToTopBtn.style.opacity = '1';
+                } else {
+                    scrollToTopBtn.style.opacity = '0';
+                    setTimeout(() => {
+                        scrollToTopBtn.style.display = 'none';
+                    }, 300);
+                }
+            } else {
+                scrollToTopBtn.style.display = 'none';
             }
-        }
-
-        if (changesMade) {
-            try {
-                await batch.commit();
-                showCustomAlert('All hidden cash assets are now visible!', 2000);
-                logDebug('Firestore: All hidden cash assets visibility reset via batch commit.');
-            } catch (error) {
-                console.error('Firestore: Error resetting all cash asset visibility:', error);
-                showCustomAlert('Error resetting hidden assets: ' + error.message);
-            }
+        });
+        if (window.innerWidth > 768) {
+            scrollToTopBtn.style.display = 'none';
         } else {
-            showCustomAlert('No cash assets are currently hidden.', 1500);
-            logDebug('Cash Asset Visibility: No hidden cash assets to reset.');
+            window.dispatchEvent(new Event('scroll'));
         }
-        // No need to call renderCashCategories directly; the Firestore listener will handle it.
-        toggleAppSidebar(false); // Close sidebar after action
-    });
-}
+        scrollToTopBtn.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); logDebug('UI: Scrolled to top.'); });
+    }
 
     // Hamburger Menu and Sidebar Interactions
     if (hamburgerBtn && appSidebar && closeMenuBtn && sidebarOverlay) {
@@ -4403,125 +3638,6 @@ if (showAllCashAssetsBtn) {
         });
     }
 
-   // NEW: Add Cash Asset from Sidebar Button
-if (addCashAssetSidebarBtn) {
-    addCashAssetSidebarBtn.addEventListener('click', () => {
-        logDebug('UI: Add Cash Asset from Sidebar button clicked.');
-        addCashCategoryUI();
-        toggleAppSidebar(false); // Close sidebar after action
-    });
-}
-
-// NEW: Show All Hidden Cash Assets Button Listener
-if (showAllCashAssetsBtn) {
-    showAllCashAssetsBtn.addEventListener('click', async () => {
-        logDebug('UI: Show All Hidden Cash Assets button clicked.');
-        if (!currentUserId || !db || !window.firestore) {
-            showCustomAlert('Please sign in to perform this action.');
-            return;
-        }
-
-        // Clear the local visibility state and then update Firestore
-        let changesMade = false;
-        const batch = window.firestore.writeBatch(db);
-        const userProfileDocRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/profile/settings');
-
-        for (const assetId in cashAssetVisibility) {
-            if (cashAssetVisibility.hasOwnProperty(assetId) && cashAssetVisibility[assetId] === false) {
-                // Only update if currently hidden
-                cashAssetVisibility[assetId] = true; // Set to true locally
-                // Use FieldValue.delete to remove the specific field from the map in Firestore
-                batch.update(userProfileDocRef, { [`cashAssetVisibility.${assetId}`]: window.firestore.deleteField });
-                changesMade = true;
-                logDebug('Firestore Batch: Resetting visibility for ' + assetId);
-            }
-        }
-
-        if (changesMade) {
-            try {
-                await batch.commit();
-                showCustomAlert('All hidden cash assets are now visible!', 2000);
-                logDebug('Firestore: All hidden cash assets visibility reset via batch commit.');
-            } catch (error) {
-                console.error('Firestore: Error resetting all cash asset visibility:', error);
-                showCustomAlert('Error resetting hidden assets: ' + error.message);
-            }
-        } else {
-            showCustomAlert('No cash assets are currently hidden.', 1500);
-            logDebug('Cash Asset Visibility: No hidden cash assets to reset.');
-        }
-        // No need to call renderCashCategories directly; the Firestore listener will handle it.
-        toggleAppSidebar(false); // Close sidebar after action
-    });
-}
-
-    if (saveCashBalancesBtn) {
-        saveCashBalancesBtn.addEventListener('click', () => {
-            logDebug('UI: Save Cash Balances button clicked.');
-            saveCashCategories(); // Saves all currently displayed cash categories
-        });
-    }
-
-    // NEW: Cash Asset Form Modal Save/Delete/Edit Buttons (2.1, 2.2)
-    if (saveCashAssetBtn) {
-        saveCashAssetBtn.addEventListener('click', async () => {
-            logDebug('Cash Form: Save Cash Asset button clicked.');
-            if (saveCashAssetBtn.classList.contains('is-disabled-icon')) {
-                showCustomAlert('Asset name and balance are required, or no changes made.');
-                console.warn('Save Cash Asset: Save button was disabled, preventing action.');
-                return;
-            }
-            await saveCashAsset(false); // Not silent save
-        });
-    }
-
-    if (deleteCashAssetBtn) {
-        deleteCashAssetBtn.addEventListener('click', async () => {
-            logDebug('Cash Form: Delete Cash Asset button clicked.');
-            if (deleteCashAssetBtn.classList.contains('is-disabled-icon')) {
-                console.warn('Delete Cash Asset: Delete button was disabled, preventing action.');
-                return;
-            }
-            if (selectedCashAssetDocId) {
-                await deleteCashCategory(selectedCashAssetDocId); // Use existing delete function
-                closeModals();
-            } else {
-                showCustomAlert('No cash asset selected for deletion.');
-            }
-        });
-    }
-
-    if (editCashAssetFromDetailBtn) {
-        editCashAssetFromDetailBtn.addEventListener('click', () => {
-            logDebug('Cash Details: Edit Cash Asset button clicked.');
-            if (selectedCashAssetDocId) {
-                hideModal(cashAssetDetailModal);
-                showAddEditCashCategoryModal(selectedCashAssetDocId);
-            } else {
-                showCustomAlert('No cash asset selected for editing.');
-            }
-        });
-    }
-
-    if (deleteCashAssetFromDetailBtn) {
-        deleteCashAssetFromDetailBtn.addEventListener('click', async () => {
-            logDebug('Cash Details: Delete Cash Asset button clicked.');
-            if (selectedCashAssetDocId) {
-                await deleteCashCategory(selectedCashAssetDocId);
-                closeModals();
-            } else {
-                showCustomAlert('No cash asset selected for deletion.');
-            }
-        });
-    }
-
-// NEW: Add Cash Asset from Main Section Button (existing button)
-if (addCashCategoryBtn) {
-    addCashCategoryBtn.addEventListener('click', () => {
-        logDebug('UI: Add Cash Category (main section) button clicked.');
-        addCashCategoryUI(); // Triggers the modal for adding new cash asset
-    });
-}
 
     // Call adjustMainContentPadding initially and on window load/resize
     // Removed: window.addEventListener('load', adjustMainContentPadding); // Removed, handled by onAuthStateChanged
@@ -4584,17 +3700,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 updateMainButtonsState(true);
                 window._userAuthenticated = true; // Mark user as authenticated
                 
-            // Show main app content and header here, ensuring they are visible
-            if (mainContainer) {
-                mainContainer.classList.remove('app-hidden'); // Remove the class if present
-                mainContainer.style.display = 'block'; // Explicitly set display to block
-            }
-            if (appHeader) {
-                appHeader.classList.remove('app-hidden'); // Remove the class if present
-                appHeader.style.display = 'block'; // Explicitly set display to block
-            }
-            // Adjust padding immediately after showing header
-            adjustMainContentPadding();
+                // Show main app content and header here
+                if (mainContainer) {
+                    mainContainer.classList.remove('app-hidden');
+                }
+                if (appHeader) {
+                    appHeader.classList.remove('app-hidden');
+                }
+                // Adjust padding immediately after showing header
+                adjustMainContentPadding();
 
                 // Start pulsing animation on icon after successful sign-in
                 if (splashKangarooIcon) {
@@ -4604,16 +3718,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Load dismissal state from localStorage on login
                 targetHitIconDismissed = localStorage.getItem('targetHitIconDismissed') === 'true';
-                // NEW: Initialize cashAssetVisibility to an empty object
-                // The actual state will be loaded later in loadUserWatchlistsAndSettings.
-                cashAssetVisibility = {};
 
                 // Load data and then hide splash screen
                 await loadUserWatchlistsAndSettings(); // This now sets _appDataLoaded and calls hideSplashScreenIfReady
-                await fetchLivePrices(); // Ensure live prices are fetched after settings and current watchlist are loaded
+                startLivePriceUpdates(); // This now sets _livePricesLoaded and calls hideSplashScreenIfReady
 
-                // Removed: startLivePriceUpdates(); // This is now called by renderWatchlist based on selected type
-                
             } else {
                 currentUserId = null;
                 mainTitle.textContent = 'Share Watchlist';
@@ -4621,20 +3730,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 updateMainButtonsState(false);
                 clearShareList();
                 clearWatchlistUI();
-                userCashCategories = []; // Clear cash data on logout
-                if (cashCategoriesContainer) cashCategoriesContainer.innerHTML = ''; // Clear cash UI
-                if (totalCashDisplay) totalCashDisplay.textContent = '$0.00'; // Reset total cash
                 if (loadingIndicator) loadingIndicator.style.display = 'none';
                 applyTheme('system-default');
                 if (unsubscribeShares) {
                     unsubscribeShares();
                     unsubscribeShares = null;
                     logDebug('Firestore Listener: Unsubscribed from shares listener on logout.');
-                }
-                if (unsubscribeCashCategories) { // NEW: Unsubscribe from cash categories
-                    unsubscribeCashCategories();
-                    unsubscribeCashCategories = null;
-                    logDebug('Firestore Listener: Unsubscribed from cash categories listener on logout.');
                 }
                 stopLivePriceUpdates();
                 
@@ -4651,16 +3752,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         splashSignInBtn.disabled = false; // Enable sign-in button
                         splashSignInBtn.textContent = 'Google Sign In'; // Reset button text
                     }
-                    // Hide main app content and header on logout
-        if (mainContainer) {
-            mainContainer.style.display = 'none';
-            mainContainer.classList.add('app-hidden');
-        }
-        if (appHeader) {
-            appHeader.style.display = 'none';
-            appHeader.classList.add('app-hidden');
-        }
-        logDebug('Splash Screen: User signed out, splash screen remains visible for sign-in.');
+                    // Hide main app content
+                    if (mainContainer) {
+                        mainContainer.classList.add('app-hidden');
+                    }
+                    if (appHeader) {
+                        appHeader.classList.add('app-hidden');
+                    }
+                    logDebug('Splash Screen: User signed out, splash screen remains visible for sign-in.');
                 } else {
                     console.warn('Splash Screen: User signed out, but splash screen element not found. App content might be visible.');
                 }
