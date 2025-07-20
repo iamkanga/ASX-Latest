@@ -1656,7 +1656,7 @@ function renderWatchlist() {
     const shareTableBodyEl = document.querySelector('#shareTable tbody');
     const mobileShareCardsContainerEl = document.getElementById('mobileShareCards');
 
-    // Explicitly hide both sections initially using style.display
+    // Explicitly hide both main content sections initially using style.display
     if (stockWatchlistSectionEl) stockWatchlistSectionEl.style.display = 'none';
     if (cashAssetsSectionEl) cashAssetsSectionEl.style.display = 'none';
 
@@ -3411,20 +3411,29 @@ async function initializeAppLogic() {
     // DEBUG: Log when initializeAppLogic starts
     logDebug('initializeAppLogic: Firebase is ready. Starting app logic.');
 
-    // Initial modal hiding
-    if (shareFormSection) shareFormSection.style.setProperty('display', 'none', 'important');
-    if (dividendCalculatorModal) dividendCalculatorModal.style.setProperty('display', 'none', 'important');
-    if (shareDetailModal) shareDetailModal.style.setProperty('display', 'none', 'important');
-    if (addWatchlistModal) addWatchlistModal.style.setProperty('display', 'none', 'important');
-    if (manageWatchlistModal) manageWatchlistModal.style.setProperty('display', 'none', 'important');
-    if (customDialogModal) customDialogModal.style.setProperty('display', 'none', 'important');
-    if (calculatorModal) calculatorModal.style.setProperty('display', 'none', 'important');
-    if (shareContextMenu) shareContextMenu.style.setProperty('display', 'none', 'important');
-    if (targetHitIconBtn) targetHitIconBtn.style.display = 'none'; // Ensure icon is hidden initially
-    if (alertPanel) alertPanel.style.display = 'none'; // NEW: Ensure alert panel is hidden initially
-    // NEW: Hide cash asset modals initially
-    if (cashAssetFormModal) cashAssetFormModal.style.setProperty('display', 'none', 'important');
-    if (cashAssetDetailModal) cashAssetDetailModal.style.setProperty('display', 'none', 'important');
+    // Initial modal hiding and main app content hiding
+if (shareFormSection) shareFormSection.style.display = 'none';
+if (dividendCalculatorModal) dividendCalculatorModal.style.display = 'none';
+if (shareDetailModal) shareDetailModal.style.display = 'none';
+if (addWatchlistModal) addWatchlistModal.style.display = 'none';
+if (manageWatchlistModal) manageWatchlistModal.style.display = 'none';
+if (customDialogModal) customDialogModal.style.display = 'none';
+if (calculatorModal) calculatorModal.style.display = 'none';
+if (shareContextMenu) shareContextMenu.style.display = 'none';
+if (targetHitIconBtn) targetHitIconBtn.style.display = 'none';
+if (alertPanel) alertPanel.style.display = 'none';
+if (cashAssetFormModal) cashAssetFormModal.style.display = 'none';
+if (cashAssetDetailModal) cashAssetDetailModal.style.display = 'none';
+
+// Explicitly hide main app content and header initially
+if (mainContainer) {
+    mainContainer.classList.add('app-hidden'); // Keep class for initial state
+    mainContainer.style.display = 'none'; // Ensure hidden
+}
+if (appHeader) {
+    appHeader.classList.add('app-hidden'); // Keep class for initial state
+    appHeader.style.display = 'none'; // Ensure hidden
+}
 
 
     // Service Worker Registration
@@ -4571,7 +4580,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 updateMainButtonsState(true);
                 window._userAuthenticated = true; // Mark user as authenticated
                 
-                // Show main app content and header here, ensuring they are visible
+            // Show main app content and header here, ensuring they are visible
             if (mainContainer) {
                 mainContainer.classList.remove('app-hidden'); // Remove the class if present
                 mainContainer.style.display = 'block'; // Explicitly set display to block
