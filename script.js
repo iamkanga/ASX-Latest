@@ -47,7 +47,7 @@ let contextMenuOpen = false; // To track if the custom context menu is open
 let currentContextMenuShareId = null; // Stores the ID of the share that opened the context menu
 let originalShareData = null; // Stores the original share data when editing for dirty state check
 let originalWatchlistData = null; // Stores original watchlist data for dirty state check in watchlist modals
-let originalShareData = null; // Stores the original share data when editing for dirty state check
+
 
 // Live Price Data
 // IMPORTANT: This URL is the exact string provided in your initial script.js file.
