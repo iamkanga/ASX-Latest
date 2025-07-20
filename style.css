@@ -3732,24 +3732,18 @@ main.container {
     padding: 10px; /* Adjust padding for grid layout */
 }
 
-/* On desktop, for compact view, make cards full width (one per row) */
+/* On desktop, for compact view, force a single column and center it */
 @media (min-width: 769px) {
     .mobile-share-cards.compact-view {
-        grid-template-columns: 1fr; /* Single column for full width cards */
-        max-width: 400px; /* Optional: Limit width on very large screens for readability */
-        margin: 0 auto; /* Optional: Center the single column on desktop */
+        grid-template-columns: 1fr; /* Force single column on desktop */
+        max-width: 450px; /* Adjust max-width as desired for desktop cards */
+        margin: 0 auto; /* Center the single column on desktop */
+        padding: 20px 0; /* Add vertical padding for spacing */
     }
-}
-
-/* Style for individual cards in compact view */
-.mobile-share-cards.compact-view .mobile-card {
-    display: flex;
-    flex-direction: column; /* Stack content vertically within the card */
-    align-items: center; /* Center content horizontally */
-    justify-content: center; /* Center content vertically */
-    padding: 8px; /* Reduce padding for smaller cards */
-    min-height: 80px; /* Ensure a minimum height for consistency */
-    text-align: center;
+    /* Ensure individual cards fill the single column width */
+    .mobile-share-cards.compact-view .mobile-card {
+        width: 100%; /* Make cards fill the grid column */
+    }
 }
 
 /* Hide most <p> tags in compact view to only show live price and change */
