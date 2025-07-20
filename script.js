@@ -144,11 +144,6 @@ const calcEstimatedDividend = document.getElementById('calcEstimatedDividend');
 const sortSelect = document.getElementById('sortSelect');
 const customDialogModal = document.getElementById('customDialogModal');
 const customDialogMessage = document.getElementById('customDialogMessage');
-// These variables are now declared without initial assignment to allow dynamic assignment within functions
-// or to ensure they are re-fetched when needed.
-// The elements will be fetched directly inside showCustomAlert and showCustomConfirm.
-let customDialogConfirmBtn;
-let customDialogCancelBtn;
 const calculatorModal = document.getElementById('calculatorModal');
 const calculatorInput = document.getElementById('calculatorInput');
 const calculatorResult = document.getElementById('calculatorResult');
@@ -375,21 +370,21 @@ function closeModals() {
 
 // Custom Dialog (Alert) Function
 function showCustomAlert(message, duration = 1000) {
-    // Always get fresh references to the buttons when showing the alert
     const confirmBtn = document.getElementById('customDialogConfirmBtn');
     const cancelBtn = document.getElementById('customDialogCancelBtn');
+    const dialogButtonsContainer = document.querySelector('#customDialogModal .custom-dialog-buttons');
 
-    if (!customDialogModal || !customDialogMessage || !confirmBtn || !cancelBtn) {
+    logDebug('showCustomAlert: confirmBtn found: ' + !!confirmBtn + ', cancelBtn found: ' + !!cancelBtn + ', dialogButtonsContainer found: ' + !!dialogButtonsContainer);
+
+    if (!customDialogModal || !customDialogMessage || !confirmBtn || !cancelBtn || !dialogButtonsContainer) {
         console.error('Custom dialog elements not found. Cannot show alert.');
         console.log('ALERT (fallback): ' + message);
         return;
     }
     customDialogMessage.textContent = message;
-    // For alerts, ensure buttons are hidden and disabled
-    confirmBtn.style.display = 'none';
-    setIconDisabled(confirmBtn, true);
-    cancelBtn.style.display = 'none';
-    setIconDisabled(cancelBtn, true);
+
+    dialogButtonsContainer.style.display = 'none'; // Explicitly hide the container
+    logDebug('showCustomAlert: dialogButtonsContainer display set to: ' + dialogButtonsContainer.style.display);
 
     showModal(customDialogModal);
     if (autoDismissTimeout) { clearTimeout(autoDismissTimeout); }
@@ -843,8 +838,8 @@ function populateShareWatchlistSelect(currentShareWatchlistId = null, isNewShare
             disableDropdown = true;
             logDebug('Share Form: New share: Pre-selected and disabled to current view: ' + selectedOptionId);
         } 
-        // Priority 2: If a default watchlist exists, pre-select it (and keep enabled)
-        else if (defaultWatchlistForNewShare) {
+        // Priority 2: If a default watchlist exists AND it's a stock watchlist, pre-select it (and keep enabled)
+        else if (defaultWatchlistForNewShare && stockWatchlists.some(wl => wl.id === defaultWatchlistForNewShare.id)) { 
             selectedOptionId = defaultWatchlistForNewShare.id;
             disableDropdown = false; // Keep enabled for user to change
             logDebug('Share Form: New share: Pre-selected default watchlist: ' + selectedOptionId);
@@ -859,7 +854,7 @@ function populateShareWatchlistSelect(currentShareWatchlistId = null, isNewShare
         else {
             selectedOptionId = ''; // Keep placeholder selected
             disableDropdown = false;
-            logDebug('Share Form: New share: No stock watchlists available, user must select.');
+            logDebug('Share Form: New share: User must select a watchlist (no stock watchlists available).');
         }
     } else { // Editing an existing share
         if (currentShareWatchlistId && stockWatchlists.some(wl => wl.id === currentShareWatchlistId)) {
@@ -878,6 +873,16 @@ function populateShareWatchlistSelect(currentShareWatchlistId = null, isNewShare
     // Apply the determined selection and disabled state
     shareWatchlistSelect.value = selectedOptionId;
     shareWatchlistSelect.disabled = disableDropdown;
+
+    // Explicitly set the 'selected' attribute on the option for visual update reliability
+    // This loop is crucial to ensure the visual selection is correctly applied.
+    Array.from(shareWatchlistSelect.options).forEach(option => {
+        if (option.value === selectedOptionId) {
+            option.selected = true;
+        } else {
+            option.selected = false;
+        }
+    });
 
     // Add event listener for dirty state checking on this dropdown
     shareWatchlistSelect.addEventListener('change', checkFormDirtyState);
@@ -2028,54 +2033,49 @@ async function saveSortOrderPreference(sortOrder) {
 }
 
 async function loadUserWatchlistsAndSettings() {
+    logDebug('loadUserWatchlistsAndSettings called.'); // Added log for function entry
+
     if (!db || !currentUserId) {
-        console.warn('User Settings: Firestore DB or User ID not available for loading settings.');
-        // NEW: Indicate data loading failure for splash screen
+        console.warn('User Settings: Firestore DB or User ID not available for loading settings. Skipping.');
         window._appDataLoaded = false;
-        hideSplashScreenIfReady(); // Attempt to hide even if this part fails
+        hideSplashScreenIfReady();
         return;
     }
     userWatchlists = [];
-    const watchlistsColRef = window.firestore ? window.firestore.collection(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/watchlists') : null;
-    const userProfileDocRef = window.firestore ? window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/profile/settings') : null;
-
-    if (!watchlistsColRef || !userProfileDocRef) {
-        console.error('User Settings: Firestore collection or doc reference is null. Cannot load settings.');
-        showCustomAlert('Firestore services not fully initialized. Cannot load user settings.');
-        // NEW: Indicate data loading failure for splash screen
-        window._appDataLoaded = false;
-        hideSplashScreen(); // Hide splash screen on critical failure
-        return;
-    }
+    const watchlistsColRef = window.firestore.collection(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/watchlists');
+    const userProfileDocRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/profile/settings');
 
     try {
         logDebug('User Settings: Fetching user watchlists and profile settings...');
         const querySnapshot = await window.firestore.getDocs(window.firestore.query(watchlistsColRef));
         querySnapshot.forEach(doc => { userWatchlists.push({ id: doc.id, name: doc.data().name }); });
-        logDebug('User Settings: Found ' + userWatchlists.length + ' existing watchlists.');
+        logDebug('User Settings: Found ' + userWatchlists.length + ' existing watchlists (before default check).');
 
         // Ensure "Cash & Assets" is always an option in `userWatchlists` for internal logic
-        // It's already hardcoded in HTML, but this ensures it's in our JS array for consistency.
         if (!userWatchlists.some(wl => wl.id === CASH_BANK_WATCHLIST_ID)) {
-            userWatchlists.push({ id: CASH_BANK_WATCHLIST_ID, name: 'Cash & Assets' }); // UPDATED TEXT
+            userWatchlists.push({ id: CASH_BANK_WATCHLIST_ID, name: 'Cash & Assets' });
             logDebug('User Settings: Added "Cash & Assets" to internal watchlists array.');
         }
 
-        if (userWatchlists.length === 0) {
+        // If no user-defined watchlists (excluding Cash & Assets), create a default one
+        const userDefinedStockWatchlists = userWatchlists.filter(wl => wl.id !== CASH_BANK_WATCHLIST_ID && wl.id !== ALL_SHARES_ID);
+        if (userDefinedStockWatchlists.length === 0) {
             const defaultWatchlistId = getDefaultWatchlistId(currentUserId);
             const defaultWatchlistRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/watchlists/' + defaultWatchlistId);
             await window.firestore.setDoc(defaultWatchlistRef, { name: DEFAULT_WATCHLIST_NAME, createdAt: new Date().toISOString() });
             userWatchlists.push({ id: defaultWatchlistId, name: DEFAULT_WATCHLIST_NAME });
-            // NEW: Ensure currentSelectedWatchlistIds points to the newly created default watchlist
+            // Ensure currentSelectedWatchlistIds points to the newly created default watchlist
             currentSelectedWatchlistIds = [defaultWatchlistId]; 
             logDebug('User Settings: Created default watchlist and set it as current selection.');
         }
-        // Sort only the user-defined watchlists, keep Cash & Assets at the bottom or handle its fixed position
+
+        // Sort watchlists (excluding Cash & Assets for sorting, then re-add it if needed)
         userWatchlists.sort((a, b) => {
-            if (a.id === CASH_BANK_WATCHLIST_ID) return 1; // Push Cash & Assets to end
-            if (b.id === CASH_BANK_WATCHLIST_ID) return -1; // Push Cash & Assets to end
+            if (a.id === CASH_BANK_WATCHLIST_ID) return 1;
+            if (b.id === CASH_BANK_WATCHLIST_ID) return -1;
             return a.name.localeCompare(b.name);
         });
+        logDebug('User Settings: Watchlists after sorting: ' + userWatchlists.map(wl => wl.name).join(', '));
 
         const userProfileSnap = await window.firestore.getDoc(userProfileDocRef);
         savedSortOrder = null;
@@ -2084,70 +2084,54 @@ async function loadUserWatchlistsAndSettings() {
         if (userProfileSnap.exists()) {
             savedSortOrder = userProfileSnap.data().lastSortOrder;
             savedTheme = userProfileSnap.data().lastTheme;
-            currentSelectedWatchlistIds = userProfileSnap.data().lastSelectedWatchlistIds;
-            logDebug('User Settings: Found last selected watchlists in profile: ' + currentSelectedWatchlistIds);
-            logDebug('User Settings: Found saved sort order in profile: ' + savedSortOrder);
-            logDebug('User Settings: Found saved theme in profile: ' + savedTheme);
-        }
+            const loadedSelectedWatchlistIds = userProfileSnap.data().lastSelectedWatchlistIds;
 
-        if (currentSelectedWatchlistIds && Array.isArray(currentSelectedWatchlistIds) && currentSelectedWatchlistIds.length > 0) {
-            currentSelectedWatchlistIds = currentSelectedWatchlistIds.filter(id => 
-                id === ALL_SHARES_ID || id === CASH_BANK_WATCHLIST_ID || userWatchlists.some(wl => wl.id === id)
-            );
-
-            // NEW LOGIC START: Prioritize a stock watchlist if Cash & Assets is the default on login (1)
-            // Get all actual stock watchlists (excluding ALL_SHARES_ID as it's a view, not a user-created watchlist data record)
-            const actualStockWatchlists = userWatchlists.filter(wl => wl.id !== ALL_SHARES_ID && wl.id !== CASH_BANK_WATCHLIST_ID);
-
-            if (currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID) && actualStockWatchlists.length > 0) {
-                // If saved preference is Cash & Assets, but stock watchlists exist,
-                // switch to 'All Shares' or the first stock watchlist for initial display.
-                currentSelectedWatchlistIds = [ALL_SHARES_ID]; // Default to 'All Shares' view
-                logDebug('User Settings: Saved preference was Cash & Assets, but stock watchlists exist. Defaulting to "All Shares" for initial view.');
-            } else if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID) && actualStockWatchlists.length === 0) {
-                 // If "All Shares" is selected but no actual stock watchlists exist, default to Cash & Assets
-                 currentSelectedWatchlistIds = [CASH_BANK_WATCHLIST_ID];
-                 logDebug('User Settings: Only Cash & Assets watchlist exists, defaulting to it.');
-            }
-            // NEW LOGIC END
-            
-            // If no valid watchlists are selected after filtering (e.g., deleted), default to first available
-            if (currentSelectedWatchlistIds.length === 0) {
-                // Fallback: If after all logic, no valid selection, pick first non-cash watchlist or Cash&Assets if no others.
-                const firstNonCashWatchlist = userWatchlists.find(wl => wl.id !== CASH_BANK_WATCHLIST_ID);
-                if (firstNonCashWatchlist) {
-                     currentSelectedWatchlistIds = [firstNonCashWatchlist.id];
-                     console.warn('User Settings: No valid watchlist selection after filtering, defaulting to first non-cash watchlist.');
-                } else {
-                     currentSelectedWatchlistIds = [CASH_BANK_WATCHLIST_ID];
-                     console.warn('User Settings: No valid watchlist selection and no non-cash watchlists, defaulting to Cash & Assets.');
-                }
+            if (loadedSelectedWatchlistIds && Array.isArray(loadedSelectedWatchlistIds) && loadedSelectedWatchlistIds.length > 0) {
+                // Filter out invalid or non-existent watchlists from loaded preferences
+                currentSelectedWatchlistIds = loadedSelectedWatchlistIds.filter(id => 
+                    id === ALL_SHARES_ID || id === CASH_BANK_WATCHLIST_ID || userWatchlists.some(wl => wl.id === id)
+                );
+                logDebug('User Settings: Loaded last selected watchlists from profile: ' + currentSelectedWatchlistIds.join(', '));
+            } else {
+                logDebug('User Settings: No valid last selected watchlists in profile. Will determine default.');
             }
         } else {
-            // Default to the first actual watchlist (which could be Cash & Assets if no others)
-            const firstNonCashWatchlist = userWatchlists.find(wl => wl.id !== CASH_BANK_WATCHLIST_ID);
-            if (firstNonCashWatchlist) {
-                 currentSelectedWatchlistIds = [firstNonCashWatchlist.id];
-                 logDebug('User Settings: No saved watchlist preference, defaulting to first non-cash watchlist: ' + firstNonCashWatchlist.name);
-            } else {
-                 currentSelectedWatchlistIds = [CASH_BANK_WATCHLIST_ID];
-                 logDebug('User Settings: No saved watchlist preference and no non-cash watchlists, defaulting to Cash & Assets: ' + userWatchlists[0].name);
-            }
+            logDebug('User Settings: User profile settings not found. Will determine default watchlist selection.');
         }
 
-        renderWatchlistSelect();
-        
+        // Determine final currentSelectedWatchlistIds if not set or invalid after loading/filtering
+        if (!currentSelectedWatchlistIds || currentSelectedWatchlistIds.length === 0) {
+            const firstAvailableStockWatchlist = userWatchlists.find(wl => wl.id !== CASH_BANK_WATCHLIST_ID);
+            if (firstAvailableStockWatchlist) {
+                currentSelectedWatchlistIds = [firstAvailableStockWatchlist.id];
+                logDebug('User Settings: Defaulting currentSelectedWatchlistIds to first available stock watchlist: ' + firstAvailableStockWatchlist.name);
+            } else {
+                currentSelectedWatchlistIds = [CASH_BANK_WATCHLIST_ID];
+                logDebug('User Settings: No stock watchlists found, defaulting to Cash & Assets.');
+            }
+        }
+        logDebug('User Settings: Final currentSelectedWatchlistIds before renderWatchlistSelect: ' + currentSelectedWatchlistIds.join(', '));
+
+        renderWatchlistSelect(); // Populate and select in the header dropdown
+
+        // Apply saved sort order or default
         if (currentUserId && savedSortOrder && Array.from(sortSelect.options).some(option => option.value === savedSortOrder)) {
             sortSelect.value = savedSortOrder;
             currentSortOrder = savedSortOrder;
             logDebug('Sort: Applied saved sort order: ' + currentSortOrder);
         } else {
-            sortSelect.value = ''; 
-            currentSortOrder = '';
-            logDebug('Sort: No valid saved sort order or not logged in, defaulting to placeholder.');
+            // Set to default sort for the current view type
+            let defaultSortValue = 'entryDate-desc';
+            if (currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
+                defaultSortValue = 'name-asc';
+            }
+            sortSelect.value = defaultSortValue; 
+            currentSortOrder = defaultSortValue;
+            logDebug('Sort: No valid saved sort order or not applicable, defaulting to: ' + defaultSortValue);
         }
-        renderSortSelect(); // Call again to ensure correct options are displayed based on currentSelectedWatchlistIds
-        
+        renderSortSelect(); // Re-render sort options based on selected watchlist type
+
+        // Apply saved theme or default
         if (savedTheme) {
             applyTheme(savedTheme);
         } else {
@@ -2170,7 +2154,7 @@ async function loadUserWatchlistsAndSettings() {
         if (!migratedSomething) {
             logDebug('Migration: No old shares to migrate/update, directly setting up shares listener for current watchlist.');
         }
-        
+
         // Load shares listener and cash categories listener once here
         await loadShares(); // Sets up the listener for shares
         await loadCashCategories(); // Sets up the listener for cash categories
@@ -2178,14 +2162,12 @@ async function loadUserWatchlistsAndSettings() {
         // Initial render based on selected watchlist (stock or cash)
         renderWatchlist(); // This will now correctly display based on the initial currentSelectedWatchlistIds
 
-        // NEW: Indicate that data loading is complete for splash screen
         window._appDataLoaded = true;
         hideSplashScreenIfReady();
 
     } catch (error) {
         console.error('User Settings: Error loading user watchlists and settings:', error);
         showCustomAlert('Error loading user settings: ' + error.message);
-        // NEW: Hide splash screen on error
         hideSplashScreen();
     } finally {
         if (loadingIndicator) loadingIndicator.style.display = 'none';
@@ -2905,28 +2887,29 @@ function showCashCategoryDetailsModal(assetId) {
 
 // Custom Confirm Dialog Function (Now unused for deletions, but kept for potential future use)
 function showCustomConfirm(message, callback) {
-    // Always get fresh references to the buttons when showing the confirm dialog
     const confirmBtn = document.getElementById('customDialogConfirmBtn');
     const cancelBtn = document.getElementById('customDialogCancelBtn');
+    const dialogButtonsContainer = document.querySelector('#customDialogModal .custom-dialog-buttons');
 
-    if (!customDialogModal || !customDialogMessage || !confirmBtn || !cancelBtn) {
+    logDebug('showCustomConfirm: confirmBtn found: ' + !!confirmBtn + ', cancelBtn found: ' + !!cancelBtn + ', dialogButtonsContainer found: ' + !!dialogButtonsContainer);
+
+    if (!customDialogModal || !customDialogMessage || !confirmBtn || !cancelBtn || !dialogButtonsContainer) {
         console.error('Custom dialog elements not found. Cannot show confirm.');
         console.log('CONFIRM (fallback): ' + message);
         callback(window.confirm(message)); // Fallback to native confirm
         return;
     }
     customDialogMessage.textContent = message;
-    // For confirms, ensure buttons are visible and enabled
-    confirmBtn.style.display = 'inline-flex'; // Make sure they are visible
+
+    dialogButtonsContainer.style.display = 'flex'; // Explicitly show the container
+    logDebug('showCustomConfirm: dialogButtonsContainer display set to: ' + dialogButtonsContainer.style.display);
+
     setIconDisabled(confirmBtn, false); // Enable the confirm button
-    cancelBtn.style.display = 'inline-flex'; // Make sure they are visible
     setIconDisabled(cancelBtn, false); // Enable the cancel button
 
     showModal(customDialogModal);
 
     // Remove any existing 'click' listeners to prevent multiple firings
-    // This is crucial if the same button elements are reused without cloning.
-    // We ensure only one listener is active at a time.
     const oldConfirmListener = confirmBtn._currentClickListener;
     if (oldConfirmListener) {
         confirmBtn.removeEventListener('click', oldConfirmListener);
@@ -2948,7 +2931,6 @@ function showCustomConfirm(message, callback) {
         logDebug('Confirm: User cancelled.');
     };
 
-    // Attach new listeners and store references for future removal
     confirmBtn.addEventListener('click', onConfirm);
     confirmBtn._currentClickListener = onConfirm; // Store reference
 
