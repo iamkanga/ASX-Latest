@@ -3725,10 +3725,20 @@ main.container {
 
 /* --- NEW: Compact Mobile View Specific Styles --- */
 .mobile-share-cards.compact-view {
-    display: grid;
-    grid-template-columns: 1fr 1fr; /* Two equal columns */
-    gap: 10px; /* Space between the cards */
-    padding: 10px; /* Adjust padding for grid layout */
+    display: grid;
+    /* On mobile, keep two equal columns */
+    grid-template-columns: 1fr 1fr;
+    gap: 10px; /* Space between the cards */
+    padding: 10px; /* Adjust padding for grid layout */
+}
+
+/* On desktop, for compact view, make cards full width (one per row) */
+@media (min-width: 769px) {
+    .mobile-share-cards.compact-view {
+        grid-template-columns: 1fr; /* Single column for full width cards */
+        max-width: 400px; /* Optional: Limit width on very large screens for readability */
+        margin: 0 auto; /* Optional: Center the single column on desktop */
+    }
 }
 
 /* Style for individual cards in compact view */
