@@ -2116,6 +2116,10 @@ main.container {
     padding-left: 15px;
     padding-right: 15px;
     margin-top: 0; /* No top margin here, gap handled by parent header's gap */
+    min-height: 0; /* Ensure it can shrink, but also allow it to grow */
+    overflow: visible; /* Explicitly allow content to be visible even if it wraps multiple lines */
+    align-items: flex-start; /* Align items to the start of the cross axis (top) */
+    align-content: flex-start; /* Align wrapped lines to the start of the cross axis (top) */
 }
 
 /* NEW: Hide ASX code buttons when compact view is active */
