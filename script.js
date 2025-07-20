@@ -117,6 +117,7 @@ const modalStarRating = document.getElementById('modalStarRating');
 const addCommentSectionBtn = document.getElementById('addCommentSectionBtn');
 const shareTableBody = document.querySelector('#shareTable tbody');
 const mobileShareCardsContainer = document.getElementById('mobileShareCards');
+const tableContainer = document.querySelector('.table-container');
 const loadingIndicator = document.getElementById('loadingIndicator');
 const shareDetailModal = document.getElementById('shareDetailModal');
 const modalShareName = document.getElementById('modalShareName');
@@ -1650,72 +1651,82 @@ function renderWatchlist() {
 
     if (selectedWatchlistId === CASH_BANK_WATCHLIST_ID) {
         // Show Cash & Assets section (1)
-        cashAssetsSection.classList.remove('app-hidden'); // UPDATED ID
-        mainTitle.textContent = 'Cash & Assets'; // UPDATED TEXT
-        renderCashCategories(); // Render cash categories
-        // Hide stock-specific UI elements
-        // addShareHeaderBtn is now handled by updateAddHeaderButton
-        sortSelect.classList.remove('app-hidden'); // Keep sort select visible for cash assets
+        cashAssetsSection.classList.remove('app-hidden');
+        mainTitle.textContent = 'Cash & Assets';
+        renderCashCategories();
+        sortSelect.classList.remove('app-hidden');
         refreshLivePricesBtn.classList.add('app-hidden');
         toggleCompactViewBtn.classList.add('app-hidden');
         asxCodeButtonsContainer.classList.add('app-hidden');
-        targetHitIconBtn.classList.add('app-hidden'); // Hide target icon for cash view
-        exportWatchlistBtn.classList.add('app-hidden'); // Hide export for cash view
-        stopLivePriceUpdates(); // Stop live price updates when in cash view
-        updateAddHeaderButton(); // Ensure header button context is set for cash view
+        targetHitIconBtn.classList.add('app-hidden');
+        exportWatchlistBtn.classList.add('app-hidden');
+        stopLivePriceUpdates();
+        updateAddHeaderButton();
     } else {
         // Show Stock Watchlist section
         stockWatchlistSection.classList.remove('app-hidden');
-        // Update main title based on selected stock watchlist
         const selectedWatchlist = userWatchlists.find(wl => wl.id === selectedWatchlistId);
         if (selectedWatchlistId === ALL_SHARES_ID) {
             mainTitle.textContent = 'All Shares';
         } else if (selectedWatchlist) {
             mainTitle.textContent = selectedWatchlist.name;
         } else {
-            mainTitle.textContent = 'Share Watchlist'; // Fallback
+            mainTitle.textContent = 'Share Watchlist';
         }
 
         // Show stock-specific UI elements
-        // addShareHeaderBtn is now handled by updateAddHeaderButton
         sortSelect.classList.remove('app-hidden');
         refreshLivePricesBtn.classList.remove('app-hidden');
         toggleCompactViewBtn.classList.remove('app-hidden');
-        asxCodeButtonsContainer.classList.remove('app-hidden');
-        targetHitIconBtn.classList.remove('app-hidden'); // Show target icon for stock view
-        exportWatchlistBtn.classList.remove('app-hidden'); // Show export for stock view
-        startLivePriceUpdates(); // Ensure live price updates are running for stock view
-        updateAddHeaderButton(); // Ensure header button context is set for stock view
+        targetHitIconBtn.classList.remove('app-hidden');
+        exportWatchlistBtn.classList.remove('app-hidden');
+        startLivePriceUpdates();
+        updateAddHeaderButton();
+
+        // --- Core Fix for Desktop Compact View ---
+        const isMobileView = window.innerWidth <= 768; // Define what constitutes "mobile"
+
+        if (isMobileView) {
+            // On actual mobile devices, always hide table and show mobile cards
+            if (tableContainer) tableContainer.style.display = 'none';
+            if (mobileShareCardsContainer) mobileShareCardsContainer.style.display = 'flex';
+            if (mobileShareCardsContainer && currentMobileViewMode === 'compact') {
+                mobileShareCardsContainer.classList.add('compact-view');
+            } else if (mobileShareCardsContainer) {
+                mobileShareCardsContainer.classList.remove('compact-view');
+            }
+            // ASX buttons are hidden on mobile compact via CSS, but ensure JS doesn't override
+            if (asxCodeButtonsContainer) asxCodeButtonsContainer.style.display = 'flex'; // Default to flex, CSS will hide if compact
+        } else { // Desktop view
+            if (currentMobileViewMode === 'compact') {
+                // On desktop, if compact mode is active, hide table and show mobile cards
+                if (tableContainer) tableContainer.style.display = 'none';
+                if (mobileShareCardsContainer) {
+                    mobileShareCardsContainer.style.display = 'grid'; // Use grid for desktop compact for better layout
+                    mobileShareCardsContainer.classList.add('compact-view');
+                }
+                if (asxCodeButtonsContainer) asxCodeButtonsContainer.style.display = 'none'; // Hide ASX buttons in desktop compact
+            } else {
+                // On desktop, if default mode, show table and hide mobile cards
+                if (tableContainer) tableContainer.style.display = 'block'; // Or 'table' if it was a table element directly
+                if (mobileShareCardsContainer) {
+                    mobileShareCardsContainer.style.display = 'none';
+                    mobileShareCardsContainer.classList.remove('compact-view');
+                }
+                if (asxCodeButtonsContainer) asxCodeButtonsContainer.style.display = 'flex'; // Show ASX buttons in desktop default
+            }
+        }
+        // --- End Core Fix ---
 
         let sharesToRender = [];
         if (selectedWatchlistId === ALL_SHARES_ID) {
             sharesToRender = [...allSharesData];
             logDebug('Render: Displaying all shares (from ALL_SHARES_ID in currentSelectedWatchlistIds).');
-        } else if (currentSelectedWatchlistIds.length === 1) { // Only render if a single stock watchlist is selected
+        } else if (currentSelectedWatchlistIds.length === 1) {
             sharesToRender = allSharesData.filter(share => currentSelectedWatchlistIds.includes(share.watchlistId));
             logDebug('Render: Displaying shares from watchlist: ' + selectedWatchlistId);
         } else {
             logDebug('Render: No specific stock watchlists selected or multiple selected, showing empty state.');
-        }
-
-        // Apply or remove the 'compact-view' class from the mobileShareCardsContainer
-        if (mobileShareCardsContainer) {
-            if (currentMobileViewMode === 'compact') {
-                mobileShareCardsContainer.classList.add('compact-view');
-            } else {
-                mobileShareCardsContainer.classList.remove('compact-view');
-            }
-        }
-
-        // NEW: Hide/Show ASX code buttons based on currentMobileViewMode
-        if (asxCodeButtonsContainer) {
-            if (currentMobileViewMode === 'compact') {
-                asxCodeButtonsContainer.style.display = 'none';
-                logDebug('UI: Hiding ASX code buttons in compact view.');
-            } else {
-                asxCodeButtonsContainer.style.display = 'flex'; // Or whatever its default display is
-                logDebug('UI: Showing ASX code buttons in default view.');
-            }
         }
 
         if (sharesToRender.length === 0) {
@@ -1725,18 +1736,30 @@ function renderWatchlist() {
             emptyWatchlistMessage.style.padding = '20px';
             emptyWatchlistMessage.style.color = 'var(--ghosted-text)';
             const td = document.createElement('td');
-            td.colSpan = 5; // Updated colspan to 5 as Comments column is removed
+            td.colSpan = 6; // Updated colspan to 6 for the new Rating column
             td.appendChild(emptyWatchlistMessage);
             const tr = document.createElement('tr');
             tr.appendChild(td);
-            shareTableBody.appendChild(tr);
-            mobileShareCardsContainer.appendChild(emptyWatchlistMessage.cloneNode(true));
+            // Only append to table if table is visible, otherwise to mobile cards
+            if (tableContainer && tableContainer.style.display !== 'none') {
+                shareTableBody.appendChild(tr);
+            }
+            if (mobileShareCardsContainer && mobileShareCardsContainer.style.display !== 'none') {
+                mobileShareCardsContainer.appendChild(emptyWatchlistMessage.cloneNode(true));
+            }
         }
 
         sharesToRender.forEach((share) => {
-            addShareToTable(share);
-            addShareToMobileCards(share); 
+            // Only add to table if table is visible
+            if (tableContainer && tableContainer.style.display !== 'none') {
+                addShareToTable(share);
+            }
+            // Only add to mobile cards if mobile cards are visible
+            if (mobileShareCardsContainer && mobileShareCardsContainer.style.display !== 'none') {
+                addShareToMobileCards(share); 
+            }
         });
+
         if (selectedShareDocId) {
             const stillExists = sharesToRender.some(share => share.id === selectedShareDocId);
             if (stillExists) {
@@ -1746,10 +1769,10 @@ function renderWatchlist() {
             }
         }
         logDebug('Render: Stock watchlist rendering complete.');
-        updateTargetHitBanner(); // NEW: Update the banner after rendering the watchlist
-        renderAsxCodeButtons(); // Ensure ASX buttons are rendered after watchlist content
+        updateTargetHitBanner();
+        renderAsxCodeButtons();
     }
-    adjustMainContentPadding(); // Adjust padding after section visibility changes
+    adjustMainContentPadding();
 }
 
 function renderAsxCodeButtons() {
