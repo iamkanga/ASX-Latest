@@ -4598,15 +4598,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 updateMainButtonsState(true);
                 window._userAuthenticated = true; // Mark user as authenticated
                 
-                // Show main app content and header here
-                if (mainContainer) {
-                    mainContainer.classList.remove('app-hidden');
-                }
-                if (appHeader) {
-                    appHeader.classList.remove('app-hidden');
-                }
-                // Adjust padding immediately after showing header
-                adjustMainContentPadding();
+                // Show main app content and header here, ensuring they are visible
+        if (mainContainer) {
+            mainContainer.classList.remove('app-hidden'); // Remove the class if present
+            mainContainer.style.display = 'block'; // Explicitly set display to block
+        }
+        if (appHeader) {
+            appHeader.classList.remove('app-hidden'); // Remove the class if present
+            appHeader.style.display = 'block'; // Explicitly set display to block
+        }
+        // Adjust padding immediately after showing header
+        adjustMainContentPadding();
 
                 // Start pulsing animation on icon after successful sign-in
                 if (splashKangarooIcon) {
