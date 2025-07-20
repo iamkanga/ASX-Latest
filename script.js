@@ -4395,15 +4395,7 @@ if (showAllCashAssetsBtn) {
         });
     }
 
-   // NEW: Add Cash Asset from Main Section Button (existing button)
-if (addCashCategoryBtn) {
-    addCashCategoryBtn.addEventListener('click', () => {
-        logDebug('UI: Add Cash Category (main section) button clicked.');
-        addCashCategoryUI(); // Triggers the modal for adding new cash asset
-    });
-}
-
-// NEW: Add Cash Asset from Sidebar Button
+   // NEW: Add Cash Asset from Sidebar Button
 if (addCashAssetSidebarBtn) {
     addCashAssetSidebarBtn.addEventListener('click', () => {
         logDebug('UI: Add Cash Asset from Sidebar button clicked.');
@@ -4515,6 +4507,13 @@ if (showAllCashAssetsBtn) {
         });
     }
 
+// NEW: Add Cash Asset from Main Section Button (existing button)
+if (addCashCategoryBtn) {
+    addCashCategoryBtn.addEventListener('click', () => {
+        logDebug('UI: Add Cash Category (main section) button clicked.');
+        addCashCategoryUI(); // Triggers the modal for adding new cash asset
+    });
+}
 
     // Call adjustMainContentPadding initially and on window load/resize
     // Removed: window.addEventListener('load', adjustMainContentPadding); // Removed, handled by onAuthStateChanged
