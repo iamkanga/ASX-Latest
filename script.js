@@ -2589,7 +2589,10 @@ function showAddEditCashCategoryModal(assetIdToEdit = null) {
                 addCommentSection(cashAssetCommentsContainer, '', '', true); // Add one empty comment section
             }
         }
-        addCashAssetCommentBtn.classList.remove('hidden'); // Show add comment button
+        // Ensure addCashAssetCommentBtn exists before trying to modify its classList
+        if (addCashAssetCommentBtn) {
+            addCashAssetCommentBtn.classList.remove('hidden'); // Show add comment button
+        }
         originalCashAssetData = getCurrentCashAssetFormData(); // Store original data for dirty check
         logDebug('Cash Form: Opened edit form for cash asset: ' + assetToEdit.name + ' (ID: ' + assetIdToEdit + ')');
     } else {
@@ -2599,7 +2602,10 @@ function showAddEditCashCategoryModal(assetIdToEdit = null) {
             cashAssetCommentsContainer.innerHTML = ''; // Clear any previous comments
             addCommentSection(cashAssetCommentsContainer, '', '', true); // Add initial empty comment section for new cash asset
         }
-        addCashAssetCommentBtn.classList.remove('hidden'); // Show add comment button
+        // Ensure addCashAssetCommentBtn exists before trying to modify its classList
+        if (addCashAssetCommentBtn) {
+            addCashAssetCommentBtn.classList.remove('hidden'); // Show add comment button
+        }
         originalCashAssetData = null; // No original data for new asset
         logDebug('Cash Form: Opened add new cash asset form.');
     }
