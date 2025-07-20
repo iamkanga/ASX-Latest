@@ -1547,7 +1547,7 @@ function renderSortSelect() {
  * Renders the watchlist based on the currentSelectedWatchlistIds. (1)
  */
 function renderWatchlist() {
-    logDebug('Render: Rendering content for selected watchlist ID: ' + currentSelectedWatchlistIds[0]);
+    logDebug('DEBUG: renderWatchlist called. Current selected watchlist ID: ' + currentSelectedWatchlistIds[0]);
     
     const selectedWatchlistId = currentSelectedWatchlistIds[0];
 
@@ -2860,6 +2860,7 @@ function updateMainTitle() {
  * If 'Cash & Assets' is selected, they open the cash asset form. Otherwise, they open the share form.
  */
 function updateAddHeaderButton() {
+    logDebug('DEBUG: updateAddHeaderButton called. Current selected watchlist IDs: ' + currentSelectedWatchlistIds.join(', '));
     if (!addShareHeaderBtn) {
         console.warn('updateAddHeaderButton: addShareHeaderBtn not found.');
         return;
@@ -2872,10 +2873,10 @@ function updateAddHeaderButton() {
     // Set the appropriate event listener for the header button
     if (currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
         addShareHeaderBtn.addEventListener('click', handleAddCashAssetClick);
-        logDebug('Header Button: Plus button set to Add Cash Asset.');
+        logDebug('DEBUG: Header Plus Button (addShareHeaderBtn) now opens Add Cash Asset modal.');
     } else {
         addShareHeaderBtn.addEventListener('click', handleAddShareClick);
-        logDebug('Header Button: Plus button set to Add Share.');
+        logDebug('DEBUG: Header Plus Button (addShareHeaderBtn) now opens Add Share modal.');
     }
     // Ensure the button is enabled as its functionality is now contextual
     addShareHeaderBtn.disabled = false; 
@@ -2914,6 +2915,7 @@ function handleAddCashAssetClick() {
  * It will open the Share Form or Cash Asset Form based on the selected watchlist.
  */
 function updateSidebarAddButtonContext() {
+    logDebug('DEBUG: updateSidebarAddButtonContext called. Current selected watchlist IDs: ' + currentSelectedWatchlistIds.join(', '));
     if (!newShareBtn) {
         console.warn('updateSidebarAddButtonContext: newShareBtn not found.');
         return;
@@ -2927,15 +2929,15 @@ function updateSidebarAddButtonContext() {
     if (currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
         newShareBtn.addEventListener('click', handleAddCashAssetClick);
         // Update the text/icon if needed (optional, but good for clarity)
-        newShareBtn.querySelector('span').textContent = 'Add New Cash Asset';
-        newShareBtn.querySelector('i').className = 'fas fa-money-bill-wave'; // Example icon change
-        logDebug('Sidebar Button: "Add New Share" button set to Add Cash Asset.');
+        if (newShareBtn.querySelector('span')) newShareBtn.querySelector('span').textContent = 'Add New Cash Asset';
+        if (newShareBtn.querySelector('i')) newShareBtn.querySelector('i').className = 'fas fa-money-bill-wave'; // Example icon change
+        logDebug('DEBUG: Sidebar "Add New Share" button (newShareBtn) now opens Add Cash Asset modal.');
     } else {
         newShareBtn.addEventListener('click', handleAddShareClick);
         // Revert text/icon to original for stock view
-        newShareBtn.querySelector('span').textContent = 'Add New Share';
-        newShareBtn.querySelector('i').className = 'fas fa-plus-circle'; // Original icon
-        logDebug('Sidebar Button: "Add New Share" button set to Add Share.');
+        if (newShareBtn.querySelector('span')) newShareBtn.querySelector('span').textContent = 'Add New Share';
+        if (newShareBtn.querySelector('i')) newShareBtn.querySelector('i').className = 'fas fa-plus-circle'; // Original icon
+        logDebug('DEBUG: Sidebar "Add New Share" button (newShareBtn) now opens Add Share modal.');
     }
 }
 
