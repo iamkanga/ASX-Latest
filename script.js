@@ -2464,18 +2464,16 @@ function renderCashCategories() {
         const actionsContainer = document.createElement('div');
         actionsContainer.classList.add('category-actions');
 
-        // NEW: Hide/Show Toggle Button (New Feature)
+        // NEW: Hide/Show Toggle Button (New Feature) - Listener moved to event delegation
         const hideToggleButton = document.createElement('button');
         hideToggleButton.classList.add('hide-toggle-btn');
+        hideToggleButton.dataset.categoryId = category.id; // Store category ID on the button itself
         hideToggleButton.innerHTML = cashAssetVisibility[category.id] === false ? '<i class="fas fa-eye-slash"></i>' : '<i class="fas fa-eye"></i>';
         hideToggleButton.title = cashAssetVisibility[category.id] === false ? 'Show Asset' : 'Hide Asset';
         if (cashAssetVisibility[category.id] === false) {
             hideToggleButton.classList.add('hidden-icon');
         }
-        hideToggleButton.addEventListener('click', (event) => {
-            event.stopPropagation(); // Prevent card click from triggering details
-            toggleCashAssetVisibility(category.id);
-        });
+        // Removed direct event listener attachment here
         actionsContainer.appendChild(hideToggleButton);
 
         // Edit and Delete buttons are now only in the modal, so they are not added here.
@@ -4310,7 +4308,19 @@ async function initializeAppLogic() {
     //         saveCashCategories(); // Saves all currently displayed cash categories
     //     });
     // }
-
+    // NEW: Event delegation for hide/show cash asset toggle buttons (eye icon)
+    if (cashCategoriesContainer) {
+        cashCategoriesContainer.addEventListener('click', (event) => {
+            const toggleButton = event.target.closest('.hide-toggle-btn');
+            if (toggleButton) {
+                event.stopPropagation(); // Prevent the card click listener from firing
+                const categoryId = toggleButton.dataset.categoryId;
+                if (categoryId) {
+                    toggleCashAssetVisibility(categoryId);
+                }
+            }
+        });
+    }
     // NEW: Cash Asset Form Modal Save/Delete/Edit Buttons (2.1, 2.2)
     if (saveCashAssetBtn) {
         saveCashAssetBtn.addEventListener('click', async () => {
