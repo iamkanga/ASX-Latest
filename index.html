@@ -73,6 +73,8 @@
                     <option value="dividendAmount-asc">Dividend (Low-High)</option>
                     <option value="percentageChange-desc">Percentage Change (High-Low)</option>
                     <option value="percentageChange-asc">Percentage Change (Low-High)</option>
+                    <option value="starRating-desc">Star Rating (High-Low)</option>
+                    <option value="starRating-asc">Star Rating (Low-High)</option>
                 </select>
             </div>
         </div>
@@ -239,6 +241,7 @@
                             <th>Entered Price</th>
                             <th>Target Price</th>
                             <th>Dividends</th>
+                            <th>Rating</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -300,6 +303,16 @@
                     <!-- Options will be dynamically populated by script.js -->
                 </select>
 
+                <label for="shareRating">Star Rating:</label>
+                <select id="shareRating" class="dropdown-large">
+                    <option value="0" selected>No Rating</option>
+                    <option value="1">⭐ 1 Star</option>
+                    <option value="2">⭐⭐ 2 Stars</option>
+                    <option value="3">⭐⭐⭐ 3 Stars</option>
+                    <option value="4">⭐⭐⭐⭐ 4 Stars</option>
+                    <option value="5">⭐⭐⭐⭐⭐ 5 Stars</option>
+                </select>
+
                 <label for="shareName">Code:</label>
                 <input type="text" id="shareName" placeholder="e.g., BHP" required>
 
@@ -355,6 +368,7 @@
                 <p><strong>Unfranked Yield:</strong> <span id="modalUnfrankedYield"></span></p>
                 <p><strong>Franked Yield:</strong> <span id="modalFrankedYield"></span></p>
                 <p><strong>Entry Date:</strong> <span id="modalEntryDate"></span></p>
+                <p><strong>Star Rating:</strong> <span id="modalStarRating"></span></p>
 
                 <div id="modalCommentsContainer" class="modal-comments-sections">
                     <h3>Comments</h3>

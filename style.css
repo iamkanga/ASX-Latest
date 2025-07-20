@@ -2024,6 +2024,9 @@ body.theme-subtle-10 { /* Subtle Stone */
 
 
 /* General Body and Layout */
+.star-rating-cell {
+    white-space: nowrap; /* Prevent rating from wrapping */
+}
 html {
     height: 100%; /* Ensure html takes full height */
     overflow-y: auto; /* Allow scrolling on html */

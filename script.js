@@ -47,6 +47,7 @@ let contextMenuOpen = false; // To track if the custom context menu is open
 let currentContextMenuShareId = null; // Stores the ID of the share that opened the context menu
 let originalShareData = null; // Stores the original share data when editing for dirty state check
 let originalWatchlistData = null; // Stores original watchlist data for dirty state check in watchlist modals
+let originalShareData = null; // Stores the original share data when editing for dirty state check
 
 // Live Price Data
 // IMPORTANT: This URL is the exact string provided in your initial script.js file.
@@ -110,7 +111,9 @@ const currentPriceInput = document.getElementById('currentPrice');
 const targetPriceInput = document.getElementById('targetPrice');
 const dividendAmountInput = document.getElementById('dividendAmount');
 const frankingCreditsInput = document.getElementById('frankingCredits');
-const commentsFormContainer = document.getElementById('dynamicCommentsArea'); 
+const shareRatingSelect = document.getElementById('shareRating');
+const commentsFormContainer = document.getElementById('dynamicCommentsArea');
+const modalStarRating = document.getElementById('modalStarRating'); 
 const addCommentSectionBtn = document.getElementById('addCommentSectionBtn');
 const shareTableBody = document.querySelector('#shareTable tbody');
 const mobileShareCardsContainer = document.getElementById('mobileShareCards');
@@ -222,7 +225,7 @@ if (!sidebarOverlay) {
 
 const formInputs = [
     shareNameInput, currentPriceInput, targetPriceInput,
-    dividendAmountInput, frankingCreditsInput
+    dividendAmountInput, frankingCreditsInput, shareRatingSelect
 ];
 
 // NEW: Form inputs for Cash Asset Modal
@@ -441,6 +444,9 @@ function addShareToTable(share) {
         <td>${Number(share.currentPrice) !== null && !isNaN(Number(share.currentPrice)) ? '$' + Number(share.currentPrice).toFixed(2) : 'N/A'}</td>
         <td>${Number(share.targetPrice) !== null && !isNaN(Number(share.targetPrice)) ? '$' + Number(share.targetPrice).toFixed(2) : 'N/A'}</td>
         <td>${Number(share.dividendAmount) !== null && !isNaN(Number(share.dividendAmount)) ? '$' + Number(share.dividendAmount).toFixed(3) : 'N/A'}</td>
+        <td class="star-rating-cell">
+            ${share.starRating > 0 ? '⭐ ' + share.starRating : 'N/A'}
+        </td>
     `;
 
     row.addEventListener('click', () => {
@@ -561,6 +567,7 @@ function addShareToMobileCards(share) {
         <p><strong>Entered Price:</strong> $${Number(share.currentPrice) !== null && !isNaN(Number(share.currentPrice)) ? Number(share.currentPrice).toFixed(2) : 'N/A'}</p>
         <p><strong>Target Price:</strong> $${Number(share.targetPrice) !== null && !isNaN(Number(share.targetPrice)) ? Number(share.targetPrice).toFixed(2) : 'N/A'}</p>
         <p><strong>Dividends:</strong> $${Number(share.dividendAmount) !== null && !isNaN(Number(share.dividendAmount)) ? Number(share.dividendAmount).toFixed(3) : 'N/A'} (Franking: ${Number(share.frankingCredits) !== null && !isNaN(Number(share.frankingCredits)) ? Number(share.frankingCredits).toFixed(1) + '%' : 'N/A'})</p>
+        <p><strong>Star Rating:</strong> ${share.starRating > 0 ? '⭐ ' + share.starRating : 'No Rating'}</p>
     `;
 
     card.addEventListener('click', () => {
@@ -858,6 +865,10 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
 
     formTitle.textContent = 'Edit Share';
     shareNameInput.value = shareToEdit.shareName || '';
+    // Set the star rating dropdown
+    if (shareRatingSelect) {
+        shareRatingSelect.value = shareToEdit.starRating !== undefined && shareToEdit.starRating !== null ? shareToEdit.starRating.toString() : '0';
+    }
     currentPriceInput.value = Number(shareToEdit.currentPrice) !== null && !isNaN(Number(share.currentPrice)) ? Number(shareToEdit.currentPrice).toFixed(2) : '';
     targetPriceInput.value = Number(shareToEdit.targetPrice) !== null && !isNaN(Number(share.targetPrice)) ? Number(shareToEdit.targetPrice).toFixed(2) : '';
     dividendAmountInput.value = Number(shareToEdit.dividendAmount) !== null && !isNaN(Number(share.dividendAmount)) ? Number(shareToEdit.dividendAmount).toFixed(3) : '';
@@ -914,6 +925,8 @@ function getCurrentFormData() {
         targetPrice: parseFloat(targetPriceInput.value),
         dividendAmount: parseFloat(dividendAmountInput.value),
         frankingCredits: parseFloat(frankingCreditsInput.value),
+        // Get the selected star rating as a number
+        starRating: shareRatingSelect ? parseInt(shareRatingSelect.value) : 0,
         comments: comments,
         // Include the selected watchlist ID from the new dropdown
         watchlistId: shareWatchlistSelect ? shareWatchlistSelect.value : null
@@ -930,7 +943,7 @@ function getCurrentFormData() {
 function areShareDataEqual(data1, data2) {
     if (!data1 || !data2) return false;
 
-    const fields = ['shareName', 'currentPrice', 'targetPrice', 'dividendAmount', 'frankingCredits', 'watchlistId']; // Include watchlistId
+    const fields = ['shareName', 'currentPrice', 'targetPrice', 'dividendAmount', 'frankingCredits', 'watchlistId', 'starRating']; // Include watchlistId and starRating
     for (const field of fields) {
         let val1 = data1[field];
         let val2 = data2[field];
@@ -1051,10 +1064,10 @@ async function saveShareData(isSilent = false) {
         dividendAmount: isNaN(dividendAmount) ? null : dividendAmount,
         frankingCredits: isNaN(frankingCredits) ? null : frankingCredits,
         comments: comments,
-        userId: currentUserId,
         // Use the selected watchlist from the modal dropdown
         watchlistId: selectedWatchlistIdForSave,
-        lastPriceUpdateTime: new Date().toISOString()
+        lastPriceUpdateTime: new Date().toISOString(),
+        starRating: shareRatingSelect ? parseInt(shareRatingSelect.value) : 0 // Ensure rating is saved as a number
     };
 
     if (selectedShareDocId) {
@@ -1249,6 +1262,7 @@ function showShareDetails() {
 
     // Populate Entry Date after Franked Yield
     modalEntryDate.textContent = formatDate(share.entryDate) || 'N/A';
+    modalStarRating.textContent = share.starRating > 0 ? '⭐ ' + share.starRating : 'No Rating';
     
     if (modalCommentsContainer) {
         modalCommentsContainer.innerHTML = '';
@@ -1377,6 +1391,10 @@ function sortShares() {
             if (nameB === '') return -1; 
 
             return order === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+        } else if (field === 'starRating') {
+            const ratingA = a.starRating !== undefined && a.starRating !== null && !isNaN(parseInt(a.starRating)) ? parseInt(a.starRating) : 0;
+            const ratingB = b.starRating !== undefined && b.starRating !== null && !isNaN(parseInt(b.starRating)) ? parseInt(b.starRating) : 0;
+            return order === 'asc' ? ratingA - ratingB : ratingB - ratingA;
         } else if (field === 'entryDate') {
             // UPDATED: Robust date parsing for sorting
             const dateA = new Date(valA);
@@ -3486,18 +3504,38 @@ async function initializeAppLogic() {
             input.addEventListener('keydown', function(event) {
                 if (event.key === 'Enter') {
                     event.preventDefault();
+                    const nextInput = formInputs[index + 1];
+                    // If current input is the last one, try to add a comment or save
                     if (index === formInputs.length - 1) {
-                        if (addCommentSectionBtn && addCommentSectionBtn.offsetParent !== null && !addCommentSectionBtn.classList.contains('is-disabled-icon')) { 
+                        if (addCommentSectionBtn && addCommentSectionBtn.offsetParent !== null && !addCommentSectionBtn.classList.contains('is-disabled-icon')) {
                             addCommentSectionBtn.click();
                             const newCommentTitleInput = commentsFormContainer.lastElementChild?.querySelector('.comment-title-input');
                             if (newCommentTitleInput) {
                                 newCommentTitleInput.focus();
                             }
-                        } else if (saveShareBtn && !saveShareBtn.classList.contains('is-disabled-icon')) { 
+                        } else if (saveShareBtn && !saveShareBtn.classList.contains('is-disabled-icon')) {
                             saveShareBtn.click();
                         }
-                    } else {
-                        if (formInputs[index + 1]) formInputs[index + 1].focus();
+                    } else if (nextInput) {
+                        // For the dropdown, explicitly move focus to the next input element after it
+                        if (input === shareRatingSelect) {
+                            // Find the element *after* shareRatingSelect in the formInputs array
+                            const nextElementAfterRating = formInputs[index + 1];
+                            if (nextElementAfterRating) {
+                                nextElementAfterRating.focus();
+                            } else if (addCommentSectionBtn && addCommentSectionBtn.offsetParent !== null && !addCommentSectionBtn.classList.contains('is-disabled-icon')) {
+                                // If no more inputs after rating, try to add comment section
+                                addCommentSectionBtn.click();
+                                const newCommentTitleInput = commentsFormContainer.lastElementChild?.querySelector('.comment-title-input');
+                                if (newCommentTitleInput) {
+                                    newCommentTitleInput.focus();
+                                }
+                            } else if (saveShareBtn && !saveShareBtn.classList.contains('is-disabled-icon')) {
+                                saveShareBtn.click();
+                            }
+                        } else {
+                            nextInput.focus();
+                        }
                     }
                 }
             });
