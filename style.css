@@ -853,6 +853,576 @@ body.theme-bold-10 { /* Ruby */
     --cash-edit-icon-color: #dc143c;
 }
 
+/* Muted Themes */
+body.theme-muted-blue {
+    --background-color: #cddbe7;
+    --text-color: #3f4f5f;
+    --header-bg: #a1b7cb;
+    --card-bg: #eef4f9;
+    --border-color: #8c9fae;
+    --button-bg: #6a8ba8;
+    --button-hover-bg: #5a7b98;
+    --input-bg: #eef4f9;
+    --input-border: #a1b7cb;
+    --input-placeholder-color: #7a8fa5;
+    --modal-content-bg: #eef4f9;
+    --table-header-bg: #a1b7cb;
+    --table-row-hover-bg: #d9e6f0;
+    --asx-button-bg: #a1b7cb;
+    --asx-button-hover-bg: #8c9fae;
+    --asx-button-active-bg: #6a8ba8;
+    --sidebar-bg: #e0eaf2;
+    --sidebar-border: #a1b7cb;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #d9e6f0;
+    --placeholder-text: #7a8fa5;
+    --ghosted-text: #9ab0c0;
+    --danger-button-bg: #dc3545;
+    --danger-button-hover-bg: #c82333;
+    --icon-action-color: #6a8ba8;
+    --icon-action-hover-color: #5a7b98;
+    --icon-danger-color: #dc3545;
+    --icon-danger-hover-color: #c82333;
+    --calc-num-btn-bg: #b3c7d9;
+    --calc-num-btn-text: #3f4f5f;
+    --calc-num-btn-hover-bg: #6a8ba8;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(106, 139, 168, 0.08);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #6a8ba8;
+    --target-alert-text: #fff;
+    --target-alert-border: #5a7b98;
+
+    /* UPDATED: Cash & Assets Section Colors (Muted Theme) */
+    --cash-section-bg: #eef4f9;
+    --cash-card-bg: #cddbe7;
+    --cash-border-color: #a1b7cb;
+    --cash-total-bg: #5a7b98;
+    --cash-total-text: #fff;
+    --cash-button-bg: #28a745;
+    --cash-button-hover-bg: #218838;
+    --cash-primary-button-bg: #6a8ba8;
+    --cash-primary-button-hover-bg: #5a7b98;
+    --cash-delete-icon-color: #dc3545;
+    --cash-edit-icon-color: #6a8ba8;
+}
+
+body.theme-muted-brown {
+    --background-color: #e7e0d9;
+    --text-color: #5f4f3f;
+    --header-bg: #b7a18c;
+    --card-bg: #f9f4ee;
+    --border-color: #ae9f8c;
+    --button-bg: #a88b6a;
+    --button-hover-bg: #987b5a;
+    --input-bg: #f9f4ee;
+    --input-border: #b7a18c;
+    --input-placeholder-color: #8a7a65;
+    --modal-content-bg: #f9f4ee;
+    --table-header-bg: #b7a18c;
+    --table-row-hover-bg: #e6d9d0;
+    --asx-button-bg: #b7a18c;
+    --asx-button-hover-bg: #ae9f8c;
+    --asx-button-active-bg: #a88b6a;
+    --sidebar-bg: #e7e0d9;
+    --sidebar-border: #b7a18c;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #e6d9d0;
+    --placeholder-text: #8a7a65;
+    --ghosted-text: #a59b8a;
+    --danger-button-bg: #dc3545;
+    --danger-button-hover-bg: #c82333;
+    --icon-action-color: #a88b6a;
+    --icon-action-hover-color: #987b5a;
+    --icon-danger-color: #dc3545;
+    --icon-danger-hover-color: #c82333;
+    --calc-num-btn-bg: #d9c7b3;
+    --calc-num-btn-text: #5f4f3f;
+    --calc-num-btn-hover-bg: #a88b6a;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(168, 139, 106, 0.08);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #a88b6a;
+    --target-alert-text: #fff;
+    --target-alert-border: #987b5a;
+
+    /* UPDATED: Cash & Assets Section Colors (Muted Theme) */
+    --cash-section-bg: #f9f4ee;
+    --cash-card-bg: #e7e0d9;
+    --cash-border-color: #b7a18c;
+    --cash-total-bg: #987b5a;
+    --cash-total-text: #fff;
+    --cash-button-bg: #28a745;
+    --cash-button-hover-bg: #218838;
+    --cash-primary-button-bg: #a88b6a;
+    --cash-primary-button-hover-bg: #987b5a;
+    --cash-delete-icon-color: #dc3545;
+    --cash-edit-icon-color: #a88b6a;
+}
+
+body.theme-muted-pink {
+    --background-color: #e7cddb;
+    --text-color: #5f3f4f;
+    --header-bg: #b7a1cb;
+    --card-bg: #f9eef4;
+    --border-color: #ae8c9f;
+    --button-bg: #a86a8b;
+    --button-hover-bg: #985a7b;
+    --input-bg: #f9eef4;
+    --input-border: #b7a1cb;
+    --input-placeholder-color: #8a657a;
+    --modal-content-bg: #f9eef4;
+    --table-header-bg: #b7a1cb;
+    --table-row-hover-bg: #e6d0d9;
+    --asx-button-bg: #b7a1cb;
+    --asx-button-hover-bg: #ae8c9f;
+    --asx-button-active-bg: #a86a8b;
+    --sidebar-bg: #e7cddb;
+    --sidebar-border: #b7a1cb;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #e6d0d9;
+    --placeholder-text: #8a657a;
+    --ghosted-text: #a58a9b;
+    --danger-button-bg: #dc3545;
+    --danger-button-hover-bg: #c82333;
+    --icon-action-color: #a86a8b;
+    --icon-action-hover-color: #985a7b;
+    --icon-danger-color: #dc3545;
+    --icon-danger-hover-color: #c82333;
+    --calc-num-btn-bg: #d9b3c7;
+    --calc-num-btn-text: #5f3f4f;
+    --calc-num-btn-hover-bg: #a86a8b;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(168, 106, 139, 0.08);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #a86a8b;
+    --target-alert-text: #fff;
+    --target-alert-border: #985a7b;
+
+    /* UPDATED: Cash & Assets Section Colors (Muted Theme) */
+    --cash-section-bg: #f9eef4;
+    --cash-card-bg: #e7cddb;
+    --cash-border-color: #b7a1cb;
+    --cash-total-bg: #985a7b;
+    --cash-total-text: #fff;
+    --cash-button-bg: #28a745;
+    --cash-button-hover-bg: #218838;
+    --cash-primary-button-bg: #a86a8b;
+    --cash-primary-button-hover-bg: #985a7b;
+    --cash-delete-icon-color: #dc3545;
+    --cash-edit-icon-color: #a86a8b;
+}
+
+body.theme-muted-green {
+    --background-color: #cde7db;
+    --text-color: #3f5f4f;
+    --header-bg: #a1cbb7;
+    --card-bg: #eef9f4;
+    --border-color: #8cafa1;
+    --button-bg: #6aa88b;
+    --button-hover-bg: #5a987b;
+    --input-bg: #eef9f4;
+    --input-border: #a1cbb7;
+    --input-placeholder-color: #7a8a65;
+    --modal-content-bg: #eef9f4;
+    --table-header-bg: #a1cbb7;
+    --table-row-hover-bg: #d9e6d0;
+    --asx-button-bg: #a1cbb7;
+    --asx-button-hover-bg: #8cafa1;
+    --asx-button-active-bg: #6aa88b;
+    --sidebar-bg: #cde7db;
+    --sidebar-border: #a1cbb7;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #d9e6d0;
+    --placeholder-text: #7a8a65;
+    --ghosted-text: #9ab08a;
+    --danger-button-bg: #dc3545;
+    --danger-button-hover-bg: #c82333;
+    --icon-action-color: #6aa88b;
+    --icon-action-hover-color: #5a987b;
+    --icon-danger-color: #dc3545;
+    --icon-danger-hover-color: #c82333;
+    --calc-num-btn-bg: #b3d9c7;
+    --calc-num-btn-text: #3f5f4f;
+    --calc-num-btn-hover-bg: #6aa88b;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(106, 168, 139, 0.08);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #6aa88b;
+    --target-alert-text: #fff;
+    --target-alert-border: #5a987b;
+
+    /* UPDATED: Cash & Assets Section Colors (Muted Theme) */
+    --cash-section-bg: #eef9f4;
+    --cash-card-bg: #cde7db;
+    --cash-border-color: #a1cbb7;
+    --cash-total-bg: #5a987b;
+    --cash-total-text: #fff;
+    --cash-button-bg: #28a745;
+    --cash-button-hover-bg: #218838;
+    --cash-primary-button-bg: #6aa88b;
+    --cash-primary-button-hover-bg: #5a987b;
+    --cash-delete-icon-color: #dc3545;
+    --cash-edit-icon-color: #6aa88b;
+}
+
+body.theme-muted-purple {
+    --background-color: #e0cde7;
+    --text-color: #4f3f5f;
+    --header-bg: #b7a1cb;
+    --card-bg: #f4eef9;
+    --border-color: #ae8ca1;
+    --button-bg: #8b6aa8;
+    --button-hover-bg: #7b5a98;
+    --input-bg: #f4eef9;
+    --input-border: #b7a1cb;
+    --input-placeholder-color: #7a658a;
+    --modal-content-bg: #f4eef9;
+    --table-header-bg: #b7a1cb;
+    --table-row-hover-bg: #e6d0d9;
+    --asx-button-bg: #b7a1cb;
+    --asx-button-hover-bg: #ae8ca1;
+    --asx-button-active-bg: #8b6aa8;
+    --sidebar-bg: #e0cde7;
+    --sidebar-border: #b7a1cb;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #e6d0d9;
+    --placeholder-text: #7a658a;
+    --ghosted-text: #a58a9b;
+    --danger-button-bg: #dc3545;
+    --danger-button-hover-bg: #c82333;
+    --icon-action-color: #8b6aa8;
+    --icon-action-hover-color: #7b5a98;
+    --icon-danger-color: #dc3545;
+    --icon-danger-hover-color: #c82333;
+    --calc-num-btn-bg: #d9b3c7;
+    --calc-num-btn-text: #4f3f5f;
+    --calc-num-btn-hover-bg: #8b6aa8;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(139, 106, 168, 0.08);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #8b6aa8;
+    --target-alert-text: #fff;
+    --target-alert-border: #7b5a98;
+
+    /* UPDATED: Cash & Assets Section Colors (Muted Theme) */
+    --cash-section-bg: #f4eef9;
+    --cash-card-bg: #e0cde7;
+    --cash-border-color: #b7a1cb;
+    --cash-total-bg: #7b5a98;
+    --cash-total-text: #fff;
+    --cash-button-bg: #28a745;
+    --cash-button-hover-bg: #218838;
+    --cash-primary-button-bg: #8b6aa8;
+    --cash-primary-button-hover-bg: #7b5a98;
+    --cash-delete-icon-color: #dc3545;
+    --cash-edit-icon-color: #8b6aa8;
+}
+
+body.theme-muted-orange {
+    --background-color: #e7d9cd;
+    --text-color: #5f4f3f;
+    --header-bg: #cbb7a1;
+    --card-bg: #f9f4ee;
+    --border-color: #afa18c;
+    --button-bg: #a88b6a;
+    --button-hover-bg: #987b5a;
+    --input-bg: #f9f4ee;
+    --input-border: #cbb7a1;
+    --input-placeholder-color: #8a7a65;
+    --modal-content-bg: #f9f4ee;
+    --table-header-bg: #cbb7a1;
+    --table-row-hover-bg: #e6d0d9;
+    --asx-button-bg: #cbb7a1;
+    --asx-button-hover-bg: #afa18c;
+    --asx-button-active-bg: #a88b6a;
+    --sidebar-bg: #e7d9cd;
+    --sidebar-border: #cbb7a1;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #e6d0d9;
+    --placeholder-text: #8a7a65;
+    --ghosted-text: #a59b8a;
+    --danger-button-bg: #dc3545;
+    --danger-button-hover-bg: #c82333;
+    --icon-action-color: #a88b6a;
+    --icon-action-hover-color: #987b5a;
+    --icon-danger-color: #dc3545;
+    --icon-danger-hover-color: #c82333;
+    --calc-num-btn-bg: #d9c7b3;
+    --calc-num-btn-text: #5f4f3f;
+    --calc-num-btn-hover-bg: #a88b6a;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(168, 139, 106, 0.08);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #a88b6a;
+    --target-alert-text: #fff;
+    --target-alert-border: #987b5a;
+
+    /* UPDATED: Cash & Assets Section Colors (Muted Theme) */
+    --cash-section-bg: #f9f4ee;
+    --cash-card-bg: #e7d9cd;
+    --cash-border-color: #cbb7a1;
+    --cash-total-bg: #987b5a;
+    --cash-total-text: #fff;
+    --cash-button-bg: #28a745;
+    --cash-button-hover-bg: #218838;
+    --cash-primary-button-bg: #a88b6a;
+    --cash-primary-button-hover-bg: #987b5a;
+    --cash-delete-icon-color: #dc3545;
+    --cash-edit-icon-color: #a88b6a;
+}
+
+body.theme-muted-cyan {
+    --background-color: #cde7e7;
+    --text-color: #3f5f5f;
+    --header-bg: #a1cbb7;
+    --card-bg: #eef9f9;
+    --border-color: #8cafa1;
+    --button-bg: #6aa8a8;
+    --button-hover-bg: #5a9898;
+    --input-bg: #eef9f9;
+    --input-border: #a1cbb7;
+    --input-placeholder-color: #7a8a8a;
+    --modal-content-bg: #eef9f9;
+    --table-header-bg: #a1cbb7;
+    --table-row-hover-bg: #d9e6e6;
+    --asx-button-bg: #a1cbb7;
+    --asx-button-hover-bg: #8cafa1;
+    --asx-button-active-bg: #6aa8a8;
+    --sidebar-bg: #cde7e7;
+    --sidebar-border: #a1cbb7;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #d9e6e6;
+    --placeholder-text: #7a8a8a;
+    --ghosted-text: #9ab0b0;
+    --danger-button-bg: #dc3545;
+    --danger-button-hover-bg: #c82333;
+    --icon-action-color: #6aa8a8;
+    --icon-action-hover-color: #5a9898;
+    --icon-danger-color: #dc3545;
+    --icon-danger-hover-color: #c82333;
+    --calc-num-btn-bg: #b3d9d9;
+    --calc-num-btn-text: #3f5f5f;
+    --calc-num-btn-hover-bg: #6aa8a8;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(106, 168, 168, 0.08);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #6aa8a8;
+    --target-alert-text: #fff;
+    --target-alert-border: #5a9898;
+
+    /* UPDATED: Cash & Assets Section Colors (Muted Theme) */
+    --cash-section-bg: #eef9f9;
+    --cash-card-bg: #cde7e7;
+    --cash-border-color: #a1cbb7;
+    --cash-total-bg: #5a9898;
+    --cash-total-text: #fff;
+    --cash-button-bg: #28a745;
+    --cash-button-hover-bg: #218838;
+    --cash-primary-button-bg: #6aa8a8;
+    --cash-primary-button-hover-bg: #5a9898;
+    --cash-delete-icon-color: #dc3545;
+    --cash-edit-icon-color: #6aa8a8;
+}
+
+body.theme-muted-magenta {
+    --background-color: #e7cde7;
+    --text-color: #5f3f5f;
+    --header-bg: #cbb7a1;
+    --card-bg: #f9eef9;
+    --border-color: #afa18c;
+    --button-bg: #a86a8b;
+    --button-hover-bg: #985a7b;
+    --input-bg: #f9eef9;
+    --input-border: #cbb7a1;
+    --input-placeholder-color: #8a7a65;
+    --modal-content-bg: #f9eef9;
+    --table-header-bg: #cbb7a1;
+    --table-row-hover-bg: #e6d0d9;
+    --asx-button-bg: #cbb7a1;
+    --asx-button-hover-bg: #afa18c;
+    --asx-button-active-bg: #a86a8b;
+    --sidebar-bg: #e7cde7;
+    --sidebar-border: #cbb7a1;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #e6d0d9;
+    --placeholder-text: #8a7a65;
+    --ghosted-text: #a59b8a;
+    --danger-button-bg: #dc3545;
+    --danger-button-hover-bg: #c82333;
+    --icon-action-color: #a86a8b;
+    --icon-action-hover-color: #987b5a;
+    --icon-danger-color: #dc3545;
+    --icon-danger-hover-color: #c82333;
+    --calc-num-btn-bg: #d9b3c7;
+    --calc-num-btn-text: #5f3f5f;
+    --calc-num-btn-hover-bg: #a86a8b;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(168, 106, 139, 0.08);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #a86a8b;
+    --target-alert-text: #fff;
+    --target-alert-border: #987b5a;
+
+    /* UPDATED: Cash & Assets Section Colors (Muted Theme) */
+    --cash-section-bg: #f9eef9;
+    --cash-card-bg: #e7cde7;
+    --cash-border-color: #cbb7a1;
+    --cash-total-bg: #987b5a;
+    --cash-total-text: #fff;
+    --cash-button-bg: #28a745;
+    --cash-button-hover-bg: #218838;
+    --cash-primary-button-bg: #a86a8b;
+    --cash-primary-button-hover-bg: #987b5a;
+    --cash-delete-icon-color: #dc3545;
+    --cash-edit-icon-color: #a86a8b;
+}
+
+body.theme-muted-gold {
+    --background-color: #e7e0cd;
+    --text-color: #5f5f3f;
+    --header-bg: #cbb7a1;
+    --card-bg: #f9f4ee;
+    --border-color: #afa18c;
+    --button-bg: #a8a86a;
+    --button-hover-bg: #98985a;
+    --input-bg: #f9f4ee;
+    --input-border: #cbb7a1;
+    --input-placeholder-color: #8a8a65;
+    --modal-content-bg: #f9f4ee;
+    --table-header-bg: #cbb7a1;
+    --table-row-hover-bg: #e6d9d0;
+    --asx-button-bg: #cbb7a1;
+    --asx-button-hover-bg: #afa18c;
+    --asx-button-active-bg: #a8a86a;
+    --sidebar-bg: #e7e0cd;
+    --sidebar-border: #cbb7a1;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #e6d9d0;
+    --placeholder-text: #8a8a65;
+    --ghosted-text: #a5a58a;
+    --danger-button-bg: #dc3545;
+    --danger-button-hover-bg: #c82333;
+    --icon-action-color: #a8a86a;
+    --icon-action-hover-color: #98985a;
+    --icon-danger-color: #dc3545;
+    --icon-danger-hover-color: #c82333;
+    --calc-num-btn-bg: #d9d9b3;
+    --calc-num-btn-text: #5f5f3f;
+    --calc-num-btn-hover-bg: #a8a86a;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(168, 168, 106, 0.08);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #a8a86a;
+    --target-alert-text: #fff;
+    --target-alert-border: #98985a;
+
+    /* UPDATED: Cash & Assets Section Colors (Muted Theme) */
+    --cash-section-bg: #f9f4ee;
+    --cash-card-bg: #e7e0cd;
+    --cash-border-color: #cbb7a1;
+    --cash-total-bg: #98985a;
+    --cash-total-text: #fff;
+    --cash-button-bg: #28a745;
+    --cash-button-hover-bg: #218838;
+    --cash-primary-button-bg: #a8a86a;
+    --cash-primary-button-hover-bg: #98985a;
+    --cash-delete-icon-color: #dc3545;
+    --cash-edit-icon-color: #a8a86a;
+}
+
+body.theme-muted-grey {
+    --background-color: #e0e0e0;
+    --text-color: #5f5f5f;
+    --header-bg: #b7b7b7;
+    --card-bg: #f4f4f4;
+    --border-color: #a1a1a1;
+    --button-bg: #8a8a8a;
+    --button-hover-bg: #7a7a7a;
+    --input-bg: #f4f4f4;
+    --input-border: #b7b7b7;
+    --input-placeholder-color: #6a6a6a;
+    --modal-content-bg: #f4f4f4;
+    --table-header-bg: #b7b7b7;
+    --table-row-hover-bg: #d9d9d9;
+    --asx-button-bg: #b7b7b7;
+    --asx-button-hover-bg: #a1a1a1;
+    --asx-button-active-bg: #8a8a8a;
+    --sidebar-bg: #e0e0e0;
+    --sidebar-border: #b7b7b7;
+    --menu-button-bg: transparent;
+    --menu-button-hover-bg: #d9d9d9;
+    --placeholder-text: #6a6a6a;
+    --ghosted-text: #8a8a8a;
+    --danger-button-bg: #dc3545;
+    --danger-button-hover-bg: #c82333;
+    --icon-action-color: #8a8a8a;
+    --icon-action-hover-color: #7a7a7a;
+    --icon-danger-color: #dc3545;
+    --icon-danger-hover-color: #c82333;
+    --calc-num-btn-bg: #d9d9d9;
+    --calc-num-btn-text: #5f5f5f;
+    --calc-num-btn-hover-bg: #8a8a8a;
+    --price-up-color: #28a745;
+    --price-down-color: #dc3545;
+    --price-neutral-color: #6c757d;
+    --live-price-section-bg: rgba(138, 138, 138, 0.08);
+    --live-price-positive-bg: rgba(40, 167, 69, 0.1);
+    --live-price-negative-bg: rgba(220, 53, 69, 0.1);
+    --comment-title-bg: rgba(0, 0, 0, 0.05);
+    --target-alert-bg: #8a8a8a;
+    --target-alert-text: #fff;
+    --target-alert-border: #7a7a7a;
+
+    /* UPDATED: Cash & Assets Section Colors (Muted Theme) */
+    --cash-section-bg: #f4f4f4;
+    --cash-card-bg: #e0e0e0;
+    --cash-border-color: #b7b7b7;
+    --cash-total-bg: #7a7a7a;
+    --cash-total-text: #fff;
+    --cash-button-bg: #28a745;
+    --cash-button-hover-bg: #218838;
+    --cash-primary-button-bg: #8a8a8a;
+    --cash-primary-button-hover-bg: #7a7a7a;
+    --cash-delete-icon-color: #dc3545;
+    --cash-edit-icon-color: #8a8a8a;
+}
 
 /* Subtle Themes - Adjusted for better visual distinction */
 body.theme-subtle-1 { /* Subtle Sky */
@@ -1934,16 +2504,32 @@ table td .live-price-value {
 }
 
 /* Apply coloring to specific text elements */
-.positive {
-    color: var(--price-up-color) !important; /* Use !important to override inherited text color */
+/* Now applying to ASX code and live price value directly */
+.positive,
+.share-code-display.positive, /* For ASX code in table */
+.live-price-value.positive,   /* For live price in table */
+.mobile-card h3.positive,     /* For ASX code in mobile card */
+.live-price-large.positive,   /* For live price in mobile card/modal */
+.asx-code-btn.positive {      /* For ASX code buttons */
+    color: var(--price-up-color) !important;
 }
 
-.negative {
-    color: var(--price-down-color) !important; /* Use !important to override inherited text color */
+.negative,
+.share-code-display.negative,
+.live-price-value.negative,
+.mobile-card h3.negative,
+.live-price-large.negative,
+.asx-code-btn.negative {
+    color: var(--price-down-color) !important;
 }
 
-.neutral {
-    color: var(--price-neutral-color) !important; /* Use !important to override inherited text color */
+.neutral,
+.share-code-display.neutral,
+.live-price-value.neutral,
+.mobile-card h3.neutral,
+.live-price-large.neutral,
+.asx-code-btn.neutral {
+    color: var(--price-neutral-color) !important;
 }
 
 /* Remove background color from table cells, as text color is desired */
@@ -2310,6 +2896,65 @@ table td.live-price-cell.negative-change {
 .modal-content input[type="number"]::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
+}
+
+/* NEW: Styling for Checkbox Group */
+.form-check-group {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px; /* Space below the checkbox */
+    margin-top: 10px; /* Space above the checkbox */
+    padding: 10px;
+    background-color: var(--table-header-bg); /* Subtle background for the group */
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.form-check-group input[type="checkbox"] {
+    /* Make checkbox larger */
+    width: 24px;
+    height: 24px;
+    min-width: 24px; /* Ensure it doesn't shrink on mobile */
+    min-height: 24px; /* Ensure it doesn't shrink on mobile */
+    margin-right: 10px;
+    cursor: pointer;
+    border: 1px solid var(--input-border);
+    border-radius: 4px;
+    appearance: none; /* Hide default checkbox */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: var(--input-bg);
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+    flex-shrink: 0; /* Prevent the checkbox from shrinking */
+}
+
+.form-check-group input[type="checkbox"]:checked {
+    background-color: var(--success-color); /* Green when checked */
+    border-color: var(--success-color);
+}
+
+.form-check-group input[type="checkbox"]:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25); /* Focus ring */
+}
+
+.form-check-group label {
+    margin-bottom: 0; /* Remove default label margin */
+    font-weight: 400; /* Lighter font weight for the label */
+    color: var(--text-color);
+    cursor: pointer;
+    flex-grow: 1; /* Allow label to take remaining space */
+    font-size: 1em; /* Ensure readable font size */
+}
+
+/* Custom checkmark for the checkbox */
+.form-check-group input[type="checkbox"]:checked::before {
+    content: '\2713'; /* Unicode checkmark character */
+    display: block;
+    color: var(--button-text); /* White checkmark */
+    font-size: 18px; /* Adjust size of checkmark */
+    line-height: 24px; /* Vertically center checkmark */
+    text-align: center;
 }
 
 /* NEW: Styling for Checkbox Group */

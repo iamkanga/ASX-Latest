@@ -415,9 +415,15 @@ function addShareToTable(share) {
     }
 
     row.innerHTML = `
-        <td><span class="share-code-display">${share.shareName || ''}</span></td>
+        <td><span class="share-code-display ${
+            livePriceData && livePriceData.live !== null && livePriceData.prevClose !== null && !isNaN(livePriceData.live) && !isNaN(livePriceData.prevClose) ?
+            (livePriceData.live - livePriceData.prevClose > 0 ? 'positive' : (livePriceData.live - livePriceData.prevClose < 0 ? 'negative' : 'neutral')) : ''
+        }">${share.shareName || ''}</span></td>
         <td class="live-price-cell">
-            <span class="live-price-value">${
+            <span class="live-price-value ${
+                livePriceData && livePriceData.live !== null && livePriceData.prevClose !== null && !isNaN(livePriceData.live) && !isNaN(livePriceData.prevClose) ?
+                (livePriceData.live - livePriceData.prevClose > 0 ? 'positive' : (livePriceData.live - livePriceData.prevClose < 0 ? 'negative' : 'neutral')) : ''
+            }">${
                 livePriceData && livePriceData.live !== null && !isNaN(livePriceData.live) ?
                 '$' + livePriceData.live.toFixed(2) : 'N/A'
             }</span>
@@ -529,7 +535,7 @@ function addShareToMobileCards(share) {
     }
 
     card.innerHTML = `
-        <h3>${share.shareName || ''}</h3>
+        <h3 class="${priceChangeClass}">${share.shareName || ''}</h3>
         <div class="live-price-display-section">
             <div class="fifty-two-week-row">
                 <span class="fifty-two-week-value low">Low: ${livePriceData && livePriceData.Low52 !== null && !isNaN(livePriceData.Low52) ? '$' + livePriceData.Low52.toFixed(2) : 'N/A'}</span>
@@ -1105,7 +1111,21 @@ function showShareDetails() {
         showCustomAlert('Selected share not found.');
         return;
     }
+    // Determine price change class for modalShareName
+    let modalShareNamePriceChangeClass = 'neutral';
+    const livePriceDataForName = livePrices[share.shareName.toUpperCase()];
+    if (livePriceDataForName && livePriceDataForName.live !== null && livePriceDataForName.prevClose !== null && !isNaN(livePriceDataForName.live) && !isNaN(livePriceDataForName.prevClose)) {
+        const change = livePriceDataForName.live - livePriceDataForName.prevClose;
+        if (change > 0) {
+            modalShareNamePriceChangeClass = 'positive';
+        } else if (change < 0) {
+            modalShareNamePriceChangeClass = 'negative';
+        } else {
+            modalShareNamePriceChangeClass = 'neutral';
+        }
+    }
     modalShareName.textContent = share.shareName || 'N/A';
+    modalShareName.className = 'modal-share-name ' + modalShareNamePriceChangeClass; // Apply class to modalShareName
     
     const enteredPriceNum = Number(share.currentPrice);
 
@@ -1704,6 +1724,22 @@ function renderAsxCodeButtons() {
         button.className = 'asx-code-btn';
         button.textContent = asxCode;
         button.dataset.asxCode = asxCode;
+
+        // Determine price change class for the button
+        let buttonPriceChangeClass = '';
+        const livePriceData = livePrices[asxCode.toUpperCase()];
+        if (livePriceData && livePriceData.live !== null && livePriceData.prevClose !== null && !isNaN(livePriceData.live) && !isNaN(livePriceData.prevClose)) {
+            const change = livePriceData.live - livePriceData.prevClose;
+            if (change > 0) {
+                buttonPriceChangeClass = 'positive';
+            } else if (change < 0) {
+                buttonPriceChangeClass = 'negative';
+            } else {
+                buttonPriceChangeClass = 'neutral';
+            }
+        }
+        button.classList.add(buttonPriceChangeClass); // Apply the color class
+
         asxCodeButtonsContainer.appendChild(button);
         button.addEventListener('click', (event) => {
             logDebug('ASX Button Click: Button for ' + asxCode + ' clicked.');
@@ -2934,14 +2970,18 @@ function updateSidebarAddButtonContext() {
     if (currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
         newShareBtn.addEventListener('click', handleAddCashAssetClick);
         // Update the text/icon if needed (optional, but good for clarity)
-        if (newShareBtn.querySelector('span')) newShareBtn.querySelector('span').textContent = 'Add New Cash Asset';
-        if (newShareBtn.querySelector('i')) newShareBtn.querySelector('i').className = 'fas fa-money-bill-wave'; // Example icon change
+        const sidebarSpan = newShareBtn.querySelector('span');
+        const sidebarIcon = newShareBtn.querySelector('i');
+        if (sidebarSpan) sidebarSpan.textContent = 'Add New Cash Asset';
+        if (sidebarIcon) sidebarIcon.className = 'fas fa-money-bill-wave'; // Example icon change
         logDebug('DEBUG: Sidebar "Add New Share" button (newShareBtn) now opens Add Cash Asset modal.');
     } else {
         newShareBtn.addEventListener('click', handleAddShareClick);
         // Revert text/icon to original for stock view
-        if (newShareBtn.querySelector('span')) newShareBtn.querySelector('span').textContent = 'Add New Share';
-        if (newShareBtn.querySelector('i')) newShareBtn.querySelector('i').className = 'fas fa-plus-circle'; // Original icon
+        const sidebarSpan = newShareBtn.querySelector('span');
+        const sidebarIcon = newShareBtn.querySelector('i');
+        if (sidebarSpan) sidebarSpan.textContent = 'Add New Share';
+        if (sidebarIcon) sidebarIcon.className = 'fas fa-plus-circle'; // Original icon
         logDebug('DEBUG: Sidebar "Add New Share" button (newShareBtn) now opens Add Share modal.');
     }
 }
