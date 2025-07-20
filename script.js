@@ -4599,16 +4599,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 window._userAuthenticated = true; // Mark user as authenticated
                 
                 // Show main app content and header here, ensuring they are visible
-        if (mainContainer) {
-            mainContainer.classList.remove('app-hidden'); // Remove the class if present
-            mainContainer.style.display = 'block'; // Explicitly set display to block
-        }
-        if (appHeader) {
-            appHeader.classList.remove('app-hidden'); // Remove the class if present
-            appHeader.style.display = 'block'; // Explicitly set display to block
-        }
-        // Adjust padding immediately after showing header
-        adjustMainContentPadding();
+            if (mainContainer) {
+                mainContainer.classList.remove('app-hidden'); // Remove the class if present
+                mainContainer.style.display = 'block'; // Explicitly set display to block
+            }
+            if (appHeader) {
+                appHeader.classList.remove('app-hidden'); // Remove the class if present
+                appHeader.style.display = 'block'; // Explicitly set display to block
+            }
+            // Adjust padding immediately after showing header
+            adjustMainContentPadding();
 
                 // Start pulsing animation on icon after successful sign-in
                 if (splashKangarooIcon) {
@@ -4665,14 +4665,16 @@ document.addEventListener('DOMContentLoaded', function() {
                         splashSignInBtn.disabled = false; // Enable sign-in button
                         splashSignInBtn.textContent = 'Google Sign In'; // Reset button text
                     }
-                    // Hide main app content
-                    if (mainContainer) {
-                        mainContainer.classList.add('app-hidden');
-                    }
-                    if (appHeader) {
-                        appHeader.classList.add('app-hidden');
-                    }
-                    logDebug('Splash Screen: User signed out, splash screen remains visible for sign-in.');
+                    // Hide main app content if not authenticated
+            if (mainContainer) {
+                mainContainer.classList.add('app-hidden');
+                mainContainer.style.display = 'none'; // Ensure it's hidden
+            }
+            if (appHeader) {
+                appHeader.classList.add('app-hidden');
+                appHeader.style.display = 'none'; // Ensure it's hidden
+            }
+            logDebug('Splash Screen: User signed out, splash screen remains visible for sign-in.');
                 } else {
                     console.warn('Splash Screen: User signed out, but splash screen element not found. App content might be visible.');
                 }
