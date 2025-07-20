@@ -2506,16 +2506,9 @@ function renderCashCategories() {
  * Adds a new empty cash category to the UI and `userCashCategories` array.
  * This function is now primarily for triggering the modal for a new entry.
  */
-function addCashCategoryUI() {
-    logDebug('Cash Categories: Add new category UI triggered.');
-    clearCashAssetForm(); // Clear the form first
-    cashFormTitle.textContent = 'Add New Cash Asset'; // Set title for new asset
-    setIconDisabled(deleteCashAssetBtn, true); // Hide delete button for new asset
-    addCashAssetCommentBtn.classList.remove('hidden'); // Show add comment button for new asset
-    addCommentSection(cashAssetCommentsContainer, '', '', true); // Add initial empty comment section for cash asset
-    showModal(cashAssetFormModal);
-    cashAssetNameInput.focus();
-    checkCashAssetFormDirtyState(); // Initial dirty state check
+function handleAddCashAssetClick() {
+    logDebug('UI: Add Cash Asset button clicked (contextual).');
+    addCashCategoryUI(); // This function now directly opens the modal for adding a new cash asset
 }
 
 /**
