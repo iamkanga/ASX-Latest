@@ -62,20 +62,32 @@ self.addEventListener('fetch', (event) => {
         event.respondWith(
             caches.match(event.request).then((cachedResponse) => {
                 const fetchPromise = fetch(event.request).then((networkResponse) => {
-                    // Cache successful responses for future use
-                    // Do not cache opaque responses (e.g., from third-party CDNs that don't allow CORS)
-                    if (networkResponse.ok && (networkResponse.type === 'basic' || networkResponse.type === 'cors')) {
-                        const responseToCache = networkResponse.clone();
-                        caches.open(CACHE_NAME).then((cache) => {
-                            cache.put(event.request, responseToCache);
-                        });
-                    }
+                // Check if we received a valid response and if it's cacheable
+                if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic' && networkResponse.type !== 'cors') {
+                    // Not a valid or cacheable response, just return it without caching
                     return networkResponse;
-                }).catch(error => {
-                    console.error(`Service Worker: Network fetch failed for ${event.request.url}.`, error);
-                    // If network fails, try to return a cached response as a fallback
-                    return caches.match(event.request); // Try to get from cache again if network failed
+                }
+
+                // Clone the response to cache it. The original response will be returned to the browser.
+                const responseToCache = networkResponse.clone();
+
+                caches.open(CACHE_NAME).then((cache) => {
+                    // Use a try-catch block around cache.put for extra resilience
+                    try {
+                        cache.put(event.request, responseToCache);
+                    } catch (e) {
+                        console.warn(`Service Worker: Failed to cache ${event.request.url}:`, e);
+                        // This catch handles potential issues with put, like NotFoundError
+                        // but the original networkResponse is still returned.
+                    }
                 });
+
+                return networkResponse;
+            }).catch(error => {
+                console.error(`Service Worker: Network fetch failed for ${event.request.url}.`, error);
+                // If network fails, try to return a cached response as a fallback
+                return caches.match(event.request);
+            });
 
                 // Return cached response immediately if available, otherwise wait for network
                 return cachedResponse || fetchPromise;
