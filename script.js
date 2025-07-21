@@ -2107,7 +2107,10 @@ async function displayStockDetailsInSearchModal(asxCode) {
 
         // Construct the display HTML
         searchResultDisplay.innerHTML = `
-            <h3 class="${priceClass}">${stockData.ASXCode || 'N/A'} - ${stockData.CompanyName || 'N/A'}</h3>
+            <div class="text-center mb-4">
+                <h3 class="${priceClass}">${stockData.ASXCode || 'N/A'} ${stockData.CompanyName ? '- ' + stockData.CompanyName : ''}</h3>
+                <span class="text-sm text-gray-500">${stockData.CompanyName ? '' : '(Company Name N/A)'}</span>
+            </div>
             <div class="live-price-display-section">
                 <div class="fifty-two-week-row">
                     <span class="fifty-two-week-value low">Low: ${!isNaN(low52Week) ? '$' + low52Week.toFixed(2) : 'N/A'}</span>
