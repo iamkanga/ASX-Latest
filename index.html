@@ -104,6 +104,9 @@
                 <button id="newShareBtn" class="menu-button-item" data-action-closes-menu="true">
                     <i class="fas fa-plus-circle"></i> <span>Add New Share</span>
                 </button>
+                <button id="searchStockBtn" class="menu-button-item" data-action-closes-menu="true">
+                    <i class="fas fa-search-plus"></i> <span>Search & Add Stock</span>
+                </button>
                 <!-- Show Last Live Price Toggle -->
                 <div class="menu-button-item toggle-switch-container" data-action-closes-menu="false">
                     <label class="switch">
@@ -574,6 +577,31 @@
         </div>
     </div>
 
+<div id="stockSearchModal" class="modal">
+        <div class="modal-content stock-search-modal-content">
+            <div class="modal-header-with-icon">
+                <h2 id="stockSearchTitle">Search ASX Stocks</h2>
+                <div class="modal-header-action-group">
+                    <span class="close-button search-close-button">&times;</span>
+                </div>
+            </div>
+            
+            <div class="modal-body-scrollable">
+                <div class="search-input-container">
+                    <input type="text" id="asxSearchInput" placeholder="Search by Code (e.g., BHP)" autocomplete="off">
+                    <div id="asxSuggestions" class="autocomplete-suggestions">
+                        </div>
+                </div>
+
+                <div id="searchResultDisplay" class="search-result-display">
+                    <p class="initial-message">Start typing an ASX code to search.</p>
+                </div>
+            </div>
+
+            <div class="modal-action-buttons-footer">
+                </div>
+        </div>
+    </div>
     <!-- NEW: Cash Asset Details Modal (2.2) -->
     <div id="cashAssetDetailModal" class="modal">
         <div class="modal-content">

@@ -184,6 +184,19 @@ const targetHitIconCount = document.getElementById('targetHitIconCount'); // NEW
 const toggleCompactViewBtn = document.getElementById('toggleCompactViewBtn');
 const showLastLivePriceToggle = document.getElementById('showLastLivePriceToggle');
 const splashScreen = document.getElementById('splashScreen');
+const searchStockBtn = document.getElementById('searchStockBtn'); // NEW: Search Stock button
+const stockSearchModal = document.getElementById('stockSearchModal'); // NEW: Stock Search Modal
+const stockSearchTitle = document.getElementById('stockSearchTitle'); // NEW: Title for search modal
+const asxSearchInput = document.getElementById('asxSearchInput'); // NEW: Search input field
+const asxSuggestions = document.getElementById('asxSuggestions'); // NEW: Autocomplete suggestions container
+const searchResultDisplay = document.getElementById('searchResultDisplay'); // NEW: Display area for search results
+const searchModalActionButtons = document.querySelector('#stockSearchModal .modal-action-buttons-footer'); // NEW: Action buttons container
+const searchModalCloseButton = document.querySelector('.search-close-button'); // NEW: Close button for search modal
+
+// NEW: Global variable for storing loaded ASX code data from CSV
+let allAsxCodes = []; // { code: 'BHP', name: 'BHP Group Ltd' }
+let currentSelectedSuggestionIndex = -1; // For keyboard navigation in autocomplete
+let currentSearchShareData = null; // Stores data of the currently displayed stock in search modal
 const splashKangarooIcon = document.getElementById('splashKangarooIcon');
 const splashSignInBtn = document.getElementById('splashSignInBtn');
 const alertPanel = document.getElementById('alertPanel'); // NEW: Reference to the alert panel (not in current HTML, but kept for consistency)
@@ -568,10 +581,6 @@ function addShareToTable(share) {
     logDebug('Table: Added share ' + share.shareName + ' to table.');
 }
 
-/**
- * Adds a single share to the mobile cards view.
- * @param {object} share The share object to add.
- */
 function addShareToMobileCards(share) {
     if (!mobileShareCardsContainer) {
         console.error('addShareToMobileCards: mobileShareCardsContainer element not found.');
@@ -611,7 +620,7 @@ function addShareToMobileCards(share) {
             }
             if (currentLivePrice !== null && previousClosePrice !== null && !isNaN(currentLivePrice) && !isNaN(previousClosePrice)) {
                 const change = currentLivePrice - previousClosePrice;
-                const percentageChange = (previousClosePrice !== 0 ? (change / previousClosePrice) * 100 : 0);
+                const percentageChange = (previousClosePrice !== 0 ? (change / previousPrice) * 100 : 0);
                 displayPriceChange = `${change.toFixed(2)} (${percentageChange.toFixed(2)}%)`;
                 priceClass = change > 0 ? 'positive' : (change < 0 ? 'negative' : 'neutral');
             } else if (lastFetchedLive !== null && lastFetchedPrevClose !== null && !isNaN(lastFetchedLive) && !isNaN(lastFetchedPrevClose)) {
@@ -2033,6 +2042,52 @@ function calculateUnfrankedYield(dividendAmount, currentPrice) {
     return (dividendAmount / currentPrice) * 100;
 }
 
+/**
+ * Loads ASX company codes and names from a local CSV file.
+ * Assumes CSV has headers 'ASX Code' and 'Company Name'.
+ * @returns {Promise<Array<object>>} A promise that resolves to an array of stock objects.
+ */
+async function loadAsxCodesFromCSV() {
+    try {
+        const response = await fetch('./asx_codes.csv'); // Assuming the CSV is named asx_codes.csv and is in the root
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const csvText = await response.text();
+        logDebug('CSV: ASX codes CSV loaded successfully. Parsing...');
+
+        const lines = csvText.split('\n').filter(line => line.trim() !== '');
+        if (lines.length === 0) {
+            console.warn('CSV: ASX codes CSV is empty.');
+            return [];
+        }
+
+        const headers = lines[0].split(',').map(header => header.trim());
+        const asxCodeIndex = headers.indexOf('ASX Code');
+        const companyNameIndex = headers.indexOf('Company Name');
+
+        if (asxCodeIndex === -1 || companyNameIndex === -1) {
+            throw new Error('CSV: Required headers "ASX Code" or "Company Name" not found in CSV.');
+        }
+
+        const parsedCodes = lines.slice(1).map(line => {
+            const values = line.split(',');
+            // Handle cases where lines might not have enough columns or contain extra commas within quoted fields
+            // For simple CSV, splitting by comma is usually sufficient. More robust parsing might use a library.
+            const code = values[asxCodeIndex] ? values[asxCodeIndex].trim().toUpperCase() : '';
+            const name = values[companyNameIndex] ? values[companyNameIndex].trim() : '';
+            return { code: code, name: name };
+        }).filter(item => item.code !== ''); // Filter out any entries without a code
+
+        logDebug(`CSV: Successfully parsed ${parsedCodes.length} ASX codes from CSV.`);
+        return parsedCodes;
+
+    } catch (error) {
+        console.error('CSV: Error loading or parsing ASX codes CSV:', error);
+        showCustomAlert('Error loading stock search data: ' + error.message, 3000);
+        return [];
+    }
+}
 /**
  * Checks if the Australian Securities Exchange (ASX) is currently open.
  * Considers standard trading hours and public holidays observed in Sydney.
@@ -3822,6 +3877,7 @@ async function initializeAppLogic() {
     // NEW: Hide cash asset modals initially
     if (cashAssetFormModal) cashAssetFormModal.style.setProperty('display', 'none', 'important');
     if (cashAssetDetailModal) cashAssetDetailModal.style.setProperty('display', 'none', 'important');
+    if (stockSearchModal) stockSearchModal.style.setProperty('display', 'none', 'important'); // NEW: Hide stock search modal
 
 
     // Service Worker Registration
@@ -3974,6 +4030,20 @@ async function initializeAppLogic() {
             button.addEventListener('click', closeModals); // Other modals still close normally
         }
     });
+
+    // NEW: Close button for stock search modal
+    if (searchModalCloseButton) {
+        searchModalCloseButton.addEventListener('click', () => {
+            logDebug('Search Modal: Close button clicked.');
+            asxSearchInput.value = ''; // Clear input on close
+            searchResultDisplay.innerHTML = '<p class="initial-message">Start typing an ASX code to search.</p>'; // Reset display
+            searchModalActionButtons.innerHTML = ''; // Clear action buttons
+            asxSuggestions.classList.remove('active'); // Hide suggestions
+            currentSelectedSuggestionIndex = -1; // Reset selection
+            currentSearchShareData = null; // Clear current search data
+            hideModal(stockSearchModal);
+        });
+    }
 
     // Global click listener to close modals/context menu if clicked outside
     window.addEventListener('click', (event) => {
@@ -4788,6 +4858,23 @@ if (sortSelect) {
             toggleAppSidebar(false); // Close sidebar after action
         });
     }
+
+    // NEW: Search Stock Button Listener
+    if (searchStockBtn) {
+        searchStockBtn.addEventListener('click', () => {
+            logDebug('UI: Search Stock button clicked. Opening search modal.');
+            // Clear and reset the modal content when opening
+            asxSearchInput.value = '';
+            searchResultDisplay.innerHTML = '<p class="initial-message">Start typing an ASX code to search.</p>';
+            searchModalActionButtons.innerHTML = '';
+            asxSuggestions.classList.remove('active');
+            currentSelectedSuggestionIndex = -1;
+            currentSearchShareData = null;
+            showModal(stockSearchModal);
+            asxSearchInput.focus();
+            toggleAppSidebar(false); // Close sidebar
+        });
+    }
     
     // NEW: Show Last Live Price Toggle Listener
 if (showLastLivePriceToggle) {
@@ -4945,6 +5032,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Load data and then hide splash screen
                 await loadUserWatchlistsAndSettings(); // This now sets _appDataLoaded and calls hideSplashScreenIfReady
                 await fetchLivePrices(); // Ensure live prices are fetched after settings and current watchlist are loaded
+                // NEW: Load ASX codes for autocomplete
+                allAsxCodes = await loadAsxCodesFromCSV();
+                logDebug(`ASX Autocomplete: Loaded ${allAsxCodes.length} codes for search.`);
 
                 // Removed: startLivePriceUpdates(); // This is now called by renderWatchlist based on selected type
                 
