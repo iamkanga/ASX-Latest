@@ -1432,57 +1432,53 @@ function sortShares() {
             const livePriceDataA = livePrices[a.shareName.toUpperCase()];
             const livePriceA = livePriceDataA ? livePriceDataA.live : undefined;
             // Price for yield calculation: prefer live price, fall back to entered price
-            // Ensure price is not zero to avoid division by zero
-            const priceForYieldA = (livePriceA !== undefined && livePriceA !== null && !isNaN(livePriceA) && livePriceA !== 0) ? livePriceA : (Number(a.currentPrice) || 0);
+            // Default to 0 if price is invalid or zero to avoid division issues in yield functions
+            const priceForYieldA = (livePriceA !== undefined && livePriceA !== null && !isNaN(livePriceA) && livePriceA > 0) ? livePriceA : (Number(a.currentPrice) > 0 ? Number(a.currentPrice) : 0);
 
             // Get live price data for share B
             const livePriceDataB = livePrices[b.shareName.toUpperCase()];
             const livePriceB = livePriceDataB ? livePriceDataB.live : undefined;
             // Price for yield calculation: prefer live price, fall back to entered price
-            // Ensure price is not zero to avoid division by zero
-            const priceForYieldB = (livePriceB !== undefined && livePriceB !== null && !isNaN(livePriceB) && livePriceB !== 0) ? livePriceB : (Number(b.currentPrice) || 0);
+            // Default to 0 if price is invalid or zero to avoid division issues in yield functions
+            const priceForYieldB = (livePriceB !== undefined && livePriceB !== null && !isNaN(livePriceB) && livePriceB > 0) ? livePriceB : (Number(b.currentPrice) > 0 ? Number(b.currentPrice) : 0);
 
-            const dividendAmountA = Number(a.dividendAmount) || 0;
-            const frankingCreditsA = Number(a.frankingCredits) || 0;
+            const dividendAmountA = Number(a.dividendAmount) || 0; // Default to 0 if not a number
+            const frankingCreditsA = Number(a.frankingCredits) || 0; // Default to 0 if not a number
 
-            const dividendAmountB = Number(b.dividendAmount) || 0;
-            const frankingCreditsB = Number(b.frankingCredits) || 0;
+            const dividendAmountB = Number(b.dividendAmount) || 0; // Default to 0 if not a number
+            const frankingCreditsB = Number(b.frankingCredits) || 0; // Default to 0 if not a number
 
-            let effectiveYieldA = null;
-            // Only calculate yields if priceForYieldA is a valid non-zero number
-            if (priceForYieldA > 0) {
-                const frankedYieldA = calculateFrankedYield(dividendAmountA, priceForYieldA, frankingCreditsA);
-                const unfrankedYieldA = calculateUnfrankedYield(dividendAmountA, priceForYieldA);
+            // Calculate yields for share A using the determined priceForYieldA
+            const frankedYieldA = calculateFrankedYield(dividendAmountA, priceForYieldA, frankingCreditsA);
+            const unfrankedYieldA = calculateUnfrankedYield(dividendAmountA, priceForYieldA);
 
-                if (frankingCreditsA > 0 && frankedYieldA !== null && !isNaN(frankedYieldA)) {
-                    effectiveYieldA = frankedYieldA;
-                } else if (unfrankedYieldA !== null && !isNaN(unfrankedYieldA)) {
-                    effectiveYieldA = unfrankedYieldA;
-                }
+            // Calculate yields for share B using the determined priceForYieldB
+            const frankedYieldB = calculateFrankedYield(dividendAmountB, priceForYieldB, frankingCreditsB);
+            const unfrankedYieldB = calculateUnfrankedYield(dividendAmountB, priceForYieldB);
+
+            // Determine the effective yield for sorting for A (prioritize franked if > 0, then unfranked)
+            let effectiveYieldA = 0; // Default to 0, not null
+            if (frankingCreditsA > 0 && frankedYieldA > 0) { // Only use franked if franking > 0 AND yield > 0
+                effectiveYieldA = frankedYieldA;
+            } else if (unfrankedYieldA > 0) { // Only use unfranked if yield > 0
+                effectiveYieldA = unfrankedYieldA;
             }
+            // If both are 0 or less, effectiveYieldA remains 0
 
-            let effectiveYieldB = null;
-            // Only calculate yields if priceForYieldB is a valid non-zero number
-            if (priceForYieldB > 0) {
-                const frankedYieldB = calculateFrankedYield(dividendAmountB, priceForYieldB, frankingCreditsB);
-                const unfrankedYieldB = calculateUnfrankedYield(dividendAmountB, priceForYieldB);
-
-                if (frankingCreditsB > 0 && frankedYieldB !== null && !isNaN(frankedYieldB)) {
-                    effectiveYieldB = frankedYieldB;
-                } else if (unfrankedYieldB !== null && !isNaN(unfrankedYieldB)) {
-                    effectiveYieldB = unfrankedYieldB;
-                }
+            // Determine the effective yield for sorting for B (prioritize franked if > 0, then unfranked)
+            let effectiveYieldB = 0; // Default to 0, not null
+            if (frankingCreditsB > 0 && frankedYieldB > 0) { // Only use franked if franking > 0 AND yield > 0
+                effectiveYieldB = frankedYieldB;
+            } else if (unfrankedYieldB > 0) { // Only use unfranked if yield > 0
+                effectiveYieldB = unfrankedYieldB;
             }
+            // If both are 0 or less, effectiveYieldB remains 0
 
             logDebug(`Sort Debug - Dividend: Comparing ${a.shareName} (Effective Yield A: ${effectiveYieldA}) vs ${b.shareName} (Effective Yield B: ${effectiveYieldB})`);
 
-            // Handle null/NaN yields by pushing them to the bottom (or top for asc)
-            // Use a very small negative number for asc and very large positive for desc
-            // to ensure null/NaN values are always at the end of the list.
-            const finalYieldA = (effectiveYieldA === null || isNaN(effectiveYieldA)) ? (order === 'asc' ? -1e10 : 1e10) : effectiveYieldA;
-            const finalYieldB = (effectiveYieldB === null || isNaN(effectiveYieldB)) ? (order === 'asc' ? -1e10 : 1e10) : effectiveYieldB;
-
-            return order === 'asc' ? finalYieldA - finalYieldB : finalYieldB - finalYieldA;
+            // Perform numerical comparison. Since effectiveYieldA/B are now always numbers (0 or positive),
+            // we don't need the Infinity/1e10 logic here.
+            return order === 'asc' ? effectiveYieldA - effectiveYieldB : effectiveYieldB - effectiveYieldA;
         } else if (field === 'shareName') {
             const nameA = (a.shareName || '').toUpperCase().trim();
             const nameB = (b.shareName || '').toUpperCase().trim();
@@ -1930,20 +1926,25 @@ function scrollToShare(asxCode) {
 
 const COMPANY_TAX_RATE = 0.30;
 function calculateUnfrankedYield(dividendAmount, currentPrice) {
-    if (typeof dividendAmount !== 'number' || isNaN(dividendAmount) || dividendAmount <= 0) { return null; }
-    if (typeof currentPrice !== 'number' || isNaN(currentPrice) || currentPrice <= 0) { return null; }
+    // Ensure inputs are valid numbers and currentPrice is not zero
+    if (typeof dividendAmount !== 'number' || isNaN(dividendAmount) || dividendAmount < 0) { return 0; } // Yield can't be negative, default to 0
+    if (typeof currentPrice !== 'number' || isNaN(currentPrice) || currentPrice <= 0) { return 0; } // Price must be positive for yield calculation
     return (dividendAmount / currentPrice) * 100;
 }
 
 function calculateFrankedYield(dividendAmount, currentPrice, frankingCreditsPercentage) {
-    if (typeof dividendAmount !== 'number' || isNaN(dividendAmount) || dividendAmount <= 0) { return null; }
-    if (typeof currentPrice !== 'number' || isNaN(currentPrice) || currentPrice <= 0) { return null; }
-    if (typeof frankingCreditsPercentage !== 'number' || isNaN(frankingCreditsPercentage) || frankingCreditsPercentage < 0 || frankingCreditsPercentage > 100) { return null; }
+    // Ensure inputs are valid numbers and currentPrice is not zero
+    if (typeof dividendAmount !== 'number' || isNaN(dividendAmount) || dividendAmount < 0) { return 0; }
+    if (typeof currentPrice !== 'number' || isNaN(currentPrice) || currentPrice <= 0) { return 0; }
+    if (typeof frankingCreditsPercentage !== 'number' || isNaN(frankingCreditsPercentage) || frankingCreditsPercentage < 0 || frankingCreditsPercentage > 100) { return 0; }
+
     const unfrankedYield = calculateUnfrankedYield(dividendAmount, currentPrice);
-    if (unfrankedYield === null) return null;
+    if (unfrankedYield === 0) return 0; // If unfranked is 0, franked is also 0
+
     const frankingRatio = frankingCreditsPercentage / 100;
     const frankingCreditPerShare = dividendAmount * (COMPANY_TAX_RATE / (1 - COMPANY_TAX_RATE)) * frankingRatio;
     const grossedUpDividend = dividendAmount + frankingCreditPerShare;
+
     return (grossedUpDividend / currentPrice) * 100;
 }
 

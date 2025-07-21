@@ -3727,12 +3727,10 @@ main.container {
 /* Default for mobile compact view: two columns */
 .mobile-share-cards.compact-view {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    /* Use calc to subtract half the gap from each 1fr to prevent overflow */
+    grid-template-columns: repeat(auto-fit, minmax(calc(50% - 5px), 1fr)); /* Two columns on mobile, auto-fit for safety */
     gap: 10px;
-    /* Adjusted padding for mobile compact view */
-    /* Use padding-inline for left/right and ensure box-sizing is border-box */
-    padding-inline: 10px; /* Applies 10px padding to left and right */
-    padding-block: 10px; /* Applies 10px padding to top and bottom */
+    padding: 10px; /* Keep padding */
     box-sizing: border-box; /* Ensure padding is included in element's total width */
 }
 
@@ -3740,11 +3738,14 @@ main.container {
 @media (max-width: 768px) {
     .mobile-share-cards.compact-view {
         display: grid !important;
-        grid-template-columns: repeat(2, 1fr) !important;
+        /* Use calc to subtract half the gap from each 1fr to prevent overflow */
+        grid-template-columns: repeat(auto-fit, minmax(calc(50% - 5px), 1fr)) !important; /* Force 2 columns, accounting for gap */
         gap: 10px !important;
-        padding-inline: 10px !important; /* Force left/right padding */
-        padding-block: 10px !important; /* Force top/bottom padding */
-        box-sizing: border-box !important; /* Ensure box-sizing is applied */
+        padding: 10px !important;
+        box-sizing: border-box !important;
+        /* Also ensure no extra margin/padding on body/html is causing overflow */
+        margin: 0 !important; /* Remove any default margins */
+        width: 100% !important; /* Ensure it takes full available width */
     }
     /* Ensure individual cards fill their grid column width on mobile */
     .mobile-share-cards.compact-view .mobile-card {
@@ -3756,12 +3757,14 @@ main.container {
 @media (min-width: 769px) {
     .mobile-share-cards.compact-view {
         display: grid !important;
-        grid-template-columns: repeat(4, 1fr) !important;
+        /* Use calc to subtract gap from each 1fr for 4 columns */
+        grid-template-columns: repeat(auto-fit, minmax(calc(25% - 11.25px), 1fr)) !important; /* 4 columns, accounting for gap */
         gap: 15px !important;
         padding: 15px !important;
         max-width: none !important;
         margin: 0 !important;
-        box-sizing: border-box !important; /* Ensure box-sizing is applied */
+        box-sizing: border-box !important;
+        width: 100% !important; /* Ensure it takes full available width */
     }
     /* Ensure individual cards fill their grid column width */
     .mobile-share-cards.compact-view .mobile-card {
