@@ -2124,6 +2124,9 @@ async function displayStockDetailsInSearchModal(asxCode) {
                     <a id="searchModalFoolLink" href="#" target="_blank" class="external-link">View on Fool.com.au <i class="fas fa-external-link-alt"></i></a>
                 </div>
                 <div class="external-link-item">
+                    <a id="searchModalListcorpLink" href="#" target="_blank" class="external-link">View on Listcorp.com <i class="fas fa-external-link-alt"></i></a>
+                </div>
+                <div class="external-link-item">
                     <a id="searchModalCommSecLink" href="#" target="_blank" class="external-link">View on CommSec.com.au <i class="fas fa-external-link-alt"></i></a>
                 </div>
                 <p class="ghosted-text commsec-message">Requires single CommSec login per session</p>
@@ -2135,11 +2138,13 @@ async function displayStockDetailsInSearchModal(asxCode) {
         const searchModalNewsLink = document.getElementById('searchModalNewsLink');
         const searchModalMarketIndexLink = document.getElementById('searchModalMarketIndexLink');
         const searchModalFoolLink = document.getElementById('searchModalFoolLink');
+        const searchModalListcorpLink = document.getElementById('searchModalListcorpLink'); // NEW: Listcorp link element
         const searchModalCommSecLink = document.getElementById('searchModalCommSecLink');
 
         if (searchModalNewsLink) searchModalNewsLink.href = `https://news.google.com/search?q=${encodedAsxCode}%20ASX&hl=en-AU&gl=AU&ceid=AU%3Aen`;
         if (searchModalMarketIndexLink) searchModalMarketIndexLink.href = `https://www.marketindex.com.au/asx/${asxCode.toLowerCase()}`;
         if (searchModalFoolLink) searchModalFoolLink.href = `https://www.fool.com.au/quote/${asxCode}/`; // Assuming Fool URL structure
+        if (searchModalListcorpLink) searchModalListcorpLink.href = `https://www.listcorp.com/asx/${asxCode.toLowerCase()}`; // NEW: Listcorp URL structure
         if (searchModalCommSecLink) searchModalCommSecLink.href = `https://www.commsec.com.au/markets/company-details.html?code=${asxCode}`;
 
         // Store the fetched data for potential adding/editing
