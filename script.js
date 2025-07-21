@@ -2065,11 +2065,20 @@ async function displayStockDetailsInSearchModal(asxCode) {
         logDebug(`Search: Fetched details for ${asxCode}:`, data);
 
         if (data.length === 0 || !data[0] || !data[0].ASXCode) {
-            searchResultDisplay.innerHTML = `<p class="initial-message">No data found for ${asxCode}. Please check the code.</p>`;
+            // Check if the stock code actually exists in our allAsxCodes list.
+            // This helps differentiate between "no data from script" and "invalid ASX code".
+            const isValidAsxCode = allAsxCodes.some(s => s.code === asxCode.toUpperCase());
+            if (!isValidAsxCode) {
+                searchResultDisplay.innerHTML = `<p class="initial-message">ASX code "${asxCode}" not found in our database. Please check spelling.</p>`;
+            } else {
+                searchResultDisplay.innerHTML = `<p class="initial-message">No live data available for ${asxCode} from source. It might be delisted or the market is closed.</p>`;
+            }
             return;
         }
 
         const stockData = data[0]; // Assuming the first item is the relevant one
+        // Ensure CompanyName defaults to an empty string if not provided by the Apps Script
+        stockData.CompanyName = stockData.CompanyName || "";
 
         // Check if the stock is already in the user's watchlist
         const existingShare = allSharesData.find(s => s.shareName.toUpperCase() === asxCode.toUpperCase());
@@ -2138,13 +2147,13 @@ async function displayStockDetailsInSearchModal(asxCode) {
         const searchModalNewsLink = document.getElementById('searchModalNewsLink');
         const searchModalMarketIndexLink = document.getElementById('searchModalMarketIndexLink');
         const searchModalFoolLink = document.getElementById('searchModalFoolLink');
-        const searchModalListcorpLink = document.getElementById('searchModalListcorpLink'); // NEW: Listcorp link element
+        const searchModalListcorpLink = document.getElementById('searchModalListcorpLink');
         const searchModalCommSecLink = document.getElementById('searchModalCommSecLink');
 
         if (searchModalNewsLink) searchModalNewsLink.href = `https://news.google.com/search?q=${encodedAsxCode}%20ASX&hl=en-AU&gl=AU&ceid=AU%3Aen`;
         if (searchModalMarketIndexLink) searchModalMarketIndexLink.href = `https://www.marketindex.com.au/asx/${asxCode.toLowerCase()}`;
         if (searchModalFoolLink) searchModalFoolLink.href = `https://www.fool.com.au/quote/${asxCode}/`; // Assuming Fool URL structure
-        if (searchModalListcorpLink) searchModalListcorpLink.href = `https://www.listcorp.com/asx/${asxCode.toLowerCase()}`; // NEW: Listcorp URL structure
+        if (searchModalListcorpLink) searchModalListcorpLink.href = `https://www.listcorp.com/asx/${asxCode.toLowerCase()}`;
         if (searchModalCommSecLink) searchModalCommSecLink.href = `https://www.commsec.com.au/markets/company-details.html?code=${asxCode}`;
 
         // Store the fetched data for potential adding/editing
@@ -4074,7 +4083,8 @@ async function initializeAppLogic() {
         });
     }
 
-    // NEW: Autocomplete Search Input Listeners for Stock Search Modal
+    
+    // NEW: Autocomplete Search Input Listeners for Stock Search Modal (Consolidated & Corrected)
     if (asxSearchInput) {
         let currentSuggestions = []; // Stores the current filtered suggestions
 
@@ -4102,6 +4112,7 @@ async function initializeAppLogic() {
                     div.classList.add('suggestion-item');
                     div.textContent = `${stock.code} - ${stock.name}`;
                     div.dataset.code = stock.code; // Store the code for easy access
+                    div.dataset.name = stock.name; // Store the company name
                     div.addEventListener('click', () => {
                         asxSearchInput.value = stock.code; // Set input to selected code
                         asxSuggestions.classList.remove('active'); // Hide suggestions
@@ -4136,7 +4147,11 @@ async function initializeAppLogic() {
             } else if (e.key === 'Enter') {
                 e.preventDefault(); // Prevent form submission
                 if (currentSelectedSuggestionIndex > -1) {
-                    items[currentSelectedSuggestionIndex].click(); // Simulate click on selected item
+                    // Use the code from the selected suggestion's dataset
+                    const selectedCode = items[currentSelectedSuggestionIndex].dataset.code;
+                    asxSearchInput.value = selectedCode; // Update input field with the selected code
+                    asxSuggestions.classList.remove('active'); // Hide suggestions
+                    displayStockDetailsInSearchModal(selectedCode); // Display details for the *selected* stock
                 } else if (asxSearchInput.value.trim() !== '') {
                     // If no suggestion selected but input has value, search directly
                     displayStockDetailsInSearchModal(asxSearchInput.value.trim().toUpperCase());
