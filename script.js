@@ -53,7 +53,8 @@ let originalWatchlistData = null; // Stores original watchlist data for dirty st
 // IMPORTANT: This URL is the exact string provided in your initial script.js file.
 // If CORS errors persist, the solution is to redeploy your Google Apps Script with "Anyone, even anonymous" access
 // and then update this constant with the NEW URL provided by Google Apps Script.
-const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzp7OjZL3zqvJ9wPsV9M-afm2wKeQPbIgGVv_juVpkaRllADESLwj7F4-S7YWYerau-/exec'; 
+const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzp7OjZL3zqvJ9wPsV9M-afm2wKeQPbIgGVv_juVpkaRllADESLwj7F4-S7YWYerau-/exec';
+let livePrices = {}; // Stores live price data: {ASX_CODE: {live: price, prevClose: price, PE: value, High52: value, Low52: value, targetHit: boolean, lastLivePrice: value, lastPrevClose: value}} 
 let livePrices = {}; // Stores live price data: {ASX_CODE: {live: price, prevClose: price, PE: value, High52: value, Low52: value, targetHit: boolean}}
 let livePriceFetchInterval = null; // To hold the interval ID for live price updates
 const LIVE_PRICE_FETCH_INTERVAL_MS = 5 * 60 * 1000; // Fetch every 5 minutes
@@ -80,6 +81,7 @@ let currentMobileViewMode = 'default';
 
 // NEW: Global variable to track if the target hit icon is dismissed for the current session
 let targetHitIconDismissed = false;
+let showLastLivePriceOnClosedMarket = false; // New global variable for the toggle state
 
 // NEW: Global variable to store cash categories data
 let userCashCategories = [];
@@ -181,6 +183,7 @@ const modalLivePriceDisplaySection = document.querySelector('.live-price-display
 const targetHitIconBtn = document.getElementById('targetHitIconBtn'); // NEW: Reference to the icon button
 const targetHitIconCount = document.getElementById('targetHitIconCount'); // NEW: Reference to the count span
 const toggleCompactViewBtn = document.getElementById('toggleCompactViewBtn');
+const showLastLivePriceToggle = document.getElementById('showLastLivePriceToggle');
 const splashScreen = document.getElementById('splashScreen');
 const splashKangarooIcon = document.getElementById('splashKangarooIcon');
 const splashSignInBtn = document.getElementById('splashSignInBtn');
@@ -188,6 +191,7 @@ const alertPanel = document.getElementById('alertPanel'); // NEW: Reference to t
 const alertList = document.getElementById('alertList'); // NEW: Reference to the alert list container (not in current HTML, but kept for consistency)
 const closeAlertPanelBtn = document.getElementById('closeAlertPanelBtn'); // NEW: Reference to close alert panel button (not in current HTML, but kept for consistency)
 const clearAllAlertsBtn = document.getElementById('clearAllAlertsBtn'); // NEW: Reference to clear all alerts button (not in current HTML, but kept for consistency)
+const showLastLivePriceToggle = document.getElementById('showLastLivePriceToggle'); // NEW: Reference to the new toggle switch
 
 // NEW: Cash & Assets UI Elements (1)
 const stockWatchlistSection = document.getElementById('stockWatchlistSection');
@@ -428,27 +432,47 @@ function addShareToTable(share) {
         row.classList.add('target-hit-alert');
     }
 
+    const isMarketOpen = isAsxMarketOpen();
+    let displayLivePrice = 'N/A';
+    let displayPriceChange = '';
+    let priceClass = '';
+
+    if (livePriceData) {
+        const currentPrice = livePriceData.live;
+        const previousClose = livePriceData.data.prevClose; // Changed to livePriceData.data.prevClose
+        const lastFetchedLive = livePriceData.lastLivePrice;
+        const lastFetchedPrevClose = livePriceData.lastPrevClose;
+
+        if (isMarketOpen || showLastLivePriceOnClosedMarket) {
+            // Show live data if market is open, or if market is closed but toggle is ON
+            if (currentPrice !== null && !isNaN(currentPrice)) {
+                displayLivePrice = '$' + currentPrice.toFixed(2);
+            }
+            if (currentPrice !== null && previousClose !== null && !isNaN(currentPrice) && !isNaN(previousClose)) {
+                const change = currentPrice - previousClose;
+                const percentageChange = (previousClose !== 0 ? (change / previousClose) * 100 : 0);
+                displayPriceChange = `${change.toFixed(2)} (${percentageChange.toFixed(2)}%)`;
+                priceClass = change > 0 ? 'positive' : (change < 0 ? 'negative' : 'neutral');
+            } else if (lastFetchedLive !== null && lastFetchedPrevClose !== null && !isNaN(lastFetchedLive) && !isNaN(lastFetchedPrevClose)) {
+                // Fallback to last fetched values if current live/prevClose are null but lastFetched are present
+                const change = lastFetchedLive - lastFetchedPrevClose;
+                const percentageChange = (lastFetchedPrevClose !== 0 ? (change / lastFetchedPrevClose) * 100 : 0);
+                displayPriceChange = `${change.toFixed(2)} (${percentageChange.toFixed(2)}%)`;
+                priceClass = change > 0 ? 'positive' : (change < 0 ? 'negative' : 'neutral');
+            }
+        } else {
+            // Market closed and toggle is OFF, show zero change
+            displayLivePrice = lastFetchedLive !== null && !isNaN(lastFetchedLive) ? '$' + lastFetchedLive.toFixed(2) : 'N/A';
+            displayPriceChange = '0.00 (0.00%)';
+            priceClass = 'neutral';
+        }
+    }
+
     row.innerHTML = `
-        <td><span class="share-code-display ${
-            livePriceData && livePriceData.live !== null && livePriceData.prevClose !== null && !isNaN(livePriceData.live) && !isNaN(livePriceData.prevClose) ?
-            (livePriceData.live - livePriceData.prevClose > 0 ? 'positive' : (livePriceData.live - livePriceData.prevClose < 0 ? 'negative' : 'neutral')) : ''
-        }">${share.shareName || ''}</span></td>
+        <td><span class="share-code-display ${priceClass}">${share.shareName || ''}</span></td>
         <td class="live-price-cell">
-            <span class="live-price-value ${
-                livePriceData && livePriceData.live !== null && livePriceData.prevClose !== null && !isNaN(livePriceData.live) && !isNaN(livePriceData.prevClose) ?
-                (livePriceData.live - livePriceData.prevClose > 0 ? 'positive' : (livePriceData.live - livePriceData.prevClose < 0 ? 'negative' : 'neutral')) : ''
-            }">${
-                livePriceData && livePriceData.live !== null && !isNaN(livePriceData.live) ?
-                '$' + livePriceData.live.toFixed(2) : 'N/A'
-            }</span>
-            <span class="price-change ${
-                livePriceData && livePriceData.live !== null && livePriceData.prevClose !== null && !isNaN(livePriceData.live) && !isNaN(livePriceData.prevClose) ?
-                (livePriceData.live - livePriceData.prevClose > 0 ? 'positive' : (livePriceData.live - livePriceData.prevClose < 0 ? 'negative' : 'neutral')) : ''
-            }">${
-                livePriceData && livePriceData.live !== null && livePriceData.prevClose !== null && !isNaN(livePriceData.live) && !isNaN(livePriceData.prevClose) ?
-                (livePriceData.live - livePriceData.prevClose).toFixed(2) + ' (' + 
-                (livePriceData.prevClose !== 0 ? (( (livePriceData.live - livePriceData.prevClose) / livePriceData.prevClose) * 100).toFixed(2) : '0.00') + '%)' : ''
-            }</span>
+            <span class="live-price-value ${priceClass}">${displayLivePrice}</span>
+            <span class="price-change ${priceClass}">${displayPriceChange}</span>
         </td>
         <td>${Number(share.currentPrice) !== null && !isNaN(Number(share.currentPrice)) ? '$' + Number(share.currentPrice).toFixed(2) : 'N/A'}</td>
         <td>${Number(share.targetPrice) !== null && !isNaN(Number(share.targetPrice)) ? '$' + Number(share.targetPrice).toFixed(2) : 'N/A'}</td>
@@ -462,9 +486,11 @@ function addShareToTable(share) {
                 const frankingCredits = Number(share.frankingCredits) || 0;
                 const currentPrice = Number(share.currentPrice) || 0; // Fallback for entered price if live not available
 
-                const livePriceData = livePrices[share.shareName.toUpperCase()];
-                const livePrice = livePriceData ? livePriceData.live : undefined;
-                const priceForYield = (livePrice !== undefined && livePrice !== null && !isNaN(livePrice) && livePrice > 0) ? livePrice : (currentPrice > 0 ? currentPrice : 0);
+                // Use the price that is actually displayed for yield calculation if possible
+                // If displayLivePrice is 'N/A', use currentPrice from share object (entered price)
+                const priceForYield = (displayLivePrice !== 'N/A' && displayLivePrice.startsWith('$'))
+                                    ? parseFloat(displayLivePrice.substring(1))
+                                    : (currentPrice > 0 ? currentPrice : 0);
 
                 if (priceForYield === 0) return 'N/A'; // Cannot calculate yield if price is zero
 
@@ -578,23 +604,52 @@ function addShareToMobileCards(share) {
         }
     }
 
+    const isMarketOpen = isAsxMarketOpen();
+    let displayLivePrice = 'N/A';
+    let displayPriceChange = '';
+    let priceClass = '';
+
+    if (livePriceData) {
+        const currentPrice = livePriceData.live;
+        const previousClose = livePriceData.prevClose;
+        const lastFetchedLive = livePriceData.lastLivePrice;
+        const lastFetchedPrevClose = livePriceData.lastPrevClose;
+
+        if (isMarketOpen || showLastLivePriceOnClosedMarket) {
+            // Show live data if market is open, or if market is closed but toggle is ON
+            if (currentPrice !== null && !isNaN(currentPrice)) {
+                displayLivePrice = '$' + currentPrice.toFixed(2);
+            }
+            if (currentPrice !== null && previousClose !== null && !isNaN(currentPrice) && !isNaN(previousClose)) {
+                const change = currentPrice - previousClose;
+                const percentageChange = (previousClose !== 0 ? (change / previousClose) * 100 : 0);
+                displayPriceChange = `${change.toFixed(2)} (${percentageChange.toFixed(2)}%)`;
+                priceClass = change > 0 ? 'positive' : (change < 0 ? 'negative' : 'neutral');
+            } else if (lastFetchedLive !== null && lastFetchedPrevClose !== null && !isNaN(lastFetchedLive) && !isNaN(lastFetchedPrevClose)) {
+                // Fallback to last fetched values if current live/prevClose are null but lastFetched are present
+                const change = lastFetchedLive - lastFetchedPrevClose;
+                const percentageChange = (lastFetchedPrevClose !== 0 ? (change / lastFetchedPrevClose) * 100 : 0);
+                displayPriceChange = `${change.toFixed(2)} (${percentageChange.toFixed(2)}%)`;
+                priceClass = change > 0 ? 'positive' : (change < 0 ? 'negative' : 'neutral');
+            }
+        } else {
+            // Market closed and toggle is OFF, show zero change
+            displayLivePrice = lastFetchedLive !== null && !isNaN(lastFetchedLive) ? '$' + lastFetchedLive.toFixed(2) : 'N/A';
+            displayPriceChange = '0.00 (0.00%)';
+            priceClass = 'neutral';
+        }
+    }
+
     card.innerHTML = `
-        <h3 class="${priceChangeClass}">${share.shareName || ''}</h3>
+        <h3 class="${priceClass}">${share.shareName || ''}</h3>
         <div class="live-price-display-section">
             <div class="fifty-two-week-row">
                 <span class="fifty-two-week-value low">Low: ${livePriceData && livePriceData.Low52 !== null && !isNaN(livePriceData.Low52) ? '$' + livePriceData.Low52.toFixed(2) : 'N/A'}</span>
                 <span class="fifty-two-week-value high">High: ${livePriceData && livePriceData.High52 !== null && !isNaN(livePriceData.High52) ? '$' + livePriceData.High52.toFixed(2) : 'N/A'}</span>
             </div>
             <div class="live-price-main-row">
-                <span class="live-price-large ${priceChangeClass}">${
-                    livePriceData && livePriceData.live !== null && !isNaN(livePriceData.live) ?
-                    '$' + livePriceData.live.toFixed(2) : 'N/A'
-                }</span>
-                <span class="price-change-large ${priceChangeClass}">${
-                    livePriceData && livePriceData.live !== null && livePriceData.prevClose !== null && !isNaN(livePriceData.live) && !isNaN(livePriceData.prevClose) ?
-                    (livePriceData.live - livePriceData.prevClose).toFixed(2) + ' (' +
-                    (livePriceData.prevClose !== 0 ? (((livePriceData.live - livePriceData.prevClose) / livePriceData.prevClose) * 100).toFixed(2) : '0.00') + '%)' : ''
-                }</span>
+                <span class="live-price-large ${priceClass}">${displayLivePrice}</span>
+                <span class="price-change-large ${priceClass}">${displayPriceChange}</span>
             </div>
             <div class="pe-ratio-row">
                 <span class="pe-ratio-value">P/E: ${livePriceData && livePriceData.PE !== null && !isNaN(livePriceData.PE) ? livePriceData.PE.toFixed(2) : 'N/A'}</span>
@@ -1987,6 +2042,75 @@ function calculateUnfrankedYield(dividendAmount, currentPrice) {
     return (dividendAmount / currentPrice) * 100;
 }
 
+/**
+ * Checks if the Australian Securities Exchange (ASX) is currently open.
+ * Considers standard trading hours and public holidays observed in Sydney.
+ * @returns {boolean} True if the ASX is open, false otherwise.
+ */
+function isAsxMarketOpen() {
+    const now = new Date();
+    // Get current time in Sydney (Australia/Sydney)
+    // Using 'en-AU' locale and 'Australia/Sydney' timezone for accurate comparison
+    const options = {
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: false, // 24-hour format
+        timeZone: 'Australia/Sydney',
+        weekday: 'short', // To check for weekends
+        year: 'numeric', // For holidays
+        month: 'numeric', // For holidays
+        day: 'numeric' // For holidays
+    };
+
+    const sydneyTimeStr = new Intl.DateTimeFormat('en-AU', options).format(now);
+    const [dayOfWeekStr, dateStr, timeStr] = sydneyTimeStr.split(', ');
+    const [day, month, year] = dateStr.split('/').map(Number);
+    const [hours, minutes] = timeStr.split(':').map(Number);
+
+    // Reconstruct date in Sydney time to use for holiday checks
+    const sydneyDate = new Date(year, month - 1, day, hours, minutes);
+    const dayOfWeek = sydneyDate.getDay(); // Sunday - Saturday : 0 - 6
+
+    // Check for weekends (Saturday = 6, Sunday = 0)
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+        logDebug('Market Status: Market is closed (weekend).');
+        return false;
+    }
+
+    // Standard ASX trading hours: 10:00 AM to 4:00 PM (Sydney time)
+    const marketOpenHours = 10;
+    const marketCloseHours = 16; // 4:00 PM
+
+    if (hours < marketOpenHours || hours >= marketCloseHours) {
+        logDebug('Market Status: Market is closed (outside trading hours: ' + timeStr + ').');
+        return false;
+    }
+
+    // Basic check for major Sydney public holidays (non-exhaustive)
+    // This list should be updated annually for accuracy or fetched from an external API.
+    // Format: 'MM/DD'
+    const sydneyPublicHolidays = [
+        '01/01', // New Year's Day
+        '01/26', // Australia Day (observed)
+        '03/28', // Good Friday (example for 2025 - changes annually)
+        '03/31', // Easter Monday (example for 2025 - changes annually)
+        '04/25', // Anzac Day
+        '06/09', // King's Birthday (NSW)
+        '08/04', // Bank Holiday (NSW - First Monday in August)
+        '10/06', // Labour Day (NSW - First Monday in October)
+        '12/25', // Christmas Day
+        '12/26' // Boxing Day
+    ];
+
+    const todayMonthDay = `${(month < 10 ? '0' : '') + month}/${(day < 10 ? '0' : '') + day}`;
+    if (sydneyPublicHolidays.includes(todayMonthDay)) {
+        logDebug('Market Status: Market is closed (public holiday: ' + todayMonthDay + ').');
+        return false;
+    }
+
+    logDebug('Market Status: Market is likely open (' + timeStr + ').');
+    return true;
+}
 function calculateFrankedYield(dividendAmount, currentPrice, frankingCreditsPercentage) {
     // Ensure inputs are valid numbers and currentPrice is not zero
     if (typeof dividendAmount !== 'number' || isNaN(dividendAmount) || dividendAmount < 0) { return 0; }
@@ -2219,11 +2343,15 @@ async function loadUserWatchlistsAndSettings() {
         const userProfileSnap = await window.firestore.getDoc(userProfileDocRef);
         savedSortOrder = null;
         savedTheme = null;
+        let savedShowLastLivePricePreference = null;
 
         if (userProfileSnap.exists()) {
             savedSortOrder = userProfileSnap.data().lastSortOrder;
             savedTheme = userProfileSnap.data().lastTheme;
+            savedShowLastLivePricePreference = userProfileSnap.data().showLastLivePriceOnClosedMarket; // Load the new preference
             const loadedSelectedWatchlistIds = userProfileSnap.data().lastSelectedWatchlistIds;
+            showLastLivePriceOnClosedMarket = userProfileSnap.data().showLastLivePriceOnClosedMarket || false; // Load preference
+            logDebug('User Settings: Loaded showLastLivePriceOnClosedMarket: ' + showLastLivePriceOnClosedMarket);
 
             if (loadedSelectedWatchlistIds && Array.isArray(loadedSelectedWatchlistIds) && loadedSelectedWatchlistIds.length > 0) {
                 // Filter out invalid or non-existent watchlists from loaded preferences
@@ -2287,7 +2415,22 @@ async function loadUserWatchlistsAndSettings() {
         }
         updateThemeToggleAndSelector();
 
-        updateMainButtonsState(true); 
+        updateMainButtonsState(true);
+        // Apply saved 'show last live price' preference
+    if (typeof savedShowLastLivePricePreference === 'boolean') {
+        showLastLivePriceOnClosedMarket = savedShowLastLivePricePreference;
+        if (showLastLivePriceToggle) {
+            showLastLivePriceToggle.checked = showLastLivePriceOnClosedMarket;
+        }
+        logDebug('Toggle: Applied saved "Show Last Live Price" preference: ' + showLastLivePriceOnClosedMarket);
+    } else {
+        // Default to false if not set
+        showLastLivePriceOnClosedMarket = false;
+        if (showLastLivePriceToggle) {
+            showLastLivePriceToggle.checked = false;
+        }
+        logDebug('Toggle: No saved "Show Last Live Price" preference, defaulting to false.');
+    } 
 
         const migratedSomething = await migrateOldSharesToWatchlist();
         if (!migratedSomething) {
@@ -2305,6 +2448,10 @@ async function loadUserWatchlistsAndSettings() {
         hideSplashScreenIfReady();
 
     } catch (error) {
+        // Set the initial state of the toggle switch based on loaded preference
+        if (showLastLivePriceToggle) {
+            showLastLivePriceToggle.checked = showLastLivePriceOnClosedMarket;
+        }
         console.error('User Settings: Error loading user watchlists and settings:', error);
         showCustomAlert('Error loading user settings: ' + error.message);
         hideSplashScreen();
@@ -2348,23 +2495,22 @@ async function fetchLivePrices() {
                 // Find the corresponding share in allSharesData to get its targetPrice
                 const shareData = allSharesData.find(s => s.shareName.toUpperCase() === asxCode);
                 // Ensure targetPrice is parsed as a number, handling null/undefined/NaN
-                const targetPrice = shareData && shareData.targetPrice !== null && !isNaN(parseFloat(shareData.targetPrice)) 
-                                    ? parseFloat(shareData.targetPrice) 
-                                    : undefined;
+                const targetPrice = shareData && shareData.targetPrice !== null && !isNaN(parseFloat(shareData.targetPrice))
+                    ? parseFloat(shareData.targetPrice)
+                    : undefined;
 
                 const isTargetHit = (targetPrice !== undefined && livePrice <= targetPrice);
-
-                // Debugging log:
-                console.log('Target Price Debug: Share: ' + asxCode + ', Live: ' + livePrice + ', Target: ' + targetPrice + ', Is Target Hit: ' + isTargetHit); 
-
 
                 newLivePrices[asxCode] = {
                     live: livePrice,
                     prevClose: isNaN(prevClose) ? null : prevClose,
-                    PE: isNaN(pe) ? null : pe, 
-                    High52: isNaN(high52) ? null : high52, 
-                    Low52: isNaN(low52) ? null : low52, 
-                    targetHit: isTargetHit 
+                    PE: isNaN(pe) ? null : pe,
+                    High52: isNaN(high52) ? null : high52,
+                    Low52: isNaN(low52) ? null : low52,
+                    targetHit: isTargetHit,
+                    // Store the fetched live and prevClose prices for use when market is closed
+                    lastLivePrice: livePrice,
+                    lastPrevClose: isNaN(prevClose) ? null : prevClose
                 };
             } else {
                 console.warn('Live Price: Skipping item due to missing ASX code or invalid price:', item);
@@ -4651,7 +4797,29 @@ if (sortSelect) {
             toggleAppSidebar(false); // Close sidebar after action
         });
     }
-     
+    
+    // NEW: Show Last Live Price Toggle Listener
+if (showLastLivePriceToggle) {
+    showLastLivePriceToggle.addEventListener('change', async (event) => {
+        showLastLivePriceOnClosedMarket = event.target.checked;
+        logDebug('Toggle: "Show Last Live Price" toggled to: ' + showLastLivePriceOnClosedMarket);
+
+        // Save preference to Firestore
+        if (currentUserId && db && window.firestore) {
+            const userProfileDocRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/profile/settings');
+            try {
+                await window.firestore.setDoc(userProfileDocRef, { showLastLivePriceOnClosedMarket: showLastLivePriceOnClosedMarket }, { merge: true });
+                logDebug('Toggle: Saved "Show Last Live Price" preference to Firestore: ' + showLastLivePriceOnClosedMarket);
+            } catch (error) {
+                console.error('Toggle: Error saving "Show Last Live Price" preference to Firestore:', error);
+                showCustomAlert('Error saving preference: ' + error.message);
+            }
+        }
+        renderWatchlist(); // Re-render to apply the new display logic immediately
+        showCustomAlert('Last Price Display set to: ' + (showLastLivePriceOnClosedMarket ? 'On (Market Closed)' : 'Off (Market Closed)'), 1500);
+    });
+}
+
     // NEW: Cash Asset Form Modal Save/Delete/Edit Buttons (2.1, 2.2)
     if (saveCashAssetBtn) {
         saveCashAssetBtn.addEventListener('click', async () => {

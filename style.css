@@ -2289,14 +2289,85 @@ h1#mainTitle {
     transform: translateY(-1px);
 }
 
-/* Specific styling for icon-only menu items */
-.menu-button-item.icon-only {
-    justify-content: center;
-    padding: 10px;
-    width: auto;
-    align-self: flex-start;
-    min-width: 40px;
-    max-width: 60px;
+/* Toggle Switch Styling */
+.toggle-switch-container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; /* Align content to the left */
+    gap: 10px;
+    padding: 10px 15px; /* Match menu-button-item padding */
+    border: none;
+    background-color: var(--menu-button-bg);
+    color: var(--sidebar-text);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.toggle-switch-container:hover {
+    background-color: var(--menu-button-hover-bg);
+}
+
+.toggle-switch-container span {
+    font-size: 1em; /* Ensure text is readable */
+    font-weight: 400; /* Match other menu items */
+}
+
+/* The switch - the box around the slider */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 40px; /* Smaller width for compact sidebar */
+    height: 22px; /* Smaller height */
+    flex-shrink: 0; /* Prevent shrinking */
+}
+
+/* Hide default HTML checkbox */
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+/* The slider */
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--secondary-button-bg); /* Off state color */
+    -webkit-transition: .4s;
+    transition: .4s;
+    border-radius: 22px; /* Rounded slider */
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px; /* Smaller circle */
+    width: 18px; /* Smaller circle */
+    left: 2px; /* Adjusted position */
+    bottom: 2px; /* Adjusted position */
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: var(--button-bg); /* On state color */
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px var(--button-bg);
+}
+
+input:checked + .slider:before {
+    -webkit-transform: translateX(18px); /* Move circle to right */
+    -ms-transform: translateX(18px);
+    transform: translateX(18px);
 }
 
 .menu-button-item.icon-only i {
