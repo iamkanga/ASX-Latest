@@ -63,12 +63,18 @@ self.addEventListener('fetch', (event) => {
             caches.match(event.request).then((cachedResponse) => {
                 const fetchPromise = fetch(event.request).then((networkResponse) => {
                 // Check if we received a valid response and if it's cacheable
-                // Exclude caching for specific problematic URLs if known, or just be more general.
-                // The'basic' type allows same-origin requests. 'cors' allows cross-origin with CORS headers.
-                // 'opaque' responses (cross-origin without CORS) are often problematic for cache.put.
+                // Exclude caching for specific problematic URLs (like Google Apps Script opaque responses)
+                // 'basic' type allows same-origin requests. 'cors' allows cross-origin with CORS headers.
+                // 'opaque' responses (cross-origin without CORS) cannot be inspected or directly cached by Service Workers reliably.
                 if (!networkResponse || networkResponse.status !== 200 || 
                     (networkResponse.type !== 'basic' && networkResponse.type !== 'cors')) {
-                    // Not a valid or cacheable response, just return it without caching
+                    // If it's an opaque response (cross-origin without CORS headers), do NOT attempt to cache.
+                    // Just return the response directly.
+                    if (networkResponse && networkResponse.type === 'opaque') {
+                        console.warn(`Service Worker: Skipping caching for opaque response: ${event.request.url}`);
+                        return networkResponse;
+                    }
+                    // Not a valid or cacheable response (non-opaque), just return it without caching
                     return networkResponse;
                 }
 
@@ -76,7 +82,7 @@ self.addEventListener('fetch', (event) => {
                 const responseToCache = networkResponse.clone();
 
                 caches.open(CACHE_NAME).then((cache) => {
-                    // Attempt to cache. If put fails (e.g., for opaque responses), it won't throw an unhandled promise rejection.
+                    // Attempt to cache. If put fails (e.g., for opaque responses or other reasons), it won't throw an unhandled promise rejection.
                     // We are explicitly handling the put operation's promise.
                     cache.put(event.request, responseToCache).catch(e => {
                         // Log the error but don't let it break the main fetch chain
