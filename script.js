@@ -452,11 +452,38 @@ function addShareToTable(share) {
         </td>
         <td>${Number(share.currentPrice) !== null && !isNaN(Number(share.currentPrice)) ? '$' + Number(share.currentPrice).toFixed(2) : 'N/A'}</td>
         <td>${Number(share.targetPrice) !== null && !isNaN(Number(share.targetPrice)) ? '$' + Number(share.targetPrice).toFixed(2) : 'N/A'}</td>
-        <td>${Number(share.dividendAmount) !== null && !isNaN(Number(share.dividendAmount)) ? '$' + Number(share.dividendAmount).toFixed(3) : 'N/A'}</td>
-        <td class="star-rating-cell">
-            ${share.starRating > 0 ? '⭐ ' + share.starRating : 'N/A'}
-        </td>
-    `;
+    <td>
+        ${
+            // Determine the effective yield for display in the table
+            // Prioritize franked yield if franking credits are present and yield is valid, otherwise use unfranked yield
+            // Default to N/A if no valid yield can be calculated
+            (() => {
+                const dividendAmount = Number(share.dividendAmount) || 0;
+                const frankingCredits = Number(share.frankingCredits) || 0;
+                const currentPrice = Number(share.currentPrice) || 0; // Fallback for entered price if live not available
+
+                const livePriceData = livePrices[share.shareName.toUpperCase()];
+                const livePrice = livePriceData ? livePriceData.live : undefined;
+                const priceForYield = (livePrice !== undefined && livePrice !== null && !isNaN(livePrice) && livePrice > 0) ? livePrice : (currentPrice > 0 ? currentPrice : 0);
+
+                if (priceForYield === 0) return 'N/A'; // Cannot calculate yield if price is zero
+
+                const frankedYield = calculateFrankedYield(dividendAmount, priceForYield, frankingCredits);
+                const unfrankedYield = calculateUnfrankedYield(dividendAmount, priceForYield);
+
+                if (frankingCredits > 0 && frankedYield > 0) {
+                    return frankedYield.toFixed(2) + '% (F)'; // Display franked yield with (F)
+                } else if (unfrankedYield > 0) {
+                    return unfrankedYield.toFixed(2) + '% (U)'; // Display unfranked yield with (U)
+                }
+                return 'N/A'; // No valid yield
+            })()
+        }
+    </td>
+    <td class="star-rating-cell">
+        ${share.starRating > 0 ? '⭐ ' + share.starRating : 'N/A'}
+    </td>
+`;
 
     row.addEventListener('click', () => {
         logDebug('Table Row Click: Share ID: ' + share.id);
@@ -575,9 +602,37 @@ function addShareToMobileCards(share) {
         </div>
         <p><strong>Entered Price:</strong> $${Number(share.currentPrice) !== null && !isNaN(Number(share.currentPrice)) ? Number(share.currentPrice).toFixed(2) : 'N/A'}</p>
         <p><strong>Target Price:</strong> $${Number(share.targetPrice) !== null && !isNaN(Number(share.targetPrice)) ? Number(share.targetPrice).toFixed(2) : 'N/A'}</p>
-        <p><strong>Dividends:</strong> $${Number(share.dividendAmount) !== null && !isNaN(Number(share.dividendAmount)) ? Number(share.dividendAmount).toFixed(3) : 'N/A'} (Franking: ${Number(share.frankingCredits) !== null && !isNaN(Number(share.frankingCredits)) ? Number(share.frankingCredits).toFixed(1) + '%' : 'N/A'})</p>
-        <p><strong>Star Rating:</strong> ${share.starRating > 0 ? '⭐ ' + share.starRating : 'No Rating'}</p>
-    `;
+        <p>
+        <strong>Dividend Yield:</strong>
+        ${
+            // Determine the effective yield for display in mobile cards
+            // Prioritize franked yield if franking credits are present and yield is valid, otherwise use unfranked yield
+            // Default to N/A if no valid yield can be calculated
+            (() => {
+                const dividendAmount = Number(share.dividendAmount) || 0;
+                const frankingCredits = Number(share.frankingCredits) || 0;
+                const currentPrice = Number(share.currentPrice) || 0; // Fallback for entered price if live not available
+
+                const livePriceData = livePrices[share.shareName.toUpperCase()];
+                const livePrice = livePriceData ? livePriceData.live : undefined;
+                const priceForYield = (livePrice !== undefined && livePrice !== null && !isNaN(livePrice) && livePrice > 0) ? livePrice : (currentPrice > 0 ? currentPrice : 0);
+
+                if (priceForYield === 0) return 'N/A'; // Cannot calculate yield if price is zero
+
+                const frankedYield = calculateFrankedYield(dividendAmount, priceForYield, frankingCredits);
+                const unfrankedYield = calculateUnfrankedYield(dividendAmount, priceForYield);
+
+                if (frankingCredits > 0 && frankedYield > 0) {
+                    return frankedYield.toFixed(2) + '% (Franked)'; // Display franked yield with (Franked)
+                } else if (unfrankedYield > 0) {
+                    return unfrankedYield.toFixed(2) + '% (Unfranked)'; // Display unfranked yield with (Unfranked)
+                }
+                return 'N/A'; // No valid yield
+            })()
+        }
+    </p>
+    <p><strong>Star Rating:</strong> ${share.starRating > 0 ? '⭐ ' + share.starRating : 'No Rating'}</p>
+`;
 
     card.addEventListener('click', () => {
         logDebug('Mobile Card Click: Share ID: ' + share.id);
