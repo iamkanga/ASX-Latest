@@ -190,7 +190,6 @@ const alertPanel = document.getElementById('alertPanel'); // NEW: Reference to t
 const alertList = document.getElementById('alertList'); // NEW: Reference to the alert list container (not in current HTML, but kept for consistency)
 const closeAlertPanelBtn = document.getElementById('closeAlertPanelBtn'); // NEW: Reference to close alert panel button (not in current HTML, but kept for consistency)
 const clearAllAlertsBtn = document.getElementById('clearAllAlertsBtn'); // NEW: Reference to clear all alerts button (not in current HTML, but kept for consistency)
-const showLastLivePriceToggle = document.getElementById('showLastLivePriceToggle'); // NEW: Reference to the new toggle switch
 
 // NEW: Cash & Assets UI Elements (1)
 const stockWatchlistSection = document.getElementById('stockWatchlistSection');
