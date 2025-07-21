@@ -2043,6 +2043,154 @@ function calculateUnfrankedYield(dividendAmount, currentPrice) {
 }
 
 /**
+ * Displays detailed stock information in the search modal,
+ * and renders action buttons (Add to Watchlist / Edit Existing Share).
+ * @param {string} asxCode The ASX code to display.
+ */
+async function displayStockDetailsInSearchModal(asxCode) {
+    if (!searchResultDisplay) {
+        console.error('displayStockDetailsInSearchModal: searchResultDisplay element not found.');
+        return;
+    }
+
+    searchResultDisplay.innerHTML = '<div class="loader"></div><p>Fetching stock data...</p>'; // Show loading spinner
+    searchModalActionButtons.innerHTML = ''; // Clear existing buttons
+    currentSearchShareData = null; // Reset previous data
+
+    try {
+        const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?stockCode=${asxCode}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        logDebug(`Search: Fetched details for ${asxCode}:`, data);
+
+        if (data.length === 0 || !data[0] || !data[0].ASXCode) {
+            searchResultDisplay.innerHTML = `<p class="initial-message">No data found for ${asxCode}. Please check the code.</p>`;
+            return;
+        }
+
+        const stockData = data[0]; // Assuming the first item is the relevant one
+
+        // Check if the stock is already in the user's watchlist
+        const existingShare = allSharesData.find(s => s.shareName.toUpperCase() === asxCode.toUpperCase());
+
+        // Prepare the data to be displayed in the modal
+        const currentLivePrice = parseFloat(stockData.LivePrice);
+        const previousClosePrice = parseFloat(stockData.PrevClose);
+        const peRatio = parseFloat(stockData.PE);
+        const high52Week = parseFloat(stockData.High52);
+        const low52Week = parseFloat(stockData.Low52);
+
+        // Determine price change class
+        let priceClass = '';
+        let priceChangeText = 'N/A';
+        let displayPrice = 'N/A';
+
+        if (!isNaN(currentLivePrice) && currentLivePrice !== null) {
+            displayPrice = `$${currentLivePrice.toFixed(2)}`;
+            if (!isNaN(previousClosePrice) && previousClosePrice !== null) {
+                const change = currentLivePrice - previousClosePrice;
+                const percentageChange = (previousClosePrice !== 0 ? (change / previousClosePrice) * 100 : 0);
+                priceChangeText = `${change.toFixed(2)} (${percentageChange.toFixed(2)}%)`;
+                priceClass = change > 0 ? 'positive' : (change < 0 ? 'negative' : 'neutral');
+            }
+        }
+
+        // Construct the display HTML
+        searchResultDisplay.innerHTML = `
+            <h3 class="${priceClass}">${stockData.ASXCode || 'N/A'} - ${stockData.CompanyName || 'N/A'}</h3>
+            <div class="live-price-display-section">
+                <div class="fifty-two-week-row">
+                    <span class="fifty-two-week-value low">Low: ${!isNaN(low52Week) ? '$' + low52Week.toFixed(2) : 'N/A'}</span>
+                    <span class="fifty-two-week-value high">High: ${!isNaN(high52Week) ? '$' + high52Week.toFixed(2) : 'N/A'}</span>
+                </div>
+                <div class="live-price-main-row">
+                    <span class="live-price-large ${priceClass}">${displayPrice}</span>
+                    <span class="price-change-large ${priceClass}">${priceChangeText}</span>
+                </div>
+                <div class="pe-ratio-row">
+                    <span class="pe-ratio-value">P/E: ${!isNaN(peRatio) ? peRatio.toFixed(2) : 'N/A'}</span>
+                </div>
+            </div>
+            <div class="external-links-section">
+                <h3>External Links</h3>
+                <div class="external-link-item">
+                    <a id="searchModalNewsLink" href="#" target="_blank" class="external-link">View News <i class="fas fa-external-link-alt"></i></a>
+                </div>
+                <div class="external-link-item">
+                    <a id="searchModalMarketIndexLink" href="#" target="_blank" class="external-link">View on MarketIndex.com.au <i class="fas fa-external-link-alt"></i></a>
+                </div>
+                <div class="external-link-item">
+                    <a id="searchModalFoolLink" href="#" target="_blank" class="external-link">View on Fool.com.au <i class="fas fa-external-link-alt"></i></a>
+                </div>
+                <div class="external-link-item">
+                    <a id="searchModalCommSecLink" href="#" target="_blank" class="external-link">View on CommSec.com.au <i class="fas fa-external-link-alt"></i></a>
+                </div>
+                <p class="ghosted-text commsec-message">Requires single CommSec login per session</p>
+            </div>
+        `;
+
+        // Populate external links
+        const encodedAsxCode = encodeURIComponent(asxCode);
+        const searchModalNewsLink = document.getElementById('searchModalNewsLink');
+        const searchModalMarketIndexLink = document.getElementById('searchModalMarketIndexLink');
+        const searchModalFoolLink = document.getElementById('searchModalFoolLink');
+        const searchModalCommSecLink = document.getElementById('searchModalCommSecLink');
+
+        if (searchModalNewsLink) searchModalNewsLink.href = `https://news.google.com/search?q=${encodedAsxCode}%20ASX&hl=en-AU&gl=AU&ceid=AU%3Aen`;
+        if (searchModalMarketIndexLink) searchModalMarketIndexLink.href = `https://www.marketindex.com.au/asx/${asxCode.toLowerCase()}`;
+        if (searchModalFoolLink) searchModalFoolLink.href = `https://www.fool.com.au/quote/${asxCode}/`; // Assuming Fool URL structure
+        if (searchModalCommSecLink) searchModalCommSecLink.href = `https://www.commsec.com.au/markets/company-details.html?code=${asxCode}`;
+
+        // Store the fetched data for potential adding/editing
+        currentSearchShareData = {
+            shareName: stockData.ASXCode,
+            companyName: stockData.CompanyName,
+            currentPrice: currentLivePrice, // Use current live price as initial entered price
+            targetPrice: null, // Default null
+            dividendAmount: null, // Default null
+            frankingCredits: null, // Default null
+            starRating: 0, // Default 0
+            comments: [], // Default empty array
+            watchlistId: null // To be selected when adding
+        };
+
+        // Render action buttons
+        const actionButton = document.createElement('button');
+        actionButton.classList.add('button', 'primary-button');
+        
+        if (existingShare) {
+            actionButton.textContent = 'Edit Existing Share';
+            actionButton.addEventListener('click', () => {
+                hideModal(stockSearchModal); // Close search modal
+                showEditFormForSelectedShare(existingShare.id); // Open edit modal with existing share's ID
+            });
+        } else {
+            actionButton.textContent = 'Add to Watchlist';
+            actionButton.addEventListener('click', () => {
+                hideModal(stockSearchModal); // Close search modal
+                clearForm(); // Clear share form
+                formTitle.textContent = 'Add New Share'; // Set title for new share
+                shareNameInput.value = currentSearchShareData.shareName; // Pre-fill code
+                currentPriceInput.value = !isNaN(currentSearchShareData.currentPrice) ? currentSearchShareData.currentPrice.toFixed(2) : ''; // Pre-fill live price
+                populateShareWatchlistSelect(null, true); // Populate and enable watchlist select for new share
+                addCommentSection(commentsFormContainer); // Add initial empty comment section
+                showModal(shareFormSection); // Show add/edit modal
+                checkFormDirtyState(); // Check dirty state for the new share form
+            });
+        }
+        searchModalActionButtons.appendChild(actionButton);
+        logDebug(`Search: Displayed details and action button for ${asxCode}.`);
+
+    } catch (error) {
+        console.error('Search: Error fetching stock details:', error);
+        searchResultDisplay.innerHTML = `<p class="initial-message">Error fetching data for ${asxCode}: ${error.message}.</p>`;
+        searchModalActionButtons.innerHTML = '';
+    }
+}
+
+/**
  * Loads ASX company codes and names from a local CSV file.
  * Assumes CSV has headers 'ASX Code' and 'Company Name'.
  * @returns {Promise<Array<object>>} A promise that resolves to an array of stock objects.
@@ -3920,6 +4068,105 @@ async function initializeAppLogic() {
             this.value = this.value.toUpperCase(); 
             checkFormDirtyState();
         });
+    }
+
+    // NEW: Autocomplete Search Input Listeners for Stock Search Modal
+    if (asxSearchInput) {
+        let currentSuggestions = []; // Stores the current filtered suggestions
+
+        asxSearchInput.addEventListener('input', () => {
+            const query = asxSearchInput.value.trim().toUpperCase();
+            asxSuggestions.innerHTML = ''; // Clear previous suggestions
+            currentSelectedSuggestionIndex = -1; // Reset selection
+
+            if (query.length < 2) { // Only show suggestions if query is at least 2 characters
+                asxSuggestions.classList.remove('active');
+                searchResultDisplay.innerHTML = '<p class="initial-message">Start typing an ASX code to search.</p>'; // Reset display
+                searchModalActionButtons.innerHTML = ''; // Clear action buttons
+                currentSearchShareData = null;
+                return;
+            }
+
+            // Filter suggestions by code or company name
+            currentSuggestions = allAsxCodes.filter(stock => 
+                stock.code.includes(query) || stock.name.toUpperCase().includes(query)
+            ).slice(0, 10); // Limit to top 10 suggestions
+
+            if (currentSuggestions.length > 0) {
+                currentSuggestions.forEach((stock, index) => {
+                    const div = document.createElement('div');
+                    div.classList.add('suggestion-item');
+                    div.textContent = `${stock.code} - ${stock.name}`;
+                    div.dataset.code = stock.code; // Store the code for easy access
+                    div.addEventListener('click', () => {
+                        asxSearchInput.value = stock.code; // Set input to selected code
+                        asxSuggestions.classList.remove('active'); // Hide suggestions
+                        displayStockDetailsInSearchModal(stock.code); // Display details for selected stock
+                    });
+                    asxSuggestions.appendChild(div);
+                });
+                asxSuggestions.classList.add('active'); // Show suggestions
+            } else {
+                asxSuggestions.classList.remove('active'); // Hide suggestions if no matches
+                searchResultDisplay.innerHTML = '<p class="initial-message">No matching stocks found.</p>';
+                searchModalActionButtons.innerHTML = '';
+                currentSearchShareData = null;
+            }
+        });
+
+        // Keyboard navigation for suggestions
+        asxSearchInput.addEventListener('keydown', (e) => {
+            const items = asxSuggestions.querySelectorAll('.suggestion-item');
+            if (items.length === 0) return;
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault(); // Prevent cursor movement in input
+                currentSelectedSuggestionIndex = (currentSelectedSuggestionIndex + 1) % items.length;
+                updateSelectedSuggestion(items);
+                items[currentSelectedSuggestionIndex].scrollIntoView({ block: 'nearest' });
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault(); // Prevent cursor movement in input
+                currentSelectedSuggestionIndex = (currentSelectedSuggestionIndex - 1 + items.length) % items.length;
+                updateSelectedSuggestion(items);
+                items[currentSelectedSuggestionIndex].scrollIntoView({ block: 'nearest' });
+            } else if (e.key === 'Enter') {
+                e.preventDefault(); // Prevent form submission
+                if (currentSelectedSuggestionIndex > -1) {
+                    items[currentSelectedSuggestionIndex].click(); // Simulate click on selected item
+                } else if (asxSearchInput.value.trim() !== '') {
+                    // If no suggestion selected but input has value, search directly
+                    displayStockDetailsInSearchModal(asxSearchInput.value.trim().toUpperCase());
+                    asxSuggestions.classList.remove('active'); // Hide suggestions
+                }
+            } else if (e.key === 'Escape') {
+                asxSuggestions.classList.remove('active'); // Hide suggestions
+                asxSearchInput.value = ''; // Clear input
+                searchResultDisplay.innerHTML = '<p class="initial-message">Start typing an ASX code to search.</p>';
+                searchModalActionButtons.innerHTML = '';
+                currentSearchShareData = null;
+            }
+        });
+
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', (e) => {
+            if (asxSuggestions && !asxSuggestions.contains(e.target) && e.target !== asxSearchInput) {
+                asxSuggestions.classList.remove('active');
+            }
+        });
+
+        function updateSelectedSuggestion(items) {
+            items.forEach((item, index) => {
+                if (index === currentSelectedSuggestionIndex) {
+                    item.classList.add('selected');
+                } else {
+                    item.classList.remove('selected');
+                }
+            });
+            // Update input value to selected suggestion for better UX
+            if (currentSelectedSuggestionIndex > -1) {
+                asxSearchInput.value = items[currentSelectedSuggestionIndex].dataset.code;
+            }
+        }
     }
 
     // Add event listeners to all form inputs for dirty state checking
