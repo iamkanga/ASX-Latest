@@ -64,7 +64,7 @@ self.addEventListener('fetch', (event) => {
                 const fetchPromise = fetch(event.request).then((networkResponse) => {
                 // Check if we received a valid response and if it's cacheable
                 // Exclude caching for specific problematic URLs if known, or just be more general.
-                // The 'basic' type allows same-origin requests. 'cors' allows cross-origin with CORS headers.
+                // The'basic' type allows same-origin requests. 'cors' allows cross-origin with CORS headers.
                 // 'opaque' responses (cross-origin without CORS) are often problematic for cache.put.
                 if (!networkResponse || networkResponse.status !== 200 || 
                     (networkResponse.type !== 'basic' && networkResponse.type !== 'cors')) {
