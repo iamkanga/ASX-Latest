@@ -706,8 +706,134 @@
             onAuthStateChanged: onAuthStateChanged
         } : null;
 
+        // NEW: Move the onAuthStateChanged listener and initial app logic here
         document.addEventListener('DOMContentLoaded', async function() {
             console.log("index.html script module loaded and DOMContentLoaded fired.");
+
+            // Show splash screen immediately on DOMContentLoaded
+            if (window.splashScreen) { // Use window.splashScreen as it's a global reference from script.js
+                window.splashScreen.style.display = 'flex';
+                window.splashScreen.classList.remove('hidden');
+                window.splashScreenReady = true;
+                document.body.style.overflow = 'hidden';
+                window.logDebug('Splash Screen: Displayed on DOMContentLoaded, body overflow hidden.');
+            } else {
+                console.warn('Splash Screen: Splash screen element not found. App will start without it.');
+                window._firebaseInitialized = true;
+                window._userAuthenticated = false;
+                window._appDataLoaded = true;
+                window._livePricesLoaded = true;
+            }
+
+            // Initially hide main app content and header
+            if (window.mainContainer) {
+                window.mainContainer.classList.add('app-hidden');
+            }
+            if (window.appHeader) {
+                window.appHeader.classList.add('app-hidden');
+            }
+
+            if (firebaseInitialized) { // Check if Firebase itself initialized successfully
+                window.authFunctions.onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        window.currentUserId = user.uid;
+                        window.logDebug('AuthState: User signed in: ' + user.uid);
+                        window.logDebug('AuthState: User email: ' + user.email);
+                        window.mainTitle.textContent = 'ASX Tracker';
+                        window.logDebug('AuthState: Main title set to ASX Tracker.');
+                        window.updateMainButtonsState(true);
+                        window._userAuthenticated = true;
+                        
+                        if (window.mainContainer) {
+                            window.mainContainer.classList.remove('app-hidden');
+                        }
+                        if (window.appHeader) {
+                            window.appHeader.classList.remove('app-hidden');
+                        }
+                        window.adjustMainContentPadding();
+
+                        if (window.splashKangarooIcon) {
+                            window.splashKangarooIcon.classList.add('pulsing');
+                            window.logDebug('Splash Screen: Started pulsing animation after sign-in.');
+                        }
+                        
+                        window.targetHitIconDismissed = localStorage.getItem('targetHitIconDismissed') === 'true';
+
+                        // Ensure initializeAppLogic is called only once after successful auth
+                        if (!window._appLogicInitialized) {
+                            await window.initializeAppLogic(); // Call the main app initialization logic
+                            window._appLogicInitialized = true;
+                        } else {
+                            // If already initialized, just re-render and apply view mode
+                            if (window.currentMobileViewMode === 'compact' && window.mobileShareCardsContainer) {
+                                window.mobileShareCardsContainer.classList.add('compact-view');
+                            } else if (window.mobileShareCardsContainer) {
+                                window.mobileShareCardsContainer.classList.remove('compact-view');
+                            }
+                            window.renderWatchlist();
+                        }
+                    } else {
+                        window.currentUserId = null;
+                        window.mainTitle.textContent = 'Share Watchlist';
+                        window.logDebug('AuthState: User signed out.');
+                        window.updateMainButtonsState(false);
+                        window.clearShareList();
+                        window.clearWatchlistUI();
+                        window.userCashCategories = [];
+                        if (window.cashCategoriesContainer) window.cashCategoriesContainer.innerHTML = '';
+                        if (window.totalCashDisplay) window.totalCashDisplay.textContent = '$0.00';
+                        if (window.loadingIndicator) window.loadingIndicator.style.display = 'none';
+                        window.applyTheme('system-default');
+                        if (window.unsubscribeShares) {
+                            window.unsubscribeShares();
+                            window.unsubscribeShares = null;
+                            window.logDebug('Firestore Listener: Unsubscribed from shares listener on logout.');
+                        }
+                        if (window.unsubscribeCashCategories) {
+                            window.unsubscribeCashCategories();
+                            window.unsubscribeCashCategories = null;
+                            window.logDebug('Firestore Listener: Unsubscribed from cash categories listener on logout.');
+                        }
+                        window.stopLivePriceUpdates();
+                        
+                        window._userAuthenticated = false;
+                        if (window.splashScreen) {
+                            window.splashScreen.style.display = 'flex';
+                            window.splashScreen.classList.remove('hidden');
+                            document.body.style.overflow = 'hidden';
+                            if (window.splashKangarooIcon) {
+                                window.splashKangarooIcon.classList.remove('pulsing');
+                            }
+                            if (window.splashSignInBtn) {
+                                window.splashSignInBtn.disabled = false;
+                                window.splashSignInBtn.textContent = 'Google Sign In';
+                            }
+                            if (window.mainContainer) {
+                                window.mainContainer.classList.add('app-hidden');
+                            }
+                            if (window.appHeader) {
+                                window.appHeader.classList.add('app-hidden');
+                            }
+                            window.logDebug('Splash Screen: User signed out, splash screen remains visible for sign-in.');
+                        } else {
+                            console.warn('Splash Screen: User signed out, but splash screen element not found. App content might be visible.');
+                        }
+                        window.targetHitIconDismissed = false; 
+                        localStorage.removeItem('targetHitIconDismissed');
+                    }
+                });
+            } else {
+                console.error('Firebase: Firebase objects (db, auth, appId, firestore, authFunctions) are not available on DOMContentLoaded. Firebase initialization likely failed in index.html.');
+                const errorDiv = document.getElementById('firebaseInitError');
+                if (errorDiv) {
+                        errorDiv.style.display = 'block';
+                }
+                window.updateMainButtonsState(false);
+                if (window.loadingIndicator) window.loadingIndicator.style.display = 'none';
+                window.applyTheme('system-default');
+                window.adjustMainContentPadding();
+                window.hideSplashScreen();
+            }
         }); 
     </script>
     <!-- Linking to your separate script.js file -->
