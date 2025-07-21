@@ -634,12 +634,7 @@ function addShareToMobileCards(share) {
         }
     }
 
-    const isMarketOpen = isAsxMarketOpen();
-    let displayLivePrice = 'N/A';
-    let displayPriceChange = '';
-    let priceClass = '';
-
-    if (livePriceData) {
+        if (livePriceData) {
         const currentPrice = livePriceData.live;
         const previousClose = livePriceData.prevClose;
         const lastFetchedLive = livePriceData.lastLivePrice;
@@ -670,12 +665,7 @@ function addShareToMobileCards(share) {
         }
     }
 
-    const isMarketOpen = isAsxMarketOpen();
-        let displayLivePrice = 'N/A';
-        let displayPriceChange = '';
-        let priceClass = '';
-
-        // Ensure livePriceData exists before accessing its properties
+            // Ensure livePriceData exists before accessing its properties
         if (livePriceData) {
             const currentPrice = livePriceData.live;
             const previousClose = livePriceData.prevClose; // CORRECTED: Removed .data
