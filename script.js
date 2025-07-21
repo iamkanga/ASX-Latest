@@ -620,7 +620,7 @@ function addShareToMobileCards(share) {
             }
             if (currentLivePrice !== null && previousClosePrice !== null && !isNaN(currentLivePrice) && !isNaN(previousClosePrice)) {
                 const change = currentLivePrice - previousClosePrice;
-                const percentageChange = (previousClosePrice !== 0 ? (change / previousPrice) * 100 : 0);
+                const percentageChange = (previousClosePrice !== 0 ? (change / previousClosePrice) * 100 : 0); // Corrected: use previousClosePrice
                 displayPriceChange = `${change.toFixed(2)} (${percentageChange.toFixed(2)}%)`;
                 priceClass = change > 0 ? 'positive' : (change < 0 ? 'negative' : 'neutral');
             } else if (lastFetchedLive !== null && lastFetchedPrevClose !== null && !isNaN(lastFetchedLive) && !isNaN(lastFetchedPrevClose)) {
@@ -1001,7 +1001,6 @@ function populateShareWatchlistSelect(currentShareWatchlistId = null, isNewShare
     // Add event listener for dirty state checking on this dropdown
     shareWatchlistSelect.addEventListener('change', checkFormDirtyState);
 }
-
 
 function showEditFormForSelectedShare(shareIdToEdit = null) {
     const targetShareId = shareIdToEdit || selectedShareDocId;
