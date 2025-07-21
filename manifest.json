@@ -1,7 +1,7 @@
 {
     "name": "ASX Tracker",
     "short_name": "ASX Tracker",
-    "description": "Your personal share watchlist application.",
+    "description": "Your personal share tracker application.",
     "start_url": "./",
     "display": "standalone",
     "background_color": "#000000",
