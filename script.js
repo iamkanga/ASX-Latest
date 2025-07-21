@@ -4328,11 +4328,7 @@ async function initializeAppLogic() {
             input.addEventListener('input', checkFormDirtyState);
             input.addEventListener('change', checkFormDirtyState);
             input.addEventListener('focus', function() {
-                // Only call select() if the input is a text-like input (text, number, textarea)
-                // Dropdowns (select) do not have a select() method.
-                if (this.tagName === 'INPUT' && (this.type === 'text' || this.type === 'number') || this.tagName === 'TEXTAREA') {
-                    this.select();
-                }
+                this.select();
             });
         }
     });
