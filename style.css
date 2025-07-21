@@ -3724,27 +3724,37 @@ main.container {
 }
 
 /* --- NEW: Compact Mobile View Specific Styles --- */
+/* Default for mobile compact view: two columns */
 .mobile-share-cards.compact-view {
-    display: grid !important; /* Force grid display */
-    /* On mobile, ensure two equal columns */
-    grid-template-columns: repeat(2, 1fr) !important; /* Force 2 columns */
-    gap: 10px !important;
-    padding: 10px !important;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    padding: 10px;
+}
+
+/* Ensure mobile compact view stays 2 columns even if other rules try to override */
+@media (max-width: 768px) { /* Target mobile screens explicitly */
+    .mobile-share-cards.compact-view {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+        padding: 10px !important;
+    }
 }
 
 /* On desktop, for compact view, force exactly four columns */
 @media (min-width: 769px) {
     .mobile-share-cards.compact-view {
-        display: grid !important; /* Ensure display is grid */
-        grid-template-columns: repeat(4, 1fr) !important; /* Force exactly 4 equal columns */
-        gap: 15px !important; /* Space between the cards */
-        padding: 15px !important; /* Adjust padding for desktop grid layout */
-        max-width: none !important; /* Allow container to take full width */
-        margin: 0 !important; /* Remove centering margin */
+        display: grid !important;
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 15px !important;
+        padding: 15px !important;
+        max-width: none !important;
+        margin: 0 !important;
     }
     /* Ensure individual cards fill their grid column width */
     .mobile-share-cards.compact-view .mobile-card {
-        width: auto !important; /* Let grid handle width */
+        width: auto !important;
     }
 }
 
