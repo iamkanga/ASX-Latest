@@ -1289,20 +1289,21 @@ function showShareDetails() {
         modalLivePriceDisplaySection.appendChild(peRow);
     }
 
-    modalEnteredPrice.textContent = (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? '$' + enteredPriceNum.toFixed(2) : 'N/A';
-    const targetPriceNum = Number(share.targetPrice);
-    modalTargetPrice.textContent = (!isNaN(targetPriceNum) && targetPriceNum !== null) ? '$' + targetPriceNum.toFixed(2) : 'N/A';
+    modalEnteredPrice.textContent = (enteredPriceNum !== null && !isNaN(enteredPriceNum)) ? '$' + enteredPriceNum.toFixed(2) : 'N/A';
+    modalTargetPrice.textContent = (share.targetPrice !== null && !isNaN(Number(share.targetPrice))) ? '$' + Number(share.targetPrice).toFixed(2) : 'N/A';
 
-    const dividendAmountNum = Number(share.dividendAmount);
-    const modalDividendAmountText = (!isNaN(dividendAmountNum) && dividendAmountNum !== null) ? '$' + dividendAmountNum.toFixed(3) : 'N/A';
+    // Ensure dividendAmount and frankingCredits are numbers before formatting
+    const displayDividendAmount = Number(share.dividendAmount);
+    const displayFrankingCredits = Number(share.frankingCredits);
 
-    const frankingCreditsNum = Number(share.frankingCredits);
+    modalDividendAmount.textContent = (displayDividendAmount !== null && !isNaN(displayDividendAmount)) ? '$' + displayDividendAmount.toFixed(3) : 'N/A';
+    modalFrankingCredits.textContent = (displayFrankingCredits !== null && !isNaN(displayFrankingCredits)) ? displayFrankingCredits.toFixed(1) + '%' : 'N/A';
 
     const priceForYield = (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) ? livePrice : enteredPriceNum;
-    const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, priceForYield); 
+    const unfrankedYield = calculateUnfrankedYield(displayDividendAmount, priceForYield); 
     modalUnfrankedYieldSpan.textContent = unfrankedYield !== null && !isNaN(unfrankedYield) ? unfrankedYield.toFixed(2) + '%' : '0.00%';
 
-    const frankedYield = calculateFrankedYield(dividendAmountNum, priceForYield, frankingCreditsNum);
+    const frankedYield = calculateFrankedYield(displayDividendAmount, priceForYield, displayFrankingCredits);
     modalFrankedYieldSpan.textContent = frankedYield !== null && !isNaN(frankedYield) ? frankedYield.toFixed(2) + '%' : '0.00%';
 
     // Populate Entry Date after Franked Yield
