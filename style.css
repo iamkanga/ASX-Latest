@@ -3726,8 +3726,8 @@ main.container {
 /* --- NEW: Compact Mobile View Specific Styles --- */
 .mobile-share-cards.compact-view {
     display: grid;
-    /* On mobile, keep two equal columns */
-    grid-template-columns: 1fr 1fr;
+    /* On mobile, ensure two equal columns */
+    grid-template-columns: repeat(2, 1fr); /* Explicitly set to 2 columns */
     gap: 10px;
     padding: 10px;
 }

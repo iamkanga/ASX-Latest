@@ -1577,12 +1577,12 @@ function renderSortSelect() {
             { value: 'entryDate-asc', text: 'Date Added (Oldest)' },
             { value: 'shareName-asc', text: 'Code (A-Z)' },
             { value: 'shareName-desc', text: 'Code (Z-A)' },
-            { value: 'dividendAmount-desc', text: 'Dividend (High-Low)' },
-            { value: 'dividendAmount-asc', text: 'Dividend (Low-High)' },
+            { value: 'dividendAmount-desc', text: 'Dividend % (High-Low)' }, // Changed text
+            { value: 'dividendAmount-asc', text: 'Dividend % (Low-High)' },  // Changed text
             { value: 'percentageChange-desc', text: 'Percentage Change (High-Low)' },
             { value: 'percentageChange-asc', text: 'Percentage Change (Low-High)' },
-            { value: 'starRating-desc', text: 'Star Rating (High-Low)' }, // Added star rating sort
-            { value: 'starRating-asc', text: 'Star Rating (Low-High)' }   // Added star rating sort
+            { value: 'starRating-desc', text: 'Star Rating (High-Low)' },
+            { value: 'starRating-asc', text: 'Star Rating (Low-High)' }
         ];
 
         const cashOptions = [
