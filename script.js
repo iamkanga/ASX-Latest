@@ -1431,18 +1431,20 @@ function sortShares() {
             // Get live price data for share A
             const livePriceDataA = livePrices[a.shareName.toUpperCase()];
             const livePriceA = livePriceDataA ? livePriceDataA.live : undefined;
-            const priceForYieldA = (livePriceA !== undefined && livePriceA !== null && !isNaN(livePriceA)) ? livePriceA : Number(a.currentPrice);
+            // Price for yield calculation: prefer live price, fall back to entered price
+            const priceForYieldA = (livePriceA !== undefined && livePriceA !== null && !isNaN(livePriceA)) ? livePriceA : (Number(a.currentPrice) || 0); // Default to 0 if entered price is bad
 
             // Get live price data for share B
             const livePriceDataB = livePrices[b.shareName.toUpperCase()];
             const livePriceB = livePriceDataB ? livePriceDataB.live : undefined;
-            const priceForYieldB = (livePriceB !== undefined && livePriceB !== null && !isNaN(livePriceB)) ? livePriceB : Number(b.currentPrice);
+            // Price for yield calculation: prefer live price, fall back to entered price
+            const priceForYieldB = (livePriceB !== undefined && livePriceB !== null && !isNaN(livePriceB)) ? livePriceB : (Number(b.currentPrice) || 0); // Default to 0 if entered price is bad
 
-            const dividendAmountA = Number(a.dividendAmount);
-            const frankingCreditsA = Number(a.frankingCredits);
+            const dividendAmountA = Number(a.dividendAmount) || 0; // Default to 0 if not a number
+            const frankingCreditsA = Number(a.frankingCredits) || 0; // Default to 0 if not a number
 
-            const dividendAmountB = Number(b.dividendAmount);
-            const frankingCreditsB = Number(b.frankingCredits);
+            const dividendAmountB = Number(b.dividendAmount) || 0; // Default to 0 if not a number
+            const frankingCreditsB = Number(b.frankingCredits) || 0; // Default to 0 if not a number
 
             // Calculate yields for share A using the determined priceForYieldA
             const frankedYieldA = calculateFrankedYield(dividendAmountA, priceForYieldA, frankingCreditsA);
@@ -1454,7 +1456,7 @@ function sortShares() {
 
             // Determine the effective yield for sorting for A (prioritize franked, then unfranked)
             let effectiveYieldA = null;
-            if (frankedYieldA !== null && !isNaN(frankedYieldA)) {
+            if (frankingCreditsA > 0 && frankedYieldA !== null && !isNaN(frankedYieldA)) { // Only use franked if franking > 0
                 effectiveYieldA = frankedYieldA;
             } else if (unfrankedYieldA !== null && !isNaN(unfrankedYieldA)) {
                 effectiveYieldA = unfrankedYieldA;
@@ -1462,11 +1464,13 @@ function sortShares() {
 
             // Determine the effective yield for sorting for B (prioritize franked, then unfranked)
             let effectiveYieldB = null;
-            if (frankedYieldB !== null && !isNaN(frankedYieldB)) {
+            if (frankingCreditsB > 0 && frankedYieldB !== null && !isNaN(frankedYieldB)) { // Only use franked if franking > 0
                 effectiveYieldB = frankedYieldB;
             } else if (unfrankedYieldB !== null && !isNaN(unfrankedYieldB)) {
                 effectiveYieldB = unfrankedYieldB;
             }
+
+            logDebug(`Sort Debug - Dividend: Comparing ${a.shareName} (Effective Yield A: ${effectiveYieldA}) vs ${b.shareName} (Effective Yield B: ${effectiveYieldB})`);
 
             // Handle null/NaN yields by pushing them to the bottom (or top for asc)
             // Using Infinity for asc sort pushes nulls to the end.
@@ -1626,8 +1630,8 @@ function renderSortSelect() {
             { value: 'entryDate-asc', text: 'Date Added (Oldest)' },
             { value: 'shareName-asc', text: 'Code (A-Z)' },
             { value: 'shareName-desc', text: 'Code (Z-A)' },
-            { value: 'dividendAmount-desc', text: 'Dividend (High-Low)' }, // Reverted text
-            { value: 'dividendAmount-asc', text: 'Dividend (Low-High)' },  // Reverted text
+            { value: 'dividendAmount-desc', text: 'Dividend Yield % (High-Low)' }, // Changed text
+            { value: 'dividendAmount-asc', text: 'Dividend Yield % (Low-High)' },  // Changed text
             { value: 'percentageChange-desc', text: 'Percentage Change (High-Low)' },
             { value: 'percentageChange-asc', text: 'Percentage Change (Low-High)' },
             { value: 'starRating-desc', text: 'Star Rating (High-Low)' },
