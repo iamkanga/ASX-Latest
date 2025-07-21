@@ -1577,8 +1577,8 @@ function renderSortSelect() {
             { value: 'entryDate-asc', text: 'Date Added (Oldest)' },
             { value: 'shareName-asc', text: 'Code (A-Z)' },
             { value: 'shareName-desc', text: 'Code (Z-A)' },
-            { value: 'dividendAmount-desc', text: 'Dividend % (High-Low)' }, // Changed text
-            { value: 'dividendAmount-asc', text: 'Dividend % (Low-High)' },  // Changed text
+            { value: 'dividendAmount-desc', text: 'Dividend (High-Low)' }, // Reverted text
+            { value: 'dividendAmount-asc', text: 'Dividend (Low-High)' },  // Reverted text
             { value: 'percentageChange-desc', text: 'Percentage Change (High-Low)' },
             { value: 'percentageChange-asc', text: 'Percentage Change (Low-High)' },
             { value: 'starRating-desc', text: 'Star Rating (High-Low)' },
