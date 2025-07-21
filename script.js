@@ -466,48 +466,85 @@ function addShareToTable(share) {
         }
     }
 
-    row.innerHTML = `
-        <td><span class="share-code-display ${priceClass}">${share.shareName || ''}</span></td>
-        <td class="live-price-cell">
-            <span class="live-price-value ${priceClass}">${displayLivePrice}</span>
-            <span class="price-change ${priceClass}">${displayPriceChange}</span>
-        </td>
-        <td>${Number(share.currentPrice) !== null && !isNaN(Number(share.currentPrice)) ? '$' + Number(share.currentPrice).toFixed(2) : 'N/A'}</td>
-        <td>${Number(share.targetPrice) !== null && !isNaN(Number(share.targetPrice)) ? '$' + Number(share.targetPrice).toFixed(2) : 'N/A'}</td>
-    <td>
-        ${
-            // Determine the effective yield for display in the table
-            // Prioritize franked yield if franking credits are present and yield is valid, otherwise use unfranked yield
-            // Default to N/A if no valid yield can be calculated
-            (() => {
-                const dividendAmount = Number(share.dividendAmount) || 0;
-                const frankingCredits = Number(share.frankingCredits) || 0;
-                const currentPrice = Number(share.currentPrice) || 0; // Fallback for entered price if live not available
+    const isMarketOpen = isAsxMarketOpen();
+        let displayLivePrice = 'N/A';
+        let displayPriceChange = '';
+        let priceClass = '';
 
-                // Use the price that is actually displayed for yield calculation if possible
-                // If displayLivePrice is 'N/A', use currentPrice from share object (entered price)
-                const priceForYield = (displayLivePrice !== 'N/A' && displayLivePrice.startsWith('$'))
-                                    ? parseFloat(displayLivePrice.substring(1))
-                                    : (currentPrice > 0 ? currentPrice : 0);
+        // Ensure livePriceData exists before accessing its properties
+        if (livePriceData) {
+            const currentPrice = livePriceData.live;
+            const previousClose = livePriceData.prevClose; // CORRECTED: Removed .data
+            const lastFetchedLive = livePriceData.lastLivePrice;
+            const lastFetchedPrevClose = livePriceData.lastPrevClose;
 
-                if (priceForYield === 0) return 'N/A'; // Cannot calculate yield if price is zero
-
-                const frankedYield = calculateFrankedYield(dividendAmount, priceForYield, frankingCredits);
-                const unfrankedYield = calculateUnfrankedYield(dividendAmount, priceForYield);
-
-                if (frankingCredits > 0 && frankedYield > 0) {
-                    return frankedYield.toFixed(2) + '% (F)'; // Display franked yield with (F)
-                } else if (unfrankedYield > 0) {
-                    return unfrankedYield.toFixed(2) + '% (U)'; // Display unfranked yield with (U)
+            if (isMarketOpen || showLastLivePriceOnClosedMarket) {
+                // Show live data if market is open, or if market is closed but toggle is ON
+                if (currentPrice !== null && !isNaN(currentPrice)) {
+                    displayLivePrice = '$' + currentPrice.toFixed(2);
                 }
-                return 'N/A'; // No valid yield
-            })()
+                if (currentPrice !== null && previousClose !== null && !isNaN(currentPrice) && !isNaN(previousClose)) {
+                    const change = currentPrice - previousClose;
+                    const percentageChange = (previousClose !== 0 ? (change / previousClose) * 100 : 0);
+                    displayPriceChange = `${change.toFixed(2)} (${percentageChange.toFixed(2)}%)`;
+                    priceClass = change > 0 ? 'positive' : (change < 0 ? 'negative' : 'neutral');
+                } else if (lastFetchedLive !== null && lastFetchedPrevClose !== null && !isNaN(lastFetchedLive) && !isNaN(lastFetchedPrevClose)) {
+                    // Fallback to last fetched values if current live/prevClose are null but lastFetched are present
+                    const change = lastFetchedLive - lastFetchedPrevClose;
+                    const percentageChange = (lastFetchedPrevClose !== 0 ? (change / lastFetchedPrevClose) * 100 : 0);
+                    displayPriceChange = `${change.toFixed(2)} (${percentageChange.toFixed(2)}%)`;
+                    priceClass = change > 0 ? 'positive' : (change < 0 ? 'negative' : 'neutral');
+                }
+            } else {
+                // Market closed and toggle is OFF, show zero change
+                displayLivePrice = lastFetchedLive !== null && !isNaN(lastFetchedLive) ? '$' + lastFetchedLive.toFixed(2) : 'N/A';
+                displayPriceChange = '0.00 (0.00%)';
+                priceClass = 'neutral';
+            }
         }
-    </td>
-    <td class="star-rating-cell">
-        ${share.starRating > 0 ? '⭐ ' + share.starRating : 'N/A'}
-    </td>
-`;
+
+        row.innerHTML = `
+            <td><span class="share-code-display ${priceClass}">${share.shareName || ''}</span></td>
+            <td class="live-price-cell">
+                <span class="live-price-value ${priceClass}">${displayLivePrice}</span>
+                <span class="price-change ${priceClass}">${displayPriceChange}</span>
+            </td>
+            <td>${Number(share.currentPrice) !== null && !isNaN(Number(share.currentPrice)) ? '$' + Number(share.currentPrice).toFixed(2) : 'N/A'}</td>
+            <td>${Number(share.targetPrice) !== null && !isNaN(Number(share.targetPrice)) ? '$' + Number(share.targetPrice).toFixed(2) : 'N/A'}</td>
+        <td>
+            ${
+                // Determine the effective yield for display in the table
+                // Prioritize franked yield if franking credits are present and yield is valid, otherwise use unfranked yield
+                // Default to N/A if no valid yield can be calculated
+                (() => {
+                    const dividendAmount = Number(share.dividendAmount) || 0;
+                    const frankingCredits = Number(share.frankingCredits) || 0;
+                    const currentPrice = Number(share.currentPrice) || 0; // Fallback for entered price if live not available
+
+                    // Use the price that is actually displayed for yield calculation if possible
+                    // If displayLivePrice is 'N/A', use currentPrice from share object (entered price)
+                    const priceForYield = (displayLivePrice !== 'N/A' && displayLivePrice.startsWith('$'))
+                                        ? parseFloat(displayLivePrice.substring(1))
+                                        : (currentPrice > 0 ? currentPrice : 0);
+
+                    if (priceForYield === 0) return 'N/A'; // Cannot calculate yield if price is zero
+
+                    const frankedYield = calculateFrankedYield(dividendAmount, priceForYield, frankingCredits);
+                    const unfrankedYield = calculateUnfrankedYield(dividendAmount, priceForYield);
+
+                    if (frankingCredits > 0 && frankedYield > 0) {
+                        return frankedYield.toFixed(2) + '% (F)'; // Display franked yield with (F)
+                    } else if (unfrankedYield > 0) {
+                        return unfrankedYield.toFixed(2) + '% (U)'; // Display unfranked yield with (U)
+                    }
+                    return 'N/A'; // No valid yield
+                })()
+            }
+        </td>
+        <td class="star-rating-cell">
+            ${share.starRating > 0 ? '⭐ ' + share.starRating : 'N/A'}
+        </td>
+    `;
 
     row.addEventListener('click', () => {
         logDebug('Table Row Click: Share ID: ' + share.id);
@@ -638,54 +675,93 @@ function addShareToMobileCards(share) {
         }
     }
 
-    card.innerHTML = `
-        <h3 class="${priceClass}">${share.shareName || ''}</h3>
-        <div class="live-price-display-section">
-            <div class="fifty-two-week-row">
-                <span class="fifty-two-week-value low">Low: ${livePriceData && livePriceData.Low52 !== null && !isNaN(livePriceData.Low52) ? '$' + livePriceData.Low52.toFixed(2) : 'N/A'}</span>
-                <span class="fifty-two-week-value high">High: ${livePriceData && livePriceData.High52 !== null && !isNaN(livePriceData.High52) ? '$' + livePriceData.High52.toFixed(2) : 'N/A'}</span>
-            </div>
-            <div class="live-price-main-row">
-                <span class="live-price-large ${priceClass}">${displayLivePrice}</span>
-                <span class="price-change-large ${priceClass}">${displayPriceChange}</span>
-            </div>
-            <div class="pe-ratio-row">
-                <span class="pe-ratio-value">P/E: ${livePriceData && livePriceData.PE !== null && !isNaN(livePriceData.PE) ? livePriceData.PE.toFixed(2) : 'N/A'}</span>
-            </div>
-        </div>
-        <p><strong>Entered Price:</strong> $${Number(share.currentPrice) !== null && !isNaN(Number(share.currentPrice)) ? Number(share.currentPrice).toFixed(2) : 'N/A'}</p>
-        <p><strong>Target Price:</strong> $${Number(share.targetPrice) !== null && !isNaN(Number(share.targetPrice)) ? Number(share.targetPrice).toFixed(2) : 'N/A'}</p>
-        <p>
-        <strong>Dividend Yield:</strong>
-        ${
-            // Determine the effective yield for display in mobile cards
-            // Prioritize franked yield if franking credits are present and yield is valid, otherwise use unfranked yield
-            // Default to N/A if no valid yield can be calculated
-            (() => {
-                const dividendAmount = Number(share.dividendAmount) || 0;
-                const frankingCredits = Number(share.frankingCredits) || 0;
-                const currentPrice = Number(share.currentPrice) || 0; // Fallback for entered price if live not available
+    const isMarketOpen = isAsxMarketOpen();
+        let displayLivePrice = 'N/A';
+        let displayPriceChange = '';
+        let priceClass = '';
 
-                const livePriceData = livePrices[share.shareName.toUpperCase()];
-                const livePrice = livePriceData ? livePriceData.live : undefined;
-                const priceForYield = (livePrice !== undefined && livePrice !== null && !isNaN(livePrice) && livePrice > 0) ? livePrice : (currentPrice > 0 ? currentPrice : 0);
+        // Ensure livePriceData exists before accessing its properties
+        if (livePriceData) {
+            const currentPrice = livePriceData.live;
+            const previousClose = livePriceData.prevClose; // CORRECTED: Removed .data
+            const lastFetchedLive = livePriceData.lastLivePrice;
+            const lastFetchedPrevClose = livePriceData.lastPrevClose;
 
-                if (priceForYield === 0) return 'N/A'; // Cannot calculate yield if price is zero
-
-                const frankedYield = calculateFrankedYield(dividendAmount, priceForYield, frankingCredits);
-                const unfrankedYield = calculateUnfrankedYield(dividendAmount, priceForYield);
-
-                if (frankingCredits > 0 && frankedYield > 0) {
-                    return frankedYield.toFixed(2) + '% (Franked)'; // Display franked yield with (Franked)
-                } else if (unfrankedYield > 0) {
-                    return unfrankedYield.toFixed(2) + '% (Unfranked)'; // Display unfranked yield with (Unfranked)
+            if (isMarketOpen || showLastLivePriceOnClosedMarket) {
+                // Show live data if market is open, or if market is closed but toggle is ON
+                if (currentPrice !== null && !isNaN(currentPrice)) {
+                    displayLivePrice = '$' + currentPrice.toFixed(2);
                 }
-                return 'N/A'; // No valid yield
-            })()
+                if (currentPrice !== null && previousClose !== null && !isNaN(currentPrice) && !isNaN(previousClose)) {
+                    const change = currentPrice - previousClose;
+                    const percentageChange = (previousClose !== 0 ? (change / previousClose) * 100 : 0);
+                    displayPriceChange = `${change.toFixed(2)} (${percentageChange.toFixed(2)}%)`;
+                    priceClass = change > 0 ? 'positive' : (change < 0 ? 'negative' : 'neutral');
+                } else if (lastFetchedLive !== null && lastFetchedPrevClose !== null && !isNaN(lastFetchedLive) && !isNaN(lastFetchedPrevClose)) {
+                    // Fallback to last fetched values if current live/prevClose are null but lastFetched are present
+                    const change = lastFetchedLive - lastFetchedPrevClose;
+                    const percentageChange = (lastFetchedPrevClose !== 0 ? (change / lastFetchedPrevClose) * 100 : 0);
+                    displayPriceChange = `${change.toFixed(2)} (${percentageChange.toFixed(2)}%)`;
+                    priceClass = change > 0 ? 'positive' : (change < 0 ? 'negative' : 'neutral');
+                }
+            } else {
+                // Market closed and toggle is OFF, show zero change
+                displayLivePrice = lastFetchedLive !== null && !isNaN(lastFetchedLive) ? '$' + lastFetchedLive.toFixed(2) : 'N/A';
+                displayPriceChange = '0.00 (0.00%)';
+                priceClass = 'neutral';
+            }
         }
-    </p>
-    <p><strong>Star Rating:</strong> ${share.starRating > 0 ? '⭐ ' + share.starRating : 'No Rating'}</p>
-`;
+
+        card.innerHTML = `
+            <h3 class="${priceClass}">${share.shareName || ''}</h3>
+            <div class="live-price-display-section">
+                <div class="fifty-two-week-row">
+                    <span class="fifty-two-week-value low">Low: ${livePriceData && livePriceData.Low52 !== null && !isNaN(livePriceData.Low52) ? '$' + livePriceData.Low52.toFixed(2) : 'N/A'}</span>
+                    <span class="fifty-two-week-value high">High: ${livePriceData && livePriceData.High52 !== null && !isNaN(livePriceData.High52) ? '$' + livePriceData.High52.toFixed(2) : 'N/A'}</span>
+                </div>
+                <div class="live-price-main-row">
+                    <span class="live-price-large ${priceClass}">${displayLivePrice}</span>
+                    <span class="price-change-large ${priceClass}">${displayPriceChange}</span>
+                </div>
+                <div class="pe-ratio-row">
+                    <span class="pe-ratio-value">P/E: ${livePriceData && livePriceData.PE !== null && !isNaN(livePriceData.PE) ? livePriceData.PE.toFixed(2) : 'N/A'}</span>
+                </div>
+            </div>
+            <p><strong>Entered Price:</strong> $${Number(share.currentPrice) !== null && !isNaN(Number(share.currentPrice)) ? Number(share.currentPrice).toFixed(2) : 'N/A'}</p>
+            <p><strong>Target Price:</strong> $${Number(share.targetPrice) !== null && !isNaN(Number(share.targetPrice)) ? Number(share.targetPrice).toFixed(2) : 'N/A'}</p>
+            <p>
+            <strong>Dividend Yield:</strong>
+            ${
+                // Determine the effective yield for display in mobile cards
+                // Prioritize franked yield if franking credits are present and yield is valid, otherwise use unfranked yield
+                // Default to N/A if no valid yield can be calculated
+                (() => {
+                    const dividendAmount = Number(share.dividendAmount) || 0;
+                    const frankingCredits = Number(share.frankingCredits) || 0;
+                    const currentPrice = Number(share.currentPrice) || 0; // Fallback for entered price if live not available
+
+                    // Use the price that is actually displayed for yield calculation if possible
+                    // If displayLivePrice is 'N/A', use currentPrice from share object (entered price)
+                    const priceForYield = (displayLivePrice !== 'N/A' && displayLivePrice.startsWith('$'))
+                                        ? parseFloat(displayLivePrice.substring(1))
+                                        : (currentPrice > 0 ? currentPrice : 0);
+
+                    if (priceForYield === 0) return 'N/A'; // Cannot calculate yield if price is zero
+
+                    const frankedYield = calculateFrankedYield(dividendAmount, priceForYield, frankingCredits);
+                    const unfrankedYield = calculateUnfrankedYield(dividendAmount, priceForYield);
+
+                    if (frankingCredits > 0 && frankedYield > 0) {
+                        return frankedYield.toFixed(2) + '% (Franked)'; // Display franked yield with (Franked)
+                    } else if (unfrankedYield > 0) {
+                        return unfrankedYield.toFixed(2) + '% (Unfranked)'; // Display unfranked yield with (Unfranked)
+                    }
+                    return 'N/A'; // No valid yield
+                })()
+            }
+        </p>
+        <p><strong>Star Rating:</strong> ${share.starRating > 0 ? '⭐ ' + share.starRating : 'No Rating'}</p>
+    `;
 
     card.addEventListener('click', () => {
         logDebug('Mobile Card Click: Share ID: ' + share.id);
