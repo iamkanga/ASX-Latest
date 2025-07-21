@@ -2965,6 +2965,15 @@ table td.live-price-cell.negative-change {
     margin-bottom: 15px; /* Consistent margin below the group */
 }
 
+/* Ensure consistent height and vertical alignment for input and select within this group */
+.target-input-group input[type="number"],
+.target-input-group select {
+    height: 40px; /* Fixed height for both to ensure alignment */
+    box-sizing: border-box; /* Include padding/border in height calculation */
+    line-height: 1; /* Reset line-height to prevent extra spacing */
+    vertical-align: middle; /* Ensure vertical alignment */
+}
+
 .target-input-group input[type="number"] {
     flex-grow: 1; /* Allows the input to take up most of the space */
     margin-bottom: 0; /* Remove default margin-bottom */
