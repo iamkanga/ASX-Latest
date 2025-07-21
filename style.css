@@ -2960,7 +2960,7 @@ table td.live-price-cell.negative-change {
 /* NEW: Styling for the unified target input group */
 .target-input-group {
     display: flex;
-    align-items: center;
+    align-items: center; /* Vertically align items in the middle */
     gap: 10px; /* Space between input and select */
     margin-bottom: 15px; /* Consistent margin below the group */
 }
