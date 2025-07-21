@@ -79,14 +79,6 @@
     --snooze-options-bg: #ffffff;
     --snooze-options-border: #b0b8bb;
 
-    /* NEW: Target Alert Bubble Colors */
---target-alert-buy-bg: #dc3545; /* Red for Buy alerts */
---target-alert-buy-shadow: rgba(220, 53, 69, 0.4);
---target-alert-sell-bg: #28a745; /* Green for Sell alerts */
---target-alert-sell-shadow: rgba(40, 167, 69, 0.4);
---target-alert-mixed-bg: #007bff; /* Blue for Mixed alerts */
---target-alert-mixed-shadow: rgba(0, 123, 255, 0.4);
-
     /* UPDATED: Cash & Assets Section Colors */
     --cash-section-bg: #f8f9fa;
     --cash-card-bg: #ffffff;
@@ -2957,48 +2949,6 @@ table td.live-price-cell.negative-change {
     font-size: 0.95em;
 }
 
-/* NEW: Styling for the unified target input group */
-.target-input-group {
-    display: flex;
-    align-items: center; /* Vertically align items in the middle */
-    gap: 10px; /* Space between input and select */
-    margin-bottom: 15px; /* Consistent margin below the group */
-}
-
-/* Ensure consistent height, padding, and vertical alignment for input and select within this group */
-.target-input-group input[type="number"],
-.target-input-group select {
-    height: 40px; /* Fixed height for both to ensure alignment */
-    padding: 8px 10px; /* Consistent padding for both */
-    box-sizing: border-box; /* Include padding/border in height calculation */
-    line-height: 1.5; /* Standard line-height for text input */
-    vertical-align: middle; /* Ensure vertical alignment */
-    /* Override any specific dropdown padding that might cause misalignment */
-    background-position: right 10px center; /* Center the dropdown arrow */
-}
-
-/* Specific adjustment for the select dropdown's text padding */
-.target-input-group select {
-    padding-right: 25px; /* Ensure space for the dropdown arrow */
-}
-
-.target-input-group input[type="number"] {
-    flex-grow: 1; /* Allows the input to take up most of the space */
-    margin-bottom: 0; /* Remove default margin-bottom */
-}
-
-.target-input-group select {
-    width: auto; /* Allow select to size based on content */
-    flex-shrink: 0; /* Prevent select from shrinking */
-    margin-bottom: 0; /* Remove default margin-bottom */
-    min-width: 60px; /* Ensure it's wide enough for "$" or "%" */
-    text-align: center; /* Center the text in the dropdown */
-    padding-left: 5px; /* Adjust padding if needed */
-    padding-right: 5px; /* Adjust padding if needed */
-    background-position: right 5px top 50%; /* Adjust arrow position */
-    background-size: 8px auto; /* Adjust arrow size */
-}
-
 .modal-content input[type="text"],
 .modal-content input[type="number"],
 .modal-content textarea,
@@ -3596,8 +3546,8 @@ table td.live-price-cell.negative-change {
     right: 20px !important; /* Padding from right */
     left: auto !important; /* Ensure it's not forced to the left */
     z-index: 9999 !important; /* Ensure it's on top of everything */
-    background-color: var(--alert-icon-bg); /* Default alert background color */
-    color: var(--alert-icon-text); /* Default alert text color */
+    background-color: var(--alert-icon-bg); /* Use alert background color */
+    color: var(--alert-icon-text); /* Use alert text color */
     border: none;
     border-radius: 8px; /* Slightly rounded for chat box look */
     width: 55px; /* Size of the button */
@@ -3607,37 +3557,12 @@ table td.live-price-cell.negative-change {
     align-items: center;
     font-size: 1.8em; /* Icon size */
     cursor: pointer;
-    box-shadow: 0 4px 12px var(--alert-icon-shadow); /* Default prominent shadow */
-    transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease; /* Added box-shadow to transition */
+    box-shadow: 0 4px 12px var(--alert-icon-shadow); /* More prominent shadow */
+    transition: transform 0.2s ease, background-color 0.2s ease;
     animation: pulse-alert 1.5s infinite alternate; /* Subtle pulsing animation */
     
     /* Chat box tail */
     position: relative; /* For positioning the pseudo-element tail */
-}
-
-/* NEW: Specific colors for the target hit icon based on alert type */
-.target-hit-icon-btn.target-alert-buy {
-    background-color: var(--target-alert-buy-bg);
-    box-shadow: 0 4px 12px var(--target-alert-buy-shadow);
-}
-.target-hit-icon-btn.target-alert-buy::after {
-    border-top-color: var(--target-alert-buy-bg);
-}
-
-.target-hit-icon-btn.target-alert-sell {
-    background-color: var(--target-alert-sell-bg);
-    box-shadow: 0 4px 12px var(--target-alert-sell-shadow);
-}
-.target-hit-icon-btn.target-alert-sell::after {
-    border-top-color: var(--target-alert-sell-bg);
-}
-
-.target-hit-icon-btn.target-alert-mixed {
-    background-color: var(--target-alert-mixed-bg);
-    box-shadow: 0 4px 12px var(--target-alert-mixed-shadow);
-}
-.target-hit-icon-btn.target-alert-mixed::after {
-    border-top-color: var(--target-alert-mixed-bg);
 }
 
 .target-hit-icon-btn::after {
