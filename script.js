@@ -725,7 +725,7 @@ function addShareToMobileCards(share) {
 
     mobileShareCardsContainer.appendChild(card);
     logDebug('Mobile Cards: Added share ' + share.shareName + ' to mobile cards.');
-}fqw
+}
 
 function updateMainButtonsState(enable) {
     logDebug('UI State: Setting main buttons state to: ' + (enable ? 'ENABLED' : 'DISABLED'));
