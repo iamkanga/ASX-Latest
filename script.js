@@ -4808,6 +4808,7 @@ if (showLastLivePriceToggle) {
         }
         renderWatchlist(); // Re-render to apply the new display logic immediately
         showCustomAlert('Last Price Display set to: ' + (showLastLivePriceOnClosedMarket ? 'On (Market Closed)' : 'Off (Market Closed)'), 1500);
+        toggleAppSidebar(false); // Close sidebar after action
     });
 }
 
