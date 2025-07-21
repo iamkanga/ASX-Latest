@@ -95,71 +95,71 @@
 
 /* Dark Theme Variables */
 body.dark-theme {
-    --background-color: #2c3e50;
-    --text-color: #ecf0f1;
-    --header-bg: #34495e;
-    --card-bg: #3b526b;
-    --border-color: #4a627a;
-    --button-bg: #007bff;
-    --button-text: #fff;
-    --button-hover-bg: #0056b3;
-    --input-bg: #4a627a;
-    --input-border: #6c8095;
-    --input-placeholder-color: #bdc3c7;
-    --modal-bg: rgba(0, 0, 0, 0.75);
-    --modal-content-bg: #34495e;
-    --table-header-bg: #4a627a;
-    --table-row-hover-bg: #4a627a;
-    --asx-button-bg: #4a627a;
-    --asx-button-hover-bg: #5c758e;
-    --asx-button-active-bg: #007bff;
-    --asx-button-active-text: #fff;
-    --success-color: #2ecc71;
-    --danger-color: #e74c3c;
-    --warning-color: #f39c12;
-    --info-color: #3498db;
-    --link-color: #3498db;
-    --link-hover-color: #2980b9;
-    --sidebar-bg: #34495e;
-    --sidebar-text: #ecf0f1;
-    --sidebar-border: #4a627a;
+    --background-color: #1a1a1a; /* Very dark gray/almost black */
+    --text-color: #e0e0e0; /* Light gray for text */
+    --header-bg: #282828; /* Darker gray for header */
+    --card-bg: #333333; /* Medium dark gray for cards */
+    --border-color: #555555; /* Darker gray for borders */
+    --button-bg: #555555; /* Gray button */
+    --button-text: #ffffff; /* White text on buttons */
+    --button-hover-bg: #6a6a6a; /* Lighter gray on hover */
+    --input-bg: #444444; /* Dark gray for input backgrounds */
+    --input-border: #777777; /* Gray for input borders */
+    --input-placeholder-color: #aaaaaa; /* Lighter gray for placeholders */
+    --modal-bg: rgba(0, 0, 0, 0.85); /* More opaque black modal background */
+    --modal-content-bg: #282828; /* Dark gray for modal content */
+    --table-header-bg: #3a3a3a; /* Darker gray for table headers */
+    --table-row-hover-bg: #4a4a4a; /* Medium dark gray for row hover */
+    --asx-button-bg: #444444; /* Dark gray for ASX buttons */
+    --asx-button-hover-bg: #5a5a5a; /* Lighter gray for ASX button hover */
+    --asx-button-active-bg: #888888; /* Even lighter gray for active ASX button */
+    --asx-button-active-text: #ffffff; /* White text for active ASX button */
+    --success-color: #2ecc71; /* Keep green for success */
+    --danger-color: #e74c3c; /* Keep red for danger */
+    --warning-color: #f39c12; /* Keep orange for warning */
+    --info-color: #3498db; /* Keep blue for info */
+    --link-color: #99ccff; /* Lighter blue for links */
+    --link-hover-color: #6699cc; /* Darker blue for link hover */
+    --sidebar-bg: #282828; /* Dark gray for sidebar */
+    --sidebar-text: #e0e0e0; /* Light gray for sidebar text */
+    --sidebar-border: #555555; /* Darker gray for sidebar border */
     --menu-button-bg: transparent;
-    --menu-button-hover-bg: #4a627a;
-    --placeholder-text: #bdc3c7;
-    --ghosted-text: #95a5a6;
+    --menu-button-hover-bg: #444444; /* Dark gray for menu button hover */
+    --placeholder-text: #aaaaaa;
+    --ghosted-text: #888888; /* Medium gray for ghosted text */
     --danger-button-bg: #e74c3c;
     --danger-button-hover-bg: #c0392b;
-    --icon-action-color: #3498db;
-    --icon-action-hover-color: #2980b9;
+    --icon-action-color: #cccccc; /* Light gray for action icons */
+    --icon-action-hover-color: #ffffff; /* White for action icon hover */
     --icon-danger-color: #e74c3c;
     --icon-danger-hover-color: #c0392b;
-    --calc-num-btn-bg: #5a758e;
-    --calc-num-btn-text: #ecf0f1;
-    --calc-num-btn-hover-bg: #6c8095;
-    --price-up-color: #2ecc71;
-    --price-down-color: #e74c3c;
-    --price-neutral-color: #95a5a6;
-    --live-price-section-bg: rgba(52, 152, 219, 0.1); /* Subtle blue tint */
-    --live-price-positive-bg: rgba(46, 204, 113, 0.15); /* Faint green */
-    --live-price-negative-bg: rgba(231, 76, 60, 0.15); /* Faint red */
-    --comment-title-bg: rgba(255, 255, 255, 0.08); /* Subtle background for comment titles in dark mode */
-    --target-alert-bg: #3498db;
-    --target-alert-text: #ecf0f1;
-    --target-alert-border: #2980b9;
+    --calc-num-btn-bg: #555555; /* Gray for calculator number buttons */
+    --calc-num-btn-text: #e0e0e0;
+    --calc-num-btn-hover-bg: #6a6a6a;
+    --price-up-color: #2ecc71; /* Keep green for price up */
+    --price-down-color: #e74c3c; /* Keep red for price down */
+    --price-neutral-color: #888888; /* Gray for neutral price */
+    --live-price-section-bg: rgba(68, 68, 68, 0.1); /* Very subtle dark gray tint */
+    --live-price-positive-bg: rgba(46, 204, 113, 0.1); /* Faint green */
+    --live-price-negative-bg: rgba(231, 76, 60, 0.1); /* Faint red */
+    --comment-title-bg: rgba(255, 255, 255, 0.05); /* Very subtle light tint for comment titles */
+    --target-alert-bg: #555555; /* Gray for target alert background */
+    --target-alert-text: #ffffff; /* White text for target alert */
+    --target-alert-border: #888888; /* Gray border for target alert */
     --target-banner-height: 40px;
 
     /* UPDATED: Cash & Assets Section Colors (Dark Theme) */
-    --cash-section-bg: #3b526b;
-    --cash-card-bg: #4a627a;
-    --cash-border-color: #5c758e;
-    --cash-total-bg: #2980b9;
-    --cash-total-text: #ecf0f1;
-    --cash-button-bg: #27ae60;
-    --cash-button-hover-bg: #229954;
-    --cash-primary-button-bg: #3498db;
-    --cash-primary-button-hover-bg: #2980b9;
-    --cash-delete-icon-color: #e74c3c;
-    --cash-edit-icon-color: #3498db;
+    --cash-section-bg: #282828; /* Dark gray */
+    --cash-card-bg: #333333; /* Medium dark gray */
+    --cash-border-color: #555555; /* Darker gray */
+    --cash-total-bg: #444444; /* Dark gray for total background */
+    --cash-total-text: #e0e0e0; /* Light gray for total text */
+    --cash-button-bg: #2ecc71; /* Keep green */
+    --cash-button-hover-bg: #229954; /* Keep green hover */
+    --cash-primary-button-bg: #555555; /* Gray primary button */
+    --cash-primary-button-hover-bg: #6a6a6a; /* Gray primary button hover */
+    --cash-delete-icon-color: #e74c3c; /* Keep red */
+    --cash-edit-icon-color: #99ccff; /* Lighter blue for edit icon */
 }
 
 /* Custom Themes */

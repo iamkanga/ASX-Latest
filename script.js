@@ -126,6 +126,10 @@ const modalTargetPrice = document.getElementById('modalTargetPrice');
 const modalCommentsContainer = document.getElementById('modalCommentsContainer');
 const modalUnfrankedYieldSpan = document.getElementById('modalUnfrankedYield');
 const modalFrankedYieldSpan = document.getElementById('modalFrankedYield');
+const modalEnteredPrice = document.getElementById('modalEnteredPrice');
+const modalTargetPrice = document.getElementById('modalTargetPrice');
+const modalDividendAmount = document.getElementById('modalDividendAmount');
+const modalFrankingCredits = document.getElementById('modalFrankingCredits');
 const editShareFromDetailBtn = document.getElementById('editShareFromDetailBtn');
 const deleteShareFromDetailBtn = document.getElementById('deleteShareFromDetailBtn');
 const modalNewsLink = document.getElementById('modalNewsLink');
@@ -1183,7 +1187,7 @@ function showShareDetails() {
     }
     modalShareName.textContent = share.shareName || 'N/A';
     modalShareName.className = 'modal-share-name ' + modalShareNamePriceChangeClass; // Apply class to modalShareName
-    
+
     const enteredPriceNum = Number(share.currentPrice);
 
     // Get live price data from the global livePrices object
@@ -1221,7 +1225,7 @@ function showShareDetails() {
         // 1. Add 52-Week Low and High at the top
         const fiftyTwoWeekRow = document.createElement('div');
         fiftyTwoWeekRow.classList.add('fifty-two-week-row'); // New class for styling
-        
+
         const lowSpan = document.createElement('span');
         lowSpan.classList.add('fifty-two-week-value', 'low'); // New classes
         lowSpan.textContent = 'Low: ' + (low52Week !== undefined && low52Week !== null && !isNaN(low52Week) ? '$' + low52Week.toFixed(2) : 'N/A');
@@ -1285,27 +1289,27 @@ function showShareDetails() {
         peRow.appendChild(peSpan);
         modalLivePriceDisplaySection.appendChild(peRow);
     }
-    
+
     modalEnteredPrice.textContent = (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? '$' + enteredPriceNum.toFixed(2) : 'N/A';
     const targetPriceNum = Number(share.targetPrice);
     modalTargetPrice.textContent = (!isNaN(targetPriceNum) && targetPriceNum !== null) ? '$' + targetPriceNum.toFixed(2) : 'N/A';
-    
+
     const dividendAmountNum = Number(share.dividendAmount);
     const modalDividendAmountText = (!isNaN(dividendAmountNum) && dividendAmountNum !== null) ? '$' + dividendAmountNum.toFixed(3) : 'N/A';
-    
+
     const frankingCreditsNum = Number(share.frankingCredits);
-    
+
     const priceForYield = (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) ? livePrice : enteredPriceNum;
     const unfrankedYield = calculateUnfrankedYield(dividendAmountNum, priceForYield); 
     modalUnfrankedYieldSpan.textContent = unfrankedYield !== null && !isNaN(unfrankedYield) ? unfrankedYield.toFixed(2) + '%' : '0.00%';
-    
+
     const frankedYield = calculateFrankedYield(dividendAmountNum, priceForYield, frankingCreditsNum);
     modalFrankedYieldSpan.textContent = frankedYield !== null && !isNaN(frankedYield) ? frankedYield.toFixed(2) + '%' : '0.00%';
 
     // Populate Entry Date after Franked Yield
     modalEntryDate.textContent = formatDate(share.entryDate) || 'N/A';
     modalStarRating.textContent = share.starRating > 0 ? '⭐ ' + share.starRating : 'No Rating';
-    
+
     if (modalCommentsContainer) {
         modalCommentsContainer.innerHTML = '';
         if (share.comments && Array.isArray(share.comments) && share.comments.length > 0) {
@@ -1313,7 +1317,7 @@ function showShareDetails() {
                 if (comment.title || comment.text) {
                     const commentDiv = document.createElement('div');
                     commentDiv.className = 'modal-comment-item';
-                    
+
                     // Conditional Title Bar
                     if (comment.title && comment.title.trim() !== '') {
                         const titleBar = document.createElement('div');
@@ -1321,7 +1325,7 @@ function showShareDetails() {
                         titleBar.textContent = comment.title;
                         commentDiv.appendChild(titleBar);
                     }
-                    
+
                     const commentTextP = document.createElement('p');
                     commentTextP.textContent = comment.text || '';
                     commentDiv.appendChild(commentTextP);
@@ -4637,13 +4641,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 currentUserId = user.uid;
                 logDebug('AuthState: User signed in: ' + user.uid);
                 logDebug('AuthState: User email: ' + user.email);
-                if (user.email && user.email.toLowerCase() === KANGA_EMAIL) {
-                    mainTitle.textContent = 'Kanga\'s Share Watchlist';
-                    logDebug('AuthState: Main title set to Kanga\'s Share Watchlist.');
-                } else {
-                    mainTitle.textContent = 'My Share Watchlist';
-                    logDebug('AuthState: Main title set to My Share Watchlist.');
-                }
+                // Always set the main title to "ASX Tracker" regardless of user email
+            mainTitle.textContent = 'ASX Tracker';
+            logDebug('AuthState: Main title set to ASX Tracker.');
                 updateMainButtonsState(true);
                 window._userAuthenticated = true; // Mark user as authenticated
                 
