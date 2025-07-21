@@ -2174,16 +2174,18 @@ async function displayStockDetailsInSearchModal(asxCode) {
 
         // Render action buttons
         const actionButton = document.createElement('button');
-        actionButton.classList.add('button', 'primary-button');
+        actionButton.classList.add('button', 'primary-button'); // Apply base button styles
         
         if (existingShare) {
-            actionButton.textContent = 'Edit Existing Share';
+            actionButton.textContent = 'Add Share to ASX Tracker'; // Changed text
             actionButton.addEventListener('click', () => {
                 hideModal(stockSearchModal); // Close search modal
-                showEditFormForSelectedShare(existingShare.id); // Open edit modal with existing share's ID
+                // If the user clicks "Add Share to ASX Tracker" for an existing share,
+                // we should open the edit form for that existing share.
+                showEditFormForSelectedShare(existingShare.id);
             });
         } else {
-            actionButton.textContent = 'Add to Watchlist';
+            actionButton.textContent = 'Add Share to ASX Tracker'; // Changed text to be consistent for new shares
             actionButton.addEventListener('click', () => {
                 hideModal(stockSearchModal); // Close search modal
                 clearForm(); // Clear share form
