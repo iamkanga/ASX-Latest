@@ -63,7 +63,11 @@ self.addEventListener('fetch', (event) => {
             caches.match(event.request).then((cachedResponse) => {
                 const fetchPromise = fetch(event.request).then((networkResponse) => {
                 // Check if we received a valid response and if it's cacheable
-                if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic' && networkResponse.type !== 'cors') {
+                // Exclude caching for specific problematic URLs if known, or just be more general.
+                // The 'basic' type allows same-origin requests. 'cors' allows cross-origin with CORS headers.
+                // 'opaque' responses (cross-origin without CORS) are often problematic for cache.put.
+                if (!networkResponse || networkResponse.status !== 200 || 
+                    (networkResponse.type !== 'basic' && networkResponse.type !== 'cors')) {
                     // Not a valid or cacheable response, just return it without caching
                     return networkResponse;
                 }
@@ -72,17 +76,15 @@ self.addEventListener('fetch', (event) => {
                 const responseToCache = networkResponse.clone();
 
                 caches.open(CACHE_NAME).then((cache) => {
-                    // Use a try-catch block around cache.put for extra resilience
-                    try {
-                        cache.put(event.request, responseToCache);
-                    } catch (e) {
-                        console.warn(`Service Worker: Failed to cache ${event.request.url}:`, e);
-                        // This catch handles potential issues with put, like NotFoundError
-                        // but the original networkResponse is still returned.
-                    }
+                    // Attempt to cache. If put fails (e.g., for opaque responses), it won't throw an unhandled promise rejection.
+                    // We are explicitly handling the put operation's promise.
+                    cache.put(event.request, responseToCache).catch(e => {
+                        // Log the error but don't let it break the main fetch chain
+                        console.warn(`Service Worker: Failed to cache (put error) ${event.request.url}:`, e);
+                    });
                 });
 
-                return networkResponse;
+                return networkResponse; // Always return the original network response
             }).catch(error => {
                 console.error(`Service Worker: Network fetch failed for ${event.request.url}.`, error);
                 // If network fails, try to return a cached response as a fallback
