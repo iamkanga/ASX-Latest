@@ -1421,12 +1421,61 @@ function sortShares() {
         let valA = a[field];
         let valB = b[field];
 
-        if (field === 'currentPrice' || field === 'targetPrice' || field === 'dividendAmount' || field === 'frankingCredits') {
+        if (field === 'currentPrice' || field === 'targetPrice' || field === 'frankingCredits') {
             valA = (typeof valA === 'string' && valA.trim() !== '') ? parseFloat(valA) : valA;
             valB = (typeof valB === 'string' && valB.trim() !== '') ? parseFloat(valB) : valB;
             valA = (valA === null || valA === undefined || isNaN(valA)) ? (order === 'asc' ? Infinity : -Infinity) : valA;
             valB = (valB === null || valB === undefined || isNaN(valB)) ? (order === 'asc' ? Infinity : -Infinity) : valB;
             return order === 'asc' ? valA - valB : valB - valA;
+        } else if (field === 'dividendAmount') { // Dedicated logic for dividendAmount (yield)
+            // Get live price data for share A
+            const livePriceDataA = livePrices[a.shareName.toUpperCase()];
+            const livePriceA = livePriceDataA ? livePriceDataA.live : undefined;
+            const priceForYieldA = (livePriceA !== undefined && livePriceA !== null && !isNaN(livePriceA)) ? livePriceA : Number(a.currentPrice);
+
+            // Get live price data for share B
+            const livePriceDataB = livePrices[b.shareName.toUpperCase()];
+            const livePriceB = livePriceDataB ? livePriceDataB.live : undefined;
+            const priceForYieldB = (livePriceB !== undefined && livePriceB !== null && !isNaN(livePriceB)) ? livePriceB : Number(b.currentPrice);
+
+            const dividendAmountA = Number(a.dividendAmount);
+            const frankingCreditsA = Number(a.frankingCredits);
+
+            const dividendAmountB = Number(b.dividendAmount);
+            const frankingCreditsB = Number(b.frankingCredits);
+
+            // Calculate yields for share A using the determined priceForYieldA
+            const frankedYieldA = calculateFrankedYield(dividendAmountA, priceForYieldA, frankingCreditsA);
+            const unfrankedYieldA = calculateUnfrankedYield(dividendAmountA, priceForYieldA);
+
+            // Calculate yields for share B using the determined priceForYieldB
+            const frankedYieldB = calculateFrankedYield(dividendAmountB, priceForYieldB, frankingCreditsB);
+            const unfrankedYieldB = calculateUnfrankedYield(dividendAmountB, priceForYieldB);
+
+            // Determine the effective yield for sorting for A (prioritize franked, then unfranked)
+            let effectiveYieldA = null;
+            if (frankedYieldA !== null && !isNaN(frankedYieldA)) {
+                effectiveYieldA = frankedYieldA;
+            } else if (unfrankedYieldA !== null && !isNaN(unfrankedYieldA)) {
+                effectiveYieldA = unfrankedYieldA;
+            }
+
+            // Determine the effective yield for sorting for B (prioritize franked, then unfranked)
+            let effectiveYieldB = null;
+            if (frankedYieldB !== null && !isNaN(frankedYieldB)) {
+                effectiveYieldB = frankedYieldB;
+            } else if (unfrankedYieldB !== null && !isNaN(unfrankedYieldB)) {
+                effectiveYieldB = unfrankedYieldB;
+            }
+
+            // Handle null/NaN yields by pushing them to the bottom (or top for asc)
+            // Using Infinity for asc sort pushes nulls to the end.
+            // Using -Infinity for desc sort pushes nulls to the end.
+            const finalYieldA = (effectiveYieldA === null || isNaN(effectiveYieldA)) ? (order === 'asc' ? -Infinity : Infinity) : effectiveYieldA;
+            const finalYieldB = (effectiveYieldB === null || isNaN(effectiveYieldB)) ? (order === 'asc' ? -Infinity : Infinity) : effectiveYieldB;
+
+
+            return order === 'asc' ? finalYieldA - finalYieldB : finalYieldB - finalYieldA;
         } else if (field === 'shareName') {
             const nameA = (a.shareName || '').toUpperCase().trim();
             const nameB = (b.shareName || '').toUpperCase().trim();

@@ -3725,11 +3725,11 @@ main.container {
 
 /* --- NEW: Compact Mobile View Specific Styles --- */
 .mobile-share-cards.compact-view {
-    display: grid;
+    display: grid !important; /* Force grid display */
     /* On mobile, ensure two equal columns */
-    grid-template-columns: repeat(2, 1fr); /* Explicitly set to 2 columns */
-    gap: 10px;
-    padding: 10px;
+    grid-template-columns: repeat(2, 1fr) !important; /* Force 2 columns */
+    gap: 10px !important;
+    padding: 10px !important;
 }
 
 /* On desktop, for compact view, force exactly four columns */
