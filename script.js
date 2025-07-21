@@ -3904,19 +3904,23 @@ if (deleteAllUserDataBtn) {
     }
 
     // Sort Select Change Listener
-    if (sortSelect) {
-        sortSelect.addEventListener('change', async (event) => {
-            logDebug('Sort Select: Change event fired. New value: ' + event.target.value);
-            currentSortOrder = sortSelect.value;
-            // Determine whether to sort shares or cash assets
-            if (currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
-                renderCashCategories(); // Re-render cash categories with new sort order
-            } else {
-                sortShares(); // Sorts allSharesData and calls renderWatchlist
-            }
-            await saveSortOrderPreference(currentSortOrder);
-        });
-    }
+if (sortSelect) {
+    sortSelect.addEventListener('change', async (event) => {
+        logDebug('Sort Select: Change event fired. New value: ' + event.target.value);
+        currentSortOrder = sortSelect.value;
+        // Determine whether to sort shares or cash assets
+        if (currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
+            renderCashCategories(); // Re-render cash categories with new sort order
+        } else {
+            sortShares(); // Sorts allSharesData and calls renderWatchlist
+        }
+        await saveSortOrderPreference(currentSortOrder);
+
+        // NEW: Scroll to the top of the page after sorting/rendering
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        logDebug('Sort: Scrolled to top after sorting.');
+    });
+}
 
     // New Share Button (from sidebar) - Now contextual, handled by updateSidebarAddButtonContext
     // The event listener will be set dynamically by updateSidebarAddButtonContext()
