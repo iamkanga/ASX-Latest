@@ -1432,52 +1432,55 @@ function sortShares() {
             const livePriceDataA = livePrices[a.shareName.toUpperCase()];
             const livePriceA = livePriceDataA ? livePriceDataA.live : undefined;
             // Price for yield calculation: prefer live price, fall back to entered price
-            const priceForYieldA = (livePriceA !== undefined && livePriceA !== null && !isNaN(livePriceA)) ? livePriceA : (Number(a.currentPrice) || 0); // Default to 0 if entered price is bad
+            // Ensure price is not zero to avoid division by zero
+            const priceForYieldA = (livePriceA !== undefined && livePriceA !== null && !isNaN(livePriceA) && livePriceA !== 0) ? livePriceA : (Number(a.currentPrice) || 0);
 
             // Get live price data for share B
             const livePriceDataB = livePrices[b.shareName.toUpperCase()];
             const livePriceB = livePriceDataB ? livePriceDataB.live : undefined;
             // Price for yield calculation: prefer live price, fall back to entered price
-            const priceForYieldB = (livePriceB !== undefined && livePriceB !== null && !isNaN(livePriceB)) ? livePriceB : (Number(b.currentPrice) || 0); // Default to 0 if entered price is bad
+            // Ensure price is not zero to avoid division by zero
+            const priceForYieldB = (livePriceB !== undefined && livePriceB !== null && !isNaN(livePriceB) && livePriceB !== 0) ? livePriceB : (Number(b.currentPrice) || 0);
 
-            const dividendAmountA = Number(a.dividendAmount) || 0; // Default to 0 if not a number
-            const frankingCreditsA = Number(a.frankingCredits) || 0; // Default to 0 if not a number
+            const dividendAmountA = Number(a.dividendAmount) || 0;
+            const frankingCreditsA = Number(a.frankingCredits) || 0;
 
-            const dividendAmountB = Number(b.dividendAmount) || 0; // Default to 0 if not a number
-            const frankingCreditsB = Number(b.frankingCredits) || 0; // Default to 0 if not a number
+            const dividendAmountB = Number(b.dividendAmount) || 0;
+            const frankingCreditsB = Number(b.frankingCredits) || 0;
 
-            // Calculate yields for share A using the determined priceForYieldA
-            const frankedYieldA = calculateFrankedYield(dividendAmountA, priceForYieldA, frankingCreditsA);
-            const unfrankedYieldA = calculateUnfrankedYield(dividendAmountA, priceForYieldA);
-
-            // Calculate yields for share B using the determined priceForYieldB
-            const frankedYieldB = calculateFrankedYield(dividendAmountB, priceForYieldB, frankingCreditsB);
-            const unfrankedYieldB = calculateUnfrankedYield(dividendAmountB, priceForYieldB);
-
-            // Determine the effective yield for sorting for A (prioritize franked, then unfranked)
             let effectiveYieldA = null;
-            if (frankingCreditsA > 0 && frankedYieldA !== null && !isNaN(frankedYieldA)) { // Only use franked if franking > 0
-                effectiveYieldA = frankedYieldA;
-            } else if (unfrankedYieldA !== null && !isNaN(unfrankedYieldA)) {
-                effectiveYieldA = unfrankedYieldA;
+            // Only calculate yields if priceForYieldA is a valid non-zero number
+            if (priceForYieldA > 0) {
+                const frankedYieldA = calculateFrankedYield(dividendAmountA, priceForYieldA, frankingCreditsA);
+                const unfrankedYieldA = calculateUnfrankedYield(dividendAmountA, priceForYieldA);
+
+                if (frankingCreditsA > 0 && frankedYieldA !== null && !isNaN(frankedYieldA)) {
+                    effectiveYieldA = frankedYieldA;
+                } else if (unfrankedYieldA !== null && !isNaN(unfrankedYieldA)) {
+                    effectiveYieldA = unfrankedYieldA;
+                }
             }
 
-            // Determine the effective yield for sorting for B (prioritize franked, then unfranked)
             let effectiveYieldB = null;
-            if (frankingCreditsB > 0 && frankedYieldB !== null && !isNaN(frankedYieldB)) { // Only use franked if franking > 0
-                effectiveYieldB = frankedYieldB;
-            } else if (unfrankedYieldB !== null && !isNaN(unfrankedYieldB)) {
-                effectiveYieldB = unfrankedYieldB;
+            // Only calculate yields if priceForYieldB is a valid non-zero number
+            if (priceForYieldB > 0) {
+                const frankedYieldB = calculateFrankedYield(dividendAmountB, priceForYieldB, frankingCreditsB);
+                const unfrankedYieldB = calculateUnfrankedYield(dividendAmountB, priceForYieldB);
+
+                if (frankingCreditsB > 0 && frankedYieldB !== null && !isNaN(frankedYieldB)) {
+                    effectiveYieldB = frankedYieldB;
+                } else if (unfrankedYieldB !== null && !isNaN(unfrankedYieldB)) {
+                    effectiveYieldB = unfrankedYieldB;
+                }
             }
 
             logDebug(`Sort Debug - Dividend: Comparing ${a.shareName} (Effective Yield A: ${effectiveYieldA}) vs ${b.shareName} (Effective Yield B: ${effectiveYieldB})`);
 
             // Handle null/NaN yields by pushing them to the bottom (or top for asc)
-            // Using Infinity for asc sort pushes nulls to the end.
-            // Using -Infinity for desc sort pushes nulls to the end.
-            const finalYieldA = (effectiveYieldA === null || isNaN(effectiveYieldA)) ? (order === 'asc' ? -Infinity : Infinity) : effectiveYieldA;
-            const finalYieldB = (effectiveYieldB === null || isNaN(effectiveYieldB)) ? (order === 'asc' ? -Infinity : Infinity) : effectiveYieldB;
-
+            // Use a very small negative number for asc and very large positive for desc
+            // to ensure null/NaN values are always at the end of the list.
+            const finalYieldA = (effectiveYieldA === null || isNaN(effectiveYieldA)) ? (order === 'asc' ? -1e10 : 1e10) : effectiveYieldA;
+            const finalYieldB = (effectiveYieldB === null || isNaN(effectiveYieldB)) ? (order === 'asc' ? -1e10 : 1e10) : effectiveYieldB;
 
             return order === 'asc' ? finalYieldA - finalYieldB : finalYieldB - finalYieldA;
         } else if (field === 'shareName') {
