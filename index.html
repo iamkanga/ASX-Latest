@@ -340,8 +340,14 @@
                 <label for="currentPrice">Entered Price ($):</label>
                 <input type="number" id="currentPrice" step="0.01" placeholder="e.g., 25.50">
 
-                <label for="targetPrice">Target Price ($):</label>
-                <input type="number" id="targetPrice" step="0.01" placeholder="e.g., 30.00">
+                <label for="targetValue">Target Value:</label>
+                <div class="target-input-group">
+                    <input type="number" id="targetValue" step="0.01" placeholder="e.g., 30.00 or 20">
+                    <select id="targetType" class="dropdown-large">
+                        <option value="dollar">$</option>
+                        <option value="percentage">%</option>
+                    </select>
+                </div>
 
                 <label for="dividendAmount">Dividend Amount (per share, annual $):</label>
                 <input type="number" id="dividendAmount" step="0.001" placeholder="e.g., 1.250">
