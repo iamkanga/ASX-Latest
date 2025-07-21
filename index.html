@@ -348,6 +348,9 @@
                         <option value="percentage">%</option>
                     </select>
                 </div>
+                <p id="calculatedTargetDisplay" class="ghosted-text" style="text-align: center; margin-top: -10px; margin-bottom: 15px; min-height: 20px;">
+                    <!-- Calculated target methodology will be displayed here -->
+                </p>
 
                 <label for="dividendAmount">Dividend Amount (per share, annual $):</label>
                 <input type="number" id="dividendAmount" step="0.001" placeholder="e.g., 1.250">
@@ -637,7 +640,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, FieldValue, deleteField, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, FieldValue, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // YOUR FIREBASE CONFIGURATION - Replace with your actual Firebase project config
         const firebaseConfig = {
@@ -678,9 +681,6 @@
         }
 
         // Expose Firebase objects globally for script.js
-        window.firestoreDb = firebaseInitialized ? db : null;
-        window.firebaseAuth = firebaseInitialized ? auth : null;
-        window.getFirebaseAppId = () => currentAppId;
         window.firestore = firebaseInitialized ? {
             collection: collection,
             doc: doc,
@@ -693,7 +693,7 @@
             query: query,
             where: where,
             getDocs: getDocs,
-            deleteField: FieldValue.delete,
+            deleteField: typeof FieldValue !== 'undefined' ? FieldValue.delete : null, // Ensure FieldValue is defined before using
             writeBatch: writeBatch
         } : null;
         

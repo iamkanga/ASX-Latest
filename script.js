@@ -111,6 +111,7 @@ const shareNameInput = document.getElementById('shareName');
 const currentPriceInput = document.getElementById('currentPrice');
 const targetValueInput = document.getElementById('targetValue'); // NEW: Reference to the unified target value input
 const targetTypeSelect = document.getElementById('targetType');   // NEW: Reference to the target type select
+const calculatedTargetDisplay = document.getElementById('calculatedTargetDisplay'); // NEW: Reference for calculated target display
 const dividendAmountInput = document.getElementById('dividendAmount');
 const frankingCreditsInput = document.getElementById('frankingCredits');
 const shareRatingSelect = document.getElementById('shareRating');
@@ -1069,6 +1070,7 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
     showModal(shareFormSection);
     shareNameInput.focus();
     logDebug('Form: Opened edit form for share: ' + shareToEdit.shareName + ' (ID: ' + selectedShareDocId + ')');
+    updateCalculatedTargetDisplay(); // NEW: Update display when opening edit form
 }
 
 /**
@@ -1173,6 +1175,7 @@ function checkFormDirtyState() {
 
     setIconDisabled(saveShareBtn, !canSave);
     logDebug('Dirty State: Save button enabled: ' + canSave);
+    updateCalculatedTargetDisplay(); // NEW: Update display on dirty state change (input/change events)
 }
 
 /**

@@ -2965,13 +2965,21 @@ table td.live-price-cell.negative-change {
     margin-bottom: 15px; /* Consistent margin below the group */
 }
 
-/* Ensure consistent height and vertical alignment for input and select within this group */
+/* Ensure consistent height, padding, and vertical alignment for input and select within this group */
 .target-input-group input[type="number"],
 .target-input-group select {
     height: 40px; /* Fixed height for both to ensure alignment */
+    padding: 8px 10px; /* Consistent padding for both */
     box-sizing: border-box; /* Include padding/border in height calculation */
-    line-height: 1; /* Reset line-height to prevent extra spacing */
+    line-height: 1.5; /* Standard line-height for text input */
     vertical-align: middle; /* Ensure vertical alignment */
+    /* Override any specific dropdown padding that might cause misalignment */
+    background-position: right 10px center; /* Center the dropdown arrow */
+}
+
+/* Specific adjustment for the select dropdown's text padding */
+.target-input-group select {
+    padding-right: 25px; /* Ensure space for the dropdown arrow */
 }
 
 .target-input-group input[type="number"] {
