@@ -1537,11 +1537,11 @@ function showShareDetails() {
         if (share.targetType === '%') {
             const sign = share.targetValue >= 0 ? '+' : '';
             const absTargetValue = Math.abs(share.targetValue);
-            explanation = ` (Entered ${formatCurrency(enteredPrice)} ${sign}${absTargetValue}% = ${formatCurrency(share.calculatedTargetPrice)})`;
+            explanation = `Entered ${formatCurrency(enteredPrice)} ${sign}${absTargetValue}% = ${formatCurrency(share.calculatedTargetPrice)}`;
         } else { // Dollar amount
-            explanation = ` (Set at ${formatCurrency(share.calculatedTargetPrice)})`;
+            explanation = `Set at ${formatCurrency(share.calculatedTargetPrice)}`;
         }
-        targetPriceDisplay = formatCurrency(share.calculatedTargetPrice) + explanation;
+        targetPriceDisplay = `${formatCurrency(share.calculatedTargetPrice)} (${explanation})`; // Format: Price (Explanation)
     }
     modalTargetPrice.textContent = targetPriceDisplay;
 
@@ -2586,10 +2586,26 @@ function openActiveAlertsModal() {
 // NEW: Function to close (minimize) the active alerts modal
 function closeActiveAlertsModal() {
     if (!activeAlertsModal) return; // Safety check
+
+    // Ensure the 'open' class is removed to trigger CSS transition
     activeAlertsModal.classList.remove('open');
-    setTimeout(() => { // Delay hiding until animation completes
+
+    // Remove the event listener for clicking outside the modal when closing
+    // This prevents multiple listeners from accumulating and causing odd behavior.
+    const currentOutsideClickListener = activeAlertsModal._currentOutsideClickListener;
+    if (currentOutsideClickListener) {
+        activeAlertsModal.removeEventListener('click', currentOutsideClickListener);
+        activeAlertsModal._currentOutsideClickListener = null;
+    }
+
+    // Delay setting display: 'none' until after the CSS transition completes
+    // This ensures the fade-out and slide animation finishes visually.
+    setTimeout(() => {
         activeAlertsModal.style.display = 'none';
-    }, 300); // Match CSS transition duration
+        // Also ensure visibility is hidden, in case display:none is overridden elsewhere
+        activeAlertsModal.style.visibility = 'hidden';
+    }, 300); // Match the CSS transition duration (0.3s)
+
     activeAlertsModalOpen = false;
     logDebug('Alerts Modal: Closed (minimized).');
 }
@@ -3031,56 +3047,67 @@ async function fetchLivePrices() {
             const high52 = parseFloat(item.High52);
             const low52 = parseFloat(item.Low52);
 
-            if (asxCode && !isNaN(livePrice)) {
-                // Find the corresponding share in allSharesData to get its targetValue and targetType
-                const shareIndex = allSharesData.findIndex(s => s.shareName.toUpperCase() === asxCode);
-                const shareData = shareIndex !== -1 ? allSharesData[shareIndex] : null;
+            // Find the corresponding share in allSharesData to get its targetValue and targetType
+            const shareIndex = allSharesData.findIndex(s => s.shareName.toUpperCase() === asxCode);
+            const shareData = shareIndex !== -1 ? allSharesData[shareIndex] : null;
 
-                let isTargetHit = false;
-                let alertType = ''; // 'buy' or 'sell'
-                let calculatedTargetPrice = null;
+            let isTargetHit = false;
+            let alertType = ''; // 'buy' or 'sell'
+            let calculatedTargetPrice = null;
 
-                if (shareData && shareData.targetValue !== null && shareData.targetValue !== undefined && !isNaN(shareData.targetValue) && shareData.currentPrice !== null && shareData.currentPrice !== undefined && !isNaN(shareData.currentPrice)) {
-                    if (shareData.targetType === '%') {
-                        calculatedTargetPrice = shareData.currentPrice * (1 + shareData.targetValue / 100);
-                        if (shareData.targetValue > 0) { // Positive percentage is a sell target
-                            alertType = 'sell';
-                            if (livePrice >= calculatedTargetPrice) {
-                                isTargetHit = true;
-                            }
-                        } else { // Negative percentage is a buy target
-                            alertType = 'buy';
-                            if (livePrice <= calculatedTargetPrice) {
-                                isTargetHit = true;
-                            }
+            // Only perform target calculation if we have valid share data, target value, and entered price
+            if (shareData && shareData.targetValue !== null && !isNaN(shareData.targetValue) &&
+                shareData.currentPrice !== null && !isNaN(shareData.currentPrice) &&
+                livePrice !== null && !isNaN(livePrice)) { // Use fetched livePrice for alert check
+                
+                if (shareData.targetType === '%') {
+                    calculatedTargetPrice = shareData.currentPrice * (1 + shareData.targetValue / 100);
+                    if (shareData.targetValue > 0) { // Positive percentage is a sell target
+                        alertType = 'sell';
+                        if (livePrice >= calculatedTargetPrice) {
+                            isTargetHit = true;
                         }
-                    } else { // '$' type
-                        calculatedTargetPrice = shareData.targetValue;
-                        if (calculatedTargetPrice < shareData.currentPrice) { // Dollar target below entered price is a buy target
-                            alertType = 'buy';
-                            if (livePrice <= calculatedTargetPrice) {
-                                isTargetHit = true;
-                            }
-                        } else { // Dollar target above entered price is a sell target
-                            alertType = 'sell';
-                            if (livePrice >= calculatedTargetPrice) {
-                                isTargetHit = true;
-                            }
+                    } else { // Negative percentage is a buy target
+                        alertType = 'buy';
+                        if (livePrice <= calculatedTargetPrice) {
+                            isTargetHit = true;
                         }
                     }
-
-                    // Update the actual share object in allSharesData with calculated properties
-                    if (shareIndex !== -1) {
-                        allSharesData[shareIndex].calculatedTargetPrice = calculatedTargetPrice;
-                        allSharesData[shareIndex].alertTriggered = isTargetHit;
-                        allSharesData[shareIndex].alertType = alertType;
-                        // Store company name from live data if available and not already set
-                        if (item.CompanyName) {
-                            allSharesData[shareIndex].companyName = item.CompanyName;
+                } else { // '$' type
+                    calculatedTargetPrice = shareData.targetValue;
+                    if (calculatedTargetPrice < shareData.currentPrice) { // Dollar target below entered price is a buy target
+                        alertType = 'buy';
+                        if (livePrice <= calculatedTargetPrice) {
+                            isTargetHit = true;
+                        }
+                    } else { // Dollar target above entered price is a sell target
+                        alertType = 'sell';
+                        if (livePrice >= calculatedTargetPrice) {
+                            isTargetHit = true;
                         }
                     }
                 }
-                newLivePrices[asxCode] = {
+
+                // Update the actual share object in allSharesData with calculated properties
+                if (shareIndex !== -1) {
+                    allSharesData[shareIndex].calculatedTargetPrice = calculatedTargetPrice;
+                    allSharesData[shareIndex].alertTriggered = isTargetHit;
+                    allSharesData[shareIndex].alertType = alertType;
+                    // Store company name from live data if available and not already set
+                    if (item.CompanyName) {
+                        allSharesData[shareIndex].companyName = item.CompanyName;
+                    }
+                }
+            } else {
+                // If target calculation cannot be performed, ensure alert properties are reset
+                if (shareIndex !== -1) {
+                    allSharesData[shareIndex].calculatedTargetPrice = null;
+                    allSharesData[shareIndex].alertTriggered = false;
+                    allSharesData[shareIndex].alertType = '';
+                }
+            }
+
+            newLivePrices[asxCode] = {
                     live: livePrice,
                     prevClose: isNaN(prevClose) ? null : prevClose,
                     PE: isNaN(pe) ? null : pe,
@@ -3091,57 +3118,54 @@ async function fetchLivePrices() {
                     lastPrevClose: isNaN(prevClose) ? null : prevClose,
                     CompanyName: item.CompanyName || 'N/A' // Store company name here too
                 };
-            } else {
-                console.warn('Live Price: Skipping item due to missing ASX code or invalid price:', item);
-            }
-        });
-        livePrices = newLivePrices;
-        console.log('Live Price: Live prices updated:', livePrices); 
-        
-        // renderWatchlist is called from the onSnapshot for shares, which will then trigger this.
-        // We need to ensure adjustMainContentPadding is called here as well, as per user's instruction.
-        adjustMainContentPadding(); 
-        
-        // NEW: Indicate that live prices are loaded for splash screen
-        window._livePricesLoaded = true;
-        hideSplashScreenIfReady();
-        
-        updateAlertIconStatus(); // Explicitly update alert icon after prices are fresh
-    } catch (error) {
-        console.error('Live Price: Error fetching live prices:', error);
-        // NEW: Hide splash screen on error
-        hideSplashScreen();
+            }); // This closes the data.forEach loop
+            livePrices = newLivePrices;
+            console.log('Live Price: Live prices updated:', livePrices);
+            
+            // renderWatchlist is called from the onSnapshot for shares, which will then trigger this.
+            // We need to ensure adjustMainContentPadding is called here as well, as per user's instruction.
+            adjustMainContentPadding(); 
+            
+            // NEW: Indicate that live prices are loaded for splash screen
+            window._livePricesLoaded = true;
+            hideSplashScreenIfReady();
+            
+            updateAlertIconStatus(); // Explicitly update alert icon after prices are fresh
+        } catch (error) {
+            console.error('Live Price: Error fetching live prices:', error);
+            // NEW: Hide splash screen on error
+            hideSplashScreen();
+        }
     }
-}
 
-/**
- * Starts the periodic fetching of live prices.
- */
-function startLivePriceUpdates() {
-    if (livePriceFetchInterval) {
-        clearInterval(livePriceFetchInterval);
-        logDebug('Live Price: Cleared existing live price interval.');
+    /**
+    * Starts the periodic fetching of live prices.
+    */
+    function startLivePriceUpdates() {
+        if (livePriceFetchInterval) {
+            clearInterval(livePriceFetchInterval);
+            logDebug('Live Price: Cleared existing live price interval.');
+        }
+        // Only start fetching if not in cash view
+        if (!currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
+            fetchLivePrices(); 
+            livePriceFetchInterval = setInterval(fetchLivePrices, LIVE_PRICE_FETCH_INTERVAL_MS);
+            logDebug('Live Price: Started live price updates every ' + (LIVE_PRICE_FETCH_INTERVAL_MS / 1000 / 60) + ' minutes.');
+        } else {
+            logDebug('Live Price: Not starting live price updates because "Cash & Assets" is selected.'); // UPDATED TEXT
+        }
     }
-    // Only start fetching if not in cash view
-    if (!currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
-        fetchLivePrices(); 
-        livePriceFetchInterval = setInterval(fetchLivePrices, LIVE_PRICE_FETCH_INTERVAL_MS);
-        logDebug('Live Price: Started live price updates every ' + (LIVE_PRICE_FETCH_INTERVAL_MS / 1000 / 60) + ' minutes.');
-    } else {
-        logDebug('Live Price: Not starting live price updates because "Cash & Assets" is selected.'); // UPDATED TEXT
-    }
-}
 
-/**
- * Stops the periodic fetching of live prices.
- */
-function stopLivePriceUpdates() {
-    if (livePriceFetchInterval) {
-        clearInterval(livePriceFetchInterval);
-        livePriceFetchInterval = null;
-        logDebug('Live Price: Stopped live price updates.');
+    /**
+    * Stops the periodic fetching of live prices.
+    */
+    function stopLivePriceUpdates() {
+        if (livePriceFetchInterval) {
+            clearInterval(livePriceFetchInterval);
+            livePriceFetchInterval = null;
+            logDebug('Live Price: Stopped live price updates.');
+        }
     }
-}
 
 // This function is removed as its logic is now replaced by updateAlertIconStatus.
 // Keep this empty placeholder if it's called elsewhere and removing it completely causes issues.
