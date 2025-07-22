@@ -1076,7 +1076,8 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
 
     formTitle.textContent = 'Edit Share';
     shareNameInput.value = shareToEdit.shareName || '';
-    currentPriceInput.value = Number(shareToEdit.currentPrice) !== null && !isNaN(Number(shareToEdit.currentPrice)) ? Number(shareToEdit.currentPrice).toFixed(2) : '';
+    // Ensure currentPrice is a number and format for display
+    currentPriceInput.value = (typeof shareToEdit.currentPrice === 'number' && !isNaN(shareToEdit.currentPrice)) ? shareToEdit.currentPrice.toFixed(2) : '';
     // NEW: Populate Target Value and Type
     if (targetValueInput) {
         if (shareToEdit.targetValue !== undefined && shareToEdit.targetValue !== null) {
@@ -1086,11 +1087,11 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
         }
     }
     if (targetTypeDollarBtn && targetTypePercentBtn) {
-        // Default to dollar if type is not explicitly set or is invalid
+        // Set the active class based on the share's targetType
         if (shareToEdit.targetType === '%') {
             targetTypePercentBtn.classList.add('active');
             targetTypeDollarBtn.classList.remove('active');
-        } else {
+        } else { // Default to '$' if targetType is not '%' or is undefined/null
             targetTypeDollarBtn.classList.add('active');
             targetTypePercentBtn.classList.remove('active');
         }
@@ -1302,9 +1303,10 @@ async function saveShareData(isSilent = false) {
         });
     }
 
+    const currentPriceValue = parseFloat(currentPriceInput.value); // Get value directly from input
     const shareData = {
         shareName: shareName,
-        currentPrice: isNaN(currentPrice) ? null : currentPrice,
+        currentPrice: isNaN(currentPriceValue) ? null : currentPriceValue, // Use the parsed value
         // NEW: Store targetValue and targetType instead of targetPrice
         targetValue: isNaN(targetValue) ? null : targetValue,
         targetType: targetType,
