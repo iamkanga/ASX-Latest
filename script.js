@@ -5482,16 +5482,31 @@ if (showLastLivePriceToggle) {
         updateTargetCalculationDisplay();
     });
 
-    // Event listeners for the new Active Alerts Modal
+    // Event listeners for the Active Alerts Modal
     if (targetHitIconBtn) targetHitIconBtn.addEventListener('click', openActiveAlertsModal);
-    if (alertsCloseButton) alertsCloseButton.addEventListener('click', closeActiveAlertsModal);
-    if (minimizeAlertsModalBtn) minimizeAlertsModalBtn.addEventListener('click', closeActiveAlertsModal);
-    if (dismissAllAlertsBtn) dismissAllAlertsBtn.addEventListener('click', dismissAllActiveAlerts);
+
+    // Correctly handle the close button for the active alerts modal
+    if (alertsCloseButton) { // Use the direct reference 'alertsCloseButton'
+        // Remove any previous listeners to prevent duplicates
+        alertsCloseButton.removeEventListener('click', closeModals); // Remove global close if present
+        alertsCloseButton.removeEventListener('click', closeActiveAlertsModal); // Remove previous specific close
+        alertsCloseButton.addEventListener('click', closeActiveAlertsModal); // Add correct specific close
+    }
+
+    if (minimizeAlertsModalBtn) {
+        minimizeAlertsModalBtn.removeEventListener('click', closeActiveAlertsModal); // Remove previous
+        minimizeAlertsModalBtn.addEventListener('click', closeActiveAlertsModal); // Re-add to ensure it's active
+    }
+    if (dismissAllAlertsBtn) {
+        dismissAllAlertsBtn.removeEventListener('click', dismissAllActiveAlerts); // Remove previous
+        dismissAllAlertsBtn.addEventListener('click', dismissAllActiveAlerts); // Re-add to ensure it's active
+    }
     // Click outside alerts modal to minimize it
     if (activeAlertsModal) {
         activeAlertsModal.addEventListener('click', (event) => {
             const modalContent = activeAlertsModal.querySelector('.modal-content');
-            if (modalContent && !modalContent.contains(event.target)) {
+            // Ensure click is on the backdrop, not bubbling from inside the modal content
+            if (modalContent && !modalContent.contains(event.target) && event.target === activeAlertsModal) {
                 closeActiveAlertsModal();
             }
         });
