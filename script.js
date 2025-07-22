@@ -410,7 +410,7 @@ function closeModals() {
     if (autoDismissTimeout) { clearTimeout(autoDismissTimeout); autoDismissTimeout = null; }
     hideContextMenu();
     // NEW: Close the alert panel if open (alertPanel is not in current HTML, but kept for consistency)
-    if (alertPanel) hideModal(alertPanel);
+    if (activeAlertsModal) hideModal(activeAlertsModal); // Correctly hide the active alerts modal
     logDebug('Modal: All modals closed.');
 }
 
@@ -1080,11 +1080,7 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
     currentPriceInput.value = (typeof shareToEdit.currentPrice === 'number' && !isNaN(shareToEdit.currentPrice)) ? shareToEdit.currentPrice.toFixed(2) : '';
     // NEW: Populate Target Value and Type
     if (targetValueInput) {
-        if (shareToEdit.targetValue !== undefined && shareToEdit.targetValue !== null) {
-            targetValueInput.value = shareToEdit.targetValue;
-        } else {
-            targetValueInput.value = ''; // Ensure it's clear if no target
-        }
+        targetValueInput.value = (typeof shareToEdit.targetValue === 'number' && !isNaN(shareToEdit.targetValue)) ? shareToEdit.targetValue : '';
     }
     if (targetTypeDollarBtn && targetTypePercentBtn) {
         // Set the active class based on the share's targetType
@@ -1178,9 +1174,9 @@ function getCurrentFormData() {
 function areShareDataEqual(data1, data2) {
     if (!data1 || !data2) return false;
 
-    const fields = ['shareName', 'currentPrice', 'dividendAmount', 'frankingCredits', 'watchlistId', 'starRating', 'targetValue', 'targetType'];
+    const fields = ['shareName', 'currentPrice', 'dividendAmount', 'frankingCredits', 'watchlistId', 'starRating'];
     // NEW: Add targetValue and targetType to fields for comparison
-    const newTargetFields = ['targetValue', 'targetType'];
+    // const newTargetFields = ['targetValue', 'targetType']; // This variable is not used directly in the loop below
 
     for (const field of fields) {
         let val1 = data1[field];
@@ -1905,12 +1901,6 @@ function renderSortSelect() {
 /**
  * Renders the watchlist based on the currentSelectedWatchlistIds. (1)
  */
-/**
- * Renders the watchlist based on the currentSelectedWatchlistIds. (1)
- */
-/**
- * Renders the watchlist based on the currentSelectedWatchlistIds. (1)
- */
 function renderWatchlist() {
     logDebug('DEBUG: renderWatchlist called. Current selected watchlist ID: ' + currentSelectedWatchlistIds[0]);
     
@@ -1918,15 +1908,10 @@ function renderWatchlist() {
 
     // Hide both sections initially
     stockWatchlistSection.classList.add('app-hidden');
-    cashAssetsSection.classList.add('app-hidden'); 
+    cashAssetsSection.classList.add('app-hidden'); // UPDATED ID
     
     // Clear previous content
-    if (!shareTableBody || !mobileShareCardsContainer) {
-        console.error('renderWatchlist: shareTableBody or mobileShareCardsContainer not found for clearing.');
-        return;
-    }
-    shareTableBody.innerHTML = ''; // Clear stock table
-    mobileShareCardsContainer.innerHTML = ''; // Clear mobile cards
+    clearShareListUI(); // Clears stock table and mobile cards
     if (cashCategoriesContainer) cashCategoriesContainer.innerHTML = ''; // Clear cash categories
 
     // Update sort dropdown options based on selected watchlist type
@@ -2033,153 +2018,6 @@ function renderWatchlist() {
                 shareTableBody.appendChild(tr);
             }
             if (mobileShareCardsContainer && mobileShareCardsContainer.style.display !== 'none') {
-                mobileShareCardsContainer.innerHTML = emptyWatchlistMessage.outerHTML; // Use outerHTML to get the <p> tag too
-            }
-        } else {
-            sharesToRender.forEach((share) => {
-                // Ensure share object has the latest calculated alert properties
-                // This is needed because renderWatchlist might be called before fetchLivePrices updates allSharesData
-                // This logic is now handled in fetchLivePrices so share object already has these
-                
-                // Get live price data for the current share
-                const shareLivePriceData = livePrices[share.shareName.toUpperCase()];
-
-                if (tableContainer && tableContainer.style.display !== 'none') {
-                    addShareToTable(share, shareLivePriceData);
-                }
-                if (mobileShareCardsContainer && mobileShareCardsContainer.style.display !== 'none') {
-                    addShareToMobileCards(share, shareLivePriceData);
-                }
-            });
-        }
-
-        if (selectedShareDocId) {
-            const stillExists = sharesToRender.some(share => share.id === selectedShareDocId);
-            if (stillExists) {
-                selectShare(selectedShareDocId);
-            } else {
-                deselectCurrentShare();
-            }
-        }
-        logDebug('Render: Stock watchlist rendering complete.');
-        renderAsxCodeButtons();
-        // Moved from updateTargetHitBanner which is now deprecated
-        updateAlertIconStatus(); 
-        renderActiveAlertsList();
-    }
-    adjustMainContentPadding();
-}
-    logDebug('DEBUG: renderWatchlist called. Current selected watchlist ID: ' + currentSelectedWatchlistIds[0]);
-    
-    const selectedWatchlistId = currentSelectedWatchlistIds[0];
-
-    // Hide both sections initially
-    stockWatchlistSection.classList.add('app-hidden');
-    cashAssetsSection.classList.add('app-hidden'); // UPDATED ID
-    
-    // Clear previous content
-    clearShareListUI(); // Clears stock table and mobile cards
-    if (cashCategoriesContainer) cashCategoriesContainer.innerHTML = ''; // Clear cash categories
-
-    // Update sort dropdown options based on selected watchlist type
-    renderSortSelect();
-
-    if (selectedWatchlistId === CASH_BANK_WATCHLIST_ID) {
-        // Show Cash & Assets section (1)
-        cashAssetsSection.classList.remove('app-hidden');
-        mainTitle.textContent = 'Cash & Assets';
-        renderCashCategories();
-        sortSelect.classList.remove('app-hidden');
-        refreshLivePricesBtn.classList.add('app-hidden');
-        toggleCompactViewBtn.classList.add('app-hidden');
-        asxCodeButtonsContainer.classList.add('app-hidden');
-        targetHitIconBtn.classList.add('app-hidden');
-        exportWatchlistBtn.classList.add('app-hidden');
-        stopLivePriceUpdates();
-        updateAddHeaderButton();
-    } else {
-        // Show Stock Watchlist section
-        stockWatchlistSection.classList.remove('app-hidden');
-        const selectedWatchlist = userWatchlists.find(wl => wl.id === selectedWatchlistId);
-        if (selectedWatchlistId === ALL_SHARES_ID) {
-            mainTitle.textContent = 'All Shares';
-        } else if (selectedWatchlist) {
-            mainTitle.textContent = selectedWatchlist.name;
-        } else {
-            mainTitle.textContent = 'Share Watchlist';
-        }
-
-        // Show stock-specific UI elements
-        sortSelect.classList.remove('app-hidden');
-        refreshLivePricesBtn.classList.remove('app-hidden');
-        toggleCompactViewBtn.classList.remove('app-hidden');
-        targetHitIconBtn.classList.remove('app-hidden');
-        exportWatchlistBtn.classList.remove('app-hidden');
-        startLivePriceUpdates();
-        updateAddHeaderButton();
-
-        // --- Core Fix for Desktop Compact View ---
-        const isMobileView = window.innerWidth <= 768; // Define what constitutes "mobile"
-
-        if (isMobileView) {
-            // On actual mobile devices, always hide table and show mobile cards
-            if (tableContainer) tableContainer.style.display = 'none';
-            if (mobileShareCardsContainer) mobileShareCardsContainer.style.display = 'flex';
-            if (mobileShareCardsContainer && currentMobileViewMode === 'compact') {
-                mobileShareCardsContainer.classList.add('compact-view');
-            } else if (mobileShareCardsContainer) {
-                mobileShareCardsContainer.classList.remove('compact-view');
-            }
-            // ASX buttons are hidden on mobile compact via CSS, but ensure JS doesn't override
-            if (asxCodeButtonsContainer) asxCodeButtonsContainer.style.display = 'flex'; // Default to flex, CSS will hide if compact
-        } else { // Desktop view
-            if (currentMobileViewMode === 'compact') {
-                // On desktop, if compact mode is active, hide table and show mobile cards
-                if (tableContainer) tableContainer.style.display = 'none';
-                if (mobileShareCardsContainer) {
-                    mobileShareCardsContainer.style.display = 'grid'; // Use grid for desktop compact for better layout
-                    mobileShareCardsContainer.classList.add('compact-view');
-                }
-                if (asxCodeButtonsContainer) asxCodeButtonsContainer.style.display = 'none'; // Hide ASX buttons in desktop compact
-            } else {
-                // On desktop, if default mode, show table and hide mobile cards
-                if (tableContainer) tableContainer.style.display = 'block'; // Or 'table' if it was a table element directly
-                if (mobileShareCardsContainer) {
-                    mobileShareCardsContainer.style.display = 'none';
-                    mobileShareCardsContainer.classList.remove('compact-view');
-                }
-                if (asxCodeButtonsContainer) asxCodeButtonsContainer.style.display = 'flex'; // Show ASX buttons in desktop default
-            }
-        }
-        // --- End Core Fix ---
-
-        let sharesToRender = [];
-        if (selectedWatchlistId === ALL_SHARES_ID) {
-            sharesToRender = [...allSharesData];
-            logDebug('Render: Displaying all shares (from ALL_SHARES_ID in currentSelectedWatchlistIds).');
-        } else if (currentSelectedWatchlistIds.length === 1) {
-            sharesToRender = allSharesData.filter(share => currentSelectedWatchlistIds.includes(share.watchlistId));
-            logDebug('Render: Displaying shares from watchlist: ' + selectedWatchlistId);
-        } else {
-            logDebug('Render: No specific stock watchlists selected or multiple selected, showing empty state.');
-        }
-
-        if (sharesToRender.length === 0) {
-            const emptyWatchlistMessage = document.createElement('p');
-            emptyWatchlistMessage.textContent = 'No shares found for the selected watchlists. Add a new share to get started!';
-            emptyWatchlistMessage.style.textAlign = 'center';
-            emptyWatchlistMessage.style.padding = '20px';
-            emptyWatchlistMessage.style.color = 'var(--ghosted-text)';
-            const td = document.createElement('td');
-            td.colSpan = 6; // Updated colspan to 6 for the new Rating column
-            td.appendChild(emptyWatchlistMessage);
-            const tr = document.createElement('tr');
-            tr.appendChild(td);
-            // Only append to table if table is visible, otherwise to mobile cards
-            if (tableContainer && tableContainer.style.display !== 'none') {
-                shareTableBody.appendChild(tr);
-            }
-            if (mobileShareCardsContainer && mobileShareCardsContainer.style.display !== 'none') {
                 mobileShareCardsContainer.appendChild(emptyWatchlistMessage.cloneNode(true));
             }
         }
@@ -2208,6 +2046,7 @@ function renderWatchlist() {
         renderAsxCodeButtons();
     }
     adjustMainContentPadding();
+}
 
 function renderAsxCodeButtons() {
     if (!asxCodeButtonsContainer) { console.error('renderAsxCodeButtons: asxCodeButtonsContainer element not found.'); return; }
@@ -5397,9 +5236,7 @@ if (sortSelect) {
                 const userProfileDocRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/profile/settings');
                 try {
                     await window.firestore.setDoc(userProfileDocRef, { lastTheme: targetTheme }, { merge: true });
-                    logDebug('Theme: Saved explicit Light/Dark theme preference to Firestore: ' + targetTheme);
-                } catch (error) {
-                    console.error('Theme: Error saving explicit Light/Dark theme preference to Firestore:', error);
+                    logDebug('Theme: Error saving explicit Light/Dark theme preference to Firestore:', error);
                 }
             }
             updateThemeToggleAndSelector(); // Update dropdown (it should now show "No Custom Theme")

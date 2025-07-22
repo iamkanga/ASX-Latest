@@ -1,4 +1,4 @@
-/*  Base Styles */
+/* Base Styles */
 :root {
     /* Light Theme (Default) */
     --background-color: #eef2f3;
@@ -66,24 +66,6 @@
     --target-alert-border: #007bff;
     --target-banner-height: 40px; /* This variable is now effectively unused for the banner, but kept for other potential uses */
 
-    /* NEW: Alert System Colors */
-    --alert-icon-bg: #dc3545; /* Red for the chat box icon */
-    --alert-icon-text: #fff;
-    --alert-icon-shadow: rgba(220, 53, 69, 0.4);
-    --alert-panel-bg: #f8f9fa; /* Light background for panel */
-    --alert-panel-border: #c9d2d4;
-    --alert-item-bg: #ffffff;
-    --alert-item-hover-bg: #f0f4f5;
-    --alert-dismiss-btn-color: #28a745; /* Green for dismiss */
-    --alert-snooze-btn-color: #17a2b8; /* Info blue for snooze */
-    --snooze-options-bg: #ffffff;
-    --snooze-options-border: #b0b8bb;
-
-    /* UPDATED: Cash & Assets Section Colors */
-    --cash-section-bg: #f8f9fa;
-    --cash-card-bg: #ffffff;
-    --cash-border-color: #c9d2d4;
-    --cash-total-bg: #e0f7fa;
     /* NEW: Alert System Colors */
     --alert-icon-buy: #dc3545; /* Red for buy target hit */
     --alert-icon-sell: #28a745; /* Green for sell target hit */
@@ -1207,7 +1189,7 @@ body.theme-muted-orange {
 
     /* UPDATED: Cash & Assets Section Colors (Muted Theme) */
     --cash-section-bg: #f9f4ee;
-    --cash-card-bg: #e7d9cd;
+    --cash-card-bg: #e7e0d9;
     --cash-border-color: #cbb7a1;
     --cash-total-bg: #987b5a;
     --cash-total-text: #fff;
@@ -1302,7 +1284,7 @@ body.theme-muted-magenta {
     --danger-button-bg: #dc3545;
     --danger-button-hover-bg: #c82333;
     --icon-action-color: #a86a8b;
-    --icon-action-hover-color: #987b5a;
+    --icon-action-hover-color: #985a7b;
     --icon-danger-color: #dc3545;
     --icon-danger-hover-color: #c82333;
     --calc-num-btn-bg: #d9b3c7;
@@ -1317,18 +1299,18 @@ body.theme-muted-magenta {
     --comment-title-bg: rgba(0, 0, 0, 0.05);
     --target-alert-bg: #a86a8b;
     --target-alert-text: #fff;
-    --target-alert-border: #987b5a;
+    --target-alert-border: #985a7b;
 
     /* UPDATED: Cash & Assets Section Colors (Muted Theme) */
     --cash-section-bg: #f9eef9;
     --cash-card-bg: #e7cde7;
     --cash-border-color: #cbb7a1;
-    --cash-total-bg: #987b5a;
+    --cash-total-bg: #985a7b;
     --cash-total-text: #fff;
     --cash-button-bg: #28a745;
     --cash-button-hover-bg: #218838;
     --cash-primary-button-bg: #a86a8b;
-    --cash-primary-button-hover-bg: #987b5a;
+    --cash-primary-button-hover-bg: #985a7b;
     --cash-delete-icon-color: #dc3545;
     --cash-edit-icon-color: #a86a8b;
 }
@@ -3720,104 +3702,96 @@ table td.live-price-cell.negative-change {
 }
 
 /* Active Alerts Modal Styles */
-.active-alerts-modal {
-    display: none; /* Hidden by default */
-    position: fixed; /* Fixed position */
+#activeAlertsModal {
+    position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    overflow: hidden; /* Prevent scrolling on the modal container */
-    background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent overlay */
-    z-index: 1000; /* Ensure it's above main content but below splash screen */
-    padding: 0; /* Remove padding as content will handle it */
-    justify-content: flex-start; /* Align content to the left */
-    align-items: center; /* Center vertically */
-    transition: background-color 0.3s ease; /* Smooth transition for overlay */
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent overlay */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000; /* Higher than other modals */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
-.active-alerts-modal .modal-content {
-    margin: 0; /* No auto margin, position by absolute/flexbox */
-    position: absolute; /* Position within the fixed modal container */
-    left: 0;
-    top: 0;
-    height: 100%; /* Take full height of the viewport */
-    max-height: 100vh; /* Max height to prevent overflow */
-    width: 350px; /* Fixed width as requested */
-    max-width: 90vw; /* Ensure it doesn't exceed viewport width on small screens */
-    border-radius: 0; /* No rounded corners for a full-height sidebar-like modal */
-    box-shadow: 2px 0 15px rgba(0,0,0,0.3); /* Shadow on the right side */
-    background-color: var(--alert-modal-bg);
-    border-right: 1px solid var(--alert-modal-border); /* Border on the right */
-    padding: 20px; /* Internal padding */
-    transform: translateX(-100%); /* Start off-screen to the left */
-    transition: transform 0.3s ease-out; /* Slide in/out transition */
-    flex-direction: column; /* Stack header, list, footer */
+#activeAlertsModal.open {
+    opacity: 1;
+    visibility: visible;
 }
 
-.active-alerts-modal.open .modal-content {
-    transform: translateX(0); /* Slide into view */
-}
-
-.active-alerts-modal .modal-header-with-icon {
-    border-bottom: 1px solid var(--alert-modal-border);
-    padding-bottom: 10px;
-    margin-bottom: 15px;
-    background-color: var(--alert-modal-header-bg); /* Use specific header background */
-    padding: 15px; /* More padding for header */
-    margin-top: -20px; /* Offset for padding */
-    margin-left: -20px; /* Offset for padding */
-    margin-right: -20px; /* Offset for padding */
-    border-top-left-radius: 0; /* No rounded corners */
-    border-top-right-radius: 0;
-}
-
-.active-alerts-modal .modal-header-with-icon h2 {
-    font-size: 1.5em; /* Larger title for modal header */
-    margin: 0;
-}
-
-.active-alerts-modal .alerts-close-button {
-    font-size: 2em;
+#activeAlertsModal .modal-content {
+    background-color: var(--modal-bg-color);
     color: var(--text-color);
+    padding: 20px;
+    border-radius: var(--border-radius-medium); /* Slightly larger radius for modal */
+    width: 90%; /* Responsive width */
+    max-width: 400px; /* Max width for desktop */
+    max-height: 90%; /* Max height to allow scrolling */
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden; /* Hide overflow until scrollable area is defined */
+    box-shadow: 0 5px 15px var(--shadow-color); /* Apply modal shadow */
+    transform: translateY(20px); /* Start slightly off-center */
+    transition: transform 0.3s ease;
 }
-.active-alerts-modal .alerts-close-button:hover {
+
+#activeAlertsModal.open .modal-content {
+    transform: translateY(0); /* Slide into place */
+}
+
+#activeAlertsModal .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+#activeAlertsModal .modal-title {
+    font-size: 1.5rem; /* Larger title */
+    font-weight: bold;
+    color: var(--heading-color);
+}
+
+#activeAlertsModal .alerts-close-button {
+    background: none;
+    border: none;
+    color: var(--ghosted-text);
+    font-size: 1.8rem; /* Larger close icon */
+    cursor: pointer;
+    padding: 5px;
+    transition: color 0.2s ease;
+}
+
+#activeAlertsModal .alerts-close-button:hover {
     color: var(--danger-color);
 }
 
-.active-alerts-modal #dismissAllAlertsBtn {
-    color: var(--alert-dismiss-btn-bg); /* Green color */
-    border: none;
-}
-.active-alerts-modal #dismissAllAlertsBtn:hover {
-    background-color: transparent; /* Remove hover background */
-    color: var(--alert-dismiss-btn-hover-bg); /* Darker green on hover */
-}
-
-.active-alerts-modal #minimizeAlertsModalBtn {
-    color: var(--alert-minimize-btn-color); /* Grey color */
-    border: none;
-}
-.active-alerts-modal #minimizeAlertsModalBtn:hover {
-    background-color: transparent; /* Remove hover background */
-    color: var(--alert-minimize-btn-hover-color); /* Darker grey on hover */
+#activeAlertsModal .no-alerts-message {
+    text-align: center;
+    color: var(--ghosted-text);
+    padding: 20px;
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-
-.active-alerts-modal .modal-body-scrollable {
-    flex-grow: 1; /* Allow list to take available space */
-    overflow-y: auto; /* Enable scrolling for alerts */
-    -webkit-overflow-scrolling: touch;
-    padding: 0; /* Remove padding here as alert-list has it */
-    margin: 0; /* Remove margin here */
+#activeAlertsModal .alerts-list-scrollable { /* New container for scrollable list */
+    flex-grow: 1;
+    overflow-y: auto; /* Enable scrolling for the list */
+    padding-right: 5px; /* Add some padding to avoid scrollbar overlapping content */
+    margin-bottom: 15px; /* Space before buttons */
 }
 
-.active-alerts-modal .alert-list {
-    padding: 0 10px; /* Padding for the list items inside */
-}
-
-.active-alerts-modal .alert-item {
-    background-color: var(--alert-item-bg);
+#activeAlertsModal .alert-item {
+    background-color: var(--secondary-background-color);
     border: 1px solid var(--alert-item-border);
     border-radius: 8px;
     padding: 12px;
@@ -3826,32 +3800,31 @@ table td.live-price-cell.negative-change {
     color: var(--text-color);
     font-size: 0.9em;
     position: relative;
-    /* Removed individual snooze/dismiss buttons as per requirement */
-    display: block; /* Ensure it behaves as a block */
+    display: block;
 }
 
-.active-alerts-modal .alert-item:last-child {
+#activeAlertsModal .alert-item:last-child {
     margin-bottom: 0;
 }
 
-.active-alerts-modal .alert-item-header {
+#activeAlertsModal .alert-item-header {
     font-weight: 700;
     margin-bottom: 5px;
-    display: block; /* Stack header elements */
+    display: block;
     font-size: 1.1em;
 }
 
-.active-alerts-modal .alert-item-body {
-    margin-bottom: 0; /* No margin below body as per simplified display */
+#activeAlertsModal .alert-item-body {
+    margin-bottom: 0;
     line-height: 1.4;
 }
 
 /* No specific alert item actions in modal as per simplified design (only dismiss all) */
-.active-alerts-modal .alert-item-actions {
+#activeAlertsModal .alert-item-actions {
     display: none;
 }
 
-.active-alerts-modal .no-alerts-message {
+#activeAlertsModal .no-alerts-message {
     text-align: center;
     color: var(--ghosted-text);
     padding: 20px 0;
