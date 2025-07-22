@@ -2552,14 +2552,35 @@ function updateAlertIconStatus() {
 // NEW: Function to open the active alerts modal
 function openActiveAlertsModal() {
     if (!activeAlertsModal) return; // Safety check
-    activeAlertsModal.style.display = 'flex'; // Use flex to position content
-    // Request an animation frame to ensure display:flex is applied before transform
+
+    activeAlertsModal.style.display = 'flex'; // Set display to flex to make it visible
+    activeAlertsModal.style.visibility = 'visible'; // Ensure visibility is set
+
+    // Request an animation frame to ensure display/visibility is applied before transform
     requestAnimationFrame(() => {
-        activeAlertsModal.classList.add('open');
+        activeAlertsModal.classList.add('open'); // Add 'open' class to trigger CSS transition
     });
+
     activeAlertsModalOpen = true;
     renderActiveAlertsList(); // Populate the list when opening
     logDebug('Alerts Modal: Opened.');
+
+    // Attach the "click outside" listener ONLY when the modal is opened
+    // Store the listener function so it can be correctly removed later.
+    const outsideClickListener = (event) => {
+        const modalContent = activeAlertsModal.querySelector('.modal-content');
+        // Ensure click is on the backdrop, not bubbling from inside the modal content
+        if (modalContent && !modalContent.contains(event.target) && event.target === activeAlertsModal) {
+            closeActiveAlertsModal();
+        }
+    };
+
+    // Remove any existing listener first to prevent duplicates
+    if (activeAlertsModal._currentOutsideClickListener) {
+        activeAlertsModal.removeEventListener('click', activeAlertsModal._currentOutsideClickListener);
+    }
+    activeAlertsModal.addEventListener('click', outsideClickListener);
+    activeAlertsModal._currentOutsideClickListener = outsideClickListener; // Store reference to the listener
 }
 
 // NEW: Function to close (minimize) the active alerts modal
@@ -4664,11 +4685,12 @@ async function initializeAppLogic() {
 
     // Global click listener to close modals/context menu if clicked outside
     window.addEventListener('click', (event) => {
+        // Only close these specific modals if clicked directly on their backdrop
         if (event.target === shareDetailModal || event.target === dividendCalculatorModal ||
             event.target === shareFormSection || event.target === customDialogModal ||
             event.target === calculatorModal || event.target === addWatchlistModal ||
-            event.target === manageWatchlistModal || event.target === alertPanel ||
-            event.target === cashAssetFormModal || event.target === cashAssetDetailModal) { // NEW: Include cash asset modals here
+            event.target === manageWatchlistModal || // Removed alertPanel here as it's handled by its own function
+            event.target === cashAssetFormModal || event.target === cashAssetDetailModal) {
             closeModals();
         }
 
@@ -5673,11 +5695,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 dismissedAlertsSession.clear();
 
                 // Load data and then hide splash screen
-                await loadUserWatchlistsAndSettings(); // This now sets _appDataLoaded and calls hideSplashScreenIfReady
-                await fetchLivePrices(); // Ensure live prices are fetched after settings and current watchlist are loaded
-                // NEW: Load ASX codes for autocomplete
+                await loadUserWatchlistsAndSettings(); // This loads watchlists and user settings
+                // Load ASX codes for autocomplete (can happen in parallel or before live prices)
                 allAsxCodes = await loadAsxCodesFromCSV();
                 logDebug(`ASX Autocomplete: Loaded ${allAsxCodes.length} codes for search.`);
+                
+                // Now fetch live prices. This must happen AFTER loadUserWatchlistsAndSettings
+                // because fetchLivePrices needs share.lastFetchedPrice from allSharesData,
+                // which is populated by the shares onSnapshot listener initiated by loadShares(),
+                // which is called by loadUserWatchlistsAndSettings().
+                await fetchLivePrices();
 
                 // Removed: startLivePriceUpdates(); // This is now called by renderWatchlist based on selected type
                 
