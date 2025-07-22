@@ -2061,13 +2061,16 @@ function renderWatchlist() {
         }
 
         sharesToRender.forEach((share) => {
+            // Get the live price data for the current share
+            const shareLivePriceData = livePrices[share.shareName.toUpperCase()] || {};
+
             // Only add to table if table is visible
             if (tableContainer && tableContainer.style.display !== 'none') {
-                addShareToTable(share);
+                addShareToTable(share, shareLivePriceData); // Pass livePriceData
             }
             // Only add to mobile cards if mobile cards are visible
             if (mobileShareCardsContainer && mobileShareCardsContainer.style.display !== 'none') {
-                addShareToMobileCards(share); 
+                addShareToMobileCards(share, shareLivePriceData); // Pass livePriceData
             }
         });
 
@@ -4617,13 +4620,21 @@ async function initializeAppLogic() {
 
     // Close buttons for modals
     document.querySelectorAll('.close-button').forEach(button => {
-        if (button.classList.contains('form-close-button')) { // Specific for the share form's 'X' (Cancel button)
+        // Handle specific close buttons that should only close their own modal
+        if (button === alertsCloseButton || button === minimizeAlertsModalBtn) { // Target the alerts modal's 'X' and Minimize button
+            // Ensure any previous listeners are removed to prevent multiple firings or conflicts
+            button.removeEventListener('click', closeModals);
+            button.removeEventListener('click', closeActiveAlertsModal);
+            button.addEventListener('click', closeActiveAlertsModal); // This button ONLY closes the alerts modal
+        } else if (button.classList.contains('form-close-button')) { // Specific for the share form's 'X' (Cancel button)
+            button.removeEventListener('click', closeModals); // Remove general listener
             button.addEventListener('click', () => {
                 logDebug('Form: Share form close button (X) clicked. Clearing form before closing to cancel edits.');
                 clearForm(); // This will reset originalShareData and selectedShareDocId, preventing auto-save
                 closeModals(); // Now closeModals won't trigger auto-save for this form
             });
         } else if (button.classList.contains('cash-form-close-button')) { // NEW: Specific for cash asset form's 'X' (Cancel button)
+            button.removeEventListener('click', closeModals); // Remove general listener
             button.addEventListener('click', () => {
                 logDebug('Cash Form: Cash asset form close button (X) clicked. Clearing form before closing to cancel edits.');
                 clearCashAssetForm(); // Reset originalCashAssetData and selectedCashAssetDocId
@@ -4631,7 +4642,9 @@ async function initializeAppLogic() {
             });
         }
         else {
-            button.addEventListener('click', closeModals); // Other modals still close normally
+            // For all other generic close buttons, they should still call closeModals()
+            button.removeEventListener('click', closeModals); // Remove any existing to prevent duplicates
+            button.addEventListener('click', closeModals); // Re-add general close
         }
     });
 
