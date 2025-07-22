@@ -24,15 +24,15 @@ self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then((cache) => {
-                console.log('Service Worker: Cache opened, adding assets.');
+                console.log('Service Worker: Cache opened, adding assets...');
                 return cache.addAll(CACHED_ASSETS);
             })
             .then(() => {
                 console.log('Service Worker: All assets added to cache. Skipping waiting.');
-                return self.skipWaiting(); // Force the new service worker to activate immediately
+                return self.skipWaiting(); // Activate the new service worker immediately
             })
-            .catch(error => {
-                console.error('Service Worker: Installation failed:', error);
+            .catch((error) => {
+                console.error('Service Worker: Failed to cache essential assets during install:', error);
             })
     );
 });
@@ -44,67 +44,65 @@ self.addEventListener('activate', (event) => {
         caches.keys().then((cacheNames) => {
             return Promise.all(
                 cacheNames.map((cacheName) => {
-                    if (cacheName !== CACHE_NAME) {
-                        console.log(`Service Worker: Deleting old cache: ${cacheName}`);
+                    if (cacheName.startsWith('share-watchlist-') && cacheName !== CACHE_NAME) {
+                        console.log('Service Worker: Deleting old cache:', cacheName);
                         return caches.delete(cacheName);
                     }
-                    return null;
                 })
-            ).then(() => self.clients.claim()); // Take control of clients immediately
+            );
+        }).then(() => {
+            console.log('Service Worker: Old caches cleared. Claiming clients.');
+            return self.clients.claim(); // Take control of all clients immediately
         })
     );
 });
 
-// Fetch event: serves cached content or fetches from network
+// Fetch event: intercepts network requests
 self.addEventListener('fetch', (event) => {
-    // Only handle GET requests, ignore others (like POST, PUT, DELETE)
+    // Only cache GET requests
     if (event.request.method === 'GET') {
+        // IMPORTANT: Do NOT cache Firestore API calls (or any dynamic API calls).
+        // These are real-time data streams or dynamic queries and should always go to the network.
+        if (event.request.url.includes('firestore.googleapis.com') || event.request.url.includes('script.google.com/macros')) {
+            // console.log(`Service Worker: Bypassing cache for dynamic API request: ${event.request.url}`);
+            event.respondWith(fetch(event.request));
+            return; // Exit early, don't try to cache this
+        }
+
         event.respondWith(
             caches.match(event.request).then((cachedResponse) => {
-                const fetchPromise = fetch(event.request).then((networkResponse) => {
-                // Check if we received a valid response and if it's cacheable
-                // Exclude caching for specific problematic URLs (like Google Apps Script opaque responses)
-                // 'basic' type allows same-origin requests. 'cors' allows cross-origin with CORS headers.
-                // 'opaque' responses (cross-origin without CORS) cannot be inspected or directly cached by Service Workers reliably.
-                if (!networkResponse || networkResponse.status !== 200 || 
-                    (networkResponse.type !== 'basic' && networkResponse.type !== 'cors')) {
-                    // If it's an opaque response (cross-origin without CORS headers), do NOT attempt to cache.
-                    // Just return the response directly.
-                    if (networkResponse && networkResponse.type === 'opaque') {
-                        console.warn(`Service Worker: Skipping caching for opaque response: ${event.request.url}`);
-                        return networkResponse;
-                    }
-                    // Not a valid or cacheable response (non-opaque), just return it without caching
-                    return networkResponse;
+                // If cached response is found, return it
+                if (cachedResponse) {
+                    return cachedResponse;
                 }
 
-                // Clone the response to cache it. The original response will be returned to the browser.
-                const responseToCache = networkResponse.clone();
+                // Otherwise, go to network
+                return fetch(event.request).then((networkResponse) => {
+                    // Check if the response is valid to cache
+                    // A response is valid if it has a status of 200 and is not opaque (cross-origin without CORS)
+                    // Opaque responses cannot be inspected or cached reliably.
+                    if (!networkResponse || networkResponse.status !== 200 || networkResponse.type === 'opaque') {
+                        // console.log(`Service Worker: Skipping caching for response (status ${networkResponse ? networkResponse.status : 'N/A'}, type ${networkResponse ? networkResponse.type : 'N/A'}): ${event.request.url}`);
+                        return networkResponse; // Return the response without caching
+                    }
 
-                caches.open(CACHE_NAME).then((cache) => {
-                    // Attempt to cache. If put fails (e.g., for opaque responses or other reasons), it won't throw an unhandled promise rejection.
-                    // We are explicitly handling the put operation's promise.
-                    cache.put(event.request, responseToCache).catch(e => {
-                        // Log the error but don't let it break the main fetch chain
-                        console.warn(`Service Worker: Failed to cache (put error) ${event.request.url}:`, e);
+                    // Clone the response because it's a stream and can only be consumed once
+                    const responseToCache = networkResponse.clone();
+
+                    caches.open(CACHE_NAME).then((cache) => {
+                        cache.put(event.request, responseToCache).catch(e => {
+                            console.error(`Service Worker: Failed to cache (put error) ${event.request.url}:`, e);
+                        });
                     });
+
+                    return networkResponse; // Always return the original network response
+                }).catch(error => {
+                    console.error(`Service Worker: Network fetch failed for ${event.request.url}. Returning offline fallback if available.`, error);
+                    // If network fails, try to return a cached response as a fallback
+                    return caches.match(event.request);
                 });
 
-                return networkResponse; // Always return the original network response
-            }).catch(error => {
-                console.error(`Service Worker: Network fetch failed for ${event.request.url}.`, error);
-                // If network fails, try to return a cached response as a fallback
-                return caches.match(event.request);
-            });
-
-                // Return cached response immediately if available, otherwise wait for network
-                return cachedResponse || fetchPromise;
-
-            }).catch(error => {
-                console.error(`Service Worker: Cache match failed for ${event.request.url}.`, error);
-                // Fallback in case both cache match and network fetch fail
-                return fetch(event.request); // Try network one more time if cache fails
-            })
+            }) // No second .catch here, as the inner fetch promise already handles its own errors and returns a fallback
         );
     } else {
         // For non-GET requests (e.g., POST, PUT, DELETE), just fetch from network
