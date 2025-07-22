@@ -2208,7 +2208,6 @@ function renderWatchlist() {
         renderAsxCodeButtons();
     }
     adjustMainContentPadding();
-}
 
 function renderAsxCodeButtons() {
     if (!asxCodeButtonsContainer) { console.error('renderAsxCodeButtons: asxCodeButtonsContainer element not found.'); return; }
