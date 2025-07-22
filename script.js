@@ -3131,65 +3131,69 @@ async function fetchLivePrices() {
             const low52 = parseFloat(item.Low52);
 
             if (asxCode && !isNaN(livePrice)) {
-                // Find the corresponding share in allSharesData to get its targetValue and targetType
-                const shareIndex = allSharesData.findIndex(s => s.shareName.toUpperCase() === asxCode);
-                const shareData = shareIndex !== -1 ? allSharesData[shareIndex] : null;
+                // Find the corresponding share in allSharesData to get its targetValue and targetType
+                const shareIndex = allSharesData.findIndex(s => s.shareName.toUpperCase() === asxCode);
+                const shareData = shareIndex !== -1 ? allSharesData[shareIndex] : null;
 
-                let isTargetHit = false;
-                let alertType = ''; // 'buy' or 'sell'
-                let calculatedTargetPrice = null;
+                let isTargetHit = false;
+                let alertType = ''; // 'buy' or 'sell'
+                let calculatedTargetPrice = null;
 
-                if (shareData && shareData.targetValue !== null && shareData.targetValue !== undefined && !isNaN(shareData.targetValue) && shareData.currentPrice !== null && shareData.currentPrice !== undefined && !isNaN(shareData.currentPrice)) {
-                    if (shareData.targetType === '%') {
-                        calculatedTargetPrice = shareData.currentPrice * (1 + shareData.targetValue / 100);
-                    } else { // '$' type
-                        calculatedTargetPrice = shareData.targetValue;
-                    }
+                if (shareData && shareData.targetValue !== null && shareData.targetValue !== undefined && !isNaN(shareData.targetValue) && shareData.currentPrice !== null && shareData.currentPrice !== undefined && !isNaN(shareData.currentPrice)) {
+                    if (shareData.targetType === '%') {
+                        calculatedTargetPrice = shareData.currentPrice * (1 + shareData.targetValue / 100);
+                    } else { // '$' type
+                        calculatedTargetPrice = shareData.targetValue;
+                    }
 
-                    if (calculatedTargetPrice !== null && livePrice !== null) {
-                        if (shareData.targetType === '%') {
-                            if (shareData.targetValue > 0) { // Positive percentage is a sell target
-                                if (livePrice >= calculatedTargetPrice) {
-                                    isTargetHit = true;
-                                }
-                            } else { // Negative percentage is a buy target
-                                if (livePrice <= calculatedTargetPrice) {
-                                    isTargetHit = true;
-                                }
-                            }
-                        } else { // '$' type
-                            if (calculatedTargetPrice < shareData.currentPrice) { // Dollar target below entered price is a buy target
-                                if (livePrice <= calculatedTargetPrice) {
-                                    isTargetHit = true;
-                                }
-                            } else { // Dollar target above entered price is a sell target
-                                if (livePrice >= calculatedTargetPrice) {
-                                    isTargetHit = true;
-                                }
-                            }
-                    }
-                    // Update the actual share object in allSharesData with calculated properties
-                    if (shareIndex !== -1) {
-                        allSharesData[shareIndex].calculatedTargetPrice = calculatedTargetPrice;
-                        allSharesData[shareIndex].alertTriggered = isTargetHit;
-                        allSharesData[shareIndex].alertType = alertType;
-                        // Store company name from live data if available and not already set
-                        if (item.CompanyName) {
-                            allSharesData[shareIndex].companyName = item.CompanyName;
-                        }
-                    }
-                }
-                newLivePrices[asxCode] = {
-                    live: livePrice,
-                    prevClose: isNaN(prevClose) ? null : prevClose,
-                    PE: isNaN(pe) ? null : pe,
-                    High52: isNaN(high52) ? null : high52,
-                    Low52: isNaN(low52) ? null : low52,
-                    targetHit: isTargetHit, // Keep this for now for existing logic reference
-                    lastLivePrice: livePrice,
-                    lastPrevClose: isNaN(prevClose) ? null : prevClose,
-                    CompanyName: item.CompanyName || 'N/A' // Store company name here too
-                };
+                    if (calculatedTargetPrice !== null && livePrice !== null) {
+                        if (shareData.targetType === '%') {
+                            if (shareData.targetValue > 0) { // Positive percentage is a sell target
+                                if (livePrice >= calculatedTargetPrice) {
+                                    isTargetHit = true;
+                                }
+                            } else { // Negative percentage is a buy target
+                                if (livePrice <= calculatedTargetPrice) {
+                                    isTargetHit = true;
+                                }
+                            }
+                        } else { // '$' type
+                            if (calculatedTargetPrice < shareData.currentPrice) { // Dollar target below entered price is a buy target
+                                if (livePrice <= calculatedTargetPrice) {
+                                    isTargetHit = true;
+                                }
+                            } else { // Dollar target above entered price is a sell target
+                                if (livePrice >= calculatedTargetPrice) {
+                                    isTargetHit = true;
+                                }
+                            }
+                        }
+                        // Update the actual share object in allSharesData with calculated properties
+                        if (shareIndex !== -1) {
+                            allSharesData[shareIndex].calculatedTargetPrice = calculatedTargetPrice;
+                            allSharesData[shareIndex].alertTriggered = isTargetHit;
+                            allSharesData[shareIndex].alertType = alertType;
+                            // Store company name from live data if available and not already set
+                            if (item.CompanyName) {
+                                allSharesData[shareIndex].companyName = item.CompanyName;
+                            }
+                        }
+                    }
+                }
+                newLivePrices[asxCode] = {
+                    live: livePrice,
+                    prevClose: isNaN(prevClose) ? null : prevClose,
+                    PE: isNaN(pe) ? null : pe,
+                    High52: isNaN(high52) ? null : high52,
+                    Low52: isNaN(low52) ? null : low52,
+                    targetHit: isTargetHit, // Keep this for now for existing logic reference
+                    lastLivePrice: livePrice,
+                    lastPrevClose: isNaN(prevClose) ? null : prevClose,
+                    CompanyName: item.CompanyName || 'N/A' // Store company name here too
+                };
+            } else {
+                console.warn('Live Price: Skipping item due to missing ASX code or invalid price:', item);
+            }
         });
         livePrices = newLivePrices;
         console.log('Live Price: Live prices updated:', livePrices); 
