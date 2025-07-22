@@ -5236,7 +5236,9 @@ if (sortSelect) {
                 const userProfileDocRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/profile/settings');
                 try {
                     await window.firestore.setDoc(userProfileDocRef, { lastTheme: targetTheme }, { merge: true });
-                    logDebug('Theme: Error saving explicit Light/Dark theme preference to Firestore:', error);
+                    logDebug('Theme: Saved explicit Light/Dark theme preference to Firestore: ' + targetTheme);
+                } catch (error) { // Added missing catch block
+                    console.error('Theme: Error saving explicit Light/Dark theme preference to Firestore:', error);
                 }
             }
             updateThemeToggleAndSelector(); // Update dropdown (it should now show "No Custom Theme")
