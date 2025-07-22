@@ -109,7 +109,7 @@ const saveShareBtn = document.getElementById('saveShareBtn');
 const deleteShareBtn = document.getElementById('deleteShareBtn');
 const shareNameInput = document.getElementById('shareName');
 const currentPriceInput = document.getElementById('currentPrice');
-const targetPriceInput = document.getElementById('targetPrice');
+
 const dividendAmountInput = document.getElementById('dividendAmount');
 const frankingCreditsInput = document.getElementById('frankingCredits');
 const shareRatingSelect = document.getElementById('shareRating');
@@ -268,7 +268,7 @@ if (!sidebarOverlay) {
 }
 
 const formInputs = [
-    shareNameInput, currentPriceInput, targetPriceInput,
+    shareNameInput, currentPriceInput, targetValueInput, // Updated to targetValueInput
     dividendAmountInput, frankingCreditsInput, shareRatingSelect
 ];
 
@@ -939,7 +939,7 @@ function clearForm() {
     if (currentPriceInput) currentPriceInput.value = '';
     // NEW: Clear and reset target fields
     if (targetValueInput) targetValueInput.value = '';
-    if (targetTypeDollarBtn) targetTypeDollarBtn.classList.add('active');
+    if (targetTypeDollarBtn) targetTypeDollarBtn.classList.add('active'); // Default to dollar on clear
     if (targetTypePercentBtn) targetTypePercentBtn.classList.remove('active');
     if (targetCalculationDisplay) targetCalculationDisplay.textContent = ''; // Clear dynamic display
     
