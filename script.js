@@ -32,7 +32,7 @@ let touchStartX = 0;
 let touchStartY = 0;
 const TOUCH_MOVE_THRESHOLD = 10; // Pixels for touch movement to cancel long press
 const KANGA_EMAIL = 'iamkanga@gmail.com';
-let currentCalculatorInput = '';
+let currentWatchlistId = ALL_SHARES_ID; // Initialize with a default value
 let operator = null;
 let previousCalculatorInput = '';
 let resultDisplayed = false;
@@ -946,7 +946,7 @@ function clearForm() {
     if (dividendAmountInput) dividendAmountInput.value = '';
     if (frankingCreditsInput) frankingCreditsInput.value = '0'; // Default to 0, not empty
     if (shareRatingSelect) shareRatingSelect.value = '0';
-    if (shareWatchlistSelect) shareWatchlistSelect.value = currentWatchlistId; // Set default watchlist
+    if (shareWatchlistSelect) shareWatchlistSelect.value = getDefaultWatchlistId(currentUserId); // Set default watchlist
 
     if (commentsFormContainer) { // This now refers to #dynamicCommentsArea
         commentsFormContainer.innerHTML = ''; // Clears ONLY the dynamically added comments
@@ -1176,7 +1176,7 @@ function getCurrentFormData() {
 function areShareDataEqual(data1, data2) {
     if (!data1 || !data2) return false;
 
-    const fields = ['shareName', 'currentPrice', 'dividendAmount', 'frankingCredits', 'watchlistId', 'starRating']; // Updated: removed targetPrice
+    const fields = ['shareName', 'currentPrice', 'dividendAmount', 'frankingCredits', 'watchlistId', 'starRating', 'targetValue', 'targetType'];
     // NEW: Add targetValue and targetType to fields for comparison
     const newTargetFields = ['targetValue', 'targetType'];
 
@@ -1203,17 +1203,9 @@ function areShareDataEqual(data1, data2) {
         }
     }
 
-// NEW: Compare new target fields
-    for (const field of newTargetFields) {
-        let val1 = data1[field];
-        let val2 = data2[2];
-
-        if (typeof val1 === 'number' && isNaN(val1)) val1 = null;
-        if (typeof val2 === 'number' && isNaN(val2)) val2 = null;
-
-        if (val1 !== val2) {
-            return false;
-        }
+// NEW: Compare new target fields (targetValue, targetType)
+    if (data1.targetValue !== data2.targetValue || data1.targetType !== data2.targetType) {
+        return false;
     }
 
     return true;
@@ -1288,8 +1280,9 @@ async function saveShareData(isSilent = false) {
     }
 
 
-    // NEW: Get targetValue and targetType from inputs
-    const targetValue = parseFloat(targetValueInput.value);
+    // NEW: Get targetValue and targetType from inputs, handling potential empty string for value
+    const targetValueRaw = targetValueInput.value.trim();
+    const targetValue = targetValueRaw === '' ? null : parseFloat(targetValueRaw);
     const targetType = targetTypePercentBtn.classList.contains('active') ? '%' : '$';
     
     const dividendAmount = parseFloat(dividendAmountInput.value);
@@ -1498,22 +1491,22 @@ function showShareDetails() {
     }
 
     modalEnteredPrice.textContent = (enteredPriceNum !== null && !isNaN(enteredPriceNum)) ? '$' + enteredPriceNum.toFixed(2) : 'N/A';
-    // NEW: Display calculated target price based on type
+    // Display the calculated target price, which is now stored on the share object
     let targetPriceDisplay = 'N/A';
-    // Use the calculatedTargetPrice from the share object (set in updateShareDisplay)
-    if (share.calculatedTargetPrice !== null && share.calculatedTargetPrice !== undefined && !isNaN(share.calculatedTargetPrice)) {
+    if (share.calculatedTargetPrice !== null && !isNaN(share.calculatedTargetPrice)) {
         let explanation = '';
-        const enteredPrice = parseFloat(share.currentPrice); // Need original entered price for context
+        const enteredPrice = Number(share.currentPrice); // Ensure enteredPrice is a number
+
         if (share.targetType === '%') {
-            const sign = share.targetValue >= 0 ? '+' : ''; // Only add '+' if positive
+            const sign = share.targetValue >= 0 ? '+' : '';
             const absTargetValue = Math.abs(share.targetValue);
             explanation = ` (Entered ${formatCurrency(enteredPrice)} ${sign}${absTargetValue}% = ${formatCurrency(share.calculatedTargetPrice)})`;
-        } else {
+        } else { // Dollar amount
             explanation = ` (Set at ${formatCurrency(share.calculatedTargetPrice)})`;
         }
         targetPriceDisplay = formatCurrency(share.calculatedTargetPrice) + explanation;
     }
-    document.getElementById('modalTargetPrice').textContent = targetPriceDisplay;
+    modalTargetPrice.textContent = targetPriceDisplay;
 
     // Ensure dividendAmount and frankingCredits are numbers before formatting
     const displayDividendAmount = Number(share.dividendAmount);
@@ -2208,7 +2201,7 @@ function renderWatchlist() {
             }
         }
         logDebug('Render: Stock watchlist rendering complete.');
-        updateTargetHitBanner();
+        updateAlertIconStatus(); 
         renderAsxCodeButtons();
     }
     adjustMainContentPadding();
@@ -3146,41 +3139,40 @@ async function fetchLivePrices() {
                 if (shareData && shareData.targetValue !== null && shareData.targetValue !== undefined && !isNaN(shareData.targetValue) && shareData.currentPrice !== null && shareData.currentPrice !== undefined && !isNaN(shareData.currentPrice)) {
                     if (shareData.targetType === '%') {
                         calculatedTargetPrice = shareData.currentPrice * (1 + shareData.targetValue / 100);
-                    } else { // '$' type
-                        calculatedTargetPrice = shareData.targetValue;
-                    }
-
-                    if (calculatedTargetPrice !== null && livePrice !== null) {
-                        if (shareData.targetType === '%') {
-                            if (shareData.targetValue > 0) { // Positive percentage is a sell target
-                                if (livePrice >= calculatedTargetPrice) {
-                                    isTargetHit = true;
-                                }
-                            } else { // Negative percentage is a buy target
-                                if (livePrice <= calculatedTargetPrice) {
-                                    isTargetHit = true;
-                                }
+                        if (shareData.targetValue > 0) { // Positive percentage is a sell target
+                            alertType = 'sell';
+                            if (livePrice >= calculatedTargetPrice) {
+                                isTargetHit = true;
                             }
-                        } else { // '$' type
-                            if (calculatedTargetPrice < shareData.currentPrice) { // Dollar target below entered price is a buy target
-                                if (livePrice <= calculatedTargetPrice) {
-                                    isTargetHit = true;
-                                }
-                            } else { // Dollar target above entered price is a sell target
-                                if (livePrice >= calculatedTargetPrice) {
-                                    isTargetHit = true;
-                                }
+                        } else { // Negative percentage is a buy target
+                            alertType = 'buy';
+                            if (livePrice <= calculatedTargetPrice) {
+                                isTargetHit = true;
                             }
                         }
-                        // Update the actual share object in allSharesData with calculated properties
-                        if (shareIndex !== -1) {
-                            allSharesData[shareIndex].calculatedTargetPrice = calculatedTargetPrice;
-                            allSharesData[shareIndex].alertTriggered = isTargetHit;
-                            allSharesData[shareIndex].alertType = alertType;
-                            // Store company name from live data if available and not already set
-                            if (item.CompanyName) {
-                                allSharesData[shareIndex].companyName = item.CompanyName;
+                    } else { // '$' type
+                        calculatedTargetPrice = shareData.targetValue;
+                        if (calculatedTargetPrice < shareData.currentPrice) { // Dollar target below entered price is a buy target
+                            alertType = 'buy';
+                            if (livePrice <= calculatedTargetPrice) {
+                                isTargetHit = true;
                             }
+                        } else { // Dollar target above entered price is a sell target
+                            alertType = 'sell';
+                            if (livePrice >= calculatedTargetPrice) {
+                                isTargetHit = true;
+                            }
+                        }
+                    }
+
+                    // Update the actual share object in allSharesData with calculated properties
+                    if (shareIndex !== -1) {
+                        allSharesData[shareIndex].calculatedTargetPrice = calculatedTargetPrice;
+                        allSharesData[shareIndex].alertTriggered = isTargetHit;
+                        allSharesData[shareIndex].alertType = alertType;
+                        // Store company name from live data if available and not already set
+                        if (item.CompanyName) {
+                            allSharesData[shareIndex].companyName = item.CompanyName;
                         }
                     }
                 }
@@ -3210,7 +3202,7 @@ async function fetchLivePrices() {
         window._livePricesLoaded = true;
         hideSplashScreenIfReady();
         
-        updateTargetHitBanner(); // Explicitly update banner after prices are fresh
+        updateAlertIconStatus(); // Explicitly update alert icon after prices are fresh
     } catch (error) {
         console.error('Live Price: Error fetching live prices:', error);
         // NEW: Hide splash screen on error
@@ -3947,7 +3939,7 @@ function handleAddShareClick() {
     clearForm();
     formTitle.textContent = 'Add New Share';
     if (deleteShareBtn) { deleteShareBtn.classList.add('hidden'); }
-    populateShareWatchlistSelect(null, true); // true indicates new share
+    populateShareWatchlistSelect(getDefaultWatchlistId(currentUserId), true); // true indicates new share, pass default watchlist ID
     showModal(shareFormSection);
     shareNameInput.focus();
     addCommentSection(commentsFormContainer); // Add an initial empty comment section for new shares
@@ -4238,7 +4230,7 @@ function exportWatchlistToCSV() {
     }
 
     const headers = [
-        'Code', 'Entered Price', 'Live Price', 'Price Change', 'Target Price', 'Dividend Amount', 'Franking Credits (%)',
+        'Code', 'Entered Price', 'Live Price', 'Price Change', 'Target Value', 'Target Type', 'Calculated Target Price', 'Dividend Amount', 'Franking Credits (%)',
         'Unfranked Yield (%)', 'Franked Yield (%)', 'Entry Date'
     ];
 
@@ -4249,7 +4241,9 @@ function exportWatchlistToCSV() {
         const enteredPriceNum = Number(share.currentPrice);
         const dividendAmountNum = Number(share.dividendAmount);
         const frankingCreditsNum = Number(share.frankingCredits);
-        const targetPriceNum = Number(share.targetPrice);
+        const targetValueNum = Number(share.targetValue); // New: Get targetValue
+        const targetTypeStr = share.targetType || '$'; // New: Get targetType
+        const calculatedTargetPriceNum = Number(share.calculatedTargetPrice); // New: Get calculated target price
 
         // Get live price data from the global livePrices object
         const livePriceData = livePrices[share.shareName.toUpperCase()];
@@ -4274,7 +4268,9 @@ function exportWatchlistToCSV() {
             (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? enteredPriceNum.toFixed(2) : '',
             (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) ? livePrice.toFixed(2) : '',
             priceChange, // Now includes the calculated price change
-            (!isNaN(targetPriceNum) && targetPriceNum !== null) ? targetPriceNum.toFixed(2) : '',
+            (!isNaN(targetValueNum) && targetValueNum !== null) ? targetValueNum.toFixed(2) : '', // Target Value
+            targetTypeStr, // Target Type
+            (!isNaN(calculatedTargetPriceNum) && calculatedTargetPriceNum !== null) ? calculatedTargetPriceNum.toFixed(2) : '', // Calculated Target Price
             (!isNaN(dividendAmountNum) && dividendAmountNum !== null) ? dividendAmountNum.toFixed(3) : '',
             (!isNaN(frankingCreditsNum) && frankingCreditsNum !== null) ? frankingCreditsNum.toFixed(1) : '',
             unfrankedYield !== null && !isNaN(unfrankedYield) ? unfrankedYield.toFixed(2) : '0.00', // Ensure numerical output
@@ -5570,8 +5566,11 @@ if (showLastLivePriceToggle) {
     showLastLivePriceToggle.addEventListener('change', async (event) => {
         showLastLivePriceOnClosedMarket = event.target.checked;
         logDebug('Toggle: "Show Last Live Price" toggled to: ' + showLastLivePriceOnClosedMarket);
-        // Event listeners for new target price input
-    if (targetValueInput) targetValueInput.addEventListener('input', updateTargetCalculationDisplay);
+    // Event listeners for new target price input
+    if (targetValueInput) {
+        targetValueInput.addEventListener('input', updateTargetCalculationDisplay);
+        targetValueInput.addEventListener('change', updateTargetCalculationDisplay); // Also listen for change to catch blur
+    }
     if (targetTypeDollarBtn) targetTypeDollarBtn.addEventListener('click', () => {
         targetTypeDollarBtn.classList.add('active');
         targetTypePercentBtn.classList.remove('active');
