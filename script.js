@@ -53,7 +53,7 @@ let originalWatchlistData = null; // Stores original watchlist data for dirty st
 // IMPORTANT: This URL is the exact string provided in your initial script.js file.
 // If CORS errors persist, the solution is to redeploy your Google Apps Script with "Anyone, even anonymous" access
 // and then update this constant with the NEW URL provided by Google Apps Script.
-const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzp7OjZL3zqvJ9wPsV9M-afm2wKeQPbIgGVv_juVpkaRllADESLwj7F4-S7YWYerau-/exec';
+const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzp7OjZL3zqvJ9wPsV9M-afm2wKeQPbIgGVv_juVpkaRllADESLwj7F4-S7YWYerau-/exec'; // Replace with your actual deployment URL
 let livePrices = {}; // Stores live price data: {ASX_CODE: {live: price, prevClose: price, PE: value, High52: value, Low52: value, targetHit: boolean, lastLivePrice: value, lastPrevClose: value}} 
 let livePriceFetchInterval = null; // To hold the interval ID for live price updates
 const LIVE_PRICE_FETCH_INTERVAL_MS = 5 * 60 * 1000; // Fetch every 5 minutes
@@ -192,6 +192,17 @@ const asxSuggestions = document.getElementById('asxSuggestions'); // NEW: Autoco
 const searchResultDisplay = document.getElementById('searchResultDisplay'); // NEW: Display area for search results
 const searchModalActionButtons = document.querySelector('#stockSearchModal .modal-action-buttons-footer'); // NEW: Action buttons container
 const searchModalCloseButton = document.querySelector('.search-close-button'); // NEW: Close button for search modal
+// New Target Price Alert elements
+const targetValueInput = document.getElementById('targetValueInput');
+const targetTypeDollarBtn = document.getElementById('targetTypeDollar');
+const targetTypePercentBtn = document.getElementById('targetTypePercent');
+const targetCalculationDisplay = document.getElementById('targetCalculationDisplay');
+const activeAlertsModal = document.getElementById('activeAlertsModal');
+const activeAlertsList = document.getElementById('activeAlertsList');
+const minimizeAlertsModalBtn = document.getElementById('minimizeAlertsModalBtn');
+const dismissAllAlertsBtn = document.getElementById('dismissAllAlertsBtn');
+const alertsCloseButton = activeAlertsModal ? activeAlertsModal.querySelector('.alerts-close-button') : null;
+const noAlertsMessage = activeAlertsModal ? activeAlertsModal.querySelector('.no-alerts-message') : null;
 
 // NEW: Global variable for storing loaded ASX code data from CSV
 let allAsxCodes = []; // { code: 'BHP', name: 'BHP Group Ltd' }
@@ -199,6 +210,21 @@ let currentSelectedSuggestionIndex = -1; // For keyboard navigation in autocompl
 let currentSearchShareData = null; // Stores data of the currently displayed stock in search modal
 const splashKangarooIcon = document.getElementById('splashKangarooIcon');
 const splashSignInBtn = document.getElementById('splashSignInBtn');
+// Global state for alert system
+let activeShareAlerts = []; // Stores details of shares currently hitting a target
+let dismissedAlertsSession = new Set(); // Stores share codes of alerts dismissed for the current session
+let activeAlertsModalOpen = false; // To track if the alerts modal is open
+
+// Utility function to format currency
+function formatCurrency(value) {
+    return new Intl.NumberFormat('en-AU', {
+        style: 'currency',
+        currency: 'AUD',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(value);
+}
+
 const alertPanel = document.getElementById('alertPanel'); // NEW: Reference to the alert panel (not in current HTML, but kept for consistency)
 const alertList = document.getElementById('alertList'); // NEW: Reference to the alert list container (not in current HTML, but kept for consistency)
 const closeAlertPanelBtn = document.getElementById('closeAlertPanelBtn'); // NEW: Reference to close alert panel button (not in current HTML, but kept for consistency)
@@ -434,13 +460,31 @@ function addShareToTable(share) {
     const row = document.createElement('tr');
     row.dataset.docId = share.id;
 
-    // Check if target price is hit for this share
-    const livePriceData = livePrices[share.shareName.toUpperCase()];
-    const isTargetHit = livePriceData ? livePriceData.targetHit : false;
-
-    // Apply target-hit-alert class if target is hit and not dismissed
-    if (isTargetHit && !targetHitIconDismissed) {
-        row.classList.add('target-hit-alert');
+    // Determine target hit status and type from the share object (updated in updateShareDisplay)
+    let alertClass = '';
+    if (share.alertTriggered && !dismissedAlertsSession.has(share.shareName)) {
+        alertClass = `alert-${share.alertType}`;
+        // Add to active alerts list if not already there
+        const existingAlertIndex = activeShareAlerts.findIndex(alert => alert.id === share.id);
+        if (existingAlertIndex === -1) {
+            // Retrieve company name from the livePrices object (if available) or fallback
+            const companyName = livePrices[share.shareName.toUpperCase()]?.CompanyName || share.companyName || 'N/A';
+            activeShareAlerts.push({
+                id: share.id,
+                shareName: share.shareName,
+                companyName: companyName, 
+                alertType: share.alertType,
+                calculatedTargetPrice: share.calculatedTargetPrice,
+                currentLivePrice: livePrices[share.shareName.toUpperCase()] ? livePrices[share.shareName.toUpperCase()].live : null
+            });
+        }
+    } else {
+        // Remove from active alerts list if no longer triggered or has been dismissed
+        activeShareAlerts = activeShareAlerts.filter(alert => alert.id !== share.id);
+    }
+    // Apply alert class
+    if (alertClass) {
+        row.classList.add(alertClass);
     }
 
     // Declare these variables once at the top of the function
@@ -591,13 +635,15 @@ function addShareToMobileCards(share) {
     card.classList.add('mobile-card');
     card.dataset.docId = share.id;
 
-    // Check if target price is hit for this share
-    const livePriceData = livePrices[share.shareName.toUpperCase()];
-    const isTargetHit = livePriceData ? livePriceData.targetHit : false;
-
-    // Apply target-hit-alert class if target is hit and not dismissed
-    if (isTargetHit && !targetHitIconDismissed) {
-        card.classList.add('target-hit-alert');
+    // Determine alert class based on share object (updated in updateShareDisplay)
+    let alertClass = '';
+    if (share.alertTriggered && !dismissedAlertsSession.has(share.shareName)) {
+        alertClass = `alert-${share.alertType}`;
+        // (No need to add to activeShareAlerts here, done in addShareToTable)
+    }
+    // Apply alert class
+    if (alertClass) {
+        card.classList.add(alertClass);
     }
 
     // Declare these variables once at the top of the function
@@ -887,9 +933,20 @@ function addCommentSection(container, title = '', text = '', isCashAssetComment 
 }
 
 function clearForm() {
-    formInputs.forEach(input => {
-        if (input) { input.value = ''; }
-    });
+    // Clear the form fields
+    if (shareNameInput) shareNameInput.value = '';
+    if (currentPriceInput) currentPriceInput.value = '';
+    // NEW: Clear and reset target fields
+    if (targetValueInput) targetValueInput.value = '';
+    if (targetTypeDollarBtn) targetTypeDollarBtn.classList.add('active');
+    if (targetTypePercentBtn) targetTypePercentBtn.classList.remove('active');
+    if (targetCalculationDisplay) targetCalculationDisplay.textContent = ''; // Clear dynamic display
+    
+    if (dividendAmountInput) dividendAmountInput.value = '';
+    if (frankingCreditsInput) frankingCreditsInput.value = '0'; // Default to 0, not empty
+    if (shareRatingSelect) shareRatingSelect.value = '0';
+    if (shareWatchlistSelect) shareWatchlistSelect.value = currentWatchlistId; // Set default watchlist
+
     if (commentsFormContainer) { // This now refers to #dynamicCommentsArea
         commentsFormContainer.innerHTML = ''; // Clears ONLY the dynamically added comments
     }
@@ -901,7 +958,6 @@ function clearForm() {
     }
     // Reset shareWatchlistSelect to its default placeholder
     if (shareWatchlistSelect) {
-        shareWatchlistSelect.value = ''; // Set to empty string to select the disabled option
         shareWatchlistSelect.disabled = false; // Ensure it's enabled for new share entry
     }
     setIconDisabled(saveShareBtn, true); // Save button disabled on clear
@@ -1019,7 +1075,27 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
     formTitle.textContent = 'Edit Share';
     shareNameInput.value = shareToEdit.shareName || '';
     currentPriceInput.value = Number(shareToEdit.currentPrice) !== null && !isNaN(Number(shareToEdit.currentPrice)) ? Number(shareToEdit.currentPrice).toFixed(2) : '';
-    targetPriceInput.value = Number(shareToEdit.targetPrice) !== null && !isNaN(Number(shareToEdit.targetPrice)) ? Number(shareToEdit.targetPrice).toFixed(2) : '';
+    // NEW: Populate Target Value and Type
+    if (targetValueInput) {
+        if (shareToEdit.targetValue !== undefined && shareToEdit.targetValue !== null) {
+            targetValueInput.value = shareToEdit.targetValue;
+        } else {
+            targetValueInput.value = ''; // Ensure it's clear if no target
+        }
+    }
+    if (targetTypeDollarBtn && targetTypePercentBtn) {
+        // Default to dollar if type is not explicitly set or is invalid
+        if (shareToEdit.targetType === '%') {
+            targetTypePercentBtn.classList.add('active');
+            targetTypeDollarBtn.classList.remove('active');
+        } else {
+            targetTypeDollarBtn.classList.add('active');
+            targetTypePercentBtn.classList.remove('active');
+        }
+    }
+    // Manually trigger update for initial display after values are set.
+    updateTargetCalculationDisplay(); 
+    
     dividendAmountInput.value = Number(shareToEdit.dividendAmount) !== null && !isNaN(Number(shareToEdit.dividendAmount)) ? Number(shareToEdit.dividendAmount).toFixed(3) : '';
     frankingCreditsInput.value = Number(shareToEdit.frankingCredits) !== null && !isNaN(Number(shareToEdit.frankingCredits)) ? Number(shareToEdit.frankingCredits).toFixed(1) : '';
 
@@ -1076,7 +1152,9 @@ function getCurrentFormData() {
     return {
         shareName: shareNameInput.value.trim().toUpperCase(),
         currentPrice: parseFloat(currentPriceInput.value),
-        targetPrice: parseFloat(targetPriceInput.value),
+        // NEW: Capture targetValue and targetType
+        targetValue: parseFloat(targetValueInput.value) || null, // Capture value
+        targetType: targetTypePercentBtn.classList.contains('active') ? '%' : '$', // Capture type
         dividendAmount: parseFloat(dividendAmountInput.value),
         frankingCredits: parseFloat(frankingCreditsInput.value),
         // Get the selected star rating as a number
@@ -1097,7 +1175,10 @@ function getCurrentFormData() {
 function areShareDataEqual(data1, data2) {
     if (!data1 || !data2) return false;
 
-    const fields = ['shareName', 'currentPrice', 'targetPrice', 'dividendAmount', 'frankingCredits', 'watchlistId', 'starRating']; // Include watchlistId and starRating
+    const fields = ['shareName', 'currentPrice', 'dividendAmount', 'frankingCredits', 'watchlistId', 'starRating']; // Updated: removed targetPrice
+    // NEW: Add targetValue and targetType to fields for comparison
+    const newTargetFields = ['targetValue', 'targetType'];
+
     for (const field of fields) {
         let val1 = data1[field];
         let val2 = data2[field];
@@ -1117,6 +1198,19 @@ function areShareDataEqual(data1, data2) {
         const comment1 = data1.comments[i];
         const comment2 = data2.comments[i];
         if (comment1.title !== comment2.title || comment1.text !== comment2.text) {
+            return false;
+        }
+    }
+
+// NEW: Compare new target fields
+    for (const field of newTargetFields) {
+        let val1 = data1[field];
+        let val2 = data2[2];
+
+        if (typeof val1 === 'number' && isNaN(val1)) val1 = null;
+        if (typeof val2 === 'number' && isNaN(val2)) val2 = null;
+
+        if (val1 !== val2) {
             return false;
         }
     }
@@ -1193,8 +1287,10 @@ async function saveShareData(isSilent = false) {
     }
 
 
-    const currentPrice = parseFloat(currentPriceInput.value);
-    const targetPrice = parseFloat(targetPriceInput.value);
+    // NEW: Get targetValue and targetType from inputs
+    const targetValue = parseFloat(targetValueInput.value);
+    const targetType = targetTypePercentBtn.classList.contains('active') ? '%' : '$';
+    
     const dividendAmount = parseFloat(dividendAmountInput.value);
     const frankingCredits = parseFloat(frankingCreditsInput.value);
 
@@ -1214,7 +1310,9 @@ async function saveShareData(isSilent = false) {
     const shareData = {
         shareName: shareName,
         currentPrice: isNaN(currentPrice) ? null : currentPrice,
-        targetPrice: isNaN(targetPrice) ? null : targetPrice,
+        // NEW: Store targetValue and targetType instead of targetPrice
+        targetValue: isNaN(targetValue) ? null : targetValue,
+        targetType: targetType,
         dividendAmount: isNaN(dividendAmount) ? null : dividendAmount,
         frankingCredits: isNaN(frankingCredits) ? null : frankingCredits,
         comments: comments,
@@ -1399,7 +1497,22 @@ function showShareDetails() {
     }
 
     modalEnteredPrice.textContent = (enteredPriceNum !== null && !isNaN(enteredPriceNum)) ? '$' + enteredPriceNum.toFixed(2) : 'N/A';
-    modalTargetPrice.textContent = (share.targetPrice !== null && !isNaN(Number(share.targetPrice))) ? '$' + Number(share.targetPrice).toFixed(2) : 'N/A';
+    // NEW: Display calculated target price based on type
+    let targetPriceDisplay = 'N/A';
+    // Use the calculatedTargetPrice from the share object (set in updateShareDisplay)
+    if (share.calculatedTargetPrice !== null && share.calculatedTargetPrice !== undefined && !isNaN(share.calculatedTargetPrice)) {
+        let explanation = '';
+        const enteredPrice = parseFloat(share.currentPrice); // Need original entered price for context
+        if (share.targetType === '%') {
+            const sign = share.targetValue >= 0 ? '+' : ''; // Only add '+' if positive
+            const absTargetValue = Math.abs(share.targetValue);
+            explanation = ` (Entered ${formatCurrency(enteredPrice)} ${sign}${absTargetValue}% = ${formatCurrency(share.calculatedTargetPrice)})`;
+        } else {
+            explanation = ` (Set at ${formatCurrency(share.calculatedTargetPrice)})`;
+        }
+        targetPriceDisplay = formatCurrency(share.calculatedTargetPrice) + explanation;
+    }
+    document.getElementById('modalTargetPrice').textContent = targetPriceDisplay;
 
     // Ensure dividendAmount and frankingCredits are numbers before formatting
     const displayDividendAmount = Number(share.dividendAmount);
@@ -1798,7 +1911,164 @@ function renderSortSelect() {
 /**
  * Renders the watchlist based on the currentSelectedWatchlistIds. (1)
  */
+/**
+ * Renders the watchlist based on the currentSelectedWatchlistIds. (1)
+ */
 function renderWatchlist() {
+    logDebug('DEBUG: renderWatchlist called. Current selected watchlist ID: ' + currentSelectedWatchlistIds[0]);
+    
+    const selectedWatchlistId = currentSelectedWatchlistIds[0];
+
+    // Hide both sections initially
+    stockWatchlistSection.classList.add('app-hidden');
+    cashAssetsSection.classList.add('app-hidden'); 
+    
+    // Clear previous content
+    if (!shareTableBody || !mobileShareCardsContainer) {
+        console.error('renderWatchlist: shareTableBody or mobileShareCardsContainer not found for clearing.');
+        return;
+    }
+    shareTableBody.innerHTML = ''; // Clear stock table
+    mobileShareCardsContainer.innerHTML = ''; // Clear mobile cards
+    if (cashCategoriesContainer) cashCategoriesContainer.innerHTML = ''; // Clear cash categories
+
+    // Update sort dropdown options based on selected watchlist type
+    renderSortSelect();
+
+    if (selectedWatchlistId === CASH_BANK_WATCHLIST_ID) {
+        // Show Cash & Assets section (1)
+        cashAssetsSection.classList.remove('app-hidden');
+        mainTitle.textContent = 'Cash & Assets';
+        renderCashCategories();
+        sortSelect.classList.remove('app-hidden');
+        refreshLivePricesBtn.classList.add('app-hidden');
+        toggleCompactViewBtn.classList.add('app-hidden');
+        asxCodeButtonsContainer.classList.add('app-hidden');
+        targetHitIconBtn.classList.add('app-hidden');
+        exportWatchlistBtn.classList.add('app-hidden');
+        stopLivePriceUpdates();
+        updateAddHeaderButton();
+        // Clear active alerts as we are in cash view
+        activeShareAlerts = [];
+        dismissedAlertsSession.clear();
+        updateAlertIconStatus();
+        renderActiveAlertsList();
+    } else {
+        // Show Stock Watchlist section
+        stockWatchlistSection.classList.remove('app-hidden');
+        const selectedWatchlist = userWatchlists.find(wl => wl.id === selectedWatchlistId);
+        if (selectedWatchlistId === ALL_SHARES_ID) {
+            mainTitle.textContent = 'All Shares';
+        } else if (selectedWatchlist) {
+            mainTitle.textContent = selectedWatchlist.name;
+        } else {
+            mainTitle.textContent = 'Share Watchlist';
+        }
+
+        // Show stock-specific UI elements
+        sortSelect.classList.remove('app-hidden');
+        refreshLivePricesBtn.classList.remove('app-hidden');
+        toggleCompactViewBtn.classList.remove('app-hidden');
+        targetHitIconBtn.classList.remove('app-hidden'); // Ensure icon becomes visible if needed
+        exportWatchlistBtn.classList.remove('app-hidden');
+        startLivePriceUpdates();
+        updateAddHeaderButton();
+
+        // --- Core Fix for Desktop Compact View ---
+        const isMobileView = window.innerWidth <= 768; // Define what constitutes "mobile"
+
+        if (isMobileView) {
+            // On actual mobile devices, always hide table and show mobile cards
+            if (tableContainer) tableContainer.style.display = 'none';
+            if (mobileShareCardsContainer) mobileShareCardsContainer.style.display = 'flex';
+            if (mobileShareCardsContainer && currentMobileViewMode === 'compact') {
+                mobileShareCardsContainer.classList.add('compact-view');
+            } else if (mobileShareCardsContainer) {
+                mobileShareCardsContainer.classList.remove('compact-view');
+            }
+            // ASX buttons are hidden on mobile compact via CSS, but ensure JS doesn't override
+            if (asxCodeButtonsContainer) asxCodeButtonsContainer.style.display = 'flex'; // Default to flex, CSS will hide if compact
+        } else { // Desktop view
+            if (currentMobileViewMode === 'compact') {
+                // On desktop, if compact mode is active, hide table and show mobile cards
+                if (tableContainer) tableContainer.style.display = 'none';
+                if (mobileShareCardsContainer) {
+                    mobileShareCardsContainer.style.display = 'grid'; // Use grid for desktop compact for better layout
+                    mobileShareCardsContainer.classList.add('compact-view');
+                }
+                if (asxCodeButtonsContainer) asxCodeButtonsContainer.style.display = 'none'; // Hide ASX buttons in desktop compact
+            } else {
+                // On desktop, if default mode, show table and hide mobile cards
+                if (tableContainer) tableContainer.style.display = 'block'; // Or 'table' if it was a table element directly
+                if (mobileShareCardsContainer) {
+                    mobileShareCardsContainer.style.display = 'none';
+                    mobileShareCardsContainer.classList.remove('compact-view');
+                }
+                if (asxCodeButtonsContainer) asxCodeButtonsContainer.style.display = 'flex'; // Show ASX buttons in desktop default
+            }
+        }
+        // --- End Core Fix ---
+
+        let sharesToRender = [];
+        if (selectedWatchlistId === ALL_SHARES_ID) {
+            sharesToRender = [...allSharesData];
+            logDebug('Render: Displaying all shares (from ALL_SHARES_ID in currentSelectedWatchlistIds).');
+        } else if (currentSelectedWatchlistIds.length === 1) {
+            sharesToRender = allSharesData.filter(share => currentSelectedWatchlistIds.includes(share.watchlistId));
+            logDebug('Render: Displaying shares from watchlist: ' + selectedWatchlistId);
+        } else {
+            logDebug('Render: No specific stock watchlists selected or multiple selected, showing empty state.');
+        }
+
+        if (sharesToRender.length === 0) {
+            const emptyWatchlistMessage = document.createElement('p');
+            emptyWatchlistMessage.textContent = 'No shares found for the selected watchlists. Add a new share to get started!';
+            emptyWatchlistMessage.style.textAlign = 'center';
+            emptyWatchlistMessage.style.padding = '20px';
+            emptyWatchlistMessage.style.color = 'var(--ghosted-text)';
+            const td = document.createElement('td');
+            td.colSpan = 6; // Updated colspan to 6 for the new Rating column
+            td.appendChild(emptyWatchlistMessage);
+            const tr = document.createElement('tr');
+            tr.appendChild(td);
+            // Only append to table if table is visible, otherwise to mobile cards
+            if (tableContainer && tableContainer.style.display !== 'none') {
+                shareTableBody.appendChild(tr);
+            }
+            if (mobileShareCardsContainer && mobileShareCardsContainer.style.display !== 'none') {
+                mobileShareCardsContainer.innerHTML = emptyWatchlistMessage.outerHTML; // Use outerHTML to get the <p> tag too
+            }
+        } else {
+            sharesToRender.forEach((share) => {
+                // Ensure share object has the latest calculated alert properties
+                // This is needed because renderWatchlist might be called before fetchLivePrices updates allSharesData
+                // This logic is now handled in fetchLivePrices so share object already has these
+                
+                if (tableContainer && tableContainer.style.display !== 'none') {
+                    addShareToTable(share);
+                }
+                if (mobileShareCardsContainer && mobileShareCardsContainer.style.display !== 'none') {
+                    addShareToMobileCards(share);
+                }
+            });
+        }
+
+        if (selectedShareDocId) {
+            const stillExists = sharesToRender.some(share => share.id === selectedShareDocId);
+            if (stillExists) {
+                selectShare(selectedShareDocId);
+            } else {
+                deselectCurrentShare();
+            }
+        }
+        logDebug('Render: Stock watchlist rendering complete.');
+        renderAsxCodeButtons();
+        // Moved from updateTargetHitBanner which is now deprecated
+        updateAlertIconStatus(); 
+        renderActiveAlertsList();
+    }
+    adjustMainContentPadding();
+}
     logDebug('DEBUG: renderWatchlist called. Current selected watchlist ID: ' + currentSelectedWatchlistIds[0]);
     
     const selectedWatchlistId = currentSelectedWatchlistIds[0];
@@ -2323,6 +2593,164 @@ function isAsxMarketOpen() {
     logDebug('Market Status: Market is likely open (' + timeStr + ').');
     return true;
 }
+
+// NEW: Function to calculate and update target calculation display in share form
+function updateTargetCalculationDisplay() {
+    const targetValue = parseFloat(targetValueInput.value);
+    const enteredPrice = parseFloat(document.getElementById('currentPrice').value);
+    const isPercent = targetTypePercentBtn.classList.contains('active');
+    
+    let displayHtml = '';
+
+    if (!isNaN(targetValue) && !isNaN(enteredPrice)) {
+        let calculatedTarget = 0;
+        let typeText = '';
+        let targetRelation = ''; // "Buy Target" or "Sell Target"
+
+        if (isPercent) {
+            calculatedTarget = enteredPrice * (1 + targetValue / 100);
+            typeText = `${targetValue >= 0 ? '+' : ''}${targetValue}%`;
+            targetRelation = targetValue >= 0 ? 'Sell Target' : 'Buy Target';
+        } else { // Dollar amount
+            calculatedTarget = targetValue;
+            typeText = ''; // No percentage display for dollar amount
+            targetRelation = calculatedTarget < enteredPrice ? 'Buy Target' : 'Sell Target';
+        }
+
+        displayHtml = `Target: Entered ${formatCurrency(enteredPrice)} ${typeText} = ${formatCurrency(calculatedTarget)} (${targetRelation})`;
+    } else if (!isNaN(targetValue)) {
+        displayHtml = `Input Entered Price to calculate target.`;
+    } else {
+        displayHtml = `Enter Target Value.`;
+    }
+    
+    if (targetCalculationDisplay) { // Safety check
+        targetCalculationDisplay.textContent = displayHtml;
+    }
+}
+
+// NEW: Function to refresh and update the global alert icon status
+function updateAlertIconStatus() {
+    // Only show alerts if not in cash & assets view
+    if (currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
+        if (targetHitIconBtn) targetHitIconBtn.style.display = 'none';
+        if (targetHitIconCount) targetHitIconCount.textContent = '0';
+        logDebug('Target Alert: In Cash & Assets view, hiding alert icon.');
+        return;
+    }
+
+    // Filter active alerts based on dismissal for the current session
+    const relevantAlerts = activeShareAlerts.filter(alert => !dismissedAlertsSession.has(alert.shareName));
+    const totalAlerts = relevantAlerts.length;
+
+    if (targetHitIconCount) targetHitIconCount.textContent = totalAlerts;
+
+    // Remove all color classes first
+    if (targetHitIconBtn) targetHitIconBtn.classList.remove('buy-alert', 'sell-alert', 'mixed-alert');
+
+    if (totalAlerts > 0) {
+        if (targetHitIconBtn) targetHitIconBtn.style.display = 'flex'; // Show the button
+
+        const hasBuyAlerts = relevantAlerts.some(alert => alert.alertType === 'buy');
+        const hasSellAlerts = relevantAlerts.some(alert => alert.alertType === 'sell');
+
+        if (targetHitIconBtn) { // Safety check before adding classes
+            if (hasBuyAlerts && hasSellAlerts) {
+                targetHitIconBtn.classList.add('mixed-alert');
+            } else if (hasBuyAlerts) {
+                targetHitIconBtn.classList.add('buy-alert');
+            } else if (hasSellAlerts) {
+                targetHitIconBtn.classList.add('sell-alert');
+            }
+        }
+        logDebug(`Target Alert: Showing icon with ${totalAlerts} alerts. Buy: ${hasBuyAlerts}, Sell: ${hasSellAlerts}.`);
+    } else {
+        if (targetHitIconBtn) targetHitIconBtn.style.display = 'none'; // Hide the button
+        logDebug('Target Alert: No active alerts to display. Hiding icon.');
+    }
+}
+
+// NEW: Function to open the active alerts modal
+function openActiveAlertsModal() {
+    if (!activeAlertsModal) return; // Safety check
+    activeAlertsModal.style.display = 'flex'; // Use flex to position content
+    // Request an animation frame to ensure display:flex is applied before transform
+    requestAnimationFrame(() => {
+        activeAlertsModal.classList.add('open');
+    });
+    activeAlertsModalOpen = true;
+    renderActiveAlertsList(); // Populate the list when opening
+    logDebug('Alerts Modal: Opened.');
+}
+
+// NEW: Function to close (minimize) the active alerts modal
+function closeActiveAlertsModal() {
+    if (!activeAlertsModal) return; // Safety check
+    activeAlertsModal.classList.remove('open');
+    setTimeout(() => { // Delay hiding until animation completes
+        activeAlertsModal.style.display = 'none';
+    }, 300); // Match CSS transition duration
+    activeAlertsModalOpen = false;
+    logDebug('Alerts Modal: Closed (minimized).');
+}
+
+// NEW: Function to render alerts in the modal list
+function renderActiveAlertsList() {
+    if (!activeAlertsList || !noAlertsMessage) return; // Safety check
+
+    activeAlertsList.innerHTML = ''; // Clear existing list
+    const relevantAlerts = activeShareAlerts.filter(alert => !dismissedAlertsSession.has(alert.shareName));
+
+    if (relevantAlerts.length === 0) {
+        noAlertsMessage.style.display = 'block';
+        return;
+    } else {
+        noAlertsMessage.style.display = 'none';
+    }
+
+    // Sort alphabetically by share name
+    relevantAlerts.sort((a, b) => a.shareName.localeCompare(b.shareName));
+
+    relevantAlerts.forEach(alert => {
+        const alertItem = document.createElement('div');
+        alertItem.className = 'alert-item';
+
+        const alertTypeText = alert.alertType === 'buy' ? 'Buy Target' : 'Sell Target';
+        let alertDetails = '';
+        if (alert.calculatedTargetPrice !== null && alert.calculatedTargetPrice !== undefined && !isNaN(alert.calculatedTargetPrice) && 
+            alert.currentLivePrice !== null && alert.currentLivePrice !== undefined && !isNaN(alert.currentLivePrice)) {
+            alertDetails = `Target ${alert.alertType === 'buy' ? 'below' : 'above'} ${formatCurrency(alert.calculatedTargetPrice)} (Current: ${formatCurrency(alert.currentLivePrice)})`;
+        } else {
+            alertDetails = `Target hit for ${alert.alertType} alert.`;
+        }
+
+        alertItem.innerHTML = `
+            <div class="alert-item-header">${alert.shareName} (${alert.companyName})</div>
+            <div class="alert-item-body">${alertTypeText}: ${alertDetails}</div>
+        `;
+        activeAlertsList.appendChild(alertItem);
+    });
+    logDebug(`Alerts Modal: Rendered ${relevantAlerts.length} active alerts.`);
+}
+
+// NEW: Function to dismiss all active alerts for the session
+function dismissAllActiveAlerts() {
+    const alertsToDismiss = activeShareAlerts.filter(alert => !dismissedAlertsSession.has(alert.shareName));
+    alertsToDismiss.forEach(alert => dismissedAlertsSession.add(alert.shareName));
+    
+    // Update UI immediately
+    renderActiveAlertsList();
+    updateAlertIconStatus();
+    // Re-render shares to remove highlighting
+    renderWatchlist(); // Call renderWatchlist which will refresh all share displays with new alert states
+    
+    // Show a confirmation message
+    showCustomAlert('All active alerts dismissed for this session.', () => {
+        // Callback after dismissal confirmation (if needed)
+    }, null, 'OK', 'Information'); // Use OK button, not Yes/No
+    logDebug('Alerts: All active alerts dismissed for current session.');
+}
+
 function calculateFrankedYield(dividendAmount, currentPrice, frankingCreditsPercentage) {
     // Ensure inputs are valid numbers and currentPrice is not zero
     if (typeof dividendAmount !== 'number' || isNaN(dividendAmount) || dividendAmount < 0) { return 0; }
@@ -2704,29 +3132,65 @@ async function fetchLivePrices() {
             const low52 = parseFloat(item.Low52);
 
             if (asxCode && !isNaN(livePrice)) {
-                // Find the corresponding share in allSharesData to get its targetPrice
-                const shareData = allSharesData.find(s => s.shareName.toUpperCase() === asxCode);
-                // Ensure targetPrice is parsed as a number, handling null/undefined/NaN
-                const targetPrice = shareData && shareData.targetPrice !== null && !isNaN(parseFloat(shareData.targetPrice))
-                    ? parseFloat(shareData.targetPrice)
-                    : undefined;
+                // Find the corresponding share in allSharesData to get its targetValue and targetType
+                const shareIndex = allSharesData.findIndex(s => s.shareName.toUpperCase() === asxCode);
+                const shareData = shareIndex !== -1 ? allSharesData[shareIndex] : null;
 
-                const isTargetHit = (targetPrice !== undefined && livePrice <= targetPrice);
+                let isTargetHit = false;
+                let alertType = ''; // 'buy' or 'sell'
+                let calculatedTargetPrice = null;
 
-                newLivePrices[asxCode] = {
-                    live: livePrice,
-                    prevClose: isNaN(prevClose) ? null : prevClose,
-                    PE: isNaN(pe) ? null : pe,
-                    High52: isNaN(high52) ? null : high52,
-                    Low52: isNaN(low52) ? null : low52,
-                    targetHit: isTargetHit,
-                    // Store the fetched live and prevClose prices for use when market is closed
-                    lastLivePrice: livePrice,
-                    lastPrevClose: isNaN(prevClose) ? null : prevClose
-                };
-            } else {
-                console.warn('Live Price: Skipping item due to missing ASX code or invalid price:', item);
-            }
+                if (shareData && shareData.targetValue !== null && shareData.targetValue !== undefined && !isNaN(shareData.targetValue) && shareData.currentPrice !== null && shareData.currentPrice !== undefined && !isNaN(shareData.currentPrice)) {
+                    if (shareData.targetType === '%') {
+                        calculatedTargetPrice = shareData.currentPrice * (1 + shareData.targetValue / 100);
+                    } else { // '$' type
+                        calculatedTargetPrice = shareData.targetValue;
+                    }
+
+                    if (calculatedTargetPrice !== null && livePrice !== null) {
+                        if (shareData.targetType === '%') {
+                            if (shareData.targetValue > 0) { // Positive percentage is a sell target
+                                if (livePrice >= calculatedTargetPrice) {
+                                    isTargetHit = true;
+                                }
+                            } else { // Negative percentage is a buy target
+                                if (livePrice <= calculatedTargetPrice) {
+                                    isTargetHit = true;
+                                }
+                            }
+                        } else { // '$' type
+                            if (calculatedTargetPrice < shareData.currentPrice) { // Dollar target below entered price is a buy target
+                                if (livePrice <= calculatedTargetPrice) {
+                                    isTargetHit = true;
+                                }
+                            } else { // Dollar target above entered price is a sell target
+                                if (livePrice >= calculatedTargetPrice) {
+                                    isTargetHit = true;
+                                }
+                            }
+                    }
+                    // Update the actual share object in allSharesData with calculated properties
+                    if (shareIndex !== -1) {
+                        allSharesData[shareIndex].calculatedTargetPrice = calculatedTargetPrice;
+                        allSharesData[shareIndex].alertTriggered = isTargetHit;
+                        allSharesData[shareIndex].alertType = alertType;
+                        // Store company name from live data if available and not already set
+                        if (item.CompanyName) {
+                            allSharesData[shareIndex].companyName = item.CompanyName;
+                        }
+                    }
+                }
+                newLivePrices[asxCode] = {
+                    live: livePrice,
+                    prevClose: isNaN(prevClose) ? null : prevClose,
+                    PE: isNaN(pe) ? null : pe,
+                    High52: isNaN(high52) ? null : high52,
+                    Low52: isNaN(low52) ? null : low52,
+                    targetHit: isTargetHit, // Keep this for now for existing logic reference
+                    lastLivePrice: livePrice,
+                    lastPrevClose: isNaN(prevClose) ? null : prevClose,
+                    CompanyName: item.CompanyName || 'N/A' // Store company name here too
+                };
         });
         livePrices = newLivePrices;
         console.log('Live Price: Live prices updated:', livePrices); 
@@ -2776,36 +3240,11 @@ function stopLivePriceUpdates() {
     }
 }
 
-// NEW: Function to update the target hit notification icon
+// This function is removed as its logic is now replaced by updateAlertIconStatus.
+// Keep this empty placeholder if it's called elsewhere and removing it completely causes issues.
+// Ideally, all calls to updateTargetHitBanner should be replaced with updateAlertsIconStatus.
 function updateTargetHitBanner() {
-    // UPDATED: Filter shares in the CURRENTLY SELECTED WATCHLIST for target hits
-    sharesAtTargetPrice = allSharesData.filter(share => {
-        // Check if the share belongs to the currently selected watchlists (excluding 'All Shares' for this check)
-        const isShareInCurrentView = currentSelectedWatchlistIds.includes(ALL_SHARES_ID) || currentSelectedWatchlistIds.includes(share.watchlistId);
-        
-        const livePriceData = livePrices[share.shareName.toUpperCase()];
-        // Ensure livePriceData exists and has targetHit property
-        return isShareInCurrentView && livePriceData && livePriceData.targetHit;
-    });
-
-    if (!targetHitIconBtn || !targetHitIconCount) {
-        console.warn('Target Alert: Target hit icon elements not found. Cannot update icon.');
-        return;
-    }
-
-    // Only show if there are shares at target AND the icon hasn't been manually dismissed AND we are in a stock view
-    if (sharesAtTargetPrice.length > 0 && !targetHitIconDismissed && !currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
-        targetHitIconCount.textContent = sharesAtTargetPrice.length;
-        targetHitIconBtn.classList.remove('app-hidden'); // Show the icon
-        targetHitIconBtn.style.display = 'flex'; // Ensure it's flex for icon + counter
-        targetHitIconCount.style.display = 'block'; // Show the count badge
-        logDebug('Target Alert: Showing icon: ' + sharesAtTargetPrice.length + ' shares hit target (watchlist-specific check).');
-    } else {
-        targetHitIconBtn.classList.add('app-hidden'); // Hide the icon
-        targetHitIconBtn.style.display = 'none'; // Ensure it's hidden
-        targetHitIconCount.style.display = 'none'; // Hide the count badge
-        logDebug('Target Alert: No shares hit target in current view or icon is dismissed or in cash view. Hiding icon.');
-    }
+    logDebug('Target Alert: updateTargetHitBanner is deprecated. Its functionality is now handled by updateAlertIconStatus().');
 }
 
 // NEW: Function to render alerts in the alert panel (currently empty, but planned for future)
@@ -2920,6 +3359,12 @@ async function loadShares() {
     try {
         const sharesCol = window.firestore.collection(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/shares');
         let q = window.firestore.query(sharesCol); // Listener for all shares, filtering for display done in renderWatchlist
+
+        // NEW: Unsubscribe from the previous listener if it exists to prevent multiple listeners
+        if (unsubscribeShares) {
+            unsubscribeShares();
+            logDebug('Firestore Listener: Unsubscribed from previous shares listener before re-attaching.');
+        }
 
         unsubscribeShares = window.firestore.onSnapshot(q, async (querySnapshot) => { 
             logDebug('Firestore Listener: Shares snapshot received. Processing changes.');
@@ -4039,7 +4484,7 @@ async function initializeAppLogic() {
     if (calculatorModal) calculatorModal.style.setProperty('display', 'none', 'important');
     if (shareContextMenu) shareContextMenu.style.setProperty('display', 'none', 'important');
     if (targetHitIconBtn) targetHitIconBtn.style.display = 'none'; // Ensure icon is hidden initially
-    if (alertPanel) alertPanel.style.display = 'none'; // NEW: Ensure alert panel is hidden initially
+    if (activeAlertsModal) activeAlertsModal.style.setProperty('display', 'none', 'important'); // Ensure active alerts modal is hidden initially
     // NEW: Hide cash asset modals initially
     if (cashAssetFormModal) cashAssetFormModal.style.setProperty('display', 'none', 'important');
     if (cashAssetDetailModal) cashAssetDetailModal.style.setProperty('display', 'none', 'important');
@@ -4373,18 +4818,6 @@ async function initializeAppLogic() {
         });
     }
 
-    // NEW: Target hit icon button listener for dismissal
-    if (targetHitIconBtn) {
-        targetHitIconBtn.addEventListener('click', (event) => {
-            logDebug('Target Alert: Icon button clicked. Dismissing icon.');
-            targetHitIconDismissed = true; // Set flag to true
-            localStorage.setItem('targetHitIconDismissed', 'true'); // Save dismissal state to localStorage
-            updateTargetHitBanner(); // Re-run to hide the icon
-            showCustomAlert('Alerts dismissed for this session.', 1500); // Optional: Provide user feedback
-            renderWatchlist(); // NEW: Re-render watchlist to remove highlighting
-        });
-    }
-
     // NEW: Target hit icon button listener to open alert panel (if you decide to use it later)
     // For now, this is commented out as the user wants simple dismissal on click.
     /*
@@ -4400,27 +4833,6 @@ async function initializeAppLogic() {
         });
     }
     */
-
-    // NEW: Close alert panel button listener (alertPanel is not in current HTML, but kept for consistency)
-    if (closeAlertPanelBtn) {
-        closeAlertPanelBtn.addEventListener('click', () => {
-            logDebug('Alert Panel: Close button clicked.');
-            // hideModal(alertPanel); // Commented out as alertPanel is not in HTML
-        });
-    }
-
-    // NEW: Clear All Alerts button listener (alertPanel is not in current HTML, but kept for consistency)
-    if (clearAllAlertsBtn) {
-        clearAllAlertsBtn.addEventListener('click', () => {
-            logDebug('Alert Panel: Clear All button clicked.');
-            sharesAtTargetPrice = []; // Clear all alerts in memory
-            // renderAlertsInPanel(); // Commented out as alertPanel is not in HTML
-            updateTargetHitBanner(); // Update the main icon count
-            showCustomAlert('All alerts cleared for this session.', 1500);
-            // hideModal(alertPanel); // Commented out as alertPanel is not in HTML
-        });
-    }
-
 
     // Logout Button
     if (logoutBtn) {
@@ -4461,9 +4873,8 @@ async function initializeAppLogic() {
                 } else {
                     console.warn('Splash Screen: User signed out, but splash screen element not found. App content might be visible.');
                 }
-                // NEW: Reset targetHitIconDismissed and clear localStorage entry on logout for a fresh start on next login
-                targetHitIconDismissed = false; 
-                localStorage.removeItem('targetHitIconDismissed');
+                // NEW: Clear dismissed alerts session on logout for a fresh start on next login
+                dismissedAlertsSession.clear();
 
             }
             catch (error) {
@@ -5152,6 +5563,33 @@ if (showLastLivePriceToggle) {
     showLastLivePriceToggle.addEventListener('change', async (event) => {
         showLastLivePriceOnClosedMarket = event.target.checked;
         logDebug('Toggle: "Show Last Live Price" toggled to: ' + showLastLivePriceOnClosedMarket);
+        // Event listeners for new target price input
+    if (targetValueInput) targetValueInput.addEventListener('input', updateTargetCalculationDisplay);
+    if (targetTypeDollarBtn) targetTypeDollarBtn.addEventListener('click', () => {
+        targetTypeDollarBtn.classList.add('active');
+        targetTypePercentBtn.classList.remove('active');
+        updateTargetCalculationDisplay();
+    });
+    if (targetTypePercentBtn) targetTypePercentBtn.addEventListener('click', () => {
+        targetTypePercentBtn.classList.add('active');
+        targetTypeDollarBtn.classList.remove('active');
+        updateTargetCalculationDisplay();
+    });
+
+    // Event listeners for the new Active Alerts Modal
+    if (targetHitIconBtn) targetHitIconBtn.addEventListener('click', openActiveAlertsModal);
+    if (alertsCloseButton) alertsCloseButton.addEventListener('click', closeActiveAlertsModal);
+    if (minimizeAlertsModalBtn) minimizeAlertsModalBtn.addEventListener('click', closeActiveAlertsModal);
+    if (dismissAllAlertsBtn) dismissAllAlertsBtn.addEventListener('click', dismissAllActiveAlerts);
+    // Click outside alerts modal to minimize it
+    if (activeAlertsModal) {
+        activeAlertsModal.addEventListener('click', (event) => {
+            const modalContent = activeAlertsModal.querySelector('.modal-content');
+            if (modalContent && !modalContent.contains(event.target)) {
+                closeActiveAlertsModal();
+            }
+        });
+    }
 
         // Save preference to Firestore
         if (currentUserId && db && window.firestore) {
@@ -5297,8 +5735,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     logDebug('Splash Screen: Started pulsing animation after sign-in.');
                 }
                 
-                // Load dismissal state from localStorage on login
-                targetHitIconDismissed = localStorage.getItem('targetHitIconDismissed') === 'true';
+                // On successful login, clear the session dismissal for alerts to re-evaluate all
+                dismissedAlertsSession.clear();
 
                 // Load data and then hide splash screen
                 await loadUserWatchlistsAndSettings(); // This now sets _appDataLoaded and calls hideSplashScreenIfReady
