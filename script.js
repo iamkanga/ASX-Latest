@@ -451,7 +451,7 @@ function formatDate(dateString) {
  * Adds a single share to the desktop table view.
  * @param {object} share The share object to add.
  */
-function addShareToTable(share) {
+function addShareToTable(share, livePriceData) {
     if (!shareTableBody) {
         console.error('addShareToTable: shareTableBody element not found.');
         return;
@@ -494,7 +494,8 @@ function addShareToTable(share) {
     let priceClass = '';
 
     // Logic to determine display values
-    if (livePriceData) {
+    // livePriceData is now passed as an argument
+    if (livePriceData) { 
         const currentLivePrice = livePriceData.live;
         const previousClosePrice = livePriceData.prevClose;
         const lastFetchedLive = livePriceData.lastLivePrice;
@@ -625,7 +626,7 @@ function addShareToTable(share) {
     logDebug('Table: Added share ' + share.shareName + ' to table.');
 }
 
-function addShareToMobileCards(share) {
+function addShareToMobileCards(share, livePriceData) {
     if (!mobileShareCardsContainer) {
         console.error('addShareToMobileCards: mobileShareCardsContainer element not found.');
         return;
@@ -2044,11 +2045,14 @@ function renderWatchlist() {
                 // This is needed because renderWatchlist might be called before fetchLivePrices updates allSharesData
                 // This logic is now handled in fetchLivePrices so share object already has these
                 
+                // Get live price data for the current share
+                const shareLivePriceData = livePrices[share.shareName.toUpperCase()];
+
                 if (tableContainer && tableContainer.style.display !== 'none') {
-                    addShareToTable(share);
+                    addShareToTable(share, shareLivePriceData);
                 }
                 if (mobileShareCardsContainer && mobileShareCardsContainer.style.display !== 'none') {
-                    addShareToMobileCards(share);
+                    addShareToMobileCards(share, shareLivePriceData);
                 }
             });
         }
