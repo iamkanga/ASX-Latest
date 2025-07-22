@@ -268,8 +268,9 @@ if (!sidebarOverlay) {
 }
 
 const formInputs = [
-    shareNameInput, currentPriceInput, targetValueInput, // Updated to targetValueInput
-    dividendAmountInput, frankingCreditsInput, shareRatingSelect
+    shareNameInput, currentPriceInput, targetValueInput,
+    dividendAmountInput, frankingCreditsInput, shareRatingSelect,
+    shareWatchlistSelect // Ensure watchlist select is included for dirty state and navigation
 ];
 
 // NEW: Form inputs for Cash Asset Modal
@@ -3939,7 +3940,7 @@ function handleAddShareClick() {
     clearForm();
     formTitle.textContent = 'Add New Share';
     if (deleteShareBtn) { deleteShareBtn.classList.add('hidden'); }
-    populateShareWatchlistSelect(getDefaultWatchlistId(currentUserId), true); // true indicates new share, pass default watchlist ID
+    populateShareWatchlistSelect(null, true); // true indicates new share
     showModal(shareFormSection);
     shareNameInput.focus();
     addCommentSection(commentsFormContainer); // Add an initial empty comment section for new shares
@@ -4536,6 +4537,13 @@ async function initializeAppLogic() {
         });
     }
 
+    if (currentPriceInput) {
+        currentPriceInput.addEventListener('input', () => {
+            checkFormDirtyState();
+            updateTargetCalculationDisplay();
+        });
+    }
+
     
     // NEW: Autocomplete Search Input Listeners for Stock Search Modal (Consolidated & Corrected)
     if (asxSearchInput) {
@@ -4821,21 +4829,13 @@ async function initializeAppLogic() {
         });
     }
 
-    // NEW: Target hit icon button listener to open alert panel (if you decide to use it later)
-    // For now, this is commented out as the user wants simple dismissal on click.
-    /*
+    // NEW: Target hit icon button listener to open active alerts modal
     if (targetHitIconBtn) {
         targetHitIconBtn.addEventListener('click', () => {
-            logDebug('Target Alert: Icon button clicked. Toggling alert panel.');
-            if (alertPanel.style.display === 'flex') {
-                hideModal(alertPanel);
-            } else {
-                renderAlertsInPanel(); // Render alerts before showing
-                showModal(alertPanel);
-            }
+            logDebug('Target Alert: Icon button clicked. Opening active alerts modal.');
+            openActiveAlertsModal(); // Call the function to open the active alerts modal
         });
     }
-    */
 
     // Logout Button
     if (logoutBtn) {
@@ -5571,6 +5571,30 @@ if (showLastLivePriceToggle) {
         targetValueInput.addEventListener('input', updateTargetCalculationDisplay);
         targetValueInput.addEventListener('change', updateTargetCalculationDisplay); // Also listen for change to catch blur
     }
+
+    // Event listeners for target type buttons (Dollar/Percentage)
+    if (targetTypeDollarBtn) {
+        targetTypeDollarBtn.addEventListener('click', () => {
+            if (!targetTypeDollarBtn.classList.contains('active')) {
+                targetTypeDollarBtn.classList.add('active');
+                targetTypePercentBtn.classList.remove('active');
+                updateTargetCalculationDisplay();
+                checkFormDirtyState(); // Check dirty state when toggle changes
+            }
+        });
+    }
+
+    if (targetTypePercentBtn) {
+        targetTypePercentBtn.addEventListener('click', () => {
+            if (!targetTypePercentBtn.classList.contains('active')) {
+                targetTypePercentBtn.classList.add('active');
+                targetTypeDollarBtn.classList.remove('active');
+                updateTargetCalculationDisplay();
+                checkFormDirtyState(); // Check dirty state when toggle changes
+            }
+        });
+    }
+
     if (targetTypeDollarBtn) targetTypeDollarBtn.addEventListener('click', () => {
         targetTypeDollarBtn.classList.add('active');
         targetTypePercentBtn.classList.remove('active');
