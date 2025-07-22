@@ -4676,15 +4676,33 @@ async function initializeAppLogic() {
             input.addEventListener('keydown', function(event) {
                 if (event.key === 'Enter') {
                     event.preventDefault();
-                    const nextInput = formInputs[index + 1];
-
-                    // Only call select() if the input has the method (i.e., it's a text/number input)
-                    if (input.tagName === 'INPUT' || input.tagName === 'TEXTAREA') {
-                        input.select();
+                    // Determine the next focusable element
+                    let nextElement = null;
+                    if (input === targetValueInput) {
+                        // If current input is targetValueInput, check which toggle is active or default to dollar
+                        if (targetTypeDollarBtn.classList.contains('active') && targetTypePercentBtn) {
+                            nextElement = targetTypePercentBtn; // Focus on the other toggle to allow user to easily switch
+                        } else if (targetTypePercentBtn.classList.contains('active') && targetTypeDollarBtn) {
+                            nextElement = targetTypeDollarBtn;
+                        } else {
+                            // Default to dollar button if neither is active (shouldn't happen if default is set)
+                            nextElement = targetTypeDollarBtn;
+                        }
+                    } else if (input === targetTypeDollarBtn || input === targetTypePercentBtn) {
+                        // If current input is a toggle button, move to dividendAmountInput
+                        nextElement = dividendAmountInput;
+                    } else if (index < formInputs.length - 1) {
+                        nextElement = formInputs[index + 1];
                     }
 
-                    // If current input is the last one, try to add a comment or save
-                    if (index === formInputs.length - 1) {
+                    if (nextElement) {
+                        nextElement.focus();
+                        // For text inputs, select content for easier editing
+                        if (nextElement.tagName === 'INPUT' && (nextElement.type === 'text' || nextElement.type === 'number')) {
+                            nextElement.select();
+                        }
+                    } else {
+                        // If no more inputs in the formInputs array, try to add a comment or save
                         if (addCommentSectionBtn && addCommentSectionBtn.offsetParent !== null && !addCommentSectionBtn.classList.contains('is-disabled-icon')) {
                             addCommentSectionBtn.click();
                             const newCommentTitleInput = commentsFormContainer.lastElementChild?.querySelector('.comment-title-input');
@@ -4693,26 +4711,6 @@ async function initializeAppLogic() {
                             }
                         } else if (saveShareBtn && !saveShareBtn.classList.contains('is-disabled-icon')) {
                             saveShareBtn.click();
-                        }
-                    } else if (nextInput) {
-                        // For the dropdown, explicitly move focus to the next input element after it
-                        if (input === shareRatingSelect) {
-                            // Find the element *after* shareRatingSelect in the formInputs array
-                            const nextElementAfterRating = formInputs[index + 1];
-                            if (nextElementAfterRating) {
-                                nextElementAfterRating.focus();
-                            } else if (addCommentSectionBtn && addCommentSectionBtn.offsetParent !== null && !addCommentSectionBtn.classList.contains('is-disabled-icon')) {
-                                // If no more inputs after rating, try to add comment section
-                                addCommentSectionBtn.click();
-                                const newCommentTitleInput = commentsFormContainer.lastElementChild?.querySelector('.comment-title-input');
-                                if (newCommentTitleInput) {
-                                    newCommentTitleInput.focus();
-                                }
-                            } else if (saveShareBtn && !saveShareBtn.classList.contains('is-disabled-icon')) {
-                                saveShareBtn.click();
-                            }
-                        } else {
-                            nextInput.focus();
                         }
                     }
                 }
@@ -5566,13 +5564,12 @@ if (showLastLivePriceToggle) {
     showLastLivePriceToggle.addEventListener('change', async (event) => {
         showLastLivePriceOnClosedMarket = event.target.checked;
         logDebug('Toggle: "Show Last Live Price" toggled to: ' + showLastLivePriceOnClosedMarket);
-    // Event listeners for new target price input
+    // Event listeners for new target price input and type buttons
     if (targetValueInput) {
         targetValueInput.addEventListener('input', updateTargetCalculationDisplay);
-        targetValueInput.addEventListener('change', updateTargetCalculationDisplay); // Also listen for change to catch blur
+        targetValueInput.addEventListener('change', updateTargetCalculationDisplay); // Listen for change to catch blur
     }
 
-    // Event listeners for target type buttons (Dollar/Percentage)
     if (targetTypeDollarBtn) {
         targetTypeDollarBtn.addEventListener('click', () => {
             if (!targetTypeDollarBtn.classList.contains('active')) {
