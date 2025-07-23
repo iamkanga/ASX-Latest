@@ -342,7 +342,7 @@ function closeModals() {
             const isWatchlistSelected = shareWatchlistSelect && shareWatchlistSelect.value !== '';
             const needsWatchlistSelection = currentSelectedWatchlistIds.includes(ALL_SHARES_ID);
             
-            if (isShareNameValid && (!needsWatchlistSelection || isWatchlistSelected)) { 
+            if (isShareNameValid && (!needsWatchlistSelection || isWatchlistSelected)) {
                 logDebug('Auto-Save: New share detected with valid name and watchlist. Attempting silent save.');
                 saveShareData(true); // true indicates silent save
             } else {
@@ -397,45 +397,91 @@ function closeModals() {
         }
     }
 
-
-    document.querySelectorAll('.modal').forEach(modal => {
-        if (modal) {
-            modal.style.setProperty('display', 'none', 'important');
-        }
-    });
+    // First, clear form and deselect current items
     resetCalculator();
     deselectCurrentShare();
-    // NEW: Deselect current cash asset
     deselectCurrentCashAsset();
     if (autoDismissTimeout) { clearTimeout(autoDismissTimeout); autoDismissTimeout = null; }
     hideContextMenu();
-    // NEW: Close the alert panel if open (alertPanel is not in current HTML, but kept for consistency)
-    if (activeAlertsModal) hideModal(activeAlertsModal); // Correctly hide the active alerts modal
+
+    // Explicitly hide each *type* of modal if it's currently open
+    // This allows modals with complex transitions (like activeAlertsModal) to manage their own hiding process
+    if (shareFormSection.style.display !== 'none') hideModal(shareFormSection);
+    if (dividendCalculatorModal.style.display !== 'none') hideModal(dividendCalculatorModal);
+    if (shareDetailModal.style.display !== 'none') hideModal(shareDetailModal);
+    if (addWatchlistModal.style.display !== 'none') hideModal(addWatchlistModal);
+    if (manageWatchlistModal.style.display !== 'none') hideModal(manageWatchlistModal);
+    if (customDialogModal.style.display !== 'none') hideModal(customDialogModal);
+    if (calculatorModal.style.display !== 'none') hideModal(calculatorModal);
+    if (cashAssetFormModal.style.display !== 'none') hideModal(cashAssetFormModal);
+    if (cashAssetDetailModal.style.display !== 'none') hideModal(cashAssetDetailModal);
+    if (stockSearchModal.style.display !== 'none') hideModal(stockSearchModal);
+
+    // activeAlertsModal has its own close function with transition
+    if (activeAlertsModalOpen) closeActiveAlertsModal(); // Call its specific close function if open
+    
     logDebug('Modal: All modals closed.');
 }
 
 // Custom Dialog (Alert) Function
-function showCustomAlert(message, duration = 1000) {
+// Allows for a duration or a custom button type (e.g., 'OK')
+function showCustomAlert(message, durationOrButtonType = 1000, callback = null, buttonText = 'OK') {
     const confirmBtn = document.getElementById('customDialogConfirmBtn');
     const cancelBtn = document.getElementById('customDialogCancelBtn');
     const dialogButtonsContainer = document.querySelector('#customDialogModal .custom-dialog-buttons');
-
-    logDebug('showCustomAlert: confirmBtn found: ' + !!confirmBtn + ', cancelBtn found: ' + !!cancelBtn + ', dialogButtonsContainer found: ' + !!dialogButtonsContainer);
 
     if (!customDialogModal || !customDialogMessage || !confirmBtn || !cancelBtn || !dialogButtonsContainer) {
         console.error('Custom dialog elements not found. Cannot show alert.');
         console.log('ALERT (fallback): ' + message);
         return;
     }
+
     customDialogMessage.textContent = message;
 
-    dialogButtonsContainer.style.display = 'none'; // Explicitly hide the container
-    logDebug('showCustomAlert: dialogButtonsContainer display set to: ' + dialogButtonsContainer.style.display);
+    // Ensure buttons are visible for custom button types, hidden for auto-dismiss
+    dialogButtonsContainer.style.display = 'flex'; // Default to flex
+    confirmBtn.style.display = 'inline-flex'; // Show confirm button
+    cancelBtn.style.display = 'none'; // Hide cancel button by default for alerts
+
+    confirmBtn.textContent = buttonText; // Set custom button text (e.g., "OK")
+    setIconDisabled(confirmBtn, false); // Ensure confirm button is enabled
+
+    // Remove any previous listeners
+    const oldConfirmListener = confirmBtn._currentClickListener;
+    if (oldConfirmListener) {
+        confirmBtn.removeEventListener('click', oldConfirmListener);
+    }
+
+    const onClose = () => {
+        hideModal(customDialogModal);
+        if (callback) {
+            callback();
+        }
+        logDebug('Alert: Custom alert closed.');
+    };
+
+    confirmBtn.addEventListener('click', onClose);
+    confirmBtn._currentClickListener = onClose; // Store reference
 
     showModal(customDialogModal);
-    if (autoDismissTimeout) { clearTimeout(autoDismissTimeout); }
-    autoDismissTimeout = setTimeout(() => { hideModal(customDialogModal); autoDismissTimeout = null; }, duration);
     logDebug('Alert: Showing alert: "' + message + '"');
+
+    // Handle auto-dismissal
+    if (typeof durationOrButtonType === 'number' && durationOrButtonType > 0) {
+        if (autoDismissTimeout) {
+            clearTimeout(autoDismissTimeout);
+        }
+        autoDismissTimeout = setTimeout(() => {
+            hideModal(customDialogModal);
+            autoDismissTimeout = null;
+        }, durationOrButtonType);
+    } else {
+        // If duration is not a number, or it's a string (like 'OK'), no auto-dismiss
+        if (autoDismissTimeout) {
+            clearTimeout(autoDismissTimeout);
+            autoDismissTimeout = null;
+        }
+    }
 }
 
 // Date Formatting Helper Functions (Australian Style)
@@ -1087,21 +1133,22 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
     // Ensure currentPrice is a number and format for display
     currentPriceInput.value = (typeof shareToEdit.currentPrice === 'number' && !isNaN(shareToEdit.currentPrice)) ? shareToEdit.currentPrice.toFixed(2) : '';
     // NEW: Populate Target Value and Type
-    if (targetValueInput) {
-        targetValueInput.value = (typeof shareToEdit.targetValue === 'number' && !isNaN(shareToEdit.targetValue)) ? shareToEdit.targetValue : '';
-    }
-    if (targetTypeDollarBtn && targetTypePercentBtn) {
-        // Set the active class based on the share's targetType
-        if (shareToEdit.targetType === '%') {
-            targetTypePercentBtn.classList.add('active');
-            targetTypeDollarBtn.classList.remove('active');
-        } else { // Default to '$' if targetType is not '%' or is undefined/null
-            targetTypeDollarBtn.classList.add('active');
-            targetTypePercentBtn.classList.remove('active');
-        }
-    }
-    // Manually trigger update for initial display after values are set.
-    updateTargetCalculationDisplay(); 
+    if (targetValueInput) {
+        targetValueInput.value = (typeof shareToEdit.targetValue === 'number' && !isNaN(shareToEdit.targetValue)) ? shareToEdit.targetValue : '';
+    }
+    // Use the new `targetTypeDollar` and `targetTypePercent` references (which are for the radio inputs)
+    if (targetTypeDollar && targetTypePercent) {
+        // Set the 'checked' property of the hidden radio inputs directly
+        if (shareToEdit.targetType === '%') {
+            targetTypePercent.checked = true;
+            targetTypeDollar.checked = false;
+        } else { // Default to '$' if targetType is not '%' or is undefined/null
+            targetTypeDollar.checked = true;
+            targetTypePercent.checked = false;
+        }
+    }
+    // Manually trigger update for initial display after values are set.
+    updateTargetCalculationDisplay(); 
     
     dividendAmountInput.value = Number(shareToEdit.dividendAmount) !== null && !isNaN(Number(shareToEdit.dividendAmount)) ? Number(shareToEdit.dividendAmount).toFixed(3) : '';
     frankingCreditsInput.value = Number(shareToEdit.frankingCredits) !== null && !isNaN(Number(shareToEdit.frankingCredits)) ? Number(shareToEdit.frankingCredits).toFixed(1) : '';
@@ -1184,7 +1231,7 @@ function areShareDataEqual(data1, data2) {
 
     const fields = ['shareName', 'currentPrice', 'dividendAmount', 'frankingCredits', 'watchlistId', 'starRating'];
     // NEW: Add targetValue and targetType to fields for comparison
-    // const newTargetFields = ['targetValue', 'targetType']; // This variable is not used directly in the loop below
+    // These fields are compared in the loop below. targetValue and targetType are compared separately.
 
     for (const field of fields) {
         let val1 = data1[field];
@@ -1289,7 +1336,7 @@ async function saveShareData(isSilent = false) {
     // NEW: Get targetValue and targetType from inputs, handling potential empty string for value
     const targetValueRaw = targetValueInput.value.trim();
     const targetValue = targetValueRaw === '' ? null : parseFloat(targetValueRaw);
-    const targetType = targetTypePercentBtn.classList.contains('active') ? '%' : '$';
+    const targetType = targetTypePercent.checked ? '%' : '$', // Capture type from CHECKED state of radio
     
     const dividendAmount = parseFloat(dividendAmountInput.value);
     const frankingCredits = parseFloat(frankingCreditsInput.value);
@@ -2380,27 +2427,13 @@ async function loadAsxCodesFromCSV() {
  */
 function isAsxMarketOpen() {
     const now = new Date();
-    // Get current time in Sydney (Australia/Sydney)
-    // Using 'en-AU' locale and 'Australia/Sydney' timezone for accurate comparison
-    const options = {
-        hour: 'numeric',
-        minute: 'numeric',
-        hour12: false, // 24-hour format
-        timeZone: 'Australia/Sydney',
-        weekday: 'short', // To check for weekends
-        year: 'numeric', // For holidays
-        month: 'numeric', // For holidays
-        day: 'numeric' // For holidays
-    };
+    // Get current time in Sydney (Australia/Sydney) using a more robust method
+    // This directly creates a Date object in the target timezone without string parsing
+    const sydneyDate = new Date(now.toLocaleString('en-US', { timeZone: 'Australia/Sydney' }));
 
-    const sydneyTimeStr = new Intl.DateTimeFormat('en-AU', options).format(now);
-    const [dayOfWeekStr, dateStr, timeStr] = sydneyTimeStr.split(', ');
-    const [day, month, year] = dateStr.split('/').map(Number);
-    const [hours, minutes] = timeStr.split(':').map(Number);
-
-    // Reconstruct date in Sydney time to use for holiday checks
-    const sydneyDate = new Date(year, month - 1, day, hours, minutes);
     const dayOfWeek = sydneyDate.getDay(); // Sunday - Saturday : 0 - 6
+    const hours = sydneyDate.getHours();
+    const minutes = sydneyDate.getMinutes();
 
     // Check for weekends (Saturday = 6, Sunday = 0)
     if (dayOfWeek === 0 || dayOfWeek === 6) {
@@ -2413,45 +2446,43 @@ function isAsxMarketOpen() {
     const marketCloseHours = 16; // 4:00 PM
 
     if (hours < marketOpenHours || hours >= marketCloseHours) {
-        logDebug('Market Status: Market is closed (outside trading hours: ' + timeStr + ').');
+        logDebug(`Market Status: Market is closed (outside trading hours: ${hours}:${minutes < 10 ? '0' : ''}${minutes}).`);
         return false;
     }
 
     // Basic check for major Sydney public holidays (non-exhaustive)
     // This list should be updated annually for accuracy or fetched from an external API.
-    // Format: 'MM/DD'
+    // Format: 'MM-DD' for direct comparison with new Date(year, month-1, day)
     const sydneyPublicHolidays = [
-        '01/01', // New Year's Day
-        '01/26', // Australia Day (observed)
-        '03/28', // Good Friday (example for 2025 - changes annually)
-        '03/31', // Easter Monday (example for 2025 - changes annually)
-        '04/25', // Anzac Day
-        '06/09', // King's Birthday (NSW)
-        '08/04', // Bank Holiday (NSW - First Monday in August)
-        '10/06', // Labour Day (NSW - First Monday in October)
-        '12/25', // Christmas Day
-        '12/26' // Boxing Day
+        '01-01', // New Year's Day
+        '01-26', // Australia Day (observed)
+        '03-29', // Good Friday (example for 2024 - changes annually)
+        '04-01', // Easter Monday (example for 2024 - changes annually)
+        '04-25', // Anzac Day
+        '06-10', // King's Birthday (NSW - example for 2024)
+        // Add more holidays for the current year as needed
     ];
 
-    const todayMonthDay = `${(month < 10 ? '0' : '') + month}/${(day < 10 ? '0' : '') + day}`;
-    if (sydneyPublicHolidays.includes(todayMonthDay)) {
-        logDebug('Market Status: Market is closed (public holiday: ' + todayMonthDay + ').');
+    const currentMonthDay = `${(sydneyDate.getMonth() + 1).toString().padStart(2, '0')}-${sydneyDate.getDate().toString().padStart(2, '0')}`;
+    if (sydneyPublicHolidays.includes(currentMonthDay)) {
+        logDebug(`Market Status: Market is closed (public holiday: ${currentMonthDay}).`);
         return false;
     }
 
-    logDebug('Market Status: Market is likely open (' + timeStr + ').');
+    logDebug(`Market Status: Market is likely open (${hours}:${minutes < 10 ? '0' : ''}${minutes}).`);
     return true;
 }
 
 // NEW: Function to calculate and update target calculation display in share form
 function updateTargetCalculationDisplay() {
     const targetValue = parseFloat(targetValueInput.value);
-    const enteredPrice = parseFloat(document.getElementById('currentPrice').value);
-    const isPercent = targetTypePercentBtn.classList.contains('active');
+    const enteredPrice = parseFloat(currentPriceInput.value); // Ensure it reads from the correct input
+    const isPercent = targetTypePercent.checked; // Check the 'checked' property of the radio input
     
     let displayHtml = '';
 
-    if (!isNaN(targetValue) && !isNaN(enteredPrice)) {
+    // Adjust opacity and hidden class based on input validity
+    if (!isNaN(targetValue) && !isNaN(enteredPrice) && enteredPrice > 0) {
         let calculatedTarget = 0;
         let typeText = '';
         let targetRelation = ''; // "Buy Target" or "Sell Target"
@@ -2467,14 +2498,26 @@ function updateTargetCalculationDisplay() {
         }
 
         displayHtml = `Target: Entered ${formatCurrency(enteredPrice)} ${typeText} = ${formatCurrency(calculatedTarget)} (${targetRelation})`;
-    } else if (!isNaN(targetValue)) {
-        displayHtml = `Input Entered Price to calculate target.`;
+        if (targetCalculationDisplay) {
+            targetCalculationDisplay.textContent = displayHtml;
+            targetCalculationDisplay.classList.remove('text-red-500', 'opacity-0', 'hidden');
+            targetCalculationDisplay.classList.add('text-gray-500', 'italic', 'opacity-100', 'block');
+        }
+    } else if (targetValueInput.value.length > 0 || currentPriceInput.value.length > 0) {
+        // Show error if user has started typing but input is invalid
+        displayHtml = `Enter valid price and target.`;
+        if (targetCalculationDisplay) {
+            targetCalculationDisplay.textContent = displayHtml;
+            targetCalculationDisplay.classList.remove('text-gray-500', 'italic', 'opacity-0', 'hidden');
+            targetCalculationDisplay.classList.add('text-red-500', 'opacity-100', 'block');
+        }
     } else {
-        displayHtml = `Enter Target Value.`;
-    }
-    
-    if (targetCalculationDisplay) { // Safety check
-        targetCalculationDisplay.textContent = displayHtml;
+        // Hide completely if no input
+        if (targetCalculationDisplay) {
+            targetCalculationDisplay.textContent = '';
+            targetCalculationDisplay.classList.add('opacity-0', 'hidden');
+            targetCalculationDisplay.classList.remove('text-red-500', 'text-gray-500', 'italic', 'block');
+        }
     }
 }
 
@@ -3026,6 +3069,7 @@ async function fetchLivePrices() {
             let calculatedTargetPrice = null;
 
             // Only perform target calculation if we have valid share data, target value, and entered price
+            // Ensure livePrice is valid before attempting calculations
             if (shareData && shareData.targetValue !== null && !isNaN(shareData.targetValue) &&
                 shareData.currentPrice !== null && !isNaN(shareData.currentPrice) &&
                 livePrice !== null && !isNaN(livePrice)) { // Use fetched livePrice for alert check
@@ -3111,22 +3155,20 @@ async function fetchLivePrices() {
     }
 
     /**
-    * Starts the periodic fetching of live prices.
-    */
-    function startLivePriceUpdates() {
-        if (livePriceFetchInterval) {
-            clearInterval(livePriceFetchInterval);
-            logDebug('Live Price: Cleared existing live price interval.');
-        }
-        // Only start fetching if not in cash view
-        if (!currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
-            fetchLivePrices(); 
-            livePriceFetchInterval = setInterval(fetchLivePrices, LIVE_PRICE_FETCH_INTERVAL_MS);
-            logDebug('Live Price: Started live price updates every ' + (LIVE_PRICE_FETCH_INTERVAL_MS / 1000 / 60) + ' minutes.');
-        } else {
-            logDebug('Live Price: Not starting live price updates because "Cash & Assets" is selected.'); // UPDATED TEXT
-        }
-    }
+    * Starts the periodic fetching of live prices.
+    */
+    function startLivePriceUpdates() {
+        // Only start fetching if not in cash view AND no interval is already active
+        if (!currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID) && !livePriceFetchInterval) {
+            fetchLivePrices(); // Fetch immediately on start
+            livePriceFetchInterval = setInterval(fetchLivePrices, LIVE_PRICE_FETCH_INTERVAL_MS);
+            logDebug('Live Price: Started live price updates every ' + (LIVE_PRICE_FETCH_INTERVAL_MS / 1000 / 60) + ' minutes.');
+        } else if (currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
+            logDebug('Live Price: Not starting live price updates because "Cash & Assets" is selected.');
+        } else {
+            logDebug('Live Price: Live price updates already running.');
+        }
+    }
 
     /**
     * Stops the periodic fetching of live prices.
@@ -3732,10 +3774,8 @@ function showCustomConfirm(message, callback) {
     const cancelBtn = document.getElementById('customDialogCancelBtn');
     const dialogButtonsContainer = document.querySelector('#customDialogModal .custom-dialog-buttons');
 
-    logDebug('showCustomConfirm: confirmBtn found: ' + !!confirmBtn + ', cancelBtn found: ' + !!cancelBtn + ', dialogButtonsContainer found: ' + !!dialogButtonsContainer);
-
     if (!customDialogModal || !customDialogMessage || !confirmBtn || !cancelBtn || !dialogButtonsContainer) {
-        console.error('Custom dialog elements not found. Cannot show confirm.');
+        console.error('Custom dialog elements not found. Cannot show confirm. Falling back to native.');
         console.log('CONFIRM (fallback): ' + message);
         callback(window.confirm(message)); // Fallback to native confirm
         return;
@@ -3743,22 +3783,17 @@ function showCustomConfirm(message, callback) {
     customDialogMessage.textContent = message;
 
     dialogButtonsContainer.style.display = 'flex'; // Explicitly show the container
-    logDebug('showCustomConfirm: dialogButtonsContainer display set to: ' + dialogButtonsContainer.style.display);
+    confirmBtn.style.display = 'inline-flex'; // Ensure confirm button is visible
+    cancelBtn.style.display = 'inline-flex'; // Ensure cancel button is visible
 
     setIconDisabled(confirmBtn, false); // Enable the confirm button
     setIconDisabled(cancelBtn, false); // Enable the cancel button
 
     showModal(customDialogModal);
 
-    // Remove any existing 'click' listeners to prevent multiple firings
-    const oldConfirmListener = confirmBtn._currentClickListener;
-    if (oldConfirmListener) {
-        confirmBtn.removeEventListener('click', oldConfirmListener);
-    }
-    const oldCancelListener = cancelBtn._currentClickListener;
-    if (oldCancelListener) {
-        cancelBtn.removeEventListener('click', oldCancelListener);
-    }
+    // Clear previous event listeners for both buttons to prevent stacking
+    confirmBtn.removeEventListener('click', confirmBtn._currentClickListener || (() => {}));
+    cancelBtn.removeEventListener('click', cancelBtn._currentClickListener || (() => {}));
 
     const onConfirm = () => {
         hideModal(customDialogModal);
@@ -3773,10 +3808,10 @@ function showCustomConfirm(message, callback) {
     };
 
     confirmBtn.addEventListener('click', onConfirm);
-    confirmBtn._currentClickListener = onConfirm; // Store reference
+    confirmBtn._currentClickListener = onConfirm; // Store reference for removal
 
     cancelBtn.addEventListener('click', onCancel);
-    cancelBtn._currentClickListener = onCancel; // Store reference
+    cancelBtn._currentClickListener = onCancel; // Store reference for removal
 
     logDebug('Confirm: Showing confirm: "' + message + '"');
 }
@@ -4680,62 +4715,126 @@ async function initializeAppLogic() {
     }
 
     // Global click listener to close modals/context menu if clicked outside
-    window.addEventListener('click', (event) => {
-        // Only close these specific modals if clicked directly on their backdrop
-        if (event.target === shareDetailModal || event.target === dividendCalculatorModal ||
-            event.target === shareFormSection || event.target === customDialogModal ||
-            event.target === calculatorModal || event.target === addWatchlistModal ||
-            event.target === manageWatchlistModal || // Removed alertPanel here as it's handled by its own function
-            event.target === cashAssetFormModal || event.target === cashAssetDetailModal) {
-            closeModals();
-        }
+    // Introduce a flag to temporarily disable this listener after a modal is opened.
+    let allowGlobalModalClose = true; // Global flag to control this listener
 
-        if (contextMenuOpen && shareContextMenu && !shareContextMenu.contains(event.target)) {
-            hideContextMenu();
-        }
-    });
+    // Helper function to temporarily disable global click listener
+    function temporarilyDisableGlobalClose() {
+        allowGlobalModalClose = false;
+        setTimeout(() => {
+            allowGlobalModalClose = true;
+        }, 100); // Small delay to allow modal open animation/events to settle
+    }
 
-    // Google Auth Button (Sign In/Out) - This button is removed from index.html.
-    // Its functionality is now handled by splashSignInBtn.
+    // Override showModal to include the temporary disable
+    const originalShowModal = showModal;
+    showModal = function(modalElement) {
+        originalShowModal(modalElement);
+        temporarilyDisableGlobalClose();
+    };
 
-    // NEW: Splash Screen Sign-In Button
-    if (splashSignInBtn) {
-        splashSignInBtn.addEventListener('click', async () => {
-            logDebug('Auth: Splash Screen Sign-In Button Clicked.');
-            const currentAuth = window.firebaseAuth;
-            if (!currentAuth || !window.authFunctions) {
-                console.warn('Auth: Auth service not ready or functions not loaded. Cannot process splash sign-in.');
-                showCustomAlert('Authentication service not ready. Please try again in a moment.');
-                return;
-            }
-            try {
-                // Start pulsing animation immediately on click
-                if (splashKangarooIcon) {
-                    splashKangarooIcon.classList.add('pulsing');
-                    logDebug('Splash Screen: Started pulsing animation on sign-in click.');
-                }
-                splashSignInBtn.disabled = true; // Disable button to prevent multiple clicks
-                
-                const provider = window.authFunctions.GoogleAuthProviderInstance;
-                if (!provider) {
-                    console.error('Auth: GoogleAuthProvider instance not found. Is Firebase module script loaded?');
-                    showCustomAlert('Authentication service not ready. Please ensure Firebase module script is loaded.');
-                    splashSignInBtn.disabled = false; // Re-enable on error
-                    if (splashKangarooIcon) splashKangarooIcon.classList.remove('pulsing'); // Stop animation on error
-                    return;
-                }
-                await window.authFunctions.signInWithPopup(currentAuth, provider);
-                logDebug('Auth: Google Sign-In successful from splash screen.');
-                // The onAuthStateChanged listener will handle hiding the splash screen
-            }
-            catch (error) {
-                console.error('Auth: Google Sign-In failed from splash screen: ' + error.message);
-                showCustomAlert('Google Sign-In failed: ' + error.message);
-                splashSignInBtn.disabled = false; // Re-enable on error
-                if (splashKangarooIcon) splashKangarooIcon.classList.remove('pulsing'); // Stop animation on error
-            }
-        });
-    }
+    window.addEventListener('click', (event) => {
+        if (!allowGlobalModalClose) {
+            // logDebug('Global Click: Global modal close suppressed temporarily.');
+            return; // Do nothing if global close is temporarily disabled
+        }
+
+        // Only close these specific modals if clicked directly on their backdrop
+        // The explicit check `event.target === modal` ensures the click is on the backdrop itself, not an element inside.
+        if (event.target === shareDetailModal || event.target === dividendCalculatorModal ||
+            event.target === shareFormSection || event.target === customDialogModal ||
+            event.target === calculatorModal || event.target === addWatchlistModal ||
+            event.target === manageWatchlistModal ||
+            event.target === cashAssetFormModal || event.target === cashAssetDetailModal ||
+            event.target === stockSearchModal) {
+            closeModals();
+        }
+
+        if (contextMenuOpen && shareContextMenu && !shareContextMenu.contains(event.target)) {
+            hideContextMenu();
+        }
+    });
+
+        // NEW: Show Last Live Price Toggle Listener
+if (showLastLivePriceToggle) {
+    showLastLivePriceToggle.addEventListener('change', async (event) => {
+        showLastLivePriceOnClosedMarket = event.target.checked;
+        logDebug('Toggle: "Show Last Live Price" toggled to: ' + showLastLivePriceOnClosedMarket);
+        // Save preference to Firestore
+        if (currentUserId && db && window.firestore) {
+            const userProfileDocRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/profile/settings');
+            try {
+                await window.firestore.setDoc(userProfileDocRef, { showLastLivePriceOnClosedMarket: showLastLivePriceOnClosedMarket }, { merge: true });
+                logDebug('Toggle: Saved "Show Last Live Price" preference to Firestore: ' + showLastLivePriceOnClosedMarket);
+            } catch (error) {
+                console.error('Toggle: Error saving "Show Last Live Price" preference to Firestore:', error);
+                showCustomAlert('Error saving preference: ' + error.message);
+            }
+        }
+        renderWatchlist(); // Re-render to apply the new display logic immediately
+        showCustomAlert('Last Price Display set to: ' + (showLastLivePriceOnClosedMarket ? 'On (Market Closed)' : 'Off (Market Closed)'), 1500);
+        toggleAppSidebar(false); // Close sidebar after action
+    });
+}
+
+    // NEW: Cash Asset Form Modal Save/Delete/Edit Buttons (2.1, 2.2)
+    if (saveCashAssetBtn) {
+        saveCashAssetBtn.addEventListener('click', async () => {
+            logDebug('Cash Form: Save Cash Asset button clicked.');
+            if (saveCashAssetBtn.classList.contains('is-disabled-icon')) {
+                showCustomAlert('Asset name and balance are required, or no changes made.');
+                console.warn('Save Cash Asset: Save button was disabled, preventing action.');
+                return;
+            }
+            await saveCashAsset(false); // Not silent save
+        });
+    }
+
+    if (deleteCashAssetBtn) {
+        deleteCashAssetBtn.addEventListener('click', async () => {
+            logDebug('Cash Form: Delete Cash Asset button clicked.');
+            if (deleteCashAssetBtn.classList.contains('is-disabled-icon')) {
+                console.warn('Delete Cash Asset: Delete button was disabled, preventing action.');
+                return;
+            }
+            if (selectedCashAssetDocId) {
+                await deleteCashCategory(selectedCashAssetDocId); // Use existing delete function
+                closeModals();
+            } else {
+                showCustomAlert('No cash asset selected for deletion.');
+            }
+        });
+    }
+
+    if (editCashAssetFromDetailBtn) {
+        editCashAssetFromDetailBtn.addEventListener('click', () => {
+            logDebug('Cash Details: Edit Cash Asset button clicked.');
+            if (selectedCashAssetDocId) {
+                hideModal(cashAssetDetailModal);
+                showAddEditCashCategoryModal(selectedCashAssetDocId);
+            } else {
+                showCustomAlert('No cash asset selected for editing.');
+            }
+        });
+    }
+
+    if (deleteCashAssetFromDetailBtn) {
+        deleteCashAssetFromDetailBtn.addEventListener('click', async () => {
+            logDebug('Cash Details: Delete Cash Asset button clicked.');
+            if (selectedCashAssetDocId) {
+                await deleteCashCategory(selectedCashAssetDocId);
+                closeModals();
+            } else {
+                showCustomAlert('No cash asset selected for deletion.');
+            }
+        });
+    }
+
+
+    // Call adjustMainContentPadding initially and on window load/resize
+    // Removed: window.addEventListener('load', adjustMainContentPadding); // Removed, handled by onAuthStateChanged
+    // Already added to window.addEventListener('resize') in sidebar section
+} // End of initializeAppLogic
 
     // NEW: Target hit icon button listener to open active alerts modal
     if (targetHitIconBtn) {
@@ -5469,52 +5568,53 @@ if (sortSelect) {
         });
     }
     
-    // NEW: Show Last Live Price Toggle Listener
-if (showLastLivePriceToggle) {
-    showLastLivePriceToggle.addEventListener('change', async (event) => {
-        showLastLivePriceOnClosedMarket = event.target.checked;
-        logDebug('Toggle: "Show Last Live Price" toggled to: ' + showLastLivePriceOnClosedMarket);
-    // Event listeners for new target price input and type buttons
-    if (targetValueInput) {
-        targetValueInput.addEventListener('input', updateTargetCalculationDisplay);
-        targetValueInput.addEventListener('change', updateTargetCalculationDisplay); // Listen for change to catch blur
+    // NEW: Function to calculate and update target calculation display in share form
+function updateTargetCalculationDisplay() {
+    const targetValue = parseFloat(targetValueInput.value);
+    const enteredPrice = parseFloat(currentPriceInput.value); // Ensure it reads from the correct input
+    const isPercent = targetTypePercent.checked; // Check the 'checked' property of the radio input
+    
+    let displayHtml = '';
+
+    // Adjust opacity and hidden class based on input validity
+    if (!isNaN(targetValue) && !isNaN(enteredPrice) && enteredPrice > 0) {
+        let calculatedTarget = 0;
+        let typeText = '';
+        let targetRelation = ''; // "Buy Target" or "Sell Target"
+
+        if (isPercent) {
+            calculatedTarget = enteredPrice * (1 + targetValue / 100);
+            typeText = `${targetValue >= 0 ? '+' : ''}${targetValue}%`;
+            targetRelation = targetValue >= 0 ? 'Sell Target' : 'Buy Target';
+        } else { // Dollar amount
+            calculatedTarget = targetValue;
+            typeText = ''; // No percentage display for dollar amount
+            targetRelation = calculatedTarget < enteredPrice ? 'Buy Target' : 'Sell Target';
+        }
+
+        displayHtml = `Target: Entered ${formatCurrency(enteredPrice)} ${typeText} = ${formatCurrency(calculatedTarget)} (${targetRelation})`;
+        if (targetCalculationDisplay) {
+            targetCalculationDisplay.textContent = displayHtml;
+            targetCalculationDisplay.classList.remove('text-red-500', 'opacity-0', 'hidden');
+            targetCalculationDisplay.classList.add('text-gray-500', 'italic', 'opacity-100', 'block');
+        }
+    } else if (targetValueInput.value.length > 0 || currentPriceInput.value.length > 0) {
+        // Show error if user has started typing but input is invalid
+        displayHtml = `Enter valid price and target.`;
+        if (targetCalculationDisplay) {
+            targetCalculationDisplay.textContent = displayHtml;
+            targetCalculationDisplay.classList.remove('text-gray-500', 'italic', 'opacity-0', 'hidden');
+            targetCalculationDisplay.classList.add('text-red-500', 'opacity-100', 'block');
+        }
+    } else {
+        // Hide completely if no input
+        if (targetCalculationDisplay) {
+            targetCalculationDisplay.textContent = '';
+            targetCalculationDisplay.classList.add('opacity-0', 'hidden');
+            targetCalculationDisplay.classList.remove('text-red-500', 'text-gray-500', 'italic', 'block');
+        }
     }
-
-    if (targetTypeDollarBtn) {
-        targetTypeDollarBtn.addEventListener('click', () => {
-            if (!targetTypeDollarBtn.classList.contains('active')) {
-                targetTypeDollarBtn.classList.add('active');
-                targetTypePercentBtn.classList.remove('active');
-                updateTargetCalculationDisplay();
-                checkFormDirtyState(); // Check dirty state when toggle changes
-            }
-        });
-    }
-
-    if (targetTypePercentBtn) {
-        targetTypePercentBtn.addEventListener('click', () => {
-            if (!targetTypePercentBtn.classList.contains('active')) {
-                targetTypePercentBtn.classList.add('active');
-                targetTypeDollarBtn.classList.remove('active');
-                updateTargetCalculationDisplay();
-                checkFormDirtyState(); // Check dirty state when toggle changes
-            }
-        });
-    }
-
-    if (targetTypeDollarBtn) targetTypeDollarBtn.addEventListener('click', () => {
-        targetTypeDollarBtn.classList.add('active');
-        targetTypePercentBtn.classList.remove('active');
-        updateTargetCalculationDisplay();
-    });
-    if (targetTypePercentBtn) targetTypePercentBtn.addEventListener('click', () => {
-        targetTypePercentBtn.classList.add('active');
-        targetTypeDollarBtn.classList.remove('active');
-        updateTargetCalculationDisplay();
-    });
-
-    // Event listeners for the Active Alerts Modal
-    if (targetHitIconBtn) targetHitIconBtn.addEventListener('click', openActiveAlertsModal);
+}
 
     // Correctly handle the close button for the active alerts modal
     if (alertsCloseButton) { // Use the direct reference 'alertsCloseButton'
