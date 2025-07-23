@@ -362,16 +362,25 @@
                 <input type="number" id="currentPrice" step="0.01" placeholder="e.g., 25.50">
 
                 <!-- NEW: Unified Target Value Input and Type Toggle -->
-                <label for="targetValueInput">Target Value:</label>
-                <div class="target-input-group">
-                    <input type="number" id="targetValueInput" step="0.01" placeholder="e.g., 30.00 or -10" class="target-value-input">
-                    <div class="target-type-toggle">
-                        <button type="button" id="targetTypeDollar" class="target-type-btn active" data-type="$">$</button>
-                        <button type="button" id="targetTypePercent" class="target-type-btn" data-type="%">%</button>
-                    </div>
-                </div>
-                <!-- Dynamic calculation display (ghosted) -->
-                <p id="targetCalculationDisplay" class="ghosted-text"></p>
+                <div class="mb-4">
+    <label for="targetValueInput" class="block text-sm font-medium text-gray-700 mb-1">Target Value:</label>
+    <div class="relative flex items-center target-input-container border border-gray-300 rounded-md shadow-sm overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500">
+        <input type="number" id="targetValueInput" placeholder="e.g., 10 or -5"
+            class="flex-grow p-2 sm:text-sm border-none focus:outline-none focus:ring-0">
+
+        <div class="flex bg-gray-100 rounded-md overflow-hidden mr-1">
+            <input type="radio" id="targetTypeDollar" name="targetType" value="dollar" class="hidden" checked>
+            <label for="targetTypeDollar" class="px-3 py-1 text-sm font-medium cursor-pointer transition-all duration-200 ease-in-out select-none"
+                style="border-radius: 0.375rem;">$</label>
+
+            <input type="radio" id="targetTypePercent" name="targetType" value="percent" class="hidden">
+            <label for="targetTypePercent" class="px-3 py-1 text-sm font-medium cursor-pointer transition-all duration-200 ease-in-out select-none"
+                style="border-radius: 0.375rem;">%</label>
+        </div>
+    </div>
+    <p id="targetCalculationDisplay" class="mt-2 text-xs text-gray-500 italic px-2 py-1 bg-gray-50 rounded-md transition-opacity duration-300 opacity-0 hidden">
+        </p>
+</div>
 
                 <label for="dividendAmount">Dividend Amount (per share, annual $):</label>
                 <input type="number" id="dividendAmount" step="0.001" placeholder="e.g., 1.250">

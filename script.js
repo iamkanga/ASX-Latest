@@ -194,8 +194,8 @@ const searchModalActionButtons = document.querySelector('#stockSearchModal .moda
 const searchModalCloseButton = document.querySelector('.search-close-button'); // NEW: Close button for search modal
 // New Target Price Alert elements
 const targetValueInput = document.getElementById('targetValueInput');
-const targetTypeDollarBtn = document.getElementById('targetTypeDollar');
-const targetTypePercentBtn = document.getElementById('targetTypePercent');
+const targetTypeDollar = document.getElementById('targetTypeDollar'); // Reference to the hidden radio input for Dollar
+const targetTypePercent = document.getElementById('targetTypePercent'); // Reference to the hidden radio input for Percent
 const targetCalculationDisplay = document.getElementById('targetCalculationDisplay');
 const activeAlertsModal = document.getElementById('activeAlertsModal');
 const activeAlertsList = document.getElementById('activeAlertsList');
@@ -972,37 +972,7 @@ function addCommentSection(container, title = '', text = '', isCashAssetComment 
     logDebug('Comments: Added new comment section.');
 }
 
-function clearForm() {
-    // Clear the form fields
-    if (shareNameInput) shareNameInput.value = '';
-    if (currentPriceInput) currentPriceInput.value = '';
-    // NEW: Clear and reset target fields
-    if (targetValueInput) targetValueInput.value = '';
-    if (targetTypeDollarBtn) targetTypeDollarBtn.classList.add('active'); // Default to dollar on clear
-    if (targetTypePercentBtn) targetTypePercentBtn.classList.remove('active');
-    if (targetCalculationDisplay) targetCalculationDisplay.textContent = ''; // Clear dynamic display
-    
-    if (dividendAmountInput) dividendAmountInput.value = '';
-    if (frankingCreditsInput) frankingCreditsInput.value = '0'; // Default to 0, not empty
-    if (shareRatingSelect) shareRatingSelect.value = '0';
-    if (shareWatchlistSelect) shareWatchlistSelect.value = getDefaultWatchlistId(currentUserId); // Set default watchlist
-
-    if (commentsFormContainer) { // This now refers to #dynamicCommentsArea
-        commentsFormContainer.innerHTML = ''; // Clears ONLY the dynamically added comments
-    }
-    selectedShareDocId = null;
-    originalShareData = null; // IMPORTANT: Reset original data to prevent auto-save of cancelled edits
-    if (deleteShareBtn) {
-        deleteShareBtn.classList.add('hidden');
-        logDebug('clearForm: deleteShareBtn hidden.');
-    }
-    // Reset shareWatchlistSelect to its default placeholder
-    if (shareWatchlistSelect) {
-        shareWatchlistSelect.disabled = false; // Ensure it's enabled for new share entry
-    }
-    setIconDisabled(saveShareBtn, true); // Save button disabled on clear
-    logDebug('Form: Form fields cleared and selectedShareDocId reset. saveShareBtn disabled.');
-}
+targetCalculationDisplay
 
 /**
  * Populates the 'Assign to Watchlist' dropdown in the share form modal.
@@ -3031,7 +3001,7 @@ async function fetchLivePrices() {
     }
 
     try {
-        const response = await fetch(GOOGLE_APPS_SCRIPT_URL); 
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL);
         if (!response.ok) {
             throw new Error('HTTP error! status: ' + response.status);
         }
@@ -3061,8 +3031,10 @@ async function fetchLivePrices() {
                 livePrice !== null && !isNaN(livePrice)) { // Use fetched livePrice for alert check
                 
                 if (shareData.targetType === '%') {
+                    // For percentage targets, calculate the actual target price based on enteredPrice
                     calculatedTargetPrice = shareData.currentPrice * (1 + shareData.targetValue / 100);
-                    if (shareData.targetValue > 0) { // Positive percentage is a sell target
+                    
+                    if (shareData.targetValue >= 0) { // Positive or zero percentage is a sell target
                         alertType = 'sell';
                         if (livePrice >= calculatedTargetPrice) {
                             isTargetHit = true;
@@ -3073,8 +3045,8 @@ async function fetchLivePrices() {
                             isTargetHit = true;
                         }
                     }
-                } else { // '$' type
-                    calculatedTargetPrice = shareData.targetValue;
+                } else { // '$' type (specific dollar amount)
+                    calculatedTargetPrice = shareData.targetValue; // For dollar target, the targetValue is the calculated price
                     if (calculatedTargetPrice < shareData.currentPrice) { // Dollar target below entered price is a buy target
                         alertType = 'buy';
                         if (livePrice <= calculatedTargetPrice) {

@@ -4658,3 +4658,27 @@ main.container {
         padding: 12px;
     }
 }
+
+/* NEW DESIGN: Integrated Target Input & Calculation Bar Styles */
+
+/* Base styling for the segmented toggle labels */
+.target-input-container label {
+    color: var(--text-color); /* Default text color */
+}
+
+/* Style for the active (checked) segmented toggle label */
+.target-input-container input[type="radio"]:checked + label {
+    background-color: var(--button-bg); /* Use theme's primary button color */
+    color: var(--button-text); /* Use theme's primary button text color */
+}
+
+/* Hover effect for labels */
+.target-input-container label:hover {
+    background-color: var(--button-hover-bg); /* Use theme's button hover color */
+    color: var(--button-text); /* Ensure text stays readable on hover */
+}
+
+/* Transition for the calculation display for smooth fade-in/out */
+#targetCalculationDisplay {
+    transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+}
