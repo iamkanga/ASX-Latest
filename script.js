@@ -3151,7 +3151,7 @@ async function fetchLivePrices() { // <<< CRITICAL: The 'async' keyword MUST be 
             // NEW: Hide splash screen on error
             hideSplashScreen();
         }
-    }
+    } // This is the final closing curly brace for the fetchLivePrices function.
 
     /**
     * Starts the periodic fetching of live prices.
