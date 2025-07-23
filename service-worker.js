@@ -1,7 +1,7 @@
-// Service Worker Version: 1.0.2 (Updated for opaque response handling)
+// Service Worker Version: 1.0.3 (Minor update for clarity on image paths)
 
 // Cache name for the current version of the service worker
-const CACHE_NAME = 'share-watchlist-v1.0.2'; // Version incremented for new logic
+const CACHE_NAME = 'share-watchlist-v1.0.3'; // Version incremented for potential path fix
 
 // List of essential application assets to precache
 const CACHED_ASSETS = [
@@ -10,13 +10,15 @@ const CACHED_ASSETS = [
     './script.js',
     './style.css',
     './manifest.json',
-    './favicn.jpg', // Ensure this path is correct if favicon is named differently
-    './Kangaicon.jpg', // Ensure this path is correct if Kangaicon is named differently
+    './favicn.jpg', // <<--- VERIFY THIS PATH AND FILENAME (e.g., Favicn.png vs favicn.jpg)
+    './Kangaicon.jpg', // <<--- VERIFY THIS PATH AND FILENAME
     './asx_codes.csv', // Added for local CSV data
     'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap',
     'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css',
-    // Firebase SDKs are loaded as modules, so they might not be directly in the cache list
-    // if not explicitly requested by the main app. However, if they are, it's good to list them.
+    // Firebase SDKs are loaded as modules, and while generally cacheable,
+    // they can sometimes cause issues with addAll if the CDN has specific headers.
+    // If addAll continues to fail, consider temporarily removing these Firebase URLs
+    // from CACHED_ASSETS to isolate the problem.
     'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js',
     'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js',
     'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js'
@@ -29,10 +31,13 @@ self.addEventListener('install', (event) => {
         caches.open(CACHE_NAME)
             .then((cache) => {
                 console.log('Service Worker: Cache opened, adding assets...');
+                // addAll is atomic; if any request fails, the entire operation fails.
                 return cache.addAll(CACHED_ASSETS);
             })
             .catch((e) => {
-                console.error('Service Worker: Failed to cache assets during install:', e);
+                console.error('Service Worker: Failed to cache assets during install: ' + e.message, e);
+                // Log which specific request failed if possible (though addAll doesn't easily expose this)
+                // You might need to check the Network tab in dev tools during install to see which asset failed.
             })
     );
 });
@@ -103,6 +108,7 @@ self.addEventListener('fetch', (event) => {
                 }).catch(error => {
                     console.error(`Service Worker: Network fetch failed for ${event.request.url}.`, error);
                     // If network fails, try to return a cached response as a fallback
+                    // You might want to serve a custom offline page here.
                     return caches.match(event.request);
                 });
 
