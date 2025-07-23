@@ -3922,9 +3922,14 @@ async function saveWatchlistChanges(isSilent = false, newName, watchlistId = nul
     }
 
     // Check for duplicate name (case-insensitive, excluding current watchlist if editing)
-    const isDuplicate = userWatchlists.some(w => 
-        w.name.toLowerCase() === newName.toLowerCase() && w.id !== watchlistId
-    );
+    const isDuplicate = userWatchlists.some(w => {
+        const isMatch = w.name.toLowerCase() === newName.toLowerCase() && w.id !== watchlistId;
+        if (isMatch && DEBUG_MODE) {
+            logDebug('Save Watchlist: Duplicate name detected against existing watchlist: ' + w.name + ' (ID: ' + w.id + ')');
+        }
+        return isMatch;
+    });
+
     if (isDuplicate) {
         if (!isSilent) showCustomAlert('A watchlist with this name already exists!');
         console.warn('Save Watchlist: Duplicate watchlist name. Skipping save.');
@@ -3949,9 +3954,20 @@ async function saveWatchlistChanges(isSilent = false, newName, watchlistId = nul
             // If new watchlist added, set it as current selection and save preference
             currentSelectedWatchlistIds = [newDocRef.id];
             await saveLastSelectedWatchlistIds(currentSelectedWatchlistIds);
+
+            // Explicitly set the watchlist select value and re-render after adding a new watchlist
+            // This ensures the UI immediately reflects the newly created watchlist.
+            renderWatchlistSelect(); // Re-populate and select the new watchlist in the dropdown
+            renderWatchlist(); // Re-render the main content to show the new watchlist's shares
         }
         
-        await loadUserWatchlistsAndSettings(); // Re-load to update UI and internal state
+        // Only re-load user watchlists and settings if it's an edit, or if the new watchlist
+        // setting needs to be fully re-evaluated (though the explicit render calls above should handle it).
+        // For adding a new watchlist, the explicit renderWatchlistSelect/renderWatchlist calls are more direct.
+        if (watchlistId) { // Only call loadUserWatchlistsAndSettings if it was an edit operation
+             await loadUserWatchlistsAndSettings(); // Re-load to update UI and internal state for edits
+        }
+
         if (!isSilent) closeModals(); // Only close if not a silent save
         originalWatchlistData = getCurrentWatchlistFormData(watchlistId === null); // Update original data after successful save
         checkWatchlistFormDirtyState(watchlistId === null); // Disable save button after saving
