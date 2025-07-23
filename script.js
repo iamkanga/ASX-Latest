@@ -2703,30 +2703,32 @@ async function fetchLivePrices() {
             const high52 = parseFloat(item.High52);
             const low52 = parseFloat(item.Low52);
 
-            if (asxCode && !isNaN(livePrice)) {
-                // Find the corresponding share in allSharesData to get its targetPrice
-                const shareData = allSharesData.find(s => s.shareName.toUpperCase() === asxCode);
-                // Ensure targetPrice is parsed as a number, handling null/undefined/NaN
-                const targetPrice = shareData && shareData.targetPrice !== null && !isNaN(parseFloat(shareData.targetPrice))
-                    ? parseFloat(shareData.targetPrice)
-                    : undefined;
+            if (asxCode && livePrice !== null && !isNaN(livePrice)) {
+    // Find the corresponding share in allSharesData to get its targetPrice
+    const shareData = allSharesData.find(s => s.shareName.toUpperCase() === asxCode);
+    // Ensure targetPrice is parsed as a number, handling null/undefined/NaN
+    const targetPrice = shareData && shareData.targetPrice !== null && !isNaN(parseFloat(shareData.targetPrice))
+        ? parseFloat(shareData.targetPrice)
+        : undefined;
 
-                const isTargetHit = (targetPrice !== undefined && livePrice <= targetPrice);
+    const isTargetHit = (targetPrice !== undefined && livePrice <= targetPrice);
 
-                newLivePrices[asxCode] = {
-                    live: livePrice,
-                    prevClose: isNaN(prevClose) ? null : prevClose,
-                    PE: isNaN(pe) ? null : pe,
-                    High52: isNaN(high52) ? null : high52,
-                    Low52: isNaN(low52) ? null : low52,
-                    targetHit: isTargetHit,
-                    // Store the fetched live and prevClose prices for use when market is closed
-                    lastLivePrice: livePrice,
-                    lastPrevClose: isNaN(prevClose) ? null : prevClose
-                };
-            } else {
-                console.warn('Live Price: Skipping item due to missing ASX code or invalid price:', item);
-            }
+    newLivePrices[asxCode] = {
+        live: livePrice,
+        prevClose: isNaN(prevClose) ? null : prevClose,
+        PE: isNaN(pe) ? null : pe,
+        High52: isNaN(high52) ? null : high52,
+        Low52: isNaN(low52) ? null : low52,
+        targetHit: isTargetHit,
+        // Store the fetched live and prevClose prices for use when market is closed
+        lastLivePrice: livePrice,
+        lastPrevClose: isNaN(prevClose) ? null : prevClose
+    };
+} else {
+    if (DEBUG_MODE) {
+        console.warn('Live Price: Skipping item due to missing ASX code or invalid price:', item);
+    }
+}
         });
         livePrices = newLivePrices;
         console.log('Live Price: Live prices updated:', livePrices); 
