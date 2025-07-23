@@ -4477,6 +4477,19 @@ async function initializeAppLogic() {
         });
     }
 
+    // NEW: Add event listeners for target type radio buttons
+    if (targetTypeDollar) {
+        targetTypeDollar.addEventListener('change', () => {
+            updateTargetCalculationDisplay();
+            checkFormDirtyState();
+        });
+    }
+    if (targetTypePercent) {
+        targetTypePercent.addEventListener('change', () => {
+            updateTargetCalculationDisplay();
+            checkFormDirtyState();
+        });
+    }
     
     // NEW: Autocomplete Search Input Listeners for Stock Search Modal (Consolidated & Corrected)
     if (asxSearchInput) {
@@ -4716,828 +4729,68 @@ async function initializeAppLogic() {
         });
     }
 
-    function getCurrentFormData() {
-    const comments = [];
-    if (commentsFormContainer) { // This now refers to #dynamicCommentsArea
-        commentsFormContainer.querySelectorAll('.comment-section').forEach(section => {
-            const titleInput = section.querySelector('.comment-title-input');
-            const textInput = section.querySelector('.comment-text-input');
-            const title = titleInput ? titleInput.value.trim() : '';
-            const text = textInput ? textInput.value.trim() : '';
-            if (title || text) {
-                comments.push({ title: title, text: text });
-            }
-        });
+    // Global click listener to close modals/context menu if clicked outside
+    // Introduce a flag to temporarily disable this listener after a modal is opened.
+    let allowGlobalModalClose = true; // Global flag to control this listener
+
+    // Helper function to temporarily disable global click listener
+    function temporarilyDisableGlobalClose() {
+        allowGlobalModalClose = false;
+        setTimeout(() => {
+            allowGlobalModalClose = true;
+        }, 100); // Small delay to allow modal open animation/events to settle
     }
 
-    return {
-        shareName: shareNameInput.value.trim().toUpperCase(),
-        currentPrice: parseFloat(currentPriceInput.value),
-        // NEW: Capture targetValue and targetType, reading from the 'checked' property of the radio inputs
-        targetValue: parseFloat(targetValueInput.value) || null, // Capture value
-        targetType: targetTypePercent.checked ? '%' : '$', // Correctly capture type from CHECKED state of radio
-        dividendAmount: parseFloat(dividendAmountInput.value),
-        frankingCredits: parseFloat(frankingCreditsInput.value),
-        // Get the selected star rating as a number
-        starRating: shareRatingSelect ? parseInt(shareRatingSelect.value) : 0,
-        comments: comments,
-        // Include the selected watchlist ID from the new dropdown
-        watchlistId: shareWatchlistSelect ? shareWatchlistSelect.value : null
+    // Override showModal to include the temporary disable
+    const originalShowModal = showModal;
+    showModal = function(modalElement) {
+        originalShowModal(modalElement);
+        temporarilyDisableGlobalClose();
     };
-}
 
-    // NEW: Target hit icon button listener to open active alerts modal
-    if (targetHitIconBtn) {
-        targetHitIconBtn.addEventListener('click', () => {
-            logDebug('Target Alert: Icon button clicked. Opening active alerts modal.');
-            openActiveAlertsModal(); // Call the function to open the active alerts modal
-        });
-    }
-
-    // Logout Button
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', async () => {
-            logDebug('Auth: Logout Button Clicked (No Confirmation).');
-            const currentAuth = window.firebaseAuth;
-            if (!currentAuth || !window.authFunctions) {
-                console.warn('Auth: Auth service not ready or functions not loaded. Cannot process logout.');
-                showCustomAlert('Authentication service not ready. Please try again in a moment.');
-                return;
-            }
-            try {
-                await window.authFunctions.signOut(currentAuth);
-                showCustomAlert('Logged out successfully!', 1500);
-                logDebug('Auth: User successfully logged out.');
-                toggleAppSidebar(false);
-
-                // NEW: Explicitly ensure splash screen is visible for re-authentication
-                if (splashScreen) {
-                    splashScreen.style.display = 'flex'; // Ensure splash screen is visible
-                    splashScreen.classList.remove('hidden'); // Ensure it's not hidden
-                    document.body.style.overflow = 'hidden'; // Re-apply overflow hidden
-                    if (splashKangarooIcon) {
-                        splashKangarooIcon.classList.remove('pulsing'); // Stop animation if signed out
-                    }
-                    if (splashSignInBtn) {
-                        splashSignInBtn.disabled = false; // Enable sign-in button
-                        splashSignInBtn.textContent = 'Google Sign In'; // Reset button text
-                    }
-                    // Hide main app content
-                    if (mainContainer) {
-                        mainContainer.classList.add('app-hidden');
-                    }
-                    if (appHeader) {
-                        appHeader.classList.add('app-hidden');
-                    }
-                    logDebug('Splash Screen: User signed out, splash screen remains visible for sign-in.');
-                } else {
-                    console.warn('Splash Screen: User signed out, but splash screen element not found. App content might be visible.');
-                }
-                // NEW: Clear dismissed alerts session on logout for a fresh start on next login
-                dismissedAlertsSession.clear();
-
-            }
-            catch (error) {
-                console.error('Auth: Logout failed:', error);
-                showCustomAlert('Logout failed: ' + error.message);
-            }
-        });
-    }
-
-    // NEW: Add event listeners for target type radio buttons
-    if (targetTypeDollar) {
-        targetTypeDollar.addEventListener('change', () => {
-            updateTargetCalculationDisplay();
-            checkFormDirtyState();
-        });
-    }
-    if (targetTypePercent) {
-        targetTypePercent.addEventListener('change', () => {
-            updateTargetCalculationDisplay();
-            checkFormDirtyState();
-        });
-    }
-
-// Delete All User Data Button
-if (deleteAllUserDataBtn) {
-    deleteAllUserDataBtn.addEventListener('click', () => {
-        logDebug('UI: Delete All User Data button clicked.');
-        deleteAllUserData();
-        toggleAppSidebar(false); // Close sidebar after action
-    });
-}
-
-    // Watchlist Select Change Listener
-    if (watchlistSelect) {
-        watchlistSelect.addEventListener('change', async (event) => {
-            logDebug('Watchlist Select: Change event fired. New value: ' + event.target.value);
-            currentSelectedWatchlistIds = [event.target.value];
-            await saveLastSelectedWatchlistIds(currentSelectedWatchlistIds);
-            // Just render the watchlist. The listeners for shares/cash are already active.
-            renderWatchlist();
-        });
-    }
-
-    // Sort Select Change Listener
-if (sortSelect) {
-    sortSelect.addEventListener('change', async (event) => {
-        logDebug('Sort Select: Change event fired. New value: ' + event.target.value);
-        currentSortOrder = sortSelect.value;
-        // Determine whether to sort shares or cash assets
-        if (currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
-            renderCashCategories(); // Re-render cash categories with new sort order
-        } else {
-            sortShares(); // Sorts allSharesData and calls renderWatchlist
+    window.addEventListener('click', (event) => {
+        if (!allowGlobalModalClose) {
+            // logDebug('Global Click: Global modal close suppressed temporarily.');
+            return; // Do nothing if global close is temporarily disabled
         }
-        await saveSortOrderPreference(currentSortOrder);
 
-        // NEW: Scroll to the top of the page after sorting/rendering
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        logDebug('Sort: Scrolled to top after sorting.');
-    });
-}
+        // Only close these specific modals if clicked directly on their backdrop
+        // The explicit check `event.target === modal` ensures the click is on the backdrop itself, not an element inside.
+        if (event.target === shareDetailModal || event.target === dividendCalculatorModal ||
+            event.target === shareFormSection || event.target === customDialogModal ||
+            event.target === calculatorModal || event.target === addWatchlistModal ||
+            event.target === manageWatchlistModal ||
+            event.target === cashAssetFormModal || event.target === cashAssetDetailModal ||
+            event.target === stockSearchModal) {
+            closeModals();
+        }
 
-    // New Share Button (from sidebar) - Now contextual, handled by updateSidebarAddButtonContext
-    // The event listener will be set dynamically by updateSidebarAddButtonContext()
-    // No direct event listener here anymore.
-
-    // NEW: Add New Cash Asset Button (from sidebar)
-    if (addCashAssetSidebarBtn) {
-        addCashAssetSidebarBtn.addEventListener('click', () => {
-            logDebug('UI: Add New Cash Asset button (sidebar) clicked.');
-            addCashCategoryUI(); // This function now directly opens the modal for adding a new cash asset
-            toggleAppSidebar(false);
-        });
-    }
-
-    // Add Share Header Button (from header) - now contextual, handled by updateAddHeaderButton
-    // Its click listener is set dynamically in updateAddHeaderButton()
-
-    // Event listener for shareNameInput to toggle saveShareBtn
-    if (shareNameInput && saveShareBtn) {
-        shareNameInput.addEventListener('input', () => {
-            checkFormDirtyState(); 
-        });
-    }
-
-    // Save Share Button
-    if (saveShareBtn) {
-        saveShareBtn.addEventListener('click', async () => {
-            logDebug('Share Form: Save Share button clicked.');
-            // Call the shared save function, not silent
-            saveShareData(false);
-        });
-    }
-
-    // Delete Share Button
-    if (deleteShareBtn) {
-        deleteShareBtn.addEventListener('click', async () => {
-            logDebug('Share Form: Delete Share button clicked (Direct Delete).');
-            if (deleteShareBtn.classList.contains('is-disabled-icon')) {
-                console.warn('Delete Share: Delete button was disabled, preventing action.');
-                return;
-            }
-            if (selectedShareDocId) {
-                try {
-                    const shareDocRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/shares', selectedShareDocId);
-                    await window.firestore.deleteDoc(shareDocRef);
-                    showCustomAlert('Share deleted successfully!', 1500);
-                    logDebug('Firestore: Share (ID: ' + selectedShareDocId + ') deleted.');
-                    closeModals();
-                } catch (error) {
-                    console.error('Firestore: Error deleting share:', error);
-                    showCustomAlert('Error deleting share: ' + error.message);
-                }
-            } else { showCustomAlert('No share selected for deletion.'); }
-        });
-    }
-
-    // Edit Share From Detail Button
-    if (editShareFromDetailBtn) {
-        editShareFromDetailBtn.addEventListener('click', () => {
-            logDebug('Share Details: Edit Share button clicked.');
-            if (editShareFromDetailBtn.classList.contains('is-disabled-icon')) {
-                console.warn('Edit Share From Detail: Edit button was disabled, preventing action.');
-                return;
-            }
-            hideModal(shareDetailModal);
-            showEditFormForSelectedShare();
-        });
-    }
-
-    // Delete Share From Detail Button
-    if (deleteShareFromDetailBtn) {
-        deleteShareFromDetailBtn.addEventListener('click', async () => {
-            logDebug('Share Details: Delete Share button clicked (Direct Delete).');
-            if (deleteShareFromDetailBtn.classList.contains('is-disabled-icon')) {
-                console.warn('Delete Share From Detail: Delete button was disabled, preventing action.');
-                return;
-            }
-            if (selectedShareDocId) {
-                try {
-                    const shareDocRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/shares', selectedShareDocId);
-                    await window.firestore.deleteDoc(shareDocRef);
-                    showCustomAlert('Share deleted successfully!', 1500);
-                    logDebug('Firestore: Share (ID: ' + selectedShareDocId + ') deleted.');
-                    closeModals();
-                } catch (error) {
-                    console.error('Firestore: Error deleting share:', error);
-                    showCustomAlert('Error deleting share: ' + error.message);
-                }
-            } else { showCustomAlert('No share selected for deletion.'); }
-        });
-    }
-
-    // Context Menu Edit Share Button
-    if (contextEditShareBtn) {
-        contextEditShareBtn.addEventListener('click', () => {
-            logDebug('Context Menu: Edit Share button clicked.');
-            if (currentContextMenuShareId) {
-                const shareIdToEdit = currentContextMenuShareId;
-                hideContextMenu();
-                showEditFormForSelectedShare(shareIdToEdit);
-            } else {
-                console.warn('Context Menu: No share ID found for editing.');
-            }
-        });
-    }
-
-    // Context Menu Delete Share Button
-    if (contextDeleteShareBtn) {
-        contextDeleteShareBtn.addEventListener('click', async () => {
-            logDebug('Context Menu: Delete Share button clicked (Direct Delete).');
-            if (currentContextMenuShareId) {
-                const shareToDeleteId = currentContextMenuShareId;
-                hideContextMenu();
-                try {
-                    const shareDocRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/shares', shareToDeleteId);
-                    await window.firestore.deleteDoc(shareDocRef);
-                    showCustomAlert('Share deleted successfully!', 1500);
-                    logDebug('Firestore: Share (ID: ' + shareToDeleteId + ') deleted.');
-                } catch (error) {
-                    console.error('Firestore: Error deleting share:', error);
-                    showCustomAlert('Error deleting share: ' + error.message);
-                }
-            } else {
-                showCustomAlert('No share selected for deletion from context menu.');
-                console.warn('Context Menu: No share ID found for deletion.');
-            }
-        });
-    }
-
-    // Add Watchlist Button
-    if (addWatchlistBtn) {
-        addWatchlistBtn.addEventListener('click', () => {
-            logDebug('UI: Add Watchlist button clicked.');
-            if (newWatchlistNameInput) newWatchlistNameInput.value = '';
-            setIconDisabled(saveWatchlistBtn, true); // Disable save button initially
-            logDebug('Add Watchlist: saveWatchlistBtn disabled initially.');
-            originalWatchlistData = getCurrentWatchlistFormData(true); // Store initial state for dirty check
-            showModal(addWatchlistModal);
-            newWatchlistNameInput.focus();
-            toggleAppSidebar(false);
-            checkWatchlistFormDirtyState(true); // Check dirty state immediately after opening
-        });
-    }
-
-    // Event listener for newWatchlistNameInput to toggle saveWatchlistBtn (for Add Watchlist Modal)
-    if (newWatchlistNameInput && saveWatchlistBtn) {
-        newWatchlistNameInput.addEventListener('input', () => {
-            checkWatchlistFormDirtyState(true);
-        });
-    }
-
-    // Save Watchlist Button (for Add Watchlist Modal)
-    if (saveWatchlistBtn) {
-        saveWatchlistBtn.addEventListener('click', async () => {
-            logDebug('Watchlist Form: Save Watchlist button clicked.');
-            if (saveWatchlistBtn.classList.contains('is-disabled-icon')) {
-                showCustomAlert('Please enter a watchlist name.');
-                console.warn('Save Watchlist: Save button was disabled, preventing action.');
-                return;
-            }
-            const watchlistName = newWatchlistNameInput.value.trim();
-            await saveWatchlistChanges(false, watchlistName); // false indicates not silent
-        });
-    }
-
-    // Edit Watchlist Button
-    if (editWatchlistBtn) {
-        editWatchlistBtn.addEventListener('click', () => {
-            logDebug('UI: Edit Watchlist button clicked.');
-            let watchlistToEditId = watchlistSelect.value;
-
-            // Prevent editing "All Shares" or "Cash & Assets"
-            if (watchlistToEditId === ALL_SHARES_ID || watchlistToEditId === CASH_BANK_WATCHLIST_ID) {
-                showCustomAlert('Cannot edit this special watchlist.', 2000);
-                return;
-            }
-
-            if (!watchlistToEditId || !userWatchlists.some(w => w.id === watchlistToEditId)) {
-                showCustomAlert('Please select a watchlist to edit.');
-                return;
-            }
-            const selectedWatchlistObj = userWatchlists.find(w => w.id === watchlistToEditId);
-            const watchlistToEditName = selectedWatchlistObj ? selectedWatchlistObj.name : '';
-
-            logDebug('Edit Watchlist Button Click: Watchlist to edit ID: ' + watchlistToEditId + ', Name: ' + watchlistToEditName);
-
-            editWatchlistNameInput.value = watchlistToEditName;
-            // Keep at least one real watchlist + Cash & Assets
-            const actualWatchlists = userWatchlists.filter(wl => wl.id !== ALL_SHARES_ID && wl.id !== CASH_BANK_WATCHLIST_ID);
-            const isDisabledDelete = actualWatchlists.length <= 1; 
-            setIconDisabled(deleteWatchlistInModalBtn, isDisabledDelete); 
-            logDebug('Edit Watchlist: deleteWatchlistInModalBtn disabled: ' + isDisabledDelete);
-            setIconDisabled(saveWatchlistNameBtn, true); // Disable save button initially
-            logDebug('Edit Watchlist: saveWatchlistNameBtn disabled initially.');
-            originalWatchlistData = getCurrentWatchlistFormData(false); // Store initial state for dirty check
-            showModal(manageWatchlistModal);
-            editWatchlistNameInput.focus();
-            toggleAppSidebar(false);
-            checkWatchlistFormDirtyState(false); // Check dirty state immediately after opening
-        });
-    }
-
-    // Event listener for editWatchlistNameInput to toggle saveWatchlistNameBtn
-    if (editWatchlistNameInput && saveWatchlistNameBtn) {
-        editWatchlistNameInput.addEventListener('input', () => {
-            checkWatchlistFormDirtyState(false);
-        });
-    }
-
-    // Save Watchlist Name Button (for Manage Watchlist Modal)
-    if (saveWatchlistNameBtn) {
-        saveWatchlistNameBtn.addEventListener('click', async () => {
-            logDebug('Manage Watchlist Form: Save Watchlist Name button clicked.');
-            if (saveWatchlistNameBtn.classList.contains('is-disabled-icon')) {
-                showCustomAlert('Watchlist name cannot be empty or unchanged.');
-                console.warn('Save Watchlist Name: Save button was disabled, preventing action.');
-                return;
-            }
-            const newName = editWatchlistNameInput.value.trim();
-            const watchlistToEditId = watchlistSelect.value;
-            await saveWatchlistChanges(false, newName, watchlistToEditId); // false indicates not silent
-        });
-    }
-
-    // Delete Watchlist In Modal Button (for Manage Watchlist Modal)
-    if (deleteWatchlistInModalBtn) {
-        deleteWatchlistInModalBtn.addEventListener('click', async () => {
-            logDebug('Manage Watchlist Form: Delete Watchlist button clicked (Direct Delete).');
-            if (deleteWatchlistInModalBtn.classList.contains('is-disabled-icon')) {
-                console.warn('Delete Watchlist In Modal: Delete button was disabled, preventing action.');
-                return;
-            }
-
-            let watchlistToDeleteId = watchlistSelect.value;
-
-            // Prevent deleting "All Shares" or "Cash & Assets"
-            if (watchlistToDeleteId === ALL_SHARES_ID || watchlistToDeleteId === CASH_BANK_WATCHLIST_ID) {
-                showCustomAlert('Cannot delete this special watchlist.', 2000);
-                return;
-            }
-
-            // Ensure at least one actual watchlist remains (excluding Cash & Assets)
-            const actualWatchlists = userWatchlists.filter(wl => wl.id !== ALL_SHARES_ID && wl.id !== CASH_BANK_WATCHLIST_ID);
-            if (actualWatchlists.length <= 1) {
-                showCustomAlert('Cannot delete the last stock watchlist. Please create another stock watchlist first.', 3000);
-                return;
-            }
-
-            const watchlistToDeleteName = userWatchlists.find(w => w.id === watchlistToDeleteId)?.name || 'Unknown Watchlist';
-            
-            try {
-                const sharesColRef = window.firestore.collection(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/shares');
-                const q = window.firestore.query(sharesColRef, window.firestore.where('watchlistId', '==', watchlistToDeleteId));
-                const querySnapshot = await window.firestore.getDocs(q);
-
-                const batch = window.firestore.writeBatch(db);
-                querySnapshot.forEach(doc => {
-                    const shareRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/shares', doc.id);
-                    batch.delete(shareRef);
-                });
-                await batch.commit();
-                logDebug('Firestore: Deleted ' + querySnapshot.docs.length + ' shares from watchlist \'' + watchlistToDeleteName + '\'.');
-
-                const watchlistDocRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/watchlists', watchlistToDeleteId);
-                await window.firestore.deleteDoc(watchlistDocRef);
-                logDebug('Firestore: Watchlist \'' + watchlistToDeleteName + '\' (ID: ' + watchlistToDeleteId + ') deleted.');
-
-                showCustomAlert('Watchlist \'' + watchlistToDeleteName + '\' and its shares deleted successfully!', 2000);
-                closeModals();
-
-                // After deleting a watchlist, switch the current view to "All Shares"
-                currentSelectedWatchlistIds = [ALL_SHARES_ID];
-                await saveLastSelectedWatchlistIds(currentSelectedWatchlistIds); // Save this preference
-
-                await loadUserWatchlistsAndSettings(); // This will re-render everything correctly
-            } catch (error) {
-                console.error('Firestore: Error deleting watchlist:', error);
-                showCustomAlert('Error deleting watchlist: ' + error.message);
-            }
-        });
-    }
-
-    // Dividend Calculator Button
-    if (dividendCalcBtn) {
-        dividendCalcBtn.addEventListener('click', () => {
-            logDebug('UI: Dividend button clicked. Attempting to open modal.');
-            // Corrected references to use unique IDs for dividend calculator inputs
-            if (calcDividendAmountInput) calcDividendAmountInput.value = ''; 
-            if (calcCurrentPriceInput) calcCurrentPriceInput.value = ''; 
-            if (calcFrankingCreditsInput) calcFrankingCreditsInput.value = ''; 
-            if (calcUnfrankedYieldSpan) calcUnfrankedYieldSpan.textContent = '-'; 
-            if (calcFrankedYieldSpan) calcFrankedYieldSpan.textContent = '-'; 
-            if (calcEstimatedDividend) calcEstimatedDividend.textContent = '-'; 
-            if (investmentValueSelect) investmentValueSelect.value = '10000'; // Reset dropdown
-            showModal(dividendCalculatorModal);
-            if (calcCurrentPriceInput) calcCurrentPriceInput.focus(); 
-            logDebug('UI: Dividend Calculator modal opened.');
-            toggleAppSidebar(false);
-        });
-    }
-
-    // Dividend Calculator Input Listeners
-    [calcDividendAmountInput, calcCurrentPriceInput, calcFrankingCreditsInput, investmentValueSelect].forEach(input => {
-        if (input) {
-            input.addEventListener('input', updateDividendCalculations);
-            input.addEventListener('change', updateDividendCalculations);
+        if (contextMenuOpen && shareContextMenu && !shareContextMenu.contains(event.target)) {
+            hideContextMenu();
         }
     });
 
-    function updateDividendCalculations() {
-        const currentPrice = parseFloat(calcCurrentPriceInput.value);
-        const dividendAmount = parseFloat(calcDividendAmountInput.value);
-        const frankingCredits = parseFloat(calcFrankingCreditsInput.value);
-        const investmentValue = parseFloat(investmentValueSelect.value);
-        
-        const unfrankedYield = calculateUnfrankedYield(dividendAmount, currentPrice);
-        const frankedYield = calculateFrankedYield(dividendAmount, currentPrice, frankingCredits);
-        const estimatedDividend = estimateDividendIncome(investmentValue, dividendAmount, currentPrice);
-        
-        calcUnfrankedYieldSpan.textContent = unfrankedYield !== null ? unfrankedYield.toFixed(2) + '%' : '-';
-        calcFrankedYieldSpan.textContent = frankedYield !== null ? frankedYield.toFixed(2) + '%' : '-';
-        calcEstimatedDividend.textContent = estimatedDividend !== null ? '$' + estimatedDividend.toFixed(2) : '-';
-    }
-
-    // Standard Calculator Button
-    if (standardCalcBtn) {
-        standardCalcBtn.addEventListener('click', () => {
-            logDebug('UI: Standard Calculator button clicked.');
-            resetCalculator();
-            showModal(calculatorModal);
-            logDebug('UI: Standard Calculator modal opened.');
-            toggleAppSidebar(false);
-        });
-    }
-
-    // Calculator Buttons
-    if (calculatorButtons) {
-        calculatorButtons.addEventListener('click', (event) => {
-            const target = event.target;
-            if (!target.classList.contains('calc-btn') || target.classList.contains('is-disabled-icon')) { return; }
-            const value = target.dataset.value;
-            const action = target.dataset.action;
-            if (value) { appendNumber(value); }
-            else if (action) { handleAction(action); }
-        });
-    }
-
-    function appendNumber(num) {
-        if (resultDisplayed) { currentCalculatorInput = num; resultDisplayed = false; }
-        else { if (num === '.' && currentCalculatorInput.includes('.')) return; currentCalculatorInput += num; }
-        updateCalculatorDisplay();
-    }
-
-    function handleAction(action) {
-        if (action === 'clear') { resetCalculator(); return; }
-        if (action === 'percentage') { 
-            if (currentCalculatorInput === '' && previousCalculatorInput === '') return;
-            let val;
-            if (currentCalculatorInput !== '') {
-                val = parseFloat(currentCalculatorInput);
-            } else if (previousCalculatorInput !== '') {
-                val = parseFloat(previousCalculatorInput);
-            } else {
-                return;
-            }
-
-            if (isNaN(val)) return;
-
-            if (operator && previousCalculatorInput !== '') {
-                const prevNum = parseFloat(previousCalculatorInput);
-                if (isNaN(prevNum)) return;
-                currentCalculatorInput = (prevNum * (val / 100)).toString();
-            } else {
-                currentCalculatorInput = (val / 100).toString();
-            }
-            resultDisplayed = false;
-            updateCalculatorDisplay();
-            return; 
-        }
-        if (['add', 'subtract', 'multiply', 'divide'].includes(action)) {
-            if (currentCalculatorInput === '' && previousCalculatorInput === '') return;
-            if (currentCalculatorInput !== '') {
-                if (previousCalculatorInput !== '') { calculateResult(); previousCalculatorInput = calculatorResult.textContent; }
-                else { previousCalculatorInput = currentCalculatorInput; }
-            }
-            operator = action; currentCalculatorInput = ''; resultDisplayed = false; updateCalculatorDisplay(); return;
-        }
-        if (action === 'calculate') {
-            if (previousCalculatorInput === '' || currentCalculatorInput === '' || operator === null) { return; }
-            calculateResult(); operator = null; resultDisplayed = true;
-        }
-    }
-
-    // Theme Toggle Button (Random Selection)
-    if (themeToggleBtn) {
-        themeToggleBtn.addEventListener('click', () => {
-            logDebug('Theme Debug: Random Theme Toggle button clicked.');
-            if (CUSTOM_THEMES.length > 0) {
-                let randomIndex;
-                let newThemeName;
-                do {
-                    randomIndex = Math.floor(Math.random() * CUSTOM_THEMES.length);
-                    newThemeName = CUSTOM_THEMES[randomIndex];
-                } while (newThemeName === currentActiveTheme && CUSTOM_THEMES.length > 1); // Ensure a different theme if possible
-
-                logDebug('Theme Debug: Selected random nextThemeName: ' + newThemeName);
-                applyTheme(newThemeName);
-            } else {
-                logDebug('Theme Debug: No custom themes defined. Defaulting to system-default.');
-                applyTheme('system-default'); // Fallback if no custom themes defined
-            }
-        });
-    }
-
-    // Color Theme Select Dropdown
-    if (colorThemeSelect) {
-        colorThemeSelect.addEventListener('change', (event) => {
-            logDebug('Theme: Color theme select changed to: ' + event.target.value);
-            const selectedTheme = event.target.value;
-            // If "No Custom Theme" is selected, apply system-default
-            if (selectedTheme === 'none') {
-                applyTheme('system-default');
-            } else {
-                applyTheme(selectedTheme);
-            }
-        });
-    }
-
-    // Revert to Default Theme Button (Toggle Light/Dark)
-    if (revertToDefaultThemeBtn) {
-        revertToDefaultThemeBtn.addEventListener('click', async (event) => {
-            logDebug('Theme Debug: Revert to Default Theme button clicked (now toggling Light/Dark).');
-            event.preventDefault(); // Prevent default button behavior
-
-            const body = document.body;
-            let targetTheme;
-
-            // Remove all custom theme classes and the data-theme attribute
-            body.className = body.className.split(' ').filter(c => !c.startsWith('theme-')).join(' ');
-            body.removeAttribute('data-theme');
-            localStorage.removeItem('selectedTheme'); // Clear custom theme preference
-
-            // Determine target theme based on current state (only considering light/dark classes)
-            if (currentActiveTheme === 'light') {
-                targetTheme = 'dark';
-                body.classList.add('dark-theme');
-                logDebug('Theme: Toggled from Light to Dark theme.');
-            } else if (currentActiveTheme === 'dark') {
-                targetTheme = 'light';
-                body.classList.remove('dark-theme');
-                logDebug('Theme: Toggled from Dark to Light theme.');
-            } else { // This handles the very first click, or when currentActiveTheme is 'system-default' or any custom theme
-                const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                if (systemPrefersDark) {
-                    targetTheme = 'light';
-                    body.classList.remove('dark-theme');
-                    logDebug('Theme: First click from system-default/custom: Toggled from System Dark to Light.');
-                } else {
-                    targetTheme = 'dark';
-                    body.classList.add('dark-theme');
-                    logDebug('Theme: First click from system-default/custom: Toggled from System Light to Dark.');
-                }
-            }
-            
-            currentActiveTheme = targetTheme; // Update global tracking variable
-            localStorage.setItem('theme', targetTheme); // Save preference for light/dark
-            
+    // NEW: Show Last Live Price Toggle Listener
+    if (showLastLivePriceToggle) {
+        showLastLivePriceToggle.addEventListener('change', async (event) => {
+            showLastLivePriceOnClosedMarket = event.target.checked;
+            logDebug('Toggle: "Show Last Live Price" toggled to: ' + showLastLivePriceOnClosedMarket);
             // Save preference to Firestore
             if (currentUserId && db && window.firestore) {
                 const userProfileDocRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/profile/settings');
                 try {
-                    await window.firestore.setDoc(userProfileDocRef, { lastTheme: targetTheme }, { merge: true });
-                    logDebug('Theme: Saved explicit Light/Dark theme preference to Firestore: ' + targetTheme);
-                } catch (error) { // Added missing catch block
-                    console.error('Theme: Error saving explicit Light/Dark theme preference to Firestore:', error);
+                    await window.firestore.setDoc(userProfileDocRef, { showLastLivePriceOnClosedMarket: showLastLivePriceOnClosedMarket }, { merge: true });
+                    logDebug('Toggle: Saved "Show Last Live Price" preference to Firestore: ' + showLastLivePriceOnClosedMarket);
+                } catch (error) {
+                    console.error('Toggle: Error saving "Show Last Live Price" preference to Firestore:', error);
+                    showCustomAlert('Error saving preference: ' + error.message);
                 }
             }
-            updateThemeToggleAndSelector(); // Update dropdown (it should now show "No Custom Theme")
-        });
-    }
-
-    // System Dark Mode Preference Listener (Keep this as is)
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
-        if (currentActiveTheme === 'system-default') {
-            if (event.matches) {
-                document.body.classList.add('dark-theme');
-            } else {
-                document.body.classList.remove('dark-theme');
-            }
-            logDebug('Theme: System theme preference changed and applied (system-default mode).');
-            updateThemeToggleAndSelector();
-        }
-    });
-
-    // Scroll to Top Button
-    if (scrollToTopBtn) {
-        window.addEventListener('scroll', () => {
-            if (window.innerWidth <= 768) {
-                if (window.scrollY > 200) {
-                    scrollToTopBtn.style.display = 'flex';
-                    scrollToTopBtn.style.opacity = '1';
-                } else {
-                    scrollToTopBtn.style.opacity = '0';
-                    setTimeout(() => {
-                        scrollToTopBtn.style.display = 'none';
-                    }, 300);
-                }
-            } else {
-                scrollToTopBtn.style.display = 'none';
-            }
-        });
-        if (window.innerWidth > 768) {
-            scrollToTopBtn.style.display = 'none';
-        } else {
-            window.dispatchEvent(new Event('scroll'));
-        }
-        scrollToTopBtn.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); logDebug('UI: Scrolled to top.'); });
-    }
-
-    // Hamburger Menu and Sidebar Interactions
-    if (hamburgerBtn && appSidebar && closeMenuBtn && sidebarOverlay) {
-        logDebug('Sidebar Setup: Initializing sidebar event listeners. Elements found:', {
-            hamburgerBtn: !!hamburgerBtn,
-            appSidebar: !!appSidebar,
-            closeMenuBtn: !!closeMenuBtn,
-            sidebarOverlay: !!sidebarOverlay
-        });
-        hamburgerBtn.addEventListener('click', (event) => {
-            logDebug('UI: Hamburger button CLICKED. Event:', event);
-            event.stopPropagation();
-            toggleAppSidebar();
-        });
-        closeMenuBtn.addEventListener('click', () => {
-            logDebug('UI: Close Menu button CLICKED.');
-            toggleAppSidebar(false);
-        });
-        
-        // Corrected sidebar overlay dismissal logic for mobile
-        sidebarOverlay.addEventListener('click', (event) => {
-            logDebug('Sidebar Overlay: Clicked overlay. Attempting to close sidebar.');
-            // Ensure the click is actually on the overlay and not bubbling from inside the sidebar
-            if (appSidebar.classList.contains('open') && event.target === sidebarOverlay) {
-                toggleAppSidebar(false);
-            }
-        });
-
-        document.addEventListener('click', (event) => {
-            const isDesktop = window.innerWidth > 768;
-            // Only close sidebar on clicks outside if it's desktop and the click isn't on the sidebar or hamburger button
-            if (appSidebar.classList.contains('open') && isDesktop &&
-                !appSidebar.contains(event.target) && !hamburgerBtn.contains(event.target)) {
-                logDebug('Global Click: Clicked outside sidebar on desktop. Closing sidebar.');
-                toggleAppSidebar(false);
-            }
-            // For mobile, the sidebarOverlay handles clicks outside, and its pointer-events are managed.
-            // No additional document click listener needed for mobile sidebar dismissal.
-        });
-
-        window.addEventListener('resize', () => {
-            logDebug('Window Resize: Resizing window. Closing sidebar if open.');
-            const isDesktop = window.innerWidth > 768;
-            if (appSidebar.classList.contains('open')) {
-                toggleAppSidebar(false);
-            }
-            if (scrollToTopBtn) {
-                if (window.innerWidth > 768) {
-                    scrollToTopBtn.style.display = 'none';
-                } else {
-                    window.dispatchEvent(new Event('scroll'));
-                }
-            }
-            // NEW: Recalculate header height on resize
-            adjustMainContentPadding();
-        });
-
-        const menuButtons = appSidebar.querySelectorAll('.menu-button-item');
-        menuButtons.forEach(button => {
-            button.addEventListener('click', (event) => {
-                logDebug('Sidebar Menu Item Click: Button \'' + event.currentTarget.textContent.trim() + '\' clicked.');
-                const closesMenu = event.currentTarget.dataset.actionClosesMenu !== 'false';
-                if (closesMenu) {
-                    toggleAppSidebar(false);
-                }
-            });
-        });
-    } else {
-        console.warn('Sidebar Setup: Missing one or more sidebar elements (hamburgerBtn, appSidebar, closeMenuBtn, sidebarOverlay). Sidebar functionality might be impaired.');
-    }
-
-    // Export Watchlist Button Event Listener
-    if (exportWatchlistBtn) {
-        exportWatchlistBtn.addEventListener('click', () => {
-            logDebug('UI: Export Watchlist button clicked.');
-            exportWatchlistToCSV();
-            toggleAppSidebar(false);
-        });
-    }
-
-    // Refresh Live Prices Button Event Listener
-    if (refreshLivePricesBtn) {
-        refreshLivePricesBtn.addEventListener('click', () => {
-            logDebug('UI: Refresh Live Prices button clicked.');
-            fetchLivePrices();
-            showCustomAlert('Refreshing live prices...', 1000);
-            toggleAppSidebar(false); // NEW: Close sidebar on refresh
-        });
-    }
-
-    // NEW: Toggle Compact View Button Listener
-    if (toggleCompactViewBtn) {
-        // DEBUG: Log that the event listener is being attached
-        logDebug('DEBUG: Attaching click listener to toggleCompactViewBtn.');
-        toggleCompactViewBtn.addEventListener('click', () => {
-            logDebug('UI: Toggle Compact View button clicked.');
-            toggleMobileViewMode();
+            renderWatchlist(); // Re-render to apply the new display logic immediately
+            showCustomAlert('Last Price Display set to: ' + (showLastLivePriceOnClosedMarket ? 'On (Market Closed)' : 'Off (Market Closed)'), 1500);
             toggleAppSidebar(false); // Close sidebar after action
         });
     }
-
-    // NEW: Search Stock Button Listener
-    if (searchStockBtn) {
-        searchStockBtn.addEventListener('click', () => {
-            logDebug('UI: Search Stock button clicked. Opening search modal.');
-            // Clear and reset the modal content when opening
-            asxSearchInput.value = '';
-            searchResultDisplay.innerHTML = '<p class="initial-message">Start typing an ASX code to search.</p>';
-            searchModalActionButtons.innerHTML = '';
-            asxSuggestions.classList.remove('active');
-            currentSelectedSuggestionIndex = -1;
-            currentSearchShareData = null;
-            showModal(stockSearchModal);
-            asxSearchInput.focus();
-            toggleAppSidebar(false); // Close sidebar
-        });
-    }
-    
-    
-
-    // Correctly handle the close button for the active alerts modal
-    if (alertsCloseButton) { // Use the direct reference 'alertsCloseButton'
-        // Remove any previous listeners to prevent duplicates
-        alertsCloseButton.removeEventListener('click', closeModals); // Remove global close if present
-        alertsCloseButton.removeEventListener('click', closeActiveAlertsModal); // Remove previous specific close
-        alertsCloseButton.addEventListener('click', closeActiveAlertsModal); // Add correct specific close
-    }
-
-    if (minimizeAlertsModalBtn) {
-        minimizeAlertsModalBtn.removeEventListener('click', closeActiveAlertsModal); // Remove previous
-        minimizeAlertsModalBtn.addEventListener('click', closeActiveAlertsModal); // Re-add to ensure it's active
-    }
-    if (dismissAllAlertsBtn) {
-        dismissAllAlertsBtn.removeEventListener('click', dismissAllActiveAlerts); // Remove previous
-        dismissAllAlertsBtn.addEventListener('click', dismissAllActiveAlerts); // Re-add to ensure it's active
-    }
-    // Click outside alerts modal to minimize it
-    if (activeAlertsModal) {
-        activeAlertsModal.addEventListener('click', (event) => {
-            const modalContent = activeAlertsModal.querySelector('.modal-content');
-            // Ensure click is on the backdrop, not bubbling from inside the modal content
-            if (modalContent && !modalContent.contains(event.target) && event.target === activeAlertsModal) {
-                closeActiveAlertsModal();
-            }
-        });
-    }
-
-        // Save preference to Firestore
-        if (currentUserId && db && window.firestore) {
-            const userProfileDocRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/profile/settings');
-            try {
-                await window.firestore.setDoc(userProfileDocRef, { showLastLivePriceOnClosedMarket: showLastLivePriceOnClosedMarket }, { merge: true });
-                logDebug('Toggle: Saved "Show Last Live Price" preference to Firestore: ' + showLastLivePriceOnClosedMarket);
-            } catch (error) {
-                console.error('Toggle: Error saving "Show Last Live Price" preference to Firestore:', error);
-                showCustomAlert('Error saving preference: ' + error.message);
-            }
-        }
-        renderWatchlist(); // Re-render to apply the new display logic immediately
-        showCustomAlert('Last Price Display set to: ' + (showLastLivePriceOnClosedMarket ? 'On (Market Closed)' : 'Off (Market Closed)'), 1500);
-        toggleAppSidebar(false); // Close sidebar after action
-    });
-
-// Remove the extra '}' that was here. It prematurely closed initializeAppLogic.
 
     // NEW: Cash Asset Form Modal Save/Delete/Edit Buttons (2.1, 2.2)
     if (saveCashAssetBtn) {
@@ -5591,12 +4844,8 @@ if (sortSelect) {
             }
         });
     }
+} // End of initializeAppLogic
 
-
-    // Call adjustMainContentPadding initially and on window load/resize
-    // Removed: window.addEventListener('load', adjustMainContentPadding); // Removed, handled by onAuthStateChanged
-    // Already added to window.addEventListener('resize') in sidebar section
-}
 
 document.addEventListener('DOMContentLoaded', function() {
     logDebug('script.js DOMContentLoaded fired.');
