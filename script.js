@@ -1255,118 +1255,75 @@ function checkFormDirtyState() {
  * Saves share data to Firestore. Can be called silently for auto-save.
  * @param {boolean} isSilent If true, no alert messages are shown on success.
  */
-async function saveShareData(isSilent = false) {
-    logDebug('Share Form: saveShareData called.');
-    // Check if the save button would normally be disabled (no valid name or no changes)
-    // This prevents saving blank new shares or unchanged existing shares on auto-save.
-    if (saveShareBtn.classList.contains('is-disabled-icon') && isSilent) {
-        logDebug('Auto-Save: Save button is disabled (no changes or no valid name). Skipping silent save.');
-        return;
-    }
+// Save share details (Add/Edit mode)
+    // isSilent parameter is used when saving data without user interaction (e.g., from live price updates)
+    async function saveShareData(isSilent = false) {
+        logDebug('Attempting to save share details...');
+        const shareCode = document.getElementById('editShareCode').value.toUpperCase();
+        const shareName = document.getElementById('editShareName').value;
+        const purchasePrice = parseFloat(document.getElementById('editSharePurchasePrice').value);
+        const numberOfShares = parseInt(document.getElementById('editShareNumberOfShares').value);
+        const targetPrice = parseFloat(document.getElementById('editShareTargetPrice').value);
+        const notes = document.getElementById('editShareNotes').value;
+        const purchaseDate = document.getElementById('editSharePurchaseDate').value;
+        const shareType = document.getElementById('editShareType').value;
 
-    const shareName = shareNameInput.value.trim().toUpperCase();
-    if (!shareName) { 
-        if (!isSilent) showCustomAlert('Code is required!'); 
-        console.warn('Save Share: Code is required. Skipping save.');
-        return; 
-    }
-
-    const selectedWatchlistIdForSave = shareWatchlistSelect ? shareWatchlistSelect.value : null;
-    // For new shares from 'All Shares' view, force watchlist selection
-    if (!selectedShareDocId && currentSelectedWatchlistIds.includes(ALL_SHARES_ID)) {
-        if (!selectedWatchlistIdForSave || selectedWatchlistIdForSave === '') { // Check for empty string too
-            if (!isSilent) showCustomAlert('Please select a watchlist to assign the new share to.');
-            console.warn('Save Share: New share from All Shares: Watchlist not selected. Skipping save.');
+        if (!isSilent && (!shareCode || isNaN(purchasePrice) || isNaN(numberOfShares) || purchasePrice <= 0 || numberOfShares <= 0)) {
+            showMessage('Please fill in all required fields (Share Code, Purchase Price, Number of Shares) with valid numbers.', 'error');
             return;
         }
-    } else if (!selectedShareDocId && !selectedWatchlistIdForSave) { // New share not from All Shares, but no watchlist selected (shouldn't happen if default exists)
-         if (!isSilent) showCustomAlert('Please select a watchlist to assign the new share to.');
-         console.warn('Save Share: New share: No watchlist selected. Skipping save.');
-         return;
-    }
 
+        const shareData = {
+            shareCode: shareCode,
+            shareName: shareName,
+            purchasePrice: purchasePrice,
+            numberOfShares: numberOfShares,
+            targetPrice: targetPrice,
+            notes: notes,
+            purchaseDate: purchaseDate,
+            shareType: shareType,
+            watchlistIds: [currentWatchlistId], // Initialize with current watchlist
+            lastUpdated: new Date().toISOString() // Track last update time
+        };
 
-    // NEW: Get targetValue and targetType from inputs, handling potential empty string for value
-    const targetValueRaw = targetValueInput.value.trim();
-    const targetValue = targetValueRaw === '' ? null : parseFloat(targetValueRaw);
-    const targetType = targetTypePercentBtn.classList.contains('active') ? '%' : '$';
-    
-    const dividendAmount = parseFloat(dividendAmountInput.value);
-    const frankingCredits = parseFloat(frankingCreditsInput.value);
-
-    const comments = [];
-    if (commentsFormContainer) { // This now refers to #dynamicCommentsArea
-        commentsFormContainer.querySelectorAll('.comment-section').forEach(section => {
-            const titleInput = section.querySelector('.comment-title-input');
-            const textInput = section.querySelector('.comment-text-input');
-            const title = titleInput ? titleInput.value.trim() : '';
-            const text = textInput ? textInput.value.trim() : '';
-            if (title || text) {
-                comments.push({ title: title, text: text });
+        // If editing an existing share, preserve its currentPrice and lastLivePriceUpdate if they exist
+        // The currentPrice should ONLY be updated by the live price fetching mechanism.
+        // The input field on the edit form is intended for the purchase price, not the current live price.
+        if (selectedShareDocId) {
+            try {
+                const docRef = doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, selectedShareDocId);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const existingData = docSnap.data();
+                    shareData.currentPrice = existingData.currentPrice || 0; // Preserve existing currentPrice
+                    shareData.lastLivePriceUpdate = existingData.lastLivePriceUpdate || null; // Preserve existing lastLivePriceUpdate
+                }
+            } catch (error) {
+                console.error("Error fetching existing share data:", error);
+                // Proceed without existing data if fetch fails
             }
-        });
-    }
-
-    const currentPriceValue = parseFloat(currentPriceInput.value); // Get value directly from input
-    const shareData = {
-        shareName: shareName,
-        currentPrice: isNaN(currentPriceValue) ? null : currentPriceValue, // Use the parsed value
-        // NEW: Store targetValue and targetType instead of targetPrice
-        targetValue: isNaN(targetValue) ? null : targetValue,
-        targetType: targetType,
-        dividendAmount: isNaN(dividendAmount) ? null : dividendAmount,
-        frankingCredits: isNaN(frankingCredits) ? null : frankingCredits,
-        comments: comments,
-        // Use the selected watchlist from the modal dropdown
-        watchlistId: selectedWatchlistIdForSave,
-        lastPriceUpdateTime: new Date().toISOString(),
-        starRating: shareRatingSelect ? parseInt(shareRatingSelect.value) : 0 // Ensure rating is saved as a number
-    };
-
-    if (selectedShareDocId) {
-        const existingShare = allSharesData.find(s => s.id === selectedShareDocId);
-        if (shareData.currentPrice !== null && existingShare && existingShare.currentPrice !== shareData.currentPrice) {
-            shareData.previousFetchedPrice = existingShare.lastFetchedPrice;
-            shareData.lastFetchedPrice = shareData.currentPrice;
-        } else if (!existingShare || existingShare.lastFetchedPrice === undefined) {
-            shareData.previousFetchedPrice = shareData.currentPrice;
-            shareData.lastFetchedPrice = shareData.currentPrice;
-        } else {
-            shareData.previousFetchedPrice = existingShare.previousFetchedPrice;
-            shareData.lastFetchedPrice = existingShare.lastFetchedPrice;
         }
 
         try {
-            const shareDocRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/shares', selectedShareDocId);
-            await window.firestore.updateDoc(shareDocRef, shareData);
-            if (!isSilent) showCustomAlert('Share \'' + shareName + '\' updated successfully!', 1500);
-            logDebug('Firestore: Share \'' + shareName + '\' (ID: ' + selectedShareDocId + ') updated.');
-            originalShareData = getCurrentFormData(); // Update original data after successful save
-            setIconDisabled(saveShareBtn, true); // Disable save button after saving
+            if (selectedShareDocId) {
+                // Update existing share
+                const docRef = doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, selectedShareDocId);
+                await setDoc(docRef, shareData, { merge: true }); // Use merge to preserve existing fields not in shareData
+                if (!isSilent) showMessage('Share updated successfully!', 'success');
+            } else {
+                // Add new share
+                await addDoc(collection(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`), shareData);
+                if (!isSilent) showMessage('Share added successfully!', 'success');
+            }
+            if (!isSilent) {
+                closeShareForm();
+                renderWatchlist(); // Re-render to show updated data
+            }
         } catch (error) {
-            console.error('Firestore: Error updating share:', error);
-            if (!isSilent) showCustomAlert('Error updating share: ' + error.message);
-        }
-    } else {
-        shareData.entryDate = new Date().toISOString();
-        shareData.lastFetchedPrice = shareData.currentPrice;
-        shareData.previousFetchedPrice = shareData.currentPrice;
-
-        try {
-            const sharesColRef = window.firestore.collection(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/shares');
-            const newDocRef = await window.firestore.addDoc(sharesColRef, shareData);
-            selectedShareDocId = newDocRef.id; // Set selectedShareDocId for the newly added share
-            if (!isSilent) showCustomAlert('Share \'' + shareName + '\' added successfully!', 1500);
-            logDebug('Firestore: Share \'' + shareName + '\' added with ID: ' + newDocRef.id);
-            originalShareData = getCurrentFormData(); // Update original data after successful save
-            setIconDisabled(saveShareBtn, true); // Disable save button after saving
-        } catch (error) {
-            console.error('Firestore: Error adding share:', error);
-            if (!isSilent) showCustomAlert('Error adding share: ' + error.message);
+            console.error("Error saving share:", error);
+            if (!isSilent) showMessage('Error saving share: ' + error.message, 'error');
         }
     }
-    if (!isSilent) closeModals(); // Only close if not a silent save
-}
 
 
 function showShareDetails() {
