@@ -219,13 +219,33 @@ let dismissedAlertsSession = new Set(); // Stores share codes of alerts dismisse
 let activeAlertsModalOpen = false; // To track if the alerts modal is open
 
 // Utility function to format currency
-function formatCurrency(value) {
-    return new Intl.NumberFormat('en-AU', {
-        style: 'currency',
-        currency: 'AUD',
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    }).format(value);
+/**
+ * Displays a temporary message to the user in a styled alert box.
+ * @param {string} message The message to display.
+ * @param {string} type The type of message ('success', 'error', 'info', 'warning').
+ * @param {number} duration The duration in milliseconds before the message auto-dismisses. Default is 3000ms.
+ */
+function showMessage(message, type = 'info', duration = 3000) {
+    const messageBox = document.getElementById('messageBox'); // Assuming you have a messageBox element in your HTML
+    if (!messageBox) {
+        console.warn('showMessage: messageBox element not found. Displaying as custom alert instead.');
+        showCustomAlert(message, duration); // Fallback to custom alert if messageBox is missing
+        return;
+    }
+
+    messageBox.textContent = message;
+    messageBox.className = 'message-box ' + type; // Apply class for styling (e.g., 'message-box success')
+    messageBox.style.display = 'block'; // Show the message box
+
+    if (autoDismissTimeout) {
+        clearTimeout(autoDismissTimeout);
+    }
+    autoDismissTimeout = setTimeout(() => {
+        messageBox.style.display = 'none';
+        messageBox.classList.remove(type); // Clean up class
+        autoDismissTimeout = null;
+    }, duration);
+    logDebug(`Message: Displayed type '${type}' message: "${message}" for ${duration}ms.`);
 }
 
 const alertPanel = document.getElementById('alertPanel'); // NEW: Reference to the alert panel (not in current HTML, but kept for consistency)
