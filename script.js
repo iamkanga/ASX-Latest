@@ -1700,25 +1700,19 @@ function renderWatchlistSelect() {
         watchlistSelect.appendChild(cashBankOption);
     }
 
-    // Re-select the previously selected value if it still exists
-    if (currentSelectedValue && (Array.from(watchlistSelect.options).some(opt => opt.value === currentSelectedValue))) {
-        watchlistSelect.value = currentSelectedValue;
-        currentSelectedWatchlistIds = [currentSelectedValue]; // Ensure currentSelectedWatchlistIds reflects this
-    } else if (currentSelectedWatchlistIds.length === 1 && 
-                Array.from(watchlistSelect.options).some(opt => opt.value === currentSelectedWatchlistIds[0])) {
-        watchlistSelect.value = currentSelectedWatchlistIds[0];
+    // Attempt to select the watchlist specified in currentSelectedWatchlistIds.
+    // This array should already contain the correct ID (e.g., the newly created watchlist's ID)
+    // from loadUserWatchlistsAndSettings.
+    const desiredWatchlistId = currentSelectedWatchlistIds.length === 1 ? currentSelectedWatchlistIds[0] : '';
+    
+    if (desiredWatchlistId && Array.from(watchlistSelect.options).some(opt => opt.value === desiredWatchlistId)) {
+        watchlistSelect.value = desiredWatchlistId;
     } else {
-        // If the previously selected value is no longer valid, default to the first available option (All Shares or first custom)
-        if (watchlistSelect.querySelector('option[value="' + ALL_SHARES_ID + '"]')) {
-            watchlistSelect.value = ALL_SHARES_ID;
-            currentSelectedWatchlistIds = [ALL_SHARES_ID];
-        } else if (userWatchlists.length > 0) {
-            // Default to the first actual watchlist (which could be Cash & Assets if no others)
-            currentSelectedWatchlistIds = [userWatchlists[0].id];
-        } else {
-            watchlistSelect.value = ''; // Fallback to placeholder if no options
-            currentSelectedWatchlistIds = [];
-        }
+        // Fallback: If the desired watchlist is not found (e.g., deleted, or first load with no preference),
+        // default to "All Shares".
+        watchlistSelect.value = ALL_SHARES_ID;
+        currentSelectedWatchlistIds = [ALL_SHARES_ID]; // Ensure currentSelectedWatchlistIds is consistent
+        logDebug('UI Update: Watchlist select defaulted to All Shares as desired ID was not found.');
     }
     logDebug('UI Update: Watchlist select dropdown rendered. Selected value: ' + watchlistSelect.value);
     updateMainTitle(); // Update main title based on newly selected watchlist
@@ -3922,6 +3916,7 @@ async function saveWatchlistChanges(isSilent = false, newName, watchlistId = nul
     }
 
     // Check for duplicate name (case-insensitive, excluding current watchlist if editing)
+    // Check for duplicate name (case-insensitive, excluding current watchlist if editing)
     const isDuplicate = userWatchlists.some(w => {
         const isMatch = w.name.toLowerCase() === newName.toLowerCase() && w.id !== watchlistId;
         if (isMatch && DEBUG_MODE) {
@@ -3932,8 +3927,9 @@ async function saveWatchlistChanges(isSilent = false, newName, watchlistId = nul
 
     if (isDuplicate) {
         if (!isSilent) showCustomAlert('A watchlist with this name already exists!');
+        // Only log the warning if it's a genuine duplicate that caused a skip.
         console.warn('Save Watchlist: Duplicate watchlist name. Skipping save.');
-        return;
+        return; // Exit the function if it's a duplicate
     }
 
     try {
