@@ -4382,7 +4382,6 @@ async function initializeAppLogic() {
         }
     }
 
-
     // Share Name Input to uppercase
     if (shareNameInput) {
         shareNameInput.addEventListener('input', function() { 
@@ -4398,7 +4397,6 @@ async function initializeAppLogic() {
             updateTargetCalculationDisplay();
         });
     }
-
     
     // NEW: Autocomplete Search Input Listeners for Stock Search Modal (Consolidated & Corrected)
     if (asxSearchInput) {
@@ -4504,7 +4502,6 @@ async function initializeAppLogic() {
         }
     }
 
-    // Add event listeners to all form inputs for dirty state checking
     // Add event listeners to all form inputs for dirty state checking
     // Ensure purchasePriceInput is included here, as it's now the primary editable price field.
     [shareNameInput, purchasePriceInput, targetValueInput,
