@@ -352,6 +352,17 @@ function setIconDisabled(element, isDisabled) {
     }
 }
 
+/**
+ * Closes the share form modal and resets its state.
+ */
+function closeShareForm() {
+    if (shareFormSection) {
+        shareFormSection.style.setProperty('display', 'none', 'important');
+    }
+    clearForm(); // Clear the form fields and reset state
+    logDebug('Form: Share form closed.');
+}
+
 // Centralized Modal Closing Function
 function closeModals() {
     // Auto-save logic for share form
