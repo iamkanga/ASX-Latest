@@ -269,7 +269,7 @@ if (!sidebarOverlay) {
 }
 
 const formInputs = [
-    shareNameInput, currentPriceInput, targetValueInput,
+    shareNameInput, purchasePriceInput, targetValueInput, // Changed currentPriceInput to purchasePriceInput
     dividendAmountInput, frankingCreditsInput, shareRatingSelect,
     shareWatchlistSelect // Ensure watchlist select is included for dirty state and navigation
 ];
