@@ -1294,13 +1294,6 @@ function checkFormDirtyState() {
  * as they do not have corresponding input elements in the provided HTML.
  * @param {boolean} isSilent If true, no alert messages are shown on success.
  */
-/**
- * Saves share data to Firestore. Can be called silently for auto-save.
- * This function now uses the globally defined input elements.
- * Fields like numberOfShares, notes, purchaseDate, shareType are not collected
- * as they do not have corresponding input elements in the provided HTML.
- * @param {boolean} isSilent If true, no alert messages are shown on success.
- */
 async function saveShareData(isSilent = false) {
     logDebug('Attempting to save share data...');
 
@@ -1377,7 +1370,7 @@ async function saveShareData(isSilent = false) {
         }
     }
 
-    try {
+       try {
         if (selectedShareDocId) {
             // Update existing share
             const docRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, selectedShareDocId);
