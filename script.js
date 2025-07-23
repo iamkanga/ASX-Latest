@@ -3039,7 +3039,8 @@ async function fetchLivePrices() { // Ensure 'async' is here
         console.log('Live Price: Raw data received:', data); 
 
         const newLivePrices = {};
-        data.forEach(item => {
+        // Use a for...of loop to allow 'await' inside the iteration
+        for (const item of data) {
             const asxCode = String(item.ASXCode).toUpperCase();
             const livePrice = parseFloat(item.LivePrice);
             const prevClose = parseFloat(item.PrevClose); 
@@ -3136,7 +3137,7 @@ async function fetchLivePrices() { // Ensure 'async' is here
                 await window.firestore.setDoc(shareDocRef, updatePayload, { merge: true });
                 logDebug(`Firestore: Updated live price data for ${asxCode} in Firestore.`);
             }
-        }); // This closes the data.forEach loop
+        } // This closes the for...of loop
         livePrices = newLivePrices;
         console.log('Live Price: Live prices updated:', livePrices);
         
