@@ -1,7 +1,7 @@
-// Service Worker Version: 1.0.3 (Minor update for clarity on image paths)
+// Service Worker Version: 1.0.1
 
 // Cache name for the current version of the service worker
-const CACHE_NAME = 'share-watchlist-v1.0.3'; // Version incremented for potential path fix
+const CACHE_NAME = 'share-watchlist-v1.0.1'; // Version incremented
 
 // List of essential application assets to precache
 const CACHED_ASSETS = [
@@ -9,16 +9,10 @@ const CACHED_ASSETS = [
     './index.html',
     './script.js',
     './style.css',
-    './manifest.json',
-    './favicn.jpg', // <<--- VERIFY THIS PATH AND FILENAME (e.g., Favicn.png vs favicn.jpg)
-    './Kangaicon.jpg', // <<--- VERIFY THIS PATH AND FILENAME
-    './asx_codes.csv', // Added for local CSV data
     'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap',
     'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css',
-    // Firebase SDKs are loaded as modules, and while generally cacheable,
-    // they can sometimes cause issues with addAll if the CDN has specific headers.
-    // If addAll continues to fail, consider temporarily removing these Firebase URLs
-    // from CACHED_ASSETS to isolate the problem.
+    // Firebase SDKs are loaded as modules, so they might not be directly in the cache list
+    // if not explicitly requested by the main app. However, if they are, it's good to list them.
     'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js',
     'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js',
     'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js'
@@ -31,13 +25,14 @@ self.addEventListener('install', (event) => {
         caches.open(CACHE_NAME)
             .then((cache) => {
                 console.log('Service Worker: Cache opened, adding assets...');
-                // addAll is atomic; if any request fails, the entire operation fails.
                 return cache.addAll(CACHED_ASSETS);
             })
-            .catch((e) => {
-                console.error('Service Worker: Failed to cache assets during install: ' + e.message, e);
-                // Log which specific request failed if possible (though addAll doesn't easily expose this)
-                // You might need to check the Network tab in dev tools during install to see which asset failed.
+            .then(() => {
+                console.log('Service Worker: All assets added to cache. Skipping waiting.');
+                return self.skipWaiting(); // Activate the new service worker immediately
+            })
+            .catch((error) => {
+                console.error('Service Worker: Failed to cache essential assets during install:', error);
             })
     );
 });
@@ -49,77 +44,65 @@ self.addEventListener('activate', (event) => {
         caches.keys().then((cacheNames) => {
             return Promise.all(
                 cacheNames.map((cacheName) => {
-                    if (cacheName !== CACHE_NAME) {
+                    if (cacheName.startsWith('share-watchlist-') && cacheName !== CACHE_NAME) {
                         console.log('Service Worker: Deleting old cache:', cacheName);
                         return caches.delete(cacheName);
                     }
-                    return null;
                 })
             );
         }).then(() => {
-            // Ensure the service worker takes control of the page immediately
-            console.log('Service Worker: Claiming clients.');
-            return self.clients.claim();
+            console.log('Service Worker: Old caches cleared. Claiming clients.');
+            return self.clients.claim(); // Take control of all clients immediately
         })
     );
 });
 
 // Fetch event: intercepts network requests
 self.addEventListener('fetch', (event) => {
-    // Only handle GET requests for caching strategy
+    // Only cache GET requests
     if (event.request.method === 'GET') {
+        // IMPORTANT: Do NOT cache Firestore API calls (or any dynamic API calls).
+        // These are real-time data streams or dynamic queries and should always go to the network.
+        if (event.request.url.includes('firestore.googleapis.com') || event.request.url.includes('script.google.com/macros')) {
+            // console.log(`Service Worker: Bypassing cache for dynamic API request: ${event.request.url}`);
+            event.respondWith(fetch(event.request));
+            return; // Exit early, don't try to cache this
+        }
+
         event.respondWith(
             caches.match(event.request).then((cachedResponse) => {
-                // Return cached response if found
+                // If cached response is found, return it
                 if (cachedResponse) {
                     return cachedResponse;
                 }
 
-                // If not in cache, fetch from network
-                const fetchPromise = fetch(event.request).then((networkResponse) => {
-                    // Check if the response is valid to be put in cache
-                    // A clone is needed because a response can only be consumed once.
+                // Otherwise, go to network
+                return fetch(event.request).then((networkResponse) => {
+                    // Check if the response is valid to cache
+                    // A response is valid if it has a status of 200 and is not opaque (cross-origin without CORS)
+                    // Opaque responses cannot be inspected or cached reliably.
+                    if (!networkResponse || networkResponse.status !== 200 || networkResponse.type === 'opaque') {
+                        // console.log(`Service Worker: Skipping caching for response (status ${networkResponse ? networkResponse.status : 'N/A'}, type ${networkResponse ? networkResponse.type : 'N/A'}): ${event.request.url}`);
+                        return networkResponse; // Return the response without caching
+                    }
+
+                    // Clone the response because it's a stream and can only be consumed once
                     const responseToCache = networkResponse.clone();
 
-                    // Opaque responses (from cross-origin requests without CORS) cannot be inspected
-                    // for status. We log a warning but still return the response.
-                    if (networkResponse.type === 'opaque') {
-                        // This warning is expected for external resources like Google Fonts or CDNs.
-                        // It indicates the service worker cannot inspect the response, but it's still delivered.
-                        console.warn(`Service Worker: Skipping caching for opaque response: ${event.request.url}`);
-                        return networkResponse; // Return the original network response without caching
-                    }
-
-                    // Only cache successful (status 200) and 'basic' (same-origin) responses.
-                    // This prevents caching 404s, redirects, or other non-cacheable responses.
-                    if (networkResponse.status === 200 && networkResponse.type === 'basic') {
-                        caches.open(CACHE_NAME).then((cache) => {
-                            cache.put(event.request, responseToCache)
-                                .catch((e) => {
-                                    console.error(`Service Worker: Failed to cache (put error) ${event.request.url}:`, e);
-                                });
+                    caches.open(CACHE_NAME).then((cache) => {
+                        cache.put(event.request, responseToCache).catch(e => {
+                            console.error(`Service Worker: Failed to cache (put error) ${event.request.url}:`, e);
                         });
-                    } else {
-                        // Log if we're not caching for other reasons (e.g., not 200 OK, or not 'basic' type)
-                        console.warn(`Service Worker: Not caching response due to status (${networkResponse.status}) or type (${networkResponse.type}): ${event.request.url}`);
-                    }
+                    });
 
                     return networkResponse; // Always return the original network response
                 }).catch(error => {
-                    console.error(`Service Worker: Network fetch failed for ${event.request.url}.`, error);
+                    console.error(`Service Worker: Network fetch failed for ${event.request.url}. Returning offline fallback if available.`, error);
                     // If network fails, try to return a cached response as a fallback
-                    // You might want to serve a custom offline page here.
                     return caches.match(event.request);
                 });
 
-                // Return cached response immediately if available, otherwise wait for network
-                return cachedResponse || fetchPromise;
-
-            }).catch(error => {
-                console.error(`Service Worker: Cache match failed for ${event.request.url}.`, error);
-                // Fallback in case both cache match and network fetch fail
-                return fetch(event.request); // Try network one more time if cache fails
-            })
+            }) // No second .catch here, as the inner fetch promise already handles its own errors and returns a fallback
         );
     } else {
         // For non-GET requests (e.g., POST, PUT, DELETE), just fetch from network
