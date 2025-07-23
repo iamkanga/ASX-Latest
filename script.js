@@ -3952,35 +3952,18 @@ async function saveWatchlistChanges(isSilent = false, newName, watchlistId = nul
             if (!isSilent) showCustomAlert('Watchlist \'' + newName + '\' added!', 1500);
             logDebug('Firestore: Watchlist \'' + newName + '\' added with ID: ' + newDocRef.id);
             
-            // --- NEW LOGIC: Update userWatchlists array immediately ---
-            userWatchlists.push({ id: newDocRef.id, name: newName });
-            // Re-sort userWatchlists to ensure new watchlist appears in correct order in dropdown
-            userWatchlists.sort((a, b) => {
-                // Keep "Cash & Assets" at the bottom if it's there
-                if (a.id === CASH_BANK_WATCHLIST_ID) return 1;
-                if (b.id === CASH_BANK_WATCHLIST_ID) return -1;
-                return a.name.localeCompare(b.name);
-            });
-            logDebug('Firestore: userWatchlists array updated with new watchlist and re-sorted.');
-            // --- END NEW LOGIC ---
-
-            // Set it as current selection and save preference
+            // Set the newly created watchlist as the current selection and save this preference
             currentSelectedWatchlistIds = [newDocRef.id];
             await saveLastSelectedWatchlistIds(currentSelectedWatchlistIds);
 
-            // Explicitly set the watchlist select value and re-render after adding a new watchlist
-            // This ensures the UI immediately reflects the newly created watchlist.
-            renderWatchlistSelect(); // Re-populate the dropdown with the new watchlist (now including it)
-            watchlistSelect.value = newDocRef.id; // Force selection of the new watchlist
-            renderWatchlist(); // Re-render the main content to show the new watchlist's shares
+            // Crucially, call loadUserWatchlistsAndSettings() here for new watchlists too.
+            // This function handles re-fetching the updated list of watchlists,
+            // setting the dropdown value, and triggering the correct render of the main content.
+            await loadUserWatchlistsAndSettings();
         }
         
-        // Only re-load user watchlists and settings if it's an edit, or if the new watchlist
-        // setting needs to be fully re-evaluated (though the explicit render calls above should handle it).
-        // For adding a new watchlist, the explicit renderWatchlistSelect/renderWatchlist calls are more direct.
-        if (watchlistId) { // Only call loadUserWatchlistsAndSettings if it was an edit operation
-             await loadUserWatchlistsAndSettings(); // Re-load to update UI and internal state for edits
-        }
+        // This block now handles both new and edited watchlists.
+        // loadUserWatchlistsAndSettings() already handles the UI updates.
 
         if (!isSilent) closeModals(); // Only close if not a silent save
         originalWatchlistData = getCurrentWatchlistFormData(watchlistId === null); // Update original data after successful save
