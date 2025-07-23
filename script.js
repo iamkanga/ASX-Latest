@@ -5836,7 +5836,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Call renderWatchlist here to ensure correct mobile card rendering after auth state is set
             renderWatchlist();
             // Removed: adjustMainContentPadding(); // Removed duplicate call, now handled inside if (user) block
-        });
+        }); // Closing for onAuthStateChanged
     } else {
         console.error('Firebase: Firebase objects (db, auth, appId, firestore, authFunctions) are not available on DOMContentLoaded. Firebase initialization likely failed in index.html.');
         const errorDiv = document.getElementById('firebaseInitError');
@@ -5851,5 +5851,5 @@ document.addEventListener('DOMContentLoaded', function() {
         // NEW: Hide splash screen if Firebase fails to initialize
         hideSplashScreen();
     }
-});
-}
+}); // Closing for DOMContentLoaded event listener
+} // Closing for initializeAppLogic function
