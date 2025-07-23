@@ -3121,8 +3121,21 @@ async function fetchLivePrices() { // Ensure 'async' is here
                 CompanyName: item.CompanyName || 'N/A' // Store company name here too
             };
 
-            // Removed Firestore update logic here to resolve SyntaxError.
-            // This will be re-introduced carefully later if needed.
+            // Re-introducing Firestore update logic for live price data
+            // This ensures share.currentPrice and related fields in Firestore are kept up-to-date
+            if (shareData && db && currentUserId && window.firestore) {
+                const shareDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, shareData.id);
+                const updatePayload = {
+                    currentPrice: livePrice, // Update currentPrice with the actual live price
+                    lastFetchedPrice: livePrice,
+                    previousFetchedPrice: isNaN(prevClose) ? null : prevClose,
+                    lastLivePriceUpdate: new Date().toISOString(), // Record when it was updated
+                    companyName: item.CompanyName || shareData.companyName || null // Update company name if available
+                };
+                // Use setDoc with merge to only update these specific fields
+                await window.firestore.setDoc(shareDocRef, updatePayload, { merge: true });
+                logDebug(`Firestore: Updated live price data for ${asxCode} in Firestore.`);
+            }
         }); // This closes the data.forEach loop
         livePrices = newLivePrices;
         console.log('Live Price: Live prices updated:', livePrices);
