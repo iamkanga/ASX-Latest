@@ -108,7 +108,9 @@ const formTitle = document.getElementById('formTitle');
 const saveShareBtn = document.getElementById('saveShareBtn');
 const deleteShareBtn = document.getElementById('deleteShareBtn');
 const shareNameInput = document.getElementById('shareName');
-const currentPriceInput = document.getElementById('currentPrice');
+// Renamed currentPriceInput to purchasePriceInput to reflect its true purpose.
+// The HTML element with id="currentPrice" should be used for the purchase price input.
+const purchasePriceInput = document.getElementById('currentPrice');
 
 const dividendAmountInput = document.getElementById('dividendAmount');
 const frankingCreditsInput = document.getElementById('frankingCredits');
@@ -552,7 +554,7 @@ function addShareToTable(share, livePriceData) {
             <span class="live-price-value ${priceClass}">${displayLivePrice}</span>
             <span class="price-change ${priceClass}">${displayPriceChange}</span>
         </td>
-        <td>${Number(share.currentPrice) !== null && !isNaN(Number(share.currentPrice)) ? '$' + Number(share.currentPrice).toFixed(2) : 'N/A'}</td>
+        <td>${Number(share.purchasePrice) !== null && !isNaN(Number(share.purchasePrice)) ? '$' + Number(share.purchasePrice).toFixed(2) : 'N/A'}</td>
         <td>${Number(share.targetPrice) !== null && !isNaN(Number(share.targetPrice)) ? '$' + Number(share.targetPrice).toFixed(2) : 'N/A'}</td>
     <td>
         ${
@@ -562,13 +564,10 @@ function addShareToTable(share, livePriceData) {
             (() => {
                 const dividendAmount = Number(share.dividendAmount) || 0;
                 const frankingCredits = Number(share.frankingCredits) || 0;
-                const enteredPrice = Number(share.currentPrice) || 0; // Fallback for entered price if live not available
-
-                // Use the price that is actually displayed for yield calculation if possible
-                // If displayLivePrice is 'N/A', use enteredPrice from share object
+                // Use purchasePrice as fallback for yield calculation if live price is not available
                 const priceForYield = (displayLivePrice !== 'N/A' && displayLivePrice.startsWith('$'))
-                                    ? parseFloat(displayLivePrice.substring(1))
-                                    : (enteredPrice > 0 ? enteredPrice : 0);
+                                        ? parseFloat(displayLivePrice.substring(1))
+                                        : (Number(share.purchasePrice) > 0 ? Number(share.purchasePrice) : 0);
 
                 if (priceForYield === 0) return 'N/A'; // Cannot calculate yield if price is zero
 
@@ -739,7 +738,7 @@ function addShareToMobileCards(share, livePriceData) {
                 <span class="pe-ratio-value">P/E: ${livePriceData && livePriceData.PE !== null && !isNaN(livePriceData.PE) ? livePriceData.PE.toFixed(2) : 'N/A'}</span>
             </div>
         </div>
-        <p><strong>Entered Price:</strong> $${Number(share.currentPrice) !== null && !isNaN(Number(share.currentPrice)) ? Number(share.currentPrice).toFixed(2) : 'N/A'}</p>
+        <p><strong>Entered Price:</strong> $${Number(share.purchasePrice) !== null && !isNaN(Number(share.purchasePrice)) ? Number(share.purchasePrice).toFixed(2) : 'N/A'}</p>
         <p><strong>Target Price:</strong> $${Number(share.targetPrice) !== null && !isNaN(Number(share.targetPrice)) ? Number(share.targetPrice).toFixed(2) : 'N/A'}</p>
         <p>
         <strong>Dividend Yield:</strong>
@@ -750,13 +749,10 @@ function addShareToMobileCards(share, livePriceData) {
             (() => {
                 const dividendAmount = Number(share.dividendAmount) || 0;
                 const frankingCredits = Number(share.frankingCredits) || 0;
-                const enteredPrice = Number(share.currentPrice) || 0; // Fallback for entered price if live not available
-
-                // Use the price that is actually displayed for yield calculation if possible
-                // If displayLivePrice is 'N/A', use enteredPrice from share object
+                // Use purchasePrice as fallback for yield calculation if live not available
                 const priceForYield = (displayLivePrice !== 'N/A' && displayLivePrice.startsWith('$'))
-                                    ? parseFloat(displayLivePrice.substring(1))
-                                    : (enteredPrice > 0 ? enteredPrice : 0);
+                                        ? parseFloat(displayLivePrice.substring(1))
+                                        : (Number(share.purchasePrice) > 0 ? Number(share.purchasePrice) : 0);
 
                 if (priceForYield === 0) return 'N/A'; // Cannot calculate yield if price is zero
 
@@ -1084,8 +1080,9 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
 
     formTitle.textContent = 'Edit Share';
     shareNameInput.value = shareToEdit.shareName || '';
-    // Ensure currentPrice is a number and format for display
-    currentPriceInput.value = (typeof shareToEdit.currentPrice === 'number' && !isNaN(shareToEdit.currentPrice)) ? shareToEdit.currentPrice.toFixed(2) : '';
+    // Populate the purchase price input. This field is for the user's entered/purchase price.
+    // The live price will be displayed separately and updated automatically.
+    purchasePriceInput.value = (typeof shareToEdit.purchasePrice === 'number' && !isNaN(shareToEdit.purchasePrice)) ? shareToEdit.purchasePrice.toFixed(2) : '';
     // NEW: Populate Target Value and Type
     if (targetValueInput) {
         targetValueInput.value = (typeof shareToEdit.targetValue === 'number' && !isNaN(shareToEdit.targetValue)) ? shareToEdit.targetValue : '';
@@ -1158,7 +1155,8 @@ function getCurrentFormData() {
 
     return {
         shareName: shareNameInput.value.trim().toUpperCase(),
-        currentPrice: parseFloat(currentPriceInput.value),
+        // Capture the value from the purchasePriceInput (which is the element with id="currentPrice")
+        purchasePrice: parseFloat(purchasePriceInput.value),
         // NEW: Capture targetValue and targetType
         targetValue: parseFloat(targetValueInput.value) || null, // Capture value
         targetType: targetTypePercentBtn.classList.contains('active') ? '%' : '$', // Capture type
@@ -1182,7 +1180,8 @@ function getCurrentFormData() {
 function areShareDataEqual(data1, data2) {
     if (!data1 || !data2) return false;
 
-    const fields = ['shareName', 'currentPrice', 'dividendAmount', 'frankingCredits', 'watchlistId', 'starRating'];
+    // Changed 'currentPrice' to 'purchasePrice' for comparison, as this is the user-editable field.
+    const fields = ['shareName', 'purchasePrice', 'dividendAmount', 'frankingCredits', 'watchlistId', 'starRating'];
     // NEW: Add targetValue and targetType to fields for comparison
     // const newTargetFields = ['targetValue', 'targetType']; // This variable is not used directly in the loop below
 
@@ -4506,7 +4505,10 @@ async function initializeAppLogic() {
     }
 
     // Add event listeners to all form inputs for dirty state checking
-    formInputs.forEach(input => {
+    // Add event listeners to all form inputs for dirty state checking
+    // Ensure purchasePriceInput is included here, as it's now the primary editable price field.
+    [shareNameInput, purchasePriceInput, targetValueInput,
+    dividendAmountInput, frankingCreditsInput, shareRatingSelect].forEach(input => {
         if (input) {
             input.addEventListener('input', checkFormDirtyState);
             input.addEventListener('change', checkFormDirtyState);
