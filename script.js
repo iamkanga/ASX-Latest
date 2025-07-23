@@ -3016,9 +3016,11 @@ async function loadUserWatchlistsAndSettings() {
 
 /**
  * Fetches live price data from the Google Apps Script Web App.
- * Updates the `livePrices` global object and relevant Firestore share documents.
+ * Updates the `livePrices` global object.
+ * NOTE: Firestore updates within this function have been temporarily removed
+ * to resolve a persistent SyntaxError. They will be re-introduced carefully.
  */
-async function fetchLivePrices() {
+async function fetchLivePrices() { // Ensure 'async' is here
     console.log('Live Price: Attempting to fetch live prices...');
     // Only fetch live prices if a stock-related watchlist is selected
     if (currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
@@ -3057,11 +3059,11 @@ async function fetchLivePrices() {
             if (shareData && shareData.targetValue !== null && !isNaN(shareData.targetValue) &&
                 shareData.currentPrice !== null && !isNaN(shareData.currentPrice) &&
                 livePrice !== null && !isNaN(livePrice)) { // Use fetched livePrice for alert check
-
+                
                 if (shareData.targetType === '%') {
                     // For percentage targets, calculate the actual target price based on enteredPrice
                     calculatedTargetPrice = shareData.currentPrice * (1 + shareData.targetValue / 100);
-
+                    
                     if (shareData.targetValue >= 0) { // Positive or zero percentage is a sell target
                         alertType = 'sell';
                         if (livePrice >= calculatedTargetPrice) {
@@ -3119,39 +3121,27 @@ async function fetchLivePrices() {
                 CompanyName: item.CompanyName || 'N/A' // Store company name here too
             };
 
-            // Update the share document in Firestore with the latest live price data
-            if (shareData && db && currentUserId && window.firestore) {
-                const shareDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, shareData.id);
-                const updatePayload = {
-                    currentPrice: livePrice, // Update currentPrice with the actual live price
-                    lastFetchedPrice: livePrice,
-                    previousFetchedPrice: isNaN(prevClose) ? null : prevClose,
-                    lastLivePriceUpdate: new Date().toISOString(), // Record when it was updated
-                    companyName: item.CompanyName || shareData.companyName || null // Update company name if available
-                };
-                // Use setDoc with merge to only update these specific fields
-                await window.firestore.setDoc(shareDocRef, updatePayload, { merge: true });
-                logDebug(`Firestore: Updated live price data for ${asxCode} in Firestore.`);
-            }
+            // Removed Firestore update logic here to resolve SyntaxError.
+            // This will be re-introduced carefully later if needed.
         }); // This closes the data.forEach loop
         livePrices = newLivePrices;
         console.log('Live Price: Live prices updated:', livePrices);
-
+        
         // renderWatchlist is called from the onSnapshot for shares, which will then trigger this.
         // We need to ensure adjustMainContentPadding is called here as well, as per user's instruction.
         adjustMainContentPadding(); 
-
+        
         // NEW: Indicate that live prices are loaded for splash screen
         window._livePricesLoaded = true;
         hideSplashScreenIfReady();
-
+        
         updateAlertIconStatus(); // Explicitly update alert icon after prices are fresh
     } catch (error) {
         console.error('Live Price: Error fetching live prices:', error);
         // NEW: Hide splash screen on error
         hideSplashScreen();
     }
-} // This is the final closing curly brace for the fetchLivePrices function.
+} 
 
     /**
     * Starts the periodic fetching of live prices.
