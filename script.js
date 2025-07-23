@@ -204,7 +204,9 @@ const minimizeAlertsModalBtn = document.getElementById('minimizeAlertsModalBtn')
 const dismissAllAlertsBtn = document.getElementById('dismissAllAlertsBtn');
 const alertsCloseButton = activeAlertsModal ? activeAlertsModal.querySelector('.alerts-close-button') : null;
 const noAlertsMessage = activeAlertsModal ? activeAlertsModal.querySelector('.no-alerts-message') : null;
-
+// NEW: Target Price Type Buttons (for share form)
+const targetTypeDollarBtn = document.getElementById('targetTypeDollar');
+const targetTypePercentBtn = document.getElementById('targetTypePercent');
 // NEW: Global variable for storing loaded ASX code data from CSV
 let allAsxCodes = []; // { code: 'BHP', name: 'BHP Group Ltd' }
 let currentSelectedSuggestionIndex = -1; // For keyboard navigation in autocomplete
