@@ -1293,33 +1293,61 @@ function checkFormDirtyState() {
  */
 // Save share details (Add/Edit mode)
     // isSilent parameter is used when saving data without user interaction (e.g., from live price updates)
+    // Save share data to Firestore. Can be called silently for auto-save.
+    // This function now uses the globally defined input elements.
+    // Fields like numberOfShares, notes, purchaseDate, shareType are not collected
+    // as they do not have corresponding input elements in the provided HTML.
+    // @param {boolean} isSilent If true, no alert messages are shown on success.
     async function saveShareData(isSilent = false) {
-        logDebug('Attempting to save share details...');
-        const shareCode = document.getElementById('editShareCode').value.toUpperCase();
-        const shareName = document.getElementById('editShareName').value;
-        const purchasePrice = parseFloat(document.getElementById('editSharePurchasePrice').value);
-        const numberOfShares = parseInt(document.getElementById('editShareNumberOfShares').value);
-        const targetPrice = parseFloat(document.getElementById('editShareTargetPrice').value);
-        const notes = document.getElementById('editShareNotes').value;
-        const purchaseDate = document.getElementById('editSharePurchaseDate').value;
-        const shareType = document.getElementById('editShareType').value;
+        logDebug('Attempting to save share data...');
 
-        if (!isSilent && (!shareCode || isNaN(purchasePrice) || isNaN(numberOfShares) || purchasePrice <= 0 || numberOfShares <= 0)) {
-            showMessage('Please fill in all required fields (Share Code, Purchase Price, Number of Shares) with valid numbers.', 'error');
+        // Use the globally defined input elements
+        const shareCode = shareNameInput.value.trim().toUpperCase(); // shareNameInput is actually the share code
+        const purchasePrice = parseFloat(purchasePriceInput.value);
+        const targetValue = parseFloat(targetValueInput.value);
+        const targetType = targetTypePercentBtn.classList.contains('active') ? '%' : '$';
+        const dividendAmount = parseFloat(dividendAmountInput.value);
+        const frankingCredits = parseFloat(frankingCreditsInput.value);
+        const starRating = shareRatingSelect ? parseInt(shareRatingSelect.value) : 0;
+        const selectedWatchlistId = shareWatchlistSelect ? shareWatchlistSelect.value : null;
+
+        // Collect comments
+        const comments = [];
+        if (commentsFormContainer) {
+            commentsFormContainer.querySelectorAll('.comment-section').forEach(section => {
+                const titleInput = section.querySelector('.comment-title-input');
+                const textInput = section.querySelector('.comment-text-input');
+                const title = titleInput ? titleInput.value.trim() : '';
+                const text = textInput ? textInput.value.trim() : '';
+                if (title || text) {
+                    comments.push({ title: title, text: text });
+                }
+            });
+        }
+
+        // Basic validation for required fields
+        if (!isSilent && (!shareCode || isNaN(purchasePrice) || purchasePrice <= 0)) {
+            showMessage('Please fill in required fields (Share Code, Purchase Price) with valid numbers.', 'error');
+            return;
+        }
+        // Additional validation for watchlist selection if in 'All Shares' view and adding new
+        if (!isSilent && !selectedShareDocId && currentSelectedWatchlistIds.includes(ALL_SHARES_ID) && !selectedWatchlistId) {
+            showMessage('Please select a watchlist for the new share.', 'error');
             return;
         }
 
         const shareData = {
-            shareCode: shareCode,
-            shareName: shareName,
+            shareName: shareCode, // Storing code as shareName
             purchasePrice: purchasePrice,
-            numberOfShares: numberOfShares,
-            targetPrice: targetPrice,
-            notes: notes,
-            purchaseDate: purchaseDate,
-            shareType: shareType,
-            watchlistIds: [currentWatchlistId], // Initialize with current watchlist
-            lastUpdated: new Date().toISOString() // Track last update time
+            targetValue: isNaN(targetValue) ? null : targetValue,
+            targetType: targetType,
+            dividendAmount: isNaN(dividendAmount) ? null : dividendAmount,
+            frankingCredits: isNaN(frankingCredits) ? null : frankingCredits,
+            starRating: starRating,
+            comments: comments,
+            watchlistId: selectedWatchlistId, // Use the selected watchlist ID
+            lastUpdated: new Date().toISOString(),
+            entryDate: new Date().toISOString() // Set entry date for new shares, or keep existing for edits
         };
 
         // If editing an existing share, preserve its currentPrice and lastLivePriceUpdate if they exist
@@ -1331,14 +1359,40 @@ function checkFormDirtyState() {
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
                     const existingData = docSnap.data();
-                    shareData.currentPrice = existingData.currentPrice || 0; // Preserve existing currentPrice
-                    shareData.lastLivePriceUpdate = existingData.lastLivePriceUpdate || null; // Preserve existing lastLivePriceUpdate
+                    // Preserve actual live price data and entry date from existing document
+                    shareData.currentPrice = existingData.currentPrice || 0;
+                    shareData.lastLivePriceUpdate = existingData.lastLivePriceUpdate || null;
+                    shareData.lastFetchedPrice = existingData.lastFetchedPrice || null;
+                    shareData.previousFetchedPrice = existingData.previousFetchedPrice || null;
+                    shareData.entryDate = existingData.entryDate || shareData.entryDate; // Preserve original entry date
+                    shareData.companyName = existingData.companyName || null; // Preserve company name if exists
                 }
             } catch (error) {
-                console.error("Error fetching existing share data:", error);
-                // Proceed without existing data if fetch fails
+                console.error("Error fetching existing share data for merge:", error);
+                // Proceed without existing data if fetch fails, new data will be used.
             }
         }
+
+        try {
+            if (selectedShareDocId) {
+                // Update existing share
+                const docRef = doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, selectedShareDocId);
+                await setDoc(docRef, shareData, { merge: true }); // Use merge to preserve existing fields not explicitly set here
+                if (!isSilent) showMessage('Share updated successfully!', 'success');
+            } else {
+                // Add new share
+                await addDoc(collection(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`), shareData);
+                if (!isSilent) showMessage('Share added successfully!', 'success');
+            }
+            if (!isSilent) {
+                closeShareForm();
+                renderWatchlist(); // Re-render to show updated data
+            }
+        } catch (error) {
+            console.error("Error saving share:", error);
+            if (!isSilent) showMessage('Error saving share: ' + error.message, 'error');
+        }
+    }
 
         try {
             if (selectedShareDocId) {
