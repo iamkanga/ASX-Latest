@@ -14,9 +14,6 @@ function logDebug(message, ...optionalParams) {
     }
 }
 // --- END DEBUG LOGGING SETUP ---
-const ALL_SHARES_ID = 'all_shares_option'; // Special ID for the "Show All Shares" option
-const CASH_BANK_WATCHLIST_ID = 'cashBank'; // NEW: Special ID for the "Cash & Assets" option
-let currentWatchlistId = ALL_SHARES_ID; // Initialize with a default value
 
 let db;
 let auth = null;
@@ -35,6 +32,7 @@ let touchStartX = 0;
 let touchStartY = 0;
 const TOUCH_MOVE_THRESHOLD = 10; // Pixels for touch movement to cancel long press
 const KANGA_EMAIL = 'iamkanga@gmail.com';
+let currentCalculatorInput = '';
 let operator = null;
 let previousCalculatorInput = '';
 let resultDisplayed = false;
@@ -42,6 +40,8 @@ const DEFAULT_WATCHLIST_NAME = 'My Watchlist (Default)';
 const DEFAULT_WATCHLIST_ID_SUFFIX = 'default';
 let userWatchlists = []; // Stores all watchlists for the user
 let currentSelectedWatchlistIds = []; // Stores IDs of currently selected watchlists for display
+const ALL_SHARES_ID = 'all_shares_option'; // Special ID for the "Show All Shares" option
+const CASH_BANK_WATCHLIST_ID = 'cashBank'; // NEW: Special ID for the "Cash & Assets" option
 let currentSortOrder = 'entryDate-desc'; // Default sort order
 let contextMenuOpen = false; // To track if the custom context menu is open
 let currentContextMenuShareId = null; // Stores the ID of the share that opened the context menu
@@ -53,7 +53,7 @@ let originalWatchlistData = null; // Stores original watchlist data for dirty st
 // IMPORTANT: This URL is the exact string provided in your initial script.js file.
 // If CORS errors persist, the solution is to redeploy your Google Apps Script with "Anyone, even anonymous" access
 // and then update this constant with the NEW URL provided by Google Apps Script.
-const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzp7OjZL3zqvJ9wPsV9M-afm2wKeQPbIgGVv_juVpkaRllADESLwj7F4-S7YWYerau-/exec'; // Replace with your actual deployment URL
+const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzp7OjZL3zqvJ9wPsV9M-afm2wKeQPbIgGVv_juVpkaRllADESLwj7F4-S7YWYerau-/exec';
 let livePrices = {}; // Stores live price data: {ASX_CODE: {live: price, prevClose: price, PE: value, High52: value, Low52: value, targetHit: boolean, lastLivePrice: value, lastPrevClose: value}} 
 let livePriceFetchInterval = null; // To hold the interval ID for live price updates
 const LIVE_PRICE_FETCH_INTERVAL_MS = 5 * 60 * 1000; // Fetch every 5 minutes
@@ -108,9 +108,8 @@ const formTitle = document.getElementById('formTitle');
 const saveShareBtn = document.getElementById('saveShareBtn');
 const deleteShareBtn = document.getElementById('deleteShareBtn');
 const shareNameInput = document.getElementById('shareName');
-// Renamed currentPriceInput to purchasePriceInput to reflect its true purpose.
-// The HTML element with id="currentPrice" should be used for the purchase price input.
-const purchasePriceInput = document.getElementById('currentPrice');
+const currentPriceInput = document.getElementById('currentPrice');
+const targetPriceInput = document.getElementById('targetPrice');
 const dividendAmountInput = document.getElementById('dividendAmount');
 const frankingCreditsInput = document.getElementById('frankingCredits');
 const shareRatingSelect = document.getElementById('shareRating');
@@ -193,61 +192,13 @@ const asxSuggestions = document.getElementById('asxSuggestions'); // NEW: Autoco
 const searchResultDisplay = document.getElementById('searchResultDisplay'); // NEW: Display area for search results
 const searchModalActionButtons = document.querySelector('#stockSearchModal .modal-action-buttons-footer'); // NEW: Action buttons container
 const searchModalCloseButton = document.querySelector('.search-close-button'); // NEW: Close button for search modal
-// New Target Price Alert elements
-const targetValueInput = document.getElementById('targetValueInput');
-const targetTypeDollar = document.getElementById('targetTypeDollar'); // Reference to the hidden radio input for Dollar
-const targetTypePercent = document.getElementById('targetTypePercent'); // Reference to the hidden radio input for Percent
-const targetCalculationDisplay = document.getElementById('targetCalculationDisplay');
-const activeAlertsModal = document.getElementById('activeAlertsModal');
-const activeAlertsList = document.getElementById('activeAlertsList');
-const minimizeAlertsModalBtn = document.getElementById('minimizeAlertsModalBtn');
-const dismissAllAlertsBtn = document.getElementById('dismissAllAlertsBtn');
-const alertsCloseButton = activeAlertsModal ? activeAlertsModal.querySelector('.alerts-close-button') : null;
-const noAlertsMessage = activeAlertsModal ? activeAlertsModal.querySelector('.no-alerts-message') : null;
-// NEW: Target Price Type Buttons (for share form)
-const targetTypeDollarBtn = document.getElementById('targetTypeDollar');
-const targetTypePercentBtn = document.getElementById('targetTypePercent');
+
 // NEW: Global variable for storing loaded ASX code data from CSV
 let allAsxCodes = []; // { code: 'BHP', name: 'BHP Group Ltd' }
 let currentSelectedSuggestionIndex = -1; // For keyboard navigation in autocomplete
 let currentSearchShareData = null; // Stores data of the currently displayed stock in search modal
 const splashKangarooIcon = document.getElementById('splashKangarooIcon');
 const splashSignInBtn = document.getElementById('splashSignInBtn');
-// Global state for alert system
-let activeShareAlerts = []; // Stores details of shares currently hitting a target
-let dismissedAlertsSession = new Set(); // Stores share codes of alerts dismissed for the current session
-let activeAlertsModalOpen = false; // To track if the alerts modal is open
-
-// Utility function to format currency
-/**
- * Displays a temporary message to the user in a styled alert box.
- * @param {string} message The message to display.
- * @param {string} type The type of message ('success', 'error', 'info', 'warning').
- * @param {number} duration The duration in milliseconds before the message auto-dismisses. Default is 3000ms.
- */
-function showMessage(message, type = 'info', duration = 3000) {
-    const messageBox = document.getElementById('messageBox'); // Assuming you have a messageBox element in your HTML
-    if (!messageBox) {
-        console.warn('showMessage: messageBox element not found. Displaying as custom alert instead.');
-        showCustomAlert(message, duration); // Fallback to custom alert if messageBox is missing
-        return;
-    }
-
-    messageBox.textContent = message;
-    messageBox.className = 'message-box ' + type; // Apply class for styling (e.g., 'message-box success')
-    messageBox.style.display = 'block'; // Show the message box
-
-    if (autoDismissTimeout) {
-        clearTimeout(autoDismissTimeout);
-    }
-    autoDismissTimeout = setTimeout(() => {
-        messageBox.style.display = 'none';
-        messageBox.classList.remove(type); // Clean up class
-        autoDismissTimeout = null;
-    }, duration);
-    logDebug(`Message: Displayed type '${type}' message: "${message}" for ${duration}ms.`);
-}
-
 const alertPanel = document.getElementById('alertPanel'); // NEW: Reference to the alert panel (not in current HTML, but kept for consistency)
 const alertList = document.getElementById('alertList'); // NEW: Reference to the alert list container (not in current HTML, but kept for consistency)
 const closeAlertPanelBtn = document.getElementById('closeAlertPanelBtn'); // NEW: Reference to close alert panel button (not in current HTML, but kept for consistency)
@@ -255,15 +206,6 @@ const clearAllAlertsBtn = document.getElementById('clearAllAlertsBtn'); // NEW: 
 
 // NEW: Cash & Assets UI Elements (1)
 const stockWatchlistSection = document.getElementById('stockWatchlistSection');
-// Utility function to format currency
-function formatCurrency(value) {
-    return new Intl.NumberFormat('en-AU', {
-        style: 'currency',
-        currency: 'AUD',
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    }).format(value);
-}
 const cashAssetsSection = document.getElementById('cashAssetsSection'); // UPDATED ID
 const cashCategoriesContainer = document.getElementById('cashCategoriesContainer');
 const addCashCategoryBtn = document.getElementById('addCashCategoryBtn'); // This will be removed or repurposed
@@ -300,9 +242,8 @@ if (!sidebarOverlay) {
 }
 
 const formInputs = [
-    shareNameInput, purchasePriceInput, targetValueInput, // Changed currentPriceInput to purchasePriceInput
-    dividendAmountInput, frankingCreditsInput, shareRatingSelect,
-    shareWatchlistSelect // Ensure watchlist select is included for dirty state and navigation
+    shareNameInput, currentPriceInput, targetPriceInput,
+    dividendAmountInput, frankingCreditsInput, shareRatingSelect
 ];
 
 // NEW: Form inputs for Cash Asset Modal
@@ -350,17 +291,6 @@ function setIconDisabled(element, isDisabled) {
     } else {
         element.classList.remove('is-disabled-icon');
     }
-}
-
-/**
- * Closes the share form modal and resets its state.
- */
-function closeShareForm() {
-    if (shareFormSection) {
-        shareFormSection.style.setProperty('display', 'none', 'important');
-    }
-    clearForm(); // Clear the form fields and reset state
-    logDebug('Form: Share form closed.');
 }
 
 // Centralized Modal Closing Function
@@ -453,7 +383,7 @@ function closeModals() {
     if (autoDismissTimeout) { clearTimeout(autoDismissTimeout); autoDismissTimeout = null; }
     hideContextMenu();
     // NEW: Close the alert panel if open (alertPanel is not in current HTML, but kept for consistency)
-    if (activeAlertsModal) hideModal(activeAlertsModal); // Correctly hide the active alerts modal
+    if (alertPanel) hideModal(alertPanel);
     logDebug('Modal: All modals closed.');
 }
 
@@ -495,7 +425,7 @@ function formatDate(dateString) {
  * Adds a single share to the desktop table view.
  * @param {object} share The share object to add.
  */
-function addShareToTable(share, livePriceData) {
+function addShareToTable(share) {
     if (!shareTableBody) {
         console.error('addShareToTable: shareTableBody element not found.');
         return;
@@ -504,31 +434,13 @@ function addShareToTable(share, livePriceData) {
     const row = document.createElement('tr');
     row.dataset.docId = share.id;
 
-    // Determine target hit status and type from the share object (updated in updateShareDisplay)
-    let alertClass = '';
-    if (share.alertTriggered && !dismissedAlertsSession.has(share.shareName)) {
-        alertClass = `alert-${share.alertType}`;
-        // Add to active alerts list if not already there
-        const existingAlertIndex = activeShareAlerts.findIndex(alert => alert.id === share.id);
-        if (existingAlertIndex === -1) {
-            // Retrieve company name from the livePrices object (if available) or fallback
-            const companyName = livePrices[share.shareName.toUpperCase()]?.CompanyName || share.companyName || 'N/A';
-            activeShareAlerts.push({
-                id: share.id,
-                shareName: share.shareName,
-                companyName: companyName, 
-                alertType: share.alertType,
-                calculatedTargetPrice: share.calculatedTargetPrice,
-                currentLivePrice: livePrices[share.shareName.toUpperCase()] ? livePrices[share.shareName.toUpperCase()].live : null
-            });
-        }
-    } else {
-        // Remove from active alerts list if no longer triggered or has been dismissed
-        activeShareAlerts = activeShareAlerts.filter(alert => alert.id !== share.id);
-    }
-    // Apply alert class
-    if (alertClass) {
-        row.classList.add(alertClass);
+    // Check if target price is hit for this share
+    const livePriceData = livePrices[share.shareName.toUpperCase()];
+    const isTargetHit = livePriceData ? livePriceData.targetHit : false;
+
+    // Apply target-hit-alert class if target is hit and not dismissed
+    if (isTargetHit && !targetHitIconDismissed) {
+        row.classList.add('target-hit-alert');
     }
 
     // Declare these variables once at the top of the function
@@ -538,34 +450,33 @@ function addShareToTable(share, livePriceData) {
     let priceClass = '';
 
     // Logic to determine display values
-    // Prioritize livePriceData from the Apps Script fetch
-    if (livePriceData && livePriceData.live !== null && !isNaN(livePriceData.live)) {
-        displayLivePrice = '$' + livePriceData.live.toFixed(2);
-        if (livePriceData.prevClose !== null && !isNaN(livePriceData.prevClose)) {
-            const change = livePriceData.live - livePriceData.prevClose;
-            const percentageChange = (livePriceData.prevClose !== 0 ? (change / livePriceData.prevClose) * 100 : 0);
-            displayPriceChange = `${change.toFixed(2)} (${percentageChange.toFixed(2)}%)`;
-            priceClass = change > 0 ? 'positive' : (change < 0 ? 'negative' : 'neutral');
-        }
-    } else {
-        // Fallback to Firestore's last fetched price if live data is not available
-        const lastFetchedLive = share.lastFetchedPrice;
-        const lastFetchedPrevClose = share.previousFetchedPrice;
+    if (livePriceData) {
+        const currentLivePrice = livePriceData.live;
+        const previousClosePrice = livePriceData.prevClose;
+        const lastFetchedLive = livePriceData.lastLivePrice;
+        const lastFetchedPrevClose = livePriceData.lastPrevClose;
 
-        if (lastFetchedLive !== null && !isNaN(lastFetchedLive)) {
-            displayLivePrice = '$' + lastFetchedLive.toFixed(2);
-            if (lastFetchedPrevClose !== null && !isNaN(lastFetchedPrevClose)) {
+        if (isMarketOpen || showLastLivePriceOnClosedMarket) {
+            // Show live data if market is open, or if market is closed but toggle is ON
+            if (currentLivePrice !== null && !isNaN(currentLivePrice)) {
+                displayLivePrice = '$' + currentLivePrice.toFixed(2);
+            }
+            if (currentLivePrice !== null && previousClosePrice !== null && !isNaN(currentLivePrice) && !isNaN(previousClosePrice)) {
+                const change = currentLivePrice - previousClosePrice;
+                const percentageChange = (previousClosePrice !== 0 ? (change / previousClosePrice) * 100 : 0);
+                displayPriceChange = `${change.toFixed(2)} (${percentageChange.toFixed(2)}%)`;
+                priceClass = change > 0 ? 'positive' : (change < 0 ? 'negative' : 'neutral');
+            } else if (lastFetchedLive !== null && lastFetchedPrevClose !== null && !isNaN(lastFetchedLive) && !isNaN(lastFetchedPrevClose)) {
+                // Fallback to last fetched values if current live/prevClose are null but lastFetched are present
                 const change = lastFetchedLive - lastFetchedPrevClose;
                 const percentageChange = (lastFetchedPrevClose !== 0 ? (change / lastFetchedPrevClose) * 100 : 0);
                 displayPriceChange = `${change.toFixed(2)} (${percentageChange.toFixed(2)}%)`;
                 priceClass = change > 0 ? 'positive' : (change < 0 ? 'negative' : 'neutral');
-            } else {
-                displayPriceChange = '0.00 (0.00%)'; // If no previous close, assume no change
-                priceClass = 'neutral';
             }
         } else {
-            displayLivePrice = 'N/A';
-            displayPriceChange = '';
+            // Market closed and toggle is OFF, show zero change
+            displayLivePrice = lastFetchedLive !== null && !isNaN(lastFetchedLive) ? '$' + lastFetchedLive.toFixed(2) : 'N/A';
+            displayPriceChange = '0.00 (0.00%)';
             priceClass = 'neutral';
         }
     }
@@ -576,7 +487,7 @@ function addShareToTable(share, livePriceData) {
             <span class="live-price-value ${priceClass}">${displayLivePrice}</span>
             <span class="price-change ${priceClass}">${displayPriceChange}</span>
         </td>
-        <td>${Number(share.purchasePrice) !== null && !isNaN(Number(share.purchasePrice)) ? '$' + Number(share.purchasePrice).toFixed(2) : 'N/A'}</td>
+        <td>${Number(share.currentPrice) !== null && !isNaN(Number(share.currentPrice)) ? '$' + Number(share.currentPrice).toFixed(2) : 'N/A'}</td>
         <td>${Number(share.targetPrice) !== null && !isNaN(Number(share.targetPrice)) ? '$' + Number(share.targetPrice).toFixed(2) : 'N/A'}</td>
     <td>
         ${
@@ -586,10 +497,13 @@ function addShareToTable(share, livePriceData) {
             (() => {
                 const dividendAmount = Number(share.dividendAmount) || 0;
                 const frankingCredits = Number(share.frankingCredits) || 0;
-                // Use purchasePrice as fallback for yield calculation if live price is not available
+                const enteredPrice = Number(share.currentPrice) || 0; // Fallback for entered price if live not available
+
+                // Use the price that is actually displayed for yield calculation if possible
+                // If displayLivePrice is 'N/A', use enteredPrice from share object
                 const priceForYield = (displayLivePrice !== 'N/A' && displayLivePrice.startsWith('$'))
-                                        ? parseFloat(displayLivePrice.substring(1))
-                                        : (Number(share.purchasePrice) > 0 ? Number(share.purchasePrice) : 0);
+                                    ? parseFloat(displayLivePrice.substring(1))
+                                    : (enteredPrice > 0 ? enteredPrice : 0);
 
                 if (priceForYield === 0) return 'N/A'; // Cannot calculate yield if price is zero
 
@@ -667,7 +581,7 @@ function addShareToTable(share, livePriceData) {
     logDebug('Table: Added share ' + share.shareName + ' to table.');
 }
 
-function addShareToMobileCards(share, livePriceData) {
+function addShareToMobileCards(share) {
     if (!mobileShareCardsContainer) {
         console.error('addShareToMobileCards: mobileShareCardsContainer element not found.');
         return;
@@ -677,15 +591,13 @@ function addShareToMobileCards(share, livePriceData) {
     card.classList.add('mobile-card');
     card.dataset.docId = share.id;
 
-    // Determine alert class based on share object (updated in updateShareDisplay)
-    let alertClass = '';
-    if (share.alertTriggered && !dismissedAlertsSession.has(share.shareName)) {
-        alertClass = `alert-${share.alertType}`;
-        // (No need to add to activeShareAlerts here, done in addShareToTable)
-    }
-    // Apply alert class
-    if (alertClass) {
-        card.classList.add(alertClass);
+    // Check if target price is hit for this share
+    const livePriceData = livePrices[share.shareName.toUpperCase()];
+    const isTargetHit = livePriceData ? livePriceData.targetHit : false;
+
+    // Apply target-hit-alert class if target is hit and not dismissed
+    if (isTargetHit && !targetHitIconDismissed) {
+        card.classList.add('target-hit-alert');
     }
 
     // Declare these variables once at the top of the function
@@ -695,34 +607,33 @@ function addShareToMobileCards(share, livePriceData) {
     let priceClass = '';
 
     // Logic to determine display values
-    // Prioritize livePriceData from the Apps Script fetch
-    if (livePriceData && livePriceData.live !== null && !isNaN(livePriceData.live)) {
-        displayLivePrice = '$' + livePriceData.live.toFixed(2);
-        if (livePriceData.prevClose !== null && !isNaN(livePriceData.prevClose)) {
-            const change = livePriceData.live - livePriceData.prevClose;
-            const percentageChange = (livePriceData.prevClose !== 0 ? (change / livePriceData.prevClose) * 100 : 0);
-            displayPriceChange = `${change.toFixed(2)} (${percentageChange.toFixed(2)}%)`;
-            priceClass = change > 0 ? 'positive' : (change < 0 ? 'negative' : 'neutral');
-        }
-    } else {
-        // Fallback to Firestore's last fetched price if live data is not available
-        const lastFetchedLive = share.lastFetchedPrice;
-        const lastFetchedPrevClose = share.previousFetchedPrice;
+    if (livePriceData) {
+        const currentLivePrice = livePriceData.live;
+        const previousClosePrice = livePriceData.prevClose;
+        const lastFetchedLive = livePriceData.lastLivePrice;
+        const lastFetchedPrevClose = livePriceData.lastPrevClose;
 
-        if (lastFetchedLive !== null && !isNaN(lastFetchedLive)) {
-            displayLivePrice = '$' + lastFetchedLive.toFixed(2);
-            if (lastFetchedPrevClose !== null && !isNaN(lastFetchedPrevClose)) {
+        if (isMarketOpen || showLastLivePriceOnClosedMarket) {
+            // Show live data if market is open, or if market is closed but toggle is ON
+            if (currentLivePrice !== null && !isNaN(currentLivePrice)) {
+                displayLivePrice = '$' + currentLivePrice.toFixed(2);
+            }
+            if (currentLivePrice !== null && previousClosePrice !== null && !isNaN(currentLivePrice) && !isNaN(previousClosePrice)) {
+                const change = currentLivePrice - previousClosePrice;
+                const percentageChange = (previousClosePrice !== 0 ? (change / previousClosePrice) * 100 : 0); // Corrected: use previousClosePrice
+                displayPriceChange = `${change.toFixed(2)} (${percentageChange.toFixed(2)}%)`;
+                priceClass = change > 0 ? 'positive' : (change < 0 ? 'negative' : 'neutral');
+            } else if (lastFetchedLive !== null && lastFetchedPrevClose !== null && !isNaN(lastFetchedLive) && !isNaN(lastFetchedPrevClose)) {
+                // Fallback to last fetched values if current live/prevClose are null but lastFetched are present
                 const change = lastFetchedLive - lastFetchedPrevClose;
                 const percentageChange = (lastFetchedPrevClose !== 0 ? (change / lastFetchedPrevClose) * 100 : 0);
                 displayPriceChange = `${change.toFixed(2)} (${percentageChange.toFixed(2)}%)`;
                 priceClass = change > 0 ? 'positive' : (change < 0 ? 'negative' : 'neutral');
-            } else {
-                displayPriceChange = '0.00 (0.00%)'; // If no previous close, assume no change
-                priceClass = 'neutral';
             }
         } else {
-            displayLivePrice = 'N/A';
-            displayPriceChange = '';
+            // Market closed and toggle is OFF, show zero change
+            displayLivePrice = lastFetchedLive !== null && !isNaN(lastFetchedLive) ? '$' + lastFetchedLive.toFixed(2) : 'N/A';
+            displayPriceChange = '0.00 (0.00%)';
             priceClass = 'neutral';
         }
     }
@@ -742,7 +653,7 @@ function addShareToMobileCards(share, livePriceData) {
                 <span class="pe-ratio-value">P/E: ${livePriceData && livePriceData.PE !== null && !isNaN(livePriceData.PE) ? livePriceData.PE.toFixed(2) : 'N/A'}</span>
             </div>
         </div>
-        <p><strong>Entered Price:</strong> $${Number(share.purchasePrice) !== null && !isNaN(Number(share.purchasePrice)) ? Number(share.purchasePrice).toFixed(2) : 'N/A'}</p>
+        <p><strong>Entered Price:</strong> $${Number(share.currentPrice) !== null && !isNaN(Number(share.currentPrice)) ? Number(share.currentPrice).toFixed(2) : 'N/A'}</p>
         <p><strong>Target Price:</strong> $${Number(share.targetPrice) !== null && !isNaN(Number(share.targetPrice)) ? Number(share.targetPrice).toFixed(2) : 'N/A'}</p>
         <p>
         <strong>Dividend Yield:</strong>
@@ -753,10 +664,13 @@ function addShareToMobileCards(share, livePriceData) {
             (() => {
                 const dividendAmount = Number(share.dividendAmount) || 0;
                 const frankingCredits = Number(share.frankingCredits) || 0;
-                // Use purchasePrice as fallback for yield calculation if live not available
+                const enteredPrice = Number(share.currentPrice) || 0; // Fallback for entered price if live not available
+
+                // Use the price that is actually displayed for yield calculation if possible
+                // If displayLivePrice is 'N/A', use enteredPrice from share object
                 const priceForYield = (displayLivePrice !== 'N/A' && displayLivePrice.startsWith('$'))
-                                        ? parseFloat(displayLivePrice.substring(1))
-                                        : (Number(share.purchasePrice) > 0 ? Number(share.purchasePrice) : 0);
+                                    ? parseFloat(displayLivePrice.substring(1))
+                                    : (enteredPrice > 0 ? enteredPrice : 0);
 
                 if (priceForYield === 0) return 'N/A'; // Cannot calculate yield if price is zero
 
@@ -972,7 +886,27 @@ function addCommentSection(container, title = '', text = '', isCashAssetComment 
     logDebug('Comments: Added new comment section.');
 }
 
-targetCalculationDisplay
+function clearForm() {
+    formInputs.forEach(input => {
+        if (input) { input.value = ''; }
+    });
+    if (commentsFormContainer) { // This now refers to #dynamicCommentsArea
+        commentsFormContainer.innerHTML = ''; // Clears ONLY the dynamically added comments
+    }
+    selectedShareDocId = null;
+    originalShareData = null; // IMPORTANT: Reset original data to prevent auto-save of cancelled edits
+    if (deleteShareBtn) {
+        deleteShareBtn.classList.add('hidden');
+        logDebug('clearForm: deleteShareBtn hidden.');
+    }
+    // Reset shareWatchlistSelect to its default placeholder
+    if (shareWatchlistSelect) {
+        shareWatchlistSelect.value = ''; // Set to empty string to select the disabled option
+        shareWatchlistSelect.disabled = false; // Ensure it's enabled for new share entry
+    }
+    setIconDisabled(saveShareBtn, true); // Save button disabled on clear
+    logDebug('Form: Form fields cleared and selectedShareDocId reset. saveShareBtn disabled.');
+}
 
 /**
  * Populates the 'Assign to Watchlist' dropdown in the share form modal.
@@ -1068,42 +1002,6 @@ function populateShareWatchlistSelect(currentShareWatchlistId = null, isNewShare
     shareWatchlistSelect.addEventListener('change', checkFormDirtyState);
 }
 
-/**
- * Clears all inputs and resets the state of the share form.
- * This also resets originalShareData and selectedShareDocId to prevent auto-save on cancel.
- */
-function clearForm() {
-    if (shareNameInput) shareNameInput.value = '';
-    if (purchasePriceInput) purchasePriceInput.value = ''; // Use purchasePriceInput
-    if (targetValueInput) targetValueInput.value = '';
-    if (dividendAmountInput) dividendAmountInput.value = '';
-    if (frankingCreditsInput) frankingCreditsInput.value = '';
-    if (shareRatingSelect) shareRatingSelect.value = '0'; // Reset to default rating
-    if (shareWatchlistSelect) {
-        // Reset to placeholder or first available stock watchlist
-        const firstStockWatchlist = userWatchlists.find(wl => wl.id !== CASH_BANK_WATCHLIST_ID);
-        if (firstStockWatchlist) {
-            shareWatchlistSelect.value = firstStockWatchlist.id;
-        } else {
-            shareWatchlistSelect.value = ''; // Fallback to placeholder
-        }
-        shareWatchlistSelect.disabled = false; // Ensure it's enabled for new entries
-    }
-    if (commentsFormContainer) commentsFormContainer.innerHTML = ''; // Clear all comment sections
-    addCommentSection(commentsFormContainer); // Add one empty comment section by default
-    
-    // Reset target type buttons to dollar by default
-    if (targetTypeDollarBtn) targetTypeDollarBtn.classList.add('active');
-    if (targetTypePercentBtn) targetTypePercentBtn.classList.remove('active');
-    updateTargetCalculationDisplay(); // Update display after clearing/resetting target inputs
-
-    selectedShareDocId = null; // Crucial: Clear selected ID so it's treated as a new share
-    originalShareData = null; // Crucial: Clear original data for dirty state check
-    setIconDisabled(saveShareBtn, true); // Disable save button initially for new/cleared form
-    
-    logDebug('Form: Share form inputs cleared and state reset.');
-}
-
 function showEditFormForSelectedShare(shareIdToEdit = null) {
     const targetShareId = shareIdToEdit || selectedShareDocId;
 
@@ -1120,26 +1018,8 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
 
     formTitle.textContent = 'Edit Share';
     shareNameInput.value = shareToEdit.shareName || '';
-    // Populate the purchase price input. This field is for the user's entered/purchase price.
-    // The live price will be displayed separately and updated automatically.
-    purchasePriceInput.value = (typeof shareToEdit.purchasePrice === 'number' && !isNaN(shareToEdit.purchasePrice)) ? shareToEdit.purchasePrice.toFixed(2) : '';
-    // NEW: Populate Target Value and Type
-    if (targetValueInput) {
-        targetValueInput.value = (typeof shareToEdit.targetValue === 'number' && !isNaN(shareToEdit.targetValue)) ? shareToEdit.targetValue : '';
-    }
-    if (targetTypeDollarBtn && targetTypePercentBtn) {
-        // Set the active class based on the share's targetType
-        if (shareToEdit.targetType === '%') {
-            targetTypePercentBtn.classList.add('active');
-            targetTypeDollarBtn.classList.remove('active');
-        } else { // Default to '$' if targetType is not '%' or is undefined/null
-            targetTypeDollarBtn.classList.add('active');
-            targetTypePercentBtn.classList.remove('active');
-        }
-    }
-    // Manually trigger update for initial display after values are set.
-    updateTargetCalculationDisplay(); 
-    
+    currentPriceInput.value = Number(shareToEdit.currentPrice) !== null && !isNaN(Number(shareToEdit.currentPrice)) ? Number(shareToEdit.currentPrice).toFixed(2) : '';
+    targetPriceInput.value = Number(shareToEdit.targetPrice) !== null && !isNaN(Number(shareToEdit.targetPrice)) ? Number(shareToEdit.targetPrice).toFixed(2) : '';
     dividendAmountInput.value = Number(shareToEdit.dividendAmount) !== null && !isNaN(Number(shareToEdit.dividendAmount)) ? Number(shareToEdit.dividendAmount).toFixed(3) : '';
     frankingCreditsInput.value = Number(shareToEdit.frankingCredits) !== null && !isNaN(Number(shareToEdit.frankingCredits)) ? Number(shareToEdit.frankingCredits).toFixed(1) : '';
 
@@ -1195,11 +1075,8 @@ function getCurrentFormData() {
 
     return {
         shareName: shareNameInput.value.trim().toUpperCase(),
-        // Capture the value from the purchasePriceInput (which is the element with id="currentPrice")
-        purchasePrice: parseFloat(purchasePriceInput.value),
-        // NEW: Capture targetValue and targetType
-        targetValue: parseFloat(targetValueInput.value) || null, // Capture value
-        targetType: targetTypePercentBtn.classList.contains('active') ? '%' : '$', // Capture type
+        currentPrice: parseFloat(currentPriceInput.value),
+        targetPrice: parseFloat(targetPriceInput.value),
         dividendAmount: parseFloat(dividendAmountInput.value),
         frankingCredits: parseFloat(frankingCreditsInput.value),
         // Get the selected star rating as a number
@@ -1220,11 +1097,7 @@ function getCurrentFormData() {
 function areShareDataEqual(data1, data2) {
     if (!data1 || !data2) return false;
 
-    // Changed 'currentPrice' to 'purchasePrice' for comparison, as this is the user-editable field.
-    const fields = ['shareName', 'purchasePrice', 'dividendAmount', 'frankingCredits', 'watchlistId', 'starRating'];
-    // NEW: Add targetValue and targetType to fields for comparison
-    // const newTargetFields = ['targetValue', 'targetType']; // This variable is not used directly in the loop below
-
+    const fields = ['shareName', 'currentPrice', 'targetPrice', 'dividendAmount', 'frankingCredits', 'watchlistId', 'starRating']; // Include watchlistId and starRating
     for (const field of fields) {
         let val1 = data1[field];
         let val2 = data2[field];
@@ -1246,11 +1119,6 @@ function areShareDataEqual(data1, data2) {
         if (comment1.title !== comment2.title || comment1.text !== comment2.text) {
             return false;
         }
-    }
-
-// NEW: Compare new target fields (targetValue, targetType)
-    if (data1.targetValue !== data2.targetValue || data1.targetType !== data2.targetType) {
-        return false;
     }
 
     return true;
@@ -1288,31 +1156,50 @@ function checkFormDirtyState() {
 
     setIconDisabled(saveShareBtn, !canSave);
     logDebug('Dirty State: Save button enabled: ' + canSave);
-} // This is the final closing curly brace for checkFormDirtyState()
+}
 
 /**
  * Saves share data to Firestore. Can be called silently for auto-save.
- * This function now uses the globally defined input elements.
- * Fields like numberOfShares, notes, purchaseDate, shareType are not collected
- * as they do not have corresponding input elements in the provided HTML.
  * @param {boolean} isSilent If true, no alert messages are shown on success.
  */
 async function saveShareData(isSilent = false) {
-    logDebug('Attempting to save share data...');
+    logDebug('Share Form: saveShareData called.');
+    // Check if the save button would normally be disabled (no valid name or no changes)
+    // This prevents saving blank new shares or unchanged existing shares on auto-save.
+    if (saveShareBtn.classList.contains('is-disabled-icon') && isSilent) {
+        logDebug('Auto-Save: Save button is disabled (no changes or no valid name). Skipping silent save.');
+        return;
+    }
 
-    // Use the globally defined input elements
-    const shareCode = shareNameInput.value.trim().toUpperCase(); // shareNameInput is actually the share code
-    const purchasePrice = parseFloat(purchasePriceInput.value);
-    const targetValue = parseFloat(targetValueInput.value);
-    const targetType = targetTypePercentBtn.classList.contains('active') ? '%' : '$';
+    const shareName = shareNameInput.value.trim().toUpperCase();
+    if (!shareName) { 
+        if (!isSilent) showCustomAlert('Code is required!'); 
+        console.warn('Save Share: Code is required. Skipping save.');
+        return; 
+    }
+
+    const selectedWatchlistIdForSave = shareWatchlistSelect ? shareWatchlistSelect.value : null;
+    // For new shares from 'All Shares' view, force watchlist selection
+    if (!selectedShareDocId && currentSelectedWatchlistIds.includes(ALL_SHARES_ID)) {
+        if (!selectedWatchlistIdForSave || selectedWatchlistIdForSave === '') { // Check for empty string too
+            if (!isSilent) showCustomAlert('Please select a watchlist to assign the new share to.');
+            console.warn('Save Share: New share from All Shares: Watchlist not selected. Skipping save.');
+            return;
+        }
+    } else if (!selectedShareDocId && !selectedWatchlistIdForSave) { // New share not from All Shares, but no watchlist selected (shouldn't happen if default exists)
+         if (!isSilent) showCustomAlert('Please select a watchlist to assign the new share to.');
+         console.warn('Save Share: New share: No watchlist selected. Skipping save.');
+         return;
+    }
+
+
+    const currentPrice = parseFloat(currentPriceInput.value);
+    const targetPrice = parseFloat(targetPriceInput.value);
     const dividendAmount = parseFloat(dividendAmountInput.value);
     const frankingCredits = parseFloat(frankingCreditsInput.value);
-    const starRating = shareRatingSelect ? parseInt(shareRatingSelect.value) : 0;
-    const selectedWatchlistId = shareWatchlistSelect ? shareWatchlistSelect.value : null;
 
-    // Collect comments
     const comments = [];
-    if (commentsFormContainer) {
+    if (commentsFormContainer) { // This now refers to #dynamicCommentsArea
         commentsFormContainer.querySelectorAll('.comment-section').forEach(section => {
             const titleInput = section.querySelector('.comment-title-input');
             const textInput = section.querySelector('.comment-text-input');
@@ -1324,77 +1211,64 @@ async function saveShareData(isSilent = false) {
         });
     }
 
-    // Basic validation for required fields
-    if (!isSilent && (!shareCode || isNaN(purchasePrice) || purchasePrice <= 0)) {
-        showMessage('Please fill in required fields (Share Code, Purchase Price) with valid numbers.', 'error');
-        return;
-    }
-    // Additional validation for watchlist selection if in 'All Shares' view and adding new
-    if (!isSilent && !selectedShareDocId && currentSelectedWatchlistIds.includes(ALL_SHARES_ID) && !selectedWatchlistId) {
-        showMessage('Please select a watchlist for the new share.', 'error');
-        return;
-    }
-
     const shareData = {
-        shareName: shareCode, // Storing code as shareName
-        purchasePrice: purchasePrice,
-        targetValue: isNaN(targetValue) ? null : targetValue,
-        targetType: targetType,
+        shareName: shareName,
+        currentPrice: isNaN(currentPrice) ? null : currentPrice,
+        targetPrice: isNaN(targetPrice) ? null : targetPrice,
         dividendAmount: isNaN(dividendAmount) ? null : dividendAmount,
         frankingCredits: isNaN(frankingCredits) ? null : frankingCredits,
-        starRating: starRating,
         comments: comments,
-        watchlistId: selectedWatchlistId, // Use the selected watchlist ID
-        lastUpdated: new Date().toISOString(),
-        entryDate: new Date().toISOString() // Set entry date for new shares, or keep existing for edits
+        // Use the selected watchlist from the modal dropdown
+        watchlistId: selectedWatchlistIdForSave,
+        lastPriceUpdateTime: new Date().toISOString(),
+        starRating: shareRatingSelect ? parseInt(shareRatingSelect.value) : 0 // Ensure rating is saved as a number
     };
 
-    // If editing an existing share, preserve its currentPrice and lastLivePriceUpdate if they exist
-    // The currentPrice should ONLY be updated by the live price fetching mechanism.
-    // The input field on the edit form is intended for the purchase price, not the current live price.
     if (selectedShareDocId) {
-        try {
-            // Use window.firestore.doc and window.firestore.getDoc
-            const docRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, selectedShareDocId);
-            const docSnap = await window.firestore.getDoc(docRef);
-            if (docSnap.exists()) {
-                const existingData = docSnap.data();
-                // Preserve actual live price data and entry date from existing document
-                shareData.currentPrice = existingData.currentPrice || 0;
-                shareData.lastLivePriceUpdate = existingData.lastLivePriceUpdate || null;
-                shareData.lastFetchedPrice = existingData.lastFetchedPrice || null;
-                shareData.previousFetchedPrice = existingData.previousFetchedPrice || null;
-                shareData.entryDate = existingData.entryDate || shareData.entryDate; // Preserve original entry date
-                shareData.companyName = existingData.companyName || null; // Preserve company name if exists
-            }
-        } catch (error) {
-            console.error("Error fetching existing share data for merge:", error);
-            // Proceed without existing data if fetch fails, new data will be used.
-        }
-    }
-
-    // This is the correct start of the main try...catch for saving
-    try {
-        if (selectedShareDocId) {
-            // Update existing share
-            const docRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, selectedShareDocId);
-            await window.firestore.setDoc(docRef, shareData, { merge: true });
-            if (!isSilent) showMessage('Share updated successfully!', 'success');
+        const existingShare = allSharesData.find(s => s.id === selectedShareDocId);
+        if (shareData.currentPrice !== null && existingShare && existingShare.currentPrice !== shareData.currentPrice) {
+            shareData.previousFetchedPrice = existingShare.lastFetchedPrice;
+            shareData.lastFetchedPrice = shareData.currentPrice;
+        } else if (!existingShare || existingShare.lastFetchedPrice === undefined) {
+            shareData.previousFetchedPrice = shareData.currentPrice;
+            shareData.lastFetchedPrice = shareData.currentPrice;
         } else {
-            // Add new share
-            const sharesCollectionRef = window.firestore.collection(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`);
-            await window.firestore.addDoc(sharesCollectionRef, shareData);
-            if (!isSilent) showMessage('Share added successfully!', 'success');
+            shareData.previousFetchedPrice = existingShare.previousFetchedPrice;
+            shareData.lastFetchedPrice = existingShare.lastFetchedPrice;
         }
-        if (!isSilent) {
-            closeShareForm();
-            renderWatchlist(); // Re-render to show updated data
+
+        try {
+            const shareDocRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/shares', selectedShareDocId);
+            await window.firestore.updateDoc(shareDocRef, shareData);
+            if (!isSilent) showCustomAlert('Share \'' + shareName + '\' updated successfully!', 1500);
+            logDebug('Firestore: Share \'' + shareName + '\' (ID: ' + selectedShareDocId + ') updated.');
+            originalShareData = getCurrentFormData(); // Update original data after successful save
+            setIconDisabled(saveShareBtn, true); // Disable save button after saving
+        } catch (error) {
+            console.error('Firestore: Error updating share:', error);
+            if (!isSilent) showCustomAlert('Error updating share: ' + error.message);
         }
-    } catch (error) {
-        console.error("Error saving share:", error);
-        if (!isSilent) showMessage('Error saving share: ' + error.message, 'error');
+    } else {
+        shareData.entryDate = new Date().toISOString();
+        shareData.lastFetchedPrice = shareData.currentPrice;
+        shareData.previousFetchedPrice = shareData.currentPrice;
+
+        try {
+            const sharesColRef = window.firestore.collection(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/shares');
+            const newDocRef = await window.firestore.addDoc(sharesColRef, shareData);
+            selectedShareDocId = newDocRef.id; // Set selectedShareDocId for the newly added share
+            if (!isSilent) showCustomAlert('Share \'' + shareName + '\' added successfully!', 1500);
+            logDebug('Firestore: Share \'' + shareName + '\' added with ID: ' + newDocRef.id);
+            originalShareData = getCurrentFormData(); // Update original data after successful save
+            setIconDisabled(saveShareBtn, true); // Disable save button after saving
+        } catch (error) {
+            console.error('Firestore: Error adding share:', error);
+            if (!isSilent) showCustomAlert('Error adding share: ' + error.message);
+        }
     }
-} // This is the final closing curly brace for the saveShareData function.
+    if (!isSilent) closeModals(); // Only close if not a silent save
+}
+
 
 function showShareDetails() {
     if (!selectedShareDocId) {
@@ -1422,8 +1296,7 @@ function showShareDetails() {
     modalShareName.textContent = share.shareName || 'N/A';
     modalShareName.className = 'modal-share-name ' + modalShareNamePriceChangeClass; // Apply class to modalShareName
 
-    // Correctly use share.purchasePrice for the "Entered Price" display in the modal
-    const enteredPriceNum = Number(share.purchasePrice);
+    const enteredPriceNum = Number(share.currentPrice);
 
     // Get live price data from the global livePrices object
     const livePriceData = livePrices[share.shareName.toUpperCase()];
@@ -1522,26 +1395,11 @@ function showShareDetails() {
         peSpan.classList.add('pe-ratio-value'); // New class
         peSpan.textContent = 'P/E: ' + (peRatio !== undefined && peRatio !== null && !isNaN(peRatio) ? peRatio.toFixed(2) : 'N/A');
         peRow.appendChild(peSpan);
-        modalLivePriceDisplaySection.appendChild(peRow); // Corrected from peSpan to peRow
+        modalLivePriceDisplaySection.appendChild(peRow);
     }
 
     modalEnteredPrice.textContent = (enteredPriceNum !== null && !isNaN(enteredPriceNum)) ? '$' + enteredPriceNum.toFixed(2) : 'N/A';
-    // Display the calculated target price, which is now stored on the share object
-    let targetPriceDisplay = 'N/A';
-    if (share.calculatedTargetPrice !== null && !isNaN(share.calculatedTargetPrice)) {
-        let explanation = '';
-        const enteredPrice = Number(share.currentPrice); // Ensure enteredPrice is a number
-
-        if (share.targetType === '%') {
-            const sign = share.targetValue >= 0 ? '+' : '';
-            const absTargetValue = Math.abs(share.targetValue);
-            explanation = `Entered ${formatCurrency(enteredPrice)} ${sign}${absTargetValue}% = ${formatCurrency(share.calculatedTargetPrice)}`;
-        } else { // Dollar amount
-            explanation = `Set at ${formatCurrency(share.calculatedTargetPrice)}`;
-        }
-        targetPriceDisplay = `${formatCurrency(share.calculatedTargetPrice)} (${explanation})`; // Format: Price (Explanation)
-    }
-    modalTargetPrice.textContent = targetPriceDisplay;
+    modalTargetPrice.textContent = (share.targetPrice !== null && !isNaN(Number(share.targetPrice))) ? '$' + Number(share.targetPrice).toFixed(2) : 'N/A';
 
     // Ensure dividendAmount and frankingCredits are numbers before formatting
     const displayDividendAmount = Number(share.dividendAmount);
@@ -1618,7 +1476,7 @@ function showShareDetails() {
 
     showModal(shareDetailModal);
     logDebug('Details: Displayed details for share: ' + share.shareName + ' (ID: ' + selectedShareDocId + ')');
-} // This is the correct closing curly brace for the showShareDetails function.
+}
 
 function sortShares() {
     const sortValue = currentSortOrder;
@@ -1937,6 +1795,9 @@ function renderSortSelect() {
 /**
  * Renders the watchlist based on the currentSelectedWatchlistIds. (1)
  */
+/**
+ * Renders the watchlist based on the currentSelectedWatchlistIds. (1)
+ */
 function renderWatchlist() {
     logDebug('DEBUG: renderWatchlist called. Current selected watchlist ID: ' + currentSelectedWatchlistIds[0]);
     
@@ -1966,11 +1827,6 @@ function renderWatchlist() {
         exportWatchlistBtn.classList.add('app-hidden');
         stopLivePriceUpdates();
         updateAddHeaderButton();
-        // Clear active alerts as we are in cash view
-        activeShareAlerts = [];
-        dismissedAlertsSession.clear();
-        updateAlertIconStatus();
-        renderActiveAlertsList();
     } else {
         // Show Stock Watchlist section
         stockWatchlistSection.classList.remove('app-hidden');
@@ -1987,7 +1843,7 @@ function renderWatchlist() {
         sortSelect.classList.remove('app-hidden');
         refreshLivePricesBtn.classList.remove('app-hidden');
         toggleCompactViewBtn.classList.remove('app-hidden');
-        targetHitIconBtn.classList.remove('app-hidden'); // Ensure icon becomes visible if needed
+        targetHitIconBtn.classList.remove('app-hidden');
         exportWatchlistBtn.classList.remove('app-hidden');
         startLivePriceUpdates();
         updateAddHeaderButton();
@@ -2059,16 +1915,13 @@ function renderWatchlist() {
         }
 
         sharesToRender.forEach((share) => {
-            // Get the live price data for the current share
-            const shareLivePriceData = livePrices[share.shareName.toUpperCase()] || {};
-
             // Only add to table if table is visible
             if (tableContainer && tableContainer.style.display !== 'none') {
-                addShareToTable(share, shareLivePriceData); // Pass livePriceData
+                addShareToTable(share);
             }
             // Only add to mobile cards if mobile cards are visible
             if (mobileShareCardsContainer && mobileShareCardsContainer.style.display !== 'none') {
-                addShareToMobileCards(share, shareLivePriceData); // Pass livePriceData
+                addShareToMobileCards(share); 
             }
         });
 
@@ -2081,7 +1934,7 @@ function renderWatchlist() {
             }
         }
         logDebug('Render: Stock watchlist rendering complete.');
-        updateAlertIconStatus(); 
+        updateTargetHitBanner();
         renderAsxCodeButtons();
     }
     adjustMainContentPadding();
@@ -2470,201 +2323,6 @@ function isAsxMarketOpen() {
     logDebug('Market Status: Market is likely open (' + timeStr + ').');
     return true;
 }
-
-// NEW: Function to calculate and update target calculation display in share form
-function updateTargetCalculationDisplay() {
-    const targetValue = parseFloat(targetValueInput.value);
-    const enteredPrice = parseFloat(document.getElementById('currentPrice').value);
-    const isPercent = targetTypePercentBtn.classList.contains('active');
-    
-    let displayHtml = '';
-
-    if (!isNaN(targetValue) && !isNaN(enteredPrice)) {
-        let calculatedTarget = 0;
-        let typeText = '';
-        let targetRelation = ''; // "Buy Target" or "Sell Target"
-
-        if (isPercent) {
-            calculatedTarget = enteredPrice * (1 + targetValue / 100);
-            typeText = `${targetValue >= 0 ? '+' : ''}${targetValue}%`;
-            targetRelation = targetValue >= 0 ? 'Sell Target' : 'Buy Target';
-        } else { // Dollar amount
-            calculatedTarget = targetValue;
-            typeText = ''; // No percentage display for dollar amount
-            targetRelation = calculatedTarget < enteredPrice ? 'Buy Target' : 'Sell Target';
-        }
-
-        displayHtml = `Target: Entered ${formatCurrency(enteredPrice)} ${typeText} = ${formatCurrency(calculatedTarget)} (${targetRelation})`;
-    } else if (!isNaN(targetValue)) {
-        displayHtml = `Input Entered Price to calculate target.`;
-    } else {
-        displayHtml = `Enter Target Value.`;
-    }
-    
-    if (targetCalculationDisplay) { // Safety check
-        targetCalculationDisplay.textContent = displayHtml;
-    }
-}
-
-// NEW: Function to refresh and update the global alert icon status
-function updateAlertIconStatus() {
-    // Only show alerts if not in cash & assets view
-    if (currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
-        if (targetHitIconBtn) targetHitIconBtn.style.display = 'none';
-        if (targetHitIconCount) targetHitIconCount.textContent = '0';
-        logDebug('Target Alert: In Cash & Assets view, hiding alert icon.');
-        return;
-    }
-
-    // Filter active alerts based on dismissal for the current session
-    const relevantAlerts = activeShareAlerts.filter(alert => !dismissedAlertsSession.has(alert.shareName));
-    const totalAlerts = relevantAlerts.length;
-
-    if (targetHitIconCount) targetHitIconCount.textContent = totalAlerts;
-
-    // Remove all color classes first
-    if (targetHitIconBtn) targetHitIconBtn.classList.remove('buy-alert', 'sell-alert', 'mixed-alert');
-
-    if (totalAlerts > 0) {
-        if (targetHitIconBtn) targetHitIconBtn.style.display = 'flex'; // Show the button
-
-        const hasBuyAlerts = relevantAlerts.some(alert => alert.alertType === 'buy');
-        const hasSellAlerts = relevantAlerts.some(alert => alert.alertType === 'sell');
-
-        if (targetHitIconBtn) { // Safety check before adding classes
-            if (hasBuyAlerts && hasSellAlerts) {
-                targetHitIconBtn.classList.add('mixed-alert');
-            } else if (hasBuyAlerts) {
-                targetHitIconBtn.classList.add('buy-alert');
-            } else if (hasSellAlerts) {
-                targetHitIconBtn.classList.add('sell-alert');
-            }
-        }
-        logDebug(`Target Alert: Showing icon with ${totalAlerts} alerts. Buy: ${hasBuyAlerts}, Sell: ${hasSellAlerts}.`);
-    } else {
-        if (targetHitIconBtn) targetHitIconBtn.style.display = 'none'; // Hide the button
-        logDebug('Target Alert: No active alerts to display. Hiding icon.');
-    }
-}
-
-// NEW: Function to open the active alerts modal
-function openActiveAlertsModal() {
-    if (!activeAlertsModal) return; // Safety check
-
-    activeAlertsModal.style.display = 'flex'; // Set display to flex to make it visible
-    activeAlertsModal.style.visibility = 'visible'; // Ensure visibility is set
-
-    // Request an animation frame to ensure display/visibility is applied before transform
-    requestAnimationFrame(() => {
-        activeAlertsModal.classList.add('open'); // Add 'open' class to trigger CSS transition
-    });
-
-    activeAlertsModalOpen = true;
-    renderActiveAlertsList(); // Populate the list when opening
-    logDebug('Alerts Modal: Opened.');
-
-    // Attach the "click outside" listener ONLY when the modal is opened
-    // Store the listener function so it can be correctly removed later.
-    const outsideClickListener = (event) => {
-        const modalContent = activeAlertsModal.querySelector('.modal-content');
-        // Ensure click is on the backdrop, not bubbling from inside the modal content
-        if (modalContent && !modalContent.contains(event.target) && event.target === activeAlertsModal) {
-            closeActiveAlertsModal();
-        }
-    };
-
-    // Remove any existing listener first to prevent duplicates
-    if (activeAlertsModal._currentOutsideClickListener) {
-        activeAlertsModal.removeEventListener('click', activeAlertsModal._currentOutsideClickListener);
-    }
-    activeAlertsModal.addEventListener('click', outsideClickListener);
-    activeAlertsModal._currentOutsideClickListener = outsideClickListener; // Store reference to the listener
-}
-
-// NEW: Function to close (minimize) the active alerts modal
-function closeActiveAlertsModal() {
-    if (!activeAlertsModal) return; // Safety check
-
-    // Ensure the 'open' class is removed to trigger CSS transition
-    activeAlertsModal.classList.remove('open');
-
-    // Remove the event listener for clicking outside the modal when closing
-    // This prevents multiple listeners from accumulating and causing odd behavior.
-    const currentOutsideClickListener = activeAlertsModal._currentOutsideClickListener;
-    if (currentOutsideClickListener) {
-        activeAlertsModal.removeEventListener('click', currentOutsideClickListener);
-        activeAlertsModal._currentOutsideClickListener = null;
-    }
-
-    // Delay setting display: 'none' until after the CSS transition completes
-    // This ensures the fade-out and slide animation finishes visually.
-    setTimeout(() => {
-        activeAlertsModal.style.display = 'none';
-        // Also ensure visibility is hidden, in case display:none is overridden elsewhere
-        activeAlertsModal.style.visibility = 'hidden';
-    }, 300); // Match the CSS transition duration (0.3s)
-
-    activeAlertsModalOpen = false;
-    logDebug('Alerts Modal: Closed (minimized).');
-}
-
-// NEW: Function to render alerts in the modal list
-function renderActiveAlertsList() {
-    if (!activeAlertsList || !noAlertsMessage) return; // Safety check
-
-    activeAlertsList.innerHTML = ''; // Clear existing list
-    const relevantAlerts = activeShareAlerts.filter(alert => !dismissedAlertsSession.has(alert.shareName));
-
-    if (relevantAlerts.length === 0) {
-        noAlertsMessage.style.display = 'block';
-        return;
-    } else {
-        noAlertsMessage.style.display = 'none';
-    }
-
-    // Sort alphabetically by share name
-    relevantAlerts.sort((a, b) => a.shareName.localeCompare(b.shareName));
-
-    relevantAlerts.forEach(alert => {
-        const alertItem = document.createElement('div');
-        alertItem.className = 'alert-item';
-
-        const alertTypeText = alert.alertType === 'buy' ? 'Buy Target' : 'Sell Target';
-        let alertDetails = '';
-        if (alert.calculatedTargetPrice !== null && alert.calculatedTargetPrice !== undefined && !isNaN(alert.calculatedTargetPrice) && 
-            alert.currentLivePrice !== null && alert.currentLivePrice !== undefined && !isNaN(alert.currentLivePrice)) {
-            alertDetails = `Target ${alert.alertType === 'buy' ? 'below' : 'above'} ${formatCurrency(alert.calculatedTargetPrice)} (Current: ${formatCurrency(alert.currentLivePrice)})`;
-        } else {
-            alertDetails = `Target hit for ${alert.alertType} alert.`;
-        }
-
-        alertItem.innerHTML = `
-            <div class="alert-item-header">${alert.shareName} (${alert.companyName})</div>
-            <div class="alert-item-body">${alertTypeText}: ${alertDetails}</div>
-        `;
-        activeAlertsList.appendChild(alertItem);
-    });
-    logDebug(`Alerts Modal: Rendered ${relevantAlerts.length} active alerts.`);
-}
-
-// NEW: Function to dismiss all active alerts for the session
-function dismissAllActiveAlerts() {
-    const alertsToDismiss = activeShareAlerts.filter(alert => !dismissedAlertsSession.has(alert.shareName));
-    alertsToDismiss.forEach(alert => dismissedAlertsSession.add(alert.shareName));
-    
-    // Update UI immediately
-    renderActiveAlertsList();
-    updateAlertIconStatus();
-    // Re-render shares to remove highlighting
-    renderWatchlist(); // Call renderWatchlist which will refresh all share displays with new alert states
-    
-    // Show a confirmation message
-    showCustomAlert('All active alerts dismissed for this session.', () => {
-        // Callback after dismissal confirmation (if needed)
-    }, null, 'OK', 'Information'); // Use OK button, not Yes/No
-    logDebug('Alerts: All active alerts dismissed for current session.');
-}
-
 function calculateFrankedYield(dividendAmount, currentPrice, frankingCreditsPercentage) {
     // Ensure inputs are valid numbers and currentPrice is not zero
     if (typeof dividendAmount !== 'number' || isNaN(dividendAmount) || dividendAmount < 0) { return 0; }
@@ -3017,10 +2675,8 @@ async function loadUserWatchlistsAndSettings() {
 /**
  * Fetches live price data from the Google Apps Script Web App.
  * Updates the `livePrices` global object.
- * NOTE: Firestore updates within this function have been temporarily removed
- * to resolve a persistent SyntaxError. They will be re-introduced carefully.
  */
-async function fetchLivePrices() { // Ensure 'async' is here
+async function fetchLivePrices() {
     console.log('Live Price: Attempting to fetch live prices...');
     // Only fetch live prices if a stock-related watchlist is selected
     if (currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
@@ -3031,7 +2687,7 @@ async function fetchLivePrices() { // Ensure 'async' is here
     }
 
     try {
-        const response = await fetch(GOOGLE_APPS_SCRIPT_URL);
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL); 
         if (!response.ok) {
             throw new Error('HTTP error! status: ' + response.status);
         }
@@ -3039,8 +2695,7 @@ async function fetchLivePrices() { // Ensure 'async' is here
         console.log('Live Price: Raw data received:', data); 
 
         const newLivePrices = {};
-        // Use a for...of loop to allow 'await' inside the iteration
-        for (const item of data) {
+        data.forEach(item => {
             const asxCode = String(item.ASXCode).toUpperCase();
             const livePrice = parseFloat(item.LivePrice);
             const prevClose = parseFloat(item.PrevClose); 
@@ -3048,98 +2703,33 @@ async function fetchLivePrices() { // Ensure 'async' is here
             const high52 = parseFloat(item.High52);
             const low52 = parseFloat(item.Low52);
 
-            // Find the corresponding share in allSharesData to get its targetValue and targetType
-            const shareIndex = allSharesData.findIndex(s => s.shareName.toUpperCase() === asxCode);
-            const shareData = shareIndex !== -1 ? allSharesData[shareIndex] : null;
+            if (asxCode && !isNaN(livePrice)) {
+                // Find the corresponding share in allSharesData to get its targetPrice
+                const shareData = allSharesData.find(s => s.shareName.toUpperCase() === asxCode);
+                // Ensure targetPrice is parsed as a number, handling null/undefined/NaN
+                const targetPrice = shareData && shareData.targetPrice !== null && !isNaN(parseFloat(shareData.targetPrice))
+                    ? parseFloat(shareData.targetPrice)
+                    : undefined;
 
-            let isTargetHit = false;
-            let alertType = ''; // 'buy' or 'sell'
-            let calculatedTargetPrice = null;
+                const isTargetHit = (targetPrice !== undefined && livePrice <= targetPrice);
 
-            // Only perform target calculation if we have valid share data, target value, and entered price
-            if (shareData && shareData.targetValue !== null && !isNaN(shareData.targetValue) &&
-                shareData.currentPrice !== null && !isNaN(shareData.currentPrice) &&
-                livePrice !== null && !isNaN(livePrice)) { // Use fetched livePrice for alert check
-                
-                if (shareData.targetType === '%') {
-                    // For percentage targets, calculate the actual target price based on enteredPrice
-                    calculatedTargetPrice = shareData.currentPrice * (1 + shareData.targetValue / 100);
-                    
-                    if (shareData.targetValue >= 0) { // Positive or zero percentage is a sell target
-                        alertType = 'sell';
-                        if (livePrice >= calculatedTargetPrice) {
-                            isTargetHit = true;
-                        }
-                    } else { // Negative percentage is a buy target
-                        alertType = 'buy';
-                        if (livePrice <= calculatedTargetPrice) {
-                            isTargetHit = true;
-                        }
-                    }
-                } else { // '$' type (specific dollar amount)
-                    calculatedTargetPrice = shareData.targetValue; // For dollar target, the targetValue is the calculated price
-                    if (calculatedTargetPrice < shareData.currentPrice) { // Dollar target below entered price is a buy target
-                        alertType = 'buy';
-                        if (livePrice <= calculatedTargetPrice) {
-                            isTargetHit = true;
-                        }
-                    } else { // Dollar target above entered price is a sell target
-                        alertType = 'sell';
-                        if (livePrice >= calculatedTargetPrice) {
-                            isTargetHit = true;
-                        }
-                    }
-                }
-
-                // Update the actual share object in allSharesData with calculated properties
-                if (shareIndex !== -1) {
-                    allSharesData[shareIndex].calculatedTargetPrice = calculatedTargetPrice;
-                    allSharesData[shareIndex].alertTriggered = isTargetHit;
-                    allSharesData[shareIndex].alertType = alertType;
-                    // Store company name from live data if available and not already set
-                    if (item.CompanyName) {
-                        allSharesData[shareIndex].companyName = item.CompanyName;
-                    }
-                }
-            } else {
-                // If target calculation cannot be performed, ensure alert properties are reset
-                if (shareIndex !== -1) {
-                    allSharesData[shareIndex].calculatedTargetPrice = null;
-                    allSharesData[shareIndex].alertTriggered = false;
-                    allSharesData[shareIndex].alertType = '';
-                }
-            }
-
-            newLivePrices[asxCode] = {
-                live: livePrice,
-                prevClose: isNaN(prevClose) ? null : prevClose,
-                PE: isNaN(pe) ? null : pe,
-                High52: isNaN(high52) ? null : high52,
-                Low52: isNaN(low52) ? null : low52,
-                targetHit: isTargetHit, // Keep this for now for existing logic reference
-                lastLivePrice: livePrice,
-                lastPrevClose: isNaN(prevClose) ? null : prevClose,
-                CompanyName: item.CompanyName || 'N/A' // Store company name here too
-            };
-
-            // Re-introducing Firestore update logic for live price data
-            // This ensures share.currentPrice and related fields in Firestore are kept up-to-date
-            if (shareData && db && currentUserId && window.firestore) {
-                const shareDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, shareData.id);
-                const updatePayload = {
-                    currentPrice: livePrice, // Update currentPrice with the actual live price
-                    lastFetchedPrice: livePrice,
-                    previousFetchedPrice: isNaN(prevClose) ? null : prevClose,
-                    lastLivePriceUpdate: new Date().toISOString(), // Record when it was updated
-                    companyName: item.CompanyName || shareData.companyName || null // Update company name if available
+                newLivePrices[asxCode] = {
+                    live: livePrice,
+                    prevClose: isNaN(prevClose) ? null : prevClose,
+                    PE: isNaN(pe) ? null : pe,
+                    High52: isNaN(high52) ? null : high52,
+                    Low52: isNaN(low52) ? null : low52,
+                    targetHit: isTargetHit,
+                    // Store the fetched live and prevClose prices for use when market is closed
+                    lastLivePrice: livePrice,
+                    lastPrevClose: isNaN(prevClose) ? null : prevClose
                 };
-                // Use setDoc with merge to only update these specific fields
-                await window.firestore.setDoc(shareDocRef, updatePayload, { merge: true });
-                logDebug(`Firestore: Updated live price data for ${asxCode} in Firestore.`);
+            } else {
+                console.warn('Live Price: Skipping item due to missing ASX code or invalid price:', item);
             }
-        } // This closes the for...of loop
+        });
         livePrices = newLivePrices;
-        console.log('Live Price: Live prices updated:', livePrices);
+        console.log('Live Price: Live prices updated:', livePrices); 
         
         // renderWatchlist is called from the onSnapshot for shares, which will then trigger this.
         // We need to ensure adjustMainContentPadding is called here as well, as per user's instruction.
@@ -3149,48 +2739,73 @@ async function fetchLivePrices() { // Ensure 'async' is here
         window._livePricesLoaded = true;
         hideSplashScreenIfReady();
         
-        updateAlertIconStatus(); // Explicitly update alert icon after prices are fresh
+        updateTargetHitBanner(); // Explicitly update banner after prices are fresh
     } catch (error) {
         console.error('Live Price: Error fetching live prices:', error);
         // NEW: Hide splash screen on error
         hideSplashScreen();
     }
-} 
+}
 
-    /**
-    * Starts the periodic fetching of live prices.
-    */
-    function startLivePriceUpdates() {
-        if (livePriceFetchInterval) {
-            clearInterval(livePriceFetchInterval);
-            logDebug('Live Price: Cleared existing live price interval.');
-        }
-        // Only start fetching if not in cash view
-        if (!currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
-            fetchLivePrices(); 
-            livePriceFetchInterval = setInterval(fetchLivePrices, LIVE_PRICE_FETCH_INTERVAL_MS);
-            logDebug('Live Price: Started live price updates every ' + (LIVE_PRICE_FETCH_INTERVAL_MS / 1000 / 60) + ' minutes.');
-        } else {
-            logDebug('Live Price: Not starting live price updates because "Cash & Assets" is selected.'); // UPDATED TEXT
-        }
+/**
+ * Starts the periodic fetching of live prices.
+ */
+function startLivePriceUpdates() {
+    if (livePriceFetchInterval) {
+        clearInterval(livePriceFetchInterval);
+        logDebug('Live Price: Cleared existing live price interval.');
     }
-
-    /**
-    * Stops the periodic fetching of live prices.
-    */
-    function stopLivePriceUpdates() {
-        if (livePriceFetchInterval) {
-            clearInterval(livePriceFetchInterval);
-            livePriceFetchInterval = null;
-            logDebug('Live Price: Stopped live price updates.');
-        }
+    // Only start fetching if not in cash view
+    if (!currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
+        fetchLivePrices(); 
+        livePriceFetchInterval = setInterval(fetchLivePrices, LIVE_PRICE_FETCH_INTERVAL_MS);
+        logDebug('Live Price: Started live price updates every ' + (LIVE_PRICE_FETCH_INTERVAL_MS / 1000 / 60) + ' minutes.');
+    } else {
+        logDebug('Live Price: Not starting live price updates because "Cash & Assets" is selected.'); // UPDATED TEXT
     }
+}
 
-// This function is removed as its logic is now replaced by updateAlertIconStatus.
-// Keep this empty placeholder if it's called elsewhere and removing it completely causes issues.
-// Ideally, all calls to updateTargetHitBanner should be replaced with updateAlertsIconStatus.
+/**
+ * Stops the periodic fetching of live prices.
+ */
+function stopLivePriceUpdates() {
+    if (livePriceFetchInterval) {
+        clearInterval(livePriceFetchInterval);
+        livePriceFetchInterval = null;
+        logDebug('Live Price: Stopped live price updates.');
+    }
+}
+
+// NEW: Function to update the target hit notification icon
 function updateTargetHitBanner() {
-    logDebug('Target Alert: updateTargetHitBanner is deprecated. Its functionality is now handled by updateAlertIconStatus().');
+    // UPDATED: Filter shares in the CURRENTLY SELECTED WATCHLIST for target hits
+    sharesAtTargetPrice = allSharesData.filter(share => {
+        // Check if the share belongs to the currently selected watchlists (excluding 'All Shares' for this check)
+        const isShareInCurrentView = currentSelectedWatchlistIds.includes(ALL_SHARES_ID) || currentSelectedWatchlistIds.includes(share.watchlistId);
+        
+        const livePriceData = livePrices[share.shareName.toUpperCase()];
+        // Ensure livePriceData exists and has targetHit property
+        return isShareInCurrentView && livePriceData && livePriceData.targetHit;
+    });
+
+    if (!targetHitIconBtn || !targetHitIconCount) {
+        console.warn('Target Alert: Target hit icon elements not found. Cannot update icon.');
+        return;
+    }
+
+    // Only show if there are shares at target AND the icon hasn't been manually dismissed AND we are in a stock view
+    if (sharesAtTargetPrice.length > 0 && !targetHitIconDismissed && !currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
+        targetHitIconCount.textContent = sharesAtTargetPrice.length;
+        targetHitIconBtn.classList.remove('app-hidden'); // Show the icon
+        targetHitIconBtn.style.display = 'flex'; // Ensure it's flex for icon + counter
+        targetHitIconCount.style.display = 'block'; // Show the count badge
+        logDebug('Target Alert: Showing icon: ' + sharesAtTargetPrice.length + ' shares hit target (watchlist-specific check).');
+    } else {
+        targetHitIconBtn.classList.add('app-hidden'); // Hide the icon
+        targetHitIconBtn.style.display = 'none'; // Ensure it's hidden
+        targetHitIconCount.style.display = 'none'; // Hide the count badge
+        logDebug('Target Alert: No shares hit target in current view or icon is dismissed or in cash view. Hiding icon.');
+    }
 }
 
 // NEW: Function to render alerts in the alert panel (currently empty, but planned for future)
@@ -3305,12 +2920,6 @@ async function loadShares() {
     try {
         const sharesCol = window.firestore.collection(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/shares');
         let q = window.firestore.query(sharesCol); // Listener for all shares, filtering for display done in renderWatchlist
-
-        // NEW: Unsubscribe from the previous listener if it exists to prevent multiple listeners
-        if (unsubscribeShares) {
-            unsubscribeShares();
-            logDebug('Firestore Listener: Unsubscribed from previous shares listener before re-attaching.');
-        }
 
         unsubscribeShares = window.firestore.onSnapshot(q, async (querySnapshot) => { 
             logDebug('Firestore Listener: Shares snapshot received. Processing changes.');
@@ -4177,7 +3786,7 @@ function exportWatchlistToCSV() {
     }
 
     const headers = [
-        'Code', 'Entered Price', 'Live Price', 'Price Change', 'Target Value', 'Target Type', 'Calculated Target Price', 'Dividend Amount', 'Franking Credits (%)',
+        'Code', 'Entered Price', 'Live Price', 'Price Change', 'Target Price', 'Dividend Amount', 'Franking Credits (%)',
         'Unfranked Yield (%)', 'Franked Yield (%)', 'Entry Date'
     ];
 
@@ -4188,9 +3797,7 @@ function exportWatchlistToCSV() {
         const enteredPriceNum = Number(share.currentPrice);
         const dividendAmountNum = Number(share.dividendAmount);
         const frankingCreditsNum = Number(share.frankingCredits);
-        const targetValueNum = Number(share.targetValue); // New: Get targetValue
-        const targetTypeStr = share.targetType || '$'; // New: Get targetType
-        const calculatedTargetPriceNum = Number(share.calculatedTargetPrice); // New: Get calculated target price
+        const targetPriceNum = Number(share.targetPrice);
 
         // Get live price data from the global livePrices object
         const livePriceData = livePrices[share.shareName.toUpperCase()];
@@ -4215,9 +3822,7 @@ function exportWatchlistToCSV() {
             (!isNaN(enteredPriceNum) && enteredPriceNum !== null) ? enteredPriceNum.toFixed(2) : '',
             (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) ? livePrice.toFixed(2) : '',
             priceChange, // Now includes the calculated price change
-            (!isNaN(targetValueNum) && targetValueNum !== null) ? targetValueNum.toFixed(2) : '', // Target Value
-            targetTypeStr, // Target Type
-            (!isNaN(calculatedTargetPriceNum) && calculatedTargetPriceNum !== null) ? calculatedTargetPriceNum.toFixed(2) : '', // Calculated Target Price
+            (!isNaN(targetPriceNum) && targetPriceNum !== null) ? targetPriceNum.toFixed(2) : '',
             (!isNaN(dividendAmountNum) && dividendAmountNum !== null) ? dividendAmountNum.toFixed(3) : '',
             (!isNaN(frankingCreditsNum) && frankingCreditsNum !== null) ? frankingCreditsNum.toFixed(1) : '',
             unfrankedYield !== null && !isNaN(unfrankedYield) ? unfrankedYield.toFixed(2) : '0.00', // Ensure numerical output
@@ -4434,7 +4039,7 @@ async function initializeAppLogic() {
     if (calculatorModal) calculatorModal.style.setProperty('display', 'none', 'important');
     if (shareContextMenu) shareContextMenu.style.setProperty('display', 'none', 'important');
     if (targetHitIconBtn) targetHitIconBtn.style.display = 'none'; // Ensure icon is hidden initially
-    if (activeAlertsModal) activeAlertsModal.style.setProperty('display', 'none', 'important'); // Ensure active alerts modal is hidden initially
+    if (alertPanel) alertPanel.style.display = 'none'; // NEW: Ensure alert panel is hidden initially
     // NEW: Hide cash asset modals initially
     if (cashAssetFormModal) cashAssetFormModal.style.setProperty('display', 'none', 'important');
     if (cashAssetDetailModal) cashAssetDetailModal.style.setProperty('display', 'none', 'important');
@@ -4474,6 +4079,7 @@ async function initializeAppLogic() {
         }
     }
 
+
     // Share Name Input to uppercase
     if (shareNameInput) {
         shareNameInput.addEventListener('input', function() { 
@@ -4482,13 +4088,6 @@ async function initializeAppLogic() {
         });
     }
 
-    // Event listener for the purchase price input to update dirty state and target calculation
-    if (purchasePriceInput) {
-        purchasePriceInput.addEventListener('input', () => {
-            checkFormDirtyState();
-            updateTargetCalculationDisplay();
-        });
-    }
     
     // NEW: Autocomplete Search Input Listeners for Stock Search Modal (Consolidated & Corrected)
     if (asxSearchInput) {
@@ -4595,9 +4194,7 @@ async function initializeAppLogic() {
     }
 
     // Add event listeners to all form inputs for dirty state checking
-    // Ensure purchasePriceInput is included here, as it's now the primary editable price field.
-    [shareNameInput, purchasePriceInput, targetValueInput,
-    dividendAmountInput, frankingCreditsInput, shareRatingSelect].forEach(input => {
+    formInputs.forEach(input => {
         if (input) {
             input.addEventListener('input', checkFormDirtyState);
             input.addEventListener('change', checkFormDirtyState);
@@ -4623,33 +4220,15 @@ async function initializeAppLogic() {
             input.addEventListener('keydown', function(event) {
                 if (event.key === 'Enter') {
                     event.preventDefault();
-                    // Determine the next focusable element
-                    let nextElement = null;
-                    if (input === targetValueInput) {
-                        // If current input is targetValueInput, check which toggle is active or default to dollar
-                        if (targetTypeDollarBtn.classList.contains('active') && targetTypePercentBtn) {
-                            nextElement = targetTypePercentBtn; // Focus on the other toggle to allow user to easily switch
-                        } else if (targetTypePercentBtn.classList.contains('active') && targetTypeDollarBtn) {
-                            nextElement = targetTypeDollarBtn;
-                        } else {
-                            // Default to dollar button if neither is active (shouldn't happen if default is set)
-                            nextElement = targetTypeDollarBtn;
-                        }
-                    } else if (input === targetTypeDollarBtn || input === targetTypePercentBtn) {
-                        // If current input is a toggle button, move to dividendAmountInput
-                        nextElement = dividendAmountInput;
-                    } else if (index < formInputs.length - 1) {
-                        nextElement = formInputs[index + 1];
+                    const nextInput = formInputs[index + 1];
+
+                    // Only call select() if the input has the method (i.e., it's a text/number input)
+                    if (input.tagName === 'INPUT' || input.tagName === 'TEXTAREA') {
+                        input.select();
                     }
 
-                    if (nextElement) {
-                        nextElement.focus();
-                        // For text inputs, select content for easier editing
-                        if (nextElement.tagName === 'INPUT' && (nextElement.type === 'text' || nextElement.type === 'number')) {
-                            nextElement.select();
-                        }
-                    } else {
-                        // If no more inputs in the formInputs array, try to add a comment or save
+                    // If current input is the last one, try to add a comment or save
+                    if (index === formInputs.length - 1) {
                         if (addCommentSectionBtn && addCommentSectionBtn.offsetParent !== null && !addCommentSectionBtn.classList.contains('is-disabled-icon')) {
                             addCommentSectionBtn.click();
                             const newCommentTitleInput = commentsFormContainer.lastElementChild?.querySelector('.comment-title-input');
@@ -4658,6 +4237,26 @@ async function initializeAppLogic() {
                             }
                         } else if (saveShareBtn && !saveShareBtn.classList.contains('is-disabled-icon')) {
                             saveShareBtn.click();
+                        }
+                    } else if (nextInput) {
+                        // For the dropdown, explicitly move focus to the next input element after it
+                        if (input === shareRatingSelect) {
+                            // Find the element *after* shareRatingSelect in the formInputs array
+                            const nextElementAfterRating = formInputs[index + 1];
+                            if (nextElementAfterRating) {
+                                nextElementAfterRating.focus();
+                            } else if (addCommentSectionBtn && addCommentSectionBtn.offsetParent !== null && !addCommentSectionBtn.classList.contains('is-disabled-icon')) {
+                                // If no more inputs after rating, try to add comment section
+                                addCommentSectionBtn.click();
+                                const newCommentTitleInput = commentsFormContainer.lastElementChild?.querySelector('.comment-title-input');
+                                if (newCommentTitleInput) {
+                                    newCommentTitleInput.focus();
+                                }
+                            } else if (saveShareBtn && !saveShareBtn.classList.contains('is-disabled-icon')) {
+                                saveShareBtn.click();
+                            }
+                        } else {
+                            nextInput.focus();
                         }
                     }
                 }
@@ -4685,21 +4284,13 @@ async function initializeAppLogic() {
 
     // Close buttons for modals
     document.querySelectorAll('.close-button').forEach(button => {
-        // Handle specific close buttons that should only close their own modal
-        if (button === alertsCloseButton || button === minimizeAlertsModalBtn) { // Target the alerts modal's 'X' and Minimize button
-            // Ensure any previous listeners are removed to prevent multiple firings or conflicts
-            button.removeEventListener('click', closeModals);
-            button.removeEventListener('click', closeActiveAlertsModal);
-            button.addEventListener('click', closeActiveAlertsModal); // This button ONLY closes the alerts modal
-        } else if (button.classList.contains('form-close-button')) { // Specific for the share form's 'X' (Cancel button)
-            button.removeEventListener('click', closeModals); // Remove general listener
+        if (button.classList.contains('form-close-button')) { // Specific for the share form's 'X' (Cancel button)
             button.addEventListener('click', () => {
                 logDebug('Form: Share form close button (X) clicked. Clearing form before closing to cancel edits.');
                 clearForm(); // This will reset originalShareData and selectedShareDocId, preventing auto-save
                 closeModals(); // Now closeModals won't trigger auto-save for this form
             });
         } else if (button.classList.contains('cash-form-close-button')) { // NEW: Specific for cash asset form's 'X' (Cancel button)
-            button.removeEventListener('click', closeModals); // Remove general listener
             button.addEventListener('click', () => {
                 logDebug('Cash Form: Cash asset form close button (X) clicked. Clearing form before closing to cancel edits.');
                 clearCashAssetForm(); // Reset originalCashAssetData and selectedCashAssetDocId
@@ -4707,9 +4298,7 @@ async function initializeAppLogic() {
             });
         }
         else {
-            // For all other generic close buttons, they should still call closeModals()
-            button.removeEventListener('click', closeModals); // Remove any existing to prevent duplicates
-            button.addEventListener('click', closeModals); // Re-add general close
+            button.addEventListener('click', closeModals); // Other modals still close normally
         }
     });
 
@@ -4729,12 +4318,11 @@ async function initializeAppLogic() {
 
     // Global click listener to close modals/context menu if clicked outside
     window.addEventListener('click', (event) => {
-        // Only close these specific modals if clicked directly on their backdrop
         if (event.target === shareDetailModal || event.target === dividendCalculatorModal ||
             event.target === shareFormSection || event.target === customDialogModal ||
             event.target === calculatorModal || event.target === addWatchlistModal ||
-            event.target === manageWatchlistModal || // Removed alertPanel here as it's handled by its own function
-            event.target === cashAssetFormModal || event.target === cashAssetDetailModal) {
+            event.target === manageWatchlistModal || event.target === alertPanel ||
+            event.target === cashAssetFormModal || event.target === cashAssetDetailModal) { // NEW: Include cash asset modals here
             closeModals();
         }
 
@@ -4785,13 +4373,54 @@ async function initializeAppLogic() {
         });
     }
 
-    // NEW: Target hit icon button listener to open active alerts modal
+    // NEW: Target hit icon button listener for dismissal
     if (targetHitIconBtn) {
-        targetHitIconBtn.addEventListener('click', () => {
-            logDebug('Target Alert: Icon button clicked. Opening active alerts modal.');
-            openActiveAlertsModal(); // Call the function to open the active alerts modal
+        targetHitIconBtn.addEventListener('click', (event) => {
+            logDebug('Target Alert: Icon button clicked. Dismissing icon.');
+            targetHitIconDismissed = true; // Set flag to true
+            localStorage.setItem('targetHitIconDismissed', 'true'); // Save dismissal state to localStorage
+            updateTargetHitBanner(); // Re-run to hide the icon
+            showCustomAlert('Alerts dismissed for this session.', 1500); // Optional: Provide user feedback
+            renderWatchlist(); // NEW: Re-render watchlist to remove highlighting
         });
     }
+
+    // NEW: Target hit icon button listener to open alert panel (if you decide to use it later)
+    // For now, this is commented out as the user wants simple dismissal on click.
+    /*
+    if (targetHitIconBtn) {
+        targetHitIconBtn.addEventListener('click', () => {
+            logDebug('Target Alert: Icon button clicked. Toggling alert panel.');
+            if (alertPanel.style.display === 'flex') {
+                hideModal(alertPanel);
+            } else {
+                renderAlertsInPanel(); // Render alerts before showing
+                showModal(alertPanel);
+            }
+        });
+    }
+    */
+
+    // NEW: Close alert panel button listener (alertPanel is not in current HTML, but kept for consistency)
+    if (closeAlertPanelBtn) {
+        closeAlertPanelBtn.addEventListener('click', () => {
+            logDebug('Alert Panel: Close button clicked.');
+            // hideModal(alertPanel); // Commented out as alertPanel is not in HTML
+        });
+    }
+
+    // NEW: Clear All Alerts button listener (alertPanel is not in current HTML, but kept for consistency)
+    if (clearAllAlertsBtn) {
+        clearAllAlertsBtn.addEventListener('click', () => {
+            logDebug('Alert Panel: Clear All button clicked.');
+            sharesAtTargetPrice = []; // Clear all alerts in memory
+            // renderAlertsInPanel(); // Commented out as alertPanel is not in HTML
+            updateTargetHitBanner(); // Update the main icon count
+            showCustomAlert('All alerts cleared for this session.', 1500);
+            // hideModal(alertPanel); // Commented out as alertPanel is not in HTML
+        });
+    }
+
 
     // Logout Button
     if (logoutBtn) {
@@ -4832,8 +4461,9 @@ async function initializeAppLogic() {
                 } else {
                     console.warn('Splash Screen: User signed out, but splash screen element not found. App content might be visible.');
                 }
-                // NEW: Clear dismissed alerts session on logout for a fresh start on next login
-                dismissedAlertsSession.clear();
+                // NEW: Reset targetHitIconDismissed and clear localStorage entry on logout for a fresh start on next login
+                targetHitIconDismissed = false; 
+                localStorage.removeItem('targetHitIconDismissed');
 
             }
             catch (error) {
@@ -5354,7 +4984,7 @@ if (sortSelect) {
                 try {
                     await window.firestore.setDoc(userProfileDocRef, { lastTheme: targetTheme }, { merge: true });
                     logDebug('Theme: Saved explicit Light/Dark theme preference to Firestore: ' + targetTheme);
-                } catch (error) { // Added missing catch block
+                } catch (error) {
                     console.error('Theme: Error saving explicit Light/Dark theme preference to Firestore:', error);
                 }
             }
@@ -5522,74 +5152,6 @@ if (showLastLivePriceToggle) {
     showLastLivePriceToggle.addEventListener('change', async (event) => {
         showLastLivePriceOnClosedMarket = event.target.checked;
         logDebug('Toggle: "Show Last Live Price" toggled to: ' + showLastLivePriceOnClosedMarket);
-    // Event listeners for new target price input and type buttons
-    if (targetValueInput) {
-        targetValueInput.addEventListener('input', updateTargetCalculationDisplay);
-        targetValueInput.addEventListener('change', updateTargetCalculationDisplay); // Listen for change to catch blur
-    }
-
-    if (targetTypeDollarBtn) {
-        targetTypeDollarBtn.addEventListener('click', () => {
-            if (!targetTypeDollarBtn.classList.contains('active')) {
-                targetTypeDollarBtn.classList.add('active');
-                targetTypePercentBtn.classList.remove('active');
-                updateTargetCalculationDisplay();
-                checkFormDirtyState(); // Check dirty state when toggle changes
-            }
-        });
-    }
-
-    if (targetTypePercentBtn) {
-        targetTypePercentBtn.addEventListener('click', () => {
-            if (!targetTypePercentBtn.classList.contains('active')) {
-                targetTypePercentBtn.classList.add('active');
-                targetTypeDollarBtn.classList.remove('active');
-                updateTargetCalculationDisplay();
-                checkFormDirtyState(); // Check dirty state when toggle changes
-            }
-        });
-    }
-
-    if (targetTypeDollarBtn) targetTypeDollarBtn.addEventListener('click', () => {
-        targetTypeDollarBtn.classList.add('active');
-        targetTypePercentBtn.classList.remove('active');
-        updateTargetCalculationDisplay();
-    });
-    if (targetTypePercentBtn) targetTypePercentBtn.addEventListener('click', () => {
-        targetTypePercentBtn.classList.add('active');
-        targetTypeDollarBtn.classList.remove('active');
-        updateTargetCalculationDisplay();
-    });
-
-    // Event listeners for the Active Alerts Modal
-    if (targetHitIconBtn) targetHitIconBtn.addEventListener('click', openActiveAlertsModal);
-
-    // Correctly handle the close button for the active alerts modal
-    if (alertsCloseButton) { // Use the direct reference 'alertsCloseButton'
-        // Remove any previous listeners to prevent duplicates
-        alertsCloseButton.removeEventListener('click', closeModals); // Remove global close if present
-        alertsCloseButton.removeEventListener('click', closeActiveAlertsModal); // Remove previous specific close
-        alertsCloseButton.addEventListener('click', closeActiveAlertsModal); // Add correct specific close
-    }
-
-    if (minimizeAlertsModalBtn) {
-        minimizeAlertsModalBtn.removeEventListener('click', closeActiveAlertsModal); // Remove previous
-        minimizeAlertsModalBtn.addEventListener('click', closeActiveAlertsModal); // Re-add to ensure it's active
-    }
-    if (dismissAllAlertsBtn) {
-        dismissAllAlertsBtn.removeEventListener('click', dismissAllActiveAlerts); // Remove previous
-        dismissAllAlertsBtn.addEventListener('click', dismissAllActiveAlerts); // Re-add to ensure it's active
-    }
-    // Click outside alerts modal to minimize it
-    if (activeAlertsModal) {
-        activeAlertsModal.addEventListener('click', (event) => {
-            const modalContent = activeAlertsModal.querySelector('.modal-content');
-            // Ensure click is on the backdrop, not bubbling from inside the modal content
-            if (modalContent && !modalContent.contains(event.target) && event.target === activeAlertsModal) {
-                closeActiveAlertsModal();
-            }
-        });
-    }
 
         // Save preference to Firestore
         if (currentUserId && db && window.firestore) {
@@ -5735,20 +5297,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     logDebug('Splash Screen: Started pulsing animation after sign-in.');
                 }
                 
-                // On successful login, clear the session dismissal for alerts to re-evaluate all
-                dismissedAlertsSession.clear();
+                // Load dismissal state from localStorage on login
+                targetHitIconDismissed = localStorage.getItem('targetHitIconDismissed') === 'true';
 
                 // Load data and then hide splash screen
-                await loadUserWatchlistsAndSettings(); // This loads watchlists and user settings
-                // Load ASX codes for autocomplete (can happen in parallel or before live prices)
+                await loadUserWatchlistsAndSettings(); // This now sets _appDataLoaded and calls hideSplashScreenIfReady
+                await fetchLivePrices(); // Ensure live prices are fetched after settings and current watchlist are loaded
+                // NEW: Load ASX codes for autocomplete
                 allAsxCodes = await loadAsxCodesFromCSV();
                 logDebug(`ASX Autocomplete: Loaded ${allAsxCodes.length} codes for search.`);
-                
-                // Now fetch live prices. This must happen AFTER loadUserWatchlistsAndSettings
-                // because fetchLivePrices needs share.lastFetchedPrice from allSharesData,
-                // which is populated by the shares onSnapshot listener initiated by loadShares(),
-                // which is called by loadUserWatchlistsAndSettings().
-                await fetchLivePrices();
 
                 // Removed: startLivePriceUpdates(); // This is now called by renderWatchlist based on selected type
                 

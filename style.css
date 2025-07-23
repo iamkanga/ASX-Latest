@@ -1,4 +1,4 @@
-/* Base Styles */
+/*  Base Styles */
 :root {
     /* Light Theme (Default) */
     --background-color: #eef2f3;
@@ -67,28 +67,23 @@
     --target-banner-height: 40px; /* This variable is now effectively unused for the banner, but kept for other potential uses */
 
     /* NEW: Alert System Colors */
-    --alert-icon-buy: #dc3545; /* Red for buy target hit */
-    --alert-icon-sell: #28a745; /* Green for sell target hit */
-    --alert-icon-mixed: #007bff; /* Blue for mixed targets hit */
+    --alert-icon-bg: #dc3545; /* Red for the chat box icon */
     --alert-icon-text: #fff;
-    --alert-icon-shadow: rgba(0, 0, 0, 0.2);
-
-    --alert-modal-bg: #f8f9fa; /* Light background for modal */
-    --alert-modal-border: #c9d2d4;
-    --alert-modal-header-bg: #e6e9eb;
+    --alert-icon-shadow: rgba(220, 53, 69, 0.4);
+    --alert-panel-bg: #f8f9fa; /* Light background for panel */
+    --alert-panel-border: #c9d2d4;
     --alert-item-bg: #ffffff;
-    --alert-item-border: #e0e0e0;
-    --alert-dismiss-btn-bg: #28a745; /* Green for dismiss */
-    --alert-dismiss-btn-hover-bg: #218838;
-    --alert-minimize-btn-color: #6c757d; /* Grey for minimize */
-    --alert-minimize-btn-hover-color: #5a6268;
+    --alert-item-hover-bg: #f0f4f5;
+    --alert-dismiss-btn-color: #28a745; /* Green for dismiss */
+    --alert-snooze-btn-color: #17a2b8; /* Info blue for snooze */
+    --snooze-options-bg: #ffffff;
+    --snooze-options-border: #b0b8bb;
 
-    /* Highlight Colors for Table/Cards */
-    --highlight-buy-border: #dc3545; /* Red border */
-    --highlight-sell-border: #28a745; /* Green border */
-    --highlight-buy-bg: rgba(220, 53, 69, 0.08); /* Faint red background */
-    --highlight-sell-bg: rgba(40, 167, 69, 0.08); /* Faint green background */
-    --highlight-text-color: inherit; /* Text color remains standard or inherited */
+    /* UPDATED: Cash & Assets Section Colors */
+    --cash-section-bg: #f8f9fa;
+    --cash-card-bg: #ffffff;
+    --cash-border-color: #c9d2d4;
+    --cash-total-bg: #e0f7fa;
     --cash-total-text: #0056b3;
     --cash-button-bg: #28a745; /* Green for add */
     --cash-button-hover-bg: #218838;
@@ -1189,7 +1184,7 @@ body.theme-muted-orange {
 
     /* UPDATED: Cash & Assets Section Colors (Muted Theme) */
     --cash-section-bg: #f9f4ee;
-    --cash-card-bg: #e7e0d9;
+    --cash-card-bg: #e7d9cd;
     --cash-border-color: #cbb7a1;
     --cash-total-bg: #987b5a;
     --cash-total-text: #fff;
@@ -1284,7 +1279,7 @@ body.theme-muted-magenta {
     --danger-button-bg: #dc3545;
     --danger-button-hover-bg: #c82333;
     --icon-action-color: #a86a8b;
-    --icon-action-hover-color: #985a7b;
+    --icon-action-hover-color: #987b5a;
     --icon-danger-color: #dc3545;
     --icon-danger-hover-color: #c82333;
     --calc-num-btn-bg: #d9b3c7;
@@ -1299,18 +1294,18 @@ body.theme-muted-magenta {
     --comment-title-bg: rgba(0, 0, 0, 0.05);
     --target-alert-bg: #a86a8b;
     --target-alert-text: #fff;
-    --target-alert-border: #985a7b;
+    --target-alert-border: #987b5a;
 
     /* UPDATED: Cash & Assets Section Colors (Muted Theme) */
     --cash-section-bg: #f9eef9;
     --cash-card-bg: #e7cde7;
     --cash-border-color: #cbb7a1;
-    --cash-total-bg: #985a7b;
+    --cash-total-bg: #987b5a;
     --cash-total-text: #fff;
     --cash-button-bg: #28a745;
     --cash-button-hover-bg: #218838;
     --cash-primary-button-bg: #a86a8b;
-    --cash-primary-button-hover-bg: #985a7b;
+    --cash-primary-button-hover-bg: #987b5a;
     --cash-delete-icon-color: #dc3545;
     --cash-edit-icon-color: #a86a8b;
 }
@@ -2549,41 +2544,12 @@ table tbody tr:not(.selected):hover {
 }
 
 /* NEW: Target hit alert styling for table rows and mobile cards */
-table tbody tr.alert-buy,
-.mobile-card.alert-buy {
-    border: 2px solid var(--highlight-buy-border); /* Red border for buy */
-    background-color: var(--highlight-buy-bg); /* Faint red background */
-    animation: pulse-border-red 1.5s infinite alternate; /* Subtle pulsing animation */
-}
-
-table tbody tr.alert-sell,
-.mobile-card.alert-sell {
-    border: 2px solid var(--highlight-sell-border); /* Green border for sell */
-    background-color: var(--highlight-sell-bg); /* Faint green background */
-    animation: pulse-border-green 1.5s infinite alternate; /* Subtle pulsing animation */
-}
-
-/* Ensure text color applies to children */
-table tbody tr.alert-buy td,
-.mobile-card.alert-buy h3,
-.mobile-card.alert-buy p,
-.mobile-card.alert-buy span,
-table tbody tr.alert-sell td,
-.mobile-card.alert-sell h3,
-.mobile-card.alert-sell p,
-.mobile-card.alert-sell span {
-    color: var(--highlight-text-color); /* Inherit text color from parent */
-}
-
-/* Animations for pulsing borders */
-@keyframes pulse-border-red {
-    from { border-color: var(--highlight-buy-border); }
-    to { border-color: rgba(220, 53, 69, 0.4); } /* Faded red */
-}
-
-@keyframes pulse-border-green {
-    from { border-color: var(--highlight-sell-border); }
-    to { border-color: rgba(40, 167, 69, 0.4); } /* Faded green */
+table tbody tr.target-hit-alert,
+.mobile-card.target-hit-alert {
+    background-color: var(--target-alert-bg); /* Use the new alert background color */
+    border-color: var(--target-alert-border); /* Use the new alert border color */
+    color: var(--target-alert-text); /* Ensure text is readable on alert background */
+    animation: pulse-alert 1.5s infinite alternate; /* Subtle pulsing animation */
 }
 
 /* Ensure text color applies to children */
@@ -3063,52 +3029,6 @@ table td.live-price-cell.negative-change {
     font-size: 18px; /* Adjust size of checkmark */
     line-height: 24px; /* Vertically center checkmark */
     text-align: center;
-}
-
-/* NEW: Target Input Group Styling */
-.target-input-group {
-    display: flex;
-    align-items: center;
-    margin-bottom: 15px; /* Space below the entire group */
-    gap: 10px;
-}
-
-.target-input-group .target-value-input {
-    flex-grow: 1; /* Allow input to take most of the space */
-    margin-bottom: 0; /* Remove default margin */
-}
-
-.target-input-group .target-type-toggle {
-    display: flex;
-    border: 1px solid var(--input-border);
-    border-radius: 8px;
-    overflow: hidden; /* Ensures inner buttons respect border-radius */
-    flex-shrink: 0; /* Prevent toggle from shrinking */
-}
-
-.target-input-group .target-type-btn {
-    background-color: var(--input-bg);
-    color: var(--text-color);
-    border: none;
-    padding: 10px 15px;
-    cursor: pointer;
-    font-size: 1em;
-    font-weight: 600;
-    transition: background-color 0.2s ease, color 0.2s ease;
-    border-right: 1px solid var(--input-border); /* Separator between buttons */
-}
-
-.target-input-group .target-type-btn:last-child {
-    border-right: none; /* No border for the last button */
-}
-
-.target-input-group .target-type-btn.active {
-    background-color: var(--button-bg);
-    color: var(--button-text);
-}
-
-.target-input-group .target-type-btn:hover:not(.active) {
-    background-color: var(--table-row-hover-bg); /* Subtle hover for non-active */
 }
 
 /* NEW: Styling for Checkbox Group */
@@ -3618,16 +3538,16 @@ table td.live-price-cell.negative-change {
     color: var(--button-text);
 }
 
-/* Target Hit Notification Icon (bottom left) */
+/* Target Hit Notification Icon (bottom right) */
 .target-hit-icon-btn {
     display: none; /* Hidden by default, shown by JS when shares hit target */
     position: fixed !important; /* Ensures it stays in viewport, overriding any other positions */
     bottom: 20px !important; /* Padding from bottom */
-    left: 20px !important; /* Relocated to left */
-    right: auto !important; /* Ensure it's not forced to the right */
+    right: 20px !important; /* Padding from right */
+    left: auto !important; /* Ensure it's not forced to the left */
     z-index: 9999 !important; /* Ensure it's on top of everything */
-    background-color: var(--alert-icon-buy); /* Default to buy color, JS will change */
-    color: var(--alert-icon-text);
+    background-color: var(--alert-icon-bg); /* Use alert background color */
+    color: var(--alert-icon-text); /* Use alert text color */
     border: none;
     border-radius: 8px; /* Slightly rounded for chat box look */
     width: 55px; /* Size of the button */
@@ -3641,7 +3561,7 @@ table td.live-price-cell.negative-change {
     transition: transform 0.2s ease, background-color 0.2s ease;
     animation: pulse-alert 1.5s infinite alternate; /* Subtle pulsing animation */
     
-    /* Chat box tail - now on the left */
+    /* Chat box tail */
     position: relative; /* For positioning the pseudo-element tail */
 }
 
@@ -3649,41 +3569,24 @@ table td.live-price-cell.negative-change {
     content: '';
     position: absolute;
     bottom: -8px; /* Position below the button */
-    left: 8px; /* Align to the left side of the button */
+    right: 8px; /* Align to the right side of the button */
     width: 0;
     height: 0;
     border-left: 8px solid transparent;
     border-right: 8px solid transparent;
-    border-top: 8px solid var(--alert-icon-buy); /* Default to buy color, JS will change */
+    border-top: 8px solid var(--alert-icon-bg); /* Color of the tail */
     filter: drop-shadow(0 2px 1px rgba(0,0,0,0.1)); /* Match button shadow slightly */
 }
 
-.target-hit-icon-btn.buy-alert {
-    background-color: var(--alert-icon-buy);
-}
-.target-hit-icon-btn.buy-alert::after {
-    border-top-color: var(--alert-icon-buy);
-}
-
-.target-hit-icon-btn.sell-alert {
-    background-color: var(--alert-icon-sell);
-}
-.target-hit-icon-btn.sell-alert::after {
-    border-top-color: var(--alert-icon-sell);
-}
-
-.target-hit-icon-btn.mixed-alert {
-    background-color: var(--alert-icon-mixed);
-}
-.target-hit-icon-btn.mixed-alert::after {
-    border-top-color: var(--alert-icon-mixed);
-}
 
 .target-hit-icon-btn:hover {
     transform: scale(1.1);
-    /* No specific hover background, color changes by class */
+    background-color: var(--danger-button-hover-bg); /* Slightly darker on hover */
 }
-/* No specific :hover::after, color changes by class */
+
+.target-hit-icon-btn:hover::after {
+    border-top-color: var(--danger-button-hover-bg); /* Match tail color on hover */
+}
 
 .target-hit-icon-count {
     position: absolute;
@@ -3701,130 +3604,185 @@ table td.live-price-cell.negative-change {
     box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 
-/* Active Alerts Modal Styles */
-#activeAlertsModal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent overlay */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 2000; /* Higher than other modals */
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
-}
-
-#activeAlertsModal.open {
-    opacity: 1;
-    visibility: visible;
-}
-
-#activeAlertsModal .modal-content {
-    background-color: var(--modal-bg-color);
-    color: var(--text-color);
-    padding: 20px;
-    border-radius: var(--border-radius-medium); /* Slightly larger radius for modal */
-    width: 90%; /* Responsive width */
-    max-width: 400px; /* Max width for desktop */
-    max-height: 90%; /* Max height to allow scrolling */
-    display: flex;
+/* Alert Panel Styles */
+.alert-panel {
+    display: none; /* Hidden by default, shown by JS */
     flex-direction: column;
-    position: relative;
-    overflow: hidden; /* Hide overflow until scrollable area is defined */
-    box-shadow: 0 5px 15px var(--shadow-color); /* Apply modal shadow */
-    transform: translateY(20px); /* Start slightly off-center */
-    transition: transform 0.3s ease;
+    position: fixed !important; /* Ensures it stays in viewport */
+    bottom: 80px !important; /* Position above the target hit icon button (20px button + 20px gap + 40px button = 80px) */
+    right: 20px !important; /* Align with the icon button */
+    left: auto !important; /* Ensure it's not forced to the left */
+    width: 300px; /* Fixed width for the panel */
+    max-height: 70vh; /* Max height to prevent overflow, allow scrolling */
+    background-color: var(--alert-panel-bg);
+    border: 1px solid var(--alert-panel-border);
+    border-radius: 10px;
+    box-shadow: 0 4px 15px var(--shadow-color);
+    z-index: 9998 !important; /* Above scroll-to-top, below modals */
+    overflow: hidden; /* Hide scrollbar for the panel itself */
+    opacity: 0; /* Start hidden for transition */
+    transform: translateY(20px); /* Slide up from bottom */
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
 }
 
-#activeAlertsModal.open .modal-content {
-    transform: translateY(0); /* Slide into place */
+.alert-panel.open {
+    opacity: 1;
+    transform: translateY(0);
 }
 
-#activeAlertsModal .modal-header {
+.alert-panel-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 15px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--border-color);
+    padding: 10px 15px;
+    border-bottom: 1px solid var(--alert-panel-border);
+    background-color: var(--table-header-bg); /* Use a slightly different background */
 }
 
-#activeAlertsModal .modal-title {
-    font-size: 1.5rem; /* Larger title */
-    font-weight: bold;
-    color: var(--heading-color);
+.alert-panel-header h3 {
+    margin: 0;
+    font-size: 1.1em;
+    color: var(--text-color);
 }
 
-#activeAlertsModal .alerts-close-button {
-    background: none;
-    border: none;
-    color: var(--ghosted-text);
-    font-size: 1.8rem; /* Larger close icon */
-    cursor: pointer;
+.alert-panel-header .close-button {
+    font-size: 1.5em;
     padding: 5px;
-    transition: color 0.2s ease;
+    color: var(--text-color); /* Ensure close button color is readable */
 }
-
-#activeAlertsModal .alerts-close-button:hover {
+.alert-panel-header .close-button:hover {
     color: var(--danger-color);
 }
 
-#activeAlertsModal .no-alerts-message {
-    text-align: center;
-    color: var(--ghosted-text);
-    padding: 20px;
-    flex-grow: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.alert-list {
+    flex-grow: 1; /* Allow list to take available space */
+    overflow-y: auto; /* Enable scrolling for alerts */
+    -webkit-overflow-scrolling: touch;
+    padding: 10px 15px;
 }
 
-#activeAlertsModal .alerts-list-scrollable { /* New container for scrollable list */
-    flex-grow: 1;
-    overflow-y: auto; /* Enable scrolling for the list */
-    padding-right: 5px; /* Add some padding to avoid scrollbar overlapping content */
-    margin-bottom: 15px; /* Space before buttons */
-}
-
-#activeAlertsModal .alert-item {
-    background-color: var(--secondary-background-color);
-    border: 1px solid var(--alert-item-border);
+.alert-item {
+    background-color: var(--alert-item-bg);
+    border: 1px solid var(--alert-panel-border);
     border-radius: 8px;
-    padding: 12px;
+    padding: 10px;
     margin-bottom: 10px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     color: var(--text-color);
     font-size: 0.9em;
     position: relative;
-    display: block;
 }
 
-#activeAlertsModal .alert-item:last-child {
-    margin-bottom: 0;
+.alert-item:last-child {
+    margin-bottom: 0; /* No margin for the last item */
 }
 
-#activeAlertsModal .alert-item-header {
-    font-weight: 700;
+.alert-item-header {
+    font-weight: 600;
     margin-bottom: 5px;
-    display: block;
-    font-size: 1.1em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-#activeAlertsModal .alert-item-body {
-    margin-bottom: 0;
+.alert-item-body {
+    margin-bottom: 10px;
     line-height: 1.4;
 }
 
-/* No specific alert item actions in modal as per simplified design (only dismiss all) */
-#activeAlertsModal .alert-item-actions {
-    display: none;
+.alert-item-actions {
+    display: flex;
+    justify-content: flex-end; /* Align buttons to the right */
+    gap: 8px;
 }
 
-#activeAlertsModal .no-alerts-message {
+.alert-item-actions button {
+    background: none;
+    border: 1px solid var(--alert-panel-border);
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 0.85em;
+    font-weight: 600;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.alert-item-actions .dismiss-btn {
+    color: var(--alert-dismiss-btn-color);
+    border-color: var(--alert-dismiss-btn-color);
+}
+.alert-item-actions .dismiss-btn:hover {
+    background-color: var(--alert-dismiss-btn-color);
+    color: #fff;
+}
+
+.alert-item-actions .snooze-btn {
+    color: var(--alert-snooze-btn-color);
+    border-color: var(--alert-snooze-btn-color);
+    position: relative; /* For dropdown */
+}
+.alert-item-actions .snooze-btn:hover {
+    background-color: var(--alert-snooze-btn-color);
+    color: #fff;
+}
+
+.snooze-options {
+    display: none; /* Hidden by default */
+    flex-direction: column;
+    position: absolute;
+    bottom: 100%; /* Position above the snooze button */
+    left: 0;
+    right: 0;
+    background-color: var(--snooze-options-bg);
+    border: 1px solid var(--snooze-options-border);
+    border-radius: 5px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    z-index: 1; /* Above other content in alert item */
+    padding: 5px;
+    gap: 3px;
+}
+
+.snooze-options button {
+    width: 100%;
+    padding: 5px 8px;
+    background: none;
+    border: none;
+    text-align: left;
+    font-size: 0.85em;
+    color: var(--text-color);
+    cursor: pointer;
+}
+.snooze-options button:hover {
+    background-color: var(--table-row-hover-bg);
+}
+
+.alert-panel-footer {
+    padding: 10px 15px;
+    border-top: 1px solid var(--alert-panel-border);
+    text-align: center;
+    background-color: var(--table-header-bg);
+}
+
+.alert-panel-footer .button {
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 600;
+    transition: background-color 0.2s ease;
+}
+
+.alert-panel-footer .secondary-buttons {
+    background-color: var(--secondary-button-bg);
+    color: var(--button-text);
+    border: 1px solid var(--secondary-button-bg);
+}
+.alert-panel-footer .secondary-buttons:hover {
+    background-color: var(--secondary-button-hover-bg);
+    border-color: var(--secondary-button-hover-bg);
+}
+
+.no-alerts-message {
     text-align: center;
     color: var(--ghosted-text);
     padding: 20px 0;
@@ -4657,28 +4615,4 @@ main.container {
         font-size: 1.2em; /* Slightly smaller total display */
         padding: 12px;
     }
-}
-
-/* NEW DESIGN: Integrated Target Input & Calculation Bar Styles */
-
-/* Base styling for the segmented toggle labels */
-.target-input-container label {
-    color: var(--text-color); /* Default text color */
-}
-
-/* Style for the active (checked) segmented toggle label */
-.target-input-container input[type="radio"]:checked + label {
-    background-color: var(--button-bg); /* Use theme's primary button color */
-    color: var(--button-text); /* Use theme's primary button text color */
-}
-
-/* Hover effect for labels */
-.target-input-container label:hover {
-    background-color: var(--button-hover-bg); /* Use theme's button hover color */
-    color: var(--button-text); /* Ensure text stays readable on hover */
-}
-
-/* Transition for the calculation display for smooth fade-in/out */
-#targetCalculationDisplay {
-    transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
 }
