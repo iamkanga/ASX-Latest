@@ -1459,7 +1459,8 @@ function showShareDetails() {
     modalShareName.textContent = share.shareName || 'N/A';
     modalShareName.className = 'modal-share-name ' + modalShareNamePriceChangeClass; // Apply class to modalShareName
 
-    const enteredPriceNum = Number(share.purchasePrice); // Corrected to use share.purchasePrice
+    // Correctly use share.purchasePrice for the "Entered Price" display in the modal
+    const enteredPriceNum = Number(share.purchasePrice);
 
     // Get live price data from the global livePrices object
     const livePriceData = livePrices[share.shareName.toUpperCase()];
