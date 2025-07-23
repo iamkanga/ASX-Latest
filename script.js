@@ -234,8 +234,8 @@ const clearAllAlertsBtn = document.getElementById('clearAllAlertsBtn'); // NEW: 
 const stockWatchlistSection = document.getElementById('stockWatchlistSection');
 const cashAssetsSection = document.getElementById('cashAssetsSection'); // UPDATED ID
 const cashCategoriesContainer = document.getElementById('cashCategoriesContainer');
-const addCashCategoryBtn = document.getElementById('addCashCategoryBtn'); // This will be removed or repurposed
-const saveCashBalancesBtn = document.getElementById('saveCashBalancesBtn'); // This will be removed or repurposed
+// Removed: const addCashCategoryBtn = document.getElementById('addCashCategoryBtn'); // This will be removed or repurposed
+// Removed: const saveCashBalancesBtn = document.getElementById('saveCashBalancesBtn'); // This will be removed or repurposed
 const totalCashDisplay = document.getElementById('totalCashDisplay');
 const addCashAssetSidebarBtn = document.getElementById('addCashAssetSidebarBtn'); // NEW: Sidebar button for cash asset
 
@@ -1133,22 +1133,22 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
     // Ensure currentPrice is a number and format for display
     currentPriceInput.value = (typeof shareToEdit.currentPrice === 'number' && !isNaN(shareToEdit.currentPrice)) ? shareToEdit.currentPrice.toFixed(2) : '';
     // NEW: Populate Target Value and Type
-    if (targetValueInput) {
-        targetValueInput.value = (typeof shareToEdit.targetValue === 'number' && !isNaN(shareToEdit.targetValue)) ? shareToEdit.targetValue : '';
-    }
-    // Use the new `targetTypeDollar` and `targetTypePercent` references (which are for the radio inputs)
-    if (targetTypeDollar && targetTypePercent) {
-        // Set the 'checked' property of the hidden radio inputs directly
-        if (shareToEdit.targetType === '%') {
-            targetTypePercent.checked = true;
-            targetTypeDollar.checked = false;
-        } else { // Default to '$' if targetType is not '%' or is undefined/null
-            targetTypeDollar.checked = true;
-            targetTypePercent.checked = false;
-        }
-    }
-    // Manually trigger update for initial display after values are set.
-    updateTargetCalculationDisplay(); 
+    if (targetValueInput) {
+        targetValueInput.value = (typeof shareToEdit.targetValue === 'number' && !isNaN(shareToEdit.targetValue)) ? shareToEdit.targetValue : '';
+    }
+    // Use the new `targetTypeDollar` and `targetTypePercent` references (which are for the radio inputs)
+    if (targetTypeDollar && targetTypePercent) {
+        // Set the 'checked' property of the hidden radio inputs directly
+        if (shareToEdit.targetType === '%') {
+            targetTypePercent.checked = true;
+            targetTypeDollar.checked = false;
+        } else { // Default to '$' if targetType is not '%' or is undefined/null
+            targetTypeDollar.checked = true;
+            targetTypePercent.checked = false;
+        }
+    }
+    // Manually trigger update for initial display after values are set.
+    updateTargetCalculationDisplay(); 
     
     dividendAmountInput.value = Number(shareToEdit.dividendAmount) !== null && !isNaN(Number(shareToEdit.dividendAmount)) ? Number(shareToEdit.dividendAmount).toFixed(3) : '';
     frankingCreditsInput.value = Number(shareToEdit.frankingCredits) !== null && !isNaN(Number(shareToEdit.frankingCredits)) ? Number(shareToEdit.frankingCredits).toFixed(1) : '';
@@ -1336,7 +1336,7 @@ async function saveShareData(isSilent = false) {
     // NEW: Get targetValue and targetType from inputs, handling potential empty string for value
     const targetValueRaw = targetValueInput.value.trim();
     const targetValue = targetValueRaw === '' ? null : parseFloat(targetValueRaw);
-    const targetType = targetTypePercent.checked ? '%' : '$', // Capture type from CHECKED state of radio
+    const targetType = targetTypePercent.checked ? '%' : '$'; // Correctly capture type from CHECKED state of radio (removed trailing comma)
     
     const dividendAmount = parseFloat(dividendAmountInput.value);
     const frankingCredits = parseFloat(frankingCreditsInput.value);
@@ -2674,9 +2674,8 @@ function dismissAllActiveAlerts() {
     renderWatchlist(); // Call renderWatchlist which will refresh all share displays with new alert states
     
     // Show a confirmation message
-    showCustomAlert('All active alerts dismissed for this session.', () => {
-        // Callback after dismissal confirmation (if needed)
-    }, null, 'OK', 'Information'); // Use OK button, not Yes/No
+    // Show a confirmation message
+    showCustomAlert('All active alerts dismissed for this session.', 1500, null, 'OK'); // Removed extra 'Information' parameter
     logDebug('Alerts: All active alerts dismissed for current session.');
 }
 
@@ -4613,17 +4612,20 @@ async function initializeAppLogic() {
                     // Determine the next focusable element
                     let nextElement = null;
                     if (input === targetValueInput) {
-                        // If current input is targetValueInput, check which toggle is active or default to dollar
-                        if (targetTypeDollarBtn.classList.contains('active') && targetTypePercentBtn) {
-                            nextElement = targetTypePercentBtn; // Focus on the other toggle to allow user to easily switch
-                        } else if (targetTypePercentBtn.classList.contains('active') && targetTypeDollarBtn) {
-                            nextElement = targetTypeDollarBtn;
+                        // If current input is targetValueInput, focus on the currently checked radio button's label
+                        // or the next logical input if no radio is checked (shouldn't happen with default)
+                        if (targetTypeDollar.checked) {
+                            // Find the label associated with targetTypeDollar
+                            nextElement = document.querySelector('label[for="targetTypeDollar"]');
+                        } else if (targetTypePercent.checked) {
+                            // Find the label associated with targetTypePercent
+                            nextElement = document.querySelector('label[for="targetTypePercent"]');
                         } else {
-                            // Default to dollar button if neither is active (shouldn't happen if default is set)
-                            nextElement = targetTypeDollarBtn;
+                            // Fallback if somehow neither is checked, default to dollar label
+                            nextElement = document.querySelector('label[for="targetTypeDollar"]');
                         }
-                    } else if (input === targetTypeDollarBtn || input === targetTypePercentBtn) {
-                        // If current input is a toggle button, move to dividendAmountInput
+                    } else if (input === targetTypeDollar || input === targetTypePercent) {
+                        // If current input is a radio button, move to dividendAmountInput
                         nextElement = dividendAmountInput;
                     } else if (index < formInputs.length - 1) {
                         nextElement = formInputs[index + 1];
@@ -4714,127 +4716,35 @@ async function initializeAppLogic() {
         });
     }
 
-    // Global click listener to close modals/context menu if clicked outside
-    // Introduce a flag to temporarily disable this listener after a modal is opened.
-    let allowGlobalModalClose = true; // Global flag to control this listener
+    function getCurrentFormData() {
+    const comments = [];
+    if (commentsFormContainer) { // This now refers to #dynamicCommentsArea
+        commentsFormContainer.querySelectorAll('.comment-section').forEach(section => {
+            const titleInput = section.querySelector('.comment-title-input');
+            const textInput = section.querySelector('.comment-text-input');
+            const title = titleInput ? titleInput.value.trim() : '';
+            const text = textInput ? textInput.value.trim() : '';
+            if (title || text) {
+                comments.push({ title: title, text: text });
+            }
+        });
+    }
 
-    // Helper function to temporarily disable global click listener
-    function temporarilyDisableGlobalClose() {
-        allowGlobalModalClose = false;
-        setTimeout(() => {
-            allowGlobalModalClose = true;
-        }, 100); // Small delay to allow modal open animation/events to settle
-    }
-
-    // Override showModal to include the temporary disable
-    const originalShowModal = showModal;
-    showModal = function(modalElement) {
-        originalShowModal(modalElement);
-        temporarilyDisableGlobalClose();
-    };
-
-    window.addEventListener('click', (event) => {
-        if (!allowGlobalModalClose) {
-            // logDebug('Global Click: Global modal close suppressed temporarily.');
-            return; // Do nothing if global close is temporarily disabled
-        }
-
-        // Only close these specific modals if clicked directly on their backdrop
-        // The explicit check `event.target === modal` ensures the click is on the backdrop itself, not an element inside.
-        if (event.target === shareDetailModal || event.target === dividendCalculatorModal ||
-            event.target === shareFormSection || event.target === customDialogModal ||
-            event.target === calculatorModal || event.target === addWatchlistModal ||
-            event.target === manageWatchlistModal ||
-            event.target === cashAssetFormModal || event.target === cashAssetDetailModal ||
-            event.target === stockSearchModal) {
-            closeModals();
-        }
-
-        if (contextMenuOpen && shareContextMenu && !shareContextMenu.contains(event.target)) {
-            hideContextMenu();
-        }
-    });
-
-        // NEW: Show Last Live Price Toggle Listener
-if (showLastLivePriceToggle) {
-    showLastLivePriceToggle.addEventListener('change', async (event) => {
-        showLastLivePriceOnClosedMarket = event.target.checked;
-        logDebug('Toggle: "Show Last Live Price" toggled to: ' + showLastLivePriceOnClosedMarket);
-        // Save preference to Firestore
-        if (currentUserId && db && window.firestore) {
-            const userProfileDocRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/profile/settings');
-            try {
-                await window.firestore.setDoc(userProfileDocRef, { showLastLivePriceOnClosedMarket: showLastLivePriceOnClosedMarket }, { merge: true });
-                logDebug('Toggle: Saved "Show Last Live Price" preference to Firestore: ' + showLastLivePriceOnClosedMarket);
-            } catch (error) {
-                console.error('Toggle: Error saving "Show Last Live Price" preference to Firestore:', error);
-                showCustomAlert('Error saving preference: ' + error.message);
-            }
-        }
-        renderWatchlist(); // Re-render to apply the new display logic immediately
-        showCustomAlert('Last Price Display set to: ' + (showLastLivePriceOnClosedMarket ? 'On (Market Closed)' : 'Off (Market Closed)'), 1500);
-        toggleAppSidebar(false); // Close sidebar after action
-    });
+    return {
+        shareName: shareNameInput.value.trim().toUpperCase(),
+        currentPrice: parseFloat(currentPriceInput.value),
+        // NEW: Capture targetValue and targetType, reading from the 'checked' property of the radio inputs
+        targetValue: parseFloat(targetValueInput.value) || null, // Capture value
+        targetType: targetTypePercent.checked ? '%' : '$', // Correctly capture type from CHECKED state of radio
+        dividendAmount: parseFloat(dividendAmountInput.value),
+        frankingCredits: parseFloat(frankingCreditsInput.value),
+        // Get the selected star rating as a number
+        starRating: shareRatingSelect ? parseInt(shareRatingSelect.value) : 0,
+        comments: comments,
+        // Include the selected watchlist ID from the new dropdown
+        watchlistId: shareWatchlistSelect ? shareWatchlistSelect.value : null
+    };
 }
-
-    // NEW: Cash Asset Form Modal Save/Delete/Edit Buttons (2.1, 2.2)
-    if (saveCashAssetBtn) {
-        saveCashAssetBtn.addEventListener('click', async () => {
-            logDebug('Cash Form: Save Cash Asset button clicked.');
-            if (saveCashAssetBtn.classList.contains('is-disabled-icon')) {
-                showCustomAlert('Asset name and balance are required, or no changes made.');
-                console.warn('Save Cash Asset: Save button was disabled, preventing action.');
-                return;
-            }
-            await saveCashAsset(false); // Not silent save
-        });
-    }
-
-    if (deleteCashAssetBtn) {
-        deleteCashAssetBtn.addEventListener('click', async () => {
-            logDebug('Cash Form: Delete Cash Asset button clicked.');
-            if (deleteCashAssetBtn.classList.contains('is-disabled-icon')) {
-                console.warn('Delete Cash Asset: Delete button was disabled, preventing action.');
-                return;
-            }
-            if (selectedCashAssetDocId) {
-                await deleteCashCategory(selectedCashAssetDocId); // Use existing delete function
-                closeModals();
-            } else {
-                showCustomAlert('No cash asset selected for deletion.');
-            }
-        });
-    }
-
-    if (editCashAssetFromDetailBtn) {
-        editCashAssetFromDetailBtn.addEventListener('click', () => {
-            logDebug('Cash Details: Edit Cash Asset button clicked.');
-            if (selectedCashAssetDocId) {
-                hideModal(cashAssetDetailModal);
-                showAddEditCashCategoryModal(selectedCashAssetDocId);
-            } else {
-                showCustomAlert('No cash asset selected for editing.');
-            }
-        });
-    }
-
-    if (deleteCashAssetFromDetailBtn) {
-        deleteCashAssetFromDetailBtn.addEventListener('click', async () => {
-            logDebug('Cash Details: Delete Cash Asset button clicked.');
-            if (selectedCashAssetDocId) {
-                await deleteCashCategory(selectedCashAssetDocId);
-                closeModals();
-            } else {
-                showCustomAlert('No cash asset selected for deletion.');
-            }
-        });
-    }
-
-
-    // Call adjustMainContentPadding initially and on window load/resize
-    // Removed: window.addEventListener('load', adjustMainContentPadding); // Removed, handled by onAuthStateChanged
-    // Already added to window.addEventListener('resize') in sidebar section
-} // End of initializeAppLogic
 
     // NEW: Target hit icon button listener to open active alerts modal
     if (targetHitIconBtn) {
@@ -4891,6 +4801,20 @@ if (showLastLivePriceToggle) {
                 console.error('Auth: Logout failed:', error);
                 showCustomAlert('Logout failed: ' + error.message);
             }
+        });
+    }
+
+    // NEW: Add event listeners for target type radio buttons
+    if (targetTypeDollar) {
+        targetTypeDollar.addEventListener('change', () => {
+            updateTargetCalculationDisplay();
+            checkFormDirtyState();
+        });
+    }
+    if (targetTypePercent) {
+        targetTypePercent.addEventListener('change', () => {
+            updateTargetCalculationDisplay();
+            checkFormDirtyState();
         });
     }
 
@@ -5568,53 +5492,7 @@ if (sortSelect) {
         });
     }
     
-    // NEW: Function to calculate and update target calculation display in share form
-function updateTargetCalculationDisplay() {
-    const targetValue = parseFloat(targetValueInput.value);
-    const enteredPrice = parseFloat(currentPriceInput.value); // Ensure it reads from the correct input
-    const isPercent = targetTypePercent.checked; // Check the 'checked' property of the radio input
     
-    let displayHtml = '';
-
-    // Adjust opacity and hidden class based on input validity
-    if (!isNaN(targetValue) && !isNaN(enteredPrice) && enteredPrice > 0) {
-        let calculatedTarget = 0;
-        let typeText = '';
-        let targetRelation = ''; // "Buy Target" or "Sell Target"
-
-        if (isPercent) {
-            calculatedTarget = enteredPrice * (1 + targetValue / 100);
-            typeText = `${targetValue >= 0 ? '+' : ''}${targetValue}%`;
-            targetRelation = targetValue >= 0 ? 'Sell Target' : 'Buy Target';
-        } else { // Dollar amount
-            calculatedTarget = targetValue;
-            typeText = ''; // No percentage display for dollar amount
-            targetRelation = calculatedTarget < enteredPrice ? 'Buy Target' : 'Sell Target';
-        }
-
-        displayHtml = `Target: Entered ${formatCurrency(enteredPrice)} ${typeText} = ${formatCurrency(calculatedTarget)} (${targetRelation})`;
-        if (targetCalculationDisplay) {
-            targetCalculationDisplay.textContent = displayHtml;
-            targetCalculationDisplay.classList.remove('text-red-500', 'opacity-0', 'hidden');
-            targetCalculationDisplay.classList.add('text-gray-500', 'italic', 'opacity-100', 'block');
-        }
-    } else if (targetValueInput.value.length > 0 || currentPriceInput.value.length > 0) {
-        // Show error if user has started typing but input is invalid
-        displayHtml = `Enter valid price and target.`;
-        if (targetCalculationDisplay) {
-            targetCalculationDisplay.textContent = displayHtml;
-            targetCalculationDisplay.classList.remove('text-gray-500', 'italic', 'opacity-0', 'hidden');
-            targetCalculationDisplay.classList.add('text-red-500', 'opacity-100', 'block');
-        }
-    } else {
-        // Hide completely if no input
-        if (targetCalculationDisplay) {
-            targetCalculationDisplay.textContent = '';
-            targetCalculationDisplay.classList.add('opacity-0', 'hidden');
-            targetCalculationDisplay.classList.remove('text-red-500', 'text-gray-500', 'italic', 'block');
-        }
-    }
-}
 
     // Correctly handle the close button for the active alerts modal
     if (alertsCloseButton) { // Use the direct reference 'alertsCloseButton'
