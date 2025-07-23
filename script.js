@@ -3957,7 +3957,8 @@ async function saveWatchlistChanges(isSilent = false, newName, watchlistId = nul
 
             // Explicitly set the watchlist select value and re-render after adding a new watchlist
             // This ensures the UI immediately reflects the newly created watchlist.
-            renderWatchlistSelect(); // Re-populate and select the new watchlist in the dropdown
+            renderWatchlistSelect(); // Re-populate the dropdown with the new watchlist
+            watchlistSelect.value = newDocRef.id; // Force selection of the new watchlist
             renderWatchlist(); // Re-render the main content to show the new watchlist's shares
         }
         
