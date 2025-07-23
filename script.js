@@ -4225,6 +4225,7 @@ async function initializeAppLogic() {
                     const nextInput = formInputs[index + 1];
 
                     // Only call select() if the input has the method (i.e., it's a text/number input)
+                    // This prevents TypeError on <select> elements which do not have a .select() method.
                     if (input.tagName === 'INPUT' || input.tagName === 'TEXTAREA') {
                         input.select();
                     }
