@@ -3016,9 +3016,9 @@ async function loadUserWatchlistsAndSettings() {
 
 /**
  * Fetches live price data from the Google Apps Script Web App.
- * Updates the `livePrices` global object.
+ * Updates the `livePrices` global object and relevant Firestore share documents.
  */
-async function fetchLivePrices() {
+async function fetchLivePrices() { // <<< CRITICAL: Ensure 'async' is here
     console.log('Live Price: Attempting to fetch live prices...');
     // Only fetch live prices if a stock-related watchlist is selected
     if (currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
