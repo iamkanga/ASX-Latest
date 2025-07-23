@@ -538,54 +538,35 @@ function addShareToTable(share, livePriceData) {
     let priceClass = '';
 
     // Logic to determine display values
-    // livePriceData is now passed as an argument
-    if (livePriceData) {
-        const currentLivePrice = livePriceData.live; // This comes from the Apps Script, might be null
-        const previousClosePrice = livePriceData.prevClose; // This comes from the Apps Script, might be null
-        const lastFetchedLive = share.lastFetchedPrice; // This comes from YOUR Firestore data
-        const lastFetchedPrevClose = share.previousFetchedPrice; // This comes from YOUR Firestore data
+    // Prioritize livePriceData from the Apps Script fetch
+    if (livePriceData && livePriceData.live !== null && !isNaN(livePriceData.live)) {
+        displayLivePrice = '$' + livePriceData.live.toFixed(2);
+        if (livePriceData.prevClose !== null && !isNaN(livePriceData.prevClose)) {
+            const change = livePriceData.live - livePriceData.prevClose;
+            const percentageChange = (livePriceData.prevClose !== 0 ? (change / livePriceData.prevClose) * 100 : 0);
+            displayPriceChange = `${change.toFixed(2)} (${percentageChange.toFixed(2)}%)`;
+            priceClass = change > 0 ? 'positive' : (change < 0 ? 'negative' : 'neutral');
+        }
+    } else {
+        // Fallback to Firestore's last fetched price if live data is not available
+        const lastFetchedLive = share.lastFetchedPrice;
+        const lastFetchedPrevClose = share.previousFetchedPrice;
 
-        if (isMarketOpen) {
-            // If market is open, always try to show current live price
-            if (currentLivePrice !== null && !isNaN(currentLivePrice)) {
-                displayLivePrice = '$' + currentLivePrice.toFixed(2);
-                if (previousClosePrice !== null && !isNaN(previousClosePrice)) {
-                    const change = currentLivePrice - previousClosePrice;
-                    const percentageChange = (previousClosePrice !== 0 ? (change / previousClosePrice) * 100 : 0);
-                    displayPriceChange = `${change.toFixed(2)} (${percentageChange.toFixed(2)}%)`;
-                    priceClass = change > 0 ? 'positive' : (change < 0 ? 'negative' : 'neutral');
-                }
+        if (lastFetchedLive !== null && !isNaN(lastFetchedLive)) {
+            displayLivePrice = '$' + lastFetchedLive.toFixed(2);
+            if (lastFetchedPrevClose !== null && !isNaN(lastFetchedPrevClose)) {
+                const change = lastFetchedLive - lastFetchedPrevClose;
+                const percentageChange = (lastFetchedPrevClose !== 0 ? (change / lastFetchedPrevClose) * 100 : 0);
+                displayPriceChange = `${change.toFixed(2)} (${percentageChange.toFixed(2)}%)`;
+                priceClass = change > 0 ? 'positive' : (change < 0 ? 'negative' : 'neutral');
             } else {
-                // Market is open but livePrice is null, show N/A
-                displayLivePrice = 'N/A';
-                displayPriceChange = '';
+                displayPriceChange = '0.00 (0.00%)'; // If no previous close, assume no change
                 priceClass = 'neutral';
             }
-        } else { // Market is closed
-            if (showLastLivePriceOnClosedMarket) {
-                // If toggle is ON, show last fetched price from Firestore
-                if (lastFetchedLive !== null && !isNaN(lastFetchedLive)) {
-                    displayLivePrice = '$' + lastFetchedLive.toFixed(2);
-                    if (lastFetchedPrevClose !== null && !isNaN(lastFetchedPrevClose)) {
-                        const change = lastFetchedLive - lastFetchedPrevClose;
-                        const percentageChange = (lastFetchedPrevClose !== 0 ? (change / lastFetchedPrevClose) * 100 : 0);
-                        displayPriceChange = `${change.toFixed(2)} (${percentageChange.toFixed(2)}%)`;
-                        priceClass = change > 0 ? 'positive' : (change < 0 ? 'negative' : 'neutral');
-                    } else {
-                        displayPriceChange = '0.00 (0.00%)'; // If no prevClose, assume no change
-                        priceClass = 'neutral';
-                    }
-                } else {
-                    displayLivePrice = 'N/A';
-                    displayPriceChange = '';
-                    priceClass = 'neutral';
-                }
-            } else {
-                // If toggle is OFF, show zero change for closed market
-                displayLivePrice = lastFetchedLive !== null && !isNaN(lastFetchedLive) ? '$' + lastFetchedLive.toFixed(2) : 'N/A';
-                displayPriceChange = '0.00 (0.00%)';
-                priceClass = 'neutral';
-            }
+        } else {
+            displayLivePrice = 'N/A';
+            displayPriceChange = '';
+            priceClass = 'neutral';
         }
     }
 
@@ -714,53 +695,35 @@ function addShareToMobileCards(share, livePriceData) {
     let priceClass = '';
 
     // Logic to determine display values
-    if (livePriceData) {
-        const currentLivePrice = livePriceData.live; // This comes from the Apps Script, might be null
-        const previousClosePrice = livePriceData.prevClose; // This comes from the Apps Script, might be null
-        const lastFetchedLive = share.lastFetchedPrice; // This comes from YOUR Firestore data
-        const lastFetchedPrevClose = share.previousFetchedPrice; // This comes from YOUR Firestore data
+    // Prioritize livePriceData from the Apps Script fetch
+    if (livePriceData && livePriceData.live !== null && !isNaN(livePriceData.live)) {
+        displayLivePrice = '$' + livePriceData.live.toFixed(2);
+        if (livePriceData.prevClose !== null && !isNaN(livePriceData.prevClose)) {
+            const change = livePriceData.live - livePriceData.prevClose;
+            const percentageChange = (livePriceData.prevClose !== 0 ? (change / livePriceData.prevClose) * 100 : 0);
+            displayPriceChange = `${change.toFixed(2)} (${percentageChange.toFixed(2)}%)`;
+            priceClass = change > 0 ? 'positive' : (change < 0 ? 'negative' : 'neutral');
+        }
+    } else {
+        // Fallback to Firestore's last fetched price if live data is not available
+        const lastFetchedLive = share.lastFetchedPrice;
+        const lastFetchedPrevClose = share.previousFetchedPrice;
 
-        if (isMarketOpen) {
-            // If market is open, always try to show current live price
-            if (currentLivePrice !== null && !isNaN(currentLivePrice)) {
-                displayLivePrice = '$' + currentLivePrice.toFixed(2);
-                if (previousClosePrice !== null && !isNaN(previousClosePrice)) {
-                    const change = currentLivePrice - previousClosePrice;
-                    const percentageChange = (previousClosePrice !== 0 ? (change / previousClosePrice) * 100 : 0);
-                    displayPriceChange = `${change.toFixed(2)} (${percentageChange.toFixed(2)}%)`;
-                    priceClass = change > 0 ? 'positive' : (change < 0 ? 'negative' : 'neutral');
-                }
+        if (lastFetchedLive !== null && !isNaN(lastFetchedLive)) {
+            displayLivePrice = '$' + lastFetchedLive.toFixed(2);
+            if (lastFetchedPrevClose !== null && !isNaN(lastFetchedPrevClose)) {
+                const change = lastFetchedLive - lastFetchedPrevClose;
+                const percentageChange = (lastFetchedPrevClose !== 0 ? (change / lastFetchedPrevClose) * 100 : 0);
+                displayPriceChange = `${change.toFixed(2)} (${percentageChange.toFixed(2)}%)`;
+                priceClass = change > 0 ? 'positive' : (change < 0 ? 'negative' : 'neutral');
             } else {
-                // Market is open but livePrice is null, show N/A
-                displayLivePrice = 'N/A';
-                displayPriceChange = '';
+                displayPriceChange = '0.00 (0.00%)'; // If no previous close, assume no change
                 priceClass = 'neutral';
             }
-        } else { // Market is closed
-            if (showLastLivePriceOnClosedMarket) {
-                // If toggle is ON, show last fetched price from Firestore
-                if (lastFetchedLive !== null && !isNaN(lastFetchedLive)) {
-                    displayLivePrice = '$' + lastFetchedLive.toFixed(2);
-                    if (lastFetchedPrevClose !== null && !isNaN(lastFetchedPrevClose)) {
-                        const change = lastFetchedLive - lastFetchedPrevClose;
-                        const percentageChange = (lastFetchedPrevClose !== 0 ? (change / lastFetchedPrevClose) * 100 : 0);
-                        displayPriceChange = `${change.toFixed(2)} (${percentageChange.toFixed(2)}%)`;
-                        priceClass = change > 0 ? 'positive' : (change < 0 ? 'negative' : 'neutral');
-                    } else {
-                        displayPriceChange = '0.00 (0.00%)'; // If no prevClose, assume no change
-                        priceClass = 'neutral';
-                    }
-                } else {
-                    displayLivePrice = 'N/A';
-                    displayPriceChange = '';
-                    priceClass = 'neutral';
-                }
-            } else {
-                // If toggle is OFF, show zero change for closed market
-                displayLivePrice = lastFetchedLive !== null && !isNaN(lastFetchedLive) ? '$' + lastFetchedLive.toFixed(2) : 'N/A';
-                displayPriceChange = '0.00 (0.00%)';
-                priceClass = 'neutral';
-            }
+        } else {
+            displayLivePrice = 'N/A';
+            displayPriceChange = '';
+            priceClass = 'neutral';
         }
     }
 
@@ -3155,6 +3118,21 @@ async function fetchLivePrices() {
                     lastPrevClose: isNaN(prevClose) ? null : prevClose,
                     CompanyName: item.CompanyName || 'N/A' // Store company name here too
                 };
+
+                // Update the share document in Firestore with the latest live price data
+                if (shareData && db && currentUserId && window.firestore) {
+                    const shareDocRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, shareData.id);
+                    const updatePayload = {
+                        currentPrice: livePrice, // Update currentPrice with the actual live price
+                        lastFetchedPrice: livePrice,
+                        previousFetchedPrice: isNaN(prevClose) ? null : prevClose,
+                        lastLivePriceUpdate: new Date().toISOString(), // Record when it was updated
+                        companyName: item.CompanyName || shareData.companyName || null // Update company name if available
+                    };
+                    // Use setDoc with merge to only update these specific fields
+                    await window.firestore.setDoc(shareDocRef, updatePayload, { merge: true });
+                    logDebug(`Firestore: Updated live price data for ${asxCode} in Firestore.`);
+                }
             }); // This closes the data.forEach loop
             livePrices = newLivePrices;
             console.log('Live Price: Live prices updated:', livePrices);
