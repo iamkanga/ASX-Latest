@@ -1065,6 +1065,42 @@ function populateShareWatchlistSelect(currentShareWatchlistId = null, isNewShare
     shareWatchlistSelect.addEventListener('change', checkFormDirtyState);
 }
 
+/**
+ * Clears all inputs and resets the state of the share form.
+ * This also resets originalShareData and selectedShareDocId to prevent auto-save on cancel.
+ */
+function clearForm() {
+    if (shareNameInput) shareNameInput.value = '';
+    if (purchasePriceInput) purchasePriceInput.value = ''; // Use purchasePriceInput
+    if (targetValueInput) targetValueInput.value = '';
+    if (dividendAmountInput) dividendAmountInput.value = '';
+    if (frankingCreditsInput) frankingCreditsInput.value = '';
+    if (shareRatingSelect) shareRatingSelect.value = '0'; // Reset to default rating
+    if (shareWatchlistSelect) {
+        // Reset to placeholder or first available stock watchlist
+        const firstStockWatchlist = userWatchlists.find(wl => wl.id !== CASH_BANK_WATCHLIST_ID);
+        if (firstStockWatchlist) {
+            shareWatchlistSelect.value = firstStockWatchlist.id;
+        } else {
+            shareWatchlistSelect.value = ''; // Fallback to placeholder
+        }
+        shareWatchlistSelect.disabled = false; // Ensure it's enabled for new entries
+    }
+    if (commentsFormContainer) commentsFormContainer.innerHTML = ''; // Clear all comment sections
+    addCommentSection(commentsFormContainer); // Add one empty comment section by default
+    
+    // Reset target type buttons to dollar by default
+    if (targetTypeDollarBtn) targetTypeDollarBtn.classList.add('active');
+    if (targetTypePercentBtn) targetTypePercentBtn.classList.remove('active');
+    updateTargetCalculationDisplay(); // Update display after clearing/resetting target inputs
+
+    selectedShareDocId = null; // Crucial: Clear selected ID so it's treated as a new share
+    originalShareData = null; // Crucial: Clear original data for dirty state check
+    setIconDisabled(saveShareBtn, true); // Disable save button initially for new/cleared form
+    
+    logDebug('Form: Share form inputs cleared and state reset.');
+}
+
 function showEditFormForSelectedShare(shareIdToEdit = null) {
     const targetShareId = shareIdToEdit || selectedShareDocId;
 
