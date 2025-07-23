@@ -1294,7 +1294,14 @@ function checkFormDirtyState() {
  * as they do not have corresponding input elements in the provided HTML.
  * @param {boolean} isSilent If true, no alert messages are shown on success.
  */
-async function saveShareData(isSilent = false) { // <<< CRITICAL: Ensure 'async' is here
+/**
+ * Saves share data to Firestore. Can be called silently for auto-save.
+ * This function now uses the globally defined input elements.
+ * Fields like numberOfShares, notes, purchaseDate, shareType are not collected
+ * as they do not have corresponding input elements in the provided HTML.
+ * @param {boolean} isSilent If true, no alert messages are shown on success.
+ */
+async function saveShareData(isSilent = false) {
     logDebug('Attempting to save share data...');
 
     // Use the globally defined input elements
@@ -1351,8 +1358,9 @@ async function saveShareData(isSilent = false) { // <<< CRITICAL: Ensure 'async'
     // The input field on the edit form is intended for the purchase price, not the current live price.
     if (selectedShareDocId) {
         try {
-            const docRef = doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, selectedShareDocId);
-            const docSnap = await getDoc(docRef); // This 'await' requires the function to be 'async'
+            // Use window.firestore.doc and window.firestore.getDoc
+            const docRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, selectedShareDocId);
+            const docSnap = await window.firestore.getDoc(docRef);
             if (docSnap.exists()) {
                 const existingData = docSnap.data();
                 // Preserve actual live price data and entry date from existing document
@@ -1372,12 +1380,13 @@ async function saveShareData(isSilent = false) { // <<< CRITICAL: Ensure 'async'
     try {
         if (selectedShareDocId) {
             // Update existing share
-            const docRef = doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, selectedShareDocId);
-            await setDoc(docRef, shareData, { merge: true });
+            const docRef = window.firestore.doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, selectedShareDocId);
+            await window.firestore.setDoc(docRef, shareData, { merge: true });
             if (!isSilent) showMessage('Share updated successfully!', 'success');
         } else {
             // Add new share
-            await addDoc(collection(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`), shareData);
+            const sharesCollectionRef = window.firestore.collection(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`);
+            await window.firestore.addDoc(sharesCollectionRef, shareData);
             if (!isSilent) showMessage('Share added successfully!', 'success');
         }
         if (!isSilent) {
