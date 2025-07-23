@@ -1300,7 +1300,14 @@ function checkFormDirtyState() {
  * as they do not have corresponding input elements in the provided HTML.
  * @param {boolean} isSilent If true, no alert messages are shown on success.
  */
-async function saveShareData(isSilent = false) { // Ensure 'async' keyword is present here
+/**
+ * Saves share data to Firestore. Can be called silently for auto-save.
+ * This function now uses the globally defined input elements.
+ * Fields like numberOfShares, notes, purchaseDate, shareType are not collected
+ * as they do not have corresponding input elements in the provided HTML.
+ * @param {boolean} isSilent If true, no alert messages are shown on success.
+ */
+async function saveShareData(isSilent = false) { // <<< IMPORTANT: Ensure 'async' is here
     logDebug('Attempting to save share data...');
 
     // Use the globally defined input elements
@@ -1358,7 +1365,7 @@ async function saveShareData(isSilent = false) { // Ensure 'async' keyword is pr
     if (selectedShareDocId) {
         try {
             const docRef = doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, selectedShareDocId);
-            const docSnap = await getDoc(docRef); // This is the 'await' that needs an 'async' parent
+            const docSnap = await getDoc(docRef); // This 'await' requires the function to be 'async'
             if (docSnap.exists()) {
                 const existingData = docSnap.data();
                 // Preserve actual live price data and entry date from existing document
@@ -1415,8 +1422,6 @@ async function saveShareData(isSilent = false) { // Ensure 'async' keyword is pr
             console.error("Error saving share:", error);
             if (!isSilent) showMessage('Error saving share: ' + error.message, 'error');
         }
-    }
-
 
 function showShareDetails() {
     if (!selectedShareDocId) {
