@@ -5852,3 +5852,4 @@ document.addEventListener('DOMContentLoaded', function() {
         hideSplashScreen();
     }
 });
+}
