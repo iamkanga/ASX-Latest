@@ -111,7 +111,6 @@ const shareNameInput = document.getElementById('shareName');
 // Renamed currentPriceInput to purchasePriceInput to reflect its true purpose.
 // The HTML element with id="currentPrice" should be used for the purchase price input.
 const purchasePriceInput = document.getElementById('currentPrice');
-
 const dividendAmountInput = document.getElementById('dividendAmount');
 const frankingCreditsInput = document.getElementById('frankingCredits');
 const shareRatingSelect = document.getElementById('shareRating');
