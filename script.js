@@ -2703,7 +2703,7 @@ async function fetchLivePrices() {
             const high52 = parseFloat(item.High52);
             const low52 = parseFloat(item.Low52);
 
-            if (asxCode && livePrice !== null && !isNaN(livePrice)) {
+    if (asxCode && livePrice !== null && !isNaN(livePrice)) {
     // Find the corresponding share in allSharesData to get its targetPrice
     const shareData = allSharesData.find(s => s.shareName.toUpperCase() === asxCode);
     // Ensure targetPrice is parsed as a number, handling null/undefined/NaN
