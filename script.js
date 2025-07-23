@@ -5536,7 +5536,8 @@ if (sortSelect) {
         showCustomAlert('Last Price Display set to: ' + (showLastLivePriceOnClosedMarket ? 'On (Market Closed)' : 'Off (Market Closed)'), 1500);
         toggleAppSidebar(false); // Close sidebar after action
     });
-}
+
+// Remove the extra '}' that was here. It prematurely closed initializeAppLogic.
 
     // NEW: Cash Asset Form Modal Save/Delete/Edit Buttons (2.1, 2.2)
     if (saveCashAssetBtn) {
