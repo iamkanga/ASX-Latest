@@ -1416,6 +1416,39 @@ function showShareDetails() {
             modalShareNamePriceChangeClass = 'neutral';
         }
     }
+    modalShareName.textContent = share.shareName || 'N/A';
+    modalShareName.className = 'modal-share-name ' + modalShareNamePriceChangeClass; // Apply class to modalShareName
+
+    const enteredPriceNum = Number(share.purchasePrice); // Corrected to use share.purchasePrice
+
+    // Get live price data from the global livePrices object
+    const livePriceData = livePrices[share.shareName.toUpperCase()];
+    const livePrice = livePriceData ? livePriceData.live : undefined;
+    const prevClosePrice = livePriceData ? livePriceData.prevClose : undefined;
+    // Get PE, High52, Low52
+    const peRatio = livePriceData ? livePriceData.PE : undefined;
+    const high52Week = livePriceData ? livePriceData.High52 : undefined;
+    const low52Week = livePriceData ? livePriceData.Low52 : undefined;
+
+
+    // Display large live price and change in the dedicated section
+    // The modalLivePriceDisplaySection is already referenced globally
+    if (modalLivePriceDisplaySection) {
+        modalLivePriceDisplaySection.classList.remove('positive-change-section', 'negative-change-section'); // Clear previous states
+
+        // Determine price change class for modal live price section
+        let priceChangeClass = 'neutral'; // Default to neutral
+        if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice) && 
+            prevClosePrice !== undefined && prevClosePrice !== null && !isNaN(prevClosePrice)) {
+            const change = livePrice - prevClosePrice;
+            if (change > 0) {
+                priceChangeClass = 'positive';
+            } else if (change < 0) {
+                priceChangeClass = 'negative';
+            } else {
+                priceChangeClass = 'neutral';
+            }
+        }
 
         // Clear previous dynamic content in the section
         modalLivePriceDisplaySection.innerHTML = ''; 
@@ -1581,7 +1614,7 @@ function showShareDetails() {
 
     showModal(shareDetailModal);
     logDebug('Details: Displayed details for share: ' + share.shareName + ' (ID: ' + selectedShareDocId + ')');
-}
+} // This is the correct closing curly brace for the showShareDetails function.
 
 function sortShares() {
     const sortValue = currentSortOrder;
