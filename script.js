@@ -3951,19 +3951,21 @@ async function saveWatchlistChanges(isSilent = false, newName, watchlistId = nul
             });
             if (!isSilent) showCustomAlert('Watchlist \'' + newName + '\' added!', 1500);
             logDebug('Firestore: Watchlist \'' + newName + '\' added with ID: ' + newDocRef.id);
-            
-            // Set the newly created watchlist as the current selection and save this preference
+
+            // Set the newly created watchlist as the current selection and save this preference.
+            // loadUserWatchlistsAndSettings will then pick this up and update the UI.
             currentSelectedWatchlistIds = [newDocRef.id];
             await saveLastSelectedWatchlistIds(currentSelectedWatchlistIds);
 
-            // Crucially, call loadUserWatchlistsAndSettings() here for new watchlists too.
-            // This function handles re-fetching the updated list of watchlists,
-            // setting the dropdown value, and triggering the correct render of the main content.
+            // Call loadUserWatchlistsAndSettings to fully refresh the watchlist data,
+            // update the dropdown, and render the correct watchlist on the main screen.
             await loadUserWatchlistsAndSettings();
         }
         
         // This block now handles both new and edited watchlists.
-        // loadUserWatchlistsAndSettings() already handles the UI updates.
+        // loadUserWatchlistsAndSettings() is responsible for all subsequent UI updates.
+        // The 'if (watchlistId)' condition around loadUserWatchlistsAndSettings is removed
+        // because it needs to run for new watchlists too for consistent state management.
 
         if (!isSilent) closeModals(); // Only close if not a silent save
         originalWatchlistData = getCurrentWatchlistFormData(watchlistId === null); // Update original data after successful save
