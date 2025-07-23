@@ -194,6 +194,8 @@ const searchModalActionButtons = document.querySelector('#stockSearchModal .moda
 const searchModalCloseButton = document.querySelector('.search-close-button'); // NEW: Close button for search modal
 // New Target Price Alert elements
 const targetValueInput = document.getElementById('targetValueInput');
+const targetTypeDollarBtn = document.getElementById('targetTypeDollar'); // Reference for Dollar radio button (visually a button)
+const targetTypePercentBtn = document.getElementById('targetTypePercent'); // Reference for Percent radio button (visually a button)
 const targetTypeDollar = document.getElementById('targetTypeDollar'); // Reference to the hidden radio input for Dollar
 const targetTypePercent = document.getElementById('targetTypePercent'); // Reference to the hidden radio input for Percent
 const targetCalculationDisplay = document.getElementById('targetCalculationDisplay');
@@ -930,14 +932,25 @@ function selectCashAsset(assetId) {
     selectedCashAssetDocId = assetId;
 }
 
-function deselectCurrentCashAsset() {
-    const currentlySelected = document.querySelectorAll('.cash-category-item.selected');
-    logDebug('Selection: Attempting to deselect ' + currentlySelected.length + ' cash asset elements.');
-    currentlySelected.forEach(el => {
-        el.classList.remove('selected');
-    });
-    selectedCashAssetDocId = null;
-    logDebug('Selection: Cash asset deselected. selectedCashAssetDocId is now null.');
+function clearForm() {
+    logDebug('Form: Clearing share form inputs.');
+    shareNameInput.value = '';
+    currentPriceInput.value = '';
+    targetValueInput.value = ''; // Clear target value
+    // Reset target type to dollar by default
+    if (targetTypeDollarBtn) targetTypeDollarBtn.classList.add('active');
+    if (targetTypePercentBtn) targetTypePercentBtn.classList.remove('active');
+    updateTargetCalculationDisplay(); // Update display after clearing
+    dividendAmountInput.value = '';
+    frankingCreditsInput.value = '';
+    if (shareRatingSelect) shareRatingSelect.value = '0'; // Reset rating
+    if (shareWatchlistSelect) shareWatchlistSelect.value = ''; // Reset watchlist select
+    if (commentsFormContainer) commentsFormContainer.innerHTML = ''; // Clear dynamic comment sections
+    selectedShareDocId = null; // Important: ensure selected ID is null for new entry
+    originalShareData = null; // Reset original data
+    setIconDisabled(saveShareBtn, true); // Disable save button initially
+    if (deleteShareBtn) deleteShareBtn.classList.add('hidden'); // Hide delete button for new share
+    logDebug('Form: Share form inputs cleared. selectedShareDocId reset.');
 }
 
 
@@ -1457,28 +1470,81 @@ function showShareDetails() {
         livePriceRow.appendChild(currentModalPriceChangeLarge);
         modalLivePriceDisplaySection.appendChild(livePriceRow);
 
-        if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) {
-            currentModalLivePriceLarge.textContent = '$' + livePrice.toFixed(2);
+        // Determine what price to display based on market open status and toggle
+        const isMarketCurrentlyOpen = isAsxMarketOpen();
+        let displayLivePriceValue = null;
+        let displayPriceChangeValue = '';
+
+        if (isMarketCurrentlyOpen) {
+            // Market is open, prioritize fresh live price
+            if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) {
+                displayLivePriceValue = livePrice;
+                if (prevClosePrice !== undefined && prevClosePrice !== null && !isNaN(prevClosePrice)) {
+                    const change = livePrice - prevClosePrice;
+                    const percentageChange = (prevClosePrice !== 0 ? (change / prevClosePrice) * 100 : 0);
+                    displayPriceChangeValue = `${change.toFixed(2)} (${percentageChange.toFixed(2)}%)`;
+                }
+            } else {
+                // Market open but no live data, use N/A
+                currentModalLivePriceLarge.textContent = 'N/A';
+                currentModalPriceChangeLarge.textContent = '';
+                currentModalPriceChangeLarge.style.display = 'none';
+            }
+        } else { // Market is closed
+            if (showLastLivePriceOnClosedMarket) {
+                // If toggle is ON, show last fetched price from Firestore (which is share.lastFetchedPrice)
+                if (share.lastFetchedPrice !== null && !isNaN(share.lastFetchedPrice)) {
+                    displayLivePriceValue = share.lastFetchedPrice;
+                    if (share.previousFetchedPrice !== null && !isNaN(share.previousFetchedPrice)) {
+                        const change = share.lastFetchedPrice - share.previousFetchedPrice;
+                        const percentageChange = (share.previousFetchedPrice !== 0 ? (change / share.previousFetchedPrice) * 100 : 0);
+                        displayPriceChangeValue = `${change.toFixed(2)} (${percentageChange.toFixed(2)}%)`;
+                    } else {
+                        displayPriceChangeValue = '0.00 (0.00%)'; // If no prevClose, assume no change for display
+                    }
+                } else {
+                    currentModalLivePriceLarge.textContent = 'N/A';
+                    currentModalPriceChangeLarge.textContent = '';
+                    currentModalPriceChangeLarge.style.display = 'none';
+                }
+            } else {
+                // If toggle is OFF, show currentPrice (entered price) and zero change
+                displayLivePriceValue = enteredPriceNum;
+                displayPriceChangeValue = '0.00 (0.00%)';
+            }
+        }
+        
+        // Update the large price display
+        if (displayLivePriceValue !== null && !isNaN(displayLivePriceValue)) {
+            currentModalLivePriceLarge.textContent = '$' + displayLivePriceValue.toFixed(2);
             currentModalLivePriceLarge.style.display = 'inline';
         } else {
             currentModalLivePriceLarge.textContent = 'N/A';
             currentModalLivePriceLarge.style.display = 'inline';
         }
 
-        if (livePrice !== undefined && livePrice !== null && !isNaN(livePrice) && 
-            prevClosePrice !== undefined && prevClosePrice !== null && !isNaN(prevClosePrice)) {
-            const change = livePrice - prevClosePrice;
-            const percentageChange = (prevClosePrice !== 0 && !isNaN(prevClosePrice)) ? (change / prevClosePrice) * 100 : 0; // Handle division by zero
-
+        if (displayPriceChangeValue !== '') {
             currentModalPriceChangeLarge.textContent = ''; // Clear previous content
             const priceChangeSpan = document.createElement('span');
-            priceChangeSpan.classList.add('price-change'); // Keep base class for coloring, color already applied to parent
-            if (change > 0) {
-                priceChangeSpan.textContent = '(+$' + change.toFixed(2) + ' / +' + percentageChange.toFixed(2) + '%)';
-            } else if (change < 0) {
-                priceChangeSpan.textContent = '(-$' + Math.abs(change).toFixed(2) + ' / ' + percentageChange.toFixed(2) + '%)'; // percentageChange is already negative
+            priceChangeSpan.classList.add('price-change');
+            
+            // Format the change text correctly, including signs for positive/negative
+            const parts = displayPriceChangeValue.match(/(-?\d+\.\d{2})\s\(([-+]?\d+\.\d{2})%\)/);
+            if (parts && parts.length === 3) {
+                const changeAmount = parseFloat(parts[1]);
+                const percentageAmount = parseFloat(parts[2]);
+                
+                let formattedChange = '';
+                if (changeAmount > 0) {
+                    formattedChange = `(+$${changeAmount.toFixed(2)} / +${percentageAmount.toFixed(2)}%)`;
+                } else if (changeAmount < 0) {
+                    formattedChange = `(-$${Math.abs(changeAmount).toFixed(2)} / ${percentageAmount.toFixed(2)}%)`; // percentageAmount is already negative
+                } else {
+                    formattedChange = `($0.00 / 0.00%)`;
+                }
+                priceChangeSpan.textContent = formattedChange;
             } else {
-                priceChangeSpan.textContent = '($0.00 / 0.00%)';
+                priceChangeSpan.textContent = displayPriceChangeValue; // Fallback if regex fails
             }
             currentModalPriceChangeLarge.appendChild(priceChangeSpan);
             currentModalPriceChangeLarge.style.display = 'inline';
@@ -1497,6 +1563,7 @@ function showShareDetails() {
         modalLivePriceDisplaySection.appendChild(peRow);
     }
 
+    // Always show the entered price, clearly labeled
     modalEnteredPrice.textContent = (enteredPriceNum !== null && !isNaN(enteredPriceNum)) ? '$' + enteredPriceNum.toFixed(2) : 'N/A';
     // Display the calculated target price, which is now stored on the share object
     let targetPriceDisplay = 'N/A';
