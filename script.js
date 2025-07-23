@@ -4392,8 +4392,9 @@ async function initializeAppLogic() {
         });
     }
 
-    if (currentPriceInput) {
-        currentPriceInput.addEventListener('input', () => {
+    // Event listener for the purchase price input to update dirty state and target calculation
+    if (purchasePriceInput) {
+        purchasePriceInput.addEventListener('input', () => {
             checkFormDirtyState();
             updateTargetCalculationDisplay();
         });
