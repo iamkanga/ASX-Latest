@@ -1285,29 +1285,16 @@ function checkFormDirtyState() {
 
     setIconDisabled(saveShareBtn, !canSave);
     logDebug('Dirty State: Save button enabled: ' + canSave);
-}
+} // <<< CRITICAL: This is the missing closing curly brace for checkFormDirtyState()
 
 /**
  * Saves share data to Firestore. Can be called silently for auto-save.
- * @param {boolean} isSilent If true, no alert messages are shown on success.
- */
-// Save share details (Add/Edit mode)
-    // isSilent parameter is used when saving data without user interaction (e.g., from live price updates)
-    /**
- * Saves share data to Firestore. Can be called silently for auto-save.
  * This function now uses the globally defined input elements.
  * Fields like numberOfShares, notes, purchaseDate, shareType are not collected
  * as they do not have corresponding input elements in the provided HTML.
  * @param {boolean} isSilent If true, no alert messages are shown on success.
  */
-/**
- * Saves share data to Firestore. Can be called silently for auto-save.
- * This function now uses the globally defined input elements.
- * Fields like numberOfShares, notes, purchaseDate, shareType are not collected
- * as they do not have corresponding input elements in the provided HTML.
- * @param {boolean} isSilent If true, no alert messages are shown on success.
- */
-async function saveShareData(isSilent = false) { // <<< IMPORTANT: Ensure 'async' is here
+async function saveShareData(isSilent = false) { // <<< CRITICAL: Ensure 'async' is here
     logDebug('Attempting to save share data...');
 
     // Use the globally defined input elements
@@ -1402,26 +1389,6 @@ async function saveShareData(isSilent = false) { // <<< IMPORTANT: Ensure 'async
         if (!isSilent) showMessage('Error saving share: ' + error.message, 'error');
     }
 }
-
-        try {
-            if (selectedShareDocId) {
-                // Update existing share
-                const docRef = doc(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`, selectedShareDocId);
-                await setDoc(docRef, shareData, { merge: true }); // Use merge to preserve existing fields not in shareData
-                if (!isSilent) showMessage('Share updated successfully!', 'success');
-            } else {
-                // Add new share
-                await addDoc(collection(db, `artifacts/${currentAppId}/users/${currentUserId}/shares`), shareData);
-                if (!isSilent) showMessage('Share added successfully!', 'success');
-            }
-            if (!isSilent) {
-                closeShareForm();
-                renderWatchlist(); // Re-render to show updated data
-            }
-        } catch (error) {
-            console.error("Error saving share:", error);
-            if (!isSilent) showMessage('Error saving share: ' + error.message, 'error');
-        }
 
 function showShareDetails() {
     if (!selectedShareDocId) {
