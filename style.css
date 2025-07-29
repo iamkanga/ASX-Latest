@@ -1,4 +1,11 @@
-/*  Base Styles */
+.modal-share-name {
+    font-size: 2.7em !important; /* 1.8em * 1.5 = 2.7em */
+    font-weight: 700;
+}
+#modalCommSecLink {
+    margin-bottom: 0 !important;
+}
+/* Base Styles */
 :root {
     /* Light Theme (Default) */
     --background-color: #eef2f3;
@@ -65,7 +72,9 @@
     --target-alert-text: #0056b3; /* Darker blue for target hit text */
     --target-alert-border: #007bff;
     --target-banner-height: 40px; /* This variable is now effectively unused for the banner, but kept for other potential uses */
-
+    ---green-color: #28a745; /* Standard green for general use */
+    --green-color-dark: #218838; /* Darker green for hover states */
+    --green-color-dark-rgb: 33, 136, 56; /* RGB for #218838 for pulsing effect */
     /* NEW: Alert System Colors */
     --alert-icon-bg: #dc3545; /* Red for the chat box icon */
     --alert-icon-text: #fff;
@@ -95,6 +104,7 @@
 
 /* Dark Theme Variables */
 body.dark-theme {
+    /* Dark Theme Variables */
     --background-color: #1a1a1a; /* Very dark gray/almost black */
     --text-color: #e0e0e0; /* Light gray for text */
     --header-bg: #282828; /* Darker gray for header */
@@ -147,13 +157,15 @@ body.dark-theme {
     --target-alert-text: #ffffff; /* White text for target alert */
     --target-alert-border: #888888; /* Gray border for target alert */
     --target-banner-height: 40px;
-
+    --green-color: #2ecc71; /* Green for success in dark theme */
+    --green-color-dark: #229954; /* Darker green for hover */
+    --green-color-dark-rgb: 34, 153, 84; /* RGB for #229954 for pulsing effect */
     /* UPDATED: Cash & Assets Section Colors (Dark Theme) */
-    --cash-section-bg: #282828; /* Dark gray */
-    --cash-card-bg: #333333; /* Medium dark gray */
-    --cash-border-color: #555555; /* Darker gray */
-    --cash-total-bg: #444444; /* Dark gray for total background */
-    --cash-total-text: #e0e0e0; /* Light gray for total text */
+    --cash-section-bg: #282828;
+    --cash-card-bg: #333333;
+    --cash-border-color: #555555;
+    --cash-total-bg: #444444;
+    --cash-total-text: #e0e0e0;
     --cash-button-bg: #2ecc71; /* Keep green */
     --cash-button-hover-bg: #229954; /* Keep green hover */
     --cash-primary-button-bg: #555555; /* Gray primary button */
@@ -1279,7 +1291,7 @@ body.theme-muted-magenta {
     --danger-button-bg: #dc3545;
     --danger-button-hover-bg: #c82333;
     --icon-action-color: #a86a8b;
-    --icon-action-hover-color: #987b5a;
+    --icon-action-hover-color: #985a7b;
     --icon-danger-color: #dc3545;
     --icon-danger-hover-color: #c82333;
     --calc-num-btn-bg: #d9b3c7;
@@ -1294,18 +1306,18 @@ body.theme-muted-magenta {
     --comment-title-bg: rgba(0, 0, 0, 0.05);
     --target-alert-bg: #a86a8b;
     --target-alert-text: #fff;
-    --target-alert-border: #987b5a;
+    --target-alert-border: #985a7b;
 
     /* UPDATED: Cash & Assets Section Colors (Muted Theme) */
     --cash-section-bg: #f9eef9;
     --cash-card-bg: #e7cde7;
     --cash-border-color: #cbb7a1;
-    --cash-total-bg: #987b5a;
+    --cash-total-bg: #985a7b;
     --cash-total-text: #fff;
     --cash-button-bg: #28a745;
     --cash-button-hover-bg: #218838;
     --cash-primary-button-bg: #a86a8b;
-    --cash-primary-button-hover-bg: #987b5a;
+    --cash-primary-button-hover-bg: #985a7b;
     --cash-delete-icon-color: #dc3545;
     --cash-edit-icon-color: #a86a8b;
 }
@@ -1410,7 +1422,7 @@ body.theme-muted-grey {
     --target-alert-text: #fff;
     --target-alert-border: #7a7a7a;
 
-    /* UPDATED: Cash & Assets Section Colors (Muted Theme) */
+    /* UPDATED: Cash & Assets Section Colors (Custom Theme) */
     --cash-section-bg: #f4f4f4;
     --cash-card-bg: #e0e0e0;
     --cash-border-color: #b7b7b7;
@@ -1418,10 +1430,10 @@ body.theme-muted-grey {
     --cash-total-text: #fff;
     --cash-button-bg: #28a745;
     --cash-button-hover-bg: #218838;
-    --cash-primary-button-bg: #8a8a8a;
-    --cash-primary-button-hover-bg: #7a7a7a;
+    --cash-primary-button-bg: #999999;
+    --cash-primary-button-hover-bg: #888888;
     --cash-delete-icon-color: #dc3545;
-    --cash-edit-icon-color: #8a8a8a;
+    --cash-edit-icon-color: #999999;
 }
 
 /* Subtle Themes - Adjusted for better visual distinction */
@@ -2024,8 +2036,71 @@ body.theme-subtle-10 { /* Subtle Stone */
 
 
 /* General Body and Layout */
-.star-rating-cell {
-    white-space: nowrap; /* Prevent rating from wrapping */
+/* NEW: Visual distinction for user-entered data */
+
+/* For Desktop Table Cells with Numeric User Data */
+.numeric-data-cell {
+    text-align: left; /* Align user-entered data to the left */
+    font-weight: 600; /* Bolder */
+    font-size: 1.05em; /* Slightly larger */
+}
+
+/* For emphasized Share Code in table */
+table td .share-code-display { /* This class exists, just ensure its emphasis */
+    font-weight: 700; /* Make it bold */
+    font-size: 1.2em; /* Keep existing larger size */
+}
+
+/* For Mobile Card Data Rows */
+.mobile-card p.data-row {
+    display: flex;
+    justify-content: space-between; /* Aligns label left, value right */
+    align-items: baseline; /* Aligns text baselines */
+    margin: 5px 0; /* Consistent vertical spacing */
+}
+
+.mobile-card p.data-row .label-text {
+    font-weight: 600; /* For labels like "Entered Price:" */
+    color: var(--label-color); /* Use label color */
+    flex-shrink: 0; /* Prevent label from shrinking */
+    margin-right: 10px; /* Small space between label and value */
+}
+
+.mobile-card p.data-row .data-value {
+    font-weight: 700; /* Bolder for data */
+    font-size: 1.05em; /* Slightly larger */
+    color: var(--text-color); /* Main text color */
+    text-align: right;
+    flex-grow: 1; /* Allows value to take up remaining space */
+    white-space: nowrap; /* Prevent data from wrapping */
+    overflow: hidden;
+    text-overflow: ellipsis; /* Add ellipsis if text is too long */
+}
+
+/* For Share Detail Modal Data Elements */
+#shareDetailModal p { /* Target all paragraphs in the modal body for flex display */
+    display: flex;
+    justify-content: space-between; /* Aligns label left, value right */
+    align-items: baseline; /* Aligns content nicely */
+    margin: 10px 0; /* Consistent vertical spacing */
+    font-size: 0.95em; /* Base font size for modal details */
+}
+
+#shareDetailModal p strong { /* For labels within paragraphs (e.g., "Entered Price:") */
+    font-weight: 600;
+    color: var(--label-color);
+    flex-shrink: 0;
+    margin-right: 10px; /* Space between label and value */
+}
+
+/* Target specific span elements that hold data values in the detail modal */
+#shareDetailModal span[id^="modal"], /* Selects all spans with IDs starting with "modal" */
+#detailCashAssetBalance { /* Also apply to cash asset balance in its detail modal */
+    font-weight: 700; /* Bolder for data */
+    font-size: 1.1em; /* Noticeably larger */
+    color: var(--text-color); /* Main text color */
+    text-align: right;
+    flex-grow: 1; /* Allows value to take up remaining space */
 }
 html {
     height: 100%; /* Ensure html takes full height */
@@ -2284,6 +2359,26 @@ h1#mainTitle {
     justify-content: flex-start; 
 }
 
+/* NEW: Override for the checkbox toggle container to stack vertically */
+.menu-button-item.checkbox-switch-container {
+    flex-direction: column;
+    align-items: flex-start; /* Align children (title row, checkbox row) to the left */
+    gap: 8px; /* Add some space between the title and the checkboxes */
+    cursor: default; /* It's a container, not a single button */
+}
+
+/* Ensure icon/text spacing in Last Price ASX Closed matches other sidebar items */
+.toggle-title-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.menu-button-item.checkbox-switch-container:hover {
+    background-color: var(--menu-button-bg); /* Disable hover effect for the container */
+    transform: none;
+}
+
 .menu-button-item:hover {
     background-color: var(--menu-button-hover-bg);
     transform: translateY(-1px);
@@ -2313,13 +2408,15 @@ h1#mainTitle {
     font-weight: 400; /* Match other menu items */
 }
 
-/* The switch - the box around the slider */
+/* The switch - the box around the slider (container for the entire toggle) */
 .switch {
     position: relative;
     display: inline-block;
-    width: 40px; /* Smaller width for compact sidebar */
-    height: 22px; /* Smaller height */
-    flex-shrink: 0; /* Prevent shrinking */
+    width: 50px; /* Overall width of the toggle */
+    height: 28px; /* Overall height of the toggle */
+    flex-shrink: 0; /* Prevent shrinking in flex containers */
+    vertical-align: middle; /* Ensures vertical alignment with inline elements */
+    overflow: hidden; /* Crucial to clip the inner circle if it slightly overflows during transition */
 }
 
 /* Hide default HTML checkbox */
@@ -2329,7 +2426,7 @@ h1#mainTitle {
     height: 0;
 }
 
-/* The slider */
+/* The slider (the pill-shaped track) */
 .slider {
     position: absolute;
     cursor: pointer;
@@ -2337,38 +2434,50 @@ h1#mainTitle {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: var(--secondary-button-bg); /* Off state color */
+    background-color: var(--secondary-button-bg); /* Off state color, subtle background */
     -webkit-transition: .4s;
     transition: .4s;
-    border-radius: 22px; /* Rounded slider */
+    border-radius: 28px; /* Match height for perfect pill shape */
+    border: 2px solid var(---green-color) !important; /* Force constant green border */
+    box-sizing: border-box; /* Ensure border is included in width/height */
 }
 
+/* The slider handle (the circular thumb) */
 .slider:before {
     position: absolute;
     content: "";
-    height: 18px; /* Smaller circle */
-    width: 18px; /* Smaller circle */
-    left: 2px; /* Adjusted position */
-    bottom: 2px; /* Adjusted position */
-    background-color: white;
+    height: 20px; /* Adjusted handle size to fit new pill */
+    width: 20px; /* Match height for perfect circle */
+    left: 2px; /* Initial position for the handle (2px from left edge of track) */
+    top: 50%; /* Vertically center the handle */
+    transform: translateY(-50%); /* Adjust for perfect vertical centering */
+    background-color: white; /* Solid white for the handle */
     -webkit-transition: .4s;
     transition: .4s;
-    border-radius: 50%;
+    border-radius: 50%; /* Make it perfectly round */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3); /* Subtle shadow for depth */
 }
 
 input:checked + .slider {
-    background-color: var(--button-bg); /* On state color */
+    background-color: var(--button-bg); /* On state background color */
+    border-color: var(---green-color) !important; /* Force constant green border when checked */
 }
 
 input:focus + .slider {
-    box-shadow: 0 0 1px var(--button-bg);
+    outline: none; /* Remove default browser outline */
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.4), inset 0 0 0 1px rgba(0, 123, 255, 0.2); /* A subtle inner shadow with a softer outer glow */
+    border-color: var(---green-color) !important; /* Ensure focus border remains green */
 }
 
 input:checked + .slider:before {
-    -webkit-transform: translateX(18px); /* Move circle to right */
-    -ms-transform: translateX(18px);
-    transform: translateX(18px);
+    /* Fine-tuned translation for perfect centering and visibility.
+       This value (26px) aims for a consistent 2px spacing from both left and right edges of the 50px track. */
+    -webkit-transform: translateX(26px) translateY(-50%) !important;
+    -ms-transform: translateX(26px) translateY(-50%) !important;
+    transform: translateX(26px) translateY(-50%) !important;
+    /* Removed 'left: auto !important;' and 'right: 2px !important;' as they can conflict with translateX. */
 }
+/* The problematic duplicate .slider:before rule has been removed. */
 
 .menu-button-item.icon-only i {
     font-size: 1.5em;
@@ -2460,15 +2569,10 @@ input:checked + .slider:before {
     color: var(--label-color);
     font-weight: 400;
 }
-.dropdown-large option:not([value=""]) {
-    color: var(--text-color);
-    font-weight: 600;
-}
-
-.dropdown-large:focus {
-    border-color: var(--button-bg);
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-    outline: none;
+/* NEW: Conditional green border for dropdowns when a target is hit */
+.dropdown-large.target-hit-border {
+    border: 2px solid var(--green-color) !important;
+    box-shadow: 0 0 8px rgba(var(--green-color-dark-rgb), 0.5); /* Subtle glow */
 }
 
 .asx-code-btn {
@@ -2480,17 +2584,35 @@ input:checked + .slider:before {
     cursor: pointer;
     font-size: 0.9em;
     font-weight: 600;
-    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    /* Streamline transition properties to avoid conflicts */
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .asx-code-btn:hover {
-    background-color: var(--asx-button-hover-bg);
+    background-color: var(--asx-button-hover-bg) !important; /* Force hover background color for all states */
+}
+
+/* Specific hover behavior for target-hit ASX buttons to prevent flicker */
+.asx-code-btn.target-hit-alert:hover {
+    animation-play-state: paused; /* Temporarily pause the pulsing animation */
+    /* Only transition background-color on hover to avoid conflicting with border/shadow set by alert */
+    background-color: var(--asx-button-hover-bg) !important; /* Keep background hover effect */
+    /* Ensure border and shadow remain visually consistent with the alert state while hovered */
+    border-color: var(--green-color) !important; /* Keep green border */
+    box-shadow: 0 0 12px rgba(var(--green-color-dark-rgb), 0.8) !important; /* Keep the 'to' state of the pulse shadow */
+    transform: none !important; /* Explicitly prevent transform to avoid layout thrashing */
 }
 
 .asx-code-btn.active {
     background-color: var(--asx-button-active-bg);
     color: var(--asx-button-active-text);
     border-color: var(--asx-button-active-bg);
+}
+
+/* Conditional green border for ASX code buttons that hit target */
+.asx-code-btn.asx-target-hit-border {
+    border: 2px solid var(--green-color) !important;
+    box-shadow: 0 0 8px rgba(var(--green-color-dark-rgb), 0.5); /* Subtle glow */
 }
 
 /* Main Content Area */
@@ -2530,7 +2652,7 @@ table th {
 }
 
 table tbody tr {
-    transition: background-color 0.2s ease;
+    transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease; /* Added for smoother alert border changes */
     cursor: pointer;
 }
 
@@ -2540,16 +2662,17 @@ table tbody tr.selected {
 }
 
 table tbody tr:not(.selected):hover {
-    background-color: var(--table-row-hover-bg);
+    background-color: var(--table-row-hover-bg) !important; /* Force hover background color */
 }
 
 /* NEW: Target hit alert styling for table rows and mobile cards */
 table tbody tr.target-hit-alert,
 .mobile-card.target-hit-alert {
-    background-color: var(--target-alert-bg); /* Use the new alert background color */
-    border-color: var(--target-alert-border); /* Use the new alert border color */
-    color: var(--target-alert-text); /* Ensure text is readable on alert background */
+    border: 2px solid var(--green-color) !important; /* Force a full 2px green border */
+    box-shadow: 0 0 8px rgba(var(--green-color-dark-rgb), 0.5); /* Subtle glow for emphasis */
     animation: pulse-alert 1.5s infinite alternate; /* Subtle pulsing animation */
+    /* Keep the subtle background from the alert theme, but ensure border is dominant */
+    background-color: var(--target-alert-bg); 
 }
 
 /* Ensure text color applies to children */
@@ -2562,8 +2685,40 @@ table tbody tr.target-hit-alert td,
 
 /* Animation for pulsing alert */
 @keyframes pulse-alert {
-    from { opacity: 1; }
-    to { opacity: 0.8; }
+    from { 
+        box-shadow: 0 0 8px rgba(var(--green-color-dark-rgb), 0.5); /* Keep initial box-shadow */
+    }
+    to { 
+        box-shadow: 0 0 12px rgba(var(--green-color-dark-rgb), 0.8); /* Slightly expand box-shadow for pulse */
+    }
+}
+
+@keyframes pulseHighlight {
+    from {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(var(--green-color-dark-rgb), 0.7); /* Use RGB for pulsating shadow */
+    }
+    70% {
+        transform: scale(1.05);
+        box-shadow: 0 0 0 10px rgba(var(--green-color-dark-rgb), 0);
+    }
+    to {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(var(--green-color-dark-rgb), 0);
+    }
+}
+
+/* Override price change specific visual cues when target-hit-alert is active on mobile cards */
+.mobile-card.target-hit-alert.positive-change-card::before,
+.mobile-card.target-hit-alert.negative-change-card::before,
+.mobile-card.target-hit-alert.positive-change-card::after,
+.mobile-card.target-hit-alert.negative-change-card::after {
+    display: none !important; /* Hide vertical lines when target is hit */
+}
+
+.mobile-card.target-hit-alert.positive-change-card,
+.mobile-card.target-hit-alert.negative-change-card {
+    background-color: var(--target-alert-bg) !important; /* Force alert background, override tints */
 }
 
 /* Desktop Table: ASX Code and Live Price Styling */
@@ -2632,6 +2787,126 @@ table td.live-price-cell.negative-change {
     width: 100%; 
     box-sizing: border-box; 
 }
+/* --- Compact View Card Grid for Watchlist --- */
+.mobile-share-cards.compact-view {
+    display: grid;
+    grid-gap: 16px;
+    grid-template-columns: repeat(2, 1fr); /* 2 columns for mobile */
+}
+
+@media (min-width: 769px) {
+    .mobile-share-cards.compact-view {
+        grid-template-columns: repeat(4, 1fr); /* 4 columns for desktop */
+    }
+}
+
+.mobile-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 5px var(--shadow-color);
+    cursor: pointer;
+    /* Streamline and ensure relevant transitions are covered for all properties that change */
+    transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    position: relative; /* For pseudo-elements */
+    overflow: hidden; /* Ensure pseudo-elements are contained */
+}
+
+/* General rules for thin vertical lines (keep them for non-target-hit cards) */
+.mobile-card::before,
+.mobile-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    width: 5px; /* Width of the vertical line */
+    height: 100%;
+    transition: background-color 0.3s ease, width 0.3s ease, border-width 0.3s ease;
+    z-index: 1; /* Ensure they are above the card background but below content */
+}
+
+.mobile-card::before {
+    left: 0;
+}
+
+.mobile-card::after {
+    right: 0;
+}
+
+.mobile-card.positive-change-card::before,
+.mobile-card.positive-change-card::after {
+    background-color: var(--price-up-color);
+}
+
+.mobile-card.negative-change-card::before,
+.mobile-card.negative-change-card::after {
+    background-color: var(--price-down-color);
+}
+
+/* Subtle background tints for price movement */
+.mobile-card.positive-change-card {
+    background-color: var(--live-price-positive-bg); /* Faint green tint */
+}
+
+.mobile-card.negative-change-card {
+    background-color: var(--live-price-negative-bg); /* Faint red tint */
+}
+
+/* Remove previous specific target-hit pseudo-element styling as it's now handled by the main border */
+.mobile-card.target-hit-alert::before,
+.mobile-card.target-hit-alert::after {
+    display: none; /* Hide these when the main border is applied to the card */
+}
+
+/* NEW: Full border for modal headers when ASX code has hit target */
+/* This applies to both share detail modal and search result display (h3) */
+.modal-header-with-icon h2.modal-share-name.target-hit-alert,
+#searchResultDisplay h3.target-hit-alert { /* Applying to the h3 in search results too */
+    border: 2px solid var(--green-color) !important; /* Force a full 2px green border */
+    padding: 5px 10px; /* Add some padding to make the border visible around the text */
+    border-radius: 8px; /* Rounded corners for the border */
+    animation: pulse-alert 1.5s infinite alternate; /* Apply pulsing animation */
+    box-shadow: 0 0 8px rgba(var(--green-color-dark-rgb), 0.5); /* Subtle glow */
+    background-color: var(--target-alert-bg); /* Add a subtle background color matching the alert */
+    color: var(--target-alert-text) !important; /* Ensure text color is readable */
+}
+/* Ensure the price change colors are overridden when target-hit-alert is active on modal titles */
+.modal-header-with-icon h2.modal-share-name.target-hit-alert.positive,
+.modal-header-with-icon h2.modal-share-name.target-hit-alert.negative,
+.modal-header-with-icon h2.modal-share-name.target-hit-alert.neutral,
+#searchResultDisplay h3.target-hit-alert.positive,
+#searchResultDisplay h3.target-hit-alert.negative,
+#searchResultDisplay h3.target-hit-alert.neutral {
+    color: var(--target-alert-text) !important; /* Force text color to alert text */
+}
+
+/* NEW: Full border for ASX code buttons when target is hit */
+.asx-code-btn.target-hit-alert { /* New class for target hit on buttons */
+    border: 2px solid var(--green-color) !important; /* Force a full 2px green border */
+    animation: pulse-alert 1.5s infinite alternate;
+    box-shadow: 0 0 8px rgba(var(--green-color-dark-rgb), 0.5);
+}
+/* Ensure price colors are overridden on ASX buttons when target-hit-alert is active */
+/* Ensure no flickering when hovering target-hit ASX buttons */
+.asx-code-btn.target-hit-alert:hover {
+    /* Temporarily pause animation on hover to allow smooth background transition */
+    animation-play-state: paused; 
+    /* Ensure hover background is applied smoothly */
+    background-color: var(--asx-button-hover-bg); /* Use normal hover background */
+    /* Ensure border and shadow are consistent */
+    border-color: var(--green-color) !important; /* Keep green border */
+    box-shadow: 0 0 12px rgba(var(--green-color-dark-rgb), 0.8) !important; /* Keep active shadow */
+}
+
+/* Ensure content is readable over the tint */
+.mobile-card.positive-change-card h3,
+.mobile-card.positive-change-card p,
+.mobile-card.positive-change-card span,
+.mobile-card.negative-change-card h3,
+.mobile-card.negative-change-card p,
+.mobile-card.negative-change-card span {
+    color: var(--text-color); /* Ensure readability */
+}
 
 .mobile-card {
     background-color: var(--card-bg);
@@ -2650,7 +2925,7 @@ table td.live-price-cell.negative-change {
 }
 
 .mobile-card:not(.selected):hover {
-    background-color: var(--table-row-hover-bg);
+    background-color: var(--table-row-hover-bg) !important; /* Force hover background color */
 }
 
 /* Mobile Card: ASX Code (h3) and Live Price Styling */
@@ -2908,16 +3183,21 @@ table td.live-price-cell.negative-change {
     color: var(--ghosted-text);
     font-size: 0.85em;
     opacity: 0.8;
-    margin-top: 5px;
-    margin-bottom: 5px;
-    display: block; 
+    margin-top: 0; /* Remove top margin */
+    margin-bottom: 0; /* Remove bottom margin */
+    display: inline; /* Change to inline display */
 }
 
 .commsec-message {
-    font-size: 0.75em; 
-    margin-top: 0; 
-    margin-bottom: 0; 
-    line-height: 1.2; 
+    display: block;
+    font-size: 0.75em;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    line-height: 1;
+    position: static;
+    text-align: left;
 }
 
 .modal-body-scrollable {
@@ -2972,75 +3252,537 @@ table td.live-price-cell.negative-change {
     margin: 0;
 }
 
-/* NEW: Styling for Checkbox Group */
-.form-check-group {
+/* Specific styling for the target price input group */
+.form-group-with-toggle {
     display: flex;
-    align-items: center;
-    margin-bottom: 15px; /* Space below the checkbox */
-    margin-top: 10px; /* Space above the checkbox */
-    padding: 10px;
-    background-color: var(--table-header-bg); /* Subtle background for the group */
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
+    flex-wrap: wrap; /* Allow items to wrap on smaller screens */
+    align-items: center; /* Changed from baseline to center for better vertical alignment within the row */
+    gap: 4px; /* Halved the horizontal gap for tighter spacing */
+    row-gap: 2px; /* Explicitly control vertical gap between wrapped items */
+    margin-top: 10px; /* Ensures consistent vertical spacing */
+    margin-bottom: 15px; /* Standard space below the entire group */
+    justify-content: space-between; /* Pushes label to left, toggle to right */
+    border: none;
+    padding: 0;
+    box-sizing: border-box;
+    background-color: transparent;
+    min-height: 24px; /* Ensure minimum height for consistent alignment */
 }
 
+.form-group-with-toggle .target-price-label {
+    flex-shrink: 0; /* Prevent label from shrinking */
+}
+
+/* Ensure the switch itself has its border for the pill shape, but no outer container adds one */
+.form-group-with-toggle .switch .slider {
+    border: 1px solid var(--border-color); /* This is the actual pill border */
+}
+
+/* The rest of the switch and toggle-label styling remains as is */
+
+.form-group-with-toggle .target-price-label {
+    flex-shrink: 0; /* Prevent label from shrinking */
+}
+
+/* REMOVED: This conflicting .switch rule */
+/* The general .switch rule above (with 50px width, 28px height) will now apply everywhere */
+
+/* Title for the sidebar toggle (e.g., "Last Price (Market Closed)") */
+.menu-button-item.toggle-switch-container .toggle-title-row {
+    display: flex; /* Use flex for icon and text */
+    align-items: center;
+    gap: 8px; /* Space between icon and text */
+    font-size: 1em; /* Adjusted to match other menu item texts like "Search & Add Stock" */
+    color: var(--text-color);
+    white-space: nowrap;
+    margin-left: 0;
+    margin-bottom: 5px; /* Space between title and toggle line */
+}
+
+/* Container for the actual toggle and its Hide/Show labels in sidebar */
+.menu-button-item.toggle-switch-container .toggle-switch-row { /* NEW selector for the new div */
+    display: flex; /* Keep them on the same line */
+    align-items: center;
+    gap: 8px; /* Space between label-switch-label */
+    margin-left: auto; /* Pushes the entire toggle row to the right */
+}
+
+/* Styling for the sidebar toggle labels (Hide/Show) */
+.menu-button-item.toggle-switch-container .toggle-label {
+    font-size: 0.75em; /* Slightly smaller for sidebar */
+    color: var(--ghosted-text);
+}
+
+/* Highlight active label for sidebar toggle */
+#showLastLivePriceToggle:checked + .slider + .toggle-label.right {
+    font-weight: bold;
+    color: var(--positive-color);
+}
+
+#showLastLivePriceToggle:not(:checked) + .slider + .toggle-label.left {
+    font-weight: bold;
+    color: var(--negative-color);
+}
+
+/* Ensure the main sidebar button item is still clickable as a whole */
+. /* Copilot update: 2025-07-29 - change for sync test */
+.menu-button-item.toggle-switch-container > .switch {
+    pointer-events: none; /* Prevent switch itself from stealing click from parent */
+}
+
+.menu-button-item.toggle-switch-container > .switch input {
+    pointer-events: auto; /* Re-enable input's pointer events for actual toggle */
+}
+
+/* Checkbox specific styles (from form-check-group) */
 .form-check-group input[type="checkbox"] {
-    /* Make checkbox larger */
     width: 24px;
     height: 24px;
-    min-width: 24px; /* Ensure it doesn't shrink on mobile */
-    min-height: 24px; /* Ensure it doesn't shrink on mobile */
+    min-width: 24px;
+    min-height: 24px;
     margin-right: 10px;
     cursor: pointer;
     border: 1px solid var(--input-border);
     border-radius: 4px;
-    appearance: none; /* Hide default checkbox */
+    appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
     background-color: var(--input-bg);
     transition: background-color 0.2s ease, border-color 0.2s ease;
-    flex-shrink: 0; /* Prevent the checkbox from shrinking */
+    flex-shrink: 0;
 }
 
 .form-check-group input[type="checkbox"]:checked {
-    background-color: var(--success-color); /* Green when checked */
+    background-color: var(--success-color);
     border-color: var(--success-color);
 }
 
 .form-check-group input[type="checkbox"]:focus {
     outline: none;
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25); /* Focus ring */
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
 }
 
 .form-check-group label {
-    margin-bottom: 0; /* Remove default label margin */
-    font-weight: 400; /* Lighter font weight for the label */
+    margin-bottom: 0;
+    font-weight: 400;
     color: var(--text-color);
     cursor: pointer;
-    flex-grow: 1; /* Allow label to take remaining space */
-    font-size: 1em; /* Ensure readable font size */
+    flex-grow: 1;
+    font-size: 1em;
 }
 
-/* Custom checkmark for the checkbox */
 .form-check-group input[type="checkbox"]:checked::before {
-    content: '\2713'; /* Unicode checkmark character */
+    content: '\2713';
     display: block;
-    color: var(--button-text); /* White checkmark */
-    font-size: 18px; /* Adjust size of checkmark */
-    line-height: 24px; /* Vertically center checkmark */
+    color: var(--button-text);
+    font-size: 18px;
+    line-height: 24px;
     text-align: center;
 }
 
-/* NEW: Styling for Checkbox Group */
-.form-check-group {
+/* Frame for the target direction toggle */
+.target-toggle-frame {
     display: flex;
     align-items: center;
-    margin-bottom: 15px; /* Space below the checkbox */
-    margin-top: 10px; /* Space above the checkbox */
-    padding: 10px;
-    background-color: var(--table-header-bg); /* Subtle background for the group */
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--border-color); /* Add border */
+    border-radius: 8px; /* Rounded corners */
+    padding: 5px 8px; /* Internal spacing */
+    background-color: var(--input-bg); /* Match other form elements */
+    gap: 8px; /* Space between toggle components */
+    flex-shrink: 0; /* Prevent shrinking */
+    margin-left: auto; /* Pushes the whole frame to the right */
+    margin-bottom: 0; /* Override any default margins if this is a sub-element of form-check-group */
+}
+
+/* Ensure the inner switch container doesn't have its own margin */
+.target-direction-switch-container {
+    display: flex;
+    align-items: center;
+    gap: 0; /* Remove internal gap as labels are external */
+    margin: 0; /* Remove any default margin */
+}
+
+/* Styling for the concise toggle labels (e.g., "Below", "Above") */
+.toggle-label {
+    font-size: 0.75em; /* Smaller, concise font size */
+    color: var(--ghosted-text); /* Default muted text color when inactive */
+    white-space: nowrap; /* Prevent wrapping */
+    transition: color 0.3s ease, font-weight 0.3s ease; /* Smooth transition */
+    user-select: none; /* Prevent text selection */
+}
+
+/* Ensure the target price input drops to a new line and takes full width */
+/* Fine-tuning margin-top after adjusting parent's gap */
+.form-group-with-toggle input[type="number"] {
+    width: 100%; /* Input spans full width of its container */
+    margin-top: 0px !important; /* Remove top margin from the input itself */
+    flex-basis: 100%; /* Forces the input to start on a new line */
+}
+
+/* Highlight the active label for target direction toggle */
+#targetDirectionToggle:checked + .slider + .toggle-label.right {
+    font-weight: bold;
+    color: var(--text-color); /* Use primary text color when active */
+}
+
+#targetDirectionToggle:not(:checked) + .slider + .toggle-label.left {
+    font-weight: bold;
+    color: var(--text-color); /* Use primary text color when active */
+}
+
+/* Adjusted styling for the form group containing the toggle */
+.form-group-with-toggle {
+    display: flex;
+    flex-wrap: wrap; /* Allow items to wrap on smaller screens */
+    align-items: center; /* Vertically align all items in the center of the row */
+    gap: 4px; /* Reduced gap for tighter spacing */
+    margin-top: 10px; /* Ensures consistent vertical spacing */
+    margin-bottom: 15px; /* Standard space below the entire group */
+    justify-content: space-between; /* Pushes first item (label) to left, toggle group to right */
+    border: none;
+    padding: 0;
+    box-sizing: border-box;
+    background-color: transparent;
+    min-height: 24px; /* Ensure minimum height for consistent alignment */
+}
+
+/* New rule to group the Below label, toggle, and Above label together */
+.form-group-with-toggle .toggle-label.left,
+.form-group-with-toggle .switch,
+.form-group-with-toggle .toggle-label.right {
+    display: inline-flex; /* Ensure these stay on one line */
+    align-items: center; /* Vertically align items within this inline flex */
+    gap: 0; /* Remove internal gap between them, controlled by parent flex */
+}
+
+/* Ensure the target price label is correctly positioned horizontally */
+.form-group-with-toggle .target-price-label {
+    margin-right: auto; /* Push the label to the left and create space for the toggle group */
+    line-height: 1; /* Ensure consistent line height */
+}
+
+/* Fine-tune vertical position of the switch and labels within their group */
+.form-group-with-toggle .switch {
+    vertical-align: middle; /* Ensure vertical alignment */
+}
+
+.form-group-with-toggle .toggle-label {
+    line-height: 1; /* Ensure consistent line height */
+    vertical-align: middle; /* Ensure vertical alignment */
+}
+
+/* Adjust the input field's top margin to bring it closer to the label/toggle row */
+.form-group-with-toggle input[type="number"] {
+    margin-top: 4px; /* Keep consistent margin-top, no further reduction */
+}
+
+
+/* Specific styling for the sidebar toggle section */
+.menu-button-item.toggle-switch-container {
+    display: flex;
+    flex-direction: row; /* Arrange items on a single line */
+    align-items: center; /* Vertically center the items */
+    justify-content: space-between; /* Push title and checkboxes apart */
+    padding: 10px 15px; /* Added padding to align with other menu items */
+    border: none;
+    background-color: var(--menu-button-bg); /* Use menu button background */
+    border-radius: 8px; /* Match menu button item styling */
+    margin-bottom: 10px;
+    margin-top: 5px;
+    box-sizing: border-box; /* Ensure padding is included in width */
+    transition: background-color 0.2s ease, transform 0.1s ease; /* Add transition for hover effect */
+}
+
+.menu-button-item.toggle-switch-container:hover {
+    background-color: var(--menu-button-hover-bg); /* Add hover effect */
+    transform: translateY(-1px);
+}
+
+/* Title for the sidebar toggle (e.g., "Last Price (Market Closed)") */
+.menu-button-item.toggle-switch-container .toggle-title-row {
+    display: flex; /* Use flex for icon and text */
+    align-items: center;
+    gap: 8px; /* Space between icon and text */
+    font-size: 1em; /* This is the correct size to match other menu-button-item texts like "Search & Add Stock" */
+    color: var(--text-color);
+    white-space: nowrap;
+    margin-left: 0;
+    justify-content: flex-start; /* Align to the start */
+}
+
+/* Ensure icons within this title row inherit proper color */
+.menu-button-item.toggle-switch-container .toggle-title-row i {
+    color: var(--text-color); /* Explicitly set icon color to match text */
+    flex-shrink: 0; /* Prevent icon from shrinking */
+}
+
+/* Container for the actual toggle and its Hide/Show labels in sidebar */
+.menu-button-item.toggle-switch-container > .toggle-label.left,
+.menu-button-item.toggle-switch-container > .switch,
+.menu-button-item.toggle-switch-container > .toggle-label.right {
+    display: inline-flex; /* Keep them on the same line */
+    align-items: center;
+    gap: 8px; /* Adjusted spacing within this inline group */
+    margin-left: auto; /* Push the toggle row to the right within its container */
+}
+
+/* Styling for the sidebar toggle labels (Hide/Show) */
+.menu-button-item.toggle-switch-container .toggle-label {
+    font-size: 0.75em; /* Slightly smaller for sidebar */
+    color: var(--ghosted-text);
+}
+
+/* Highlight active label for sidebar toggle */
+#showLastLivePriceToggle:checked + .slider + .toggle-label.right {
+    font-weight: bold;
+    color: var(--positive-color);
+}
+
+#showLastLivePriceToggle:not(:checked) + .slider + .toggle-label.left {
+ /* Specific styling for the sidebar toggle section */
+.menu-button-item.toggle-switch-container {
+    display: flex;
+    flex-direction: column; /* Stack items vertically: title then toggle */
+    align-items: flex-start; /* Align items to the start (left) */
+    padding: 10px 15px; /* Added padding to align with other menu items */
+    border: none;
+    background-color: var(--menu-button-bg); /* Use menu button background */
+    border-radius: 8px; /* Match menu button item styling */
+    gap: 5px; /* Space between title and toggle line */
+    margin-bottom: 10px;
+    margin-top: 5px;
+    box-sizing: border-box; /* Ensure padding is included in width */
+    transition: background-color 0.2s ease, transform 0.1s ease; /* Add transition for hover effect */
+}
+
+.menu-button-item.toggle-switch-container:hover {
+    background-color: var(--menu-button-hover-bg); /* Add hover effect */
+    transform: translateY(-1px);
+}
+
+/* Title for the sidebar toggle (e.g., "Last Price (Market Closed)") */
+.menu-button-item.checkbox-switch-container .toggle-title-row { /* Targeted the correct container class */
+    display: flex; /* Use flex for icon and text */
+    align-items: center;
+    gap: 10px; /* Space between icon and text */
+    font-size: 1em; /* This is the correct size to match other menu-button-item texts like "Search & Add Stock" */
+    color: var(--text-color);
+    white-space: nowrap; /* Forces text to stay on one line */
+    overflow: hidden; /* Hides any overflowing text */
+    text-overflow: ellipsis; /* Adds "..." if text overflows */
+    margin-left: 0;
+    margin-bottom: 5px; /* Space between title and checkboxes */
+    width: 100%; /* Ensure it spans full width for alignment */
+    justify-content: flex-start; /* Align to the start */
+}
+
+/* Ensure icons within this title row inherit proper color */
+.menu-button-item.toggle-switch-container .toggle-title-row i {
+    color: var(--text-color); /* Explicitly set icon color to match text */
+    flex-shrink: 0; /* Prevent icon from shrinking */
+}
+
+/* Container for the actual toggle and its Hide/Show labels in sidebar */
+.menu-button-item.toggle-switch-container > .toggle-label.left,
+.menu-button-item.toggle-switch-container > .switch,
+.menu-button-item.toggle-switch-container > .toggle-label.right {
+    display: inline-flex; /* Keep them on the same line */
+    align-items: center;
+    gap: 8px; /* Adjusted spacing within this inline group */
+    margin-left: auto; /* Push the toggle row to the right within its container */
+}
+
+/* Styling for the sidebar toggle labels (Hide/Show) */
+.menu-button-item.toggle-switch-container .toggle-label {
+    font-size: 0.75em; /* Slightly smaller for sidebar */
+    color: var(--ghosted-text);
+}
+
+/* Highlight active label for sidebar toggle */
+#showLastLivePriceToggle:checked + .slider + .toggle-label.right {
+    font-weight: bold;
+    color: var(--positive-color);
+}
+
+#showLastLivePriceToggle:not(:checked) + .slider + .toggle-label.left {
+    font-weight: bold;
+    color: var(--negative-color);
+}
+
+/* Ensure the main sidebar button item is still clickable as a whole */
+.menu-button-item.toggle-switch-container > .switch {
+    pointer-events: none; /* Prevent switch itself from stealing click from parent */
+}
+
+.menu-button-item.toggle-switch-container > .switch input {
+    pointer-events: auto; /* Re-enable input's pointer events for actual toggle */
+}
+
+/* NEW: Styling for the notification badge text color */
+.target-hit-fixed-btn .badge {
+    color: var(--button-text); /* Default to white/light for dark backgrounds */
+}   font-weight: bold;
+    color: var(--negative-color);
+}
+
+/* Ensure the main sidebar button item is still clickable as a whole */
+.menu-button-item.toggle-switch-container > .switch {
+    pointer-events: none; /* Prevent switch itself from stealing click from parent */
+}
+
+.menu-button-item.toggle-switch-container > .switch input {
+    pointer-events: auto; /* Re-enable input's pointer events for actual toggle */
+}
+
+/* NEW: 2x2 Checkbox Grid for Target Direction in Share Form */
+.target-checkbox-grid {
+    display: flex;
+    flex-direction: column; /* Stack the rows vertically */
+    gap: 8px; /* Space between the rows */
+    margin-left: auto; /* Push the grid to the right */
+}
+
+.target-checkbox-row {
+    display: flex;
+    gap: 20px; /* Space between checkboxes in a row */
+    justify-content: flex-end; /* Align checkboxes to the right */
+}
+
+/* Re-using existing checkbox label style, but ensuring alignment and size */
+.target-checkbox-row .checkbox-label {
+    margin-bottom: 0; /* Override any default margins */
+    min-width: 80px; /* Give them a consistent width */
+    justify-content: flex-start; /* Align checkbox and text to the left within the label */
+    display: flex;
+    align-items: center;
+    vertical-align: middle;
+    line-height: 1.2;
+}
+
+
+/* NEW: Styling for the new checkbox-based toggle in the sidebar */
+.checkbox-switch-row {
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Space between "Hide"  and "Show" labels */
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Space between checkbox and its text */
+    cursor: pointer;
+    font-size: 0.95em;
+    color: var(--sidebar-text);
+    user-select: none; /* Prevent text selection on click */
+}
+
+.modern-checkbox {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--input-border);
+    border-radius: 4px;
+    background-color: var(--input-bg);
+    cursor: pointer;
+    position: relative;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+    flex-shrink: 0; /* Prevent checkbox from shrinking */
+}
+
+.modern-checkbox:checked {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
+}
+
+.modern-checkbox:checked::before {
+    content: '\2713'; /* Checkmark character */
+    color: var(--button-text);
+    font-size: 14px;
+    font-weight: bold;
+    /* Centering the checkmark inside the box */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* NEW: Styling for the notification badge text color */
+.target-hit-fixed-btn .badge {
+    color: var(--button-text); /* Default to white/light for dark backgrounds */
+}
+
+/* Placeholder for light theme badge and external link icon overrides */
+
+/* Styling for the new concise toggle labels (e.g., "Below", "Above") */
+.toggle-label {
+    font-size: 0.75em; /* Smaller, concise font size */
+    color: var(--ghosted-text); /* Default muted text color */
+    white-space: nowrap; /* Prevent wrapping */
+    transition: color 0.3s ease, font-weight 0.3s ease; /* Smooth transition */
+    user-select: none; /* Prevent text selection */
+}
+
+/* Highlight the active label for target direction toggle */
+/* Selectors updated to reflect that the labels are direct siblings of the <label class="switch"> element */
+#targetDirectionToggle:checked + .slider + .toggle-label.right {
+    font-weight: bold;
+    color: var(--positive-color); /* Emphasize active 'Above' */
+}
+
+#targetDirectionToggle:not(:checked) + .slider + .toggle-label.left {
+    font-weight: bold;
+    color: var(--negative-color); /* Emphasize active 'Below' */
+}
+
+
+/* Specific styling for the sidebar toggle's appearance */
+.menu-button-item.toggle-switch-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* Pushes content to ends */
+    padding: 8px 12px; /* Internal padding, consistent with other menu items */
+    border: none; /* Explicitly remove any border */
+    background-color: transparent; /* Explicitly remove any background color */
+    gap: 8px; /* Space between internal elements */
+    margin-bottom: 10px;
+    margin-top: 5px;
+    border-radius: 8px; /* Match other menu items' rounded corners */
+}
+
+/* Specific text for the description in the sidebar toggle */
+.menu-button-item.toggle-switch-container .toggle-description {
+    /* font-size: 0.85em; /* Removed to inherit font size from menu-button-item */
+    color: var(--text-color);
+    white-space: nowrap;
+}
+
+/* Styling for the sidebar toggle labels (Hide/Show) */
+.menu-button-item.toggle-switch-container .toggle-label {
+    font-size: 0.75em; /* Slightly smaller for sidebar */
+    color: var(--ghosted-text);
+}
+
+/* Highlight active label for sidebar toggle */
+#showLastLivePriceToggle:checked + .slider + .toggle-label.right {
+    font-weight: bold;
+    color: var(--positive-color);
+}
+
+#showLastLivePriceToggle:not(:checked) + .slider + .toggle-label.left {
+    font-weight: bold;
+    color: var(--negative-color);
+}
+
+/* Ensure the main sidebar button item is still clickable as a whole */
+.menu-button-item.toggle-switch-container > .switch {
+    pointer-events: none; /* Prevent switch itself from stealing click from parent */
+}
+
+.menu-button-item.toggle-switch-container > .switch input {
+    pointer-events: auto; /* Re-enable input's pointer events for actual toggle */
 }
 
 .form-check-group input[type="checkbox"] {
@@ -3311,6 +4053,9 @@ table td.live-price-cell.negative-change {
     margin-top: 25px;
     border-top: 1px solid var(--border-color);
     padding-top: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
 }
 
 .external-links-section h3 {
@@ -3331,6 +4076,20 @@ table td.live-price-cell.negative-change {
     font-weight: 600;
     margin-bottom: 10px;
     transition: color 0.2s ease;
+}
+
+/* Force visibility and styling of Font Awesome icons within external links */
+.external-link i.fas.fa-external-link-alt { 
+    display: inline-block !important; /* Ensure it's not hidden by 'display: none' */
+    visibility: visible !important; /* Ensure it's not hidden by 'visibility: hidden' */
+    font-family: "Font Awesome 6 Free" !important; /* Ensure correct font family is applied */
+    font-weight: 900 !important; /* Ensure correct font weight for solid icons */
+    font-size: 0.8em !important; /* Maintain desired size */
+    color: var(--link-color) !important; /* Ensure color */
+    margin-left: 5px !important; /* Maintain spacing */
+    vertical-align: middle !important; /* Maintain alignment */
+    -webkit-font-smoothing: antialiased; /* For better rendering */
+    -moz-osx-font-smoothing: grayscale; /* For better rendering */
 }
 
 .external-link:hover {
@@ -3538,70 +4297,69 @@ table td.live-price-cell.negative-change {
     color: var(--button-text);
 }
 
-/* Target Hit Notification Icon (bottom right) */
-.target-hit-icon-btn {
-    display: none; /* Hidden by default, shown by JS when shares hit target */
-    position: fixed !important; /* Ensures it stays in viewport, overriding any other positions */
-    bottom: 20px !important; /* Padding from bottom */
-    right: 20px !important; /* Padding from right */
-    left: auto !important; /* Ensure it's not forced to the left */
-    z-index: 9999 !important; /* Ensure it's on top of everything */
-    background-color: var(--alert-icon-bg); /* Use alert background color */
-    color: var(--alert-icon-text); /* Use alert text color */
+/* Target Hit Notification Icon (bottom-left, fixed) */
+.target-hit-fixed-btn {
+    position: fixed !important;
+    bottom: 20px !important; /* Place the button at the bottom of the page */
+    left: 20px !important; /* Place the button at the right of the page */
+    z-index: 9999 !important; /* Make sure it does not overlap */
+    background-color: transparent; /* Use a transparent background for the image */
     border: none;
-    border-radius: 8px; /* Slightly rounded for chat box look */
-    width: 55px; /* Size of the button */
-    height: 55px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 1.8em; /* Icon size */
+    border-radius: 50%; /* Keep this to make the pulsing shadow circular */
+    width: 60px; /* Adjust size as needed */
+    height: 60px; /* Adjust size as needed */
+    padding: 0; /* Remove padding to let image fill the button */
     cursor: pointer;
-    box-shadow: 0 4px 12px var(--alert-icon-shadow); /* More prominent shadow */
-    transition: transform 0.2s ease, background-color 0.2s ease;
-    animation: pulse-alert 1.5s infinite alternate; /* Subtle pulsing animation */
-    
-    /* Chat box tail */
-    position: relative; /* For positioning the pseudo-element tail */
+    /* The animation applies its own box-shadow, so we remove the default one */
+    box-shadow: none;
+    transition: transform 0.2s ease;
+    animation: pulseHighlight 2s infinite alternate ease-in-out;
+    transform: translateZ(0); /* Force hardware acceleration and prevent layering issues */
 }
 
-.target-hit-icon-btn::after {
-    content: '';
+/* NEW: Style for the image inside the notification button */
+.target-hit-fixed-btn img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Ensures the image fits without being distorted */
+}
+
+/* Ensure app-hidden completely hides the button when intended */
+.target-hit-fixed-btn.app-hidden {
+    display: none !important;
+}
+
+/* Remove the chat box tail, as it's no longer a "chat bubble" but a round alert icon */
+.target-hit-fixed-btn::after {
+    display: none;
+}
+
+.target-hit-fixed-btn:hover {
+    transform: translateY(-2px); /* Lift effect */
+    /* No background color change on hover for a transparent button */
+}
+
+/* Badge on the target hit icon */
+#targetHitIconCount {
     position: absolute;
-    bottom: -8px; /* Position below the button */
-    right: 8px; /* Align to the right side of the button */
-    width: 0;
-    height: 0;
-    border-left: 8px solid transparent;
-    border-right: 8px solid transparent;
-    border-top: 8px solid var(--alert-icon-bg); /* Color of the tail */
-    filter: drop-shadow(0 2px 1px rgba(0,0,0,0.1)); /* Match button shadow slightly */
-}
-
-
-.target-hit-icon-btn:hover {
-    transform: scale(1.1);
-    background-color: var(--danger-button-hover-bg); /* Slightly darker on hover */
-}
-
-.target-hit-icon-btn:hover::after {
-    border-top-color: var(--danger-button-hover-bg); /* Match tail color on hover */
-}
-
-.target-hit-icon-count {
-    position: absolute;
-    top: -5px; /* Position above the icon */
-    right: -5px; /* Position to the right of the icon */
-    background-color: var(--danger-color); /* Red badge */
-    color: white;
-    font-size: 0.7em; /* Smaller font for the count */
+    top: -5px;
+    right: -5px;
+    background-color: var(--danger-color);
+    color: var(--button-text); /* Use a theme-aware variable for text color */
+    font-size: 0.7em;
     font-weight: 700;
     padding: 3px 6px;
     border-radius: 50%;
-    min-width: 20px; /* Ensure it's circular for single digits */
+    min-width: 20px;
+    min-height: 20px; /* Ensure it's a circle */
     text-align: center;
-    line-height: 1; /* Center text vertically */
+    line-height: 1;
     box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    border: 2px solid var(--background-color); /* This creates a "cutout" effect against the icon */
+    display: flex; /* Use flexbox to perfectly center the number */
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
 }
 
 /* Alert Panel Styles */
@@ -3623,6 +4381,99 @@ table td.live-price-cell.negative-change {
     opacity: 0; /* Start hidden for transition */
     transform: translateY(20px); /* Slide up from bottom */
     transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+}
+
+/* Target Hit Details Modal Specific Styles */
+.target-hit-details-modal {
+    background-color: rgba(0, 0, 0, 0.4); /* Dark semi-transparent overlay */
+    backdrop-filter: blur(8px); /* Frosted glass effect */
+    -webkit-backdrop-filter: blur(8px); /* Safari support */
+}
+
+.target-hit-details-modal .modal-content {
+    background-color: rgba(255, 255, 255, 0.85); /* White semi-transparent for content, looks good on dark too */
+    max-width: 400px;
+    margin: auto;
+}
+
+body.dark-theme .target-hit-details-modal .modal-content {
+    background-color: rgba(40, 40, 40, 0.85); /* Dark semi-transparent for dark theme */
+}
+
+.target-hit-shares-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Space between alert items */
+    padding: 10px;
+    max-height: 60vh; /* Allow scrolling within the list */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    border: 1px solid var(--border-color); /* Add a border to the list container */
+    border-radius: 8px;
+    background-color: var(--background-color); /* Match overall background for list */
+}
+
+.target-hit-shares-list .no-alerts-message {
+    padding: 20px;
+    font-style: italic;
+    color: var(--ghosted-text);
+    text-align: center;
+}
+
+.target-hit-item {
+    background-color: var(--card-bg); /* Card background for each item */
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px 15px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.target-hit-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+}
+
+.target-hit-item .share-name-code {
+    font-size: 1.1em;
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+.target-hit-item .live-price-display {
+    font-size: 1.1em;
+    font-weight: 700;
+    color: var(--text-color); /* Default color, will be overridden by positive/negative */
+}
+
+/* Ensure positive/negative colors apply to share name and price in alert item */
+.target-hit-item .share-name-code.positive,
+.target-hit-item .live-price-display.positive {
+    color: var(--price-up-color) !important;
+}
+
+.target-hit-item .share-name-code.negative,
+.target-hit-item .live-price-display.negative {
+    color: var(--price-down-color) !important;
+}
+
+.target-hit-item .share-name-code.neutral,
+.target-hit-item .live-price-display.neutral {
+    color: var(--price-neutral-color) !important;
+}
+
+.target-hit-item p {
+    margin: 0;
+    font-size: 0.9em;
+    color: var(--text-color);
+}
+
+.target-hit-item p strong {
+    color: var(--label-color);
 }
 
 .alert-panel.open {
@@ -3662,7 +4513,7 @@ table td.live-price-cell.negative-change {
 }
 
 .alert-item {
-    background-color: var(--alert-item-bg);
+    background-color: rgba(255, 255, 255, 0.9); /* White semi-transparent for alert item */
     border: 1px solid var(--alert-panel-border);
     border-radius: 8px;
     padding: 10px;
@@ -3671,6 +4522,10 @@ table td.live-price-cell.negative-change {
     color: var(--text-color);
     font-size: 0.9em;
     position: relative;
+}
+
+body.dark-theme .alert-item {
+    background-color: rgba(51, 51, 51, 0.9); /* Dark semi-transparent for dark theme */
 }
 
 .alert-item:last-child {
@@ -3821,6 +4676,20 @@ main.container {
     /* Ensure individual cards fill their grid column width on mobile */
     .mobile-share-cards.compact-view .mobile-card {
         width: auto !important; /* Let grid handle width */
+    }
+    /* Ensure target price checkbox labels are perfectly centered with checkbox on mobile */
+    .target-checkbox-row .checkbox-label {
+        align-items: center !important;
+        display: flex !important;
+        line-height: 1.2 !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        height: 24px !important;
+    }
+    .target-checkbox-row .modern-checkbox {
+        vertical-align: middle !important;
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
     }
 }
 

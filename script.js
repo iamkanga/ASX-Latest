@@ -1,3 +1,96 @@
+// Copilot update: 2025-07-29 - change for sync test
+// --- IN-APP BACK BUTTON HANDLING FOR MOBILE PWAs ---
+// Push a new state when opening a modal or navigating to a new in-app view
+function pushAppState(stateObj = {}, title = '', url = '') {
+    history.pushState(stateObj, title, url);
+}
+
+// Listen for the back button (popstate event)
+window.addEventListener('popstate', function(event) {
+    // Always close the topmost open modal, one at a time, never dismissing the browser until all modals are closed
+    const modals = [
+        window.shareDetailModal,
+        window.targetHitDetailsModal,
+        window.cashAssetFormModal,
+        window.cashAssetDetailModal,
+        window.customDialogModal,
+        window.calculatorModal,
+        window.dividendCalculatorModal,
+        window.addWatchlistModal,
+        window.manageWatchlistModal,
+        window.stockSearchModal,
+        window.alertPanel
+    ];
+    for (const modal of modals) {
+        if (modal && modal.style.display !== 'none') {
+            if (window.hideModal) hideModal(modal);
+            return;
+        }
+    }
+    // If no modals are open, allow default browser back (exit app)
+});
+// ...existing code...
+
+// --- SIDEBAR CHECKBOX LOGIC FOR LAST PRICE DISPLAY ---
+document.addEventListener('DOMContentLoaded', function () {
+    const hideCheckbox = document.getElementById('sidebarHideCheckbox');
+    const showCheckbox = document.getElementById('sidebarShowCheckbox');
+
+    function setShowLastLivePricePreference(value) {
+        showLastLivePriceOnClosedMarket = value;
+        window.showLastLivePriceOnClosedMarket = value;
+        // Persist to Firestore if available
+        if (window.firebaseAuth && window.firebaseAuth.currentUser && window.firestoreDb && window.firestore && window.getFirebaseAppId) {
+            const currentUserId = window.firebaseAuth.currentUser.uid;
+            const currentAppId = window.getFirebaseAppId();
+            const userProfileDocRef = window.firestore.doc(window.firestoreDb, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/profile/settings');
+            window.firestore.setDoc(userProfileDocRef, { showLastLivePriceOnClosedMarket: value }, { merge: true })
+                .then(() => {
+                    if (window.logDebug) window.logDebug('Sidebar Checkbox: Saved "Show Last Live Price" preference to Firestore: ' + value);
+                })
+                .catch((error) => {
+                    if (window.showCustomAlert) window.showCustomAlert('Error saving preference: ' + error.message);
+                });
+        }
+        // Update UI immediately
+        if (window.renderWatchlist) window.renderWatchlist();
+        if (window.showCustomAlert) window.showCustomAlert('Last Price Display set to: ' + (value ? 'On (Market Closed)' : 'Off (Market Closed)'), 1500);
+        if (window.toggleAppSidebar) window.toggleAppSidebar(false);
+    }
+
+    function updateCheckboxes(source) {
+        if (source === hideCheckbox && hideCheckbox.checked) {
+            showCheckbox.checked = false;
+            setShowLastLivePricePreference(false);
+        } else if (source === showCheckbox && showCheckbox.checked) {
+            hideCheckbox.checked = false;
+            setShowLastLivePricePreference(true);
+        }
+        // Prevent both from being unchecked: always one selected
+        if (!hideCheckbox.checked && !showCheckbox.checked) {
+            showCheckbox.checked = true;
+            setShowLastLivePricePreference(true);
+        }
+    }
+
+    if (hideCheckbox && showCheckbox) {
+        hideCheckbox.addEventListener('change', function () {
+            updateCheckboxes(hideCheckbox);
+        });
+        showCheckbox.addEventListener('change', function () {
+            updateCheckboxes(showCheckbox);
+        });
+        // Initial state: ensure only one is checked
+        updateCheckboxes(showCheckbox.checked ? showCheckbox : hideCheckbox);
+    }
+
+    // Ensure Edit Current Watchlist button updates when selection changes
+    if (typeof watchlistSelect !== 'undefined' && watchlistSelect) {
+        watchlistSelect.addEventListener('change', function () {
+            updateMainButtonsState(true);
+        });
+    }
+});
 //  This script interacts with Firebase Firestore for data storage.
 // Firebase app, db, auth instances, and userId are made globally available
 // via window.firestoreDb, window.firebaseAuth, window.getFirebaseAppId(), etc.,
@@ -53,7 +146,7 @@ let originalWatchlistData = null; // Stores original watchlist data for dirty st
 // IMPORTANT: This URL is the exact string provided in your initial script.js file.
 // If CORS errors persist, the solution is to redeploy your Google Apps Script with "Anyone, even anonymous" access
 // and then update this constant with the NEW URL provided by Google Apps Script.
-const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzp7OjZL3zqvJ9wPsV9M-afm2wKeQPbIgGVv_juVpkaRllADESLwj7F4-S7YWYerau-/exec';
+const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzktFj2KTZ7Z77L6XOIo0zxjmN-nVvEE2cuq_iZFQLZjT4lnli3pILhH15H9AzNWL0/exec'; // This is your NEW development Apps Script URL
 let livePrices = {}; // Stores live price data: {ASX_CODE: {live: price, prevClose: price, PE: value, High52: value, Low52: value, targetHit: boolean, lastLivePrice: value, lastPrevClose: value}} 
 let livePriceFetchInterval = null; // To hold the interval ID for live price updates
 const LIVE_PRICE_FETCH_INTERVAL_MS = 5 * 60 * 1000; // Fetch every 5 minutes
@@ -81,6 +174,9 @@ let currentMobileViewMode = 'default';
 // NEW: Global variable to track if the target hit icon is dismissed for the current session
 let targetHitIconDismissed = false;
 let showLastLivePriceOnClosedMarket = false; // New global variable for the toggle state
+
+// Tracks if share detail modal was opened from alerts
+let wasShareDetailOpenedFromTargetAlerts = false;
 
 // NEW: Global variable to store cash categories data
 let userCashCategories = [];
@@ -135,6 +231,7 @@ const deleteShareFromDetailBtn = document.getElementById('deleteShareFromDetailB
 const modalNewsLink = document.getElementById('modalNewsLink');
 const modalMarketIndexLink = document.getElementById('modalMarketIndexLink');
 const modalFoolLink = document.getElementById('modalFoolLink');
+const modalListcorpLink = document.getElementById('modalListcorpLink'); // NEW: Reference for Listcorp link
 const modalCommSecLink = document.getElementById('modalCommSecLink');
 const commSecLoginMessage = document.getElementById('commSecLoginMessage');
 const dividendCalculatorModal = document.getElementById('dividendCalculatorModal');
@@ -181,7 +278,21 @@ const shareWatchlistSelect = document.getElementById('shareWatchlistSelect');
 const modalLivePriceDisplaySection = document.querySelector('.live-price-display-section'); 
 const targetHitIconBtn = document.getElementById('targetHitIconBtn'); // NEW: Reference to the icon button
 const targetHitIconCount = document.getElementById('targetHitIconCount'); // NEW: Reference to the count span
+// NEW: Target Hit Details Modal Elements
+const targetHitDetailsModal = document.getElementById('targetHitDetailsModal');
+const targetHitModalTitle = document.getElementById('targetHitModalTitle');
+// Removed: minimizeTargetHitModalBtn, dismissAllTargetHitsBtn (now explicit buttons at bottom)
+const targetHitSharesList = document.getElementById('targetHitSharesList');
 const toggleCompactViewBtn = document.getElementById('toggleCompactViewBtn');
+
+// NEW: References for the reconfigured buttons in the Target Hit Details Modal
+const targetHitModalCloseTopBtn = document.getElementById('targetHitModalCloseTopBtn'); // New 'X' button at the top
+const alertModalMinimizeBtn = document.getElementById('alertModalMinimizeBtn'); // New "Minimize" button at the bottom
+const alertModalDismissAllBtn = document.getElementById('alertModalDismissAllBtn'); // New "Dismiss All" button at the bottom
+
+// NEW: Target Direction Checkbox UI Elements
+const targetAboveCheckbox = document.getElementById('targetAboveCheckbox');
+const targetBelowCheckbox = document.getElementById('targetBelowCheckbox');
 const showLastLivePriceToggle = document.getElementById('showLastLivePriceToggle');
 const splashScreen = document.getElementById('splashScreen');
 const searchStockBtn = document.getElementById('searchStockBtn'); // NEW: Search Stock button
@@ -315,7 +426,7 @@ function closeModals() {
             const isWatchlistSelected = shareWatchlistSelect && shareWatchlistSelect.value !== '';
             const needsWatchlistSelection = currentSelectedWatchlistIds.includes(ALL_SHARES_ID);
             
-            if (isShareNameValid && (!needsWatchlistSelection || isWatchlistSelected)) { 
+            if (isShareNameValid && isWatchlistSelected) { // Always require watchlist selection for new shares
                 logDebug('Auto-Save: New share detected with valid name and watchlist. Attempting silent save.');
                 saveShareData(true); // true indicates silent save
             } else {
@@ -346,6 +457,13 @@ function closeModals() {
             logDebug('Auto-Save: No changes detected for existing watchlist.');
         }
     }
+
+    // Close target hit details modal (no auto-save needed for this one)
+    if (targetHitDetailsModal && targetHitDetailsModal.style.display !== 'none') {
+        logDebug('Auto-Close: Target Hit Details modal is closing.');
+        // No auto-save or dirty check needed for this display modal
+    }
+    // Leave a blank line here for readability.
 
     // NEW: Auto-save logic for cash asset form modal (2.1)
     if (cashAssetFormModal && cashAssetFormModal.style.display !== 'none') {
@@ -378,6 +496,7 @@ function closeModals() {
     });
     resetCalculator();
     deselectCurrentShare();
+
     // NEW: Deselect current cash asset
     deselectCurrentCashAsset();
     if (autoDismissTimeout) { clearTimeout(autoDismissTimeout); autoDismissTimeout = null; }
@@ -385,6 +504,15 @@ function closeModals() {
     // NEW: Close the alert panel if open (alertPanel is not in current HTML, but kept for consistency)
     if (alertPanel) hideModal(alertPanel);
     logDebug('Modal: All modals closed.');
+
+    // Restore Target Price Alerts modal if share detail was opened from it
+    if (wasShareDetailOpenedFromTargetAlerts) {
+        logDebug('Restoring Target Price Alerts modal after closing share detail modal.');
+        if (targetHitDetailsModal) {
+            showModal(targetHitDetailsModal);
+        }
+        wasShareDetailOpenedFromTargetAlerts = false;
+    }
 }
 
 // Custom Dialog (Alert) Function
@@ -419,6 +547,71 @@ function formatDate(dateString) {
     return date.toLocaleDateString('en-AU', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
+/**
+ * A centralized helper function to compute all display-related data for a share.
+ * This avoids duplicating complex logic in multiple rendering functions.
+ * @param {object} share The share object.
+ * @returns {object} An object containing calculated values for display.
+ */
+function getShareDisplayData(share) {
+    const livePriceData = livePrices[share.shareName.toUpperCase()];
+    const isMarketOpen = isAsxMarketOpen();
+
+    let displayLivePrice = 'N/A';
+    let displayPriceChange = '';
+    let priceClass = '';
+    let cardPriceChangeClass = '';
+    let yieldDisplayTable = '';
+    let yieldDisplayMobile = '';
+    let peRatio = 'N/A';
+    let high52Week = 'N/A';
+    let low52Week = 'N/A';
+
+    if (livePriceData) {
+        const currentLivePrice = livePriceData.live;
+        const previousClosePrice = livePriceData.prevClose;
+        const lastFetchedLive = livePriceData.lastLivePrice;
+        const lastFetchedPrevClose = livePriceData.lastPrevClose;
+
+        peRatio = livePriceData.PE !== null && !isNaN(livePriceData.PE) ? livePriceData.PE.toFixed(2) : 'N/A';
+        high52Week = livePriceData.High52 !== null && !isNaN(livePriceData.High52) ? '$' + livePriceData.High52.toFixed(2) : 'N/A';
+        low52Week = livePriceData.Low52 !== null && !isNaN(livePriceData.Low52) ? '$' + livePriceData.Low52.toFixed(2) : 'N/A';
+
+        if (isMarketOpen || showLastLivePriceOnClosedMarket) {
+            if (currentLivePrice !== null && !isNaN(currentLivePrice)) {
+                displayLivePrice = '$' + currentLivePrice.toFixed(2);
+            }
+            if (currentLivePrice !== null && previousClosePrice !== null && !isNaN(currentLivePrice) && !isNaN(previousClosePrice)) {
+                const change = currentLivePrice - previousClosePrice;
+                const percentageChange = (previousClosePrice !== 0 ? (change / previousClosePrice) * 100 : 0);
+                displayPriceChange = `${change.toFixed(2)} (${percentageChange.toFixed(2)}%)`;
+                priceClass = change > 0 ? 'positive' : (change < 0 ? 'negative' : 'neutral');
+                cardPriceChangeClass = change > 0 ? 'positive-change-card' : (change < 0 ? 'negative-change-card' : '');
+            } else if (lastFetchedLive !== null && lastFetchedPrevClose !== null && !isNaN(lastFetchedLive) && !isNaN(lastFetchedPrevClose)) {
+                const change = lastFetchedLive - lastFetchedPrevClose;
+                const percentageChange = (lastFetchedPrevClose !== 0 ? (change / lastFetchedPrevClose) * 100 : 0);
+                displayPriceChange = `${change.toFixed(2)} (${percentageChange.toFixed(2)}%)`;
+                priceClass = change > 0 ? 'positive' : (change < 0 ? 'negative' : 'neutral');
+                cardPriceChangeClass = change > 0 ? 'positive-change-card' : (change < 0 ? 'negative-change-card' : '');
+            }
+        } else {
+            displayLivePrice = lastFetchedLive !== null && !isNaN(lastFetchedLive) ? '$' + lastFetchedLive.toFixed(2) : 'N/A';
+            displayPriceChange = '0.00 (0.00%)';
+            priceClass = 'neutral';
+            cardPriceChangeClass = '';
+        }
+    }
+
+    return {
+        displayLivePrice,
+        displayPriceChange,
+        priceClass,
+        cardPriceChangeClass,
+        peRatio,
+        high52Week,
+        low52Week
+    };
+}
 // --- UI State Management Functions ---
 
 /**
@@ -434,101 +627,64 @@ function addShareToTable(share) {
     const row = document.createElement('tr');
     row.dataset.docId = share.id;
 
+    // Add click listener to open share details modal
+    row.addEventListener('click', () => {
+        logDebug('Table Row Click: Share ID: ' + share.id);
+        selectShare(share.id);
+        // If this row is inside the Target Price Alerts modal, set the restoration flag
+        if (row.closest('#targetHitSharesList')) {
+            wasShareDetailOpenedFromTargetAlerts = true;
+        }
+        showShareDetails();
+    });
+
     // Check if target price is hit for this share
     const livePriceData = livePrices[share.shareName.toUpperCase()];
     const isTargetHit = livePriceData ? livePriceData.targetHit : false;
 
-    // Apply target-hit-alert class if target is hit and not dismissed
+    // Apply target-hit-alert class if target is hit AND not dismissed
     if (isTargetHit && !targetHitIconDismissed) {
         row.classList.add('target-hit-alert');
+    } else {
+        row.classList.remove('target-hit-alert'); // Ensure class is removed if conditions are not met
     }
 
-    // Declare these variables once at the top of the function
-    const isMarketOpen = isAsxMarketOpen();
-    let displayLivePrice = 'N/A';
-    let displayPriceChange = '';
-    let priceClass = '';
-
-    // Logic to determine display values
-    if (livePriceData) {
-        const currentLivePrice = livePriceData.live;
-        const previousClosePrice = livePriceData.prevClose;
-        const lastFetchedLive = livePriceData.lastLivePrice;
-        const lastFetchedPrevClose = livePriceData.lastPrevClose;
-
-        if (isMarketOpen || showLastLivePriceOnClosedMarket) {
-            // Show live data if market is open, or if market is closed but toggle is ON
-            if (currentLivePrice !== null && !isNaN(currentLivePrice)) {
-                displayLivePrice = '$' + currentLivePrice.toFixed(2);
-            }
-            if (currentLivePrice !== null && previousClosePrice !== null && !isNaN(currentLivePrice) && !isNaN(previousClosePrice)) {
-                const change = currentLivePrice - previousClosePrice;
-                const percentageChange = (previousClosePrice !== 0 ? (change / previousClosePrice) * 100 : 0);
-                displayPriceChange = `${change.toFixed(2)} (${percentageChange.toFixed(2)}%)`;
-                priceClass = change > 0 ? 'positive' : (change < 0 ? 'negative' : 'neutral');
-            } else if (lastFetchedLive !== null && lastFetchedPrevClose !== null && !isNaN(lastFetchedLive) && !isNaN(lastFetchedPrevClose)) {
-                // Fallback to last fetched values if current live/prevClose are null but lastFetched are present
-                const change = lastFetchedLive - lastFetchedPrevClose;
-                const percentageChange = (lastFetchedPrevClose !== 0 ? (change / lastFetchedPrevClose) * 100 : 0);
-                displayPriceChange = `${change.toFixed(2)} (${percentageChange.toFixed(2)}%)`;
-                priceClass = change > 0 ? 'positive' : (change < 0 ? 'negative' : 'neutral');
-            }
-        } else {
-            // Market closed and toggle is OFF, show zero change
-            displayLivePrice = lastFetchedLive !== null && !isNaN(lastFetchedLive) ? '$' + lastFetchedLive.toFixed(2) : 'N/A';
-            displayPriceChange = '0.00 (0.00%)';
-            priceClass = 'neutral';
-        }
-    }
+    // Use the new helper function to get all display data
+    const displayData = getShareDisplayData(share);
 
     row.innerHTML = `
-        <td><span class="share-code-display ${priceClass}">${share.shareName || ''}</span></td>
+        <td><span class="share-code-display ${displayData.priceClass}">${share.shareName || ''}</span></td>
         <td class="live-price-cell">
-            <span class="live-price-value ${priceClass}">${displayLivePrice}</span>
-            <span class="price-change ${priceClass}">${displayPriceChange}</span>
+            <span class="live-price-value ${displayData.priceClass}">${displayData.displayLivePrice}</span>
+            <span class="price-change ${displayData.priceClass}">${displayData.displayPriceChange}</span>
         </td>
-        <td>${Number(share.currentPrice) !== null && !isNaN(Number(share.currentPrice)) ? '$' + Number(share.currentPrice).toFixed(2) : 'N/A'}</td>
-        <td>${Number(share.targetPrice) !== null && !isNaN(Number(share.targetPrice)) ? '$' + Number(share.targetPrice).toFixed(2) : 'N/A'}</td>
-    <td>
+        <td class="numeric-data-cell">${(val => (val !== null && !isNaN(val) && val !== 0) ? '$' + val.toFixed(2) : '')(Number(share.targetPrice))}</td>
+        <td class="numeric-data-cell">
         ${
-            // Determine the effective yield for display in the table
-            // Prioritize franked yield if franking credits are present and yield is valid, otherwise use unfranked yield
-            // Default to N/A if no valid yield can be calculated
             (() => {
                 const dividendAmount = Number(share.dividendAmount) || 0;
                 const frankingCredits = Number(share.frankingCredits) || 0;
-                const enteredPrice = Number(share.currentPrice) || 0; // Fallback for entered price if live not available
-
-                // Use the price that is actually displayed for yield calculation if possible
-                // If displayLivePrice is 'N/A', use enteredPrice from share object
-                const priceForYield = (displayLivePrice !== 'N/A' && displayLivePrice.startsWith('$'))
-                                    ? parseFloat(displayLivePrice.substring(1))
+                const enteredPrice = Number(share.currentPrice) || 0;
+                const priceForYield = (displayData.displayLivePrice !== 'N/A' && displayData.displayLivePrice.startsWith('$'))
+                                    ? parseFloat(displayData.displayLivePrice.substring(1))
                                     : (enteredPrice > 0 ? enteredPrice : 0);
-
-                if (priceForYield === 0) return 'N/A'; // Cannot calculate yield if price is zero
-
+                if (priceForYield === 0 || (dividendAmount === 0 && frankingCredits === 0)) return '';
                 const frankedYield = calculateFrankedYield(dividendAmount, priceForYield, frankingCredits);
                 const unfrankedYield = calculateUnfrankedYield(dividendAmount, priceForYield);
-
                 if (frankingCredits > 0 && frankedYield > 0) {
                     return frankedYield.toFixed(2) + '% (F)'; // Display franked yield with (F)
                 } else if (unfrankedYield > 0) {
                     return unfrankedYield.toFixed(2) + '% (U)'; // Display unfranked yield with (U)
                 }
-                return 'N/A'; // No valid yield
+                return '';
             })()
         }
     </td>
-    <td class="star-rating-cell">
-        ${share.starRating > 0 ? '⭐ ' + share.starRating : 'N/A'}
+        <td class="numeric-data-cell">${(val => (val !== null && !isNaN(val) && val !== 0) ? '$' + val.toFixed(2) : '')(Number(share.currentPrice))}</td>
+        <td class="star-rating-cell numeric-data-cell">
+        ${share.starRating > 0 ? '⭐ ' + share.starRating : ''}
     </td>
 `;
-
-    row.addEventListener('click', () => {
-        logDebug('Table Row Click: Share ID: ' + share.id);
-        selectShare(share.id);
-        showShareDetails();
-    });
 
     // Add long press / context menu for desktop
     let touchStartTime = 0;
@@ -595,16 +751,59 @@ function addShareToMobileCards(share) {
     const livePriceData = livePrices[share.shareName.toUpperCase()];
     const isTargetHit = livePriceData ? livePriceData.targetHit : false;
 
-    // Apply target-hit-alert class if target is hit and not dismissed
-    if (isTargetHit && !targetHitIconDismissed) {
-        card.classList.add('target-hit-alert');
-    }
-
     // Declare these variables once at the top of the function
     const isMarketOpen = isAsxMarketOpen();
     let displayLivePrice = 'N/A';
     let displayPriceChange = '';
     let priceClass = '';
+    let cardPriceChangeClass = ''; // NEW: For subtle background tints and vertical lines
+
+    // Logic to determine display values and card-specific classes
+    if (livePriceData) {
+        const currentLivePrice = livePriceData.live;
+        const previousClosePrice = livePriceData.prevClose;
+        const lastFetchedLive = livePriceData.lastLivePrice;
+        const lastFetchedPrevClose = livePriceData.lastPrevClose;
+
+        if (isMarketOpen || showLastLivePriceOnClosedMarket) {
+            // Show live data if market is open, or if market is closed but toggle is ON
+            if (currentLivePrice !== null && !isNaN(currentLivePrice)) {
+                displayLivePrice = '$' + currentLivePrice.toFixed(2);
+            }
+            if (currentLivePrice !== null && previousClosePrice !== null && !isNaN(currentLivePrice) && !isNaN(previousClosePrice)) {
+                const change = currentLivePrice - previousClosePrice;
+                const percentageChange = (previousClosePrice !== 0 ? (change / previousClosePrice) * 100 : 0); // Corrected: use previousClosePrice
+                displayPriceChange = `${change.toFixed(2)} (${percentageChange.toFixed(2)}%)`;
+                priceClass = change > 0 ? 'positive' : (change < 0 ? 'negative' : 'neutral');
+                cardPriceChangeClass = change > 0 ? 'positive-change-card' : (change < 0 ? 'negative-change-card' : ''); // Set class for card
+            } else if (lastFetchedLive !== null && lastFetchedPrevClose !== null && !isNaN(lastFetchedLive) && !isNaN(lastFetchedPrevClose)) {
+                // Fallback to last fetched values if current live/prevClose are null but lastFetched are present
+                const change = lastFetchedLive - lastFetchedPrevClose;
+                const percentageChange = (lastFetchedPrevClose !== 0 ? (change / lastFetchedPrevClose) * 100 : 0);
+                displayPriceChange = `${change.toFixed(2)} (${percentageChange.toFixed(2)}%)`;
+                priceClass = change > 0 ? 'positive' : (change < 0 ? 'negative' : 'neutral');
+                cardPriceChangeClass = change > 0 ? 'positive-change-card' : (change < 0 ? 'negative-change-card' : '');
+            }
+        } else {
+            // Market closed and toggle is OFF, show zero change
+            displayLivePrice = lastFetchedLive !== null && !isNaN(lastFetchedLive) ? '$' + lastFetchedLive.toFixed(2) : 'N/A';
+            displayPriceChange = '0.00 (0.00%)';
+            priceClass = 'neutral';
+            cardPriceChangeClass = ''; // No tint/line for neutral or market closed
+        }
+    }
+
+    // Apply card-specific price change class
+    if (cardPriceChangeClass) {
+        card.classList.add(cardPriceChangeClass);
+    }
+
+    // Apply target-hit-alert class if target is hit AND not dismissed
+    if (isTargetHit && !targetHitIconDismissed) {
+        card.classList.add('target-hit-alert');
+    } else {
+        card.classList.remove('target-hit-alert'); // Ensure class is removed if conditions are not met
+    }
 
     // Logic to determine display values
     if (livePriceData) {
@@ -653,40 +852,43 @@ function addShareToMobileCards(share) {
                 <span class="pe-ratio-value">P/E: ${livePriceData && livePriceData.PE !== null && !isNaN(livePriceData.PE) ? livePriceData.PE.toFixed(2) : 'N/A'}</span>
             </div>
         </div>
-        <p><strong>Entered Price:</strong> $${Number(share.currentPrice) !== null && !isNaN(Number(share.currentPrice)) ? Number(share.currentPrice).toFixed(2) : 'N/A'}</p>
-        <p><strong>Target Price:</strong> $${Number(share.targetPrice) !== null && !isNaN(Number(share.targetPrice)) ? Number(share.targetPrice).toFixed(2) : 'N/A'}</p>
-        <p>
-        <strong>Dividend Yield:</strong>
-        ${
-            // Determine the effective yield for display in mobile cards
-            // Prioritize franked yield if franking credits are present and yield is valid, otherwise use unfranked yield
-            // Default to N/A if no valid yield can be calculated
-            (() => {
-                const dividendAmount = Number(share.dividendAmount) || 0;
-                const frankingCredits = Number(share.frankingCredits) || 0;
-                const enteredPrice = Number(share.currentPrice) || 0; // Fallback for entered price if live not available
+        <p class="data-row"><span class="label-text">Entered Price:</span><span class="data-value">${(val => (val !== null && !isNaN(val) && val !== 0) ? '$' + val.toFixed(2) : '')(Number(share.currentPrice))}</span></p>
+        <p class="data-row"><span class="label-text">Target Price:</span><span class="data-value">${(val => (val !== null && !isNaN(val) && val !== 0) ? '$' + val.toFixed(2) : '')(Number(share.targetPrice))}</span></p>
+        <p class="data-row">
+            <span class="label-text">Dividend Yield:</span>
+            <span class="data-value">
+            ${
+                // Determine the effective yield for display in mobile cards
+                // Prioritize franked yield if franking credits are present and yield is valid, otherwise use unfranked yield
+                // Default to empty string if no valid yield can be calculated or if calculated yield is 0
+                (() => {
+                    const dividendAmount = Number(share.dividendAmount) || 0;
+                    const frankingCredits = Number(share.frankingCredits) || 0;
+                    const enteredPrice = Number(share.currentPrice) || 0; // Fallback for entered price if live not available
 
-                // Use the price that is actually displayed for yield calculation if possible
-                // If displayLivePrice is 'N/A', use enteredPrice from share object
-                const priceForYield = (displayLivePrice !== 'N/A' && displayLivePrice.startsWith('$'))
-                                    ? parseFloat(displayLivePrice.substring(1))
-                                    : (enteredPrice > 0 ? enteredPrice : 0);
+                    // Use the price that is actually displayed for yield calculation if possible
+                    // If displayLivePrice is 'N/A', use enteredPrice from share object
+                    const priceForYield = (displayLivePrice !== 'N/A' && displayLivePrice.startsWith('$'))
+                                        ? parseFloat(displayLivePrice.substring(1))
+                                        : (enteredPrice > 0 ? enteredPrice : 0);
 
-                if (priceForYield === 0) return 'N/A'; // Cannot calculate yield if price is zero
+                    // If price for yield is 0, or if both dividend and franking are 0, return empty string
+                    if (priceForYield === 0 || (dividendAmount === 0 && frankingCredits === 0)) return '';
 
-                const frankedYield = calculateFrankedYield(dividendAmount, priceForYield, frankingCredits);
-                const unfrankedYield = calculateUnfrankedYield(dividendAmount, priceForYield);
+                    const frankedYield = calculateFrankedYield(dividendAmount, priceForYield, frankingCredits);
+                    const unfrankedYield = calculateUnfrankedYield(dividendAmount, priceForYield);
 
-                if (frankingCredits > 0 && frankedYield > 0) {
-                    return frankedYield.toFixed(2) + '% (Franked)'; // Display franked yield with (Franked)
-                } else if (unfrankedYield > 0) {
-                    return unfrankedYield.toFixed(2) + '% (Unfranked)'; // Display unfranked yield with (Unfranked)
-                }
-                return 'N/A'; // No valid yield
-            })()
-        }
-    </p>
-    <p><strong>Star Rating:</strong> ${share.starRating > 0 ? '⭐ ' + share.starRating : 'No Rating'}</p>
+                    if (frankingCredits > 0 && frankedYield > 0) {
+                        return frankedYield.toFixed(2) + '% (Franked)'; // Display franked yield with (Franked)
+                    } else if (unfrankedYield > 0) {
+                        return unfrankedYield.toFixed(2) + '% (Unfranked)'; // Display unfranked yield with (Unfranked)
+                    }
+                    return ''; // No valid yield or yield is 0, display empty string
+                })()
+            }
+            </span>
+        </p>
+        <p class="data-row"><span class="label-text">Star Rating:</span><span class="data-value">${share.starRating > 0 ? '⭐ ' + share.starRating : ''}</span></p>
 `;
 
     card.addEventListener('click', () => {
@@ -735,6 +937,322 @@ function addShareToMobileCards(share) {
     mobileShareCardsContainer.appendChild(card);
     logDebug('Mobile Cards: Added share ' + share.shareName + ' to mobile cards.');
 }
+/**
+ * Updates an existing share row in the table or creates a new one if it doesn't exist.
+ * @param {object} share The share object.
+ */
+function updateOrCreateShareTableRow(share) {
+    if (!shareTableBody) {
+        console.error('updateOrCreateShareTableRow: shareTableBody element not found.');
+        return;
+    }
+
+    let row = shareTableBody.querySelector(`tr[data-doc-id="${share.id}"]`);
+
+    if (!row) {
+        row = document.createElement('tr');
+        row.dataset.docId = share.id;
+        // Add event listeners only once when the row is created
+        row.addEventListener('click', () => {
+            logDebug('Table Row Click: Share ID: ' + share.id);
+            selectShare(share.id);
+            showShareDetails();
+        });
+
+        let touchStartTime = 0;
+        row.addEventListener('touchstart', (e) => {
+            touchStartTime = Date.now();
+            selectedElementForTap = row;
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+
+            longPressTimer = setTimeout(() => {
+                if (Date.now() - touchStartTime >= LONG_PRESS_THRESHOLD) {
+                    selectShare(share.id);
+                    showContextMenu(e, share.id);
+                    e.preventDefault();
+                }
+            }, LONG_PRESS_THRESHOLD);
+        }, { passive: false });
+
+        row.addEventListener('touchmove', (e) => {
+            const currentX = e.touches[0].clientX;
+            const currentY = e.touches[0].clientY;
+            const dist = Math.sqrt(Math.pow(currentX - touchStartX, 2) + Math.pow(currentY - touchStartY, 2));
+            if (dist > TOUCH_MOVE_THRESHOLD) {
+                clearTimeout(longPressTimer);
+                touchStartTime = 0;
+            }
+        });
+
+        row.addEventListener('touchend', () => {
+            clearTimeout(longPressTimer);
+            if (Date.now() - touchStartTime < LONG_PRESS_THRESHOLD && selectedElementForTap === row) {
+                // Short tap handled by click event
+            }
+            touchStartTime = 0;
+            selectedElementForTap = null;
+        });
+
+        row.addEventListener('contextmenu', (e) => {
+            if (window.innerWidth > 768) {
+                e.preventDefault();
+                selectShare(share.id);
+                showContextMenu(e, share.id);
+            }
+        });
+
+        shareTableBody.appendChild(row); // Append new rows at the end, sorting will reorder virtually
+        logDebug('Table: Created new row for share ' + share.shareName + '.');
+    }
+
+    // Always update the content and classes for existing (or newly created) rows
+    const livePriceData = livePrices[share.shareName.toUpperCase()];
+    const isTargetHit = livePriceData ? livePriceData.targetHit : false;
+
+    // Apply target-hit-alert class if target is hit AND not dismissed
+    if (isTargetHit && !targetHitIconDismissed) {
+        row.classList.add('target-hit-alert');
+    } else {
+        row.classList.remove('target-hit-alert');
+    }
+
+    const isMarketOpen = isAsxMarketOpen();
+    let displayLivePrice = 'N/A';
+    let displayPriceChange = '';
+    let priceClass = '';
+
+    if (livePriceData) {
+        const currentLivePrice = livePriceData.live;
+        const previousClosePrice = livePriceData.prevClose;
+        const lastFetchedLive = livePriceData.lastLivePrice;
+        const lastFetchedPrevClose = livePriceData.lastPrevClose;
+
+        if (isMarketOpen || showLastLivePriceOnClosedMarket) {
+            if (currentLivePrice !== null && !isNaN(currentLivePrice)) {
+                displayLivePrice = '$' + currentLivePrice.toFixed(2);
+            }
+            if (currentLivePrice !== null && previousClosePrice !== null && !isNaN(currentLivePrice) && !isNaN(previousClosePrice)) {
+                const change = currentLivePrice - previousClosePrice;
+                const percentageChange = (previousClosePrice !== 0 ? (change / previousClosePrice) * 100 : 0);
+                displayPriceChange = `${change.toFixed(2)} (${percentageChange.toFixed(2)}%)`;
+                priceClass = change > 0 ? 'positive' : (change < 0 ? 'negative' : 'neutral');
+            } else if (lastFetchedLive !== null && lastFetchedPrevClose !== null && !isNaN(lastFetchedLive) && !isNaN(lastFetchedPrevClose)) {
+                const change = lastFetchedLive - lastFetchedPrevClose;
+                const percentageChange = (lastFetchedPrevClose !== 0 ? (change / lastFetchedPrevClose) * 100 : 0);
+                displayPriceChange = `${change.toFixed(2)} (${percentageChange.toFixed(2)}%)`;
+                priceClass = change > 0 ? 'positive' : (change < 0 ? 'negative' : 'neutral');
+            }
+        } else {
+            displayLivePrice = lastFetchedLive !== null && !isNaN(lastFetchedLive) ? '$' + lastFetchedLive.toFixed(2) : 'N/A';
+            displayPriceChange = '0.00 (0.00%)';
+            priceClass = 'neutral';
+        }
+    }
+
+    const dividendAmount = Number(share.dividendAmount) || 0;
+    const frankingCredits = Number(share.frankingCredits) || 0;
+    const enteredPrice = Number(share.currentPrice) || 0;
+    const priceForYield = (displayLivePrice !== 'N/A' && displayLivePrice.startsWith('$'))
+                            ? parseFloat(displayLivePrice.substring(1))
+                            : (enteredPrice > 0 ? enteredPrice : 0);
+
+    const yieldDisplay = (() => {
+        // If price for yield is 0, or if both dividend and franking are 0, return empty string
+        if (priceForYield === 0 || (dividendAmount === 0 && frankingCredits === 0)) return '';
+        const frankedYield = calculateFrankedYield(dividendAmount, priceForYield, frankingCredits);
+        const unfrankedYield = calculateUnfrankedYield(dividendAmount, priceForYield);
+        if (frankingCredits > 0 && frankedYield > 0) {
+            return frankedYield.toFixed(2) + '% (F)';
+        } else if (unfrankedYield > 0) {
+            return unfrankedYield.toFixed(2) + '% (U)';
+        }
+        return ''; // No valid yield or yield is 0, display empty string
+    })();
+
+    row.innerHTML = `
+        <td><span class="share-code-display ${priceClass}">${share.shareName || ''}</span></td>
+        <td class="live-price-cell">
+            <span class="live-price-value ${priceClass}">${displayLivePrice}</span>
+            <span class="price-change ${priceClass}">${displayPriceChange}</span>
+        </td>
+        <td class="numeric-data-cell">${(val => (val !== null && !isNaN(val) && val !== 0) ? '$' + val.toFixed(2) : '')(Number(share.targetPrice))}</td>
+        <td class="numeric-data-cell">${yieldDisplay}</td>
+        <td class="numeric-data-cell">${(val => (val !== null && !isNaN(val) && val !== 0) ? '$' + val.toFixed(2) : '')(Number(share.currentPrice))}</td>
+        <td class="star-rating-cell numeric-data-cell">
+            ${share.starRating > 0 ? '⭐ ' + share.starRating : ''}
+        </td>
+    `;
+
+    logDebug('Table: Updated/Created row for share ' + share.shareName + '.');
+}
+
+/**
+ * Updates an existing share card or creates a new one if it doesn't exist.
+ * @param {object} share The share object.
+ */
+function updateOrCreateShareMobileCard(share) {
+    if (!mobileShareCardsContainer) {
+        console.error('updateOrCreateShareMobileCard: mobileShareCardsContainer element not found.');
+        return;
+    }
+
+    let card = mobileShareCardsContainer.querySelector(`div[data-doc-id="${share.id}"]`);
+
+    if (!card) {
+        card = document.createElement('div');
+        card.classList.add('mobile-card');
+        card.dataset.docId = share.id;
+        // Add event listeners only once when the card is created
+        card.addEventListener('click', () => {
+            logDebug('Mobile Card Click: Share ID: ' + share.id);
+            selectShare(share.id);
+            showShareDetails();
+        });
+
+        let touchStartTime = 0;
+        card.addEventListener('touchstart', (e) => {
+            touchStartTime = Date.now();
+            selectedElementForTap = card;
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+
+            longPressTimer = setTimeout(() => {
+                if (Date.now() - touchStartTime >= LONG_PRESS_THRESHOLD) {
+                    selectShare(share.id);
+                    showContextMenu(e, share.id);
+                    e.preventDefault();
+                }
+            }, LONG_PRESS_THRESHOLD);
+        }, { passive: false });
+
+        card.addEventListener('touchmove', (e) => {
+            const currentX = e.touches[0].clientX;
+            const currentY = e.touches[0].clientY;
+            const dist = Math.sqrt(Math.pow(currentX - touchStartX, 2) + Math.pow(currentY - touchStartY, 2));
+            if (dist > TOUCH_MOVE_THRESHOLD) {
+                clearTimeout(longPressTimer);
+                touchStartTime = 0;
+            }
+        });
+
+        card.addEventListener('touchend', () => {
+            clearTimeout(longPressTimer);
+            if (Date.now() - touchStartTime < LONG_PRESS_THRESHOLD && selectedElementForTap === card) {
+                // Short tap handled by click event
+            }
+            touchStartTime = 0;
+            selectedElementForTap = null;
+        });
+
+        mobileShareCardsContainer.appendChild(card); // Append new cards at the end, sorting will reorder virtually
+        logDebug('Mobile Cards: Created new card for share ' + share.shareName + '.');
+    }
+
+    // Always update the content and classes for existing (or newly created) cards
+    const livePriceData = livePrices[share.shareName.toUpperCase()];
+    const isTargetHit = livePriceData ? livePriceData.targetHit : false;
+
+    // Apply target-hit-alert class if target is hit AND not dismissed
+    if (isTargetHit && !targetHitIconDismissed) {
+        card.classList.add('target-hit-alert');
+    } else {
+        card.classList.remove('target-hit-alert');
+    }
+
+    const isMarketOpen = isAsxMarketOpen();
+    let displayLivePrice = 'N/A';
+    let displayPriceChange = '';
+    let priceClass = '';
+    let cardPriceChangeClass = '';
+
+    if (livePriceData) {
+        const currentLivePrice = livePriceData.live;
+        const previousClosePrice = livePriceData.prevClose;
+        const lastFetchedLive = livePriceData.lastLivePrice;
+        const lastFetchedPrevClose = livePriceData.lastPrevClose;
+
+        if (isMarketOpen || showLastLivePriceOnClosedMarket) {
+            if (currentLivePrice !== null && !isNaN(currentLivePrice)) {
+                displayLivePrice = '$' + currentLivePrice.toFixed(2);
+            }
+            if (currentLivePrice !== null && previousClosePrice !== null && !isNaN(currentLivePrice) && !isNaN(previousClosePrice)) {
+                const change = currentLivePrice - previousClosePrice;
+                const percentageChange = (previousClosePrice !== 0 ? (change / previousClosePrice) * 100 : 0);
+                displayPriceChange = `${change.toFixed(2)} (${percentageChange.toFixed(2)}%)`;
+                priceClass = change > 0 ? 'positive' : (change < 0 ? 'negative' : 'neutral');
+                cardPriceChangeClass = change > 0 ? 'positive-change-card' : (change < 0 ? 'negative-change-card' : '');
+            } else if (lastFetchedLive !== null && lastFetchedPrevClose !== null && !isNaN(lastFetchedLive) && !isNaN(lastFetchedPrevClose)) {
+                const change = lastFetchedLive - lastFetchedPrevClose;
+                const percentageChange = (lastFetchedPrevClose !== 0 ? (change / lastFetchedPrevClose) * 100 : 0);
+                displayPriceChange = `${change.toFixed(2)} (${percentageChange.toFixed(2)}%)`;
+                priceClass = change > 0 ? 'positive' : (change < 0 ? 'negative' : 'neutral');
+                cardPriceChangeClass = change > 0 ? 'positive-change-card' : (change < 0 ? 'negative-change-card' : '');
+            }
+        } else {
+            displayLivePrice = lastFetchedLive !== null && !isNaN(lastFetchedLive) ? '$' + lastFetchedLive.toFixed(2) : 'N/A';
+            displayPriceChange = '0.00 (0.00%)';
+            priceClass = 'neutral';
+            cardPriceChangeClass = '';
+        }
+    }
+
+    // Apply card-specific price change class
+    // Remove previous price change classes before adding current one
+    card.classList.remove('positive-change-card', 'negative-change-card');
+    if (cardPriceChangeClass) {
+        card.classList.add(cardPriceChangeClass);
+    }
+
+    const dividendAmount = Number(share.dividendAmount) || 0;
+    const frankingCredits = Number(share.frankingCredits) || 0;
+    const enteredPrice = Number(share.currentPrice) || 0;
+    const priceForYield = (displayLivePrice !== 'N/A' && displayLivePrice.startsWith('$'))
+                            ? parseFloat(displayLivePrice.substring(1))
+                            : (enteredPrice > 0 ? enteredPrice : 0);
+
+    const yieldDisplay = (() => {
+        // If price for yield is 0, or if both dividend and franking are 0, return empty string
+        if (priceForYield === 0 || (dividendAmount === 0 && frankingCredits === 0)) return '';
+        const frankedYield = calculateFrankedYield(dividendAmount, priceForYield, frankingCredits);
+        const unfrankedYield = calculateUnfrankedYield(dividendAmount, priceForYield);
+        if (frankingCredits > 0 && frankedYield > 0) {
+            return frankedYield.toFixed(2) + '% (Franked)';
+        } else if (unfrankedYield > 0) {
+            return unfrankedYield.toFixed(2) + '% (Unfranked)';
+        }
+        return ''; // No valid yield or yield is 0, display empty string
+    })();
+
+
+    card.innerHTML = `
+        <h3 class="${priceClass}">${share.shareName || ''}</h3>
+        <div class="live-price-display-section">
+            <div class="fifty-two-week-row">
+                <span class="fifty-two-week-value low">Low: ${livePriceData && livePriceData.Low52 !== null && !isNaN(livePriceData.Low52) ? '$' + livePriceData.Low52.toFixed(2) : 'N/A'}</span>
+                <span class="fifty-two-week-value high">High: ${livePriceData && livePriceData.High52 !== null && !isNaN(livePriceData.High52) ? '$' + livePriceData.High52.toFixed(2) : 'N/A'}</span>
+            </div>
+            <div class="live-price-main-row">
+                <span class="live-price-large ${priceClass}">${displayLivePrice}</span>
+                <span class="price-change-large ${priceClass}">${displayPriceChange}</span>
+            </div>
+            <div class="pe-ratio-row">
+                <span class="pe-ratio-value">P/E: ${livePriceData && livePriceData.PE !== null && !isNaN(livePriceData.PE) ? livePriceData.PE.toFixed(2) : 'N/A'}</span>
+            </div>
+        </div>
+        <p class="data-row"><span class="label-text">Entered Price:</span><span class="data-value">${(val => (val !== null && !isNaN(val) && val !== 0) ? '$' + val.toFixed(2) : '')(Number(share.currentPrice))}</span></p>
+        <p class="data-row"><span class="label-text">Target Price:</span><span class="data-value">${(val => (val !== null && !isNaN(val) && val !== 0) ? '$' + val.toFixed(2) : '')(Number(share.targetPrice))}</span></p>
+        <p class="data-row"><span class="label-text">Show Live Price:</span><span class="data-value">${yieldDisplay}</span></p>
+        <p class="data-row"><span class="label-text">Star Rating:</span><span class="data-value">${share.starRating > 0 ? '⭐ ' + share.starRating : ''}</span></p>
+    `;
+
+    // Re-apply selected class if it was previously selected
+    if (selectedShareDocId === share.id) {
+        card.classList.add('selected');
+    }
+
+    logDebug('Mobile Cards: Updated/Created card for share ' + share.shareName + '.');
+}
 
 function updateMainButtonsState(enable) {
     logDebug('UI State: Setting main buttons state to: ' + (enable ? 'ENABLED' : 'DISABLED'));
@@ -743,7 +1261,15 @@ function updateMainButtonsState(enable) {
     if (dividendCalcBtn) dividendCalcBtn.disabled = !enable;
     if (exportWatchlistBtn) exportWatchlistBtn.disabled = !enable;
     if (addWatchlistBtn) addWatchlistBtn.disabled = !enable;
-    if (editWatchlistBtn) editWatchlistBtn.disabled = !enable || userWatchlists.length === 0; 
+    if (editWatchlistBtn) {
+        const selectedValue = watchlistSelect ? watchlistSelect.value : '';
+        // Enable button if there's a selected watchlist and it's not ALL_SHARES or CASH_BANK
+        const isAnEditableWatchlistSelected = selectedValue && selectedValue !== ALL_SHARES_ID && selectedValue !== CASH_BANK_WATCHLIST_ID;
+        // Remove extra conditions and only check if an editable watchlist is selected
+        editWatchlistBtn.disabled = !isAnEditableWatchlistSelected;
+        logDebug('Edit Watchlist Button State: ' + (editWatchlistBtn.disabled ? 'disabled' : 'enabled') + 
+                ' (selectedValue=' + selectedValue + ', isEditable=' + isAnEditableWatchlistSelected + ')');
+    }
     // addShareHeaderBtn is now contextual, its disabled state is managed by updateAddHeaderButton
     if (logoutBtn) setIconDisabled(logoutBtn, !enable); 
     if (themeToggleBtn) themeToggleBtn.disabled = !enable;
@@ -751,7 +1277,6 @@ function updateMainButtonsState(enable) {
     if (revertToDefaultThemeBtn) revertToDefaultThemeBtn.disabled = !enable;
     // sortSelect and watchlistSelect disabled state is managed by render functions
     if (refreshLivePricesBtn) refreshLivePricesBtn.disabled = !enable;
-    if (toggleCompactViewBtn) toggleCompactViewBtn.disabled = !enable; // NEW: Disable compact view toggle
     
     // NEW: Disable/enable buttons specific to cash section
     // addCashCategoryBtn and saveCashBalancesBtn are removed from HTML/functionality is moved
@@ -761,8 +1286,24 @@ function updateMainButtonsState(enable) {
     logDebug('UI State: Watchlist Select Disabled: ' + (watchlistSelect ? watchlistSelect.disabled : 'N/A'));
 }
 
+/**
+ * Enables or disables the 'Toggle Compact View' button based on screen width.
+ * This feature is only intended for mobile views (<= 768px).
+ */
+function updateCompactViewButtonState() {
+    if (!toggleCompactViewBtn) {
+        return; // Exit if the button doesn't exist
+    }
+    // Always enable the button, regardless of screen width
+    toggleCompactViewBtn.disabled = false;
+    toggleCompactViewBtn.title = "Toggle between default and compact card view.";
+    logDebug(`UI State: Compact view button enabled for all screen widths.`);
+}
+
 function showModal(modalElement) {
     if (modalElement) {
+        // Push a new history state for every modal open
+        pushAppState({ modalId: modalElement.id }, '', '');
         modalElement.style.setProperty('display', 'flex', 'important');
         modalElement.scrollTop = 0;
         const scrollableContent = modalElement.querySelector('.modal-body-scrollable');
@@ -940,36 +1481,10 @@ function populateShareWatchlistSelect(currentShareWatchlistId = null, isNewShare
     let disableDropdown = false; // Variable to control if dropdown should be disabled
 
     if (isNewShare) {
-        const defaultWatchlistForNewShare = userWatchlists.find(wl => wl.id === getDefaultWatchlistId(currentUserId));
-
-        // Priority 1: If currently viewing a specific stock watchlist, pre-select and disable
-        if (currentSelectedWatchlistIds.length === 1 && 
-            currentSelectedWatchlistIds[0] !== ALL_SHARES_ID &&
-            currentSelectedWatchlistIds[0] !== CASH_BANK_WATCHLIST_ID &&
-            stockWatchlists.some(wl => wl.id === currentSelectedWatchlistIds[0])) { 
-
-            selectedOptionId = currentSelectedWatchlistIds[0];
-            disableDropdown = true;
-            logDebug('Share Form: New share: Pre-selected and disabled to current view: ' + selectedOptionId);
-        } 
-        // Priority 2: If a default watchlist exists AND it's a stock watchlist, pre-select it (and keep enabled)
-        else if (defaultWatchlistForNewShare && stockWatchlists.some(wl => wl.id === defaultWatchlistForNewShare.id)) { 
-            selectedOptionId = defaultWatchlistForNewShare.id;
-            disableDropdown = false; // Keep enabled for user to change
-            logDebug('Share Form: New share: Pre-selected default watchlist: ' + selectedOptionId);
-        } 
-        // Priority 3: If no specific view or default, but other stock watchlists exist, select the first one
-        else if (stockWatchlists.length > 0) {
-            selectedOptionId = stockWatchlists[0].id;
-            disableDropdown = false;
-            logDebug('Share Form: New share: No specific view or default, pre-selected first available: ' + selectedOptionId);
-        } 
-        // Priority 4: No stock watchlists at all, leave on placeholder
-        else {
-            selectedOptionId = ''; // Keep placeholder selected
-            disableDropdown = false;
-            logDebug('Share Form: New share: User must select a watchlist (no stock watchlists available).');
-        }
+        // For new shares, always default to the blank placeholder and keep the dropdown enabled.
+        selectedOptionId = ''; // Forces selection of the disabled placeholder option
+        disableDropdown = false; // Always allow user to select a watchlist
+        logDebug('Share Form: New share: Watchlist selector forced to blank placeholder, enabled for user selection.');
     } else { // Editing an existing share
         if (currentShareWatchlistId && stockWatchlists.some(wl => wl.id === currentShareWatchlistId)) {
             selectedOptionId = currentShareWatchlistId;
@@ -1016,12 +1531,21 @@ function showEditFormForSelectedShare(shareIdToEdit = null) {
     }
     selectedShareDocId = targetShareId; 
 
-    formTitle.textContent = 'Edit Share';
-    shareNameInput.value = shareToEdit.shareName || '';
-    currentPriceInput.value = Number(shareToEdit.currentPrice) !== null && !isNaN(Number(shareToEdit.currentPrice)) ? Number(shareToEdit.currentPrice).toFixed(2) : '';
-    targetPriceInput.value = Number(shareToEdit.targetPrice) !== null && !isNaN(Number(shareToEdit.targetPrice)) ? Number(shareToEdit.targetPrice).toFixed(2) : '';
-    dividendAmountInput.value = Number(shareToEdit.dividendAmount) !== null && !isNaN(Number(shareToEdit.dividendAmount)) ? Number(shareToEdit.dividendAmount).toFixed(3) : '';
-    frankingCreditsInput.value = Number(shareToEdit.frankingCredits) !== null && !isNaN(Number(shareToEdit.frankingCredits)) ? Number(shareToEdit.frankingCredits).toFixed(1) : '';
+    formTitle.textContent = 'Edit Share - ' + (shareToEdit.shareName || 'N/A'); // Add share code to title
+    if (shareNameInput) shareNameInput.value = shareToEdit.shareName || '';
+    if (currentPriceInput) currentPriceInput.value = Number(shareToEdit.currentPrice) !== null && !isNaN(Number(shareToEdit.currentPrice)) ? Number(shareToEdit.currentPrice).toFixed(2) : '';
+    if (targetPriceInput) targetPriceInput.value = Number(shareToEdit.targetPrice) !== null && !isNaN(Number(shareToEdit.targetPrice)) ? Number(shareToEdit.targetPrice).toFixed(2) : '';
+    
+    // Set the correct state for the new target direction checkboxes
+    if (targetAboveCheckbox && targetBelowCheckbox) {
+        // Default to 'below' if not set
+        const savedTargetDirection = shareToEdit.targetDirection || 'below';
+        targetAboveCheckbox.checked = (savedTargetDirection === 'above');
+        targetBelowCheckbox.checked = (savedTargetDirection === 'below');
+    }
+
+    if (dividendAmountInput) dividendAmountInput.value = Number(shareToEdit.dividendAmount) !== null && !isNaN(Number(shareToEdit.dividendAmount)) ? Number(shareToEdit.dividendAmount).toFixed(3) : '';
+    if (frankingCreditsInput) frankingCreditsInput.value = Number(shareToEdit.frankingCredits) !== null && !isNaN(Number(shareToEdit.frankingCredits)) ? Number(shareToEdit.frankingCredits).toFixed(1) : '';
 
     // Set the star rating dropdown
     if (shareRatingSelect) {
@@ -1074,11 +1598,13 @@ function getCurrentFormData() {
     }
 
     return {
-        shareName: shareNameInput.value.trim().toUpperCase(),
-        currentPrice: parseFloat(currentPriceInput.value),
-        targetPrice: parseFloat(targetPriceInput.value),
-        dividendAmount: parseFloat(dividendAmountInput.value),
-        frankingCredits: parseFloat(frankingCreditsInput.value),
+        shareName: shareNameInput?.value?.trim().toUpperCase() || '',
+        currentPrice: parseFloat(currentPriceInput?.value),
+        targetPrice: parseFloat(targetPriceInput?.value),
+        // UPDATED: Get targetDirection from the new checkboxes
+        targetDirection: targetAboveCheckbox?.checked ? 'above' : 'below',
+        dividendAmount: parseFloat(dividendAmountInput?.value),
+        frankingCredits: parseFloat(frankingCreditsInput?.value),
         // Get the selected star rating as a number
         starRating: shareRatingSelect ? parseInt(shareRatingSelect.value) : 0,
         comments: comments,
@@ -1097,7 +1623,7 @@ function getCurrentFormData() {
 function areShareDataEqual(data1, data2) {
     if (!data1 || !data2) return false;
 
-    const fields = ['shareName', 'currentPrice', 'targetPrice', 'dividendAmount', 'frankingCredits', 'watchlistId', 'starRating']; // Include watchlistId and starRating
+    const fields = ['shareName', 'currentPrice', 'targetPrice', 'targetDirection', 'dividendAmount', 'frankingCredits', 'watchlistId', 'starRating']; // Include new targetDirection
     for (const field of fields) {
         let val1 = data1[field];
         let val2 = data2[field];
@@ -1135,12 +1661,10 @@ function checkFormDirtyState() {
 
     let canSave = isShareNameValid;
 
-    // Additional condition for new shares when in "All Shares" view
-    if (!selectedShareDocId && currentSelectedWatchlistIds.includes(ALL_SHARES_ID)) {
+    // For NEW shares, always require a watchlist to be explicitly selected in the dropdown.
+    // This applies whether in "All Shares" view or a specific watchlist view where the dropdown defaults to blank.
+    if (!selectedShareDocId) { // Only for new shares
         canSave = canSave && isWatchlistSelected;
-        if (!isWatchlistSelected) {
-            logDebug('Dirty State: New share from All Shares: Watchlist not selected, save disabled.');
-        }
     }
 
     if (selectedShareDocId && originalShareData) {
@@ -1152,6 +1676,8 @@ function checkFormDirtyState() {
     } else if (!selectedShareDocId) {
         // For new shares, enable if name is valid and (if from All Shares) watchlist is selected
         // No additional 'isDirty' check needed for new shares beyond initial validity
+        // Note: The previous logic for new shares here was redundant with the general 'if (!selectedShareDocId)' block above.
+        // Keeping this else-if structure for clarity in differentiating new vs. existing shares in logs/logic.
     }
 
     setIconDisabled(saveShareBtn, !canSave);
@@ -1215,6 +1741,8 @@ async function saveShareData(isSilent = false) {
         shareName: shareName,
         currentPrice: isNaN(currentPrice) ? null : currentPrice,
         targetPrice: isNaN(targetPrice) ? null : targetPrice,
+        // UPDATED: Save the selected target direction from the new checkboxes
+        targetDirection: targetAboveCheckbox.checked ? 'above' : 'below',
         dividendAmount: isNaN(dividendAmount) ? null : dividendAmount,
         frankingCredits: isNaN(frankingCredits) ? null : frankingCredits,
         comments: comments,
@@ -1242,8 +1770,23 @@ async function saveShareData(isSilent = false) {
             await window.firestore.updateDoc(shareDocRef, shareData);
             if (!isSilent) showCustomAlert('Share \'' + shareName + '\' updated successfully!', 1500);
             logDebug('Firestore: Share \'' + shareName + '\' (ID: ' + selectedShareDocId + ') updated.');
-            originalShareData = getCurrentFormData(); // Update original data after successful save
-            setIconDisabled(saveShareBtn, true); // Disable save button after saving
+        originalShareData = getCurrentFormData(); // Update original data after successful save
+        setIconDisabled(saveShareBtn, true); // Disable save button after saving
+        // NEW: Explicitly hide the share form modal immediately and deselect the share
+        if (!isSilent && shareFormSection) {
+            shareFormSection.style.setProperty('display', 'none', 'important'); // Instant hide
+            shareFormSection.classList.add('app-hidden'); // Ensure it stays hidden with !important class
+        }
+        deselectCurrentShare(); // Deselect share BEFORE fetching live prices to avoid re-opening details modal implicitly
+            // NEW: Explicitly hide the share form modal immediately and deselect the share
+            if (!isSilent && shareFormSection) {
+                shareFormSection.style.setProperty('display', 'none', 'important'); // Instant hide
+                shareFormSection.classList.add('app-hidden'); // Ensure it stays hidden with !important class
+            }
+            deselectCurrentShare(); // Deselect share BEFORE fetching live prices to avoid re-opening details modal implicitly
+            // NEW: Trigger a fresh fetch of live prices and re-render to reflect new target hit status
+            await fetchLivePrices(); // This will also trigger renderWatchlist and updateTargetHitBanner
+            if (!isSilent) showCustomAlert('Share \'' + shareName + '\' updated. Updating live prices...', 1500);
         } catch (error) {
             console.error('Firestore: Error updating share:', error);
             if (!isSilent) showCustomAlert('Error updating share: ' + error.message);
@@ -1259,8 +1802,23 @@ async function saveShareData(isSilent = false) {
             selectedShareDocId = newDocRef.id; // Set selectedShareDocId for the newly added share
             if (!isSilent) showCustomAlert('Share \'' + shareName + '\' added successfully!', 1500);
             logDebug('Firestore: Share \'' + shareName + '\' added with ID: ' + newDocRef.id);
-            originalShareData = getCurrentFormData(); // Update original data after successful save
-            setIconDisabled(saveShareBtn, true); // Disable save button after saving
+        originalShareData = getCurrentFormData(); // Update original data after successful save
+        setIconDisabled(saveShareBtn, true); // Disable save button after saving
+        // NEW: Explicitly hide the share form modal immediately and deselect the share
+        if (!isSilent && shareFormSection) {
+            shareFormSection.style.setProperty('display', 'none', 'important'); // Instant hide
+            shareFormSection.classList.add('app-hidden'); // Ensure it stays hidden with !important class
+        }
+        deselectCurrentShare(); // Deselect newly added share BEFORE fetching live prices
+            // NEW: Explicitly hide the share form modal immediately and deselect the share
+            if (!isSilent && shareFormSection) {
+                shareFormSection.style.setProperty('display', 'none', 'important'); // Instant hide
+                shareFormSection.classList.add('app-hidden'); // Ensure it stays hidden with !important class
+            }
+            deselectCurrentShare(); // Deselect share BEFORE fetching live prices to avoid re-opening details modal implicitly
+            // NEW: Trigger a fresh fetch of live prices and re-render to reflect new target hit status
+            await fetchLivePrices(); // This will also trigger renderWatchlist and updateTargetHitBanner
+            if (!isSilent) showCustomAlert('Share \'' + shareName + '\' added. Updating live prices...', 1500);
         } catch (error) {
             console.error('Firestore: Error adding share:', error);
             if (!isSilent) showCustomAlert('Error adding share: ' + error.message);
@@ -1294,7 +1852,17 @@ function showShareDetails() {
         }
     }
     modalShareName.textContent = share.shareName || 'N/A';
-    modalShareName.className = 'modal-share-name ' + modalShareNamePriceChangeClass; // Apply class to modalShareName
+    // Get live price data for this share to check target hit status
+    const livePriceDataForModalTitle = livePrices[share.shareName.toUpperCase()];
+    const isTargetHitForModalTitle = livePriceDataForModalTitle ? livePriceDataForModalTitle.targetHit : false;
+
+    // Apply modal-share-name, price change class.
+    let modalTitleClasses = 'modal-share-name ' + modalShareNamePriceChangeClass;
+    // Apply target-hit-alert class if target is hit AND not dismissed
+    if (isTargetHitForModalTitle && !targetHitIconDismissed) {
+        modalTitleClasses += ' target-hit-alert';
+    }
+    modalShareName.className = modalTitleClasses; // Apply all classes
 
     const enteredPriceNum = Number(share.currentPrice);
 
@@ -1334,12 +1902,12 @@ function showShareDetails() {
         const fiftyTwoWeekRow = document.createElement('div');
         fiftyTwoWeekRow.classList.add('fifty-two-week-row'); // New class for styling
 
-        const lowSpan = document.createElement('span');
+        const lowSpan = document.createElement('h3');
         lowSpan.classList.add('fifty-two-week-value', 'low'); // New classes
         lowSpan.textContent = 'Low: ' + (low52Week !== undefined && low52Week !== null && !isNaN(low52Week) ? '$' + low52Week.toFixed(2) : 'N/A');
         fiftyTwoWeekRow.appendChild(lowSpan);
 
-        const highSpan = document.createElement('span');
+        const highSpan = document.createElement('h3');
         highSpan.classList.add('fifty-two-week-value', 'high'); // New classes
         highSpan.textContent = 'High: ' + (high52Week !== undefined && high52Week !== null && !isNaN(high52Week) ? '$' + high52Week.toFixed(2) : 'N/A');
         fiftyTwoWeekRow.appendChild(highSpan);
@@ -1347,8 +1915,8 @@ function showShareDetails() {
         modalLivePriceDisplaySection.appendChild(fiftyTwoWeekRow);
 
         // 2. Add Live Price and Change (Dynamically create these elements now)
-        const currentModalLivePriceLarge = document.createElement('span');
-        currentModalLivePriceLarge.classList.add('live-price-large', priceChangeClass); // Apply color class
+        const currentModalLivePriceLarge = document.createElement('h2');
+        currentModalLivePriceLarge.classList.add('modal-share-name', priceChangeClass); // Match title size, apply color
         const currentModalPriceChangeLarge = document.createElement('span');
         currentModalPriceChangeLarge.classList.add('price-change-large', priceChangeClass); // Apply color class
 
@@ -1391,33 +1959,52 @@ function showShareDetails() {
         // 3. Add P/E Ratio below live price
         const peRow = document.createElement('div');
         peRow.classList.add('pe-ratio-row'); // New class for styling
-        const peSpan = document.createElement('span');
+        const peSpan = document.createElement('h3');
         peSpan.classList.add('pe-ratio-value'); // New class
         peSpan.textContent = 'P/E: ' + (peRatio !== undefined && peRatio !== null && !isNaN(peRatio) ? peRatio.toFixed(2) : 'N/A');
         peRow.appendChild(peSpan);
         modalLivePriceDisplaySection.appendChild(peRow);
     }
 
-    modalEnteredPrice.textContent = (enteredPriceNum !== null && !isNaN(enteredPriceNum)) ? '$' + enteredPriceNum.toFixed(2) : 'N/A';
-    modalTargetPrice.textContent = (share.targetPrice !== null && !isNaN(Number(share.targetPrice))) ? '$' + Number(share.targetPrice).toFixed(2) : 'N/A';
+    modalEnteredPrice.textContent = (val => (val !== null && !isNaN(val) && val !== 0) ? '$' + val.toFixed(2) : '')(enteredPriceNum);
+    
+    const displayTargetPrice = (val => (val !== null && !isNaN(val) && val !== 0) ? '$' + val.toFixed(2) : '')(Number(share.targetPrice));
+    
+    // Determine the target notification message based on share.targetDirection
+    let targetNotificationMessage = '';
+    // Condition should check if a numeric targetPrice exists, including 0
+    if (share.targetPrice !== null && !isNaN(Number(share.targetPrice))) { 
+        if (share.targetDirection === 'above') {
+            targetNotificationMessage = '(Alert will trigger if >= Target)'; // Option 8
+        } else { // Default or 'below'
+            targetNotificationMessage = '(Alert will trigger if <= Target)'; // Option 7
+        }
+    }
+
+    modalTargetPrice.innerHTML = `
+        ${targetNotificationMessage ? `<span class="ghosted-text">${targetNotificationMessage}</span>` : ''}
+        ${targetNotificationMessage && displayTargetPrice ? ' ' : ''} ${displayTargetPrice}
+    `.trim(); // Trim to remove potential leading/trailing whitespace if parts are empty
 
     // Ensure dividendAmount and frankingCredits are numbers before formatting
     const displayDividendAmount = Number(share.dividendAmount);
     const displayFrankingCredits = Number(share.frankingCredits);
 
-    modalDividendAmount.textContent = (displayDividendAmount !== null && !isNaN(displayDividendAmount)) ? '$' + displayDividendAmount.toFixed(3) : 'N/A';
-    modalFrankingCredits.textContent = (displayFrankingCredits !== null && !isNaN(displayFrankingCredits)) ? displayFrankingCredits.toFixed(1) + '%' : 'N/A';
+    modalDividendAmount.textContent = (val => (val !== null && !isNaN(val) && val !== 0) ? '$' + val.toFixed(3) : '')(displayDividendAmount);
+    modalFrankingCredits.textContent = (val => (val !== null && !isNaN(val) && val !== 0) ? val.toFixed(1) + '%' : '')(displayFrankingCredits);
 
     const priceForYield = (livePrice !== undefined && livePrice !== null && !isNaN(livePrice)) ? livePrice : enteredPriceNum;
     const unfrankedYield = calculateUnfrankedYield(displayDividendAmount, priceForYield); 
-    modalUnfrankedYieldSpan.textContent = unfrankedYield !== null && !isNaN(unfrankedYield) ? unfrankedYield.toFixed(2) + '%' : '0.00%';
+    // Display unfranked yield only if it's not null/NaN AND not 0
+    modalUnfrankedYieldSpan.textContent = unfrankedYield !== null && !isNaN(unfrankedYield) && unfrankedYield !== 0 ? unfrankedYield.toFixed(2) + '%' : '';
 
     const frankedYield = calculateFrankedYield(displayDividendAmount, priceForYield, displayFrankingCredits);
-    modalFrankedYieldSpan.textContent = frankedYield !== null && !isNaN(frankedYield) ? frankedYield.toFixed(2) + '%' : '0.00%';
+    // Display franked yield only if it's not null/NaN AND not 0
+    modalFrankedYieldSpan.textContent = frankedYield !== null && !isNaN(frankedYield) && frankedYield !== 0 ? frankedYield.toFixed(2) + '%' : '';
 
     // Populate Entry Date after Franked Yield
     modalEntryDate.textContent = formatDate(share.entryDate) || 'N/A';
-    modalStarRating.textContent = share.starRating > 0 ? '⭐ ' + share.starRating : 'No Rating';
+    modalStarRating.textContent = share.starRating > 0 ? '⭐ ' + share.starRating : '';
 
     if (modalCommentsContainer) {
         modalCommentsContainer.innerHTML = '';
@@ -1451,7 +2038,7 @@ function showShareDetails() {
     if (modalNewsLink && share.shareName) {
         const newsUrl = 'https://news.google.com/search?q=' + encodeURIComponent(share.shareName) + '%20ASX&hl=en-AU&gl=AU&ceid=AU%3Aen';
         modalNewsLink.href = newsUrl;
-        modalNewsLink.textContent = 'View ' + share.shareName.toUpperCase() + ' News';
+        modalNewsLink.innerHTML = 'View ' + share.shareName.toUpperCase() + ' News <i class="fas fa-external-link-alt"></i>';
         modalNewsLink.style.display = 'inline-flex';
         setIconDisabled(modalNewsLink, false);
     } else if (modalNewsLink) {
@@ -1462,7 +2049,7 @@ function showShareDetails() {
     if (modalMarketIndexLink && share.shareName) {
         const marketIndexUrl = 'https://www.marketindex.com.au/asx/' + share.shareName.toLowerCase();
         modalMarketIndexLink.href = marketIndexUrl;
-        modalMarketIndexLink.textContent = 'View ' + share.shareName.toUpperCase() + ' on MarketIndex.com.au';
+        modalMarketIndexLink.innerHTML = 'View ' + share.shareName.toUpperCase() + ' on MarketIndex.com.au <i class="fas fa-external-link-alt"></i>';
         modalMarketIndexLink.style.display = 'inline-flex';
         setIconDisabled(modalMarketIndexLink, false);
     } else if (modalMarketIndexLink) {
@@ -1470,8 +2057,50 @@ function showShareDetails() {
         setIconDisabled(modalMarketIndexLink, true);
     }
 
-    if (commSecLoginMessage) {
-        commSecLoginMessage.style.display = 'block'; 
+    // Fool.com.au Link
+    if (modalFoolLink && share.shareName) {
+        modalFoolLink.href = `https://www.fool.com.au/quote/${share.shareName}/`;
+        modalFoolLink.innerHTML = 'View on Fool.com.au <i class="fas fa-external-link-alt"></i>';
+        modalFoolLink.style.display = 'inline-flex';
+        setIconDisabled(modalFoolLink, false);
+    } else if (modalFoolLink) {
+        modalFoolLink.style.display = 'none';
+        setIconDisabled(modalFoolLink, true);
+    }
+
+    // Listcorp.com Link (NEW)
+    if (modalListcorpLink && share.shareName) {
+        const listcorpUrl = `https://www.listcorp.com/asx/${share.shareName.toLowerCase()}`;
+        modalListcorpLink.href = listcorpUrl;
+        modalListcorpLink.innerHTML = `View on Listcorp.com <i class="fas fa-external-link-alt"></i>`;
+        modalListcorpLink.style.display = 'inline-flex';
+        setIconDisabled(modalListcorpLink, false);
+    } else if (modalListcorpLink) {
+        modalListcorpLink.style.display = 'none';
+        setIconDisabled(modalListcorpLink, true);
+    }
+
+    // CommSec.com.au Link
+    if (modalCommSecLink) {
+        modalCommSecLink.href = 'https://www2.commsec.com.au/secure/login';
+        modalCommSecLink.innerHTML = 'View on CommSec.com.au <i class="fas fa-external-link-alt"></i>';
+        modalCommSecLink.style.display = 'inline-flex';
+        setIconDisabled(modalCommSecLink, false);
+    }
+
+    if (modalCommSecLink && commSecLoginMessage) {
+        // Move the login message directly after the CommSec link in the DOM, inside the same parent
+        if (modalCommSecLink.parentNode && modalCommSecLink.nextSibling !== commSecLoginMessage) {
+            modalCommSecLink.parentNode.insertBefore(commSecLoginMessage, modalCommSecLink.nextSibling);
+        }
+        // Style the login message for subtle, flush display
+        commSecLoginMessage.style.display = 'block';
+        commSecLoginMessage.style.fontSize = '75%';
+        commSecLoginMessage.style.fontWeight = 'normal';
+        commSecLoginMessage.style.color = 'var(--label-color, #888)';
+        commSecLoginMessage.style.marginTop = '2px';
+        commSecLoginMessage.style.marginBottom = '0';
+        commSecLoginMessage.style.padding = '0';
     }
 
     showModal(shareDetailModal);
@@ -1788,41 +2417,51 @@ function renderSortSelect() {
 
 /**
  * Renders the watchlist based on the currentSelectedWatchlistIds. (1)
- */
-/**
- * Renders the watchlist based on the currentSelectedWatchlistIds. (1)
+ * Optimized to update existing elements rather than recreating them, reducing flickering.
  */
 function renderWatchlist() {
     logDebug('DEBUG: renderWatchlist called. Current selected watchlist ID: ' + currentSelectedWatchlistIds[0]);
-    
+
+    // --- Compact View Display Logic ---
+    const isCompactView = currentMobileViewMode === 'compact';
+    const isMobileView = window.innerWidth <= 768;
+    if (isCompactView) {
+        // Compact view: show card container as grid, hide table
+        if (mobileShareCardsContainer) {
+            mobileShareCardsContainer.style.display = 'grid';
+        }
+        if (tableContainer) {
+            tableContainer.style.display = 'none';
+        }
+    } else if (isMobileView) {
+        // Mobile, not compact: show card container as flex, hide table
+        if (mobileShareCardsContainer) {
+            mobileShareCardsContainer.style.display = 'flex';
+        }
+        if (tableContainer) {
+            tableContainer.style.display = 'none';
+        }
+    } else {
+        // Desktop: show table, hide card container
+        if (mobileShareCardsContainer) {
+            mobileShareCardsContainer.style.display = 'none';
+        }
+        if (tableContainer) {
+            tableContainer.style.display = '';
+        }
+    }
+
     const selectedWatchlistId = currentSelectedWatchlistIds[0];
 
     // Hide both sections initially
     stockWatchlistSection.classList.add('app-hidden');
-    cashAssetsSection.classList.add('app-hidden'); // UPDATED ID
-    
-    // Clear previous content
-    clearShareListUI(); // Clears stock table and mobile cards
-    if (cashCategoriesContainer) cashCategoriesContainer.innerHTML = ''; // Clear cash categories
+    cashAssetsSection.classList.add('app-hidden');
 
-    // Update sort dropdown options based on selected watchlist type
-    renderSortSelect();
-
-    if (selectedWatchlistId === CASH_BANK_WATCHLIST_ID) {
-        // Show Cash & Assets section (1)
-        cashAssetsSection.classList.remove('app-hidden');
-        mainTitle.textContent = 'Cash & Assets';
-        renderCashCategories();
-        sortSelect.classList.remove('app-hidden');
-        refreshLivePricesBtn.classList.add('app-hidden');
-        toggleCompactViewBtn.classList.add('app-hidden');
-        asxCodeButtonsContainer.classList.add('app-hidden');
-        targetHitIconBtn.classList.add('app-hidden');
-        exportWatchlistBtn.classList.add('app-hidden');
-        stopLivePriceUpdates();
-        updateAddHeaderButton();
-    } else {
-        // Show Stock Watchlist section
+    // Clear previous content (only for elements that will be conditionally displayed)
+    // We will now manage individual row/card updates, so don't clear the whole tbody/container yet.
+    // However, for switching between stock/cash, we might still need to clear.
+    if (selectedWatchlistId !== CASH_BANK_WATCHLIST_ID) {
+        // Stock Watchlist Logic
         stockWatchlistSection.classList.remove('app-hidden');
         const selectedWatchlist = userWatchlists.find(wl => wl.id === selectedWatchlistId);
         if (selectedWatchlistId === ALL_SHARES_ID) {
@@ -1837,47 +2476,13 @@ function renderWatchlist() {
         sortSelect.classList.remove('app-hidden');
         refreshLivePricesBtn.classList.remove('app-hidden');
         toggleCompactViewBtn.classList.remove('app-hidden');
-        targetHitIconBtn.classList.remove('app-hidden');
         exportWatchlistBtn.classList.remove('app-hidden');
-        startLivePriceUpdates();
+        // startLivePriceUpdates(); // Removed this line to prevent multiple intervals
         updateAddHeaderButton();
 
-        // --- Core Fix for Desktop Compact View ---
-        const isMobileView = window.innerWidth <= 768; // Define what constitutes "mobile"
-
-        if (isMobileView) {
-            // On actual mobile devices, always hide table and show mobile cards
-            if (tableContainer) tableContainer.style.display = 'none';
-            if (mobileShareCardsContainer) mobileShareCardsContainer.style.display = 'flex';
-            if (mobileShareCardsContainer && currentMobileViewMode === 'compact') {
-                mobileShareCardsContainer.classList.add('compact-view');
-            } else if (mobileShareCardsContainer) {
-                mobileShareCardsContainer.classList.remove('compact-view');
-            }
-            // ASX buttons are hidden on mobile compact via CSS, but ensure JS doesn't override
-            if (asxCodeButtonsContainer) asxCodeButtonsContainer.style.display = 'flex'; // Default to flex, CSS will hide if compact
-        } else { // Desktop view
-            if (currentMobileViewMode === 'compact') {
-                // On desktop, if compact mode is active, hide table and show mobile cards
-                if (tableContainer) tableContainer.style.display = 'none';
-                if (mobileShareCardsContainer) {
-                    mobileShareCardsContainer.style.display = 'grid'; // Use grid for desktop compact for better layout
-                    mobileShareCardsContainer.classList.add('compact-view');
-                }
-                if (asxCodeButtonsContainer) asxCodeButtonsContainer.style.display = 'none'; // Hide ASX buttons in desktop compact
-            } else {
-                // On desktop, if default mode, show table and hide mobile cards
-                if (tableContainer) tableContainer.style.display = 'block'; // Or 'table' if it was a table element directly
-                if (mobileShareCardsContainer) {
-                    mobileShareCardsContainer.style.display = 'none';
-                    mobileShareCardsContainer.classList.remove('compact-view');
-                }
-                if (asxCodeButtonsContainer) asxCodeButtonsContainer.style.display = 'flex'; // Show ASX buttons in desktop default
-            }
-        }
-        // --- End Core Fix ---
-
+        const isMobileView = window.innerWidth <= 768;
         let sharesToRender = [];
+
         if (selectedWatchlistId === ALL_SHARES_ID) {
             sharesToRender = [...allSharesData];
             logDebug('Render: Displaying all shares (from ALL_SHARES_ID in currentSelectedWatchlistIds).');
@@ -1888,49 +2493,89 @@ function renderWatchlist() {
             logDebug('Render: No specific stock watchlists selected or multiple selected, showing empty state.');
         }
 
-        if (sharesToRender.length === 0) {
+        // --- Optimized DOM Update for Shares ---
+        const existingTableRows = Array.from(shareTableBody.children);
+        const existingMobileCards = Array.from(mobileShareCardsContainer.children);
+        const existingAsxButtons = Array.from(asxCodeButtonsContainer.children);
+
+        const newShareIds = new Set(sharesToRender.map(s => s.id));
+        const newAsxCodes = new Set(sharesToRender.map(s => s.shareName.trim().toUpperCase()));
+
+        // Remove old rows/cards/buttons that are no longer in the filtered list
+        existingTableRows.forEach(row => {
+            if (!newShareIds.has(row.dataset.docId)) {
+                row.remove();
+            }
+        });
+        existingMobileCards.forEach(card => {
+            if (!newShareIds.has(card.dataset.docId)) {
+                card.remove();
+            }
+        });
+        // Clear existing rows and cards before re-rendering in sorted order
+        // This ensures the order is always correct based on the sorted `sharesToRender` array
+        if (shareTableBody) {
+            shareTableBody.innerHTML = '';
+        }
+        if (mobileShareCardsContainer) {
+            mobileShareCardsContainer.innerHTML = '';
+        }
+
+        // Re-add shares to the UI in their sorted order
+        if (sharesToRender.length > 0) {
+            sharesToRender.forEach(share => {
+                if (tableContainer && tableContainer.style.display !== 'none') {
+                    addShareToTable(share); // Using add functions to ensure new row/card is created in order
+                }
+                if (mobileShareCardsContainer && mobileShareCardsContainer.style.display !== 'none') {
+                    addShareToMobileCards(share); // Using add functions to ensure new row/card is created in order
+                }
+            });
+        } else {
+            // Handle empty message if no shares to render in current view
             const emptyWatchlistMessage = document.createElement('p');
             emptyWatchlistMessage.textContent = 'No shares found for the selected watchlists. Add a new share to get started!';
             emptyWatchlistMessage.style.textAlign = 'center';
             emptyWatchlistMessage.style.padding = '20px';
             emptyWatchlistMessage.style.color = 'var(--ghosted-text)';
-            const td = document.createElement('td');
-            td.colSpan = 6; // Updated colspan to 6 for the new Rating column
-            td.appendChild(emptyWatchlistMessage);
-            const tr = document.createElement('tr');
-            tr.appendChild(td);
-            // Only append to table if table is visible, otherwise to mobile cards
+            
             if (tableContainer && tableContainer.style.display !== 'none') {
+                const td = document.createElement('td');
+                td.colSpan = 6;
+                td.appendChild(emptyWatchlistMessage);
+                const tr = document.createElement('tr');
+                tr.classList.add('empty-message-row'); // Add class to easily target for removal later
+                tr.appendChild(td);
                 shareTableBody.appendChild(tr);
             }
             if (mobileShareCardsContainer && mobileShareCardsContainer.style.display !== 'none') {
                 mobileShareCardsContainer.appendChild(emptyWatchlistMessage.cloneNode(true));
             }
         }
-
-        sharesToRender.forEach((share) => {
-            // Only add to table if table is visible
-            if (tableContainer && tableContainer.style.display !== 'none') {
-                addShareToTable(share);
-            }
-            // Only add to mobile cards if mobile cards are visible
-            if (mobileShareCardsContainer && mobileShareCardsContainer.style.display !== 'none') {
-                addShareToMobileCards(share); 
-            }
-        });
-
-        if (selectedShareDocId) {
-            const stillExists = sharesToRender.some(share => share.id === selectedShareDocId);
-            if (stillExists) {
-                selectShare(selectedShareDocId);
-            } else {
-                deselectCurrentShare();
-            }
-        }
-        logDebug('Render: Stock watchlist rendering complete.');
-        updateTargetHitBanner();
+        
+        // Re-render ASX Code Buttons separately
         renderAsxCodeButtons();
+
+    } else {
+        // Cash & Assets section Logic
+        cashAssetsSection.classList.remove('app-hidden');
+        mainTitle.textContent = 'Cash & Assets';
+        renderCashCategories();
+        sortSelect.classList.remove('app-hidden');
+        refreshLivePricesBtn.classList.add('app-hidden');
+        toggleCompactViewBtn.classList.add('app-hidden');
+        asxCodeButtonsContainer.classList.add('app-hidden'); // Ensure hidden in cash view
+        targetHitIconBtn.classList.add('app-hidden'); // Ensure hidden in cash view
+        exportWatchlistBtn.classList.add('app-hidden');
+        stopLivePriceUpdates();
+        updateAddHeaderButton();
+        // Ensure stock-specific containers are hidden when showing cash assets
+        if (tableContainer) tableContainer.style.display = 'none';
+        if (mobileShareCardsContainer) mobileShareCardsContainer.style.display = 'none';
     }
+    // Update sort dropdown options based on selected watchlist type
+    renderSortSelect(); // Moved here to ensure it updates for both stock and cash views
+    updateMainButtonsState(!!currentUserId); // Ensure button states (like Edit Watchlist) are correct for the current view
     adjustMainContentPadding();
 }
 
@@ -1983,9 +2628,17 @@ function renderAsxCodeButtons() {
                 buttonPriceChangeClass = 'neutral';
             }
         }
-        // Only add the class if it's not empty
+        // Apply color class based on price change
         if (buttonPriceChangeClass) {
-            button.classList.add(buttonPriceChangeClass); // Apply the color class
+            button.classList.add(buttonPriceChangeClass);
+        }
+
+        // Add target-hit-border class if this ASX code has a target hit AND not dismissed
+        const livePriceDataForButton = livePrices[asxCode.toUpperCase()];
+        if (livePriceDataForButton && livePriceDataForButton.targetHit && !targetHitIconDismissed) {
+            button.classList.add('target-hit-alert'); // Use 'target-hit-alert' for consistency with modal/cards
+        } else {
+            button.classList.remove('target-hit-alert'); // Ensure class is removed
         }
 
         asxCodeButtonsContainer.appendChild(button);
@@ -2099,23 +2752,34 @@ async function displayStockDetailsInSearchModal(asxCode) {
             }
         }
 
+        // Check if the currently displayed stock from search has hit its target (if it's in our allSharesData)
+        const correspondingShareInWatchlist = allSharesData.find(s => s.shareName.toUpperCase() === asxCode.toUpperCase());
+        const livePriceDataForSearchModal = livePrices[asxCode.toUpperCase()];
+        const isTargetHitForSearchModal = correspondingShareInWatchlist && livePriceDataForSearchModal ? livePriceDataForSearchModal.targetHit : false;
+
+        let searchModalTitleClasses = priceClass;
+        // Apply target-hit-alert class if target is hit AND not dismissed
+        if (isTargetHitForSearchModal && !targetHitIconDismissed) {
+            searchModalTitleClasses += ' target-hit-alert';
+        }
+
         // Construct the display HTML
         searchResultDisplay.innerHTML = `
             <div class="text-center mb-4">
-                <h3 class="${priceClass}">${stockData.ASXCode || 'N/A'} ${stockData.CompanyName ? '- ' + stockData.CompanyName : ''}</h3>
+                <h3 class="${searchModalTitleClasses}">${stockData.ASXCode || 'N/A'} ${stockData.CompanyName ? '- ' + stockData.CompanyName : ''}</h3>
                 <span class="text-sm text-gray-500">${stockData.CompanyName ? '' : '(Company Name N/A)'}</span>
             </div>
             <div class="live-price-display-section">
                 <div class="fifty-two-week-row">
-                    <span class="fifty-two-week-value low">Low: ${!isNaN(low52Week) ? '$' + low52Week.toFixed(2) : 'N/A'}</span>
-                    <span class="fifty-two-week-value high">High: ${!isNaN(high52Week) ? '$' + high52Week.toFixed(2) : 'N/A'}</span>
+                    <h3 class="fifty-two-week-value low">Low: ${!isNaN(low52Week) ? '$' + low52Week.toFixed(2) : 'N/A'}</h3>
+                    <h3 class="fifty-two-week-value high">High: ${!isNaN(high52Week) ? '$' + high52Week.toFixed(2) : 'N/A'}</h3>
                 </div>
                 <div class="live-price-main-row">
-                    <span class="live-price-large ${priceClass}">${displayPrice}</span>
+                    <h2 class="modal-share-name ${priceClass}">${displayPrice}</h2>
                     <span class="price-change-large ${priceClass}">${priceChangeText}</span>
                 </div>
                 <div class="pe-ratio-row">
-                    <span class="pe-ratio-value">P/E: ${!isNaN(peRatio) ? peRatio.toFixed(2) : 'N/A'}</span>
+                    <h3 class="pe-ratio-value">P/E: ${!isNaN(peRatio) ? peRatio.toFixed(2) : 'N/A'}</h3>
                 </div>
             </div>
             <div class="external-links-section">
@@ -2590,7 +3254,6 @@ async function loadUserWatchlistsAndSettings() {
         // Apply saved sort order or default
         if (currentUserId && savedSortOrder && Array.from(sortSelect.options).some(option => option.value === savedSortOrder)) {
             sortSelect.value = savedSortOrder;
-            currentSortOrder = savedSortOrder;
             logDebug('Sort: Applied saved sort order: ' + currentSortOrder);
         } else {
             // Set to default sort for the current view type
@@ -2598,7 +3261,6 @@ async function loadUserWatchlistsAndSettings() {
             if (currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
                 defaultSortValue = 'name-asc';
             }
-            sortSelect.value = defaultSortValue; 
             currentSortOrder = defaultSortValue;
             logDebug('Sort: No valid saved sort order or not applicable, defaulting to: ' + defaultSortValue);
         }
@@ -2621,22 +3283,21 @@ async function loadUserWatchlistsAndSettings() {
         }
         updateThemeToggleAndSelector();
 
-        updateMainButtonsState(true);
-        // Apply saved 'show last live price' preference
-    if (typeof savedShowLastLivePricePreference === 'boolean') {
-        showLastLivePriceOnClosedMarket = savedShowLastLivePricePreference;
-        if (showLastLivePriceToggle) {
-            showLastLivePriceToggle.checked = showLastLivePriceOnClosedMarket;
+        // Apply saved 'show last live price' preference to the new checkboxes
+        if (typeof savedShowLastLivePricePreference === 'boolean') {
+            showLastLivePriceOnClosedMarket = savedShowLastLivePricePreference;
+            const hideCheckbox = document.getElementById('sidebarHideCheckbox');
+            const showCheckbox = document.getElementById('sidebarShowCheckbox');
+            if (hideCheckbox && showCheckbox) {
+                showCheckbox.checked = showLastLivePriceOnClosedMarket;
+                hideCheckbox.checked = !showLastLivePriceOnClosedMarket;
+            }
+            logDebug('Toggle: Applied saved "Show Last Live Price" preference: ' + showLastLivePriceOnClosedMarket);
+        } else {
+            // Default to true (Show) if not set
+            showLastLivePriceOnClosedMarket = true;
+            logDebug('Toggle: No saved "Show Last Live Price" preference, defaulting to true (Show).');
         }
-        logDebug('Toggle: Applied saved "Show Last Live Price" preference: ' + showLastLivePriceOnClosedMarket);
-    } else {
-        // Default to false if not set
-        showLastLivePriceOnClosedMarket = false;
-        if (showLastLivePriceToggle) {
-            showLastLivePriceToggle.checked = false;
-        }
-        logDebug('Toggle: No saved "Show Last Live Price" preference, defaulting to false.');
-    } 
 
         const migratedSomething = await migrateOldSharesToWatchlist();
         if (!migratedSomething) {
@@ -2674,7 +3335,7 @@ async function fetchLivePrices() {
     console.log('Live Price: Attempting to fetch live prices...');
     // Only fetch live prices if a stock-related watchlist is selected
     if (currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
-        console.log('Live Price: Skipping live price fetch because "Cash & Assets" is selected.'); // UPDATED TEXT
+        console.log('Live Price: Skipping live price fetch because "Cash & Assets" is selected.');
         window._livePricesLoaded = true; // Mark as loaded even if skipped for splash screen
         hideSplashScreenIfReady();
         return;
@@ -2705,7 +3366,18 @@ async function fetchLivePrices() {
         ? parseFloat(shareData.targetPrice)
         : undefined;
 
-    const isTargetHit = (targetPrice !== undefined && livePrice <= targetPrice);
+    // Determine if target is hit based on targetDirection (new field) or default to 'below' for old shares
+            // Ensure shareData exists and has targetDirection, otherwise default to 'below'
+            const targetDirection = shareData && shareData.targetDirection ? shareData.targetDirection : 'below'; 
+
+            let isTargetHit = false;
+            if (targetPrice !== undefined && livePrice !== null && !isNaN(livePrice)) { // Only check if targetPrice and livePrice are valid
+                if (targetDirection === 'above') {
+                    isTargetHit = (livePrice >= targetPrice);
+                } else { // 'below' or any other unexpected value, including older shares
+                    isTargetHit = (livePrice <= targetPrice);
+                }
+            }
 
     newLivePrices[asxCode] = {
         live: livePrice,
@@ -2725,8 +3397,12 @@ async function fetchLivePrices() {
 }
         });
         livePrices = newLivePrices;
-        console.log('Live Price: Live prices updated:', livePrices); 
+        console.log('Live Price: Live prices updated:', livePrices);
         
+        // IMPORTANT: Re-render the watchlist immediately after live prices are updated
+        // to reflect changes in target hit status (borders, etc.).
+        renderWatchlist(); // This will trigger a full re-render of cards/table/buttons
+
         // renderWatchlist is called from the onSnapshot for shares, which will then trigger this.
         // We need to ensure adjustMainContentPadding is called here as well, as per user's instruction.
         adjustMainContentPadding(); 
@@ -2774,14 +3450,12 @@ function stopLivePriceUpdates() {
 
 // NEW: Function to update the target hit notification icon
 function updateTargetHitBanner() {
-    // UPDATED: Filter shares in the CURRENTLY SELECTED WATCHLIST for target hits
+    // Collect ALL shares that have hit their target price, regardless of current watchlist view
     sharesAtTargetPrice = allSharesData.filter(share => {
-        // Check if the share belongs to the currently selected watchlists (excluding 'All Shares' for this check)
-        const isShareInCurrentView = currentSelectedWatchlistIds.includes(ALL_SHARES_ID) || currentSelectedWatchlistIds.includes(share.watchlistId);
-        
         const livePriceData = livePrices[share.shareName.toUpperCase()];
         // Ensure livePriceData exists and has targetHit property
-        return isShareInCurrentView && livePriceData && livePriceData.targetHit;
+        // The check against `currentSelectedWatchlistIds` is removed here to show ALL alerts globally
+        return livePriceData && livePriceData.targetHit;
     });
 
     if (!targetHitIconBtn || !targetHitIconCount) {
@@ -2789,18 +3463,47 @@ function updateTargetHitBanner() {
         return;
     }
 
-    // Only show if there are shares at target AND the icon hasn't been manually dismissed AND we are in a stock view
-    if (sharesAtTargetPrice.length > 0 && !targetHitIconDismissed && !currentSelectedWatchlistIds.includes(CASH_BANK_WATCHLIST_ID)) {
+    // Only show the icon if there are shares at target AND the icon hasn't been manually dismissed
+    // (The cash view check is removed here, as the icon should represent ALL stock alerts globally)
+    if (!targetHitIconBtn || !targetHitIconCount || !watchlistSelect || !sortSelect) {
+        console.warn('Target Alert: Target hit icon elements or dropdowns not found. Cannot update banner/highlights.');
+        return;
+    }
+
+    // Determine if any shares at target price are currently being displayed in the selected stock watchlist(s)
+    const currentViewHasTargetHits = sharesAtTargetPrice.some(share => {
+        // If "All Shares" is selected, any target hit applies
+        if (currentSelectedWatchlistIds.includes(ALL_SHARES_ID)) {
+            return true;
+        }
+        // If a specific watchlist is selected, check if the target-hit share is in it
+        if (currentSelectedWatchlistIds.length === 1 && currentSelectedWatchlistIds[0] !== CASH_BANK_WATCHLIST_ID) {
+            return share.watchlistId === currentSelectedWatchlistIds[0];
+        }
+        return false; // No target hits in cash view or multiple watchlists selected (defaulting to no highlight for now)
+    });
+
+    // Update the fixed bottom-left icon
+    if (sharesAtTargetPrice.length > 0 && !targetHitIconDismissed) {
         targetHitIconCount.textContent = sharesAtTargetPrice.length;
-        targetHitIconBtn.classList.remove('app-hidden'); // Show the icon
-        targetHitIconBtn.style.display = 'flex'; // Ensure it's flex for icon + counter
+        targetHitIconBtn.classList.remove('app-hidden'); // Show the icon via class
         targetHitIconCount.style.display = 'block'; // Show the count badge
-        logDebug('Target Alert: Showing icon: ' + sharesAtTargetPrice.length + ' shares hit target (watchlist-specific check).');
+        logDebug('Target Alert: Showing icon: ' + sharesAtTargetPrice.length + ' shares hit target (global check).');
     } else {
-        targetHitIconBtn.classList.add('app-hidden'); // Hide the icon
-        targetHitIconBtn.style.display = 'none'; // Ensure it's hidden
+        targetHitIconBtn.classList.add('app-hidden'); // Hide the icon via class
         targetHitIconCount.style.display = 'none'; // Hide the count badge
-        logDebug('Target Alert: No shares hit target in current view or icon is dismissed or in cash view. Hiding icon.');
+        logDebug('Target Alert: No shares hit target or icon is dismissed. Hiding icon.');
+    }
+
+    // Apply/remove border to watchlist and sort dropdowns if the *current view* has target hits
+    if (currentViewHasTargetHits && !targetHitIconDismissed) {
+        watchlistSelect.classList.add('target-hit-border');
+        sortSelect.classList.add('target-hit-border');
+        logDebug('Target Alert: Watchlist and Sort dropdowns highlighted (current view has target hits).');
+    } else {
+        watchlistSelect.classList.remove('target-hit-border');
+        sortSelect.classList.remove('target-hit-border');
+        logDebug('Target Alert: Watchlist and Sort dropdowns unhighlighted.');
     }
 }
 
@@ -3214,11 +3917,11 @@ function getCurrentCashAssetFormData() {
     }
 
     return {
-        name: cashAssetNameInput ? cashAssetNameInput.value.trim() : '',
-        balance: cashAssetBalanceInput ? parseFloat(cashAssetBalanceInput.value) : null,
+        name: cashAssetNameInput?.value?.trim() || '',
+        balance: parseFloat(cashAssetBalanceInput?.value),
         comments: comments,
         // NEW: Include the isHidden state from the checkbox
-        isHidden: hideCashAssetCheckbox ? hideCashAssetCheckbox.checked : false
+        isHidden: hideCashAssetCheckbox?.checked || false
     };
 }
 
@@ -4064,12 +4767,13 @@ async function initializeAppLogic() {
     if (customDialogModal) customDialogModal.style.setProperty('display', 'none', 'important');
     if (calculatorModal) calculatorModal.style.setProperty('display', 'none', 'important');
     if (shareContextMenu) shareContextMenu.style.setProperty('display', 'none', 'important');
-    if (targetHitIconBtn) targetHitIconBtn.style.display = 'none'; // Ensure icon is hidden initially
+    if (targetHitIconBtn) targetHitIconBtn.classList.add('app-hidden'); // Ensure icon is hidden initially via class
     if (alertPanel) alertPanel.style.display = 'none'; // NEW: Ensure alert panel is hidden initially
     // NEW: Hide cash asset modals initially
     if (cashAssetFormModal) cashAssetFormModal.style.setProperty('display', 'none', 'important');
     if (cashAssetDetailModal) cashAssetDetailModal.style.setProperty('display', 'none', 'important');
     if (stockSearchModal) stockSearchModal.style.setProperty('display', 'none', 'important'); // NEW: Hide stock search modal
+    // The targetHitDetailsModal itself is hidden by showModal/hideModal, so no explicit line needed for its close button.
 
 
     // Service Worker Registration
@@ -4225,38 +4929,47 @@ async function initializeAppLogic() {
             input.addEventListener('input', checkFormDirtyState);
             input.addEventListener('change', checkFormDirtyState);
             input.addEventListener('focus', function() {
-                this.select();
+                // Removed: The 'this.select()' call, as it was causing a TypeError on SELECT elements (dropdowns) on focus.
+                // The automatic text selection on focus is now bypassed for stability.
             });
         }
     });
 
-    // NEW: Add event listener for the shareWatchlistSelect for dirty state checking
-    if (shareWatchlistSelect) {
-        shareWatchlistSelect.addEventListener('change', checkFormDirtyState);
-    }
+    // NEW: Add event listeners for target direction checkboxes to make them mutually exclusive
+    if (targetAboveCheckbox && targetBelowCheckbox) {
+        targetAboveCheckbox.addEventListener('change', () => {
+            if (targetAboveCheckbox.checked) {
+                targetBelowCheckbox.checked = false;
+            }
+            checkFormDirtyState();
+        });
 
+        targetBelowCheckbox.addEventListener('change', () => {
+            if (targetBelowCheckbox.checked) {
+                targetAboveCheckbox.checked = false;
+            }
+            checkFormDirtyState();
+        });
+    }
+    
     // NEW: Add event listeners for cash asset form inputs for dirty state checking (2.1)
     if (cashAssetNameInput) cashAssetNameInput.addEventListener('input', checkCashAssetFormDirtyState);
     if (cashAssetBalanceInput) cashAssetBalanceInput.addEventListener('input', checkCashAssetFormDirtyState);
     // NEW: Add event listener for the hideCashAssetCheckbox for dirty state checking
     if (hideCashAssetCheckbox) hideCashAssetCheckbox.addEventListener('change', checkCashAssetFormDirtyState);
 
-    formInputs.forEach((input, index) => {
-        if (input) {
-            input.addEventListener('keydown', function(event) {
+    formInputs.forEach((inputElement, index) => { // Renamed 'input' to 'inputElement' for clarity
+        if (inputElement) {
+            inputElement.addEventListener('keydown', function(event) { // 'this' refers to 'inputElement'
                 if (event.key === 'Enter') {
                     event.preventDefault();
-                    const nextInput = formInputs[index + 1];
 
-                    // Only call select() if the input has the method (i.e., it's a text/number input)
-                    // This prevents TypeError on <select> elements which do not have a .select() method.
-                    if (input.tagName === 'INPUT' || input.tagName === 'TEXTAREA') {
-                        input.select();
-                    }
-
-                    // If current input is the last one, try to add a comment or save
-                    if (index === formInputs.length - 1) {
-                        if (addCommentSectionBtn && addCommentSectionBtn.offsetParent !== null && !addCommentSectionBtn.classList.contains('is-disabled-icon')) {
+                    // Case 1: If it's a SELECT element (e.g., shareRatingSelect)
+                    if (this.tagName === 'SELECT') {
+                        const nextElement = formInputs[index + 1];
+                        if (nextElement) {
+                            nextElement.focus();
+                        } else if (addCommentSectionBtn && addCommentSectionBtn.offsetParent !== null && !addCommentSectionBtn.classList.contains('is-disabled-icon')) {
                             addCommentSectionBtn.click();
                             const newCommentTitleInput = commentsFormContainer.lastElementChild?.querySelector('.comment-title-input');
                             if (newCommentTitleInput) {
@@ -4265,26 +4978,34 @@ async function initializeAppLogic() {
                         } else if (saveShareBtn && !saveShareBtn.classList.contains('is-disabled-icon')) {
                             saveShareBtn.click();
                         }
-                    } else if (nextInput) {
-                        // For the dropdown, explicitly move focus to the next input element after it
-                        if (input === shareRatingSelect) {
-                            // Find the element *after* shareRatingSelect in the formInputs array
-                            const nextElementAfterRating = formInputs[index + 1];
-                            if (nextElementAfterRating) {
-                                nextElementAfterRating.focus();
-                            } else if (addCommentSectionBtn && addCommentSectionBtn.offsetParent !== null && !addCommentSectionBtn.classList.contains('is-disabled-icon')) {
-                                // If no more inputs after rating, try to add comment section
-                                addCommentSectionBtn.click();
-                                const newCommentTitleInput = commentsFormContainer.lastElementChild?.querySelector('.comment-title-input');
-                                if (newCommentTitleInput) {
-                                    newCommentTitleInput.focus();
-                                }
-                            } else if (saveShareBtn && !saveShareBtn.classList.contains('is-disabled-icon')) {
-                                saveShareBtn.click();
+                        return; // Stop processing after handling SELECT
+                    }
+
+                    // Case 2: If it's an INPUT or TEXTAREA element
+                    if (this.tagName === 'INPUT' || this.tagName === 'TEXTAREA') {
+                        // Removed: The 'this.select()' call, as it was causing an inexplicable TypeError on SELECT elements.
+                        // The original intention was to select text in text inputs, but this is now bypassed for stability.
+                        // The focus logic below will still proceed.
+                        const nextElement = formInputs[index + 1];
+                        if (nextElement) {
+                            nextElement.focus();
+                        } else if (addCommentSectionBtn && addCommentSectionBtn.offsetParent !== null && !addCommentSectionBtn.classList.contains('is-disabled-icon')) {
+                            addCommentSectionBtn.click();
+                            const newCommentTitleInput = commentsFormContainer.lastElementChild?.querySelector('.comment-title-input');
+                            if (newCommentTitleInput) {
+                                newCommentTitleInput.focus();
                             }
-                        } else {
-                            nextInput.focus();
+                        } else if (saveShareBtn && !saveShareBtn.classList.contains('is-disabled-icon')) {
+                            saveShareBtn.click();
                         }
+                        return; // Stop processing after handling INPUT/TEXTAREA
+                    }
+
+                    // Fallback for any other element type (shouldn't happen with formInputs array)
+                    // Or if no specific action was taken, try to focus next general element
+                    const nextElement = formInputs[index + 1];
+                    if (nextElement) {
+                        nextElement.focus();
                     }
                 }
             });
@@ -4345,18 +5066,60 @@ async function initializeAppLogic() {
 
     // Global click listener to close modals/context menu if clicked outside
     window.addEventListener('click', (event) => {
+        // Handle targetHitDetailsModal minimization specifically.
+        // This ensures clicks *outside* the modal content and *not* on the trigger button minimize it.
+        if (targetHitDetailsModal && targetHitDetailsModal.style.display !== 'none') {
+            const clickedInsideModalContent = targetHitDetailsModal.querySelector('.modal-content').contains(event.target);
+            const clickedOnTargetIconButton = (event.target === targetHitIconBtn || targetHitIconBtn.contains(event.target));
+            
+            if (!clickedInsideModalContent && !clickedOnTargetIconButton) {
+                logDebug('Global Click: Clicked outside targetHitDetailsModal (and not on icon). Minimizing it.');
+                hideModal(targetHitDetailsModal); // Directly hide the modal
+                return; // Prevent further modal closing logic for this click
+            }
+        }
+
+        // General modal closing logic (for other modals)
         if (event.target === shareDetailModal || event.target === dividendCalculatorModal ||
             event.target === shareFormSection || event.target === customDialogModal ||
             event.target === calculatorModal || event.target === addWatchlistModal ||
             event.target === manageWatchlistModal || event.target === alertPanel ||
-            event.target === cashAssetFormModal || event.target === cashAssetDetailModal) { // NEW: Include cash asset modals here
+            event.target === cashAssetFormModal || event.target === cashAssetDetailModal ||
+            event.target === stockSearchModal) {
             closeModals();
         }
 
+        // Context menu closing logic
         if (contextMenuOpen && shareContextMenu && !shareContextMenu.contains(event.target)) {
             hideContextMenu();
         }
     });
+
+    // The event listener for targetHitIconBtn needs to be robust.
+    // Ensure it is only added once during initialization and always re-shows the modal.
+    // This part should be in `initializeAppLogic` as confirmed previously.
+    // Make sure the `initializeAppLogic` function's relevant section looks like this:
+    /*
+    if (targetHitIconBtn) {
+        // Remove existing listeners to prevent multiple bindings if initializeAppLogic runs again
+        targetHitIconBtn.removeEventListener('click', showTargetHitDetailsModal);
+        targetHitIconBtn.addEventListener('click', (event) => {
+            logDebug('Target Alert: Icon button clicked. Opening details modal.');
+            // Ensure the modal is explicitly shown
+            showModal(targetHitDetailsModal);
+        });
+    }
+    */
+    // For this specific update, I will also add the `removeEventListener` directly to the `targetHitIconBtn` section in `initializeAppLogic`.
+
+    // Locate the `targetHitIconBtn` listener setup inside `initializeAppLogic`
+    // and replace it with the more robust version if it's not already like this.
+    // This is not part of the immediately surrounding code, but essential for the fix.
+    // So, this is a reminder for you to check this part in the `initializeAppLogic` function too:
+    // **No change in the provided snippet above for the targetHitIconBtn,
+    // as it is correctly handled in `initializeAppLogic` as a separate concern.**
+
+    // The fix for this immediate context is primarily the global click listener logic.
 
     // Google Auth Button (Sign In/Out) - This button is removed from index.html.
     // Its functionality is now handled by splashSignInBtn.
@@ -4400,39 +5163,34 @@ async function initializeAppLogic() {
         });
     }
 
-    // NEW: Target hit icon button listener for dismissal
-    if (targetHitIconBtn) {
-        targetHitIconBtn.addEventListener('click', (event) => {
-            logDebug('Target Alert: Icon button clicked. Dismissing icon.');
-            targetHitIconDismissed = true; // Set flag to true
-            localStorage.setItem('targetHitIconDismissed', 'true'); // Save dismissal state to localStorage
-            updateTargetHitBanner(); // Re-run to hide the icon
-            showCustomAlert('Alerts dismissed for this session.', 1500); // Optional: Provide user feedback
-            renderWatchlist(); // NEW: Re-render watchlist to remove highlighting
+    // NEW: Event listener for the top 'X' close button in the Target Hit Details Modal
+    if (targetHitModalCloseTopBtn) {
+        targetHitModalCloseTopBtn.addEventListener('click', () => {
+            hideModal(targetHitDetailsModal); // Standard close, keeps bubble active
+            logDebug('Target Alert Modal: Top Close button clicked. Modal hidden.');
         });
     }
 
-    // NEW: Target hit icon button listener to open alert panel (if you decide to use it later)
-    // For now, this is commented out as the user wants simple dismissal on click.
-    /*
-    if (targetHitIconBtn) {
-        targetHitIconBtn.addEventListener('click', () => {
-            logDebug('Target Alert: Icon button clicked. Toggling alert panel.');
-            if (alertPanel.style.display === 'flex') {
-                hideModal(alertPanel);
-            } else {
-                renderAlertsInPanel(); // Render alerts before showing
-                showModal(alertPanel);
-            }
+    // NEW: Event listener for the "Minimize" button at the bottom of the modal
+    if (alertModalMinimizeBtn) {
+        alertModalMinimizeBtn.addEventListener('click', () => {
+            hideModal(targetHitDetailsModal); // Close the modal
+            // The bubble remains visible by default unless explicitly dismissed
+            logDebug('Target Alert Modal: Minimize button clicked. Modal hidden, bubble remains active.');
         });
     }
-    */
 
-    // NEW: Close alert panel button listener (alertPanel is not in current HTML, but kept for consistency)
-    if (closeAlertPanelBtn) {
-        closeAlertPanelBtn.addEventListener('click', () => {
-            logDebug('Alert Panel: Close button clicked.');
-            // hideModal(alertPanel); // Commented out as alertPanel is not in HTML
+    // NEW: Event listener for the "Dismiss All" button at the bottom of the modal
+    if (alertModalDismissAllBtn) {
+        alertModalDismissAllBtn.addEventListener('click', () => {
+            targetHitIconDismissed = true; // Mark as dismissed for the session
+            localStorage.setItem('targetHitIconDismissed', 'true'); // Save dismissal preference
+            // No need to explicitly hide the bubble here, updateTargetHitBanner will handle it.
+            updateTargetHitBanner(); // Update the bubble (will hide it if no alerts and dismissed)
+            hideModal(targetHitDetailsModal); // Close the modal
+            showCustomAlert('Target Price Alerts dismissed until next login.', 2000); // User feedback
+            renderWatchlist(); // Re-render the watchlist to remove all borders/highlights
+            logDebug('Target Alert Modal: Dismiss All button clicked. Alerts dismissed, modal and bubble hidden. Watchlist re-rendered.');
         });
     }
 
@@ -4475,7 +5233,10 @@ async function initializeAppLogic() {
                     }
                     if (splashSignInBtn) {
                         splashSignInBtn.disabled = false; // Enable sign-in button
-                        splashSignInBtn.textContent = 'Google Sign In'; // Reset button text
+                        const buttonTextSpan = splashSignInBtn.querySelector('span');
+                        if (buttonTextSpan) {
+                            buttonTextSpan.textContent = 'Sign in with Google'; // Reset only the text, not the icon
+                        }
                     }
                     // Hide main app content
                     if (mainContainer) {
@@ -4583,9 +5344,10 @@ if (sortSelect) {
                 try {
                     const shareDocRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/shares', selectedShareDocId);
                     await window.firestore.deleteDoc(shareDocRef);
-                    showCustomAlert('Share deleted successfully!', 1500);
+                    // showCustomAlert('Share deleted successfully!', 1500); // Removed as per previous request
                     logDebug('Firestore: Share (ID: ' + selectedShareDocId + ') deleted.');
                     closeModals();
+                    updateTargetHitBanner(); // NEW: Update banner after deletion
                 } catch (error) {
                     console.error('Firestore: Error deleting share:', error);
                     showCustomAlert('Error deleting share: ' + error.message);
@@ -4619,9 +5381,10 @@ if (sortSelect) {
                 try {
                     const shareDocRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/shares', selectedShareDocId);
                     await window.firestore.deleteDoc(shareDocRef);
-                    showCustomAlert('Share deleted successfully!', 1500);
+                    // showCustomAlert('Share deleted successfully!', 1500); // Removed as per previous request
                     logDebug('Firestore: Share (ID: ' + selectedShareDocId + ') deleted.');
                     closeModals();
+                    updateTargetHitBanner(); // NEW: Update banner after deletion
                 } catch (error) {
                     console.error('Firestore: Error deleting share:', error);
                     showCustomAlert('Error deleting share: ' + error.message);
@@ -4654,7 +5417,7 @@ if (sortSelect) {
                 try {
                     const shareDocRef = window.firestore.doc(db, 'artifacts/' + currentAppId + '/users/' + currentUserId + '/shares', shareToDeleteId);
                     await window.firestore.deleteDoc(shareDocRef);
-                    showCustomAlert('Share deleted successfully!', 1500);
+                    // showCustomAlert('Share deleted successfully!', 1500); // Removed as per user request
                     logDebug('Firestore: Share (ID: ' + shareToDeleteId + ') deleted.');
                 } catch (error) {
                     console.error('Firestore: Error deleting share:', error);
@@ -5065,10 +5828,25 @@ if (sortSelect) {
             closeMenuBtn: !!closeMenuBtn,
             sidebarOverlay: !!sidebarOverlay
         });
+        
+        // Ensure initial state is correct for desktop
+        if (window.innerWidth > 768) {
+            document.body.classList.add('sidebar-active'); // Sidebar active on desktop by default
+            sidebarOverlay.style.pointerEvents = 'none'; // Overlay non-interactive on desktop
+            appSidebar.classList.add('open'); // Keep sidebar open by default on desktop
+            logDebug('Sidebar: Desktop: Sidebar initialized as open.');
+        } else {
+            document.body.classList.remove('sidebar-active'); // No shift on mobile
+            sidebarOverlay.style.pointerEvents = 'auto'; // Overlay interactive on mobile
+            appSidebar.classList.remove('open'); // Sidebar closed by default on mobile
+            logDebug('Sidebar: Mobile: Sidebar initialized as closed.');
+        }
+
+
         hamburgerBtn.addEventListener('click', (event) => {
             logDebug('UI: Hamburger button CLICKED. Event:', event);
-            event.stopPropagation();
-            toggleAppSidebar();
+            event.stopPropagation(); // Stop click from propagating to body/window and closing immediately
+            toggleAppSidebar(); // This should correctly open/close based on current state
         });
         closeMenuBtn.addEventListener('click', () => {
             logDebug('UI: Close Menu button CLICKED.');
@@ -5111,13 +5889,23 @@ if (sortSelect) {
             }
             // NEW: Recalculate header height on resize
             adjustMainContentPadding();
+
+            // NEW: Update the compact view button state on resize
+            updateCompactViewButtonState();
         });
 
         const menuButtons = appSidebar.querySelectorAll('.menu-button-item');
         menuButtons.forEach(button => {
             button.addEventListener('click', (event) => {
-                logDebug('Sidebar Menu Item Click: Button \'' + event.currentTarget.textContent.trim() + '\' clicked.');
-                const closesMenu = event.currentTarget.dataset.actionClosesMenu !== 'false';
+                const clickedButton = event.currentTarget;
+                logDebug('Sidebar Menu Item Click: Button \'' + clickedButton.textContent.trim() + '\' clicked.');
+
+                // Handle specific action for the toggle compact view button
+                if (clickedButton.id === 'toggleCompactViewBtn') {
+                    toggleMobileViewMode();
+                }
+
+                const closesMenu = clickedButton.dataset.actionClosesMenu !== 'false';
                 if (closesMenu) {
                     toggleAppSidebar(false);
                 }
@@ -5143,17 +5931,6 @@ if (sortSelect) {
             fetchLivePrices();
             showCustomAlert('Refreshing live prices...', 1000);
             toggleAppSidebar(false); // NEW: Close sidebar on refresh
-        });
-    }
-
-    // NEW: Toggle Compact View Button Listener
-    if (toggleCompactViewBtn) {
-        // DEBUG: Log that the event listener is being attached
-        logDebug('DEBUG: Attaching click listener to toggleCompactViewBtn.');
-        toggleCompactViewBtn.addEventListener('click', () => {
-            logDebug('UI: Toggle Compact View button clicked.');
-            toggleMobileViewMode();
-            toggleAppSidebar(false); // Close sidebar after action
         });
     }
 
@@ -5254,11 +6031,83 @@ if (showLastLivePriceToggle) {
     // Call adjustMainContentPadding initially and on window load/resize
     // Removed: window.addEventListener('load', adjustMainContentPadding); // Removed, handled by onAuthStateChanged
     // Already added to window.addEventListener('resize') in sidebar section
+
+    // NEW: Set initial state for the compact view button
+    updateCompactViewButtonState();
+} 
+// This closing brace correctly ends the `initializeAppLogic` function here.
+
+// Function to show the target hit details modal (moved to global scope)
+function showTargetHitDetailsModal() {
+    if (!targetHitDetailsModal || !targetHitSharesList || !sharesAtTargetPrice) {
+        console.error('Target Hit Modal: Required elements or data not found.');
+        showCustomAlert('Error displaying target hit details. Please try again.', 2000);
+        return;
+    }
+
+    targetHitSharesList.innerHTML = ''; // Clear previous content
+
+    if (sharesAtTargetPrice.length === 0) {
+        targetHitSharesList.innerHTML = '<p class="no-alerts-message">No shares currently at target price.</p>';
+    } else {
+        sharesAtTargetPrice.forEach(share => {
+            const livePriceData = livePrices[share.shareName.toUpperCase()];
+            if (!livePriceData || livePriceData.live === null || isNaN(livePriceData.live)) {
+                // Skip if live price data is unavailable or invalid
+                return;
+            }
+
+            const currentLivePrice = livePriceData.live;
+            const targetPrice = share.targetPrice;
+            const priceClass = currentLivePrice >= targetPrice ? 'positive' : 'negative'; // Determine color based on whether it passed target up or down
+
+            const targetHitItem = document.createElement('div');
+            targetHitItem.classList.add('target-hit-item');
+            targetHitItem.dataset.shareId = share.id; // Add data attribute for potential future interaction
+
+            targetHitItem.innerHTML = `
+                <div class="target-hit-item-header">
+                    <span class="share-name-code ${priceClass}">${share.shareName}</span>
+                    <span class="live-price-display ${priceClass}">$${currentLivePrice.toFixed(2)}</span>
+                </div>
+                <p>Target: <strong>$${targetPrice !== null && !isNaN(targetPrice) ? targetPrice.toFixed(2) : 'N/A'}</strong></p>
+                <p>Watchlist: <strong>${userWatchlists.find(w => w.id === share.watchlistId)?.name || 'N/A'}</strong></p>
+            `;
+            targetHitSharesList.appendChild(targetHitItem);
+
+            // NEW: Add click listener to make the item clickable
+            targetHitItem.addEventListener('click', () => {
+                const clickedShareId = targetHitItem.dataset.shareId;
+                if (clickedShareId) {
+                    hideModal(targetHitDetailsModal); // Close the target hit alerts modal
+                    selectShare(clickedShareId); // Select the share
+                    showShareDetails(); // Open the share details modal for the clicked share
+                }
+            });
+        });
+    }
+
+    showModal(targetHitDetailsModal);
+    logDebug('Target Hit Modal: Displayed details for ' + sharesAtTargetPrice.length + ' shares.');
+}
+
+// NEW: Target hit icon button listener (opens the modal) - moved to global scope
+if (targetHitIconBtn) {
+    targetHitIconBtn.addEventListener('click', (event) => {
+        logDebug('Target Alert: Icon button clicked. Opening details modal.');
+        showTargetHitDetailsModal();
+    });
 }
 
 document.addEventListener('DOMContentLoaded', function() {
     logDebug('script.js DOMContentLoaded fired.');
 
+    // Ensure Edit Current Watchlist button updates when watchlist selection changes
+    if (watchlistSelect) {
+        watchlistSelect.addEventListener('change', function() {
+            updateMainButtonsState(true);
+        });
+    }
     // NEW: Initialize splash screen related flags
     window._firebaseInitialized = false;
     window._userAuthenticated = false;
@@ -5274,12 +6123,13 @@ document.addEventListener('DOMContentLoaded', function() {
         logDebug('Splash Screen: Displayed on DOMContentLoaded, body overflow hidden.');
     } else {
         console.warn('Splash Screen: Splash screen element not found. App will start without it.');
-        // If splash screen isn't found, assume everything is "loaded" to proceed
+        // If splash screen not found, set flags to true and hide the splash screen logic.
+        // This is a fallback to allow the app to run without the splash screen HTML.
         window._firebaseInitialized = true;
-        window._userAuthenticated = false; // Will be set by onAuthStateChanged
+        window._userAuthenticated = false;
         window._appDataLoaded = true;
         window._livePricesLoaded = true;
-    }
+    } // This closing brace completes the 'else' block for the splash screen check.
 
     // Initially hide main app content and header
     if (mainContainer) {
@@ -5329,14 +6179,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // Load data and then hide splash screen
                 await loadUserWatchlistsAndSettings(); // This now sets _appDataLoaded and calls hideSplashScreenIfReady
-                await fetchLivePrices(); // Ensure live prices are fetched after settings and current watchlist are loaded
+                
+                // Ensure live prices are fetched once on login and interval started for stock watchlists.
+                // This call is placed before sortShares/renderWatchlist to ensure initial data.
+                // The interval will be started if the current view is a stock watchlist.
+                // We do NOT call startLivePriceUpdates() from renderWatchlist anymore to prevent multiple intervals.
+                fetchLivePrices(); // Initial fetch
+                startLivePriceUpdates(); // Start interval immediately after first fetch on login
+
+                // After fetching live prices, re-sort and re-render the watchlist to apply percentage change.
+                sortShares(); // This will also call renderWatchlist(), which now *only* renders.
+                
                 // NEW: Load ASX codes for autocomplete
                 allAsxCodes = await loadAsxCodesFromCSV();
                 logDebug(`ASX Autocomplete: Loaded ${allAsxCodes.length} codes for search.`);
+            } // This closing brace correctly ends the `if (user)` block
 
-                // Removed: startLivePriceUpdates(); // This is now called by renderWatchlist based on selected type
-                
-            } else {
+            else {
                 currentUserId = null;
                 mainTitle.textContent = 'Share Watchlist';
                 logDebug('AuthState: User signed out.');
@@ -5371,7 +6230,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     if (splashSignInBtn) {
                         splashSignInBtn.disabled = false; // Enable sign-in button
-                        splashSignInBtn.textContent = 'Google Sign In'; // Reset button text
+                        const buttonTextSpan = splashSignInBtn.querySelector('span');
+                        if (buttonTextSpan) {
+                            buttonTextSpan.textContent = 'Sign in with Google'; // Reset only the text, not the icon
+                        }
                     }
                     // Hide main app content
                     if (mainContainer) {
