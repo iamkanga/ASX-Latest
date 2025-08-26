@@ -1,6 +1,1305 @@
-.modal-share-name {
-    font-size: 2.7em !important; /* 1.8em * 1.5 = 2.7em */
+/* The .low52-title-chevron class has been removed and replaced by .low52-arrow-icon */
+/* Ghost out muted 52-week alert cards instead of hiding them */
+.low52-card-hidden {
+    opacity: 0.5;
+    filter: grayscale(80%);
+    transition: opacity 0.3s ease, filter 0.3s ease;
+}
+/* Target hit notification container inside 52-week alert: match global movers width */
+.low52-alert-card .target-hit-item.global-summary-alert {
+    min-width: 320px;
+    max-width: 540px;
+    margin-left: auto;
+    margin-right: auto;
+}
+/* 52-week alert header row: code/name left, price right */
+.low52-header-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 8px;
+    margin-bottom: 0;
+}
+.low52-header-row .low52-code {
+    flex: 0 0 auto; /* Don't shrink the code */
+    font-weight: 700; /* Bolder code */
+    font-size: 1em; /* Adjusted size */
+    margin-right: 8px;
+    white-space: nowrap;
+}
+.low52-header-row .low52-name {
+    flex: 1 1 auto; /* Allow name to take up space and shrink */
+    font-weight: 400;
+    font-size: 0.9em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--ghosted-text); /* Muted color for the name */
+    text-align: left;
+}
+.low52-header-row .low52-price {
+    margin-left: auto;
+    font-weight: 700; /* Bolder price */
+    font-size: 1em; /* Adjusted size */
+    color: var(--text-color, #222);
+    text-align: right;
+    min-width: 70px; /* A bit more space */
+    flex-shrink: 0; /* Don't shrink the price */
+}
+.low52-action-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    width: 100%;
+    margin-bottom: 0;
+    margin-top: 2px;
+}
+.low52-price-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    margin-bottom: 0;
+}
+/* Ensure 52-week explainer row is horizontal and not wrapped vertically */
+.low52-thresh-row {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: flex-start;
+    gap: 6px;
+    margin-top: auto; /* Pushes to the bottom of the flex container */
+    margin-bottom: 0;
+    width: 100%;
+    padding-top: 8px; /* Add some space above it */
+}
+/* Minimalistic chevron for ASX code toggle */
+#toggleAsxButtonsBtn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.toggle-asx-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 6px 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--ghosted-text, #666);
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+.toggle-asx-btn[aria-pressed="true"] {
+    color: var(--asx-button-active-text, #fff);
+}
+.asx-toggle-label {
+    display: inline-block;
+    line-height: 1;
+}
+
+.asx-toggle-triangle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ghosted-text, #888);
+    transition: transform 0.2s ease-in-out;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+}
+.asx-toggle-triangle .chevron-svg {
+    width: 18px;
+    height: 18px;
+    display: block;
+}
+.asx-toggle-triangle.expanded .chevron-svg {
+    transform: rotate(180deg);
+}
+
+/* Minimal chevron appearance: two stroked lines (already using polyline SVG). Ensure stroke color is visible */
+.asx-toggle-triangle .chevron-svg polyline {
+    stroke: currentColor;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* Rotate chevron when parent button has aria-expanded true for extra robustness */
+.toggle-asx-btn[aria-expanded="true"] .asx-toggle-triangle .chevron-svg {
+    transform: rotate(180deg);
+}
+
+/* Live price timestamp: display as a full-width block under the header/title bar
+   so it sits visually between the header and main content on all viewports. */
+.live-price-timestamp-container {
+    position: static; /* flow normally in document under the header */
+    display: block;
+    width: 100%;
+    text-align: right; /* keep aligned to the right edge; change to left/center if preferred */
+    padding: 6px 16px 0 16px; /* give breathing room from header edges */
+    font-size: 0.98em;
+    color: var(--ghosted-text, #888);
+    pointer-events: none;
+    z-index: 2;
+    background: transparent;
+}
+@media (max-width: 600px) {
+    .live-price-timestamp-container {
+        font-size: 0.74em !important;
+        padding: 4px 12px 0 12px;
+        text-align: right;
+    }
+}
+#livePriceTimestamp {
+    font-weight: 500;
+    letter-spacing: 0.02em;
+}
+
+/* When the timestamp is placed inside the header-top-row, position it bottom-right of the title bar */
+.live-price-inside-header {
+    position: absolute;
+    right: 12px;
+    bottom: 8px; /* sit at the bottom-right corner of the header */
+    width: auto;
+    text-align: right;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    align-items: flex-end;
+}
+.live-price-inside-header .live-price-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--ghosted-text, rgba(255,255,255,0.75));
+    opacity: 0.95;
+    pointer-events: none;
+}
+.live-price-inside-header #livePriceTimestamp {
+    font-size: 0.92rem;
     font-weight: 700;
+    color: var(--text-color, #fff);
+    opacity: 0.95;
+}
+
+/* Prevent timestamp from overflowing left side: constrain width relative to header */
+.live-price-inside-header {
+    box-sizing: border-box;
+    padding-left: 8px; /* ensure some breathing room when truncated */
+    max-width: calc(100% - 120px); /* leave space for left-side controls */
+    overflow: visible; /* container can be visible but inner text will ellipsize */
+}
+.live-price-inside-header .live-price-label,
+.live-price-inside-header #livePriceTimestamp {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+    .live-price-inside-header {
+        right: 8px;
+        bottom: 6px;
+        max-width: calc(100% - 90px);
+    }
+    .live-price-inside-header .live-price-label { font-size: 0.72rem; }
+    .live-price-inside-header #livePriceTimestamp { font-size: 0.86rem; }
+}
+
+@media (max-width: 420px) {
+    /* On very narrow screens, reduce footprint more aggressively */
+    .live-price-inside-header { max-width: calc(100% - 70px); right: 6px; }
+    .live-price-inside-header .live-price-label { display: none; } /* hide label to save space */
+    .live-price-inside-header #livePriceTimestamp { font-size: 0.82rem; }
+}
+
+/* New: left-aligned inside-header timestamp (under hamburger, centered in left column) */
+.live-price-inside-header-left {
+    position: static; /* allow it to flow inside header-left-container */
+    width: 100%;
+    text-align: center; /* center horizontally under the hamburger */
+    padding-top: 4px;
+}
+
+/* Ensure the header-left-container doesn't collapse and centers its contents */
+.header-left-container { align-items: center; }
+
+/* Splash version contrast (both top-left and bottom-right variants) */
+.app-version-splash { color: rgba(255,255,255,0.9); font-weight:600; }
+.app-version-splash-top { left: 12px; top: 12px; }
+.app-version-splash-bottomright { right: 12px; bottom: 12px; }
+
+/* Ensure splash version is visible even on dark/light backgrounds */
+.app-version-splash { color: rgba(255,255,255,0.85); }
+.app-version-splash.app-version-splash-top { left: 12px; top: 12px; }
+.header-top-row.single-dynamic-title {
+    position: relative;
+}
+
+/* Make header the positioning context for absolutely positioned children like the timestamp */
+#appHeader { position: relative; }
+
+/* Keep hamburger on top-left and above any positioned timestamp */
+#hamburgerBtn { position: relative; z-index: 80; }
+
+/* Timestamp should be positioned at bottom-right but not overlay interactive controls */
+.live-price-inside-header { z-index: 10; }
+
+/* Ensure sort controls area can wrap so the timestamp can occupy its own line
+   and appear between the header and the main content. */
+.sort-controls-container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.sort-controls-container .live-price-timestamp-container {
+    /* Force to its own row and stretch across the header width */
+    flex: 0 0 100%;
+    order: 2; /* place after primary controls within the container */
+    text-align: right; /* keep aligned to right edge; change to left if preferred */
+    padding: 6px 16px 0 16px;
+}
+
+/* Integrated ASX toggle inside the sort select wrapper */
+.sort-select-wrapper {
+    display: inline-block;
+    position: relative;
+    vertical-align: middle;
+}
+.sort-select-wrapper .dropdown-large {
+    box-sizing: border-box;
+}
+.sort-controls-container .toggle-asx-btn {
+    /* Hide the external ASX toggle button — the ASX control is now provided
+       as the first interactive option inside the sortSelect dropdown. */
+    display: none !important;
+}
+.sort-select-wrapper .toggle-asx-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(164,147,147,0.10);
+}
+.sort-select-wrapper .toggle-asx-btn:hover {
+    background: rgba(0,0,0,0.03);
+}
+/* On very small screens, hide the label and show just the chevron to save space */
+@media (max-width: 480px) {
+    .sort-select-wrapper .asx-toggle-label { display: none; }
+    .sort-select-wrapper .toggle-asx-btn { padding: 6px; }
+}
+
+@media (max-width: 600px) {
+    .sort-controls-container .live-price-timestamp-container {
+        text-align: right;
+        padding: 4px 12px 0 12px;
+    }
+}
+/* Center the discover sort bar vertically and remove label spacing */
+.discover-sort-bar-centered {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 18px 0 10px 0;
+    gap: 4px;
+    background: var(--card-bg, transparent) !important;
+    border-radius: 8px;
+    box-shadow: none;
+}
+.discover-sort-bar-centered select {
+    min-width: 140px;
+    font-size: 1em;
+}
+.discover-sort-bar-centered .discover-sort-desc {
+    margin-top: 2px;
+    font-size: 0.93em;
+    color: #aaa;
+}
+/* Add spacing above and below the context line */
+.discover-context-line-spaced {
+    display: none !important;
+}
+/* Charcoal background for 52-Week Low Alerts to match global movers */
+
+.low52-heading-white {
+    color: #fff !important;
+}
+.low52-thresh-white {
+    color: #fff !important;
+}
+
+.low52-card-muted {
+    opacity: 0.45;
+    filter: grayscale(0.7);
+}
+/* --- 52-Week Low Alerts Section (Refined) --- */
+.low52-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 18px;
+    margin-bottom: 6px;
+}
+
+/* Themed arrow icon for 52-week alert title */
+.low52-arrow-icon {
+    vertical-align: middle;
+    margin-right: 8px;
+    width: 1.15em;
+    height: 1.15em;
+    display: inline-block;
+    position: relative;
+    top: 1px;
+    /* Use CSS variable for stroke color, fallback to theme color */
+    stroke: var(--low52-color);
+    /* For SVGs, set fill to none and allow stroke to inherit */
+    fill: none;
+}
+.low52-high .low52-arrow-icon {
+    stroke: var(--high52-color);
+}
+.low52-low .low52-arrow-icon {
+    stroke: var(--low52-color);
+}
+.low52-title-text {
+    vertical-align: middle;
+    font-size:1.05rem;
+    font-weight:600;
+    margin:6px 2px 4px 2px;
+    padding:0 2px;
+    letter-spacing:0.5px;
+    background: none !important;
+    color: var(--global-summary-title-color, var(--text-color, #222)) !important;
+    box-shadow: none !important;
+}
+
+/* Mute button for 52-week low: charcoal, white, small, compact */
+.low52-mute-btn {
+    background: var(--card-bg, #fff);
+    color: var(--text-color, #222);
+    border: 1px solid var(--border-color, #e0e0e0);
+    border-radius: 6px;
+    padding: 2px 10px;
+    font-size: 0.78em;
+    font-weight: 600;
+    cursor: pointer;
+    margin-left: 10px;
+    transition: background 0.2s, color 0.2s, border 0.2s;
+    box-shadow: none;
+    min-width: 48px;
+    min-height: 22px;
+    line-height: 1.1;
+    text-align: center;
+    white-space: nowrap;
+    display: inline-block;
+}
+.low52-mute-btn:hover {
+    background: var(--button-hover-bg, #f0f0f0);
+    color: var(--button-hover-color, #111);
+    border-color: var(--border-color, #bdbdbd);
+}
+.low52-alerts-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+    margin-bottom: 12px;
+    align-items: stretch;
+    width: 100%;
+    justify-content: center;
+}
+/* 52-Week Alert Card: Themed for High/Low, matches global movers/target hit */
+.low52-alert-card {
+    border-radius: 8px;
+    padding: 10px 12px;
+    box-shadow: 0 2px 8px rgba(164,147,147,0.10);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px 0; /* Reduced gap for a tighter layout */
+    flex: 1 1 300px; /* Allow card to grow and shrink, with a preferred base width */
+    max-width: 100%; /* Prevent it from exceeding its container's width */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+    background: var(--card-bg);
+    border: 2px solid var(--border-color); /* Default border */
+    transition: box-shadow 0.18s, background 0.2s, color 0.2s, border-color 0.2s;
+    min-height: 90px; /* Ensure a minimum height for proper layout */
+    justify-content: space-between; /* This will push the threshold row to the bottom */
+}
+
+.low52-alert-card.low52-low {
+    background-color: var(--card-bg);
+    border-color: var(--brand-red); /* Themed border color */
+    color: var(--brand-red);
+}
+
+/* 52-Week High: Green theme (dynamic) */
+.low52-alert-card.low52-high {
+    background-color: var(--card-bg);
+    border-color: var(--high52-color, #1a6e1a); /* Themed border color */
+    color: var(--high52-color, #1a6e1a);
+}
+
+/* Card heading and value color overrides for contrast (dynamic) */
+.low52-alert-card.low52-low .low52-heading, .low52-alert-card.low52-low .low52-code {
+    color: var(--brand-red) !important;
+}
+.low52-alert-card.low52-high .low52-heading, .low52-alert-card.low52-high .low52-code {
+    color: var(--high52-color, #1a6e1a) !important;
+}
+
+/* Horizontal layout for 52 week low alert cards */
+.low52-horizontal {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap;
+    gap: 14px 12px;
+    align-items: stretch;
+    width: 100%;
+    margin-bottom: 12px;
+}
+.low52-card-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 2px;
+}
+
+/* Main row for 52-week low value, right-aligned */
+.low52-card-row-main {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 0;
+    margin-bottom: 2px;
+}
+
+.low52-thresh-dynamic {
+    color: var(--low52-thresh-color, #fff);
+    font-size: 0.68em;
+    font-weight: 400;
+    text-align: right;
+    margin-left: auto;
+    min-width: 110px;
+    white-space: nowrap;
+}
+
+.low52-muted-msg {
+    color: #b22222;
+    background: #fff6f6;
+    border: 1px solid #f3cccc;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin: 8px 0 12px 0;
+    text-align: center;
+    font-size: 1em;
+}
+/* --- 52-Week Low Alerts Section --- */
+.low52-heading {
+    margin-top: 6px;
+    margin-bottom: 4px;
+    font-size: 1.05rem;
+    color: var(--global-summary-title-color, var(--text-color, #222)) !important;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    background: none;
+    padding: 0 2px;
+    line-height: 1.25;
+    transition: color 0.18s;
+}
+.low52-alert-list {
+    list-style: none;
+    padding: 0 0 8px 0;
+    margin: 0 0 12px 0;
+}
+.low52-mute-btn {
+    background: var(--card-bg, #fff);
+    color: var(--text-color, #222);
+    border: 1px solid var(--border-color, #e0e0e0);
+    border-radius: 6px;
+    padding: 2px 10px;
+    font-size: 0.78em;
+    font-weight: 600;
+    cursor: pointer;
+    margin-left: 10px;
+    transition: background 0.2s, color 0.2s, border 0.2s;
+    box-shadow: none;
+    min-width: 48px;
+    min-height: 32px;
+    line-height: 1.5;
+    text-align: center;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    height: auto;
+    user-select: none;
+}
+.low52-mute-btn:hover, .low52-mute-btn:active, .low52-mute-btn:focus {
+    background: var(--button-hover-bg, #f0f0f0);
+    color: var(--button-hover-color, #111);
+    border-color: var(--border-color, #bdbdbd);
+    outline: none;
+}
+.low52-price {
+    color: #1a6e1a;
+    font-weight: 600;
+    min-width: 70px;
+}
+.low52-thresh {
+    color: var(--text-color-secondary, #888);
+    font-size: 0.68em;
+    margin-left: 6px;
+    font-weight: 400;
+}
+/* Portfolio Card Controls Row */
+.portfolio-card .pc-controls-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 18px;
+    margin-bottom: 0;
+    gap: 0;
+}
+.portfolio-card .pc-chevron-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    color: var(--icon-action-color);
+    font-size: 1.45rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    line-height: 1;
+    transition: color 0.18s;
+}
+/* Visual cue for eye button when a portfolio card is hidden from totals */
+.portfolio-card .pc-eye-btn.hidden-from-totals {
+    color: var(--ghosted-text, #9aa0a6) !important;
+    opacity: 0.75;
+}
+.portfolio-card .pc-eye-btn.hidden-from-totals .fa-eye {
+    text-decoration: line-through;
+    text-decoration-thickness: 2px;
+}
+.portfolio-card .pc-eye-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    color: var(--icon-action-color);
+    font-size: 1.45rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    line-height: 1;
+    transition: color 0.18s;
+}
+.portfolio-card .pc-eye-btn:hover,
+.portfolio-card .pc-chevron-btn:hover {
+    filter: brightness(1.2);
+}
+@media (max-width: 600px) {
+    .portfolio-card .pc-controls-row {
+        margin-top: 10px;
+    }
+    .portfolio-card .pc-chevron-btn, .portfolio-card .pc-eye-btn {
+        font-size: 1.08rem;
+    }
+}
+/* [Copilot Update] Source control helper (style.css)
+    Deploy bump marker: 2025-08-18T12:02Z (no functional change) */
+/* This comment and the function below are placeholders for automating source control actions (e.g., git add/commit)
+   and for tracking how many times files have been made available to source control from style.css.
+   Usage: Call makeFilesAvailableToSourceControlCSS() after major changes if you want to automate this. */
+
+@layer copilot-source-control {
+  :root {
+    --source-control-make-available-count: 0;
+  }
+
+/* --- Phase 1: Modern segmented toggles for Intent/Direction --- */
+/* Enhanced Watchlist Selector */
+.watchlist-enhanced-list { display:none; margin:8px 0 4px; padding:8px 10px; border:1px solid var(--border-color); border-radius:8px; background:var(--card-bg); max-height:240px; overflow-y:auto; }
+/* Ensure enhanced multi-select list matches the width of the dropdown button in the modal */
+#shareFormSection .watchlist-enhanced-list {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+.watchlist-enhanced-item { display:flex; align-items:center; justify-content:space-between; padding:6px 4px; border-bottom:1px solid var(--border-color); gap:10px; }
+.watchlist-enhanced-item:last-child { border-bottom:none; }
+.watchlist-enhanced-name { font-size:0.92rem; font-weight:500; color:var(--text-color); flex:1; }
+.watchlist-toggle { position:relative; width:44px; height:22px; cursor:pointer; }
+.watchlist-toggle input { opacity:0; width:0; height:0; position:absolute; }
+.watchlist-toggle-track { position:absolute; top:0; left:0; right:0; bottom:0; background:#c94b4b; border-radius:22px; transition:background .25s; box-shadow:inset 0 0 0 1px var(--border-color); }
+.watchlist-toggle-thumb { position:absolute; top:2px; left:3px; width:18px; height:18px; background:#fff; border-radius:50%; transition: transform .25s; box-shadow:0 1px 2px rgba(0,0,0,0.35); }
+.watchlist-toggle input:checked + .watchlist-toggle-track { background:#2e7d32; }
+.watchlist-toggle input:checked + .watchlist-toggle-track .watchlist-toggle-thumb { transform: translateX(20px); }
+.watchlist-enhanced-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:6px; }
+.watchlist-enhanced-actions button { padding:6px 12px; font-size:0.8rem; border-radius:6px; cursor:pointer; border:1px solid var(--border-color); background:var(--button-bg); color:var(--button-text); }
+.watchlist-enhanced-actions button.secondary { background:var(--card-bg); color:var(--text-color); }
+.watchlist-enhanced-actions button:hover { background:var(--button-hover-bg); }
+.autofill-pulse { animation: autofillPulse 0.9s ease-in-out 1; position:relative; }
+@keyframes autofillPulse { 0% { box-shadow:0 0 0 0 var(--accent-color,#a49393);} 60% { box-shadow:0 0 0 6px rgba(164,147,147,0);} 100% { box-shadow:0 0 0 0 rgba(164,147,147,0);} }
+.toggle-row { display:flex; gap:10px; align-items:center; margin: 6px 0 10px; }
+.segmented-toggle { display:inline-flex; border:1px solid var(--border-color, #d0d0d0); border-radius:10px; overflow:hidden; background:var(--card-bg,#fff); }
+.segmented-toggle .toggle-segment { padding:8px 14px; border:none; background:transparent; color:var(--text-color,#222); font-weight:600; cursor:pointer; transition: background .18s, color .18s, box-shadow .18s; }
+.segmented-toggle .toggle-segment + .toggle-segment { border-left:1px solid var(--border-color, #d0d0d0); }
+.segmented-toggle .toggle-segment.is-active { background:var(--accent-color,#a49393); color:#fff; box-shadow: inset 0 0 0 999px rgba(255,255,255,0.05); }
+.intent-toggle .toggle-segment.buy.is-active { background: var(--green-color, #2e7d32); }
+.intent-toggle .toggle-segment.sell.is-active { background: var(--red-color, #c62828); }
+.direction-toggle .toggle-segment.above.is-active { background: var(--green-color, #2e7d32); }
+.direction-toggle .toggle-segment.below.is-active { background: var(--red-color, #c62828); }
+@media (hover:hover) {
+    .segmented-toggle .toggle-segment:hover { background: var(--hover-bg,#f5f7fa); }
+}
+    
+    /* Unified modal action icon sizing (all modals) */
+    #shareFormSection .modal-action-icon, #shareFormSection .close-button,
+    #shareDetailModal .modal-action-icon, #shareDetailModal .close-button,
+    #addWatchlistModal .modal-action-icon, #addWatchlistModal .modal-header-with-icon .close-button,
+    #manageWatchlistModal .modal-action-icon, #manageWatchlistModal .modal-header-with-icon .close-button,
+    #watchlistViewModal .modal-action-icon, #watchlistViewModal .close-button,
+    #alertsModal .modal-action-icon, #alertsModal .close-button,
+    .modal-container .modal-action-icon, .modal-container .close-button {
+        font-size:1.9rem !important;
+        width:54px !important;
+        height:54px !important;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        padding:0 !important;
+    }
+
+/* Ensure the enhanced watchlist dropdown button is visible and spans full-width like other inputs */
+#shareFormSection #shareWatchlistDropdownBtn {
+    display: block !important;
+    width: 100% !important; /* match full width of form inputs */
+    max-width: 100% !important;
+    margin: 8px 0 6px 0 !important;
+    box-sizing: border-box !important;
+}
+
+/* The legacy native select was removed from the DOM; keep a defensive rule in case it's present */
+#shareFormSection #shareWatchlistSelect {
+    display: none !important;
+}
+
+/* Keep other dropdown-like inputs consistent but allow the enhanced control to occupy full width */
+#shareFormSection .dropdown-large,
+#shareFormSection select,
+#shareFormSection #shareRating {
+    display: block !important;
+    width: auto !important; /* let container control sizing for these elements */
+    max-width: 420px !important; /* keep inputs centered and consistent */
+    margin-left: auto !important;
+    margin-right: auto !important;
+    box-sizing: border-box !important;
+}
+
+/* On very small screens, let the dropdowns use full available width */
+@media (max-width: 480px) {
+    #shareFormSection .dropdown-large,
+    #shareFormSection select,
+    #shareFormSection #shareRating,
+    #shareFormSection #shareWatchlistSelect,
+    #shareFormSection #shareWatchlistDropdownBtn {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+}
+
+/* Mobile-only refinement: reduce Add/Edit Share modal icons to match other modal visual scale on small screens */
+@media (max-width: 640px) {
+    #shareFormSection .modal-action-icon, #shareFormSection .close-button {
+        font-size:1.55rem !important;
+        width:46px !important;
+        height:46px !important;
+    }
+}
+
+/* Single-container modal: ensure the modal content itself scrolls as one block (improves mobile keyboard/scroll behavior) */
+.single-scroll-modal {
+    max-height: calc(100vh - 80px); /* Leave room for header and safe area */
+    overflow-y: auto; /* Single scrolling container */
+    -webkit-overflow-scrolling: touch; /* Smooth native scrolling on iOS */
+    padding: 18px 18px 24px; /* Ensure comfortable padding inside modal */
+    box-sizing: border-box;
+}
+
+/* Ensure internal accordions don't create independent scroll zones */
+.single-scroll-modal .accordion { max-height: none; }
+.single-scroll-modal .accordion-panel { max-height: none; padding: 0; }
+.single-scroll-modal .accordion-toggle { padding: 12px 8px; }
+
+/* Small viewport tweak: reduce modal top margin and padding to fit mobile screens */
+@media (max-width: 640px) {
+    .single-scroll-modal { max-height: calc(100vh - 48px); padding: 12px; }
+}
+
+/* Keep modal header fixed inside a single-scroll-modal so title/action row doesn't scroll under content */
+.single-scroll-modal .modal-header-with-icon {
+    position: -webkit-sticky; /* Safari/iOS */
+    position: sticky;
+    top: 0;
+    z-index: 6; /* Sit above modal body content but below any modal chrome */
+    background: var(--modal-content-bg, #fff);
+    /* Match modal horizontal padding so header spans full modal width visually */
+    margin-left: -18px;
+    margin-right: -18px;
+    padding: 12px 18px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+}
+
+/* Ensure the header's bottom gap doesn't overlap the content when sticky */
+.single-scroll-modal .modal-header-with-icon + * {
+    margin-top: 8px;
+}
+
+/* Utility: hide visually but keep accessible to screen readers */
+.visually-hidden { position:absolute !important; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+/* Helper function for source control in style.css (for documentation only, not executable in CSS) */
+/*
+let sourceControlMakeAvailableCountCSS = 0;
+function makeFilesAvailableToSourceControlCSS() {
+    sourceControlMakeAvailableCountCSS++;
+    // To actually add to git, run: git init; git add .; git commit -m "Initial commit"
+    // This is a placeholder for future automation or extension integration.
+    alert('CSS files are ready for source control. (Count: ' + sourceControlMakeAvailableCountCSS + ')');
+}
+*/
+/* End Copilot source control helper (style.css) */
+/* === Alert Target Inline Display === */
+.alert-target-cell, .alert-target-line { white-space: nowrap; font-weight:600; font-size:0.9rem; }
+.alert-target-intent { display:inline-block; min-width:1ch; text-align:center; }
+.alert-target-arrow { font-size:0.85rem; font-weight:700; }
+.alert-target-arrow.up { color: var(--brand-green,#008000); }
+.alert-target-arrow.down { color: var(--brand-red,#c42131); }
+
+/* Enhanced styling for Alert Target on mobile cards */
+.mobile-card .alert-target-row {
+    font-weight: 500;
+    font-size: 0.95em;
+    justify-content: space-between; /* Ensure label and value are spaced */
+}
+
+.mobile-card .alert-target-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    padding: 0.25em 0.6em;
+    border-radius: var(--border-radius);
+    background-color: var(--button-bg);
+    color: var(--button-text);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.alert-target-intent {
+    font-weight: 700;
+    font-size: 0.9em;
+    margin-right: 0.2em;
+}
+.mobile-share-cards .mobile-card .alert-target-arrow.up { color: var(--brand-green,#008000) !important; }
+.mobile-share-cards .mobile-card .alert-target-arrow.down { color: var(--brand-red,#c42131) !important; }
+.alert-target-price { font-weight:600; }
+.asx-code-buttons-scroll { max-height:220px; overflow-y:auto; position:relative; }
+.asx-code-buttons-scroll::-webkit-scrollbar { width:6px; }
+.asx-code-buttons-scroll::-webkit-scrollbar-track { background:transparent; }
+.asx-code-buttons-scroll::-webkit-scrollbar-thumb { background:rgba(0,0,0,0.25); border-radius:3px; }
+@media (max-width:640px){ .alert-target-cell { font-size:0.8rem; } }
+/* Mobile card specific container */
+.alert-target-row { margin:0; padding:0.1rem 0 0.2rem 0; }
+.alert-target-row .alert-target-inline { display:inline-flex; align-items:center; gap:0.3rem; }
+/* Ensure alert target row label/value alignment matches other data rows */
+.mobile-card p.data-row.alert-target-row { display:flex; justify-content:space-between; align-items:baseline; }
+.mobile-card p.data-row.alert-target-row .label-text { font-weight:600; color: var(--label-color); }
+.mobile-card p.data-row.alert-target-row .data-value { font-weight:700; text-align:right; }
+
+/* --- Modern Responsive Controls Row & Dropdowns --- */
+
+
+/* --- Portfolio Overhaul (Updated) --- */
+.portfolio-section {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 8px 32px 8px;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+/* --- Portfolio Summary Bar: Fixed 3+2 Grid Layout for Desktop --- */
+/* --- Portfolio Summary Bar: Fixed 4+1 Grid Layout for Desktop --- */
+.portfolio-summary-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: auto auto;
+    gap: 20px 18px;
+    margin: 0 0 32px 0;
+    align-items: stretch;
+    justify-items: stretch;
+}
+.portfolio-summary-bar .summary-card:nth-child(1) {
+    grid-column: 1;
+    grid-row: 1;
+}
+.portfolio-summary-bar .summary-card:nth-child(2) {
+    grid-column: 2;
+    grid-row: 1;
+}
+.portfolio-summary-bar .summary-card:nth-child(3) {
+    grid-column: 3;
+    grid-row: 1;
+}
+.portfolio-summary-bar .summary-card:nth-child(4) {
+    grid-column: 4;
+    grid-row: 1;
+}
+.portfolio-summary-bar .summary-card:nth-child(5) {
+    grid-column: 1 / 5;
+    grid-row: 2;
+}
+/* Portfolio summary cards: portfolio view only, dynamic border */
+.portfolio-summary-bar .summary-card {
+    background: var(--card-bg);
+    border-radius: 14px;
+    box-shadow: none;
+    padding: 24px 32px 18px 32px;
+    min-width: 210px;
+    flex: 1 1 210px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    font-size: 1.45rem;
+    border-width: 8px;
+    border-style: solid;
+    border-color: var(--border-color);
+    text-align: center;
+    transition: border-color 0.18s;
+}
+.portfolio-summary-bar .summary-card.positive {
+    border-color: var(--price-up-color) !important;
+}
+.portfolio-summary-bar .summary-card.negative {
+    border-color: var(--price-down-color) !important;
+}
+.portfolio-summary-bar .summary-card.neutral {
+    border-color: var(--accent-color, #a49393) !important;
+}
+.portfolio-summary-bar .summary-label {
+        font-size: 1.13rem;
+        color: var(--label-color);
+        font-weight: 500;
+        margin-bottom: 6px;
+        text-align: center;
+}
+
+/* Make Total Return and Day Change labels more visible in light theme */
+@media (prefers-color-scheme: light) {
+    .portfolio-summary-bar .summary-card:nth-child(3) .summary-label,
+    .portfolio-summary-bar .summary-card:nth-child(4) .summary-label {
+        color: #222 !important;
+        font-weight: 600;
+    }
+}
+.portfolio-summary-bar .summary-value {
+    font-size: 1.85rem;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    color: var(--text-color);
+    text-align: center;
+}
+.portfolio-summary-bar .summary-value.positive { color: var(--price-up-color); }
+.portfolio-summary-bar .summary-value.negative { color: var(--price-down-color); }
+.portfolio-summary-bar .summary-pct {
+    font-size: 1.18rem;
+    font-weight: 600;
+    margin-left: 8px;
+}
+.portfolio-summary-bar .summary-pct.positive { color: var(--price-up-color); }
+.portfolio-summary-bar .summary-pct.negative { color: var(--price-down-color); }
+
+@media (max-width: 900px) {
+    .portfolio-summary-bar {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto auto auto;
+        gap: 12px 8px;
+        margin-bottom: 12px;
+    }
+    .portfolio-summary-bar .summary-card { min-width: 0; padding: 16px 10px 10px 10px; font-size: 1.18rem; }
+    .portfolio-summary-bar .summary-card:nth-child(1) { grid-column: 1 / 3; grid-row: 1; }
+    .portfolio-summary-bar .summary-card:nth-child(2) { grid-column: 1; grid-row: 2; }
+    .portfolio-summary-bar .summary-card:nth-child(3) { grid-column: 2; grid-row: 2; }
+    .portfolio-summary-bar .summary-card:nth-child(4) { grid-column: 1; grid-row: 3; }
+    .portfolio-summary-bar .summary-card:nth-child(5) { grid-column: 2; grid-row: 3; }
+}
+@media (max-width: 600px) {
+    .portfolio-summary-bar {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto auto auto;
+        gap: 8px 8px;
+        margin-bottom: 12px;
+    }
+    .portfolio-summary-bar .summary-card {
+        min-width: 0;
+        width: 100%;
+        font-size: 1.02rem;
+        padding: 10px 6px 8px 6px;
+        border-radius: 10px;
+    }
+    .portfolio-summary-bar .summary-card:nth-child(1) { grid-column: 1 / 3; grid-row: 1; font-size: 1.13rem; padding: 14px 8px 10px 8px; }
+    .portfolio-summary-bar .summary-card:nth-child(2) { grid-column: 1; grid-row: 2; }
+    .portfolio-summary-bar .summary-card:nth-child(3) { grid-column: 2; grid-row: 2; }
+    .portfolio-summary-bar .summary-card:nth-child(4) { grid-column: 1; grid-row: 3; }
+    .portfolio-summary-bar .summary-card:nth-child(5) { grid-column: 2; grid-row: 3; }
+    .portfolio-summary-bar .summary-label {
+        font-size: 0.92rem;
+        margin-bottom: 2px;
+    }
+    .portfolio-summary-bar .summary-value {
+        font-size: 1.18rem;
+    }
+    .portfolio-summary-bar .summary-pct {
+        font-size: 0.95rem;
+        margin-left: 4px;
+    }
+}
+
+.portfolio-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+    gap: 36px 28px;
+    width: 100%;
+    margin: 0 auto;
+    box-sizing: border-box;
+}
+@media (max-width: 600px) {
+    .portfolio-cards-grid { grid-template-columns: 1fr; gap: 22px 0; }
+}
+
+
+.portfolio-card {
+    background: var(--card-bg);
+    border-radius: 22px;
+    box-shadow: none;
+    padding: 22px 22px 16px 22px;
+    font-size: 1.45rem;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    transition: box-shadow 0.18s, border-color 0.18s;
+    position: relative;
+    min-height: 140px;
+    /* Always reserve border space for layout, default transparent */
+    border: 8px solid transparent;
+}
+/* Portfolio holding cards: portfolio view only, dynamic border */
+.portfolio-cards-grid .portfolio-card {
+    border-width: 4px !important; /* DEBUG: visually confirm border update */
+    border-style: solid !important;
+    border-color: var(--border-color, #c9d2d4) !important;
+    box-shadow: none !important;
+    transition: border-color 0.18s;
+}
+.portfolio-cards-grid .portfolio-card.positive {
+    border-color: #008000 !important; /* TEST: hardcoded brand green */
+    border-width: 4px !important;
+    border-style: solid !important;
+    box-shadow: none !important;
+}
+
+.portfolio-cards-grid .portfolio-card.negative {
+    border-color: #c42131 !important; /* TEST: hardcoded brand red */
+    border-width: 4px !important;
+    border-style: solid !important;
+    box-shadow: none !important;
+}
+
+/* Only one neutral rule, with correct coffee color and high specificity */
+.portfolio-cards-grid .portfolio-card.neutral {
+    border-color: #a49393 !important;
+    border-width: 4px !important;
+    border-style: solid !important;
+    box-shadow: 0 0 0 2px #b0896833 !important;
+    z-index: 2;
+}
+.portfolio-card.expanded { box-shadow: none; }
+.portfolio-card .pc-main-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto; /* code | live price (fluid) | value */
+    align-items: center; /* vertically center the live price */
+    gap: 12px;
+    font-size: 1.65rem;
+    font-weight: 700;
+    margin-bottom: 0;
+    width: 100%;
+}
+.portfolio-card .pc-code {
+    color: var(--text-color);
+    font-size: 1.65rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    justify-self: start;
+}
+.portfolio-card .pc-live-price {
+    justify-self: center;
+    text-align: center;
+    font-size: 1.95rem; /* prominent center price */
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    color: var(--text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 86px;
+}
+.portfolio-card .pc-value {
+    color: var(--text-color);
+    font-size: 1.18rem;
+    font-weight: 600;
+    justify-self: end;
+    text-align: right;
+}
+.portfolio-card .pc-metrics-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2em;
+    margin-top: 0.5em;
+    font-size: 1.13rem;
+}
+.portfolio-card .pc-metric-line {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin: 0 0 2px 0;
+}
+/* Portfolio card label styling (color set by theme below) */
+/* Portfolio card label styling (color set by theme below) */
+.portfolio-card .pc-label {
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    text-align: left;
+    font-size: 1.08rem;
+    color: var(--label-color);
+}
+/* Portfolio card value (Total Return, Day Change): match row title size, dynamic theme */
+.portfolio-card .pc-val {
+    font-weight: 700;
+    min-width: 80px;
+    text-align: right;
+    letter-spacing: 0.01em;
+    margin-left: 1em;
+    font-size: 1.08rem;
+    color: var(--text-color);
+    transition: color 0.18s;
+}
+/* Portfolio card percent styling (color set by theme below) */
+/* Portfolio card percent styling (color set by theme below) */
+/* Portfolio card percent (Total Return, Day Change): match label size, dynamic theme */
+.portfolio-card .pc-pct {
+    font-size: 1.08rem;
+    font-weight: 600;
+    margin-left: 8px;
+    color: var(--label-color);
+    transition: color 0.18s;
+}
+/* Force correct label color for portfolio cards in light/dark mode */
+
+.portfolio-card .pc-chevron-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    color: var(--icon-action-color);
+    font-size: 1.45rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    line-height: 1;
+    transition: color 0.18s;
+}
+.portfolio-card .pc-chevron-btn.positive { color: var(--price-up-color); }
+.portfolio-card .pc-chevron-btn.negative { color: var(--price-down-color); }
+.portfolio-card .pc-chevron-btn.neutral { color: #fff; }
+.portfolio-card .pc-chevron-btn:hover { filter: brightness(1.2); }
+.portfolio-card .chevron {
+    font-size: 1.45rem;
+    transition: transform 0.18s;
+    display: inline-block;
+}
+.portfolio-card.expanded .chevron { transform: rotate(180deg); }
+.portfolio-card .pc-details {
+    display: none;
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1.5px solid var(--border-color);
+    font-size: 1.18rem;
+    animation: expandDetails 0.28s cubic-bezier(.4,1.4,.6,1) both;
+}
+.portfolio-card.expanded .pc-details { display: block; }
+@keyframes expandDetails {
+    0% { opacity: 0; transform: translateY(-12px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+.portfolio-card .pc-detail-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    color: var(--text-color);
+}
+.portfolio-card .pc-detail-row span:first-child {
+    color: var(--label-color);
+    font-weight: 500;
+}
+.portfolio-card .pc-detail-row span:last-child {
+    font-weight: 600;
+}
+/* pc-shortcut-btn removed: dropdown shortcut icon deleted per UI cleanup */
+
+@media (max-width: 600px) {
+    .portfolio-card { padding: 12px 4px 10px 4px; font-size: 1.08rem; min-height: 90px; }
+    /* Stack the top row on small screens for readability */
+    .portfolio-card .pc-main-row { grid-template-columns: 1fr; gap: 6px; }
+    .portfolio-card .pc-main-row, .portfolio-card .pc-code { font-size: 1.13rem; }
+    .portfolio-card .pc-live-price { font-size: 1.25rem; font-weight: 700; }
+    .portfolio-card .pc-value { font-size: 1.02rem; }
+    .portfolio-card .pc-metrics-row { font-size: 0.98rem; gap: 6px 0; }
+    .portfolio-card .pc-details { font-size: 0.95rem; }
+    /* pc-shortcut-btn removed on small screens */
+}
+
+/* Accordion logic: only one expanded at a time (handled in JS, but style for expanded) */
+
+/* --- End Portfolio Overhaul (Updated) --- */
+/* Modern, balanced controls row: equal width, responsive, all on one line */
+.controls-flex-row.no-gap {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 420px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 0;
+  margin-bottom: 0.5em;
+  flex-wrap: wrap; /* Allow wrapping on smaller screens */
+  position: relative;
+}
+.controls-flex-row.no-gap > * {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.dropdown-large {
+    font-size: 1.08rem;
+    padding: 7px 10px;
+    margin-bottom: 0;
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 70px;
+    max-width: 220px;
+    border-radius: 0;
+    border: 1px solid #ccc;
+    background: #fff;
+    transition: border-color 0.2s;
+    text-align: left;
+}
+
+.dropdown-large option {
+    text-align: left;
+}
+
+/* Force selects inside the Add/Edit Share modal to span the full width of the modal content.
+   This overrides the general .dropdown-large max-width so inputs inside the modal match other fields. */
+#shareFormSection .dropdown-large,
+#shareFormSection select,
+#shareFormSection .modal-content .dropdown-large,
+#shareFormSection .modal-content select {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    text-align: left !important;
+}
+
+/* Target known selects explicitly for extra specificity */
+#shareFormSection #shareRating,
+#shareFormSection #shareWatchlistSelect {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    display: block !important;
+}
+.dropdown-large.left-rounded {
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+  border-right: none;
+}
+.dropdown-large.right-rounded {
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+  margin-left: 0;
+}
+    .pc-details-btn:hover { color: var(--icon-action-hover-color); }
+    .controls-flex-row.no-gap {
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        align-items: stretch;
+        justify-content: center;
+        gap: 6px 6px;
+        width: 100%;
+        max-width: 500px;
+        margin: 4px auto 6px auto;
+        padding: 0 8px;
+    }
+    .controls-flex-row.no-gap > select.dropdown-large {
+        flex:1 1 calc(50% - 6px);
+        max-width: calc(50% - 6px);
+        text-align:center;
+    }
+    .dropdown-large { font-size:0.95rem; padding:6px 8px; }
+    .toggle-asx-buttons-group { order:3; flex:0 0 100%; display:flex; justify-content:center; margin:2px 0 0 0; }
+}
+/* --- End Modern Responsive Controls Row & Dropdowns --- */
+@media (min-width: 769px) {
+  .toggle-asx-buttons-group {
+    display: none !important;
+  }
 }
 #modalCommSecLink {
     margin-bottom: 0 !important;
@@ -10,12 +1309,15 @@
     /* Light Theme (Default) */
     --background-color: #eef2f3;
     --text-color: #333;
-    --header-bg: #d9e2f4;
-    --card-bg: #ffffff;
+    /* Header adopts coffee tone for default theme */
+    --header-bg: #b8a7a7; /* slightly lighter coffee bar */
+    --card-bg: #ffffff; /* Base card background for light theme (ensures P/L cards follow theme) */
+    --accent-color: #a49393; /* coffee accent (standardized selection fill) */
     --border-color: #c9d2d4;
-    --button-bg: #007bff;
+    /* Standardized coffee palette replacing previous blue */
+    --button-bg: #a49393;
     --button-text: #fff;
-    --button-hover-bg: #0056b3;
+    --button-hover-bg: #8d7f7f;
     --input-bg: #fff;
     --input-border: #b0b8bb;
     --input-placeholder-color: #6c757d;
@@ -26,55 +1328,67 @@
     --asx-button-bg: #e2e8ea;
     --asx-button-hover-bg: #d0d7d9;
     --asx-button-text: #333;
-    --asx-button-active-bg: #007bff;
+    --asx-button-active-bg: #a49393;
     --asx-button-active-text: #fff;
-    --success-color: #28a745;
-    --danger-color: #dc3545;
+    /* Brand palette and mappings */
+    --brand-green: #008000;
+    --brand-red: #c42131;
+    --accent-color: #a49393;
+    --success-color: var(--brand-green);
+    --danger-color: var(--brand-red);
     --warning-color: #ffc107;
     --info-color: #17a2b8;
-    --link-color: #007bff;
-    --link-hover-color: #0056b3;
+    --link-color: #a49393;
+    --link-hover-color: #8d7f7f;
     --sidebar-bg: #f8f9fa;
     --sidebar-text: #333;
     --sidebar-border: #c9d2d4;
     --menu-button-bg: transparent;
     --menu-button-hover-bg: #e9ecef;
-    --menu-button-active-bg: #007bff;
+    --menu-button-active-bg: #a49393;
     --menu-button-active-text: #fff;
     --placeholder-text: #6c757d;
     --ghosted-text: #888;
-    --danger-button-bg: #dc3545;
-    --danger-button-hover-bg: #c82333;
+    --danger-button-bg: var(--brand-red);
+    --danger-button-hover-bg: var(--brand-red);
     --secondary-button-bg: #6c757d;
     --secondary-button-hover-bg: #545b62;
-    --google-auth-btn-bg: #FFFFFF;
-    --google-auth-btn-hover-bg: #F0F0F0;
+    --google-auth-btn-bg: var(--button-bg, #a49393);
+    --google-auth-btn-hover-bg: var(--button-hover-bg, #8d7f7f);
     --google-auth-btn-text: #4285F4;
     --label-color: #555;
     --shadow-color: rgba(0, 0, 0, 0.15);
     --sidebar-width: 280px;
     --close-sidebar-btn-color: #666;
-    --icon-action-color: #007bff;
-    --icon-action-hover-color: #0056b3;
-    --icon-danger-color: #dc3545;
-    --icon-danger-hover-color: #c82333;
+    /* Icon/button colors tuned to coffee accent */
+    --icon-action-color: var(--accent-color);
+    --icon-action-hover-color: #8a7f7f; /* slightly darker coffee */
+    --icon-danger-color: var(--brand-red);
+    --icon-danger-hover-color: var(--brand-red);
     --calc-num-btn-bg: #f0f0f0;
     --calc-num-btn-text: #333;
     --calc-num-btn-hover-bg: #e0e0e0;
-    --price-up-color: #28a745;
-    --price-down-color: #dc3545;
+    --price-up-color: var(--brand-green);
+    --price-down-color: var(--brand-red);
     --price-neutral-color: #6c757d;
-    --live-price-section-bg: rgba(0, 123, 255, 0.05); /* Subtle blue tint */
-    --live-price-positive-bg: rgba(40, 167, 69, 0.1); /* Faint green */
-    --live-price-negative-bg: rgba(220, 53, 69, 0.1); /* Faint red */
+    --live-price-section-bg: transparent; /* Removed blue tint */
+    --live-price-positive-bg: rgba(46, 204, 113, 0.12); /* Restored subtle green */
+    --live-price-negative-bg: rgba(231, 76, 60, 0.12); /* Restored subtle red */
+    --live-price-neutral-bg: rgba(164, 147, 147, 0.10); /* Muted coffee for unchanged */
+    /* Strengthened movement background hues for visibility parity */
+    --watch-bg-positive: rgba(46,204,113,0.17); /* Emerald tint stronger */
+    --watch-bg-negative: rgba(231,76,60,0.17);  /* Alizarin tint (unchanged intensity reference) */
+    --watch-bg-neutral: rgba(164,147,147,0.17); /* Coffee tint stronger */
+    --target-hit-border-color: var(--accent-color); /* Coffee hue border */
+    --target-hit-border-width: 4px; /* Unified thickness */
+    --target-hit-border-radius: 10px; /* New: rounded corners for pulsing border */
     --comment-title-bg: rgba(0, 0, 0, 0.05); /* Subtle background for comment titles */
-    --target-alert-bg: #e0f7fa; /* Light blue for target hit alert */
-    --target-alert-text: #0056b3; /* Darker blue for target hit text */
-    --target-alert-border: #007bff;
+    /* Removed obsolete target-alert * styling (replaced by unified border + movement hue) */
     --target-banner-height: 40px; /* This variable is now effectively unused for the banner, but kept for other potential uses */
-    ---green-color: #28a745; /* Standard green for general use */
-    --green-color-dark: #218838; /* Darker green for hover states */
-    --green-color-dark-rgb: 33, 136, 56; /* RGB for #218838 for pulsing effect */
+    /* General green used in components */
+    --green-color: var(--brand-green);
+    --green-color-dark: var(--brand-green);
+    --green-color-dark-rgb: 46, 204, 113; /* RGB for #2ECC71 for pulsing effect */
     /* NEW: Alert System Colors */
     --alert-icon-bg: #dc3545; /* Red for the chat box icon */
     --alert-icon-text: #fff;
@@ -83,35 +1397,401 @@
     --alert-panel-border: #c9d2d4;
     --alert-item-bg: #ffffff;
     --alert-item-hover-bg: #f0f4f5;
-    --alert-dismiss-btn-color: #28a745; /* Green for dismiss */
+    --alert-dismiss-btn-color: var(--brand-green); /* Green for dismiss */
     --alert-snooze-btn-color: #17a2b8; /* Info blue for snooze */
     --snooze-options-bg: #ffffff;
     --snooze-options-border: #b0b8bb;
+
+    /* 52-Week Low Alert Theme Variables */
+    --low52-thresh-color: #fff;
+    --low52-bg: rgba(178, 34, 34, 0.1);
+    --high52-bg: rgba(26, 110, 26, 0.1);
+    --low52-color: var(--brand-red);
+    --high52-color: var(--brand-green);
 
     /* UPDATED: Cash & Assets Section Colors */
     --cash-section-bg: #f8f9fa;
     --cash-card-bg: #ffffff;
     --cash-border-color: #c9d2d4;
-    --cash-total-bg: #e0f7fa;
-    --cash-total-text: #0056b3;
-    --cash-button-bg: #28a745; /* Green for add */
-    --cash-button-hover-bg: #218838;
-    --cash-primary-button-bg: #007bff; /* Blue for save */
-    --cash-primary-button-hover-bg: #0056b3;
+    --cash-total-bg: #a49393; /* standardized coffee fill */
+    --cash-total-text: #ffffff; /* maintain contrast over coffee fill */
+    --cash-button-bg: var(--brand-green); /* Green for add */
+    --cash-button-hover-bg: var(--brand-green);
+    --cash-primary-button-bg: #a49393; /* Coffee tone for save */
+    --cash-primary-button-hover-bg: #8d7f7f;
     --cash-delete-icon-color: #dc3545;
-    --cash-edit-icon-color: #007bff;
+    --cash-edit-icon-color: #a49393;
 }
+
+
+/* Market status banner */
+.market-status-banner {
+    width: 100%;
+    padding: 6px 10px;
+    font-size: 0.95rem;
+    color: var(--ghosted-text);
+    border-top: 1px solid var(--border-color, #c9d2d4);
+    background: var(--app-bg, #fff);
+}
+
+/* === Refined Movement & Target-Hit Styling (Corrected) === */
+/* Standard Movement: 4px side borders for all views */
+.positive-change-row, .positive-change-card { border-left: 4px solid var(--brand-green); border-right: 4px solid var(--brand-green); }
+.negative-change-row, .negative-change-card { border-left: 4px solid var(--brand-red); border-right: 4px solid var(--brand-red); }
+.neutral-change-row, .neutral-change-card { border-left: 4px solid var(--accent-color); border-right: 4px solid var(--accent-color); }
+
+/* Movement backgrounds (Light mode) - Increased specificity to ensure override */
+body table tbody tr.positive-change-row, #mobileShareCards .mobile-card.positive-change-card { background-color: var(--watch-bg-positive) !important; }
+body table tbody tr.negative-change-row, #mobileShareCards .mobile-card.negative-change-card { background-color: var(--watch-bg-negative) !important; }
+body table tbody tr.neutral-change-row, #mobileShareCards .mobile-card.neutral-change-card { background-color: var(--watch-bg-neutral) !important; }
+
+/* Target-Hit Override: Full 4px rounded border with pulse */
+@keyframes targetHitPulseBorder {
+    0% { box-shadow: 0 0 0 0 var(--accent-color); }
+    50% { box-shadow: 0 0 0 6px rgba(164, 147, 147, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(164, 147, 147, 0); }
+}
+/* Final Spec: Desktop table rows with .target-hit-alert DO NOT get full border.
+    Only mobile cards retain full pulsing border.
+    Desktop uses a subtle pulsing dot indicator inserted before the code. */
+/* Desktop pulsing dot indicator */
+.target-hit-dot { display:inline-block; width:10px; height:10px; border-radius:50%; background:#a49393; margin-right:6px; position:relative; top:1px; animation: targetHitDotPulse 2s ease-in-out infinite; }
+@keyframes targetHitDotPulse { 0%{ transform:scale(.8); opacity:.55;} 50%{ transform:scale(1.25); opacity:1;} 100%{ transform:scale(.8); opacity:.55;} }
+
+/* Pulsing Notification Icon */
+#targetHitIconBtn.has-alerts {
+    animation: targetHitPulseBorder 2.86s ease-in-out infinite;
+    border-radius: 50%; /* Ensure the pulse follows the button's shape */
+    box-shadow: 0 0 0 0 rgba(164,147,147,0.6);
+    /* Slowed pulse: 2.86s is 30% slower than 2.2s */
+    /* Only one animation property needed */
+}
+
+@keyframes targetHitPulseBorder {
+    0% { box-shadow:0 0 0 0 rgba(164,147,147,0.6); }
+    70% { box-shadow:0 0 0 8px rgba(164,147,147,0); }
+    100% { box-shadow:0 0 0 0 rgba(164,147,147,0); }
+}
+
+/* Global summary alert item styling */
+/* Global summary alert unified card styling */
+.global-summary-alert.target-hit-item {
+    background-color: var(--card-bg, #fff) !important;
+    border: 1px solid var(--border-color, #333);
+    border-radius: 8px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 8px 18px;
+}
+.global-summary-alert.target-hit-item:hover { background: var(--panel-bg-hover, rgba(255,255,255,0.08)); }
+.global-summary-alert .share-name-code { font-weight: 600; }
+.global-summary-alert .global-summary-inner { display:flex; flex-direction:column; gap:4px; }
+.global-summary-alert .global-summary-title { font-weight:700; font-size:1.25rem; letter-spacing:.5px; }
+.global-summary-alert .global-summary-detail { font-size:0.88rem; line-height:1.35; opacity:0.95; }
+.global-summary-alert .global-summary-detail.portfolio-line, .global-summary-alert .global-summary-detail.others-line { margin-top:2px; }
+.global-summary-alert .global-summary-arrows-row {
+    display: flex;
+    justify-content: center;
+    align-items: baseline; /* Better for text/icon alignment */
+    gap: 1.5rem;
+    margin-bottom: 0.75rem;
+    font-size: 1.4rem; /* Unified size */
+}
+
+.global-summary-arrows-row .up,
+.global-summary-arrows-row .down {
+    color: var(--price-up-color);
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+}
+
+.global-summary-arrows-row .down {
+    color: var(--price-down-color);
+}
+/* Right column action stack */
+.global-summary-alert .global-summary-actions { display:flex; flex-direction:column; gap:6px; align-items:flex-end; justify-content:flex-start; margin-top:auto; }
+/* Substantial action buttons */
+.global-summary-alert .global-summary-actions button[data-action="view-portfolio"],
+.global-summary-alert .global-summary-actions button[data-action="discover"],
+.global-summary-alert .global-summary-actions button[data-action="mute-global"] { 
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    font-size:0.72rem;
+    padding:6px 12px;
+    border-radius:6px;
+    cursor:pointer;
+    line-height:1.1;
+    font-weight:600;
+    min-width:95px;
+    text-align:center;
+    backdrop-filter: blur(2px);
+}
+.global-summary-alert .global-summary-actions button[data-action="view-portfolio"]:hover,
+.global-summary-alert .global-summary-actions button[data-action="discover"]:hover,
+.global-summary-alert .global-summary-actions button[data-action="mute-global"]:hover { background: var(--button-hover-bg); color:#fff; }
+.global-summary-alert .global-summary-actions button[disabled] { opacity:0.35; cursor:default; }
+/* Mute button matches tiny-toggle style */
+/* arrow size */
+.global-summary-alert .global-summary-arrows-row .arrow {
+    font-size: 1em; /* Same size as number */
+    line-height: 1;
+    margin-right: 0.1em;
+}
+/* Increase the font size of the count next to chevron arrows in global movers */
+.global-summary-arrows-row .arrow-count {
+    font-weight: 600;
+}
+/* #globalMoversTitle ordering override removed to respect DOM sequence (was order:-1 previously) */
+.global-summary-alert .global-summary-detail.ignoring-line { font-size:0.65rem !important; opacity:0.55; letter-spacing:0.35px; text-transform:uppercase; font-weight:500; }
+/* Force Global movers heading to top of its flex container only */
+/* Inline title variant (inside card) */
+.global-movers-inline-title { margin:2px 2px 4px 2px; font-size:1.0rem; }
+
+/* Layout adjustment: container becomes flex to push actions to bottom */
+.global-summary-alert.target-hit-item { display:flex; flex-direction:row; }
+.global-summary-alert.target-hit-item > .global-summary-inner { flex:1 1 auto; }
+.global-summary-alert.target-hit-item > .global-summary-actions { flex:0 0 auto; }
+
+/* External heading styling */
+.global-movers-heading { font-size:1.05rem; font-weight:600; margin:6px 2px 4px 2px; padding:0 2px; letter-spacing:0.5px; }
+/* New unified header class applied to both 'Target hit' and 'Global movers' */
+.target-hit-section-title { font-size:1.05rem; font-weight:600; margin:6px 2px 4px 2px; padding:0 2px; letter-spacing:0.5px; line-height:1.25; /* Removed order:-1 so 'Target hit' heading remains after the global summary card */ }
+/* Preserve combined line-height rule (legacy) */
+.target-hit-section-title, .global-movers-heading { line-height:1.25; }
+
+/* Discover modal movement layout */
+.discover-code-list .discover-mover { display:flex; justify-content:space-between; gap:12px; }
+
+/* Discover Modal - Larger, more legible for mobile */
+.discover-code-list.card-layout {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+}
+.discover-code-list.card-layout .discover-mover {
+    flex-direction: column;
+    align-items: flex-start;
+    border: 2px solid var(--border-color, #444);
+    border-radius: 16px;
+    padding: 18px 20px 16px 20px;
+    gap: 10px;
+    background: var(--panel-bg, rgba(255,255,255,0.06));
+    font-size: 1.25rem;
+    min-height: 120px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+.discover-code-list.card-layout .discover-mover:hover {
+    background: rgba(255,255,255,0.12);
+}
+.discover-mover .row-top {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+}
+.discover-mover .company {
+    font-size: 1.05rem;
+    line-height: 1.25;
+    color: var(--ghosted-text);
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.discover-mover .price-line {
+    font-size: 1.15rem;
+    font-variant-numeric: tabular-nums;
+    font-family: 'Inter', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+}
+.discover-mover .range-line {
+    font-size: 1.05rem;
+    font-variant-numeric: tabular-nums;
+    opacity: 0.85;
+}
+.discover-mover .range-line .sep {
+    opacity: 0.4;
+    padding: 0 6px;
+}
+.discover-mover .movement-combo {
+    font-size: 1.15rem;
+    font-family: 'Inter', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+}
+.discover-code-list .discover-mover .movement {
+    font-size: 1.05rem;
+    opacity: 0.9;
+    letter-spacing: 0.3px;
+}
+.discover-code-list .discover-mover .movement.negative { color: var(--price-down-color); }
+.discover-code-list .discover-mover .movement.positive { color: var(--price-up-color); }
+.discover-code-list .discover-mover .delta, .discover-code-list .discover-mover .pct {
+    font-size: 1.05rem;
+    font-family: 'Inter', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+    opacity: 0.9;
+    letter-spacing: 0.3px;
+}
+.discover-code-list .discover-mover .delta.negative, .discover-code-list .discover-mover .pct.negative { color: var(--price-down-color); }
+.discover-code-list .discover-mover .delta.positive, .discover-code-list .discover-mover .pct.positive { color: var(--price-up-color); }
+.movement-combo {
+    font-weight: 600;
+    font-size: 0.9rem; /* Reduced to 50% of original for target hit notifications */
+    letter-spacing: 0.22px;
+    font-variant-numeric: tabular-nums;
+    font-family: 'Inter', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+}
+.movement-combo.positive { color: var(--price-up-color); }
+.movement-combo.negative { color: var(--price-down-color); }
+.movement-combo.neutral { color: var(--price-neutral-color); }
+
+.discover-global-list { max-height:60vh; overflow-y:auto; }
+.discover-sort-bar { display:flex; align-items:center; flex-wrap:wrap; column-gap:6px; row-gap:4px; padding:4px 6px 4px; position:sticky; top:0; background:var(--modal-bg, #111); z-index:2; border-bottom:1px solid var(--border-color,#222); }
+.discover-sort-bar label { font-size:1.1rem; text-transform:uppercase; letter-spacing:1.2px; opacity:0.7; font-weight:700; margin-right:6px; }
+.discover-sort-bar select { background:var(--input-bg,#202020); color:var(--text-color); border:2px solid var(--border-color,#3a3a3a); border-radius:6px; padding:8px 16px 10px; font-size:1.1rem; line-height:1.2; min-width:180px; }
+.discover-sort-bar select:focus { outline:2px solid var(--accent-color,#666); outline-offset:2px; }
+.discover-sort-bar .discover-sort-desc { flex:1 1 100%; order:3; font-size:1rem; opacity:0.6; letter-spacing:0.6px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.discover-criteria-bar { display: flex; flex-wrap: wrap; gap: 12px 20px; padding: 16px 16px 10px; background: var(--modal-bg,#111); position: sticky; top: 0; z-index: 3; border-bottom: 2px solid var(--border-color,#333); }
+.discover-criteria-bar .criteria-title { font-size: 1.2rem; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-color); }
+.criteria-badges { display: flex; flex-wrap: wrap; gap: 8px; }
+.criteria-badge { font-size: 1rem; padding: 6px 16px 7px; border-radius: 16px; letter-spacing: 0.7px; font-weight: 700; background: var(--chip-bg,#222); border: 2px solid var(--border-color,#333); color: var(--text-color); }
+.criteria-badge.up { border-color: var(--price-up-color,#2e7d32); color: var(--price-up-color,#2e7d32); }
+.criteria-badge.down { border-color: var(--price-down-color,#c62828); color: var(--price-down-color,#c62828); }
+.criteria-badge.min { border-color: var(--accent-color,#a49393); color: var(--accent-color,#a49393); }
+.criteria-badge.none { opacity: 0.5; }
+.criteria-timestamp { margin-left: auto; font-size: 1rem; opacity: 0.6; letter-spacing: 0.7px; font-weight: 600; padding: 4px 0; }
+.criteria-summary { font-size: 1rem; letter-spacing: 0.6px; font-weight: 600; opacity: 0.8; flex-basis: 100%; }
+.discover-global-list ul.discover-code-list { list-style:none; margin:0; padding:0; }
+.discover-global-list ul.discover-code-list li { padding:6px 10px; border-bottom:1px solid var(--border-color, #444); cursor:default; display:flex; align-items:center; }
+.discover-global-list ul.discover-code-list li .code { font-weight:600; letter-spacing:0.5px; }
+.discover-global-list ul.discover-code-list li:hover { background:rgba(255,255,255,0.05); }
+/* Definitive Global Summary Card */
+/* Legacy summary block styles replaced by new grid layout above */
+
+/* Global Alerts Modal */
+.global-alerts-modal { max-width:420px; background: var(--modal-content-bg, #fff) !important; }
+.global-alerts-form .form-row { display:flex; flex-direction:column; gap:4px; margin-bottom:12px; }
+.global-alerts-form label { font-weight:600; font-size:0.85rem; }
+
+/* Force Global Movers modal and list to use dynamic theme backgrounds */
+#discoverGlobalModal.modal {
+    background: var(--modal-bg, #111) !important;
+}
+#discoverGlobalModal .modal-content {
+    background: var(--modal-content-bg, #fff) !important;
+    border-radius: 14px;
+    box-shadow: 0 4px 32px rgba(0,0,0,0.18);
+}
+#discoverGlobalList.discover-global-list {
+    background: var(--card-bg, #fff) !important;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    padding: 8px 0 0 0;
+    min-width: 320px;
+    max-width: 540px;
+    margin-left: auto;
+    margin-right: auto;
+}
+.global-alerts-form input { padding:8px 10px; border:1px solid var(--input-border); border-radius:6px; background:var(--input-bg); color:var(--text-color); }
+.global-alerts-form input:focus { outline:2px solid var(--accent-color); }
+.global-alerts-form .modal-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:10px; }
+.global-alerts-form fieldset.ga-section { border: 1px solid var(--border-color, #333); padding: 8px 12px 10px; margin: 0 0 14px; border-radius: 6px; }
+.global-alerts-form fieldset.ga-section legend { padding: 0 6px; font-size: 0.85rem; font-weight: 600; }
+.global-alerts-summary-text { font-size: 0.65rem; line-height: 1.2; color: var(--text-secondary, #aaa); padding: 4px 8px 0 8px; min-height: 16px; }
+.global-alerts-summary-text:empty { display:none; }
+.global-alerts-form .subtle-info-text { color: var(--ghosted-text); }
+
+/* === Compact Card Layout & Theme (Rebuilt) === */
+.mobile-share-cards.compact-view .mobile-card {
+    display: grid !important;
+    grid-template-columns: 1fr auto; /* Code takes up available space, chevron is auto-sized */
+    grid-template-rows: auto 1fr; /* Top row auto, middle area takes remaining space */
+    grid-template-areas:
+        "code chevron"
+        "price price";
+    align-items: center; /* Vertically center items in their grid cells */
+    padding: 8px 12px;
+    gap: 4px 8px;
+}
+
+.mobile-share-cards.compact-view .asx-code {
+    grid-area: code;
+    justify-self: start; /* Align left */
+    font-weight: bold;
+}
+
+.mobile-share-cards.compact-view .chevron {
+    grid-area: chevron;
+    justify-self: end; /* Align right */
+}
+
+.mobile-share-cards.compact-view .live-price-container {
+    grid-area: price;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center horizontally */
+    justify-content: center; /* Center vertically */
+    text-align: center;
+    padding-top: 8px; /* Add some space from the top row */
+}
+
+.mobile-share-cards.compact-view .live-price {
+    font-size: 1.6rem;
+    font-weight: bold;
+    line-height: 1.2;
+}
+
+.mobile-share-cards.compact-view .price-change-container {
+    display: flex;
+    flex-direction: column; /* Stack price and percentage change */
+    align-items: center;
+    gap: 2px;
+    margin-top: 4px;
+}
+
+/* Light Mode Compact Cards: Use subtle backgrounds */
+.mobile-share-cards.compact-view .positive-change-card { background: var(--watch-bg-positive); }
+.mobile-share-cards.compact-view .negative-change-card { background: var(--watch-bg-negative); }
+.mobile-share-cards.compact-view .neutral-change-card { background: var(--watch-bg-neutral); }
+
+/* Dark Theme Compact Cards: Rich Black Theme */
+body.dark-theme .mobile-share-cards.compact-view .mobile-card {
+    color: #f0f0f0; /* High-contrast soft white text */
+    border-radius: 8px;
+    border-left-width: 4px; /* Maintain side borders */
+    border-right-width: 4px;
+}
+body.dark-theme .mobile-share-cards.compact-view .positive-change-card {
+    background: linear-gradient(145deg, hsl(120, 100%, 8%), hsl(120, 100%, 4%));
+    border-color: var(--brand-green);
+}
+body.dark-theme .mobile-share-cards.compact-view .negative-change-card {
+    background: linear-gradient(145deg, hsl(353, 70%, 10%), hsl(353, 70%, 6%));
+    border-color: var(--brand-red);
+}
+body.dark-theme .mobile-share-cards.compact-view .neutral-change-card {
+    background: linear-gradient(145deg, #282828, #181818);
+    border-color: var(--accent-color);
+}
+/* Ensure target hit overrides dark theme gradient */
+body.dark-theme .mobile-share-cards.compact-view .target-hit-alert {
+    background: linear-gradient(145deg, #282828, #181818);
+}
+
 
 /* Dark Theme Variables */
 body.dark-theme {
     /* Dark Theme Variables */
     --background-color: #1a1a1a; /* Very dark gray/almost black */
-    --text-color: #e0e0e0; /* Light gray for text */
+    --text-color: #ffffff; /* White for all primary data/content text */
     --header-bg: #282828; /* Darker gray for header */
     --card-bg: #333333; /* Medium dark gray for cards */
     --border-color: #555555; /* Darker gray for borders */
     --button-bg: #555555; /* Gray button */
-    --button-text: #ffffff; /* White text on buttons */
+    --button-text: #ffffff; /* Keep button text white for contrast */
     --button-hover-bg: #6a6a6a; /* Lighter gray on hover */
     --input-bg: #444444; /* Dark gray for input backgrounds */
     --input-border: #777777; /* Gray for input borders */
@@ -124,8 +1804,8 @@ body.dark-theme {
     --asx-button-hover-bg: #5a5a5a; /* Lighter gray for ASX button hover */
     --asx-button-active-bg: #888888; /* Even lighter gray for active ASX button */
     --asx-button-active-text: #ffffff; /* White text for active ASX button */
-    --success-color: #2ecc71; /* Keep green for success */
-    --danger-color: #e74c3c; /* Keep red for danger */
+    --success-color: var(--brand-green);
+    --danger-color: var(--brand-red);
     --warning-color: #f39c12; /* Keep orange for warning */
     --info-color: #3498db; /* Keep blue for info */
     --link-color: #99ccff; /* Lighter blue for links */
@@ -136,18 +1816,19 @@ body.dark-theme {
     --menu-button-bg: transparent;
     --menu-button-hover-bg: #444444; /* Dark gray for menu button hover */
     --placeholder-text: #aaaaaa;
-    --ghosted-text: #888888; /* Medium gray for ghosted text */
-    --danger-button-bg: #e74c3c;
-    --danger-button-hover-bg: #c0392b;
-    --icon-action-color: #cccccc; /* Light gray for action icons */
-    --icon-action-hover-color: #ffffff; /* White for action icon hover */
-    --icon-danger-color: #e74c3c;
-    --icon-danger-hover-color: #c0392b;
+    --ghosted-text: #888888; /* Subtle muted text */
+    --label-color: #ffffff; /* Labels and user-entered field descriptors in white */
+    --danger-button-bg: var(--brand-red);
+    --danger-button-hover-bg: var(--brand-red);
+    --icon-action-color: var(--accent-color); /* Coffee accent in dark as well */
+    --icon-action-hover-color: #c8bebe; /* lighter coffee for contrast on dark */
+    --icon-danger-color: var(--brand-red);
+    --icon-danger-hover-color: var(--brand-red);
     --calc-num-btn-bg: #555555; /* Gray for calculator number buttons */
     --calc-num-btn-text: #e0e0e0;
     --calc-num-btn-hover-bg: #6a6a6a;
-    --price-up-color: #2ecc71; /* Keep green for price up */
-    --price-down-color: #e74c3c; /* Keep red for price down */
+    --price-up-color: var(--brand-green);
+    --price-down-color: var(--brand-red);
     --price-neutral-color: #888888; /* Gray for neutral price */
     --live-price-section-bg: rgba(68, 68, 68, 0.1); /* Very subtle dark gray tint */
     --live-price-positive-bg: rgba(46, 204, 113, 0.1); /* Faint green */
@@ -157,17 +1838,23 @@ body.dark-theme {
     --target-alert-text: #ffffff; /* White text for target alert */
     --target-alert-border: #888888; /* Gray border for target alert */
     --target-banner-height: 40px;
-    --green-color: #2ecc71; /* Green for success in dark theme */
-    --green-color-dark: #229954; /* Darker green for hover */
-    --green-color-dark-rgb: 34, 153, 84; /* RGB for #229954 for pulsing effect */
+    --green-color: var(--brand-green);
+    --green-color-dark: var(--brand-green);
+    --green-color-dark-rgb: 46, 204, 113; /* RGB for #2ECC71 */
+    /* 52-Week Low Alert Theme Variables */
+    --low52-thresh-color: #fff;
+    --low52-bg: rgba(178, 34, 34, 0.25);
+    --high52-bg: rgba(26, 110, 26, 0.25);
+    --low52-color: #ff8a8a;
+    --high52-color: #8aff8a;
     /* UPDATED: Cash & Assets Section Colors (Dark Theme) */
     --cash-section-bg: #282828;
     --cash-card-bg: #333333;
     --cash-border-color: #555555;
-    --cash-total-bg: #444444;
-    --cash-total-text: #e0e0e0;
-    --cash-button-bg: #2ecc71; /* Keep green */
-    --cash-button-hover-bg: #229954; /* Keep green hover */
+    --cash-total-bg: #a49393; /* coffee fill in dark theme for consistency */
+    --cash-total-text: #ffffff;
+    --cash-button-bg: var(--brand-green);
+    --cash-button-hover-bg: var(--brand-green);
     --cash-primary-button-bg: #555555; /* Gray primary button */
     --cash-primary-button-hover-bg: #6a6a6a; /* Gray primary button hover */
     --cash-delete-icon-color: #e74c3c; /* Keep red */
@@ -199,12 +1886,12 @@ body.theme-bold-1 { /* Ocean Blue */
     --menu-button-hover-bg: #0a475a;
     --placeholder-text: #8ecae6;
     --ghosted-text: #a8dadc;
-    --danger-button-bg: #e63946;
-    --danger-button-hover-bg: #c0392b;
-    --icon-action-color: #00b4d8;
-    --icon-action-hover-color: #0096c7;
-    --icon-danger-color: #e63946;
-    --icon-danger-hover-color: #c0392b;
+    --danger-button-bg: #FF0000;
+    --danger-button-hover-bg: #FF0000;
+    --icon-action-color: var(--accent-color);
+    --icon-action-hover-color: #8a7f7f;
+    --icon-danger-color: #FF0000;
+    --icon-danger-hover-color: #FF0000;
     --calc-num-btn-bg: #007f8c;
     --calc-num-btn-text: #e0f2f7;
     --calc-num-btn-hover-bg: #0096c7;
@@ -219,7 +1906,7 @@ body.theme-bold-1 { /* Ocean Blue */
     --google-auth-btn-bg: #FFFFFF;
     --google-auth-btn-hover-bg: #F0F0F0;
     --google-auth-btn-text: #4285F4;
-    --price-up-color: #2ecc71;
+    --price-up-color: #00FF00;
     --price-down-color: #e74c3c;
     --price-neutral-color: #a8dadc;
     --live-price-section-bg: rgba(0, 180, 216, 0.1);
@@ -237,8 +1924,8 @@ body.theme-bold-1 { /* Ocean Blue */
     --cash-border-color: #008793;
     --cash-total-bg: #0096c7;
     --cash-total-text: #e0f2f7;
-    --cash-button-bg: #2ecc71;
-    --cash-button-hover-bg: #229954;
+    --cash-button-bg: #00FF00;
+    --cash-button-hover-bg: #00FF00;
     --cash-primary-button-bg: #00b4d8;
     --cash-primary-button-hover-bg: #0096c7;
     --cash-delete-icon-color: #e63946;
@@ -268,12 +1955,12 @@ body.theme-bold-2 { /* Forest Green */
     --menu-button-hover-bg: #4a754a;
     --placeholder-text: #c0d8b6;
     --ghosted-text: #d4e3c9;
-    --danger-button-bg: #e74c3c;
-    --danger-button-hover-bg: #c0392b;
-    --icon-action-color: #a7c957;
-    --icon-action-hover-color: #8ba84a;
-    --icon-danger-color: #e74c3c;
-    --icon-danger-hover-color: #c0392b;
+    --danger-button-bg: #FF0000;
+    --danger-button-hover-bg: #FF0000;
+    --icon-action-color: var(--accent-color);
+    --icon-action-hover-color: #8a7f7f;
+    --icon-danger-color: #FF0000;
+    --icon-danger-hover-color: #FF0000;
     --calc-num-btn-bg: #5a855a;
     --calc-num-btn-text: #e6ffe6;
     --calc-num-btn-hover-bg: #6a9955;
@@ -288,7 +1975,7 @@ body.theme-bold-2 { /* Forest Green */
     --google-auth-btn-bg: #FFFFFF;
     --google-auth-btn-hover-bg: #F0F0F0;
     --google-auth-btn-text: #4285F4;
-    --price-up-color: #2ecc71;
+    --price-up-color: #00FF00;
     --price-down-color: #e74c3c;
     --price-neutral-color: #d4e3c9;
     --live-price-section-bg: rgba(167, 201, 87, 0.1);
@@ -306,8 +1993,8 @@ body.theme-bold-2 { /* Forest Green */
     --cash-border-color: #6a9955;
     --cash-total-bg: #8ba84a;
     --cash-total-text: #e6ffe6;
-    --cash-button-bg: #2ecc71;
-    --cash-button-hover-bg: #229954;
+    --cash-button-bg: #00FF00;
+    --cash-button-hover-bg: #00FF00;
     --cash-primary-button-bg: #a7c957;
     --cash-primary-button-hover-bg: #8ba84a;
     --cash-delete-icon-color: #e74c3c;
@@ -337,10 +2024,10 @@ body.theme-bold-3 { /* Sunset Orange */
     --menu-button-hover-bg: #f4a261;
     --placeholder-text: #ffe5b4;
     --ghosted-text: #ffd790;
-    --danger-button-bg: #e63946;
-    --danger-button-hover-bg: #c0392b;
-    --icon-action-color: #ffc300;
-    --icon-action-hover-color: #e0ac00;
+    --danger-button-bg: #FF0000;
+    --danger-button-hover-bg: #FF0000;
+    --icon-action-color: var(--accent-color);
+    --icon-action-hover-color: #8a7f7f;
     --icon-danger-color: #e63946;
     --icon-danger-hover-color: #c0392b;
     --calc-num-btn-bg: #f7b98d;
@@ -357,7 +2044,7 @@ body.theme-bold-3 { /* Sunset Orange */
     --google-auth-btn-bg: #FFFFFF;
     --google-auth-btn-hover-bg: #F0F0F0;
     --google-auth-btn-text: #4285F4;
-    --price-up-color: #2ecc71;
+    --price-up-color: #00FF00;
     --price-down-color: #e74c3c;
     --price-neutral-color: #ffd790;
     --live-price-section-bg: rgba(255, 195, 0, 0.1);
@@ -375,8 +2062,8 @@ body.theme-bold-3 { /* Sunset Orange */
     --cash-border-color: #e76f51;
     --cash-total-bg: #e0ac00;
     --cash-total-text: #fff8e1;
-    --cash-button-bg: #2ecc71;
-    --cash-button-hover-bg: #229954;
+    --cash-button-bg: #00FF00;
+    --cash-button-hover-bg: #00FF00;
     --cash-primary-button-bg: #ffc300;
     --cash-primary-button-hover-bg: #e0ac00;
     --cash-delete-icon-color: #e63946;
@@ -408,8 +2095,8 @@ body.theme-bold-4 { /* Royal Purple */
     --ghosted-text: #e8d0ff;
     --danger-button-bg: #e74c3c;
     --danger-button-hover-bg: #c0392b;
-    --icon-action-color: #c77dff;
-    --icon-action-hover-color: #a842ff;
+    --icon-action-color: var(--accent-color);
+    --icon-action-hover-color: #8a7f7f;
     --icon-danger-color: #e74c3c;
     --icon-danger-hover-color: #c0392b;
     --calc-num-btn-bg: #9d4edd;
@@ -426,7 +2113,7 @@ body.theme-bold-4 { /* Royal Purple */
     --google-auth-btn-bg: #FFFFFF;
     --google-auth-btn-hover-bg: #F0F0F0;
     --google-auth-btn-text: #4285F4;
-    --price-up-color: #2ecc71;
+    --price-up-color: #00FF00;
     --price-down-color: #e74c3c;
     --price-neutral-color: #e8d0ff;
     --live-price-section-bg: rgba(199, 125, 255, 0.1);
@@ -444,8 +2131,8 @@ body.theme-bold-4 { /* Royal Purple */
     --cash-border-color: #9d4edd;
     --cash-total-bg: #a842ff;
     --cash-total-text: #f0e6ff;
-    --cash-button-bg: #2ecc71;
-    --cash-button-hover-bg: #229954;
+    --cash-button-bg: #00FF00;
+    --cash-button-hover-bg: #00FF00;
     --cash-primary-button-bg: #c77dff;
     --cash-primary-button-hover-bg: #a842ff;
     --cash-delete-icon-color: #e74c3c;
@@ -477,7 +2164,7 @@ body.theme-bold-5 { /* Deep Red */
     --ghosted-text: #ffcccc;
     --danger-button-bg: #e74c3c;
     --danger-button-hover-bg: #c0392b;
-    --icon-action-color: #e74c3c;
+    --icon-action-color: var(--accent-color);
     --icon-action-hover-color: #c0392b;
     --icon-danger-color: #e74c3c;
     --icon-danger-hover-color: #c0392b;
@@ -495,7 +2182,7 @@ body.theme-bold-5 { /* Deep Red */
     --google-auth-btn-bg: #FFFFFF;
     --google-auth-btn-hover-bg: #F0F0F0;
     --google-auth-btn-text: #4285F4;
-    --price-up-color: #2ecc71;
+    --price-up-color: #00FF00;
     --price-down-color: #e74c3c;
     --price-neutral-color: #ffcccc;
     --live-price-section-bg: rgba(231, 76, 60, 0.1);
@@ -513,8 +2200,8 @@ body.theme-bold-5 { /* Deep Red */
     --cash-border-color: #c0392b;
     --cash-total-bg: #c0392b;
     --cash-total-text: #ffe6e6;
-    --cash-button-bg: #2ecc71;
-    --cash-button-hover-bg: #229954;
+    --cash-button-bg: #00FF00;
+    --cash-button-hover-bg: #00FF00;
     --cash-primary-button-bg: #e74c3c;
     --cash-primary-button-hover-bg: #c0392b;
     --cash-delete-icon-color: #e74c3c;
@@ -564,7 +2251,7 @@ body.theme-bold-6 { /* Gold */
     --google-auth-btn-bg: #FFFFFF;
     --google-auth-btn-hover-bg: #F0F0F0;
     --google-auth-btn-text: #4285F4;
-    --price-up-color: #2ecc71;
+    --price-up-color: #00FF00;
     --price-down-color: #e74c3c;
     --price-neutral-color: #fff2c4;
     --live-price-section-bg: rgba(255, 235, 59, 0.1);
@@ -582,8 +2269,8 @@ body.theme-bold-6 { /* Gold */
     --cash-border-color: #ffd700;
     --cash-total-bg: #fdd835;
     --cash-total-text: #3b301a;
-    --cash-button-bg: #2ecc71;
-    --cash-button-hover-bg: #229954;
+    --cash-button-bg: #00FF00;
+    --cash-button-hover-bg: #00FF00;
     --cash-primary-button-bg: #ffeb3b;
     --cash-primary-button-hover-bg: #fdd835;
     --cash-delete-icon-color: #e74c3c;
@@ -1436,6 +3123,37 @@ body.theme-muted-grey {
     --cash-edit-icon-color: #999999;
 }
 
+/* === Mobile Modal Safe Area & Keyboard Handling Enhancements (Appended) === */
+@media (max-width: 820px) {
+    .modal .modal-content.global-alerts-modal, .modal .modal-content.global-alerts-modal *:focus-visible {
+        outline-offset: 2px;
+    }
+    .modal .modal-content.global-alerts-modal {
+        max-height: calc(100dvh - 18px);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+        scroll-padding-bottom: 160px; /* ensure last inputs not hidden behind keyboard */
+    }
+    /* When a virtual keyboard is inferred (class toggled via JS), add extra breathing room */
+    body.keyboard-visible .modal .modal-content.global-alerts-modal {
+        padding-bottom: 150px;
+    }
+    /* Sticky header keeps save / close buttons accessible while scrolling thresholds */
+    .global-alerts-modal .modal-header-with-icon {
+        position: sticky;
+        top: 0;
+        background: var(--modal-content-bg, #fff);
+        z-index: 10;
+        padding-top: 6px;
+        margin-top: -6px; /* compensate for added padding in some themes */
+        box-shadow: 0 2px 4px rgba(0,0,0,0.12);
+    }
+}
+
+/* Utility class JS can toggle when a virtual keyboard shows on mobile */
+body.keyboard-visible { /* marker class (intentionally minimal) */ --keyboard-visible:1; }
+
 /* Subtle Themes - Adjusted for better visual distinction */
 body.theme-subtle-1 { /* Subtle Sky */
     --background-color: #e0eaf2; /* Lighter blue */
@@ -2102,6 +3820,69 @@ table td .share-code-display { /* This class exists, just ensure its emphasis */
     text-align: right;
     flex-grow: 1; /* Allows value to take up remaining space */
 }
+/* Share Detail Dashboard Layout */
+.share-detail-sections { display:grid; grid-template-columns: repeat(auto-fit,minmax(230px,1fr)); gap:14px 16px; align-items:start; }
+.share-detail-sections .detail-card { background:var(--card-bg); border:1px solid var(--border-color); border-radius:12px; padding:14px 16px 16px; box-shadow:0 2px 4px rgba(0,0,0,0.05); display:flex; flex-direction:column; gap:8px; min-height:0; }
+.share-detail-sections .detail-card.full-span { grid-column:1 / -1; }
+.detail-card-title { margin:0 0 4px; font-size:0.95rem; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; color:var(--ghosted-text); }
+.watchlists-membership-footer { 
+    margin-top:auto; /* push to bottom */
+    text-align:center; 
+    font-size:0.95rem; /* ~35% larger than 0.70rem */
+    letter-spacing:0.4px; 
+    font-weight:500; 
+    color:var(--ghosted-text); 
+    opacity:0.85; 
+    padding-top:2px; 
+}
+.detail-row { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:4px 0; font-size:0.9rem; border-bottom:1px dashed rgba(0,0,0,0.08); }
+body.dark-theme .detail-row { border-bottom:1px dashed rgba(255,255,255,0.1); }
+.detail-row:last-child { border-bottom:none; }
+.detail-label { font-weight:500; color:var(--label-color); flex:0 0 auto; }
+.detail-value { font-weight:600; color:var(--text-color); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+/* Research links grid refinement */
+.external-links-grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap:10px 14px; margin-top:4px; align-items:stretch; }
+/* Unified Research Links styling */
+.external-links-grid .external-link { 
+    display:inline-flex; align-items:center; gap:6px; 
+    font-size:0.9rem; font-weight:700; 
+    padding:8px 12px; background:var(--card-bg); 
+    border:1px solid var(--border-color); border-radius:10px; 
+    text-decoration:none; color:var(--accent-color,#a49393); 
+    transition: background .18s, color .18s, box-shadow .18s, border-color .18s; 
+    box-shadow:0 1px 2px rgba(0,0,0,0.06);
+}
+body.dark-theme .external-links-grid .external-link { background:var(--card-bg); }
+.external-links-grid .external-link:hover { 
+    background:var(--button-hover-bg,#8d7f7f); 
+    color:#fff; border-color:var(--button-hover-bg,#8d7f7f); 
+    box-shadow:0 2px 6px rgba(0,0,0,0.18);
+}
+.external-links-grid .primary-news-link { font-weight:800; }
+.commsec-link-wrapper { display:contents; }
+/**/
+/* Toggle button / enhanced watchlist item target hit outline */
+.asx-code-buttons-container button.asx-code-btn.target-hit, 
+.watchlist-enhanced-item.target-hit { 
+    outline:2px solid var(--green-color,#2ECC71); outline-offset:0; 
+}
+/* Compact view ensure full border retained */
+/* Removed legacy 2px compact override (now unified at 4px) */
+@media (max-width:600px){
+    .share-detail-sections { grid-template-columns:1fr; }
+    .share-detail-sections .detail-card { padding:12px 14px 14px; }
+    .detail-row { font-size:0.88rem; }
+    .external-links-grid { grid-template-columns:1fr 1fr; }
+}
+/* Mobile full-screen calculator enhancements */
+@media (max-width:640px){
+    .calculator-modal-content { width:100%; max-width:none; height:100vh; border-radius:0; display:flex; flex-direction:column; }
+    .calculator-modal-content h2 { font-size:1.35rem; }
+    .calculator-display { flex:0 0 auto; padding:10px 12px; }
+    .calculator-buttons { flex:1; display:grid; grid-template-columns:repeat(4,1fr); gap:8px; padding:12px; }
+    .calculator-buttons .calc-btn { font-size:1.15rem; padding:16px 0; }
+    .calculator-buttons .calc-btn.zero { grid-column: span 2; }
+}
 html {
     height: 100%; /* Ensure html takes full height */
     overflow-y: auto; /* Allow scrolling on html */
@@ -2145,7 +3926,31 @@ body.sidebar-active {
     display: flex; /* Use flexbox for internal layout */
     flex-direction: column; /* Stack children vertically */
     padding: 15px 20px 0; /* Removed padding-bottom, will be determined by content + gap */
-    gap: 10px; /* Space between header rows */
+    gap: 4px; /* Space between header rows */
+}
+
+#dynamicWatchlistTitle {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 8px; /* Space between title and version */
+}
+
+#appVersion {
+    font-size: 0.6rem; /* About 1/3 of the title's size */
+    color: var(--ghosted-text);
+    opacity: 0.8; /* More visible */
+    font-weight: 400;
+    margin-left: 8px; /* More space from the title */
+}
+/* Force vivid plus icon */
+#appHeader #addShareHeaderBtn i, #appHeader #addShareHeaderBtn svg { opacity:1 !important; color:var(--accent-color,#a49393) !important; mix-blend-mode:normal; }
+
+/**/
+
+/* Optional subtle style for neutral price change badge inside cards */
+.mobile-card .price-change.neutral, .price-change.neutral {
+    color: var(--price-neutral-color);
 }
 
 /* Adjust main content padding to account for fixed header - REMOVED FROM CSS, NOW HANDLED BY JS */
@@ -2157,50 +3962,296 @@ main.container {
 /* Header Top Row (now part of the fixed header) */
 .header-top-row {
     display: flex;
-    justify-content: space-between; /* Space out title and button group */
     align-items: center;
-    gap: 15px;
-    width: 100%; 
+    width: 100%;
     box-sizing: border-box;
-    padding: 0; /* No individual padding, handled by parent header */
+    padding: 0;
+    gap: 0;
+    position: relative;
+}
+
+/* Ensure hamburger, title, and add button are always in correct order and position */
+.header-action-btn-right {
+    flex: 0 0 80px; /* Give both left and right containers a fixed base width */
+    display: flex;
+    align-items: center;
+}
+
+.header-left-container {
+    justify-content: flex-start; /* Align to the top */
+    order: 1;
+    flex: 0 0 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.live-price-timestamp-container {
+    display: block;
+    margin-top: 4px;
+    text-align: left;
+    width: 100%;
+}
+
+.live-price-timestamp {
+    font-size: 0.7rem;
+    color: var(--ghosted-text);
+    opacity: 0.9;
+}
+
+.header-action-btn-right {
+    justify-content: flex-end;
+    order: 3;
+}
+
+/* Center the single dynamic title */
+h1#dynamicWatchlistTitle {
+    order: 2;
+    flex: 1 1 auto; /* Allow title to grow and fill the space */
+    margin: 0;
+    text-align: center;
+    font-size: 1.85rem;
+    font-weight: 650;
+    line-height: 1.1;
+    pointer-events: auto;
+    z-index: 1;
+    outline: none; /* Remove default focus outline */
+}
+
+/* Accessible keyboard-only focus for dynamic title text/button */
+#dynamicWatchlistTitle:focus { outline: none; }
+#dynamicWatchlistTitle:focus-visible { outline: 2px solid var(--green-color); outline-offset: 2px; }
+#dynamicWatchlistTitleText:focus { outline: none; }
+#dynamicWatchlistTitleText:focus-visible { outline: 2px solid var(--green-color); outline-offset: 2px; }
+.header-action-btn-right {
+    order: 3;
+    /* margin-left: auto; */
+}
+
+/* Ensure buttons are clickable above the title */
+.header-action-btn-left, .header-action-btn-right {
+    z-index: 2;
+    position: relative;
+    pointer-events: auto;
 }
 
 /* Watchlist and Sort controls */
+
 .watchlist-controls-row {
-    display: flex;
-    flex-wrap: nowrap;
-    justify-content: center;
-    align-items: center;
-    gap: 15px;
-    padding: 10px 15px; /* Added horizontal padding for consistency */
-    border-top: 1px solid var(--border-color);
-    border-bottom: 1px solid var(--border-color);
     width: 100%;
     box-sizing: border-box;
-    margin-top: 0; /* No top margin here, gap handled by parent header's gap */
+    margin-top: 0;
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+    padding: 10px 15px;
+}
+
+.dropdowns-center-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 1.5rem;
+    width: 100%;
+    margin: 0 auto;
+    flex-wrap: wrap;
+}
+
+.dropdowns-center-row .watchlist-group,
+    .dropdowns-center-row .sort-group {
+    display: flex;
+    align-items: center;
+    flex: 0 1 200px;
+    min-width: 120px;
+    max-width: 200px;
+    margin: 0 0.5em;
+}
+
+.dropdown-large {
+    min-width: 120px;
+    max-width: 200px;
+    width: 100%;
+    padding: 0.5em 2em 0.5em 1em;
+    font-size: 1rem;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    background: #fff;
+    margin: 0 0.5em;
+    box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .dropdowns-center-row {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: stretch;
+  }
+  .dropdowns-center-row .watchlist-group,
+  .dropdowns-center-row .sort-group {
+    min-width: 100px;
+    max-width: 100%;
+    width: 100%;
+    margin: 0.25em 0;
+  }
+  .dropdown-large {
+    width: auto;
+    min-width: 200px;
+    max-width: 80%;
+    margin: 0.25em auto; /* Center it */
+    font-size: 0.95em;
+    padding: 6px 10px;
+    text-align: center;
+  }
+}
+
+.watchlist-controls-row .watchlist-group,
+.watchlist-controls-row .sort-group {
+    flex: 0 1 220px;
+    min-width: 120px;
+    max-width: 220px;
+    margin: 0 5px;
+}
+
+.watchlist-controls-row {
+    justify-content: center;
+}
+
+@media (min-width: 769px) {
+  .watchlist-controls-row {
+    justify-content: center;
+  }
+  .watchlist-group,
+  .sort-group {
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+.watchlist-group,
+.sort-group {
+    flex: 0 1 220px;
+    min-width: 120px;
+    max-width: 220px;
+    margin: 0 5px;
+}
+
+.dropdown-large {
+    width: 100%;
+    font-size: 1em;
+    padding: 8px 12px;
+    box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+    .watchlist-controls-row {
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 8px 10px 10px 10px;
+    }
+    .watchlist-group,
+    .sort-group {
+        width: 100%;
+        max-width: 320px;
+        display: flex;
+        justify-content: center;
+        margin: 0;
+    }
+    .dropdown-large {
+        font-size: 0.95em;
+        padding: 6px 10px;
+        text-align: center;
+    }
+    .header-top-row {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        box-sizing: border-box;
+        padding: 0;
+        gap: 0;
+        position: relative;
+    }
+    /* DESKTOP STYLES NOW APPLY TO MOBILE. NO OVERRIDE NEEDED.
+    .header-action-btn-left {
+        order: 1;
+        margin-right: auto;
+        position: relative;
+        left: 0;
+        z-index: 2;
+    }
+    h1#mainTitle {
+        order: 2;
+        flex: 0 1 auto;
+        margin: 0 auto;
+        left: 0;
+        right: 0;
+        position: absolute;
+        width: 100%;
+        text-align: center;
+        pointer-events: none;
+        z-index: 1;
+    }
+    .header-action-btn-right {
+        order: 3;
+        margin-left: auto;
+        position: relative;
+        right: 0;
+        z-index: 2;
+    }
+    */
 }
 
 /* ASX Code Buttons */
 .asx-code-buttons-container {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
+    justify-content: center; /* This will be overridden on mobile */
     gap: 8px;
-    padding: 10px 15px; /* Added horizontal padding for consistency */
     width: 100%;
     box-sizing: border-box;
-    margin-top: 0; /* No top margin here, gap handled by parent header's gap */
-    min-height: 0; /* Ensure it can shrink, but also allow it to grow */
-    overflow: visible; /* Explicitly allow content to be visible even if it wraps multiple lines */
-    align-items: flex-start; /* Align items to the start of the cross axis (top) */
-    align-content: flex-start; /* Align wrapped lines to the start of the cross axis (top) */
+    /* Default collapsed state for mobile-first approach */
+    transition: max-height 0.4s ease-in-out, padding 0.4s ease-in-out, opacity 0.3s ease-in-out, border-width 0.1s ease-in-out;
+    max-height: 0;
+    overflow: hidden;
+    padding: 0 15px; /* Keep horizontal padding, but vertical is 0 */
+    opacity: 0;
+    border-top: none; /* Hide border when collapsed */
+    pointer-events: none; /* prevent interacting while collapsed */
 }
 
-/* NEW: Hide ASX code buttons when compact view is active */
-/* Removed !important to allow JS to control display if needed, but CSS handles it by default */
+/* Compact view: allow buttons to show; JS controls visibility. Enable horizontal scroll for tight space. */
 .mobile-share-cards.compact-view + #asxCodeButtonsContainer {
-    display: none; 
+    display: flex;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
+
+/* Expanded state for the container */
+.asx-code-buttons-container.expanded {
+    max-height: 500px; /* A large enough value to accommodate all buttons */
+    padding: 10px 15px;
+    opacity: 1;
+    border-top: 1px solid var(--border-color); /* Show border when expanded */
+    pointer-events: auto;
+}
+
+/* Toast notifications */
+.toast-container { position: fixed; top: 16px; right: 16px; display: flex; flex-direction: column; gap: 10px; z-index: 2000; pointer-events: none; }
+.toast { min-width: 240px; max-width: 360px; background: var(--card-bg); color: var(--text-color); border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0 6px 24px rgba(0,0,0,.12); padding: 10px 12px; display: flex; align-items: center; gap: 10px; opacity: 0; transform: translateY(-8px); transition: opacity .2s ease, transform .2s ease; pointer-events: auto; }
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast .icon { width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: #fff; flex: 0 0 22px; }
+.toast.success .icon { background: var(--accent-color); }
+.toast.error .icon { background: var(--brand-red); }
+.toast.info .icon { background: var(--accent-color); }
+.toast .message { flex: 1 1 auto; font-size: 0.95rem; line-height: 1.3; }
+.toast .close { background: transparent; border: none; color: inherit; cursor: pointer; font-size: 1rem; padding: 4px; }
+.toast .actions { display:flex; gap:8px; }
+.toast .btn { background: transparent; border: 1px solid var(--border-color); color: var(--text-color); padding: 4px 8px; border-radius: 6px; font-size: 0.9rem; cursor: pointer; }
+.toast .btn.primary { background: var(--accent-color); color: #fff; border-color: var(--accent-color); }
+.toast .btn.danger { background: var(--brand-red); color: #fff; border-color: var(--brand-red); }
+
+/* New
 
 h1#mainTitle {
     margin: 0;
@@ -2217,12 +4268,13 @@ h1#mainTitle {
     background: none;
     border: none;
     color: var(--text-color);
-    font-size: 1.8em;
+    font-size: 2rem;
     cursor: pointer;
-    padding: 5px 10px;
-    z-index: 11; /* Keep high for interaction */
+    padding: 4px 4px; /* tighter to edges */
+    z-index: 11;
     display: block;
-    flex-shrink: 0; 
+    flex-shrink: 0;
+    line-height:1;
 }
 
 .header-action-btn:hover {
@@ -2239,16 +4291,26 @@ h1#mainTitle {
 
 /* Specific styling for the hamburger button to ensure it matches other header icons */
 .hamburger-btn {
-    background: none;
-    border: none;
-    color: var(--text-color);
-    font-size: 1.8em;
-    cursor: pointer;
-    padding: 5px 10px;
-    z-index: 11;
-    display: block;
-    flex-shrink: 0;
+    background:none;
+    border:none;
+    color:var(--text-color);
+    font-size:2rem;
+    cursor:pointer;
+    padding:4px 4px;
+    z-index:11;
+    display:block;
+    flex-shrink:0;
+    line-height:1;
 }
+
+/* Push left/right buttons closer to screen edge */
+header .header-action-btn-left { margin-left:2px !important; }
+header .header-action-btn-right { margin-right:2px !important; }
+
+/* Ensure plus/hamburger full opacity */
+#hamburgerBtn, #addShareHeaderBtn { opacity:1 !important; }
+/* Match hamburger icon color to plus (coffee accent) */
+#appHeader #hamburgerBtn i, #appHeader #hamburgerBtn svg { color:var(--accent-color,#a49393) !important; opacity:1 !important; mix-blend-mode:normal; }
 
 .hamburger-btn:hover {
     color: var(--button-hover-bg);
@@ -2298,6 +4360,20 @@ h1#mainTitle {
     display: block; /* Show when sidebar is open */
     opacity: 1;
     pointer-events: auto; /* Make interactive when open */
+    touch-action: none; /* Prevent accidental scroll/tap passthrough on mobile */
+    cursor: pointer; /* Indicate clickable backdrop */
+}
+
+/* Ensure live price timestamp moved into header-left is visible and centered.
+   High specificity rule to avoid accidental overrides from other header rules. */
+#appHeader .header-top-row .header-left-container #livePriceTimestampContainer.live-price-inside-header-left {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    text-align: center !important;
+    padding-top: 4px !important;
+    box-sizing: border-box !important;
+    z-index: 50 !important;
 }
 
 
@@ -2329,10 +4405,7 @@ h1#mainTitle {
     padding-bottom: 5px;
     font-size: 1.1em;
 }
-
-.menu-section {
-    margin-bottom: 20px;
-}
+/* Removed malformed duplicate compact-view snippet (was unwrapped and produced lint error). */
 
 .menu-buttons-group {
     display: flex;
@@ -2569,11 +4642,7 @@ input:checked + .slider:before {
     color: var(--label-color);
     font-weight: 400;
 }
-/* NEW: Conditional green border for dropdowns when a target is hit */
-.dropdown-large.target-hit-border {
-    border: 2px solid var(--green-color) !important;
-    box-shadow: 0 0 8px rgba(var(--green-color-dark-rgb), 0.5); /* Subtle glow */
-}
+/* Removed legacy green glow dropdown target-hit border styling */
 
 .asx-code-btn {
     background-color: var(--asx-button-bg);
@@ -2592,28 +4661,21 @@ input:checked + .slider:before {
     background-color: var(--asx-button-hover-bg) !important; /* Force hover background color for all states */
 }
 
-/* Specific hover behavior for target-hit ASX buttons to prevent flicker */
-.asx-code-btn.target-hit-alert:hover {
-    animation-play-state: paused; /* Temporarily pause the pulsing animation */
-    /* Only transition background-color on hover to avoid conflicting with border/shadow set by alert */
-    background-color: var(--asx-button-hover-bg) !important; /* Keep background hover effect */
-    /* Ensure border and shadow remain visually consistent with the alert state while hovered */
-    border-color: var(--green-color) !important; /* Keep green border */
-    box-shadow: 0 0 12px rgba(var(--green-color-dark-rgb), 0.8) !important; /* Keep the 'to' state of the pulse shadow */
-    transform: none !important; /* Explicitly prevent transform to avoid layout thrashing */
-}
+/* Target-hit buttons unified styling handled later; no special glow hover needed here */
 
 .asx-code-btn.active {
-    background-color: var(--asx-button-active-bg);
-    color: var(--asx-button-active-text);
-    border-color: var(--asx-button-active-bg);
+    /* Border-only highlight using the current text color (set by positive/negative/neutral classes) */
+    background-color: transparent !important;
+    color: inherit; /* keep current text color */
+    border-color: currentColor !important;
+    box-shadow: 0 0 0 2px currentColor inset; /* subtle inner ring */
 }
 
-/* Conditional green border for ASX code buttons that hit target */
-.asx-code-btn.asx-target-hit-border {
-    border: 2px solid var(--green-color) !important;
-    box-shadow: 0 0 8px rgba(var(--green-color-dark-rgb), 0.5); /* Subtle glow */
-}
+/* Keyboard focus-visible styling */
+.asx-code-btn:focus { outline: none; }
+.asx-code-btn:focus-visible { outline: 2px solid var(--accent-color); outline-offset: 2px; }
+
+/* Removed legacy green glow ASX code button target-hit border styling */
 
 /* Main Content Area */
 .share-list-section {
@@ -2665,16 +4727,180 @@ table tbody tr:not(.selected):hover {
     background-color: var(--table-row-hover-bg) !important; /* Force hover background color */
 }
 
-/* NEW: Target hit alert styling for table rows and mobile cards */
-table tbody tr.target-hit-alert,
-.mobile-card.target-hit-alert {
-    border: 2px solid var(--green-color) !important; /* Force a full 2px green border */
-    box-shadow: 0 0 8px rgba(var(--green-color-dark-rgb), 0.5); /* Subtle glow for emphasis */
-    animation: pulse-alert 1.5s infinite alternate; /* Subtle pulsing animation */
-    /* Keep the subtle background from the alert theme, but ensure border is dominant */
-    background-color: var(--target-alert-bg); 
+/* Portfolio section/table styling */
+#portfolioSection.portfolio-section {
+    margin-top: 20px;
+    background-color: var(--card-bg);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px var(--shadow-color);
+    overflow: hidden;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 0; /* Breathe a bit around the table */
 }
 
+#portfolioSection h2 {
+    margin: 12px 16px;
+    font-weight: 700;
+}
+/* Hide redundant Portfolio heading when using the dynamic header
+    The app uses #dynamicWatchlistTitle; any static H2 under #portfolioSection
+    is a leftover for older layouts and should be visually suppressed on desktop. */
+#portfolioSection h2 { display: none; }
+
+/* Reuse base table styles; add numeric alignment + totals emphasis */
+#portfolioSection .portfolio-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: var(--text-color);
+}
+
+#portfolioSection .portfolio-table th,
+#portfolioSection .portfolio-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* Override: Left-align portfolio data cells for consistent column start */
+#portfolioSection .portfolio-table td { text-align:left; }
+
+/* Totals row emphasis */
+#portfolioSection .portfolio-table tr.portfolio-total-row td {
+    border-top: 2px solid var(--border-color);
+    background-color: var(--table-header-bg);
+}
+
+/* Ensure positive/negative colors apply clearly in portfolio cells */
+#portfolioSection .portfolio-table td.positive { color: var(--price-up-color) !important; font-weight: 700; }
+#portfolioSection .portfolio-table td.negative { color: var(--price-down-color) !important; font-weight: 700; }
+/* Row-level color cue */
+#portfolioSection .portfolio-table tr.positive td.code-cell { color: var(--price-up-color) !important; font-weight:700; }
+#portfolioSection .portfolio-table tr.negative td.code-cell { color:#FF4D4D !important; font-weight:700; }
+#portfolioSection .portfolio-table tr.portfolio-total-row.positive td { color: var(--price-up-color); }
+#portfolioSection .portfolio-table tr.portfolio-total-row.negative td { color:#FF4D4D; }
+
+/* Specific alignment tweaks: value column left aligned for readability */
+#portfolioSection .portfolio-table td.value-cell { text-align:left; padding-left:14px; }
+#portfolioSection .portfolio-table td.shares-cell,
+#portfolioSection .portfolio-table td.avg-cell,
+#portfolioSection .portfolio-table td.liveprice-cell,
+#portfolioSection .portfolio-table td.pl-cell,
+#portfolioSection .portfolio-table td.plpct-cell { text-align:left; }
+
+/* Profit/Loss summary bar */
+.portfolio-summary-bar { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+.portfolio-summary-bar.two-cards { justify-content:space-between; }
+.portfolio-summary-bar.two-cards .ps-card { flex:1 1 160px; }
+@media (max-width:600px){
+    .portfolio-summary-bar.two-cards { flex-direction:row; }
+    .portfolio-summary-bar.two-cards .ps-card { flex:1 1 0; min-width:0; }
+}
+.portfolio-summary-bar .ps-card { flex:1 1 140px; background:var(--card-bg); border:1px solid var(--border-color); border-radius:10px; padding:12px 14px; position:relative; overflow:hidden; }
+.portfolio-summary-bar .ps-card.highlight { border-width:2px; }
+.portfolio-summary-bar .ps-card.profit.highlight { border-color:#00FF8C; }
+.portfolio-summary-bar .ps-card.loss.highlight { border-color:#FF2F2F; }
+.portfolio-summary-bar .ps-card.net.positive.highlight { border-color:#00FF8C; }
+.portfolio-summary-bar .ps-card.net.negative.highlight { border-color:#FF2F2F; }
+.portfolio-summary-bar .ps-card::after { content:""; position:absolute; inset:0; opacity:0.15; pointer-events:none; }
+.portfolio-summary-bar .ps-card.profit::after { background:linear-gradient(135deg,#00c878,#004d2f); }
+.portfolio-summary-bar .ps-card.loss::after { background:linear-gradient(135deg,#ff4d4d,#5c0b0b); }
+.portfolio-summary-bar .ps-card.net.positive::after { background:linear-gradient(135deg,#00c878,#004d2f); }
+.portfolio-summary-bar .ps-card.net.negative::after { background:linear-gradient(135deg,#ff4d4d,#5c0b0b); }
+.portfolio-summary-bar .ps-label { font-size:0.65rem; text-transform:uppercase; letter-spacing:0.6px; opacity:0.75; margin-bottom:2px; }
+.portfolio-summary-bar .ps-value { font-size:1.15rem; font-weight:700; position:relative; z-index:1; }
+.portfolio-summary-bar .ps-card.profit .ps-value { color:#00FF9C; }
+.portfolio-summary-bar .ps-card.loss .ps-value { color:#FF7A7A; }
+.portfolio-summary-bar .ps-card.loss { border-color:#FF2F2F; }
+.portfolio-summary-bar .ps-card.loss .ps-value { color:#FF2F2F; }
+.portfolio-summary-bar .ps-card.net.positive .ps-value { color:#00FF9C; }
+.portfolio-summary-bar .ps-card.net.negative .ps-value { color:#FF7A7A; }
+.portfolio-summary-bar .ps-card.net .ps-percent { margin-top:4px; font-size:0.7rem; font-weight:600; letter-spacing:0.5px; opacity:0.85; }
+.portfolio-summary-bar .ps-card.net.positive .ps-percent { color:#00FF9C; }
+.portfolio-summary-bar .ps-card.net.negative .ps-percent { color:#FF2F2F; }
+@media (max-width:640px){
+    .portfolio-summary-bar { gap:6px; }
+    .portfolio-summary-bar .ps-card { padding:10px 12px; flex:1 1 100px; }
+    .portfolio-summary-bar .ps-value { font-size:1rem; }
+}
+@media (min-width:900px){
+    .portfolio-summary-bar .ps-value { font-size:1.25rem; }
+}
+
+/* Totals card full-width placement in portfolio cards grid */
+.portfolio-cards .totals-footer-wrapper { grid-column:1 / -1; width:100%; }
+.portfolio-cards { padding:4px 8px 10px 8px; box-sizing:border-box; overflow:hidden; }
+.portfolio-cards .portfolio-card.total.wide { margin-top:4px; }
+@media (max-width:600px){
+    .portfolio-cards { padding-left:8px; padding-right:8px; }
+}
+.portfolio-cards .portfolio-card.total.wide { width:100%; }
+@media (max-width:820px){
+    .portfolio-cards { display:grid; grid-template-columns:1fr !important; }
+    .portfolio-cards .portfolio-card { width:100%; margin:0 0 8px 0; }
+    .portfolio-cards .totals-footer-wrapper { width:100%; }
+}
+
+/* Watchlist numeric inputs left aligned */
+#shareTable td input[type="number"],
+#shareTable td input[type="text"] {
+    text-align: left;
+}
+
+/* Ensure Value header aligns with left-aligned value cells */
+
+/* Portfolio: Responsive scroll wrapper for mobile overflow */
+.portfolio-scroll-wrapper {
+    width: 100%;
+    overflow-x: hidden; /* Prevent sideways scroll */
+    padding-bottom:4px;
+    -webkit-overflow-scrolling: touch;
+}
+/* Hide default scrollbar on WebKit (keep accessible) */
+.portfolio-scroll-wrapper::-webkit-scrollbar { height: 8px; }
+.portfolio-scroll-wrapper::-webkit-scrollbar-track { background: transparent; }
+.portfolio-scroll-wrapper::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+
+/* Alignment utility classes to mirror watchlist */
+#portfolioSection .portfolio-table td.code-cell { text-align: left; font-weight: 600; }
+#portfolioSection .portfolio-table td.num-cell { text-align: left !important; white-space: nowrap; }
+
+/* Live price badge styling */
+#portfolioSection .portfolio-table .price-badge {
+    display: inline-block;
+    font-size: 0.60rem;
+    font-weight: 600;
+    padding: 2px 4px;
+    border-radius: 3px;
+    margin-right: 4px;
+    vertical-align: middle;
+    letter-spacing: 0.5px;
+}
+#portfolioSection .portfolio-table .price-badge.live { background: var(--green-color); color: #000; }
+#portfolioSection .portfolio-table .price-badge.stale { background: var(--border-color); color: var(--text-color); }
+#portfolioSection .portfolio-table td.live-cell.live .price-value { font-weight: 700; }
+
+/* Slightly reduce padding on very narrow screens */
+@media (max-width: 560px) {
+    #portfolioSection .portfolio-table th, #portfolioSection .portfolio-table td { padding: 8px 10px; }
+    #portfolioSection .portfolio-table th { font-size: 0.72rem; }
+    #portfolioSection .portfolio-table td { font-size: 0.75rem; }
+    #portfolioSection h2 { font-size: 1.05rem; }
+}
+
+/* Collapse some text labels if extremely narrow */
+@media (max-width: 420px) {
+    #portfolioSection .portfolio-table thead th:nth-child(3) { min-width: 70px; }
+    #portfolioSection .portfolio-table thead th:nth-child(4) { min-width: 64px; }
+}
+
+/* NEW: Target hit alert styling for table rows and mobile cards */
+table tbody tr.target-hit-alert,
+.mobile-card.target-hit-alert, 
+.portfolio-card.target-hit-alert, 
+tr.target-hit-alert {
+    position: relative; 
+    outline: none; 
+}
 /* Ensure text color applies to children */
 table tbody tr.target-hit-alert td,
 .mobile-card.target-hit-alert h3,
@@ -2683,29 +4909,54 @@ table tbody tr.target-hit-alert td,
     color: inherit; /* Inherit text color from parent */
 }
 
-/* Animation for pulsing alert */
-@keyframes pulse-alert {
-    from { 
-        box-shadow: 0 0 8px rgba(var(--green-color-dark-rgb), 0.5); /* Keep initial box-shadow */
-    }
-    to { 
-        box-shadow: 0 0 12px rgba(var(--green-color-dark-rgb), 0.8); /* Slightly expand box-shadow for pulse */
-    }
+/* Removed legacy pulse-alert and pulseHighlight animations (replaced by targetHitPulseBorder) */
+
+/* ===================== */
+/* Portfolio Mobile Cards */
+/* ===================== */
+.portfolio-cards { display:none; }
+
+
+/* Stronger portfolio context button coloring */
+.asx-code-btn.portfolio-context.positive { background:rgba(0,255,140,0.15); border-color:#00FF8C; color:#00FF8C; }
+.asx-code-btn.portfolio-context.negative { background:rgba(255,70,70,0.18); border-color:#FF3B3B; color:#FF3B3B; }
+.asx-code-btn.portfolio-context.neutral { background:rgba(255,255,255,0.05); }
+.portfolio-card .pc-live { display:flex; align-items:center; gap:4px; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.5px; }
+.portfolio-card .pc-live.live { color:var(--green-color); }
+.portfolio-card .pc-live.stale { opacity:0.75; }
+.portfolio-card .pc-live .val { font-size:0.85rem; font-weight:600; text-transform:none; letter-spacing:0; }
+.portfolio-card .pc-plpct { min-width:48px; text-align:right; font-weight:600; font-size:0.75rem; }
+.portfolio-card .pc-pl-val { font-weight:700; }
+.portfolio-card .pc-value-label { font-size:0.55rem; text-transform:uppercase; letter-spacing:0.5px; opacity:0.6; }
+.portfolio-card .pc-value { font-weight:600; }
+.portfolio-card .live-price { color: var(--green-color); font-weight:700; }
+.portfolio-card .last-price { color: var(--text-color); opacity:0.85; }
+.portfolio-card .manual-price { color: var(--text-color); opacity:0.6; }
+.portfolio-card.total.wide { grid-column: span 2; }
+@media (max-width:480px){ .portfolio-card.total.wide { grid-column: span 1; } }
+
+/* Table live price coloring */
+#portfolioSection .portfolio-table .price-value.live-price { color: var(--green-color); font-weight:700; }
+#portfolioSection .portfolio-table .price-value.last-price { opacity:0.85; }
+#portfolioSection .portfolio-table .price-value.manual-price { opacity:0.6; }
+
+/* Show cards & hide table below 820px to remove horizontal scroll */
+@media (max-width: 820px) {
+    #portfolioSection .portfolio-table { display:none; }
+    .portfolio-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:8px; }
+    .portfolio-scroll-wrapper { overflow-x:visible; }
 }
 
-@keyframes pulseHighlight {
-    from {
-        transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(var(--green-color-dark-rgb), 0.7); /* Use RGB for pulsating shadow */
-    }
-    70% {
-        transform: scale(1.05);
-        box-shadow: 0 0 0 10px rgba(var(--green-color-dark-rgb), 0);
-    }
-    to {
-        transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(var(--green-color-dark-rgb), 0);
-    }
+/* Force card layout on short landscape mobile/tablet screens even if width > 820px */
+@media (orientation: landscape) and (max-height: 520px) {
+    #portfolioSection .portfolio-table { display:none; }
+    .portfolio-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px; }
+}
+
+@media (max-width: 560px) {
+    .portfolio-card { padding:10px 12px; }
+    .portfolio-card .pc-row.mid { flex-wrap:wrap; }
+    .portfolio-card .pc-live .val { font-size:0.8rem; }
 }
 
 /* Override price change specific visual cues when target-hit-alert is active on mobile cards */
@@ -2725,11 +4976,18 @@ table tbody tr.target-hit-alert td,
 table td .share-code-display { /* New class for the ASX code span */
     font-size: 1.2em; /* Larger for the code */
     font-weight: 700;
+    color: var(--asx-code-color, inherit);
 }
 
 table td .live-price-value {
     font-size: 1.2em; /* Larger for the live price number */
     font-weight: 700;
+    color: var(--live-price-color, inherit);
+}
+/* Force ASX Code and Live Price to pure white in dark theme */
+body.dark-theme table td .share-code-display,
+body.dark-theme table td .live-price-value {
+    color: #fff !important;
 }
 
 /* Apply coloring to specific text elements */
@@ -2740,7 +4998,7 @@ table td .live-price-value {
 .mobile-card h3.positive,     /* For ASX code in mobile card */
 .live-price-large.positive,   /* For live price in mobile card/modal */
 .asx-code-btn.positive {      /* For ASX code buttons */
-    color: var(--price-up-color) !important;
+    color: var(--price-up-color) !important; /* Strong green */
 }
 
 .negative,
@@ -2749,7 +5007,7 @@ table td .live-price-value {
 .mobile-card h3.negative,
 .live-price-large.negative,
 .asx-code-btn.negative {
-    color: var(--price-down-color) !important;
+    color: var(--price-down-color) !important; /* Strong red, matches delete bin */
 }
 
 .neutral,
@@ -2767,8 +5025,8 @@ table td.live-price-cell.negative-change {
     background-color: transparent;
 }
 
-.price-change {
-    font-size: 0.8em;
+/* Removed standalone .price-change 0.8em scaling; change now written directly into .price-change-large which already has the 50% contract */
+.price-change { /* Keep selector for legacy markup; no size override */
     margin-left: 5px;
     font-weight: 700;
     white-space: nowrap;
@@ -2814,34 +5072,8 @@ table td.live-price-cell.negative-change {
 }
 
 /* General rules for thin vertical lines (keep them for non-target-hit cards) */
-.mobile-card::before,
-.mobile-card::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    width: 5px; /* Width of the vertical line */
-    height: 100%;
-    transition: background-color 0.3s ease, width 0.3s ease, border-width 0.3s ease;
-    z-index: 1; /* Ensure they are above the card background but below content */
-}
-
-.mobile-card::before {
-    left: 0;
-}
-
-.mobile-card::after {
-    right: 0;
-}
-
-.mobile-card.positive-change-card::before,
-.mobile-card.positive-change-card::after {
-    background-color: var(--price-up-color);
-}
-
-.mobile-card.negative-change-card::before,
-.mobile-card.negative-change-card::after {
-    background-color: var(--price-down-color);
-}
+/* Removed legacy side-line pseudo elements – side borders now handled with real borders */
+/* (Intentionally deleted ::before/::after system to avoid conflicts in compact view) */
 
 /* Subtle background tints for price movement */
 .mobile-card.positive-change-card {
@@ -2858,45 +5090,16 @@ table td.live-price-cell.negative-change {
     display: none; /* Hide these when the main border is applied to the card */
 }
 
-/* NEW: Full border for modal headers when ASX code has hit target */
-/* This applies to both share detail modal and search result display (h3) */
-.modal-header-with-icon h2.modal-share-name.target-hit-alert,
-#searchResultDisplay h3.target-hit-alert { /* Applying to the h3 in search results too */
-    border: 2px solid var(--green-color) !important; /* Force a full 2px green border */
-    padding: 5px 10px; /* Add some padding to make the border visible around the text */
-    border-radius: 8px; /* Rounded corners for the border */
-    animation: pulse-alert 1.5s infinite alternate; /* Apply pulsing animation */
-    box-shadow: 0 0 8px rgba(var(--green-color-dark-rgb), 0.5); /* Subtle glow */
-    background-color: var(--target-alert-bg); /* Add a subtle background color matching the alert */
-    color: var(--target-alert-text) !important; /* Ensure text color is readable */
-}
-/* Ensure the price change colors are overridden when target-hit-alert is active on modal titles */
-.modal-header-with-icon h2.modal-share-name.target-hit-alert.positive,
-.modal-header-with-icon h2.modal-share-name.target-hit-alert.negative,
-.modal-header-with-icon h2.modal-share-name.target-hit-alert.neutral,
-#searchResultDisplay h3.target-hit-alert.positive,
-#searchResultDisplay h3.target-hit-alert.negative,
-#searchResultDisplay h3.target-hit-alert.neutral {
-    color: var(--target-alert-text) !important; /* Force text color to alert text */
-}
+/* Removed obsolete modal title target-hit styling (now handled by unified .target-hit-alert full border) */
 
 /* NEW: Full border for ASX code buttons when target is hit */
-.asx-code-btn.target-hit-alert { /* New class for target hit on buttons */
-    border: 2px solid var(--green-color) !important; /* Force a full 2px green border */
-    animation: pulse-alert 1.5s infinite alternate;
-    box-shadow: 0 0 8px rgba(var(--green-color-dark-rgb), 0.5);
+.asx-code-btn.target-hit-alert { /* New class for target hit on buttons - unify with coffee border */
+    border: 4px solid var(--accent-color) !important; /* Use unified coffee border */
+    box-shadow: none; /* No glow */
 }
 /* Ensure price colors are overridden on ASX buttons when target-hit-alert is active */
 /* Ensure no flickering when hovering target-hit ASX buttons */
-.asx-code-btn.target-hit-alert:hover {
-    /* Temporarily pause animation on hover to allow smooth background transition */
-    animation-play-state: paused; 
-    /* Ensure hover background is applied smoothly */
-    background-color: var(--asx-button-hover-bg); /* Use normal hover background */
-    /* Ensure border and shadow are consistent */
-    border-color: var(--green-color) !important; /* Keep green border */
-    box-shadow: 0 0 12px rgba(var(--green-color-dark-rgb), 0.8) !important; /* Keep active shadow */
-}
+.asx-code-btn.target-hit-alert:hover { background-color: var(--asx-button-hover-bg); border-color: var(--accent-color) !important; }
 
 /* Ensure content is readable over the tint */
 .mobile-card.positive-change-card h3,
@@ -2907,6 +5110,14 @@ table td.live-price-cell.negative-change {
 .mobile-card.negative-change-card span {
     color: var(--text-color); /* Ensure readability */
 }
+/* Restore directional arrow color inside tinted cards */
+.mobile-card.positive-change-card .card-chevron.positive { color: var(--brand-green) !important; }
+.mobile-card.negative-change-card .card-chevron.negative { color: var(--brand-red) !important; }
+.mobile-card.neutral-change-card .card-chevron.neutral { color: var(--price-neutral-color) !important; }
+/* Global fallback to guarantee arrow coloring even if parent card movement class not applied yet */
+.card-chevron.positive { color: var(--brand-green) !important; }
+.card-chevron.negative { color: var(--brand-red) !important; }
+.card-chevron.neutral { color: var(--price-neutral-color) !important; }
 
 .mobile-card {
     background-color: var(--card-bg);
@@ -2949,17 +5160,20 @@ table td.live-price-cell.negative-change {
 
 /* Live Price Display Section for Mobile Cards and Modals */
 .live-price-display-section {
-    background-color: var(--live-price-section-bg);
+    /* Centralized sizing contract */
+    --live-price-size: 1.75em;         /* Primary (ASX Code + Live Price) */
+    --secondary-scale: 0.50;           /* All secondary metrics (change, 52W, P/E, etc.) */
+    background: none !important;
     border-radius: 8px;
     padding: 15px;
     margin-bottom: 15px;
     text-align: center;
     display: flex;
-    flex-direction: column; /* Changed to column to stack elements */
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 5px;
-    box-shadow: inset 0 0 5px rgba(0,0,0,0.05); /* Subtle inner shadow */
+    box-shadow: none !important;
 }
 
 /* New: Row for 52-Week High/Low */
@@ -2967,10 +5181,10 @@ table td.live-price-cell.negative-change {
     display: flex;
     justify-content: space-between;
     width: 100%;
-    font-size: 0.85em; /* Smaller font for high/low */
     color: var(--text-color);
-    margin-bottom: 5px; /* Space below this row */
+    margin-bottom: 5px;
 }
+.fifty-two-week-row .fifty-two-week-value { font-size: calc(var(--live-price-size) * var(--secondary-scale)); }
 
 .fifty-two-week-value {
     font-weight: 600;
@@ -2986,28 +5200,115 @@ table td.live-price-cell.negative-change {
     margin-bottom: 5px; /* Space below this row */
 }
 
-.live-price-display-section .live-price-large {
-    font-size: 1.4em; /* Size is correct as per user, ensure color applies */
-    font-weight: 800; /* Much bolder */
-    color: var(--text-color); /* Default, will be overridden by .positive/.negative */
-    line-height: 1; /* Prevent extra line height */
+/* Live price + code: always neutral theme text color */
+.live-price-display-section .live-price-large,
+.neutral-code-text { color: var(--text-color) !important; }
+/* Adjusted: live price should visually dominate over day change */
+/* Live price large: define a variable so change can be derived at 50% */
+.live-price-display-section .live-price-large { font-size: var(--live-price-size); font-weight: 800; line-height: 1; }
+
+/* Modal live price proportional sizing (day change = 50%).
+    Place variable on the container so both price and change inherit the same base. */
+/* Align detail modal primary sizing with Add Share modal for consistent ratios */
+#modalLivePriceDisplaySection { --live-price-size: 1.9em; }
+@media (max-width:640px){ #modalLivePriceDisplaySection { --live-price-size: 1.85em; } }
+/* Modal / add form: large code & live price; smaller contextual metrics */
+.live-price-display-section .modal-share-name { font-size: var(--live-price-size) !important; font-weight:800; line-height:1; }
+#addShareLivePriceDisplay { --live-price-size:1.9em; }
+@media (max-width:640px){ #addShareLivePriceDisplay { --live-price-size:1.85em; } }
+/* Search modal live display: align primary size with detail modal but slightly smaller */
+#stockSearchModal .live-price-display-section { --live-price-size: 2.4em; }
+
+/* Secondary metrics sizing (contract): value elements only (avoid inflating container rows) */
+#modalLivePriceDisplaySection .price-change-large,
+#modalLivePriceDisplaySection .fifty-two-week-value,
+#modalLivePriceDisplaySection .pe-ratio-value,
+#addShareLivePriceDisplay .price-change-large,
+#addShareLivePriceDisplay .fifty-two-week-value,
+#addShareLivePriceDisplay .pe-ratio-value { font-size: calc(var(--live-price-size) * var(--secondary-scale)) !important; }
+
+/* Generic fallback for any live price display context */
+.live-price-display-section .price-change-large,
+.live-price-display-section .fifty-two-week-value,
+.live-price-display-section .pe-ratio-value { font-size: calc(var(--live-price-size) * var(--secondary-scale)); }
+#modalLivePriceDisplaySection .price-change-large { margin-left:14px; }
+#addShareLivePriceDisplay .price-change-large { margin-left:10px; }
+
+/* Price change text only (no background container / padding) */
+/* Adjusted: make day change subordinate to live price for clarity */
+/* Day change always 50% of live price (uses variable from .live-price-large) */
+.live-price-display-section .price-change-large {
+    font-weight: 600;
+    white-space: nowrap;
+    margin-left: 10px;
+    display: inline-block;
+    line-height: 1.1;
+    letter-spacing: .25px;
+    padding: 0;
+    background:none !important;
+    border:none !important;
+    box-shadow:none !important;
+    opacity: .95;
 }
 
-.live-price-display-section .price-change-large {
-    font-size: 0.8em; /* Smaller for percentage change */
-    font-weight: 700;
-    white-space: nowrap;
-    margin-left: 10px; /* Space between price and change */
+/* Mobile fine-tune: further reduce change size on very small screens */
+@media (max-width: 640px) {
+    .live-price-display-section { --live-price-size: 1.9em; }
+    .live-price-display-section .price-change-large { margin-left: 8px; }
 }
+
+/* (Removed legacy compact absolute-position & flex centering block – superseded by FINAL COMPACT CARD GRID LAYOUT) */
+
+/* Enlarged & flush header icons */
+#hamburgerBtn, #addShareHeaderBtn { font-size:2.05rem; width:52px; height:52px; display:inline-flex; align-items:center; justify-content:center; padding:0; margin:0; }
+#addShareHeaderBtn i { opacity:1 !important; color:var(--accent-color,#a49393) !important; filter:none !important; }
+#hamburgerBtn { margin-left:-6px; }
+#addShareHeaderBtn { margin-right:-6px; }
+#hamburgerBtn svg, #addShareHeaderBtn svg { width:34px; height:34px; }
+
+/* Modal action icons (generic) */
+/* Modal action icons (generic) - apply to all modals including watchlist modals */
+.modal-container .icon-btn, .modal-container .close-button, .modal-container .delete-icon, .modal-container .edit-icon, .modal-container .save-icon,
+#editWatchlistModal .icon-btn, #editWatchlistModal .close-button, #editWatchlistModal .delete-icon, #editWatchlistModal .edit-icon, #editWatchlistModal .save-icon,
+#watchlistViewModal .icon-btn, #watchlistViewModal .close-button, #watchlistViewModal .delete-icon, #watchlistViewModal .edit-icon, #watchlistViewModal .save-icon {
+    font-size: 1.4rem !important;
+    width: 48px; /* match add/edit share modal larger touch target */
+    height: 48px;
+}
+
+/* Explicitly enlarge Add/Edit Watchlist modal icons to match share modals */
+#addWatchlistModal .modal-action-icon, #addWatchlistModal .modal-header-with-icon .close-button,
+#manageWatchlistModal .modal-action-icon, #manageWatchlistModal .modal-header-with-icon .close-button {
+    font-size:1.9rem !important; width:54px; height:54px;
+}
+
+/* Centered single-line login note on mobile */
+@media (max-width: 768px) {
+    #commSecLoginMessage { text-align:center; display:block; width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin:4px 0 0 0 !important; }
+}
+/* Larger actionable icons & buttons on smaller mobile widths */
+@media (max-width: 640px) {
+    #shareFormSection button.close-button,
+    #shareDetailModal button.close-button { font-size:1.4rem; width:48px; height:48px; }
+    #saveShareBtn, #deleteShareBtn, #contextEditShareBtn, #contextDeleteShareBtn { font-size:1.15rem; }
+    #saveShareBtn i, #deleteShareBtn i { font-size:1.3em; }
+}
+/* Remove gradient backgrounds – pure text color only */
+.price-change-large.positive { color: var(--brand-green) !important; background:none !important; }
+.price-change-large.negative { color: var(--brand-red) !important; background:none !important; }
+.price-change-large.neutral { color: var(--text-color) !important; background:none !important; }
+
+/* Larger arrow sizing inside pill (inherit current font-size, arrow is part of text) */
+.price-change-large { font-variant-numeric: tabular-nums; }
 
 /* New: Row for P/E Ratio */
 .pe-ratio-row {
     width: 100%;
     text-align: center;
-    font-size: 0.9em; /* Slightly smaller for P/E */
     color: var(--text-color);
-    margin-top: 5px; /* Space above this row */
+    margin-top: 5px;
 }
+.pe-ratio-row .pe-ratio-value { font-size: calc(var(--live-price-size) * var(--secondary-scale)); }
 
 .pe-ratio-value {
     font-weight: 600;
@@ -3040,9 +5341,9 @@ table td.live-price-cell.negative-change {
 
 .google-auth-btn {
     background-color: var(--google-auth-btn-bg);
-    color: var(--google-auth-btn-text);
+    color: #ffffff; /* Force white text for better contrast */
     padding: 12px 25px;
-    border: 1px solid var(--google-auth-btn-text);
+    border: 1px solid #000000; /* Black border */
     border-radius: 25px;
     cursor: pointer;
     font-size: 1.1em;
@@ -3068,6 +5369,16 @@ table td.live-price-cell.negative-change {
     border-color: transparent;
     cursor: not-allowed;
     opacity: 0.5;
+}
+
+/* Ghosted portfolio card when hidden from totals */
+.portfolio-card.hidden-from-totals {
+    opacity: 0.45;
+    filter: grayscale(30%);
+}
+
+.portfolio-card.hidden-from-totals .pc-eye-btn.hidden-from-totals {
+    color: var(--ghosted-text) !important;
 }
 
 /* Modals - General */
@@ -3099,8 +5410,17 @@ table td.live-price-cell.negative-change {
     color: var(--text-color);
     display: flex;
     flex-direction: column;
-    max-height: 90vh; 
+    max-height: 90vh;
+    overflow-x: hidden; /* Prevent horizontal spill */
+    word-break: break-word; /* Wrap long tokens */
+    overscroll-behavior: contain;
 }
+
+#shareDetailModal .modal-content { width:94%; max-width:540px; }
+#shareDetailModal { overscroll-behavior:contain; }
+
+/* Center & constrain login note (single line) */
+#commSecLoginMessage { text-align:center; display:block; width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin:6px 0 0 0 !important; grid-column:1 / -1; order:999; }
 
 /* Modal Header with Icon for Alignment and Buttons */
 .modal-header-with-icon {
@@ -3114,20 +5434,34 @@ table td.live-price-cell.negative-change {
     flex-wrap: nowrap; /* Prevent wrapping on small screens */
 }
 
-/* ASX Code prominence and alignment */
-#modalShareName, #modalCashAssetName { /* Targeted directly for higher specificity */
+/* ASX Code  prominence and alignment */
+#modalShareName, #modalCashAssetName, #formTitle { /* Apply to all modal titles */
     margin: 0;
-    flex-grow: 1;
-    text-align: center;
-    font-size: 2.2em; /* Set to match live price display for all sizes */
+    padding: 0;
+    font-size: 2.2em;
     font-weight: 800; /* Made bolder */
-    flex-shrink: 1; /* Allow title to shrink if buttons need space */
-    min-width: 0; /* Allow title to shrink below its content size */
-    line-height: 1; /* Ensure vertical alignment by removing extra line height */
-    display: flex; /* Use flex to center text within its own space */
-    align-items: center; /* Vertically center the text */
-    justify-content: center; /* Horizontally center the text */
-    height: 40px; /* Match the height of the action icons for vertical alignment */
+    line-height: 1.1; /* Adjust line height for better spacing */
+    /* Removed flex properties and fixed height to allow natural flow in the container */
+}
+
+/* NEW: Container for the modal title (ASX Code + Company Name) */
+.modal-title-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center the code and name */
+    flex-grow: 1; /* Allow it to take up space */
+    text-align: center;
+    margin: 0 10px; /* Add some margin to not touch the icons */
+}
+
+.modal-company-name-display {
+    font-size: 1.1em; /* Smaller than the code */
+    font-weight: 400; /* Normal weight */
+    color: var(--ghosted-text); /* Muted color */
+    margin: 0; /* Remove default paragraph margins */
+    padding: 0;
+    line-height: 1.2;
+    margin-top: 4px; /* Add a little space below the ASX code */
 }
 
 /* New group for action buttons and close button */
@@ -3139,18 +5473,21 @@ table td.live-price-cell.negative-change {
 }
 
 /* General Close Button Styling for all modals */
+/* Normalized close button sizing: inherit unified modal icon size (set earlier to 1.9rem / 54px) */
 .close-button {
-    background: none; /* Ensure no background */
-    border: none; /* Ensure no border */
-    color: var(--text-color); /* Use general text color */
-    font-size: 1.8em; /* Consistent size with header action buttons */
-    cursor: pointer;
-    padding: 5px;
-    line-height: 1; /* Vertically center the 'X' */
-    display: block;
-    flex-shrink: 0;
-    position: static; /* Ensure it flows naturally within its flex container */
-    margin-left: 0; /* Remove any auto margins that might be pushing it */
+    background:none;
+    border:none;
+    color:var(--text-color);
+    font-size:inherit; /* use size from unified modal icon rule */
+    cursor:pointer;
+    padding:0; /* match other modal action icons */
+    line-height:1;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+    position:static;
+    margin-left:0;
 }
 
 .close-button:hover,
@@ -3161,19 +5498,15 @@ table td.live-price-cell.negative-change {
 }
 
 /* Specific styling for close buttons in modal headers (like Share, Watchlist, Custom Dialog) */
-.modal-header-with-icon .close-button {
-    font-size: 2em; /* Slightly larger for modal headers */
-    padding: 5px;
-}
+/* Remove oversized variant; keep spacing consistent */
+.modal-header-with-icon .close-button { font-size:inherit; padding:0; }
 
 /* Specific styling for calculator modal close button */
-.calculator-modal-content .close-button {
-    font-size: 2em; /* Consistent with other modal close buttons */
-    position: absolute; /* Keep absolute for calculator modals as they don't have modal-header-with-icon */
-    top: 10px;
-    right: 20px;
-    color: var(--text-color); /* Ensure it uses text color */
-}
+/* Calculator modal keeps positioning but not larger font */
+.calculator-modal-content .close-button { font-size:inherit; position:absolute; top:10px; right:20px; color:var(--text-color); padding:0; }
+
+/* Modal action icon sizing */
+.modal-header-action-group button, .modal-header-action-group .icon-button, .modal-header-action-group .delete-icon, .modal-header-action-group .edit-icon, .modal-header-action-group .save-icon { font-size:2rem !important; padding:10px !important; line-height:1; }
 .calculator-modal-content .close-button:hover {
     color: var(--danger-button-bg);
 }
@@ -3187,6 +5520,7 @@ table td.live-price-cell.negative-change {
     margin-bottom: 0; /* Remove bottom margin */
     display: inline; /* Change to inline display */
 }
+
 
 .commsec-message {
     display: block;
@@ -3212,6 +5546,51 @@ table td.live-price-cell.negative-change {
 .add-share-modal-content .modal-body-scrollable {
     padding-bottom: 20px;
 }
+
+/* Accordion (Share Form) */
+.accordion { display:flex; flex-direction:column; gap:12px; }
+.accordion-section { border:1px solid var(--border-color); border-radius:10px; background:var(--card-bg); box-shadow:0 2px 4px rgba(0,0,0,0.04); overflow:hidden; transition: border-color .25s, box-shadow .25s; }
+.accordion-section.open { border-color: var(--accent-color,#a49393); box-shadow:0 3px 10px rgba(0,0,0,0.08); }
+.accordion-toggle { all:unset; cursor:pointer; display:flex; align-items:center; justify-content:space-between; width:100%; padding:14px 16px; box-sizing:border-box; font-size:0.98rem; font-weight:600; color:var(--text-color); position:relative; }
+.accordion-toggle:focus-visible { outline:2px solid var(--accent-color,#a49393); outline-offset:2px; border-radius:4px; }
+.accordion-title { pointer-events:none; }
+.accordion-caret { width:16px; height:16px; position:relative; display:inline-block; }
+.accordion-caret::before { content:""; position:absolute; inset:0; margin:auto; width:0; height:0; border-left:6px solid transparent; border-right:6px solid transparent; border-top:9px solid var(--text-color); transition: transform .28s ease; transform-origin:center; }
+.accordion-section.open .accordion-caret::before { transform: rotate(180deg); }
+.accordion-panel { max-height:0; overflow:hidden; transition:max-height .35s ease, padding .25s ease; padding:0 16px; }
+.accordion-section.open > .accordion-panel { max-height:1200px; padding:4px 16px 16px; }
+/* Subtle divider between sections */
+.accordion-section + .accordion-section { margin-top:2px; }
+/* Hover / active states */
+.accordion-section:not(.open) .accordion-toggle:hover { background:var(--table-row-hover-bg,#f5f7fa); }
+body.dark-theme .accordion-section { background: var(--card-bg,#2a2a2a); }
+body.dark-theme .accordion-section:not(.open) .accordion-toggle:hover { background:#333; }
+/* Comments header within accordion */
+.comments-header-row { display:flex; align-items:center; justify-content:space-between; margin:0 0 6px; }
+.add-section-icon { cursor:pointer; color:var(--icon-action-color); display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:6px; transition: background .2s, color .2s; }
+.add-section-icon:hover { background:var(--table-row-hover-bg,#f0f4f5); }
+body.dark-theme .add-section-icon:hover { background:#3a3a3a; }
+/* Reduce spacing of inputs inside accordion for tighter layout */
+.accordion-panel label { margin-top:12px; }
+.accordion-panel label:first-child { margin-top:4px; }
+/* Live price display inside core details */
+#addShareLivePriceDisplay { margin-top:8px; }
+/* Pulsing cue for required watchlist selection */
+.watchlist-pulse {
+    position:relative;
+    animation: watchlistPulse 1.9s ease-in-out infinite;
+    border-color: var(--accent-color,#a49393) !important;
+    box-shadow: 0 0 0 0 rgba(164,147,147,0.55);
+}
+@keyframes watchlistPulse {
+    0% { box-shadow:0 0 0 0 rgba(164,147,147,0.55); }
+    50% { box-shadow:0 0 0 6px rgba(164,147,147,0); }
+    100% { box-shadow:0 0 0 0 rgba(164,147,147,0); }
+}
+/* Smart placeholder (fade when focused) */
+input.smart-ph::placeholder { color: var(--placeholder-text,#6c757d); opacity:0.9; transition: opacity .18s; }
+input.smart-ph:focus::placeholder { opacity:0.15; }
+
 
 .modal-content h2 {
     margin-top: 0;
@@ -3243,6 +5622,7 @@ table td.live-price-cell.negative-change {
     color: var(--text-color);
     font-size: 1em;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    appearance: textfield;
     -moz-appearance: textfield; /* Firefox */
 }
 
@@ -3313,19 +5693,9 @@ table td.live-price-cell.negative-change {
     color: var(--ghosted-text);
 }
 
-/* Highlight active label for sidebar toggle */
-#showLastLivePriceToggle:checked + .slider + .toggle-label.right {
-    font-weight: bold;
-    color: var(--positive-color);
-}
-
-#showLastLivePriceToggle:not(:checked) + .slider + .toggle-label.left {
-    font-weight: bold;
-    color: var(--negative-color);
-}
+/* Removed toggle-specific highlight rules (#showLastLivePriceToggle) as the feature was deprecated */
 
 /* Ensure the main sidebar button item is still clickable as a whole */
-. /* Copilot update: 2025-07-29 - change for sync test */
 .menu-button-item.toggle-switch-container > .switch {
     pointer-events: none; /* Prevent switch itself from stealing click from parent */
 }
@@ -3532,14 +5902,7 @@ table td.live-price-cell.negative-change {
     color: var(--ghosted-text);
 }
 
-/* Highlight active label for sidebar toggle */
-#showLastLivePriceToggle:checked + .slider + .toggle-label.right {
-    font-weight: bold;
-    color: var(--positive-color);
-}
-
-#showLastLivePriceToggle:not(:checked) + .slider + .toggle-label.left {
- /* Specific styling for the sidebar toggle section */
+/* Specific styling for the sidebar toggle section */
 .menu-button-item.toggle-switch-container {
     display: flex;
     flex-direction: column; /* Stack items vertically: title then toggle */
@@ -3598,16 +5961,7 @@ table td.live-price-cell.negative-change {
     color: var(--ghosted-text);
 }
 
-/* Highlight active label for sidebar toggle */
-#showLastLivePriceToggle:checked + .slider + .toggle-label.right {
-    font-weight: bold;
-    color: var(--positive-color);
-}
-
-#showLastLivePriceToggle:not(:checked) + .slider + .toggle-label.left {
-    font-weight: bold;
-    color: var(--negative-color);
-}
+/* Removed toggle-specific highlight rules (#showLastLivePriceToggle) as the feature was deprecated */
 
 /* Ensure the main sidebar button item is still clickable as a whole */
 .menu-button-item.toggle-switch-container > .switch {
@@ -3621,8 +5975,6 @@ table td.live-price-cell.negative-change {
 /* NEW: Styling for the notification badge text color */
 .target-hit-fixed-btn .badge {
     color: var(--button-text); /* Default to white/light for dark backgrounds */
-}   font-weight: bold;
-    color: var(--negative-color);
 }
 
 /* Ensure the main sidebar button item is still clickable as a whole */
@@ -3765,16 +6117,7 @@ table td.live-price-cell.negative-change {
     color: var(--ghosted-text);
 }
 
-/* Highlight active label for sidebar toggle */
-#showLastLivePriceToggle:checked + .slider + .toggle-label.right {
-    font-weight: bold;
-    color: var(--positive-color);
-}
-
-#showLastLivePriceToggle:not(:checked) + .slider + .toggle-label.left {
-    font-weight: bold;
-    color: var(--negative-color);
-}
+/* Removed toggle-specific highlight rules (#showLastLivePriceToggle) as the feature was deprecated */
 
 /* Ensure the main sidebar button item is still clickable as a whole */
 .menu-button-item.toggle-switch-container > .switch {
@@ -3948,13 +6291,6 @@ table td.live-price-cell.negative-change {
     display: none; /* Hide these old containers */
 }
 
-/* Custom dialog buttons container - default is hidden, JS will set display: flex or none */
-.custom-dialog-buttons {
-    display: none; /* Hidden by default, JS will explicitly set to flex or none */
-    justify-content: center; /* Center the buttons */
-    gap: 15px; /* Space between buttons */
-    margin-top: 20px; /* Space above buttons */
-}
 
 /* REMOVED: Sticky footer for action icons - These are now in the header */
 .modal-content .sticky-footer {
@@ -3962,27 +6298,58 @@ table td.live-price-cell.negative-change {
 }
 
 /* Modal Action Icons for positioning in header */
-.modal-action-icon {
-    background: none;
-    border: none;
-    padding: 8px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 1.5em; /* Adjusted size for header */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.2s ease, color 0.2s ease, transform 0.1s ease;
-    flex-shrink: 0; /* Prevent shrinking */
-    width: 40px; /* Fixed width for consistent sizing */
-    height: 40px; /* Fixed height for consistent sizing */
-    color: var(--icon-action-color); /* Default color for action icons */
+/* Override: larger modal header action icons */
+.modal-action-icon, .modal-header-with-icon .close-button {
+    background:none;
+    border:none;
+    padding:6px;
+    border-radius:10px;
+    cursor:pointer;
+    font-size:1.9rem; /* larger */
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:background-color .2s ease, color .2s ease, transform .1s ease;
+    flex-shrink:0;
+    width:54px;
+    height:54px;
+    color:var(--icon-action-color);
+    line-height:1;
+}
+
+/* Viewing Modal Specific Larger Icons (match add/edit modal sizes) */
+.share-detail-modal .modal-action-icon,
+.share-detail-modal .modal-header-with-icon .close-button {
+    font-size:2.1rem;
+    width:60px;
+    height:60px;
+}
+
+/* Increase size of toggle mute buttons in target alerts modal for better tap accuracy */
+.target-hit-item-grid .toggle-alert-btn.tiny-toggle {
+    font-size:0.78rem;
+    padding:6px 10px;
+}
+
+@media (max-width: 640px) {
+  .share-detail-modal .modal-action-icon,
+  .share-detail-modal .modal-header-with-icon .close-button {
+      font-size:2.3rem;
+      width:64px;
+      height:64px;
+  }
+  .target-hit-item-grid .toggle-alert-btn.tiny-toggle { font-size:0.85rem; }
 }
 
 .modal-action-icon:hover {
     background-color: var(--menu-button-hover-bg);
     color: var(--icon-action-hover-color);
     transform: translateY(-1px);
+}
+
+.modal-action-icon:focus-visible {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
 }
 
 .modal-action-icon.danger {
@@ -3998,6 +6365,33 @@ table td.live-price-cell.negative-change {
 .modal-action-icon.secondary:hover {
     color: var(--secondary-button-hover-color);
     background-color: var(--menu-button-hover-bg);
+}
+
+/* Generic small round icon buttons (header, notifications, etc.) */
+.icon-button {
+    background: transparent;
+    border: none;
+    padding: 6px;
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--icon-action-color);
+    border-radius: 50%;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.1s ease;
+}
+/* Force add share icon vivid */
+#addShareHeaderBtn.icon-button { opacity:1 !important; color:var(--accent-color,#a49393) !important; }
+
+.icon-button:hover {
+    background-color: var(--menu-button-hover-bg);
+    color: var(--icon-action-hover-color);
+}
+
+.icon-button:focus-visible {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
 }
 
 /* Share Details Modal Specifics */
@@ -4098,9 +6492,6 @@ table td.live-price-cell.negative-change {
 }
 
 /* Calculator Modals */
-.calculator-modal-content {
-    /* Specific styles for calculator modals if needed */
-}
 .calc-input-group {
     margin-bottom: 15px;
 }
@@ -4144,6 +6535,14 @@ table td.live-price-cell.negative-change {
     white-space: nowrap;
     overflow-x: auto;
     direction: rtl;
+}
+
+/* Ensure horizontal rule in calculator modal is styled consistently */
+#dividendCalculatorModal hr {
+    border: 0;
+    border-top: 1px solid var(--border-color);
+    margin: 12px 0;
+    height: 0;
 }
 
 /* Calculator Buttons Layout */
@@ -4235,8 +6634,8 @@ table td.live-price-cell.negative-change {
     z-index: 99; /* Make sure it does not overlap */
     border: none; /* Remove borders */
     outline: none; /* Remove outline */
-    background-color: var(--button-bg); /* Set a background color */
-    color: white; /* Text color */
+    background-color: var(--accent-color); /* Coffee accent background */
+    color: #fff; /* Text color */
     cursor: pointer; /* Add a mouse pointer on hover */
     padding: 15px; /* Some padding */
     border-radius: 50%; /* Rounded corners */
@@ -4252,7 +6651,7 @@ table td.live-price-cell.negative-change {
 }
 
 #scrollToTopBtn:hover {
-    background-color: var(--button-hover-bg); /* Add a darker background on hover */
+    background-color: var(--accent-color); /* Keep accent on hover for consistency */
     transform: translateY(-2px);
 }
 
@@ -4430,13 +6829,26 @@ body.dark-theme .target-hit-details-modal .modal-content {
     flex-direction: column;
     gap: 5px;
 }
+.target-hit-item { cursor:pointer; transition:background-color .15s ease, border-color .15s ease; }
+.target-hit-item:hover { background-color: var(--card-bg-hover, rgba(255,255,255,0.08)); }
 
 .target-hit-item-header {
-    display: flex;
+    display:flex;
     justify-content: space-between;
-    align-items: center;
-    font-weight: 600;
+    align-items: flex-start;
+    gap:12px;
+    font-weight:600;
 }
+.target-hit-item-header .thi-left { display:flex; flex-direction:column; gap:2px; }
+.target-hit-item-header .toggle-alert-btn { margin-left:auto; white-space:nowrap; align-self:flex-start; }
+.target-hit-item .target-line { margin:0 0 2px 0; }
+/* New Notification Hub item grid layout */
+.target-hit-item-grid { display:grid; grid-template-columns:1fr auto; gap:12px; align-items:start; }
+.target-hit-item-grid .col-left { display:flex; flex-direction:column; gap:4px; }
+.target-hit-item-grid .col-right { display:flex; flex-direction:column; align-items:flex-end; gap:6px; }
+.target-hit-item-grid .live-price-display { font-size:1.05em; font-weight:700; }
+.target-hit-item-grid .toggle-alert-btn.tiny-toggle { font-size:0.70rem; padding:4px 8px; border:1px solid var(--border-color); background:var(--card-bg); color:var(--text-color); border-radius:6px; cursor:pointer; line-height:1.1; }
+.target-hit-item-grid .toggle-alert-btn.tiny-toggle:hover { background:var(--button-hover-bg); color:#fff; }
 
 .target-hit-item .share-name-code {
     font-size: 1.1em;
@@ -4474,6 +6886,12 @@ body.dark-theme .target-hit-details-modal .modal-content {
 
 .target-hit-item p strong {
     color: var(--label-color);
+}
+
+/* Muted alert items: subtle visual de-emphasis */
+.target-hit-item.muted {
+    opacity: 0.6;
+    filter: grayscale(18%);
 }
 
 .alert-panel.open {
@@ -4627,14 +7045,17 @@ body.dark-theme .alert-item {
     transition: background-color 0.2s ease;
 }
 
-.alert-panel-footer .secondary-buttons {
-    background-color: var(--secondary-button-bg);
-    color: var(--button-text);
-    border: 1px solid var(--secondary-button-bg);
+/* Use coffee accent styling for secondary action buttons in both legacy alert panel and modal footers */
+.alert-panel-footer .secondary-buttons,
+.modal-action-buttons-footer .secondary-buttons {
+    background-color: var(--accent-color);
+    color: #fff;
+    border: 1px solid var(--accent-color);
 }
-.alert-panel-footer .secondary-buttons:hover {
-    background-color: var(--secondary-button-hover-bg);
-    border-color: var(--secondary-button-hover-bg);
+.alert-panel-footer .secondary-buttons:hover,
+.modal-action-buttons-footer .secondary-buttons:hover {
+    background-color: var(--icon-action-hover-color);
+    border-color: var(--icon-action-hover-color);
 }
 
 .no-alerts-message {
@@ -4645,9 +7066,6 @@ body.dark-theme .alert-item {
 
 
 /* Adjust main content padding - only for header height now */
-main.container {
-    /* No CSS rule here, padding-top set by JS based on header height only */
-}
 
 /* --- NEW: Compact Mobile View Specific Styles --- */
 /* Default for mobile compact view: two columns */
@@ -4710,6 +7128,8 @@ main.container {
     .mobile-share-cards.compact-view .mobile-card {
         width: auto !important;
     }
+
+    /* Note: do not force ASX buttons container open on desktop; JS controls state */
 }
 
 /* Hide most <p> tags in compact view to only show live price and change */
@@ -4718,29 +7138,35 @@ main.container {
 }
 
 /* Ensure the live price display section remains visible and formatted */
-.mobile-share-cards.compact-view .mobile-card .live-price-display-section {
-    background-color: transparent; /* Remove background in compact view */
-    box-shadow: none; /* Remove shadow */
-    padding: 0; /* Remove padding */
-    margin-bottom: 0; /* Remove margin */
-    flex-direction: column; /* Keep content stacked */
-    gap: 0; /* Reduce gap */
-}
+/* Compact view card core container now a 2x2 grid */
+/* (Removed wrapper grid for compact view; direct grid applied to card) */
+/* New direct layout (no wrapper) */
+/* (Removed earlier generic compact grid declaration – replaced by final unified grid below) */
+.mobile-share-cards.compact-view .mobile-card .card-code { grid-column:1; grid-row:1; align-self:start; justify-self:start; margin:0; line-height:1; }
+.mobile-share-cards.compact-view .mobile-card .card-chevron { grid-column:2; grid-row:1; justify-self:end; align-self:start; font-size:1.25em; font-weight:800; line-height:1; margin:0; }
+.mobile-share-cards.compact-view .mobile-card .card-live-price { grid-column:1 / span 2; grid-row:2; justify-self:center; align-self:center; margin:0; }
+/* Compact card intrinsic height agile; remove fixed min-height */
+.mobile-share-cards.compact-view .mobile-card .card-price-change { grid-column:1 / span 2; grid-row:3; justify-self:center; align-self:center; margin:0; }
+
+/* Remove obsolete live-price-main-row usage in compact direct layout */
+
+/* Legacy wrapper-based selectors removed; new .card-* classes handle placement */
 
 /* Adjust font sizes for compact live price and change */
-.mobile-share-cards.compact-view .mobile-card .live-price-display-section .live-price-large {
-    font-size: 1.4em; /* Size is correct as per user, ensure color applies */
-    line-height: 1.2;
-}
+/* Live price sizing remains via .card-live-price (no wrapper required) */
+.mobile-share-cards.compact-view .mobile-card .card-live-price { font-size:1.4em; line-height:1.2; }
 
-.mobile-share-cards.compact-view .mobile-card .live-price-display-section .price-change-large {
-    font-size: 0.8em; /* Even smaller for percentage change */
-    font-weight: 700;
-    white-space: nowrap;
-    margin-left: 0; /* Remove margin from main price */
-    margin-top: 2px; /* Small space below price */
-    line-height: 1;
-}
+.mobile-share-cards.compact-view .mobile-card .card-price-change { font-size:0.8em; font-weight:700; }
+
+/* Added: extra breathing space in compact cards */
+.mobile-share-cards.compact-view .mobile-card .card-live-price { margin-top:6px !important; }
+.mobile-share-cards.compact-view .mobile-card .card-price-change { margin-top:4px !important; margin-bottom:6px !important; }
+
+/* Remove any internal container visuals inside mobile cards */
+/* Defensive: if any legacy wrapper remains, strip visuals */
+.mobile-card .live-price-display-section, .mobile-card .live-price-display-section > div { background:none !important; border:none !important; box-shadow:none !important; padding:0 !important; margin:0 !important; }
+/* Explicit compact card layout sanity */
+/* Removed redundant wrapper-based positioning (replaced by direct grid classes) */
 
 /* Ensure the share name (h3) is concise and always visible */
 .mobile-share-cards.compact-view .mobile-card h3 {
@@ -4762,11 +7188,94 @@ main.container {
 /* Apply color classes directly to the text elements in compact view */
 /* These rules are already correctly defined and will apply due to !important */
 
+/* NEW: Override text color in compact view to be neutral and always readable */
+.mobile-share-cards.compact-view .mobile-card h3,
+.mobile-share-cards.compact-view .mobile-card .live-price-large {
+    color: var(--text-color) !important; /* Use the theme's main text color, overriding positive/negative colors */
+}
+
+/* === Unified Movement Side Border System (4px) === */
+/* Apply this helper class via JS to rows & cards in addition to their movement class */
+/* Movement side borders helper (non-compact contexts only) */
+.movement-sides { border-left:4px solid transparent; border-right:4px solid transparent; border-top:none; border-bottom:none; }
+.movement-sides.positive-change-row, .movement-sides.positive-change-card { border-left-color: var(--brand-green); border-right-color: var(--brand-green); }
+.movement-sides.negative-change-row, .movement-sides.negative-change-card { border-left-color: var(--brand-red); border-right-color: var(--brand-red); }
+.movement-sides.neutral-change-row, .movement-sides.neutral-change-card { border-left-color: var(--accent-color); border-right-color: var(--accent-color); }
+
+/* Compact view: Side borders ONLY (4px) indicating movement; no top/bottom borders; no full borders ever */
+.mobile-share-cards.compact-view .mobile-card { border:none !important; position:relative; }
+.mobile-share-cards.compact-view .mobile-card.movement-sides { border:none !important; }
+.mobile-share-cards.compact-view .mobile-card::before,
+.mobile-share-cards.compact-view .mobile-card::after { content:''; position:absolute; top:0; bottom:0; width:4px; pointer-events:none; }
+.mobile-share-cards.compact-view .mobile-card::before { left:0; }
+.mobile-share-cards.compact-view .mobile-card::after { right:0; }
+.mobile-share-cards.compact-view .mobile-card.positive-change-card::before,
+.mobile-share-cards.compact-view .mobile-card.positive-change-card::after { background: var(--brand-green); }
+.mobile-share-cards.compact-view .mobile-card.negative-change-card::before,
+.mobile-share-cards.compact-view .mobile-card.negative-change-card::after { background: var(--brand-red); }
+.mobile-share-cards.compact-view .mobile-card.neutral-change-card::before,
+.mobile-share-cards.compact-view .mobile-card.neutral-change-card::after { background: var(--accent-color); }
+/**/
+
+/* Target-hit (non-compact) full coffee border ONLY for mobile cards; desktop rows excluded */
+.mobile-card.target-hit-alert { border:4px solid var(--accent-color); border-radius:10px; animation: targetHitPulseBorder 1.5s ease-in-out infinite; }
+
+/* Reinforce compact grid item alignment & spacing */
+/* (Removed intermediate alignment overrides – replaced by final unified grid below) */
+
+/* === FINAL COMPACT CARD GRID LAYOUT (Authoritative) === */
+.mobile-share-cards.compact-view .mobile-card {
+    display: grid !important;
+    grid-template-areas:
+        "code chevron"
+        "live live"
+        "change change";
+    grid-template-columns: 1fr auto;
+    grid-auto-rows: min-content;
+    justify-items: center;
+    align-items: center;
+    row-gap: 4px;
+    padding: 10px 10px 12px; /* Consolidated padding */
+}
+/* Neutralize legacy absolute positioning */
+.mobile-share-cards.compact-view .mobile-card h3,
+.mobile-share-cards.compact-view .mobile-card .change-chevron {
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    margin: 0;
+}
+/* Allow wrapper to disappear so its children become grid items */
+.mobile-share-cards.compact-view .mobile-card .live-price-display-section {
+    display: contents !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+/* Grid item placements */
+.mobile-share-cards.compact-view .mobile-card .card-code { grid-area: code; justify-self: start; align-self: start; font-size: 1.368em; font-weight: 800; }
+.mobile-share-cards.compact-view .mobile-card .card-chevron { grid-area: chevron; justify-self: end; align-self: start; font-size: 1.26em; font-weight: 700; }
+.mobile-share-cards.compact-view .mobile-card .card-live-price { grid-area: live; --live-price-size:1.416em; font-size: var(--live-price-size) !important; font-weight: 700; line-height: 1.15; }
+.mobile-share-cards.compact-view .mobile-card .card-price-change { grid-area: change; font-size: calc(var(--live-price-size)*var(--secondary-scale)); font-weight: 700; line-height: 1.1; }
+/* Ensure text centering for middle and bottom */
+.mobile-share-cards.compact-view .mobile-card .card-live-price,
+.mobile-share-cards.compact-view .mobile-card .card-price-change { text-align: center; width: 100%; }
+/* Preserve movement side borders & target-hit visuals already defined elsewhere */
+
+/* Adjustment: enlarge ASX code ~20% and pin firmly to top-left */
+.mobile-share-cards.compact-view .mobile-card .card-code {
+    font-size: 1.368em !important; /* Increased +20% from prior 1.14em */
+    font-weight: 800; /* Stronger weight for prominence */
+    width: auto !important; /* Release full-width block so grid start alignment is exact */
+    text-align: left !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+
 
 /* Keep the target hit alert styling on the card itself */
-.mobile-share-cards.compact-view .mobile-card.target-hit-alert {
-    animation: pulse-alert 1.5s infinite alternate;
-}
+/* Removed legacy green glow pulse; unified border pulse already applied globally */
 
 /* Hide 52-week high/low and P/E from compact view */
 .mobile-share-cards.compact-view .mobile-card .fifty-two-week-row,
@@ -4820,10 +7329,29 @@ main.container {
     animation: pulsing-fade 5s ease-in-out infinite; /* Apply the animation, now 6 seconds */
 }
 
+
+
+.app-version-splash {
+    position: absolute;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.7);
+    z-index: 2001;
+    text-transform: uppercase;
+}
+.app-version-splash-top {
+    top: 2vh;
+    left: 2vw;
+    width: auto;
+    text-align: left;
+}
+
 /* Adjust the sign-in button on the splash screen */
 #splashScreen .google-auth-btn {
     position: absolute; /* Position relative to splash screen */
-    bottom: 8vh; /* Adjusted to move it higher, experiment with 5vh-10vh */
+    bottom: 10vh; /* Visually balanced sign-in position near bottom */
     width: auto; /* Let content dictate width */
     max-width: 80%; /* Ensure it doesn't overflow on small screens */
     padding: 12px 30px; /* Generous padding */
@@ -4855,7 +7383,7 @@ main.container {
 
 #asxSearchInput:focus {
     border-color: var(--button-bg);
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+    box-shadow: 0 0 0 2px rgba(164,147,147,0.35);
     outline: none;
 }
 
@@ -4866,6 +7394,8 @@ main.container {
     width: 100%;
     max-height: 200px;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* Smooth native scrolling on iOS */
+    touch-action: auto; /* Allow touch-driven scrolling */
     background-color: var(--card-bg); /* Use card background for suggestions */
     border: 1px solid var(--border-color);
     border-top: none; /* No top border, blends with input */
@@ -4964,6 +7494,8 @@ main.container {
     gap: 15px;
     margin-top: 20px;
 }
+/* Ensure action footer stays within the modal and cannot escape due to absolute children */
+#stockSearchModal .modal-action-buttons-footer, #stockSearchModal .stock-search-modal-content { box-sizing: border-box; max-width: 100%; overflow: visible; }
 /* UPDATED: Cash & Assets Section Styles (1, 2.1, 3.1) */
 .cash-assets-section { /* Renamed from cash-bank-section */
     margin-top: 20px;
@@ -5267,16 +7799,7 @@ main.container {
         width: 100%;
     }
 
-    /* Adjust main content padding to account for fixed header */
-    main.container {
-        /* Calculated height of the fixed header on mobile */
-        /* These will be handled dynamically by JS to be more precise */
-    }
 
-    /* Adjust main content padding to account for fixed header and banner */
-    body.target-banner-active main.container {
-        /* No CSS rule here, padding-top set by JS */
-    }
 
 
     .watchlist-controls-row {
@@ -5290,11 +7813,15 @@ main.container {
 
     .watchlist-group,
     .sort-group {
-        flex-basis: 50%; /* Each takes half the width */
-        max-width: calc(50% - 5px); /* Account for half the gap */
+        flex: 1 1 auto; /* Allow dropdowns to grow and shrink to fit */
         min-width: 120px; /* Ensure a reasonable minimum width for dropdowns */
     }
     
+    /* NEW: Ensure the toggle button group doesn't grow, keeping its fixed width */
+    .toggle-asx-buttons-group {
+        flex: 0 0 auto;
+    }
+
     /* 3.3: Ensure watchlist select is centered within its group */
     .watchlist-group {
         display: flex;
@@ -5373,8 +7900,7 @@ main.container {
 
 
     .form-action-buttons,
-    .modal-action-buttons,
-    .custom-dialog-buttons {
+    .modal-action-buttons {
         gap: 5px;
         margin-top: 10px;
         padding-top: 8px;
@@ -5484,4 +8010,111 @@ main.container {
         font-size: 1.2em; /* Slightly smaller total display */
         padding: 12px;
     }
+}
+
+/* Watchlist Picker Modal */
+.watchlist-picker-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.picker-item {
+    padding: 12px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.picker-item:hover {
+    background-color: var(--table-row-hover-bg);
+}
+.picker-item:focus {
+    /* Keep accessibility focus but avoid a filled/pale box background that varies by theme.
+       Use a subtle outline instead so the item does not get a pale background fill on open. */
+    outline: 2px solid rgba(0,0,0,0.06);
+    outline-offset: 2px;
+    background-color: transparent;
+}
+
+.picker-item.active {
+    /* Use a subtle highlight for the active watchlist instead of a heavy accent fill
+       to avoid dark/black blocks when accent color is strong in some themes. */
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    font-weight: 600;
+    border-color: var(--border-color);
+    box-shadow: 0 0 0 2px rgba(0,0,0,0.03) inset;
+}
+
+.picker-item-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.1em;
+}
+
+.picker-item-content i {
+    width: 20px;
+    text-align: center;
+}
+
+/* Centered, dynamically-sized sort controls row */
+.sort-line-row {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin: 8px 0 4px 0; /* Space below the title */
+}
+
+.sort-controls-container {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Space between sort dropdown and toggle arrow */
+}
+
+.sort-select-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+/* Override dropdown-large for this specific context to be dynamically sized */
+.sort-controls-container .dropdown-large {
+    width: auto; /* Key change: allow width to fit content */
+    min-width: 140px; /* Set a reasonable minimum */
+    padding-right: 28px; /* Ensure space for sort icon */
+    text-align: center; /* Center text within the select box */
+    text-align-last: center; /* For Firefox */
+    -moz-text-align-last: center; /* For Firefox */
+}
+
+.sort-icon {
+    position: absolute;
+    right: 8px; /* Position icon inside the select box */
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    font-size: 0.8em;
+    color: var(--ghosted-text);
+    transition: transform 0.2s ease-in-out;
+}
+
+.sort-icon.up::before {
+    content: '▲';
+    color: var(--price-up-color);
+}
+
+.sort-icon.down::before {
+    content: '▼';
+    color: var(--price-down-color);
+}
+
+/* Ensure toggle button is vertically aligned and has appropriate size */
+.sort-controls-container .asx-toggle-triangle {
+    margin: 0;
+    padding: 6px;
+    font-size: 1.2em;
+    flex-shrink: 0; /* Prevent button from shrinking */
 }
